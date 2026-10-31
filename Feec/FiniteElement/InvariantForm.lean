@@ -1,32 +1,41 @@
 module
 
 public import Feec.FiniteElement.LocalSpace
+public import Mathlib.Algebra.CharZero.Infinite
 public import Mathlib.Algebra.MvPolynomial.Coeff
 public import Mathlib.Algebra.Polynomial.Roots
 public import Mathlib.LinearAlgebra.Dual.Lemmas
+public import Mathlib.LinearAlgebra.Matrix.Charpoly.Coeff
 
 /-!
 # Linearly invariant spaces of homogeneous polynomial forms
 
-The linear maps `x ↦ B x` of `ℝⁿ` act on polynomial forms by pullback (`polyPullback B 0`). A
-subspace is *linearly invariant* (`IsLinearInvariant`) if it is mapped into itself by the pullback
-of every linear map, and *affinely invariant* (`IsAffineInvariant`) if also by the translations.
-The main result: **the linearly invariant subspaces of `H_mΛᵏ`** (`m + k > 0`) are `0`, the closed
-forms `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ^{k+1}` and `H_mΛᵏ`, so the two summands
-of the Koszul decomposition `H_mΛᵏ = κH_{m-1}Λ^{k+1} ⊕ dH_{m+1}Λ^{k-1}` are irreducible
-([AFW2006], §3.4, which takes it from the representation theory of `GL(n)`, [FultonHarris1991],
-§6.1, (6.9)). The proof is elementary, by pullbacks and linear algebra:
+The linear maps `x ↦ B x` of `Kⁿ`, `K` a field, act on polynomial forms by pullback
+(`polyPullback B 0`). A subspace is *linearly invariant* (`IsLinearInvariant`) if it is mapped into
+itself by the pullback of every linear map, *`GL(n)`-invariant* (`IsGLInvariant`) if by that of
+every invertible one, and *affinely invariant* (`IsAffineInvariant`) if also by the translations.
+The main result: for `K` of characteristic `0`, **the `GL(n)`-invariant subspaces of `H_mΛᵏ`**
+(`m + k > 0`) are `0`, the closed forms `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ^{k+1}`
+and `H_mΛᵏ`, so the two summands of the Koszul decomposition
+`H_mΛᵏ = κH_{m-1}Λ^{k+1} ⊕ dH_{m+1}Λ^{k-1}` are irreducible ([AFW2006], §3.4, which takes it from
+the representation theory of `GL(n)`, [FultonHarris1991], §6.1, (6.9)). The proof is elementary,
+by pullbacks and linear algebra:
 
+* **`GL(n)` suffices** (`IsGLInvariant.isLinearInvariant`, `K` infinite): `c ↦ (B + c)^* ω` is a
+  polynomial curve (`exists_polyPullback_add_smul`), in a `GL(n)`-invariant space at the
+  cofinitely many `c` with `det(B + c) ≠ 0`, hence with all its coefficients, `B^* ω` among them
+  (`mem_of_eventually_sum_pow_smul_mem`, `polyPullback_mem_of_forall_units`); the steps below use
+  singular maps freely;
 * **weight parts**: the diagonal pullback along `diag(c^{e₁}, …, c^{eₙ})` is `Σⱼ cʲ ω_{(j)}` for
   the parts `ω_{(j)}` of weight `j` (`exists_polyPullback_diag_pow`), so a linearly invariant
-  space contains the weight parts of its elements (the coefficients of a polynomial curve in a
-  subspace lie in it, `mem_of_forall_sum_pow_smul_mem`): the homogeneous components
+  space contains the weight parts of its elements (`K` infinite): the homogeneous components
   (`IsLinearInvariant.homComp_mem`) and the multi-weight parts (`IsLinearInvariant.multiPart_mem`),
   which commute with `d` and `κ` (`extDeriv_multiPart`, `koszul_multiPart`), as `d` and `κ` commute
-  with linear pullbacks (`polyPullback_extDeriv`, `polyPullback_koszul_linear`);
+  with linear pullbacks (`polyPullback_extDeriv`, by the chain rule `pderiv_polySubst`, and
+  `polyPullback_koszul_linear`);
 * **generation** (`IsLinearInvariant.extDeriv_mem`): from `x_p^m dx_{p ∪ s}` = `d(x_p^{m+1} dx_s)`
-  up to a factor, the pullback along `x_p ↦ Σ_l x_l`, `dx_s ↦ dx_u` and the multi-weight part
-  `β + 𝟙_u` give `d(x^β dx_u)` times a multinomial coefficient;
+  up to the factor `±(m + 1)`, the pullback along `x_p ↦ Σ_l x_l`, `dx_s ↦ dx_u` and the
+  multi-weight part `β + 𝟙_u` give `d(x^β dx_u)` times a multinomial coefficient;
 * **reaching the generator** (`IsLinearInvariant.closed_le`): if `κω ≠ 0`, with `(κω)_s(a) ≠ 0`,
   the pullback along `x̂ ↦ a x̂_p + Σ_{l ∈ s} x̂_l e_l` followed by a multi-weight part is a nonzero
   multiple of `x_p^m dx_{p ∪ s}`;
@@ -35,18 +44,28 @@ of the Koszul decomposition `H_mΛᵏ = κH_{m-1}Λ^{k+1} ⊕ dH_{m+1}Λ^{k-1}` 
   `H_{m-1}Λ^{k+1}` onto the `κ`-closed forms of `H_mΛᵏ` equivariantly, and the preimage of an
   invariant space is invariant.
 
-The invariance is under all linear maps, singular ones included, as in the hypothesis of
-[AFW2006], Theorem 3.6 (all affine maps); invariance under `GL(n)` alone is not treated.
+Characteristic `0` enters only through the integers inverted: `m + 1`, the multinomial
+coefficients of degree `m + 1` and the constants `m + k`, `m + k + 1` of the homotopy formula and
+the Poincaré lemma. It cannot be dropped: in characteristic `3` the binary quartics `x⁴, x³y, xy³,
+y⁴` span a subspace of `H_4Λ⁰(K²)` invariant under every linear map (`(ax + by)³ = a³x³ + b³y³`)
+that is neither `0`, nor `H_4Λ⁰`, nor closed (`d(x³y) = x³ dy`), while every `0`-form is
+`κ`-closed. Over a finite field `F_q` the polynomial `x^q y - x y^q` spans a line of `H_{q+1}Λ⁰`
+mapped to itself by every linear map (`B^*` multiplies it by `det B`), and not closed
+(`d(x^q y - x y^q) = x^q dy - y^q dx`).
 
 ## Main definitions
 
-* `Feec.FiniteElement.IsLinearInvariant`, `Feec.FiniteElement.IsAffineInvariant`;
+* `Feec.FiniteElement.IsLinearInvariant`, `Feec.FiniteElement.IsGLInvariant`,
+  `Feec.FiniteElement.IsAffineInvariant`;
 * `Feec.FiniteElement.weightPart e j`, `Feec.FiniteElement.multiPart μ`: the parts of weight `j`
   for the coordinate weights `e`, and of multi-weight `μ` (`x^α dx_t` with `α + 𝟙_t = μ`).
 
 ## Main results
 
-* `IsLinearInvariant.eq_of_le_homForm`: **the linearly invariant subspaces of `H_mΛᵏ`**, and
+* `IsGLInvariant.isLinearInvariant`: over an infinite field, `GL(n)`-invariance is linear
+  invariance (`isAffineInvariant_of_forall_units` for the affine maps);
+* `IsLinearInvariant.eq_of_le_homForm`: **the linearly (equivalently, `GL(n)`-) invariant
+  subspaces of `H_mΛᵏ`**, and
   `IsLinearInvariant.eq_of_le_homForm_succ` with the summands as the images `dH_{m+1}Λ^{k-1}`,
   `κH_{m-1}Λ^{k+1}` (`homForm_inf_ker_extDeriv`, `homForm_inf_ker_koszul`), which are linearly
   invariant (`isLinearInvariant_map_extDeriv_homForm`, `isLinearInvariant_map_koszul_homForm`);
@@ -75,23 +94,26 @@ open Koszul (PolyForm homForm polyForm polyFormMinus homComp koszulₗ extDeriv�
 
 /-! ### Polynomial identities in a module -/
 
-/-- **Coefficients of a polynomial curve in a subspace**: if `Σ_{i<N} cⁱ vᵢ ∈ W` for every scalar
-`c` of an infinite field, then every `vᵢ ∈ W`. -/
-theorem mem_of_forall_sum_pow_smul_mem {K V : Type*} [Field K] [Infinite K] [AddCommGroup V]
+/-- **Coefficients of a polynomial curve in a subspace**: if `Σ_{i<N} cⁱ vᵢ ∈ W` for all but
+finitely many scalars `c` of an infinite field, then every `vᵢ ∈ W`. -/
+theorem mem_of_eventually_sum_pow_smul_mem {K V : Type*} [Field K] [Infinite K] [AddCommGroup V]
     [Module K V] {W : Submodule K V} {N : ℕ} {v : ℕ → V}
-    (h : ∀ c : K, ∑ i ∈ range N, c ^ i • v i ∈ W) {i : ℕ} (hi : i < N) : v i ∈ W := by
+    (h : ∀ᶠ c : K in Filter.cofinite, ∑ i ∈ range N, c ^ i • v i ∈ W) {i : ℕ} (hi : i < N) :
+    v i ∈ W := by
   rw [← Submodule.Quotient.mk_eq_zero]
   refine (Module.forall_dual_apply_eq_zero_iff K _).1 fun φ => ?_
   set ψ := φ ∘ₗ W.mkQ
   set P : Polynomial K := ∑ j ∈ range N, Polynomial.C (ψ (v j)) * Polynomial.X ^ j with hPdef
-  have hP : P = 0 := Polynomial.funext fun c => by
+  have hP : P = 0 := by
+    refine Polynomial.eq_zero_of_infinite_isRoot P
+      (Filter.frequently_cofinite_iff_infinite.1 (h.mono fun c hc => ?_).frequently)
     have h1 : ψ (∑ i ∈ range N, c ^ i • v i) = 0 := by
       change φ (W.mkQ _) = 0
-      rw [Submodule.mkQ_apply, (Submodule.Quotient.mk_eq_zero W).2 (h c), map_zero]
+      rw [Submodule.mkQ_apply, (Submodule.Quotient.mk_eq_zero W).2 hc, map_zero]
     rw [map_sum] at h1
     simp only [map_smul, smul_eq_mul] at h1
-    simp only [hPdef, Polynomial.eval_finsetSum, Polynomial.eval_mul, Polynomial.eval_C,
-      Polynomial.eval_pow, Polynomial.eval_X, Polynomial.eval_zero, ← h1]
+    simp only [Polynomial.IsRoot, hPdef, Polynomial.eval_finsetSum, Polynomial.eval_mul,
+      Polynomial.eval_C, Polynomial.eval_pow, Polynomial.eval_X, ← h1]
     exact sum_congr rfl fun j _ => mul_comm _ _
   have := congrArg (Polynomial.coeff · i) hP
   simpa [hPdef, Polynomial.finsetSum_coeff, Polynomial.coeff_C_mul, Polynomial.coeff_X_pow, hi,
@@ -99,8 +121,8 @@ theorem mem_of_forall_sum_pow_smul_mem {K V : Type*} [Field K] [Infinite K] [Add
 
 /-! ### Parts of polynomial forms selected by their monomials -/
 
-theorem wedgeProd_smul_left {ι d : Type*} [LinearOrder ι] [LinearOrder d] (c : ι → ℝ)
-    (θ : ι → d → ℝ) (s : Finset ι) :
+theorem wedgeProd_smul_left {R ι d : Type*} [CommRing R] [LinearOrder ι] [LinearOrder d]
+    (c : ι → R) (θ : ι → d → R) (s : Finset ι) :
     wedgeProd (fun i => c i • θ i) s = (∏ i ∈ s, c i) • wedgeProd θ s := by
   induction s using Finset.induction_on_min with
   | empty => simp
@@ -109,20 +131,20 @@ theorem wedgeProd_smul_left {ι d : Type*} [LinearOrder ι] [LinearOrder d] (c :
     rw [wedgeProd_insert_of_lt _ ha, wedgeProd_insert_of_lt _ ha, ih, wedge_smul_left, wedge_smul,
       smul_smul, prod_insert has]
 
-variable {n : ℕ}
+variable {K : Type*} [Field K] {n : ℕ}
 
-theorem polyForm_ext_coeff {ω η : PolyForm ℝ (Fin n)}
+theorem polyForm_ext_coeff {ω η : PolyForm K (Fin n)}
     (h : ∀ t α, (ω t).coeff α = (η t).coeff α) : ω = η :=
   funext fun t => MvPolynomial.ext _ _ (h t)
 
 open scoped Classical in
 /-- The part of `ω` on the monomial forms `x^α dx_t` with `P t α`. -/
-def restrictForm (P : Finset (Fin n) → (Fin n →₀ ℕ) → Prop) (ω : PolyForm ℝ (Fin n)) :
-    PolyForm ℝ (Fin n) :=
+def restrictForm (P : Finset (Fin n) → (Fin n →₀ ℕ) → Prop) (ω : PolyForm K (Fin n)) :
+    PolyForm K (Fin n) :=
   fun t => ∑ α ∈ (ω t).support with P t α, monomial α ((ω t).coeff α)
 
 open scoped Classical in
-theorem coeff_restrictForm (P : Finset (Fin n) → (Fin n →₀ ℕ) → Prop) (ω : PolyForm ℝ (Fin n))
+theorem coeff_restrictForm (P : Finset (Fin n) → (Fin n →₀ ℕ) → Prop) (ω : PolyForm K (Fin n))
     (t : Finset (Fin n)) (α : Fin n →₀ ℕ) :
     (restrictForm P ω t).coeff α = if P t α then (ω t).coeff α else 0 := by
   rw [restrictForm, coeff_sum]
@@ -134,7 +156,7 @@ theorem coeff_restrictForm (P : Finset (Fin n) → (Fin n →₀ ℕ) → Prop) 
     simp [hα]
 
 theorem restrictForm_restrictForm (P Q : Finset (Fin n) → (Fin n →₀ ℕ) → Prop)
-    (ω : PolyForm ℝ (Fin n)) :
+    (ω : PolyForm K (Fin n)) :
     restrictForm P (restrictForm Q ω) = restrictForm (fun t α => P t α ∧ Q t α) ω := by
   classical
   refine polyForm_ext_coeff fun t α => ?_
@@ -144,9 +166,9 @@ theorem restrictForm_restrictForm (P Q : Finset (Fin n) → (Fin n →₀ ℕ) �
 /-! ### Diagonal pullbacks -/
 
 /-- The diagonal matrix `diag μ`, as the coefficient function taken by `polyPullback`. -/
-def diagMatrix (μ : Fin n → ℝ) : Fin n → Fin n → ℝ := fun i l => if i = l then μ i else 0
+def diagMatrix (μ : Fin n → K) : Fin n → Fin n → K := fun i l => if i = l then μ i else 0
 
-theorem coeff_aeval_C_mul_X (μ : Fin n → ℝ) (p : MvPolynomial (Fin n) ℝ) (α : Fin n →₀ ℕ) :
+theorem coeff_aeval_C_mul_X (μ : Fin n → K) (p : MvPolynomial (Fin n) K) (α : Fin n →₀ ℕ) :
     (aeval (fun i => C (μ i) * X i) p).coeff α = (∏ i, μ i ^ α i) * p.coeff α := by
   induction p using MvPolynomial.induction_on' with
   | monomial β c =>
@@ -163,11 +185,11 @@ theorem coeff_aeval_C_mul_X (μ : Fin n → ℝ) (p : MvPolynomial (Fin n) ℝ) 
   | add p q hp hq => simp [hp, hq, mul_add]
 
 /-- **The diagonal pullback** `x ↦ diag(μ) x` scales `x^α dx_t` by `μ^α μ_t`. -/
-theorem coeff_polyPullback_diag (μ : Fin n → ℝ) (ω : PolyForm ℝ (Fin n)) (t : Finset (Fin n))
+theorem coeff_polyPullback_diag (μ : Fin n → K) (ω : PolyForm K (Fin n)) (t : Finset (Fin n))
     (α : Fin n →₀ ℕ) :
     (polyPullback (diagMatrix μ) 0 ω t).coeff α =
       (∏ i, μ i ^ α i) * (∏ i ∈ t, μ i) * (ω t).coeff α := by
-  have hB : diagMatrix μ = fun i => μ i • (Pi.single i 1 : Fin n → ℝ) := by
+  have hB : diagMatrix μ = fun i => μ i • (Pi.single i 1 : Fin n → K) := by
     funext i l; simp [diagMatrix, Pi.single_apply, eq_comm]
   have hW : ∀ s, wedgeProd (diagMatrix μ) s t = if s = t then ∏ i ∈ t, μ i else 0 := by
     intro s
@@ -194,22 +216,22 @@ def formWeight (e : Fin n → ℕ) (t : Finset (Fin n)) (α : Fin n →₀ ℕ) 
   ∑ i, e i * α i + ∑ i ∈ t, e i
 
 /-- The part of weight `j` of `ω` for the weights `e` of the coordinates. -/
-def weightPart (e : Fin n → ℕ) (j : ℕ) (ω : PolyForm ℝ (Fin n)) : PolyForm ℝ (Fin n) :=
+def weightPart (e : Fin n → ℕ) (j : ℕ) (ω : PolyForm K (Fin n)) : PolyForm K (Fin n) :=
   restrictForm (fun t α => formWeight e t α = j) ω
 
 theorem restrictForm_congr {P Q : Finset (Fin n) → (Fin n →₀ ℕ) → Prop}
-    (h : ∀ t α, P t α ↔ Q t α) (ω : PolyForm ℝ (Fin n)) : restrictForm P ω = restrictForm Q ω := by
+    (h : ∀ t α, P t α ↔ Q t α) (ω : PolyForm K (Fin n)) : restrictForm P ω = restrictForm Q ω := by
   have : P = Q := funext fun t => funext fun α => propext (h t α)
   rw [this]
 
-theorem restrictForm_true (ω : PolyForm ℝ (Fin n)) : restrictForm (fun _ _ => True) ω = ω := by
+theorem restrictForm_true (ω : PolyForm K (Fin n)) : restrictForm (fun _ _ => True) ω = ω := by
   classical
   exact polyForm_ext_coeff fun t α => by simp [coeff_restrictForm]
 
 /-- **The diagonal pullback along `c^e`**: `diag(c^{e₁}, …)^* ω = Σⱼ cʲ ω_{(j)}` for the weight
 parts `ω_{(j)}`, for every `N` beyond the weights of `ω`. -/
-theorem exists_polyPullback_diag_pow (e : Fin n → ℕ) (ω : PolyForm ℝ (Fin n)) :
-    ∃ N₀, ∀ N, N₀ ≤ N → ∀ c : ℝ, polyPullback (diagMatrix fun i => c ^ e i) 0 ω =
+theorem exists_polyPullback_diag_pow (e : Fin n → ℕ) (ω : PolyForm K (Fin n)) :
+    ∃ N₀, ∀ N, N₀ ≤ N → ∀ c : K, polyPullback (diagMatrix fun i => c ^ e i) 0 ω =
       ∑ j ∈ range N, c ^ j • weightPart e j ω := by
   classical
   refine ⟨∑ t, ∑ α ∈ (ω t).support, formWeight e t α + 1, fun N hN c => ?_⟩
@@ -233,37 +255,38 @@ theorem exists_polyPullback_diag_pow (e : Fin n → ℕ) (ω : PolyForm ℝ (Fin
   · rw [mem_support_iff, not_not] at hα
     simp [hα]
 
-/-- Invariance under the pullbacks `x ↦ B x` by all linear maps of `ℝⁿ`. -/
-def IsLinearInvariant (W : Submodule ℝ (PolyForm ℝ (Fin n))) : Prop :=
-  ∀ (B : Fin n → Fin n → ℝ), ∀ ω ∈ W, polyPullback B 0 ω ∈ W
+/-- Invariance under the pullbacks `x ↦ B x` by all linear maps of `Kⁿ`. -/
+def IsLinearInvariant (W : Submodule K (PolyForm K (Fin n))) : Prop :=
+  ∀ (B : Fin n → Fin n → K), ∀ ω ∈ W, polyPullback B 0 ω ∈ W
 
-/-- Invariance under the pullbacks `x ↦ B x + b` by all affine maps of `ℝⁿ`. -/
-def IsAffineInvariant (X : Submodule ℝ (PolyForm ℝ (Fin n))) : Prop :=
-  ∀ (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ), ∀ ω ∈ X, polyPullback B b ω ∈ X
+/-- Invariance under the pullbacks `x ↦ B x + b` by all affine maps of `Kⁿ`. -/
+def IsAffineInvariant (X : Submodule K (PolyForm K (Fin n))) : Prop :=
+  ∀ (B : Fin n → Fin n → K) (b : Fin n → K), ∀ ω ∈ X, polyPullback B b ω ∈ X
 
-theorem IsAffineInvariant.isLinearInvariant {X : Submodule ℝ (PolyForm ℝ (Fin n))}
+theorem IsAffineInvariant.isLinearInvariant {X : Submodule K (PolyForm K (Fin n))}
     (hX : IsAffineInvariant X) : IsLinearInvariant X := fun B => hX B 0
 
 /-- **A linearly invariant space contains the weight parts of its elements.** -/
-theorem IsLinearInvariant.weightPart_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {ω : PolyForm ℝ (Fin n)} (hω : ω ∈ W) (e : Fin n → ℕ) (j : ℕ) :
+theorem IsLinearInvariant.weightPart_mem [Infinite K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {ω : PolyForm K (Fin n)} (hω : ω ∈ W) (e : Fin n → ℕ) (j : ℕ) :
     weightPart e j ω ∈ W := by
   obtain ⟨N₀, hN⟩ := exists_polyPullback_diag_pow e ω
-  refine mem_of_forall_sum_pow_smul_mem (N := max N₀ (j + 1)) (v := fun j => weightPart e j ω)
-    (fun c => ?_) (by omega)
+  refine mem_of_eventually_sum_pow_smul_mem (N := max N₀ (j + 1))
+    (v := fun j => weightPart e j ω) (Filter.Eventually.of_forall fun c => ?_) (by omega)
   rw [← hN _ (le_max_left _ _)]
   exact hW _ _ hω
 
 /-- An operator commuting with the diagonal pullbacks commutes with the weight parts. -/
-theorem weightPart_comm (e : Fin n → ℕ) (T : PolyForm ℝ (Fin n) →ₗ[ℝ] PolyForm ℝ (Fin n))
-    (hT : ∀ (c : ℝ) ω, T (polyPullback (diagMatrix fun i => c ^ e i) 0 ω) =
-      polyPullback (diagMatrix fun i => c ^ e i) 0 (T ω)) (j : ℕ) (ω : PolyForm ℝ (Fin n)) :
+theorem weightPart_comm [Infinite K] (e : Fin n → ℕ) (T : PolyForm K (Fin n) →ₗ[K] PolyForm K (Fin n))
+    (hT : ∀ (c : K) ω, T (polyPullback (diagMatrix fun i => c ^ e i) 0 ω) =
+      polyPullback (diagMatrix fun i => c ^ e i) 0 (T ω)) (j : ℕ) (ω : PolyForm K (Fin n)) :
     T (weightPart e j ω) = weightPart e j (T ω) := by
   obtain ⟨N₀, hN₀⟩ := exists_polyPullback_diag_pow e ω
   obtain ⟨N₁, hN₁⟩ := exists_polyPullback_diag_pow e (T ω)
   set N := max (max N₀ N₁) (j + 1)
-  have h := mem_of_forall_sum_pow_smul_mem (W := (⊥ : Submodule ℝ (PolyForm ℝ (Fin n)))) (N := N)
-    (v := fun j => T (weightPart e j ω) - weightPart e j (T ω)) (fun c => ?_) (i := j) (by omega)
+  have h := mem_of_eventually_sum_pow_smul_mem (W := (⊥ : Submodule K (PolyForm K (Fin n))))
+    (N := N) (v := fun j => T (weightPart e j ω) - weightPart e j (T ω))
+    (Filter.Eventually.of_forall fun c => ?_) (i := j) (by omega)
   · simpa [sub_eq_zero] using h
   · rw [Submodule.mem_bot]
     simp only [smul_sub, sum_sub_distrib, ← map_smul, ← map_sum]
@@ -271,32 +294,84 @@ theorem weightPart_comm (e : Fin n → ℕ) (T : PolyForm ℝ (Fin n) →ₗ[ℝ
 
 /-! ### Pullbacks commute with `d`, linear pullbacks with `κ` -/
 
-/-- `F^* dω = d F^* ω` for affine `F`. -/
-theorem polyPullback_extDeriv (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) (ω : PolyForm ℝ (Fin n)) :
-    polyPullback B b (Koszul.extDeriv ω) = Koszul.extDeriv (polyPullback B b ω) := by
-  apply evalForm_injective
-  rw [evalForm_polyPullback, ← extDeriv_evalForm, ← extDeriv_evalForm, evalForm_polyPullback]
-  funext x
-  exact (extDeriv_affinePullback_apply B b
-    (((contDiff_evalForm ω (r := 1)).differentiable one_ne_zero) _)).symm
+/-- **Chain rule** for the affine substitution: `∂_l (p ∘ F) = Σᵢ B_{il} (∂ᵢ p) ∘ F`. -/
+theorem pderiv_polySubst {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K) (p : MvPolynomial (Fin n) K)
+    (l : Fin m) : pderiv l (polySubst B b p) = ∑ i, polySubst B b (pderiv i p) * C (B i l) := by
+  induction p using MvPolynomial.induction_on with
+  | C a => simp [polySubst]
+  | add p q hp hq => simp [hp, hq, add_mul, sum_add_distrib]
+  | mul_X p j hp =>
+    have hX : pderiv l (polySubst B b (X j)) = C (B j l) := by
+      simp [polySubst, pderiv_X, Pi.single_apply]
+    rw [map_mul, Derivation.leibniz, hp, hX, smul_eq_mul, smul_eq_mul]
+    simp only [Derivation.leibniz, pderiv_X, map_add, map_mul, smul_eq_mul, add_mul,
+      sum_add_distrib, mul_sum]
+    simp only [Pi.single_apply, apply_ite (polySubst B b), map_one, map_zero, mul_ite, ite_mul,
+      mul_one, mul_zero, zero_mul, sum_ite_eq, mem_univ, ite_true]
+    congr 1
+    exact sum_congr rfl fun i _ => by ring
 
-theorem polyPullback_zero_form (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) :
-    polyPullback B b (0 : PolyForm ℝ (Fin n)) = 0 := by
+/-- `F^* dω = d F^* ω` for affine `F`. -/
+theorem polyPullback_extDeriv {m : ℕ} (B : Fin n → Fin m → K) (b : Fin n → K) (ω : PolyForm K (Fin n)) :
+    polyPullback B b (Koszul.extDeriv ω) = Koszul.extDeriv (polyPullback B b ω) := by
+  have hpd : ∀ (l : Fin m) (α : Finset (Fin n) → MvPolynomial (Fin m) K),
+      (fun t => pderiv l (pullback (fun i l => C (B i l)) α t)) = pullback (fun i l => C (B i l)) (fun s => pderiv l (α s)) := by
+    intro l α
+    funext t
+    simp only [pullback_apply, map_sum, Derivation.leibniz, smul_eq_mul]
+    refine sum_congr rfl fun s _ => ?_
+    rw [show wedgeProd (fun i l => C (B i l)) s t = C (wedgeProd B s t) from (map_wedgeProd C B s t).symm, pderiv_C,
+      mul_zero, zero_add, mul_comm]
+  have hsub : ∀ i, (fun s => polySubst B b (wedge (Pi.single i 1) (Koszul.pderivForm i ω) s)) =
+      wedge (Pi.single i 1) (fun s => polySubst B b (pderiv i (ω s))) := by
+    intro i
+    funext s
+    rw [show polySubst B b (wedge (Pi.single i 1) (Koszul.pderivForm i ω) s) =
+      (polySubst B b).toRingHom _ from rfl, map_wedge]
+    congr 1
+    funext j
+    by_cases h : j = i
+    · subst h; simp
+    · simp [h]
+  have hcov : ∀ i, covPullback (fun i l => (C (B i l) : MvPolynomial (Fin m) K)) (Pi.single i 1) =
+      ∑ l, (C (B i l) : MvPolynomial (Fin m) K) • (Pi.single l 1 : Fin m → MvPolynomial (Fin m) K) := by
+    intro i
+    funext l
+    simp [covPullback, Finset.sum_apply, Pi.single_apply]
+  rw [polyPullback, polyPullback, Koszul.extDeriv_eq_sum_wedge, Koszul.extDeriv_eq_sum_wedge]
+  simp only [Finset.sum_apply, map_sum]
+  rw [show (fun s => ∑ i, polySubst B b (wedge (Pi.single i 1) (Koszul.pderivForm i ω) s)) =
+    ∑ i, (fun s => polySubst B b (wedge (Pi.single i 1) (Koszul.pderivForm i ω) s)) from by
+      funext s; simp [Finset.sum_apply]]
+  simp only [hsub, pullback_sum, pullback_wedge, hcov, wedge_sum_left, wedge_smul_left]
+  rw [sum_comm]
+  refine sum_congr rfl fun l _ => ?_
+  rw [show Koszul.pderivForm l _ = _ from hpd l _]
+  simp only [pderiv_polySubst]
+  rw [show (fun s => ∑ i, polySubst B b (pderiv i (ω s)) * C (B i l)) =
+    ∑ i, (C (B i l) : MvPolynomial (Fin m) K) • (fun s => polySubst B b (pderiv i (ω s))) from by
+      funext s; rw [Finset.sum_apply]
+      exact sum_congr rfl fun i _ => (mul_comm _ _).trans (smul_eq_mul _ _).symm]
+  rw [pullback_sum, wedge_sum]
+  exact sum_congr rfl fun i _ => by rw [pullback_smul, wedge_smul]
+
+theorem polyPullback_zero_form (B : Fin n → Fin n → K) (b : Fin n → K) :
+    polyPullback B b (0 : PolyForm K (Fin n)) = 0 := by
   funext t; simp [polyPullback_apply]
 
 /-- `B^* κω = κ B^* ω` for linear `B` ([AFW2006], (3.7)). -/
-theorem polyPullback_koszul_linear (B : Fin n → Fin n → ℝ) (ω : PolyForm ℝ (Fin n)) :
+theorem polyPullback_koszul_linear (B : Fin n → Fin n → K) (ω : PolyForm K (Fin n)) :
     polyPullback B 0 (Koszul.koszul ω) = Koszul.koszul (polyPullback B 0 ω) := by
-  have h0 : interior (fun j => C ((0 : Fin n → ℝ) j)) ω = 0 := by
+  have h0 : interior (fun j => C ((0 : Fin n → K) j)) ω = 0 := by
     funext s; simp [interior_apply]
   rw [polyPullback_koszul, h0, polyPullback_zero_form, add_zero]
 
-theorem isDeg_polyPullback {k : ℕ} {ω : PolyForm ℝ (Fin n)} (h : IsDeg k ω)
-    (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) : IsDeg k (polyPullback B b ω) :=
+theorem isDeg_polyPullback {k : ℕ} {ω : PolyForm K (Fin n)} (h : IsDeg k ω)
+    (B : Fin n → Fin n → K) (b : Fin n → K) : IsDeg k (polyPullback B b ω) :=
   IsDeg.pullback (fun t ht => by simp [h t ht]) _
 
-theorem polyPullback_smul (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) (c : ℝ)
-    (ω : PolyForm ℝ (Fin n)) : polyPullback B b (c • ω) = c • polyPullback B b ω := by
+theorem polyPullback_smul (B : Fin n → Fin n → K) (b : Fin n → K) (c : K)
+    (ω : PolyForm K (Fin n)) : polyPullback B b (c • ω) = c • polyPullback B b ω := by
   funext t
   simp only [polyPullback_apply, Pi.smul_apply, smul_sum]
   refine sum_congr rfl fun s _ => ?_
@@ -304,24 +379,24 @@ theorem polyPullback_smul (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) (c :
   simp [polySubst]
 
 /-- The pullback as a linear map. -/
-def polyPullbackₗ (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) :
-    PolyForm ℝ (Fin n) →ₗ[ℝ] PolyForm ℝ (Fin n) where
+def polyPullbackₗ (B : Fin n → Fin n → K) (b : Fin n → K) :
+    PolyForm K (Fin n) →ₗ[K] PolyForm K (Fin n) where
   toFun := polyPullback B b
   map_add' := polyPullback_add B b
   map_smul' := polyPullback_smul B b
 
-theorem extDeriv_weightPart (e : Fin n → ℕ) (j : ℕ) (ω : PolyForm ℝ (Fin n)) :
+theorem extDeriv_weightPart [Infinite K] (e : Fin n → ℕ) (j : ℕ) (ω : PolyForm K (Fin n)) :
     Koszul.extDeriv (weightPart e j ω) = weightPart e j (Koszul.extDeriv ω) :=
-  weightPart_comm e (extDerivₗ ℝ (Fin n)) (fun _ ω => (polyPullback_extDeriv _ _ ω).symm) j ω
+  weightPart_comm e (extDerivₗ K (Fin n)) (fun _ ω => (polyPullback_extDeriv _ _ ω).symm) j ω
 
-theorem koszul_weightPart (e : Fin n → ℕ) (j : ℕ) (ω : PolyForm ℝ (Fin n)) :
+theorem koszul_weightPart [Infinite K] (e : Fin n → ℕ) (j : ℕ) (ω : PolyForm K (Fin n)) :
     Koszul.koszul (weightPart e j ω) = weightPart e j (Koszul.koszul ω) :=
-  weightPart_comm e (koszulₗ ℝ (Fin n)) (fun _ ω => (polyPullback_koszul_linear _ ω).symm) j ω
+  weightPart_comm e (koszulₗ K (Fin n)) (fun _ ω => (polyPullback_koszul_linear _ ω).symm) j ω
 
 /-! ### Multi-weight parts -/
 
 /-- The part of `ω` of multi-weight `μ`: the monomial forms `x^α dx_t` with `α + 𝟙_t = μ`. -/
-def multiPart (μ : Fin n → ℕ) (ω : PolyForm ℝ (Fin n)) : PolyForm ℝ (Fin n) :=
+def multiPart (μ : Fin n → ℕ) (ω : PolyForm K (Fin n)) : PolyForm K (Fin n) :=
   restrictForm (fun t α => ∀ i, α i + (if i ∈ t then 1 else 0) = μ i) ω
 
 theorem formWeight_single (i : Fin n) (t : Finset (Fin n)) (α : Fin n →₀ ℕ) :
@@ -329,7 +404,7 @@ theorem formWeight_single (i : Fin n) (t : Finset (Fin n)) (α : Fin n →₀ �
   simp [formWeight, Pi.single_apply, sum_ite_eq']
 
 theorem restrictForm_insert_eq (μ : Fin n → ℕ) (i : Fin n) (S : Finset (Fin n))
-    (ω : PolyForm ℝ (Fin n)) :
+    (ω : PolyForm K (Fin n)) :
     restrictForm (fun t α => ∀ l ∈ insert i S, α l + (if l ∈ t then 1 else 0) = μ l) ω =
       weightPart (Pi.single i 1) (μ i)
         (restrictForm (fun t α => ∀ l ∈ S, α l + (if l ∈ t then 1 else 0) = μ l) ω) := by
@@ -337,8 +412,8 @@ theorem restrictForm_insert_eq (μ : Fin n → ℕ) (i : Fin n) (S : Finset (Fin
   exact restrictForm_congr (fun t α => by simp [formWeight_single]) ω
 
 /-- **A linearly invariant space contains the multi-weight parts of its elements.** -/
-theorem IsLinearInvariant.multiPart_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {ω : PolyForm ℝ (Fin n)} (hω : ω ∈ W) (μ : Fin n → ℕ) :
+theorem IsLinearInvariant.multiPart_mem [Infinite K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {ω : PolyForm K (Fin n)} (hω : ω ∈ W) (μ : Fin n → ℕ) :
     multiPart μ ω ∈ W := by
   suffices h : ∀ S : Finset (Fin n),
       restrictForm (fun t α => ∀ l ∈ S, α l + (if l ∈ t then 1 else 0) = μ l) ω ∈ W by
@@ -348,9 +423,9 @@ theorem IsLinearInvariant.multiPart_mem {W : Submodule ℝ (PolyForm ℝ (Fin n)
   | empty => simpa [restrictForm_true] using hω
   | insert i S _ ih => rw [restrictForm_insert_eq]; exact hW.weightPart_mem ih _ _
 
-theorem multiPart_comm (μ : Fin n → ℕ) (T : PolyForm ℝ (Fin n) →ₗ[ℝ] PolyForm ℝ (Fin n))
+theorem multiPart_comm (μ : Fin n → ℕ) (T : PolyForm K (Fin n) →ₗ[K] PolyForm K (Fin n))
     (hT : ∀ (e : Fin n → ℕ) (j : ℕ) ω, T (weightPart e j ω) = weightPart e j (T ω))
-    (ω : PolyForm ℝ (Fin n)) : T (multiPart μ ω) = multiPart μ (T ω) := by
+    (ω : PolyForm K (Fin n)) : T (multiPart μ ω) = multiPart μ (T ω) := by
   suffices h : ∀ S : Finset (Fin n),
       T (restrictForm (fun t α => ∀ l ∈ S, α l + (if l ∈ t then 1 else 0) = μ l) ω) =
         restrictForm (fun t α => ∀ l ∈ S, α l + (if l ∈ t then 1 else 0) = μ l) (T ω) by
@@ -360,17 +435,17 @@ theorem multiPart_comm (μ : Fin n → ℕ) (T : PolyForm ℝ (Fin n) →ₗ[ℝ
   | empty => simp [restrictForm_true]
   | insert i S _ ih => rw [restrictForm_insert_eq, restrictForm_insert_eq, hT, ih]
 
-theorem extDeriv_multiPart (μ : Fin n → ℕ) (ω : PolyForm ℝ (Fin n)) :
+theorem extDeriv_multiPart [Infinite K] (μ : Fin n → ℕ) (ω : PolyForm K (Fin n)) :
     Koszul.extDeriv (multiPart μ ω) = multiPart μ (Koszul.extDeriv ω) :=
-  multiPart_comm μ (extDerivₗ ℝ (Fin n)) (fun e j ω => extDeriv_weightPart e j ω) ω
+  multiPart_comm μ (extDerivₗ K (Fin n)) (fun e j ω => extDeriv_weightPart e j ω) ω
 
-theorem koszul_multiPart (μ : Fin n → ℕ) (ω : PolyForm ℝ (Fin n)) :
+theorem koszul_multiPart [Infinite K] (μ : Fin n → ℕ) (ω : PolyForm K (Fin n)) :
     Koszul.koszul (multiPart μ ω) = multiPart μ (Koszul.koszul ω) :=
-  multiPart_comm μ (koszulₗ ℝ (Fin n)) (fun e j ω => koszul_weightPart e j ω) ω
+  multiPart_comm μ (koszulₗ K (Fin n)) (fun e j ω => koszul_weightPart e j ω) ω
 
 /-- **A linearly invariant space contains the homogeneous components of its elements.** -/
-theorem IsLinearInvariant.homComp_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {k : ℕ} {ω : PolyForm ℝ (Fin n)} (hω : ω ∈ W) (hk : IsDeg k ω)
+theorem IsLinearInvariant.homComp_mem [Infinite K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {k : ℕ} {ω : PolyForm K (Fin n)} (hω : ω ∈ W) (hk : IsDeg k ω)
     (j : ℕ) : homComp j ω ∈ W := by
   classical
   have : homComp j ω = weightPart (fun _ => 1) (j + k) ω := by
@@ -384,15 +459,15 @@ theorem IsLinearInvariant.homComp_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))}
 
 /-! ### Coefficient lemmas -/
 
-theorem polyPullback_single (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) (s : Finset (Fin n))
-    (q : MvPolynomial (Fin n) ℝ) (t : Finset (Fin n)) :
+theorem polyPullback_single (B : Fin n → Fin n → K) (b : Fin n → K) (s : Finset (Fin n))
+    (q : MvPolynomial (Fin n) K) (t : Finset (Fin n)) :
     polyPullback B b (Pi.single s q) t = polySubst B b q * C (wedgeProd B s t) := by
   rw [polyPullback_apply, sum_eq_single s (fun s' _ hs' => by simp [hs']) (by simp)]
   simp
 
 /-- `x^β dx_u` has multi-weight `β + 𝟙_u`, and it is the only monomial form of that weight with
 the basis form `dx_u`. -/
-theorem multiPart_single (β : Fin n →₀ ℕ) (u : Finset (Fin n)) (q : MvPolynomial (Fin n) ℝ) :
+theorem multiPart_single (β : Fin n →₀ ℕ) (u : Finset (Fin n)) (q : MvPolynomial (Fin n) K) :
     multiPart (fun i => β i + if i ∈ u then 1 else 0) (Pi.single u q) =
       Pi.single u (monomial β (q.coeff β)) := by
   classical
@@ -408,7 +483,7 @@ theorem multiPart_single (β : Fin n →₀ ℕ) (u : Finset (Fin n)) (q : MvPol
   · simp [ht]
 
 /-- The coefficient of `x_p^N` in a homogeneous polynomial of degree `N` is its value at `e_p`. -/
-theorem coeff_single_eq_eval {f : MvPolynomial (Fin n) ℝ} {N : ℕ} (hf : f.IsHomogeneous N)
+theorem coeff_single_eq_eval {f : MvPolynomial (Fin n) K} {N : ℕ} (hf : f.IsHomogeneous N)
     (p : Fin n) : f.coeff (Finsupp.single p N) = eval (Pi.single p 1) f := by
   classical
   rw [eval_eq', sum_eq_single (Finsupp.single p N)]
@@ -431,16 +506,16 @@ theorem coeff_single_eq_eval {f : MvPolynomial (Fin n) ℝ} {N : ℕ} (hf : f.Is
       rw [prod_eq_zero (mem_univ i) (by simp [hi, hβi]), mul_zero]
   · intro h; rw [notMem_support_iff.1 h, zero_mul]
 
-theorem isHomogeneous_polySubst_zero (B : Fin n → Fin n → ℝ) {q : MvPolynomial (Fin n) ℝ}
+theorem isHomogeneous_polySubst_zero (B : Fin n → Fin n → K) {q : MvPolynomial (Fin n) K}
     {N : ℕ} (hq : q.IsHomogeneous N) : (polySubst B 0 q).IsHomogeneous N := by
-  have := hq.aeval (g := fun i => ∑ l, C (B i l) * X l + C ((0 : Fin n → ℝ) i)) (n := 1)
+  have := hq.aeval (g := fun i => ∑ l, C (B i l) * X l + C ((0 : Fin n → K) i)) (n := 1)
     fun i => by
       simp only [Pi.zero_apply, C_0, add_zero]
       exact IsHomogeneous.sum _ _ _ fun l _ => isHomogeneous_C_mul_X _ _
   simpa [polySubst] using this
 
 /-- Two matrices that agree on the columns `s` have the same products on subsets of `s`. -/
-theorem wedgeProd_congr_cols {B B' : Fin n → Fin n → ℝ} {s : Finset (Fin n)}
+theorem wedgeProd_congr_cols {B B' : Fin n → Fin n → K} {s : Finset (Fin n)}
     (h : ∀ i, ∀ l ∈ s, B i l = B' i l) (u : Finset (Fin n)) :
     ∀ t ⊆ s, wedgeProd B u t = wedgeProd B' u t := by
   induction u using Finset.induction_on_min with
@@ -454,7 +529,7 @@ theorem wedgeProd_congr_cols {B B' : Fin n → Fin n → ℝ} {s : Finset (Fin n
 /-- The products of coordinate covectors relabelled by a map strictly increasing on `s`. -/
 theorem wedgeProd_single_comp {σ : Fin n → Fin n} {s : Finset (Fin n)}
     (hσ : StrictMonoOn σ s) :
-    wedgeProd (fun i => (Pi.single (σ i) 1 : Fin n → ℝ)) s = Pi.single (s.image σ) 1 := by
+    wedgeProd (fun i => (Pi.single (σ i) 1 : Fin n → K)) s = Pi.single (s.image σ) 1 := by
   induction s using Finset.induction_on_min with
   | empty => simp
   | insert a s ha ih =>
@@ -466,22 +541,22 @@ theorem wedgeProd_single_comp {σ : Fin n → Fin n} {s : Finset (Fin n)}
       exact hσ (by simp) (by simp [hy]) (ha y hy)
     have hna : σ a ∉ s.image σ := fun h => lt_irrefl _ (hlt _ h)
     rw [wedgeProd_insert_of_lt _ ha, ih hσs, image_insert, wedge_single_single hna]
-    have : sgn (σ a) (s.image σ) = (1 : ℝ) := by
+    have : sgn (σ a) (s.image σ) = (1 : K) := by
       rw [sgn, filter_eq_empty_iff.2 fun x hx => not_lt.2 (hlt x hx).le]; simp
     rw [this, one_smul]
 
-theorem wedgeProd_id_cols {B : Fin n → Fin n → ℝ} {s : Finset (Fin n)}
+theorem wedgeProd_id_cols {B : Fin n → Fin n → K} {s : Finset (Fin n)}
     (h : ∀ i, ∀ l ∈ s, B i l = if i = l then 1 else 0) (u : Finset (Fin n)) :
     wedgeProd B u s = if u = s then 1 else 0 := by
-  rw [wedgeProd_congr_cols (B' := fun i => (Pi.single i 1 : Fin n → ℝ))
+  rw [wedgeProd_congr_cols (B' := fun i => (Pi.single i 1 : Fin n → K))
     (fun i l hl => by rw [h i l hl]; simp [Pi.single_apply, eq_comm]) u s subset_rfl,
     wedgeProd_single, Pi.single_apply]
   by_cases hu : u = s
   · subst hu; simp
   · simp [Ne.symm hu, hu]
 
-theorem polyForm_eq_sum_monomial (ω : PolyForm ℝ (Fin n)) :
-    ω = ∑ u, ∑ β ∈ (ω u).support, (ω u).coeff β • Pi.single u (monomial β (1 : ℝ)) := by
+theorem polyForm_eq_sum_monomial (ω : PolyForm K (Fin n)) :
+    ω = ∑ u, ∑ β ∈ (ω u).support, (ω u).coeff β • Pi.single u (monomial β (1 : K)) := by
   classical
   funext t
   rw [Finset.sum_apply, sum_eq_single t (fun u _ hu => by
@@ -495,7 +570,7 @@ theorem polyForm_eq_sum_monomial (ω : PolyForm ℝ (Fin n)) :
 /-- The monomial forms of multi-weight `β + 𝟙_{t₀}` with `β` supported in `t₀`, among the
 `#t₀`-forms, are the multiples of `x^β dx_{t₀}`. -/
 theorem multiPart_eq_single {t₀ : Finset (Fin n)} {β : Fin n →₀ ℕ} (hβ : ∀ i ∉ t₀, β i = 0)
-    {ω : PolyForm ℝ (Fin n)} (hω : IsDeg #t₀ ω) :
+    {ω : PolyForm K (Fin n)} (hω : IsDeg #t₀ ω) :
     multiPart (fun i => β i + if i ∈ t₀ then 1 else 0) ω =
       Pi.single t₀ (monomial β ((ω t₀).coeff β)) := by
   classical
@@ -541,11 +616,11 @@ theorem exists_strictMonoOn_image {s u : Finset (Fin n)} (h : #s = #u) :
 
 /-- `d(x_p^{m+1} dx_s) = (m+1) ε(p, s) x_p^m dx_{p ∪ s}` for `p ∉ s`. -/
 theorem extDeriv_single_X_pow {p : Fin n} {s : Finset (Fin n)} (hp : p ∉ s) (m : ℕ) :
-    Koszul.extDeriv (Pi.single s (X p ^ (m + 1)) : PolyForm ℝ (Fin n)) =
-      (((m + 1 : ℕ) : ℝ) * sgn p s) • Pi.single (insert p s) (X p ^ m) := by
+    Koszul.extDeriv (Pi.single s (X p ^ (m + 1)) : PolyForm K (Fin n)) =
+      (((m + 1 : ℕ) : K) * sgn p s) • Pi.single (insert p s) (X p ^ m) := by
   classical
-  have hd : ∀ j, pderiv j (X p ^ (m + 1) : MvPolynomial (Fin n) ℝ) =
-      if j = p then C ((m + 1 : ℕ) : ℝ) * X p ^ m else 0 := by
+  have hd : ∀ j, pderiv j (X p ^ (m + 1) : MvPolynomial (Fin n) K) =
+      if j = p then C ((m + 1 : ℕ) : K) * X p ^ m else 0 := by
     intro j
     rw [pderiv_pow, Nat.add_sub_cancel]
     by_cases hj : j = p
@@ -558,7 +633,7 @@ theorem extDeriv_single_X_pow {p : Fin n} {s : Finset (Fin n)} (hp : p ∉ s) (m
     rw [sum_eq_single p (fun j hj hjp => ?_) (by simp), erase_insert hp, Pi.single_eq_same,
       Pi.single_eq_same, sgn_insert_self, hd, smul_eq_C_mul]
     · simp only [↓reduceIte, map_mul]
-      rw [show (sgn p s : MvPolynomial (Fin n) ℝ) = C (sgn p s) by simp [sgn]]
+      rw [show (sgn p s : MvPolynomial (Fin n) K) = C (sgn p s) by simp [sgn]]
       ring
     · have : (insert p s).erase j ≠ s := fun h =>
         hp (h ▸ mem_erase.2 ⟨Ne.symm hjp, mem_insert_self p s⟩)
@@ -578,30 +653,30 @@ theorem extDeriv_single_X_pow {p : Fin n} {s : Finset (Fin n)} (hp : p ∉ s) (m
 `d H_{m+1}Λ^{#s}`: pulling `x_p^{m+1} dx_s` back along a map with `x_p ↦ Σ_l x_l` and
 `dx_s ↦ dx_u` and taking multi-weight parts gives every `d(x^β dx_u)`, as the coefficients of
 `(Σ_l x_l)^{m+1}` are multinomial coefficients, nonzero. -/
-theorem IsLinearInvariant.extDeriv_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))}
+theorem IsLinearInvariant.extDeriv_mem [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
     (hW : IsLinearInvariant W) {m : ℕ} {p : Fin n} {s : Finset (Fin n)} (hp : p ∉ s)
-    (hg : (Pi.single (insert p s) (X p ^ m) : PolyForm ℝ (Fin n)) ∈ W) {η : PolyForm ℝ (Fin n)}
-    (hη : η ∈ homForm ℝ (Fin n) (m + 1) #s) : Koszul.extDeriv η ∈ W := by
+    (hg : (Pi.single (insert p s) (X p ^ m) : PolyForm K (Fin n)) ∈ W) {η : PolyForm K (Fin n)}
+    (hη : η ∈ homForm K (Fin n) (m + 1) #s) : Koszul.extDeriv η ∈ W := by
   classical
-  set ζ : PolyForm ℝ (Fin n) := Pi.single s (X p ^ (m + 1))
-  have hc0 : (((m + 1 : ℕ) : ℝ) * sgn p s) ≠ 0 :=
+  set ζ : PolyForm K (Fin n) := Pi.single s (X p ^ (m + 1))
+  have hc0 : (((m + 1 : ℕ) : K) * sgn p s) ≠ 0 :=
     mul_ne_zero (Nat.cast_ne_zero.2 (Nat.succ_ne_zero m)) (by rw [sgn]; exact pow_ne_zero _ (by norm_num))
   have hdζ : Koszul.extDeriv ζ ∈ W := by
     rw [extDeriv_single_X_pow hp]; exact W.smul_mem _ hg
   -- every `d(x^β dx_u)` with `#u = #s` and `|β| = m + 1`
   have key : ∀ u : Finset (Fin n), #u = #s → ∀ β : Fin n →₀ ℕ, β.degree = m + 1 →
-      Koszul.extDeriv (Pi.single u (monomial β (1 : ℝ))) ∈ W := by
+      Koszul.extDeriv (Pi.single u (monomial β (1 : K))) ∈ W := by
     intro u hu β hβ
     obtain ⟨σ, hσ, hσu⟩ := exists_strictMonoOn_image hu.symm
-    set B : Fin n → Fin n → ℝ := fun i l =>
-      if i = p then 1 else if i ∈ s then (Pi.single (σ i) 1 : Fin n → ℝ) l else 0
+    set B : Fin n → Fin n → K := fun i l =>
+      if i = p then 1 else if i ∈ s then (Pi.single (σ i) 1 : Fin n → K) l else 0
     have hBζ : polyPullback B 0 ζ = Pi.single u ((∑ l, X l) ^ (m + 1)) := by
       funext t
       rw [polyPullback_single]
       have hsub : polySubst B 0 (X p ^ (m + 1)) = (∑ l, X l) ^ (m + 1) := by
         simp [polySubst, B]
       have hw : wedgeProd B s = Pi.single u 1 := by
-        rw [wedgeProd_congr (θ' := fun i => (Pi.single (σ i) 1 : Fin n → ℝ)) fun j hj => ?_,
+        rw [wedgeProd_congr (θ' := fun i => (Pi.single (σ i) 1 : Fin n → K)) fun j hj => ?_,
           wedgeProd_single_comp hσ, hσu]
         funext l
         have hjp : j ≠ p := fun h => hp (h ▸ hj)
@@ -615,13 +690,13 @@ theorem IsLinearInvariant.extDeriv_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))
     have hsum : (β.sum fun _ m => m) = m + 1 := by
       rw [← hβ, Finsupp.degree]; rfl
     simp only [hsum, ↓reduceIte] at h2
-    rw [← mul_one ((β.multinomial : ℕ) : ℝ), ← smul_eq_mul, ← smul_monomial,
-      show (Pi.single u (((β.multinomial : ℕ) : ℝ) • monomial β (1 : ℝ)) : PolyForm ℝ (Fin n)) =
-        ((β.multinomial : ℕ) : ℝ) • Pi.single u (monomial β 1) from Pi.single_smul' _ _ _,
+    rw [← mul_one ((β.multinomial : ℕ) : K), ← smul_eq_mul, ← smul_monomial,
+      show (Pi.single u (((β.multinomial : ℕ) : K) • monomial β (1 : K)) : PolyForm K (Fin n)) =
+        ((β.multinomial : ℕ) : K) • Pi.single u (monomial β 1) from Pi.single_smul' _ _ _,
       Koszul.extDeriv_smul] at h2
     refine (W.smul_mem_iff (Nat.cast_ne_zero.2 (Nat.multinomial_pos _ _).ne')).1 h2
   -- `η` is a combination of the monomial forms
-  have hlin : ∀ ω, Koszul.extDeriv ω = extDerivₗ ℝ (Fin n) ω := fun _ => rfl
+  have hlin : ∀ ω, Koszul.extDeriv ω = extDerivₗ K (Fin n) ω := fun _ => rfl
   rw [polyForm_eq_sum_monomial η, hlin, map_sum]
   refine W.sum_mem fun u _ => ?_
   rw [map_sum]
@@ -639,10 +714,10 @@ theorem IsLinearInvariant.extDeriv_mem {W : Submodule ℝ (PolyForm ℝ (Fin n))
 along `x̂ ↦ a x̂_p + Σ_{l ∈ s} x̂_l e_l` followed by the multi-weight part `x_p^m dx_{p ∪ s}` is a
 multiple of `x_p^m dx_{p ∪ s}`, nonzero as its `κ` has the coefficient `(κω)_s(a)` at
 `x_p^{m+1} dx_s`; `IsLinearInvariant.extDeriv_mem` and the polynomial Poincaré lemma conclude. -/
-theorem IsLinearInvariant.closed_le {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {m k : ℕ} {ω : PolyForm ℝ (Fin n)} (hω : ω ∈ W)
-    (hωH : ω ∈ homForm ℝ (Fin n) m k) (hκ : Koszul.koszul ω ≠ 0) :
-    homForm ℝ (Fin n) m k ⊓ LinearMap.ker (extDerivₗ ℝ (Fin n)) ≤ W := by
+theorem IsLinearInvariant.closed_le [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {m k : ℕ} {ω : PolyForm K (Fin n)} (hω : ω ∈ W)
+    (hωH : ω ∈ homForm K (Fin n) m k) (hκ : Koszul.koszul ω ≠ 0) :
+    homForm K (Fin n) m k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ≤ W := by
   classical
   obtain _ | k := k
   · exact absurd (Koszul.IsDeg.koszul_eq_zero hωH.1) hκ
@@ -662,7 +737,7 @@ theorem IsLinearInvariant.closed_le {W : Submodule ℝ (PolyForm ℝ (Fin n))}
     push Not at h
     refine hs ?_
     rw [Koszul.koszul_apply, (compl_eq_empty_iff s).2 (eq_univ_of_forall h), sum_empty]
-  set B : Fin n → Fin n → ℝ := fun i l =>
+  set B : Fin n → Fin n → K := fun i l =>
     if l ∈ s then (if i = l then 1 else 0) else if l = p then a i else 0
   have hBcols : ∀ i, ∀ l ∈ s, B i l = if i = l then 1 else 0 := fun i l hl => by simp [B, hl]
   set ω₁ := polyPullback B 0 ω
@@ -672,7 +747,7 @@ theorem IsLinearInvariant.closed_le {W : Submodule ℝ (PolyForm ℝ (Fin n))}
   have hω₂ : ω₂ ∈ W := hW.multiPart_mem hω₁ μ
   set c := (ω₁ (insert p s)).coeff (Finsupp.single p m)
   have hcard : #(insert p s) = k + 1 := by rw [card_insert_of_notMem hp, hsk]
-  have hω₂eq : ω₂ = c • (Pi.single (insert p s) (X p ^ m) : PolyForm ℝ (Fin n)) := by
+  have hω₂eq : ω₂ = c • (Pi.single (insert p s) (X p ^ m) : PolyForm K (Fin n)) := by
     have hdeg : IsDeg #(insert p s) ω₁ := by rw [hcard]; exact isDeg_polyPullback hωH.1 B 0
     rw [show ω₂ = multiPart (fun i => (Finsupp.single p m) i +
         if i ∈ insert p s then 1 else 0) ω₁ from rfl, multiPart_eq_single (fun i hi => by
@@ -699,7 +774,7 @@ theorem IsLinearInvariant.closed_le {W : Submodule ℝ (PolyForm ℝ (Fin n))}
     intro hc0
     rw [hω₂eq, hc0, zero_smul, Koszul.koszul_zero] at hκω₂
     exact ha (by simpa using hκω₂.symm)
-  have hg : (Pi.single (insert p s) (X p ^ m) : PolyForm ℝ (Fin n)) ∈ W := by
+  have hg : (Pi.single (insert p s) (X p ^ m) : PolyForm K (Fin n)) ∈ W := by
     have := W.smul_mem c⁻¹ hω₂
     rwa [hω₂eq, smul_smul, inv_mul_cancel₀ hc, one_smul] at this
   rintro ξ ⟨hξ, hdξ⟩
@@ -708,21 +783,21 @@ theorem IsLinearInvariant.closed_le {W : Submodule ℝ (PolyForm ℝ (Fin n))}
   exact hW.extDeriv_mem hp hg hη
 
 /-- `κ d ξ = (r + k) ξ` for `ξ ∈ H_rΛᵏ` with `κ ξ = 0` (homotopy formula). -/
-theorem koszul_extDeriv_of_koszul_eq_zero {r k : ℕ} {ξ : PolyForm ℝ (Fin n)}
-    (h : ξ ∈ homForm ℝ (Fin n) r k) (hκ : Koszul.koszul ξ = 0) :
-    Koszul.koszul (Koszul.extDeriv ξ) = ((r + k : ℕ) : ℝ) • ξ := by
+theorem koszul_extDeriv_of_koszul_eq_zero {r k : ℕ} {ξ : PolyForm K (Fin n)}
+    (h : ξ ∈ homForm K (Fin n) r k) (hκ : Koszul.koszul ξ = 0) :
+    Koszul.koszul (Koszul.extDeriv ξ) = ((r + k : ℕ) : K) • ξ := by
   have := Koszul.extDeriv_koszul_add_koszul_extDeriv_of_mem h
   rwa [hκ, Koszul.extDeriv_zero, zero_add] at this
 
 /-- `d κ ξ = (r + k) ξ` for `ξ ∈ H_rΛᵏ` with `d ξ = 0` (homotopy formula). -/
-theorem extDeriv_koszul_of_extDeriv_eq_zero {r k : ℕ} {ξ : PolyForm ℝ (Fin n)}
-    (h : ξ ∈ homForm ℝ (Fin n) r k) (hd : Koszul.extDeriv ξ = 0) :
-    Koszul.extDeriv (Koszul.koszul ξ) = ((r + k : ℕ) : ℝ) • ξ := by
+theorem extDeriv_koszul_of_extDeriv_eq_zero {r k : ℕ} {ξ : PolyForm K (Fin n)}
+    (h : ξ ∈ homForm K (Fin n) r k) (hd : Koszul.extDeriv ξ = 0) :
+    Koszul.extDeriv (Koszul.koszul ξ) = ((r + k : ℕ) : K) • ξ := by
   have := Koszul.extDeriv_koszul_add_koszul_extDeriv_of_mem h
   rwa [hd, Koszul.koszul_zero, add_zero] at this
 
-theorem IsLinearInvariant.comap_koszul {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) : IsLinearInvariant (W.comap (koszulₗ ℝ (Fin n))) :=
+theorem IsLinearInvariant.comap_koszul {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) : IsLinearInvariant (W.comap (koszulₗ K (Fin n))) :=
   fun B ω hω => by
     change Koszul.koszul (polyPullback B 0 ω) ∈ W
     rw [← polyPullback_koszul_linear]
@@ -731,18 +806,18 @@ theorem IsLinearInvariant.comap_koszul {W : Submodule ℝ (PolyForm ℝ (Fin n))
 /-- **The `κ`-closed summand**: a linearly invariant space containing a nonzero `κ`-closed
 `ω ∈ H_{m+1}Λᵏ` contains every `κ`-closed form of `H_{m+1}Λᵏ`. As `κ` maps the closed forms of
 `H_mΛ^{k+1}` onto them, equivariantly, this is `IsLinearInvariant.closed_le` for the preimage. -/
-theorem IsLinearInvariant.koszulClosed_le {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {m k : ℕ} {ω : PolyForm ℝ (Fin n)} (hω : ω ∈ W)
-    (hωH : ω ∈ homForm ℝ (Fin n) (m + 1) k) (hκ : Koszul.koszul ω = 0) (h0 : ω ≠ 0) :
-    homForm ℝ (Fin n) (m + 1) k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) ≤ W := by
-  set c : ℝ := ((m + 1 + k : ℕ) : ℝ)
+theorem IsLinearInvariant.koszulClosed_le [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {m k : ℕ} {ω : PolyForm K (Fin n)} (hω : ω ∈ W)
+    (hωH : ω ∈ homForm K (Fin n) (m + 1) k) (hκ : Koszul.koszul ω = 0) (h0 : ω ≠ 0) :
+    homForm K (Fin n) (m + 1) k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ≤ W := by
+  set c : K := ((m + 1 + k : ℕ) : K)
   have hc : c ≠ 0 := Nat.cast_ne_zero.2 (by omega)
-  have hpre : ∀ {ξ : PolyForm ℝ (Fin n)}, ξ ∈ homForm ℝ (Fin n) (m + 1) k →
+  have hpre : ∀ {ξ : PolyForm K (Fin n)}, ξ ∈ homForm K (Fin n) (m + 1) k →
       Koszul.koszul ξ = 0 → Koszul.koszul (c⁻¹ • Koszul.extDeriv ξ) = ξ := fun hξ hκξ => by
     rw [Koszul.koszul_smul, koszul_extDeriv_of_koszul_eq_zero hξ hκξ, smul_smul,
       inv_mul_cancel₀ hc, one_smul]
-  have hmem : ∀ {ξ : PolyForm ℝ (Fin n)}, ξ ∈ homForm ℝ (Fin n) (m + 1) k →
-      c⁻¹ • Koszul.extDeriv ξ ∈ homForm ℝ (Fin n) m (k + 1) := fun hξ =>
+  have hmem : ∀ {ξ : PolyForm K (Fin n)}, ξ ∈ homForm K (Fin n) (m + 1) k →
+      c⁻¹ • Koszul.extDeriv ξ ∈ homForm K (Fin n) m (k + 1) := fun hξ =>
     Submodule.smul_mem _ _ (by simpa using Koszul.extDeriv_mem_homForm hξ)
   have hle := hW.comap_koszul.closed_le (ω := c⁻¹ • Koszul.extDeriv ω)
     (by change Koszul.koszul _ ∈ W; rw [hpre hωH hκ]; exact hω) (hmem hωH)
@@ -756,21 +831,21 @@ theorem IsLinearInvariant.koszulClosed_le {W : Submodule ℝ (PolyForm ℝ (Fin 
 
 /-- **The Koszul decomposition by the homotopy formula**: for `ω ∈ H_mΛᵏ`, `m + k > 0`,
 `ω = c⁻¹ κdω + c⁻¹ dκω` (`c = m + k`) with `κdω` `κ`-closed and `dκω` closed, both in `H_mΛᵏ`. -/
-theorem homForm_split {m k : ℕ} (hmk : 0 < m + k) {ω : PolyForm ℝ (Fin n)}
-    (hω : ω ∈ homForm ℝ (Fin n) m k) :
-    ((m + k : ℕ) : ℝ)⁻¹ • Koszul.koszul (Koszul.extDeriv ω) ∈
-        homForm ℝ (Fin n) m k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) ∧
-      ((m + k : ℕ) : ℝ)⁻¹ • Koszul.extDeriv (Koszul.koszul ω) ∈
-        homForm ℝ (Fin n) m k ⊓ LinearMap.ker (extDerivₗ ℝ (Fin n)) ∧
-      ω = ((m + k : ℕ) : ℝ)⁻¹ • Koszul.koszul (Koszul.extDeriv ω) +
-        ((m + k : ℕ) : ℝ)⁻¹ • Koszul.extDeriv (Koszul.koszul ω) := by
-  set c : ℝ := ((m + k : ℕ) : ℝ)
+theorem homForm_split [CharZero K] {m k : ℕ} (hmk : 0 < m + k) {ω : PolyForm K (Fin n)}
+    (hω : ω ∈ homForm K (Fin n) m k) :
+    ((m + k : ℕ) : K)⁻¹ • Koszul.koszul (Koszul.extDeriv ω) ∈
+        homForm K (Fin n) m k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ∧
+      ((m + k : ℕ) : K)⁻¹ • Koszul.extDeriv (Koszul.koszul ω) ∈
+        homForm K (Fin n) m k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ∧
+      ω = ((m + k : ℕ) : K)⁻¹ • Koszul.koszul (Koszul.extDeriv ω) +
+        ((m + k : ℕ) : K)⁻¹ • Koszul.extDeriv (Koszul.koszul ω) := by
+  set c : K := ((m + k : ℕ) : K)
   have hc : c ≠ 0 := Nat.cast_ne_zero.2 hmk.ne'
   have heq : ω = c⁻¹ • Koszul.koszul (Koszul.extDeriv ω) +
       c⁻¹ • Koszul.extDeriv (Koszul.koszul ω) := by
     rw [← smul_add, add_comm, Koszul.extDeriv_koszul_add_koszul_extDeriv_of_mem hω, smul_smul,
       inv_mul_cancel₀ hc, one_smul]
-  have hb : c⁻¹ • Koszul.extDeriv (Koszul.koszul ω) ∈ homForm ℝ (Fin n) m k := by
+  have hb : c⁻¹ • Koszul.extDeriv (Koszul.koszul ω) ∈ homForm K (Fin n) m k := by
     refine Submodule.smul_mem _ _ ?_
     obtain _ | k := k
     · rw [Koszul.IsDeg.koszul_eq_zero hω.1, Koszul.extDeriv_zero]; exact Submodule.zero_mem _
@@ -785,13 +860,13 @@ theorem homForm_split {m k : ℕ} (hmk : 0 < m + k) {ω : PolyForm ℝ (Fin n)}
 /-- **The `κ`-closed summand is reached from every non-closed form**: a linearly invariant space
 containing `ω ∈ H_mΛᵏ` with `dω ≠ 0` contains the `κ`-closed forms of `H_mΛᵏ` (its `κ`-closed
 part is nonzero, and in the space once the closed summand is, `IsLinearInvariant.closed_le`). -/
-theorem IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero
-    {W : Submodule ℝ (PolyForm ℝ (Fin n))} (hW : IsLinearInvariant W) {m k : ℕ}
-    {ω : PolyForm ℝ (Fin n)} (hω : ω ∈ W) (hωH : ω ∈ homForm ℝ (Fin n) m k)
+theorem IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero [CharZero K]
+    {W : Submodule K (PolyForm K (Fin n))} (hW : IsLinearInvariant W) {m k : ℕ}
+    {ω : PolyForm K (Fin n)} (hω : ω ∈ W) (hωH : ω ∈ homForm K (Fin n) m k)
     (hd : Koszul.extDeriv ω ≠ 0) :
-    homForm ℝ (Fin n) m k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) ≤ W := by
+    homForm K (Fin n) m k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ≤ W := by
   obtain _ | m := m
-  · exact absurd (extDeriv_eq_zero_of_mem_polyForm_zero (Koszul.homForm_le_polyForm _ _ hωH)) hd
+  · exact absurd (Koszul.extDeriv_eq_zero_of_mem_polyForm_zero (Koszul.homForm_le_polyForm _ _ hωH)) hd
   obtain ⟨hK, hD, heq⟩ := homForm_split (by omega) hωH
   by_cases hκ : Koszul.koszul ω = 0
   · exact hW.koszulClosed_le hω hωH hκ fun h => hd (by rw [h, Koszul.extDeriv_zero])
@@ -799,7 +874,7 @@ theorem IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero
   have hω' := W.sub_mem hω (hDW hD)
   rw [eq_sub_of_add_eq heq.symm] at hK
   refine hW.koszulClosed_le hω' hK.1 (LinearMap.mem_ker.1 hK.2) fun h => hd ?_
-  have := congrArg (extDerivₗ ℝ (Fin n)) h
+  have := congrArg (extDerivₗ K (Fin n)) h
   rw [map_sub, map_zero, Koszul.extDerivₗ_apply, Koszul.extDerivₗ_apply] at this
   rwa [Koszul.extDeriv_smul, Koszul.extDeriv_extDeriv, smul_zero, sub_zero] at this
 
@@ -807,10 +882,10 @@ theorem IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero
 `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ^{k+1}` and `H_mΛᵏ`; that is, the two summands
 of the Koszul decomposition `H_mΛᵏ = κH_{m-1}Λ^{k+1} ⊕ dH_{m+1}Λ^{k-1}` are irreducible.
 [AFW2006], §3.4 (before Lemma 3.7, from [FultonHarris1991], (6.9)) -/
-theorem IsLinearInvariant.eq_of_le_homForm {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {m k : ℕ} (hmk : 0 < m + k) (hle : W ≤ homForm ℝ (Fin n) m k) :
-    W = ⊥ ∨ W = homForm ℝ (Fin n) m k ⊓ LinearMap.ker (extDerivₗ ℝ (Fin n)) ∨
-      W = homForm ℝ (Fin n) m k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) ∨ W = homForm ℝ (Fin n) m k := by
+theorem IsLinearInvariant.eq_of_le_homForm [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {m k : ℕ} (hmk : 0 < m + k) (hle : W ≤ homForm K (Fin n) m k) :
+    W = ⊥ ∨ W = homForm K (Fin n) m k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ∨
+      W = homForm K (Fin n) m k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ∨ W = homForm K (Fin n) m k := by
   by_cases hA : ∃ ω ∈ W, Koszul.koszul ω ≠ 0 <;> by_cases hB : ∃ ω ∈ W, Koszul.extDeriv ω ≠ 0
   · obtain ⟨ω, hω, hκ⟩ := hA
     obtain ⟨ω', hω', hd⟩ := hB
@@ -835,9 +910,9 @@ theorem IsLinearInvariant.eq_of_le_homForm {W : Submodule ℝ (PolyForm ℝ (Fin
       smul_zero, add_zero]
 
 /-- The closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ`. -/
-theorem homForm_inf_ker_extDeriv (m k : ℕ) :
-    homForm ℝ (Fin n) m (k + 1) ⊓ LinearMap.ker (extDerivₗ ℝ (Fin n)) =
-      (homForm ℝ (Fin n) (m + 1) k).map (extDerivₗ ℝ (Fin n)) := by
+theorem homForm_inf_ker_extDeriv [CharZero K] (m k : ℕ) :
+    homForm K (Fin n) m (k + 1) ⊓ LinearMap.ker (extDerivₗ K (Fin n)) =
+      (homForm K (Fin n) (m + 1) k).map (extDerivₗ K (Fin n)) := by
   refine le_antisymm ?_ ?_
   · rintro ξ ⟨hξ, hd⟩
     obtain ⟨η, hη, rfl⟩ := Koszul.exists_extDeriv_eq_of_extDeriv_eq_zero (by omega) hξ hd
@@ -847,9 +922,9 @@ theorem homForm_inf_ker_extDeriv (m k : ℕ) :
       LinearMap.mem_ker.2 (Koszul.extDeriv_extDeriv η)⟩
 
 /-- The `κ`-closed forms of `H_{m+1}Λᵏ` are `κH_mΛ^{k+1}`. -/
-theorem homForm_inf_ker_koszul (m k : ℕ) :
-    homForm ℝ (Fin n) (m + 1) k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) =
-      (homForm ℝ (Fin n) m (k + 1)).map (koszulₗ ℝ (Fin n)) := by
+theorem homForm_inf_ker_koszul [CharZero K] (m k : ℕ) :
+    homForm K (Fin n) (m + 1) k ⊓ LinearMap.ker (koszulₗ K (Fin n)) =
+      (homForm K (Fin n) m (k + 1)).map (koszulₗ K (Fin n)) := by
   refine le_antisymm ?_ ?_
   · rintro ξ ⟨hξ, hκ⟩
     obtain ⟨η, hη, rfl⟩ := Koszul.exists_koszul_eq_of_koszul_eq_zero (by omega) hξ hκ
@@ -859,7 +934,7 @@ theorem homForm_inf_ker_koszul (m k : ℕ) :
       LinearMap.mem_ker.2 (Koszul.koszul_koszul η)⟩
 
 /-- `H_mΛᵏ` is linearly invariant: linear substitutions preserve homogeneity. -/
-theorem isLinearInvariant_homForm (m k : ℕ) : IsLinearInvariant (homForm ℝ (Fin n) m k) :=
+theorem isLinearInvariant_homForm (m k : ℕ) : IsLinearInvariant (homForm K (Fin n) m k) :=
   fun B ω hω => ⟨isDeg_polyPullback hω.1 B 0, fun t => by
     rw [polyPullback_apply]
     exact IsHomogeneous.sum _ _ _ fun s _ => by
@@ -867,25 +942,120 @@ theorem isLinearInvariant_homForm (m k : ℕ) : IsLinearInvariant (homForm ℝ (
 
 /-- **`dH_mΛᵏ` is linearly invariant**, as `B^* d = d B^*` ([AFW2006], §3.4). -/
 theorem isLinearInvariant_map_extDeriv_homForm (m k : ℕ) :
-    IsLinearInvariant ((homForm ℝ (Fin n) m k).map (extDerivₗ ℝ (Fin n))) := by
+    IsLinearInvariant ((homForm K (Fin n) m k).map (extDerivₗ K (Fin n))) := by
   rintro B _ ⟨η, hη, rfl⟩
   exact ⟨_, isLinearInvariant_homForm m k B η hη, (polyPullback_extDeriv B 0 η).symm⟩
 
 /-- **`κH_mΛᵏ` is linearly invariant**, as `B^* κ = κ B^*` for linear `B` ([AFW2006], §3.4,
 (3.7)). -/
 theorem isLinearInvariant_map_koszul_homForm (m k : ℕ) :
-    IsLinearInvariant ((homForm ℝ (Fin n) m k).map (koszulₗ ℝ (Fin n))) := by
+    IsLinearInvariant ((homForm K (Fin n) m k).map (koszulₗ K (Fin n))) := by
   rintro B _ ⟨η, hη, rfl⟩
   exact ⟨_, isLinearInvariant_homForm m k B η hη, (polyPullback_koszul_linear B η).symm⟩
 
 /-- **[AFW2006], §3.4: `H_rΛᵏ` has exactly the invariant subspaces `0`, `κH_{r-1}Λ^{k+1}`,
 `dH_{r+1}Λ^{k-1}` and `H_rΛᵏ`** (`r, k ≥ 1`; with `r = m + 1`, `k = k' + 1`). -/
-theorem IsLinearInvariant.eq_of_le_homForm_succ {W : Submodule ℝ (PolyForm ℝ (Fin n))}
-    (hW : IsLinearInvariant W) {m k : ℕ} (hle : W ≤ homForm ℝ (Fin n) (m + 1) (k + 1)) :
-    W = ⊥ ∨ W = (homForm ℝ (Fin n) (m + 2) k).map (extDerivₗ ℝ (Fin n)) ∨
-      W = (homForm ℝ (Fin n) m (k + 2)).map (koszulₗ ℝ (Fin n)) ∨
-        W = homForm ℝ (Fin n) (m + 1) (k + 1) := by
+theorem IsLinearInvariant.eq_of_le_homForm_succ [CharZero K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) {m k : ℕ} (hle : W ≤ homForm K (Fin n) (m + 1) (k + 1)) :
+    W = ⊥ ∨ W = (homForm K (Fin n) (m + 2) k).map (extDerivₗ K (Fin n)) ∨
+      W = (homForm K (Fin n) m (k + 2)).map (koszulₗ K (Fin n)) ∨
+        W = homForm K (Fin n) (m + 1) (k + 1) := by
   rw [← homForm_inf_ker_extDeriv, ← homForm_inf_ker_koszul]
   exact hW.eq_of_le_homForm (by omega) hle
+
+/-! ### Invariance under `GL(n)` -/
+
+/-- **The pullback along `B + c A` is a polynomial curve in `c`.** -/
+theorem exists_polyPullback_add_smul {m : ℕ} (B A : Fin n → Fin m → K) (b : Fin n → K)
+    (ω : PolyForm K (Fin n)) : ∃ N, ∃ v : ℕ → PolyForm K (Fin m), 0 < N ∧
+      ∀ c : K, polyPullback (fun i l => B i l + c * A i l) b ω = ∑ i ∈ range N, c ^ i • v i := by
+  classical
+  let ev (c : K) : Polynomial (MvPolynomial (Fin m) K) →+* MvPolynomial (Fin m) K :=
+    Polynomial.evalRingHom (C c)
+  let Bt : Fin n → Fin m → Polynomial (MvPolynomial (Fin m) K) := fun i l =>
+    Polynomial.C (C (B i l)) + Polynomial.X * Polynomial.C (C (A i l))
+  have hB : ∀ c i l, ev c (Bt i l) = C (B i l + c * A i l) := fun c i l => by
+    simp only [ev, Bt, Polynomial.coe_evalRingHom, Polynomial.eval_C, Polynomial.eval_X, map_add,
+      map_mul]
+  let Q : MvPolynomial (Fin n) K →ₐ[K] Polynomial (MvPolynomial (Fin m) K) :=
+    aeval fun i => ∑ l, Bt i l * Polynomial.C (X l) + Polynomial.C (C (b i))
+  have hQ : ∀ c p, ev c (Q p) = polySubst (fun i l => B i l + c * A i l) b p := fun c p => by
+    induction p using MvPolynomial.induction_on with
+    | C a =>
+      rw [algHom_C, algHom_C, Polynomial.algebraMap_apply]
+      exact Polynomial.eval_C
+    | add p q hp hq => rw [map_add, map_add, hp, hq, map_add]
+    | mul_X p i hp =>
+      rw [map_mul, map_mul, hp, map_mul]
+      simp only [Q, aeval_X, polySubst, map_add, map_sum, map_mul, hB]
+      simp [ev]
+  let P (t : Finset (Fin m)) : Polynomial (MvPolynomial (Fin m) K) :=
+    ∑ s, Q (ω s) * wedgeProd Bt s t
+  have hP : ∀ c t, ev c (P t) = polyPullback (fun i l => B i l + c * A i l) b ω t := fun c t => by
+    rw [polyPullback_apply, map_sum]
+    refine sum_congr rfl fun s _ => ?_
+    rw [map_mul, hQ, map_wedgeProd, map_wedgeProd]
+    congr 2
+    funext i l
+    exact hB c i l
+  refine ⟨∑ t, (P t).natDegree + 1, fun i t => (P t).coeff i, by omega, fun c => ?_⟩
+  funext t
+  rw [← hP, Polynomial.coe_evalRingHom, Polynomial.eval_eq_sum_range' (n := ∑ t, (P t).natDegree + 1)
+    (Nat.lt_succ_of_le (single_le_sum (f := fun t => (P t).natDegree) (fun _ _ => Nat.zero_le _)
+      (mem_univ t))), Finset.sum_apply]
+  refine sum_congr rfl fun i _ => ?_
+  rw [Pi.smul_apply, smul_eq_C_mul, C_pow, mul_comm]
+
+/-- **Invertible maps suffice** (an infinite field): if the pullbacks of `ω` along the affine maps
+`x ↦ g x + b` with `g ∈ GL(n)` lie in a subspace, so do those along `x ↦ B x + b` for every `B`:
+`c ↦ (B + c)^* ω` is a polynomial curve, in the subspace at the cofinitely many `c` with
+`det(B + c) ≠ 0`. -/
+theorem polyPullback_mem_of_forall_units [Infinite K] {W : Submodule K (PolyForm K (Fin n))}
+    {b : Fin n → K} {ω : PolyForm K (Fin n)}
+    (h : ∀ g : GL (Fin n) K, polyPullback (g : Matrix (Fin n) (Fin n) K) b ω ∈ W)
+    (B : Fin n → Fin n → K) : polyPullback B b ω ∈ W := by
+  obtain ⟨N, v, hN, hv⟩ := exists_polyPullback_add_smul B (1 : Matrix (Fin n) (Fin n) K) b ω
+  have hev : ∀ᶠ c : K in Filter.cofinite, ∑ i ∈ range N, c ^ i • v i ∈ W := by
+    have hp := (Matrix.charpoly_monic (-Matrix.of B)).ne_zero
+    refine Filter.eventually_cofinite.2 ((Polynomial.finite_setOfPred_isRoot hp).subset
+      fun c hc => ?_)
+    by_contra hdet
+    refine hc ?_
+    rw [← hv]
+    have hu : IsUnit (Matrix.of fun i l => B i l + c * (1 : Matrix (Fin n) (Fin n) K) i l).det := by
+      rw [isUnit_iff_ne_zero]
+      intro h0
+      refine hdet ?_
+      rw [Set.mem_ofPred_eq, Polynomial.IsRoot, Matrix.eval_charpoly, Matrix.scalar_apply,
+        sub_neg_eq_add, add_comm, ← h0]
+      congr 2
+      ext i l
+      by_cases hil : i = l
+      · subst hil; simp [Matrix.diagonal]
+      · simp [Matrix.diagonal, hil]
+    exact h (Matrix.nonsingInvUnit _ hu)
+  have h0 := hv 0
+  simp only [zero_mul, add_zero] at h0
+  rw [sum_eq_single 0 (fun i _ hi => by rw [zero_pow hi, zero_smul])
+    (fun h => absurd (mem_range.2 hN) h), pow_zero, one_smul] at h0
+  rw [h0]
+  exact mem_of_eventually_sum_pow_smul_mem hev hN
+
+
+/-- Invariance under the pullbacks `x ↦ g x` by the invertible linear maps, `g ∈ GL(n)`. -/
+def IsGLInvariant (W : Submodule K (PolyForm K (Fin n))) : Prop :=
+  ∀ g : GL (Fin n) K, ∀ ω ∈ W, polyPullback (g : Matrix (Fin n) (Fin n) K) 0 ω ∈ W
+
+/-- **Over an infinite field, invariance under `GL(n)` is invariance under all linear maps.** -/
+theorem IsGLInvariant.isLinearInvariant [Infinite K] {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsGLInvariant W) : IsLinearInvariant W :=
+  fun B ω hω => polyPullback_mem_of_forall_units (fun g => hW g ω hω) B
+
+/-- **Over an infinite field, invariance under the invertible affine maps is affine
+invariance.** -/
+theorem isAffineInvariant_of_forall_units [Infinite K] {X : Submodule K (PolyForm K (Fin n))}
+    (hX : ∀ (g : GL (Fin n) K) (b : Fin n → K), ∀ ω ∈ X,
+      polyPullback (g : Matrix (Fin n) (Fin n) K) b ω ∈ X) : IsAffineInvariant X :=
+  fun B b ω hω => polyPullback_mem_of_forall_units (fun g => hX g b ω hω) B
 
 end Feec.FiniteElement

@@ -37,12 +37,13 @@ decompositions hold (`PeriodicTable`). -/
 theorem periodicTable (K : Type u) [Field K] (n : ℕ) : PeriodicTable K n :=
   periodicTable_of_feec K n
 
-/-- **The affinely invariant spaces of polynomial differential forms** on `ℝⁿ` ([AFW2006],
-Theorems 3.5–3.6): for `0 < k < n` they are the spaces `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`,
-`-1 ≤ s ≤ r`, among them `P_rΛᵏ` and `P_{r+1}⁻Λᵏ`; the summands `dH_{r+1}Λ^{k-1}` and
-`κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under the linear maps
+/-- **The affinely invariant spaces of polynomial differential forms** on `Kⁿ`, `K` of
+characteristic `0` ([AFW2006], Theorems 3.5–3.6): for `0 < k < n` they are the spaces
+`dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`, `-1 ≤ s ≤ r`, among them `P_rΛᵏ` and `P_{r+1}⁻Λᵏ`; the summands
+`dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under `GL(n)`
 (`AffineInvariantForms`). -/
-theorem affineInvariantForms (n : ℕ) : AffineInvariantForms n :=
-  affineInvariantForms_of_feec n
+theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
+    AffineInvariantForms K n :=
+  affineInvariantForms_of_feec K n
 
 end FEEC

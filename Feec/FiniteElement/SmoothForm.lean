@@ -680,12 +680,13 @@ theorem extDeriv_affine_smul (ξ : Fin n → ℝ) (c : ℝ) (α : Finset (Fin n)
 
 /-! ### Pullback along affine maps -/
 
-/-- The affine map `x̂ ↦ B x̂ + b` of `ℝᵐ` to `ℝⁿ` (`B : n × m`). -/
-def affine (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (x : Fin m → ℝ) : Fin n → ℝ :=
+/-- The affine map `x̂ ↦ B x̂ + b` of `Rᵐ` to `Rⁿ` (`B : n × m`). -/
+def affine {R : Type*} [CommSemiring R] (B : Fin n → Fin m → R) (b : Fin n → R) (x : Fin m → R) :
+    Fin n → R :=
   fun i => ∑ l, B i l * x l + b i
 
-theorem affine_apply (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (x : Fin m → ℝ) (i : Fin n) :
-    affine B b x i = ∑ l, B i l * x l + b i := rfl
+theorem affine_apply {R : Type*} [CommSemiring R] (B : Fin n → Fin m → R) (b : Fin n → R)
+    (x : Fin m → R) (i : Fin n) : affine B b x i = ∑ l, B i l * x l + b i := rfl
 
 theorem affine_comp (C : Fin p → Fin n → ℝ) (c : Fin p → ℝ) (B : Fin n → Fin m → ℝ)
     (b : Fin n → ℝ) (x : Fin m → ℝ) :

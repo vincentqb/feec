@@ -57,7 +57,8 @@ for instance under the compactness property
 * `BoundedData.isClosed_bgg_Δ`: the exact part of the BGG complex is closed when the connecting
   maps before `J` are bounded below.
 * `BoundedData.derivedComplexCohomologyEquiv`: its cohomology is that of the twisted complex.
-* **`BoundedData.derivedComplex_closedRangeAt`**,
+* **`BoundedData.derivedComplex_closedRangeAt`**, `BoundedData.isClosed_Δ_sup_map_twist` (closed
+  range in `Vⁱ × Ṽⁱ`),
   `BoundedData.finiteDimensional_derivedComplex_cohomology`,
   `BoundedData.finrank_derivedComplex_cohomology_le`,
   `BoundedData.derivedComplex_boundaries_eq`.
@@ -384,6 +385,57 @@ finite-dimensional cohomology (closed `Δ F`, under the elimination hypotheses).
 theorem derivedComplex_closedRangeAt : (D.derivedComplex E F).ClosedRangeAt i :=
   have := D.finiteDimensional_derivedComplex_cohomology hΔ h i
   HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology _ i
+
+/-- **Closed range in `Vⁱ × Ṽⁱ`**: the preimage `Δⁱ + T(Γⁱ⁻¹)` of the range of the differential
+of `Γ E / Δ F` into `Γⁱ / Δⁱ` is closed, so that the range is closed in the quotient
+topology of the Hilbert space `Γⁱ / Δⁱ`. -/
+theorem isClosed_Δ_sup_map_twist :
+    IsClosed ((D.Δ F i ⊔ (D.Γ E (c.prev i)).map (D.twist (c.prev i) i) : Submodule 𝕜 _) :
+      Set (V i × Vt i)) := by
+  have hc := D.derivedComplex_closedRangeAt hΔ h i
+  set P := (D.ΔL E F i)ᗮ.starProjection
+  set toL := (WithLp.prodContinuousLinearEquiv 2 𝕜 (V i) (Vt i)).symm
+  set Bd : Set (WithLp 2 (V i × Vt i)) :=
+    Subtype.val '' ((D.derivedComplex E F).boundaries i : Set (D.derivedSpace E F i))
+  have hP0 : ∀ t ∈ D.ΔL E F i, P t = 0 := fun t ht => by
+    rw [Submodule.starProjection_apply_eq_zero_iff, Submodule.orthogonal_orthogonal_eq_closure]
+    exact Submodule.le_topologicalClosure _ ht
+  have hBd : IsClosed Bd :=
+    ((D.isClosed_ΓL E i).inter (D.ΔL E F i).isClosed_orthogonal).isClosedMap_subtype_val _ hc
+  have key : ((D.Δ F i ⊔ (D.Γ E (c.prev i)).map (D.twist (c.prev i) i) : Submodule 𝕜 _) :
+      Set (V i × Vt i)) = (D.Γ E i : Set (V i × Vt i)) ∩ (fun x => P (toL x)) ⁻¹' Bd := by
+    ext x
+    constructor
+    · intro hx
+      obtain ⟨δ, hδ, _, ⟨y, hy, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hx
+      refine ⟨add_mem (h.Δ_le_Γ i hδ) (D.twist_mem_Γ E _ i hy), ?_⟩
+      set y' : WithLp 2 (V (c.prev i) × Vt (c.prev i)) := WithLp.toLp 2 y
+      let u : D.derivedSpace E F (c.prev i) :=
+        ⟨(D.ΔL E F (c.prev i))ᗮ.starProjection y', D.starProjection_mem_ΓL E F hy,
+          Submodule.starProjection_apply_mem _ _⟩
+      refine ⟨D.derivedD E F (c.prev i) i u, ⟨⟨u, Submodule.mem_top⟩, rfl⟩, ?_⟩
+      have h1 : P (toL δ) = 0 := hP0 _ ⟨hδ, h.Δ_le_Γ i hδ⟩
+      have h2 : P (D.twistL (c.prev i) i (y' - u)) = 0 :=
+        hP0 _ (D.twistL_mem_ΔL E F _ i (D.sub_starProjection_mem_ΔL E hΔ y'))
+      rw [map_sub, map_sub, sub_eq_zero] at h2
+      rw [coe_derivedD, ← h2]
+      change _ = P (toL δ + D.twistL (c.prev i) i y')
+      rw [map_add, h1, zero_add]
+    · rintro ⟨hxΓ, hxB⟩
+      obtain ⟨b, hbB, hb⟩ := hxB
+      obtain ⟨y, hu⟩ := hbB
+      set u : D.derivedSpace E F (c.prev i) := y.1
+      have hb : (D.derivedD E F (c.prev i) i u : WithLp 2 (V i × Vt i)) = P (toL x) := by
+        exact (congrArg Subtype.val hu).trans hb
+      have ht := D.sub_starProjection_mem_ΔL E hΔ (toL x - D.twistL (c.prev i) i u)
+      rw [map_sub, ← hb, coe_derivedD, sub_self, sub_zero] at ht
+      have hu : (u : WithLp 2 _).ofLp ∈ D.Γ E (c.prev i) := u.2.1
+      have hx : x = (x - D.twist (c.prev i) i (u : WithLp 2 _).ofLp) +
+          D.twist (c.prev i) i (u : WithLp 2 _).ofLp := (sub_add_cancel _ _).symm
+      rw [SetLike.mem_coe, hx]
+      exact add_mem (Submodule.mem_sup_left ht.1) (Submodule.mem_sup_right ⟨_, hu, rfl⟩)
+  rw [key]
+  exact (D.isClosed_Γ E i).inter (hBd.preimage (P.continuous.comp toL.continuous))
 
 /-- **The derived complex is exact where both rows are.** -/
 theorem derivedComplex_boundaries_eq [Subsingleton (D.rowTopComplex.cohomology i)]

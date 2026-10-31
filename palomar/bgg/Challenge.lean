@@ -6,9 +6,11 @@ public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Topology.MetricSpace.Antilipschitz
 
 /-!
-# The algebraic Bernstein–Gelfand–Gelfand construction
+# The Bernstein–Gelfand–Gelfand construction of Arnold and Hu
 
 A **stacked diagram** over a ring `R` is a pair of cochain complexes of `R`-modules
 `(V, d)` and `(Ṽ, d̃)` on `ℤ` with connecting maps `Sⁱ : Ṽⁱ → Vⁱ⁺¹` such that `d S = -S d̃`;
@@ -25,25 +27,40 @@ the bottom spaces `Ṽⁱ⁻¹`, and the bottom spaces `Ṽⁱ`, `i < J`, agains
 * `Δⁱ ⊆ Tⁱ` is spanned by `0 × Ṽⁱ` if `i < J` and by its image `{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` under
   the twisted differential if `i - 1 < J`, a subcomplex of `T`.
 
-Its spaces are `Vⁱ / R(Sⁱ⁻¹)` for `i < J`, `{(σ, φ) | dσ = Sᴶφ} / {(-Sψ, d̃ψ)}` for `i = J`
-(`Vᴶ / R(Sᴶ⁻¹)` when `Sᴶ` is bijective) and `N(Sⁱ)` for `i > J`, with the differentials
-induced by `d`, `σ ↦ d̃ (Sᴶ)⁻¹ dσ` and `d̃` ([ArnoldHu2021], (24)–(26)).
+The theorems, for `Sⁱ` injective for `i < J` and onto modulo `d` for `i ≥ J`
+(`R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`; the condition (23) of [ArnoldHu2021] asks `Sⁱ` surjective for `i ≥ J`
+and also `Sᴶ` injective):
 
-The theorem (`FEEC.bggCohomology`): if `Sⁱ` is injective for `i < J` and surjective for `i ≥ J`
-(the condition [ArnoldHu2021], (23) also asks `Sᴶ` injective), the inclusion `Γ → T` and the
-projection `Γ → Γ / Δ` are quasi-isomorphisms, so **the BGG complex has the cohomology of the
-twisted complex** in every degree ([ArnoldHu2021], §5.2); the twisted complex is an extension of
-`Ṽ` by `V`, whose long exact sequence in cohomology relates it to the rows; and the BGG complex
-is exact when both rows are. Over a field (`FEEC.bggFinrank`), the BGG complex has
-finite-dimensional cohomology where both rows do, with `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`
-([ArnoldHu2021], Theorem 6). Complexes of any length are included (rows vanishing outside a
-window).
+* `FEEC.bggCohomology`: the inclusion `Γ → T` and the projection `Γ → Γ / Δ` are
+  quasi-isomorphisms, so **the BGG complex has the cohomology of the twisted complex**
+  ([ArnoldHu2021], §5.2); `T` is an extension of `Ṽ` by `V`; the BGG complex is exact when both
+  rows are.
+* `FEEC.bggIdentification` (every `S`, `J`): **`Γ / Δ` is the output complex (24)–(26)**: the
+  cochain maps `Γ / Δ → V / R(S)`, `[(σ, φ)] ↦ [σ]`, and `N(S) → Γ / Δ`, `φ ↦ [(0, φ)]`, are
+  bijective in degrees `i < J` and `i > J`, the first also at `J` when `Sᴶ` is bijective, and the
+  differential at `J` is `[σ] ↦ d̃ (Sᴶ)⁻¹ dσ`. [ArnoldHu2021] realize `Vⁱ / R(Sⁱ⁻¹)` as the
+  orthogonal complement `Vⁱ ⊗ R(sⁱ⁻¹)^⊥` with the projected differential `P_{R^⊥} d`.
+* `FEEC.bggFinrank` (over a field, [ArnoldHu2021], Theorem 6): where both rows have
+  finite-dimensional cohomology, so does the BGG complex, `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`,
+  with equality iff `Sⁱ⁻¹` and `Sⁱ` induce the zero maps on cohomology, `S N(d̃) ⊆ R(d)` ((27)).
+* `FEEC.bggSum` ([ArnoldHu2021], Theorem 7 and Proposition 1): if `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)),
+  `S` induces zero on cohomology and `(ω, μ) ↦ (ω + Kμ, μ)` is an isomorphism from the sum complex
+  `V × Ṽ` onto `T`; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has
+  the cohomology of the sum complex.
+* `FEEC.bggClosedRange` (bounded Hilbert complexes, `Sⁱ` bounded below for `i < J`;
+  [ArnoldHu2021], Theorem 6 and the remark after it): `Γⁱ`, `Δⁱ` are closed, so `Γⁱ / Δⁱ` is a
+  Hilbert space with bounded differentials, and the differentials have closed range where both
+  rows have finite-dimensional cohomology.
+
+Complexes of any length are included (rows vanishing outside a window). Non-vacuity:
+`BGG.hypotheses_id` (`S = 𝟙 : V⟦1⟧ ⟶ V⟦1⟧`) and `BGG.hypotheses_bounded_id` (`sⁱ = id`,
+`d̃ⁱ = -dⁱ⁺¹`) satisfy the hypotheses at every `J`.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((19)–(26), Theorem 6:
-  the input diagram and the output complex) and §5 ((58)–(59): the twisted complex; §5.2:
-  splitting off an exact subcomplex)
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((19)–(28), Theorems 6
+  and 7, Proposition 1: the input diagram, the output complex and its cohomology) and §5
+  ((58)–(59): the twisted complex; §5.2: splitting off an exact subcomplex)
 * [I. N. Bernstein, I. M. Gelfand, S. I. Gelfand, *Differential operators on the base affine space and a study of g-modules*][BernsteinGelfandGelfand1975]
   (the BGG resolution)
 * [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
@@ -146,6 +163,9 @@ theorem twist_twist (i j k : ℤ) (x : V.X i × Vt.X i) : twist S j k (twist S i
   · change Vt.d j k (Vt.d i j x.2) = 0
     rw [← ModuleCat.comp_apply, Vt.d_comp_d]; rfl
 
+theorem conn_succ (i : ℤ) : conn S i (i + 1) = (S.f i).hom := by
+  simp [conn]
+
 theorem twist_of_ne {i j : ℤ} (h : i + 1 ≠ j) : twist S i j = 0 := by
   ext x <;> simp [twist, conn, h]
 
@@ -233,6 +253,82 @@ def bggΓι (J : ℤ) : bggΓ S J ⟶ twisted S := subcomplexι _ _ _
 /-- The projection `Γ → Γ / Δ`. -/
 def bggπ (J : ℤ) : bggΓ S J ⟶ bgg S J := quotientπ _ _ _
 
+/-! ### The spaces of Arnold and Hu: `Vⁱ / R(Sⁱ⁻¹)` before `J`, `N(Sⁱ)` after `J` -/
+
+/-- `R(Sⁱ⁻¹) ⊆ Vⁱ`. -/
+def rangeS (i : ℤ) : Submodule R (V.X i) := LinearMap.range (conn S (i - 1) i)
+
+theorem conn_mem_rangeS (i j : ℤ) (φ : Vt.X i) : conn S i j φ ∈ rangeS S j := by
+  by_cases h : i + 1 = j
+  · obtain rfl : i = j - 1 := eq_sub_of_add_eq h
+    exact ⟨φ, rfl⟩
+  · simp [conn, h]
+
+/-- The quotient complex `V / R(S)`, `Vⁱ / R(Sⁱ⁻¹)` with the differentials induced by `d`. -/
+def quotS : CochainComplex (ModuleCat.{v} R) ℤ :=
+  quotient V (rangeS S) fun i j _ ⟨ψ, h⟩ => h ▸ d_conn S (i - 1) i j ψ ▸
+    neg_mem (conn_mem_rangeS S i j _)
+
+/-- The subcomplex `N(S) ⊆ Ṽ`, `N(Sⁱ)` with the differentials induced by `d̃`. -/
+def kerS : CochainComplex (ModuleCat.{v} R) ℤ :=
+  subcomplex Vt (fun i => LinearMap.ker (S.f i).hom) fun i j φ hφ => by
+    have h := d_conn S i j (j + 1) φ
+    by_cases hij : i + 1 = j
+    · subst hij
+      rw [conn_succ, conn_succ, LinearMap.mem_ker.1 hφ, map_zero, eq_comm, neg_eq_zero] at h
+      exact h
+    · rw [Vt.shape i j hij]; exact zero_mem _
+
+theorem fst_mem_rangeS (J i : ℤ) {x : V.X i × Vt.X i} (hx : x ∈ Δ S J i) : x.1 ∈ rangeS S i := by
+  refine (sup_le (iSup_le fun _ => ?_) (iSup_le fun _ => ?_) : Δ S J i ≤ (rangeS S i).comap
+    (LinearMap.fst R _ _)) hx
+  · rintro _ ⟨φ, rfl⟩; exact (rangeS S i).zero_mem
+  · rintro _ ⟨_, ⟨ψ, rfl⟩, rfl⟩
+    simpa [twist] using neg_mem (conn_mem_rangeS S (i - 1) i ψ)
+
+/-- `[(σ, φ)] ↦ [σ]`, the cochain map `Γ / Δ → V / R(S)` ([ArnoldHu2021], (24)–(26) up to `J`). -/
+def toQuotS (J : ℤ) : bgg S J ⟶ quotS S where
+  f i := ModuleCat.ofHom (Submodule.mapQ _ _ (LinearMap.fst R _ _ ∘ₗ (Γ S J i).subtype)
+    fun _ hx => fst_mem_rangeS S J i hx)
+  comm' i j _ := ModuleCat.hom_ext (Submodule.linearMap_qext _ (LinearMap.ext fun x =>
+    (Submodule.Quotient.eq _).2 (by
+      change V.d i j x.1.1 - (V.d i j x.1.1 - conn S i j x.1.2) ∈ rangeS S j
+      rw [sub_sub_cancel]; exact conn_mem_rangeS S i j _)))
+
+theorem inr_mem_Γ (J i : ℤ) (φ : LinearMap.ker (S.f i).hom) :
+    ((0 : V.X i), (φ : Vt.X i)) ∈ Γ S J i :=
+  Submodule.mem_inf.2 ⟨(Submodule.mem_iInf _).2 fun _ => rfl, (Submodule.mem_iInf _).2 fun _ => by
+    simp [twist, conn_succ]⟩
+
+/-- `φ ↦ [(0, φ)]`, the cochain map `N(S) → Γ / Δ` ([ArnoldHu2021], (24)–(26) after `J`). -/
+def ofKerS (J : ℤ) : kerS S ⟶ bgg S J where
+  f i := ModuleCat.ofHom (Submodule.mkQ _ ∘ₗ LinearMap.codRestrict (Γ S J i)
+    (LinearMap.inr R _ _ ∘ₗ (LinearMap.ker (S.f i).hom).subtype) (inr_mem_Γ S J i))
+  comm' i j _ := ModuleCat.hom_ext (LinearMap.ext fun φ => congrArg Submodule.Quotient.mk
+    (Subtype.ext (Prod.ext (by
+      change V.d i j 0 - conn S i j φ.1 = 0
+      by_cases h : i + 1 = j
+      · subst h; simpa [conn_succ] using φ.2
+      · simp [conn, h]) rfl)))
+
+/-- **The spaces and differentials of the BGG complex are those of [ArnoldHu2021], (24)–(26).**
+The cochain maps `toQuotS : Γ / Δ → V / R(S)` and `ofKerS : N(S) → Γ / Δ` are bijective in
+degrees `i < J` and `i > J` respectively, and in degree `J` when `Sᴶ` is bijective; the
+differential from `J` to `J + 1` is then `[σ] ↦ d̃ (Sᴶ)⁻¹ dσ`. Hence the BGG complex is
+`Vⁱ / R(Sⁱ⁻¹)` with the differentials induced by `d` up to `J`, `N(Sⁱ)` with `d̃` after `J`. -/
+structure Identification (J : ℤ) : Prop where
+  /-- `Γⁱ / Δⁱ ≅ Vⁱ / R(Sⁱ⁻¹)` before `J` -/
+  lt : ∀ i < J, Function.Bijective ((toQuotS S J).f i)
+  /-- `Γᴶ / Δᴶ ≅ Vᴶ / R(Sᴶ⁻¹)` when `Sᴶ` is bijective -/
+  self : Function.Bijective (S.f J) → Function.Bijective ((toQuotS S J).f J)
+  /-- `N(Sⁱ) ≅ Γⁱ / Δⁱ` after `J` -/
+  gt : ∀ i, J < i → Function.Bijective ((ofKerS S J).f i)
+  /-- the differential at `J` is `[σ] ↦ d̃φ` with `Sᴶφ = dσ` -/
+  d_self : Function.Injective (S.f J) → ∀ (x : (bgg S J).X J) (σ : V.X J) (φ : Vt.X J),
+    (toQuotS S J).f J x = Submodule.Quotient.mk σ → conn S J (J + 1) φ = V.d J (J + 1) σ →
+      ∃ y : (kerS S).X (J + 1), (ofKerS S J).f (J + 1) y = (bgg S J).d J (J + 1) x ∧
+        y.1 = Vt.d J (J + 1) φ
+
 /-- **The BGG verdict at `J`.** Its content, under the hypotheses of `FEEC.bggCohomology`, is
 the two quasi-isomorphisms `quasiIso_ι` and `quasiIso_π`; `homology` follows from them,
 `shortExact` holds for every `S` and `J`, and `acyclic` follows from `shortExact` and
@@ -249,29 +345,157 @@ structure Verdict (J : ℤ) : Prop where
   /-- the BGG complex is exact when both rows are -/
   acyclic : V.Acyclic → Vt.Acyclic → (bgg S J).Acyclic
 
+/-- **`Sᵏ` induces the zero map on cohomology**, `Sᵏ N(d̃ᵏ) ⊆ R(dᵏ)` ([ArnoldHu2021], (27)). -/
+def InducesZero (k : ℤ) : Prop :=
+  ∀ φ : Vt.X k, Vt.d k (k + 1) φ = 0 → conn S k (k + 1) φ ∈ LinearMap.range (V.d k (k + 1)).hom
+
+/-- **The cochain map `(ω, μ) ↦ (ω + Kμ, μ)`** from the sum complex `V ⊕ Ṽ` (the twisted complex
+of `S = 0`) to the twisted complex, for `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` ([ArnoldHu2021], (28) and §5). -/
+def sumToTwisted (K : ∀ i, Vt.X i →ₗ[R] V.X i)
+    (hK : ∀ i μ, conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
+    twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧) ⟶ twisted S where
+  f i := ModuleCat.ofHom (((LinearMap.fst R _ _ + K i ∘ₗ LinearMap.snd R _ _)).prod
+    (LinearMap.snd R _ _))
+  comm' i j hij := by
+    obtain rfl : i + 1 = j := hij
+    refine ModuleCat.hom_ext (LinearMap.ext fun x => Prod.ext ?_ rfl)
+    change V.d i (i + 1) (x.1 + K i x.2) - conn S i (i + 1) x.2 =
+      V.d i (i + 1) x.1 - conn 0 i (i + 1) x.2 + K (i + 1) (Vt.d i (i + 1) x.2)
+    rw [hK, conn_succ, map_add]
+    simp only [HomologicalComplex.zero_f, ModuleCat.hom_zero, LinearMap.zero_apply, sub_zero]
+    rw [sub_sub_eq_add_sub, add_right_comm, add_sub_cancel_right]
+
+/-- **Non-vacuity**: `Ṽ = V⟦1⟧` with `S = 𝟙` (`Sⁱ = id`) satisfies the hypotheses of
+`FEEC.bggCohomology` at every `J`. -/
+theorem hypotheses_id (V : CochainComplex (ModuleCat.{v} R) ℤ) (J : ℤ) :
+    (∀ i < J, Function.Injective (HomologicalComplex.Hom.f (𝟙 (V⟦(1 : ℤ)⟧)) i)) ∧ ∀ i, J ≤ i →
+      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (conn (𝟙 (V⟦(1 : ℤ)⟧)) i (i + 1)) =
+        ⊤ :=
+  ⟨fun _ _ _ _ h => h, fun i _ => by
+    rw [conn_succ]
+    exact eq_top_iff.2 fun x _ => Submodule.mem_sup_right ⟨x, rfl⟩⟩
+
 end BGG
 
-/-! ### The theorem -/
+/-! ### Bounded Hilbert complexes -/
+
+namespace BGG
+
+variable {𝕜 : Type u} [RCLike 𝕜] {H : ℤ → Type v} [∀ i, NormedAddCommGroup (H i)]
+  [∀ i, InnerProductSpace 𝕜 (H i)]
+
+/-- The cochain complex of modules of bounded maps `dⁱ : Hⁱ → Hⁱ⁺¹` with `d d = 0`. -/
+abbrev ofBounded (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0) :
+    CochainComplex (ModuleCat.{v} 𝕜) ℤ :=
+  CochainComplex.of (fun i => ModuleCat.of 𝕜 (H i)) (fun i => ModuleCat.ofHom (d i))
+    fun i => ModuleCat.hom_ext (LinearMap.ext (hd i))
+
+/-- **Non-vacuity** of `FEEC.bggClosedRange`: `H̃ⁱ = Hⁱ⁺¹`, `d̃ⁱ = -dⁱ⁺¹` and `sⁱ = id` form a
+complex and connecting maps with `d s = -s d̃`, bounded below and onto at every `J`. -/
+theorem hypotheses_bounded_id (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (J : ℤ) :
+    (∀ i x, (-d (i + 1 + 1)) ((-d (i + 1)) x) = 0) ∧
+    (∀ i x, d (i + 1) (ContinuousLinearMap.id 𝕜 (H (i + 1)) x) =
+      -ContinuousLinearMap.id 𝕜 (H (i + 1 + 1)) ((-d (i + 1)) x)) ∧
+    (∀ i < J, ∃ C, AntilipschitzWith C (ContinuousLinearMap.id 𝕜 (H (i + 1)))) ∧
+    ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
+      LinearMap.range (ContinuousLinearMap.id 𝕜 (H (i + 1)) : H (i + 1) →ₗ[𝕜] H (i + 1)) = ⊤ :=
+  ⟨fun _ _ => by simp [hd], fun _ _ => by simp, fun _ _ => ⟨1, AntilipschitzWith.id⟩,
+    fun _ _ => by simp⟩
+
+variable {Ht : ℤ → Type v} [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+  {d : ∀ i, H i →L[𝕜] H (i + 1)} {hd : ∀ i x, d (i + 1) (d i x) = 0}
+  {dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)} {hdt : ∀ i x, dt (i + 1) (dt i x) = 0}
+
+/-- Bounded connecting maps `sⁱ : H̃ⁱ → Hⁱ⁺¹` with `d s = -s d̃`, as a morphism
+`ofBounded dt hdt ⟶ (ofBounded d hd)⟦1⟧`. -/
+def ofBoundedHom (s : ∀ i, Ht i →L[𝕜] H (i + 1))
+    (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x)) :
+    ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧ where
+  f i := ModuleCat.ofHom (s i)
+  comm' i j hij := by
+    obtain rfl : i + 1 = j := hij
+    ext x
+    simp [CochainComplex.shiftFunctor_obj_d', hs]
+
+end BGG
+
+/-! ### The theorems -/
 
 /-- **The BGG construction** ([ArnoldHu2021], §5.2). For a stacked diagram `S : Ṽ ⟶ V⟦1⟧` of
-cochain complexes of modules over any ring, with `Sⁱ` injective for `i < J` and surjective for
-`i ≥ J`, the BGG complex at `J` has the cohomology of the twisted complex
-(`BGG.Verdict`). -/
+cochain complexes of modules over any ring, with `Sⁱ` injective for `i < J` and onto modulo `d`
+for `i ≥ J` (`R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`; in particular when `Sⁱ` is surjective, [ArnoldHu2021], (23)),
+the BGG complex at `J` has the cohomology of the twisted complex (`BGG.Verdict`). -/
 theorem bggCohomology {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i → Function.Surjective (S.f i)) : BGG.Verdict S J := by
+    (hsurj : ∀ i, J ≤ i →
+      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
+    BGG.Verdict S J := by
   sorry
 
-/-- **The dimension bound of the BGG complex** ([ArnoldHu2021], Theorem 6). Over a field, under
-the hypotheses of `FEEC.bggCohomology`, if both rows have finite-dimensional cohomology in
-degree `i`, so does the BGG complex, and `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`. -/
+/-- **The BGG complex is the output complex of [ArnoldHu2021], (24)–(26)**, for every stacked
+diagram and every `J` (`BGG.Identification`). -/
+theorem bggIdentification {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) : BGG.Identification S J := by
+  sorry
+
+/-- **The cohomology of the BGG complex** ([ArnoldHu2021], Theorem 6). Over a field, under the
+hypotheses of `FEEC.bggCohomology`, if both rows have finite-dimensional cohomology in degree `i`,
+so does the BGG complex, `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, with equality if and only if
+`Sⁱ⁻¹` and `Sⁱ` induce the zero maps on cohomology ([ArnoldHu2021], (27)). -/
 theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} K) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i → Function.Surjective (S.f i)) (i : ℤ)
+    (hsurj : ∀ i, J ≤ i →
+      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) (i : ℤ)
     [FiniteDimensional K (V.homology i)] [FiniteDimensional K (Vt.homology i)] :
     FiniteDimensional K ((BGG.bgg S J).homology i) ∧
       Module.finrank K ((BGG.bgg S J).homology i) ≤
-        Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) := by
+        Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) ∧
+      (Module.finrank K ((BGG.bgg S J).homology i) =
+          Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) ↔
+        BGG.InducesZero S (i - 1) ∧ BGG.InducesZero S i) := by
+  sorry
+
+/-- **Cohomology through the sum complex** ([ArnoldHu2021], Theorem 7 and Proposition 1). If
+`Sⁱ = dKⁱ - Kⁱ⁺¹d̃` for maps `Kⁱ : Ṽⁱ → Vⁱ` ((28)), then `S` induces the zero maps on cohomology
+((27), Proposition 1) and the cochain map `(ω, μ) ↦ (ω + Kμ, μ)` from the sum complex (the
+twisted complex of `S = 0`: `Vⁱ × Ṽⁱ` with differential `d × d̃`) to the twisted complex is an
+isomorphism; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has the
+cohomology of the sum complex (Theorem 7). -/
+theorem bggSum {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (K : ∀ i, Vt.X i →ₗ[R] V.X i)
+    (hK : ∀ i μ, BGG.conn S i (i + 1) μ = V.d i (i + 1) (K i μ) - K (i + 1) (Vt.d i (i + 1) μ)) :
+    (∀ i, BGG.InducesZero S i) ∧ IsIso (BGG.sumToTwisted S K hK) ∧
+      ∀ J, (∀ i < J, Function.Injective (S.f i)) →
+        (∀ i, J ≤ i →
+          LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) →
+        ∀ i, Nonempty ((BGG.bgg S J).homology i ≅
+          (BGG.twisted (0 : Vt ⟶ V⟦(1 : ℤ)⟧)).homology i) := by
+  sorry
+
+/-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed
+ranges** ([ArnoldHu2021], Theorem 6 and the remark after it). Let `d`, `d̃` be complexes of
+bounded operators on Hilbert spaces and `s` bounded connecting maps with `d s = -s d̃`, bounded
+below for `i < J` and onto modulo `d` for `i ≥ J`. Then `Γⁱ` and `Δⁱ` are closed in `Hⁱ × H̃ⁱ`, so
+`Γⁱ / Δⁱ` is a Hilbert space and the differentials, induced by the bounded twisted differential,
+are bounded; and where both rows have finite-dimensional cohomology, the range of the BGG
+differential into `Γⁱ / Δⁱ` is closed: its preimage `Δⁱ + T(Γⁱ⁻¹)` in `Hⁱ × H̃ⁱ` is closed. -/
+theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
+    [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
+    [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+    [∀ i, CompleteSpace (Ht i)]
+    (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
+    (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (J : ℤ) (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
+    (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
+      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) (i : ℤ) :
+    let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
+    IsClosed (BGG.Γ S J i : Set (H i × Ht i)) ∧ IsClosed (BGG.Δ S J i : Set (H i × Ht i)) ∧
+      ([FiniteDimensional 𝕜 ((BGG.ofBounded d hd).homology i)] →
+        [FiniteDimensional 𝕜 ((BGG.ofBounded dt hdt).homology i)] →
+        IsClosed ((BGG.Δ S J i ⊔ (BGG.Γ S J (i - 1)).map (BGG.twist S (i - 1) i) :
+          Submodule 𝕜 _) : Set (H i × Ht i))) := by
   sorry
 
 end FEEC

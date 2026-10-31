@@ -157,7 +157,8 @@ def rowBotπ : D.twistComplex ⟶ D.rowBot where
   comm' _ _ _ := ModuleCat.hom_ext (LinearMap.ext fun _ => rfl)
 
 /-- `0 → V → T → Ṽ → 0`: the twisted complex is an extension of the bottom row by the top row;
-its connecting map in cohomology is induced by `S` ([ArnoldHu2021], §5.1; not formalized here). -/
+its connecting map in cohomology is induced by `-S` ([ArnoldHu2021], §5.1;
+`Feec.BGG.Data.δ_twistShortComplex` in `Feec.HilbertComplex.BGG.Connecting`). -/
 def twistShortComplex : ShortComplex (HomologicalComplex (ModuleCat.{v} R) c) :=
   ShortComplex.mk D.rowTopι D.rowBotπ (by ext i σ; rfl)
 

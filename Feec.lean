@@ -106,6 +106,7 @@ public import Feec.FiniteElement.WhitneyInterpolation
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Analysis.Polynomial
+public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice

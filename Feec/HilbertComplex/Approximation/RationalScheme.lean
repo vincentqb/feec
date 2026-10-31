@@ -29,8 +29,9 @@ of the closure of the core as `h, τ → 0`, and the constraint residuals.
   Gauss methods) for skew FEEC discretizations, `‖Pₕⁿ v‖ = ‖v‖`;
 * `DissipFEEC.norm_step_pow_sub_S_le`: **the time discretization of the exact problem**, the
   Brenner–Thomée bound `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖A^{p+1} x‖` for the unbounded generator `A`
-  and `x ∈ D(A^{p+1})` (`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`), with
-  the constant `K` of the discrete schemes.
+  and `x ∈ D(A^{p+1})` (`DissipFEEC.iterDomain`;
+  `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`), with the constant `K` of the
+  discrete schemes.
 
 ## References
 
@@ -124,15 +125,18 @@ abbrev sdirk2 (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme :=
     RationalScheme.hasOrder_sdirk2 (by norm_num) τ hτ
 
 /-- **The time discretization of the exact problem** (Brenner–Thomée for the unbounded
-generator): for every A-stable rational scheme `r` of order `p`, `τ > 0`, `n` and `x ∈ D(A^{p+1})`
-(a chain `u₀ = x, …, u_{p+1}` in the graph of `A`), `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖A^{p+1} x‖`
-with the constant `K = sup_y |ρ(iy)| + 1/(p+1)!` of `rationalScheme`. [BrennerThomee1979] -/
+generator): for every A-stable rational scheme `r` of order `p`, `τ > 0`, `n` and
+`x ∈ D(A^{p+1})` (`iterDomain`, the data of the rate classes `RegScale.domainPow`),
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖A^{p+1} x‖` with the constant `K = sup_y |ρ(iy)| + 1/(p+1)!` of
+`rationalScheme`. [BrennerThomee1979] -/
 theorem norm_step_pow_sub_S_le [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
     (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ)
-    (n : ℕ) {u : ℕ → E} (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ A.graph) :
-    ‖(r.step A τ ^ n) (u 0) - F.S (n * τ) (u 0)‖ ≤
-      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p * ‖u (p + 1)‖ :=
-  r.norm_step_pow_sub_semigroup_le F.isMDissipative hr hp hτ n hu
+    (n : ℕ) {x : E} (hx : x ∈ iterDomain A (p + 1)) :
+    ‖(r.step A τ ^ n) x - F.S (n * τ) x‖ ≤
+      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p *
+        ‖(genExt A)^[p + 1] x‖ :=
+  r.norm_step_pow_sub_semigroup_le F.isMDissipative hr hp hτ n (u := fun j => (genExt A)^[j] x)
+    (mem_graph_of_mem_iterDomain hx)
 
 end DissipFEEC
 

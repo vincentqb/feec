@@ -1,6 +1,7 @@
 module
 
 public import Feec.ForMathlib.Analysis.Polynomial
+public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
 public import Feec.TimeStepping.Convergence
 
@@ -451,19 +452,10 @@ theorem norm_step_le_one {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : �
   (r.norm_step_le hA hτ).2.trans (r.isAStable_iff.1 hr)
 
 omit [CompleteSpace V] in
-/-- `a` commutes with `Ring.inverse b` when it commutes with `b`. -/
-theorem commute_ringInverse {M : Type*} [MonoidWithZero M] {a b : M} (h : Commute a b) :
-    Commute a (Ring.inverse b) := by
-  by_cases hb : IsUnit b
-  · obtain ⟨u, rfl⟩ := hb
-    rw [Ring.inverse_unit]; exact h.units_inv_right
-  · rw [Ring.inverse_non_unit _ hb]; exact Commute.zero_right a
-
-omit [CompleteSpace V] in
 private theorem mul_inverse_mul_of_commute {M : Type*} [MonoidWithZero M] {U n d : M}
     (hU : IsUnit U) (hn : Commute U n) (hd : Commute U d) :
     U * n * Ring.inverse (U * d) = n * Ring.inverse d := by
-  rw [Ring.mul_inverse_rev' hd, hn.eq, mul_assoc, ← mul_assoc U, (commute_ringInverse hd).eq,
+  rw [Ring.mul_inverse_rev' hd, hn.eq, mul_assoc, ← mul_assoc U, hd.ringInverse_right.eq,
     mul_assoc, Ring.mul_inverse_cancel _ hU, mul_one]
 
 /-- For bounded dissipative `L`, the resolvent `S = (1 - τ L)⁻¹` (`τ > 0`) inverts `1 - τ L` on
@@ -663,7 +655,7 @@ theorem hasOrder_of_isBigO {p : ℕ}
 omit [CompleteSpace V] in
 private theorem commute_apply {L : V →L[𝕜] V} {B : V →L[𝕜] V} (h : Commute B L) :
     Commute (r.apply B) L :=
-  (commute_aeval h _).mul_left (commute_ringInverse (commute_aeval h _).symm).symm
+  (commute_aeval h _).mul_left (commute_aeval h _).symm.ringInverse_right.symm
 
 /-- **Consistency from the expansion `p = q Tₘ + X^{m+1} ρ`**, over `𝕜`: for a bounded
 dissipative `L` and `τ ≥ 0` with `q(τL)` invertible and `‖ρ(τL) q(τL)⁻¹‖ ≤ K₀`, the step
@@ -687,7 +679,7 @@ theorem isConsistent_aeval_mul_inverse [NormedSpace ℝ V] [IsScalarTower ℝ �
   have hc : Commute (aeval ((τ : 𝕜) • L) ρ * Ring.inverse (aeval ((τ : 𝕜) • L) q))
       (L ^ (m + 1)) :=
     ((commute_aeval hτL ρ).mul_left
-      (commute_ringInverse (commute_aeval hτL q).symm).symm).pow_right _
+      (commute_aeval hτL q).symm.ringInverse_right.symm).pow_right _
   refine isConsistent_of_eq hL hτ hρ fun y => ?_
   rw [he, add_apply, smul_pow, smul_mul_assoc, smul_apply, ← mul_apply_eq_comp, hc.eq,
     mul_apply_eq_comp]

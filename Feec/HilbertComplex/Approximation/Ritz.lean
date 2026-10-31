@@ -321,6 +321,13 @@ def iterDomain (A : E →ₗ.[𝕜] E) (k : ℕ) : Set E := {y | ∀ j < k, (gen
 def iterDomainNorm (A : E →ₗ.[𝕜] E) (k : ℕ) (y : E) : ℝ :=
   ∑ j ∈ Finset.range (k + 1), ‖(genExt A)^[j] y‖
 
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- On `D(Aᵏ)` the iterates `Aʲ y`, `j ≤ k`, are a chain in the graph of `A`. -/
+theorem mem_graph_of_mem_iterDomain {k : ℕ} {y : E} (hy : y ∈ iterDomain A k) :
+    ∀ j < k, ((genExt A)^[j] y, (genExt A)^[j + 1] y) ∈ A.graph := fun j hj => by
+  rw [Function.iterate_succ_apply', genExt_of_mem (hy j hj)]
+  exact A.mem_graph ⟨_, hy j hj⟩
+
 /-- `S(t)` keeps `D(Aᵏ)` and commutes with `Aʲ` on it, `j ≤ k` (`t ≥ 0`). -/
 theorem iterate_genExt_S {k : ℕ} {x : E} (hx : x ∈ iterDomain A k) {t : ℝ} (ht : 0 ≤ t) :
     ∀ j ≤ k, (genExt A)^[j] (F.S t x) = F.S t ((genExt A)^[j] x) := by

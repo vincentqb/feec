@@ -3024,13 +3024,13 @@ example {T : ℝ} (R : (F.windowFEEC a m K hK).toApprox.RateClass T)
 /-- The time discretization of the exact wave and heat equations by an A-stable rational scheme
 (Brenner–Thomée for the unbounded generators) is a field of the crown. -/
 example (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
-    (hτ : 0 < τ) (n : ℕ) {u u' : ℕ → PiLp 2 fun i : Fin m => V (a + i)}
-    (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ (H.window a m).wave.graph)
-    (hu' : ∀ j < p + 1, (u' j, u' (j + 1)) ∈ (-(H.window a m).hodgeLaplacian).graph) :
-    type_of% ((F.windowFEEC a m K hK).toApprox.norm_step_pow_sub_S_le r hr hp hτ n hu) ∧
-      type_of% ((F.windowFEEC a m K hK).toHeat.norm_step_pow_sub_S_le r hr hp hτ n hu') :=
-  ⟨(F.feec.full a m K hK).exact_wave r hr hp hτ n hu,
-    (F.feec.full a m K hK).exact_heat r hr hp hτ n hu'⟩
+    (hτ : 0 < τ) (n : ℕ) {x x' : PiLp 2 fun i : Fin m => V (a + i)}
+    (hx : x ∈ DissipFEEC.iterDomain (H.window a m).wave (p + 1))
+    (hx' : x' ∈ DissipFEEC.iterDomain (-(H.window a m).hodgeLaplacian) (p + 1)) :
+    type_of% ((F.windowFEEC a m K hK).toApprox.norm_step_pow_sub_S_le r hr hp hτ n hx) ∧
+      type_of% ((F.windowFEEC a m K hK).toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx') :=
+  ⟨(F.feec.full a m K hK).exact_wave r hr hp hτ n hx,
+    (F.feec.full a m K hK).exact_heat r hr hp hτ n hx'⟩
 
 open scoped InnerProductSpace in
 example (B : (PiLp 2 fun i : Fin m => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin m => V (a + i))

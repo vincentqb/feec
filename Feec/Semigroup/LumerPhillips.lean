@@ -3,6 +3,7 @@ module
 public import Feec.Semigroup.Stone
 public import Feec.Semigroup.Perturbation
 public import Feec.ForMathlib.Analysis.Gronwall
+public import Feec.ForMathlib.Analysis.StrongConvergence
 
 /-!
 # The Lumer–Phillips theorem
@@ -482,6 +483,43 @@ theorem yosida_commute (hA : A.IsMDissipative) (n m : ℕ) :
   · exact ((Commute.one_left _).smul_left _).smul_right _
   · exact ((Commute.one_left _).smul_left _).smul_right _
 
+/-- **The Yosida approximations on `D(Aᵏ)`**: for a chain `u₀, …, u_k` with `(u_j, u_{j+1})` in
+the graph of `A` (so `u₀ ∈ D(Aᵏ)`, `Aᵏ u₀ = u_k`), `A_nᵏ u₀ = J_nᵏ u_k`. -/
+theorem yosida_pow_apply (hA : A.IsMDissipative) (n : ℕ) {k : ℕ} {u : ℕ → E}
+    (hu : ∀ j < k, (u j, u (j + 1)) ∈ A.graph) : (yosida A n ^ k) (u 0) = (approxJ A n ^ k) (u k) := by
+  induction k generalizing u with
+  | zero => rfl
+  | succ k ih =>
+    obtain ⟨x, hx1, hx2⟩ := (mem_graph_iff A).1 (hu 0 (Nat.succ_pos k))
+    simp only [zero_add] at hx1 hx2
+    have hy : yosida A n (u 0) = approxJ A n (u 1) := by
+      rw [← hx1, yosida_apply_domain hA, hx2]
+    have hc : Commute (yosida A n) (approxJ A n) :=
+      ((Commute.refl _).smul_left _).sub_left ((Commute.one_left _).smul_left _)
+    have ih' := ih (u := fun j => u (j + 1)) fun j hj => hu (j + 1) (by omega)
+    simp only [zero_add] at ih'
+    calc (yosida A n ^ (k + 1)) (u 0) = (yosida A n ^ k) (approxJ A n (u 1)) := by
+          rw [pow_succ, mul_apply_eq_comp, hy]
+      _ = approxJ A n ((yosida A n ^ k) (u 1)) := by
+          rw [← mul_apply_eq_comp, (hc.pow_left k).eq, mul_apply_eq_comp]
+      _ = (approxJ A n ^ (k + 1)) (u (k + 1)) := by
+          rw [ih', pow_succ', mul_apply_eq_comp]
+
+/-- `‖J_nᵏ y‖ ≤ ‖y‖`. -/
+theorem norm_approxJ_pow_apply_le (hA : A.IsMDissipative) (n k : ℕ) (y : E) :
+    ‖(approxJ A n ^ k) y‖ ≤ ‖y‖ := by
+  induction k generalizing y with
+  | zero => rfl
+  | succ k ih =>
+    rw [pow_succ, mul_apply_eq_comp]
+    exact (ih _).trans (norm_approxJ_apply_le hA n y)
+
+/-- `‖A_nᵏ u₀‖ ≤ ‖Aᵏ u₀‖` on `D(Aᵏ)`, uniformly in `n`. -/
+theorem norm_yosida_pow_apply_le (hA : A.IsMDissipative) (n : ℕ) {k : ℕ} {u : ℕ → E}
+    (hu : ∀ j < k, (u j, u (j + 1)) ∈ A.graph) : ‖(yosida A n ^ k) (u 0)‖ ≤ ‖u k‖ := by
+  rw [yosida_pow_apply hA n hu]
+  exact norm_approxJ_pow_apply_le hA n k _
+
 /-! ### The approximating semigroups and their strong limit -/
 
 section Limit
@@ -549,14 +587,10 @@ theorem tendsto_approxS (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) (x : E)
 
 theorem tendsto_approxS_of_tendsto (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) {y : ℕ → E}
     {y₀ : E} (hy : Tendsto y atTop (𝓝 y₀)) :
-    Tendsto (fun n => approxS A n t (y n)) atTop (𝓝 (lpS hA t y₀)) := by
-  have h0 : Tendsto (fun n => approxS A n t (y n - y₀)) atTop (𝓝 0) := by
-    rw [tendsto_zero_iff_norm_tendsto_zero]
-    refine squeeze_zero (fun _ => norm_nonneg _) (fun n => norm_approxS_apply_le hA n ht _) ?_
-    exact tendsto_zero_iff_norm_tendsto_zero.1 (by simpa using hy.sub_const y₀)
-  have := h0.add (tendsto_approxS hA ht y₀)
-  rw [zero_add] at this
-  exact this.congr fun n => by rw [← _root_.map_add, sub_add_cancel]
+    Tendsto (fun n => approxS A n t (y n)) atTop (𝓝 (lpS hA t y₀)) :=
+  ContinuousLinearMap.tendsto_apply_of_tendsto
+    (fun n => ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+      simpa using norm_approxS_apply_le hA n ht x) (tendsto_approxS hA ht) hy
 
 theorem norm_lpS_apply_le (hA : A.IsMDissipative) (t : ℝ) (x : E) : ‖lpS hA t x‖ ≤ ‖x‖ :=
   le_of_tendsto' (tendsto_approxS_max hA t x).norm fun n =>

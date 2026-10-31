@@ -53,9 +53,10 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    `TimeScheme.norm_S_sub_sol_le_uniform`); the explicit leapfrog scheme for the wave equation
    converges under the CFL condition `τ ‖Lₕ‖ ≤ c < 1` ([Joly2003]); the time discretization of
    the exact wave and heat equations alone by every A-stable rational scheme of order `p` has
-   the error `K nτ τᵖ ‖L^{p+1} x‖` on `D(L^{p+1})`, with the constant of the discrete schemes
-   (Brenner–Thomée for the unbounded generators, `ConstrainedFEEC.FullVerdict.exact_wave`,
-   `ConstrainedFEEC.FullVerdict.exact_heat`); the field carries
+   the error `K nτ τᵖ ‖L^{p+1} x‖` on `D(L^{p+1})` (the data of the domain scale), with the
+   constant of the discrete schemes (Brenner–Thomée for the unbounded generators,
+   `ConstrainedFEEC.FullVerdict.exact_wave`, `ConstrainedFEEC.FullVerdict.exact_heat`); the field
+   carries
    **forcing and inhomogeneous boundary data**: the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` have the
    comparison error plus the summed consistency defects (the discrete Duhamel formula,
    `DissipFEEC.TimeScheme.Verdict.forced_iterates`), and for an operator `L_max ≥ L` without
@@ -262,20 +263,21 @@ structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
             (b.equivFun v) ↔
       w = b.equivFun ((G.toApprox.crankNicolson τ hτ).P h v)
   /-- the time discretization of the exact wave equation by every A-stable rational scheme `r`
-  of order `p`: `‖r(τL)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖L^{p+1} x‖` for `x ∈ D(L^{p+1})` (a chain in the
-  graph of `L`), with the constant `K` of the discrete schemes (Brenner–Thomée for the unbounded
-  `L`, `DissipFEEC.norm_step_pow_sub_S_le`) -/
+  of order `p`: `‖r(τL)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖L^{p+1} x‖` for `x ∈ D(L^{p+1})` (the data of
+  the domain scale `DissipFEEC.RegScale.domainPow`), with the constant `K` of the discrete schemes
+  (Brenner–Thomée for the unbounded `L`, `DissipFEEC.norm_step_pow_sub_S_le`) -/
   exact_wave (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
-    {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → PiLp 2 W}
-    (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ H.wave.graph) :
-    ‖(r.step H.wave τ ^ n) (u 0) - G.toApprox.S (n * τ) (u 0)‖ ≤
-      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p * ‖u (p + 1)‖
+    {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {x : PiLp 2 W} (hx : x ∈ DissipFEEC.iterDomain H.wave (p + 1)) :
+    ‖(r.step H.wave τ ^ n) x - G.toApprox.S (n * τ) x‖ ≤
+      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p *
+        ‖(DissipFEEC.genExt H.wave)^[p + 1] x‖
   /-- the same for the exact heat equation, generator `-Δ` -/
   exact_heat (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
-    {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → PiLp 2 W}
-    (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ (-H.hodgeLaplacian).graph) :
-    ‖(r.step (-H.hodgeLaplacian) τ ^ n) (u 0) - G.toHeat.S (n * τ) (u 0)‖ ≤
-      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p * ‖u (p + 1)‖
+    {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {x : PiLp 2 W}
+    (hx : x ∈ DissipFEEC.iterDomain (-H.hodgeLaplacian) (p + 1)) :
+    ‖(r.step (-H.hodgeLaplacian) τ ^ n) x - G.toHeat.S (n * τ) x‖ ≤
+      ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p *
+        ‖(DissipFEEC.genExt (-H.hodgeLaplacian))^[p + 1] x‖
 
 /-- **The fully discrete FEEC theorem for a constrained FEEC discretization**: wave and heat, every
 time scheme, leapfrog under the CFL condition, the Hermitian signed systems of Crank–Nicolson, and
@@ -285,8 +287,8 @@ theorem constrainedFEEC_fullyDiscrete (G : ConstrainedFEEC H κ) : G.FullVerdict
     fun hcr hb Θ => dissipFEEC_fullyDiscrete (G.heatCore hcr hb) Θ,
     G.toApprox.norm_S_sub_leapfrog_le,
     fun hτ h _ b ε hε hMε hKε v => G.toApprox.crankNicolson_signed hτ h b ε hε hMε hKε v,
-    fun r hr _ hp _ hτ n _ hu => G.toApprox.norm_step_pow_sub_S_le r hr hp hτ n hu,
-    fun r hr _ hp _ hτ n _ hu => G.toHeat.norm_step_pow_sub_S_le r hr hp hτ n hu⟩
+    fun r hr _ hp _ hτ n _ hx => G.toApprox.norm_step_pow_sub_S_le r hr hp hτ n hx,
+    fun r hr _ hp _ hτ n _ hx => G.toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx⟩
 
 variable {ρ : Type*}
 

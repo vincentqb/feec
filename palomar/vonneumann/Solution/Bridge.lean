@@ -89,6 +89,8 @@ section Semigroup
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E}
 
 omit [IsScalarTower ℝ 𝕜 E] in
+/-- The strong solutions of the challenge are those of `Feec.Evolution.IsStrongSolution`, without
+forcing. -/
 theorem isStrongSolution_iff {I : Set ℝ} {u : ℝ → E} :
     IsStrongSolution A I u ↔ Feec.Evolution.IsStrongSolution A I 0 u := by
   refine ⟨fun h => ⟨h.1, fun t ht => ?_⟩, fun h => ⟨h.continuousOn, fun t ht => ?_⟩⟩

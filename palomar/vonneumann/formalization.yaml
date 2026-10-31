@@ -116,15 +116,14 @@ sources:
     note: >-
       Convergence of rational approximations: for r stable and of order m,
       ||r(tau A)^n x - e^(n tau A) x|| <= C t tau^m ||A^(m+1) x||, t = n tau, for generators A
-      of semigroups with x in the domain of A^(m+1) (Thms 1 and 3 as recalled). Formalized for
-      Hilbert spaces (complex r on complex spaces, real r on real or complex spaces), where
-      A-stability gives the stability ||r(tau A)^n|| <= 1: for bounded dissipative A and for
+      of semigroups with x in the domain of A^(m+1). Formalized for Hilbert spaces (complex r on
+      complex spaces, real r on real or complex spaces), where A-stability gives the stability ||r(tau A)^n|| <= 1: for bounded dissipative A and for
       m-dissipative, possibly unbounded, A (the generators of contraction semigroups), with C
       uniform in A, the space, tau and n. Not compared: Banach spaces and generators of
       semigroups that are not contractive (where stability may only hold with a growing bound
       on ||r(tau A)^n||), and the estimates for less smooth data (x in the domain of a lower
-      power of A, with a lower rate). Paper not consulted; statement, theorem numbers and scope
-      as recalled.
+      power of A, with a lower rate). Paper not consulted; statement and scope as recalled, so
+      no theorem numbers are cited.
     author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
@@ -254,7 +253,9 @@ review:
   reviewers:
     - "none"
   notes: >-
-    The author reviewed the Challenge statements. Every merge of the library was gated by a full
+    The author reviewed the Challenge statements except VonNeumann.IsStrongSolution,
+    VonNeumann.error_bound_mdissipative and VonNeumann.error_bound_mdissipative_real, added after
+    that review and not yet reviewed by the author. Every merge of the library was gated by a full
     build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
     independent AI review. No external mathematical review.
 
@@ -306,12 +307,12 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Real A-stable r of order m, bounded dissipative A, real or complex Hilbert spaces."
-    - source: "[BrennerThomee1979], Thms 1, 3; [Pazy1983], §1.4"
+    - source: "[BrennerThomee1979]; [Pazy1983], §1.4"
       lean: "VonNeumann.error_bound_mdissipative"
       module: "Challenge"
       status: "proved"
       note: "Complex A-stable r of order m, m-dissipative A, the semigroup by strong solutions."
-    - source: "[BrennerThomee1979], Thms 1, 3; [Pazy1983], §1.4"
+    - source: "[BrennerThomee1979]; [Pazy1983], §1.4"
       lean: "VonNeumann.error_bound_mdissipative_real"
       module: "Challenge"
       status: "proved"

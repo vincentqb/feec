@@ -235,7 +235,7 @@ theorem error_bound_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval 
   exact r.norm_apply_pow_sub_exp_le hA hr (r.hasOrder_of_isBigO hm) hτ n x
 
 /-- **The error of an A-stable scheme of order `m` for m-dissipative operators**
-([BrennerThomee1979], Thms 1 and 3). Let `r = p/q` be a complex rational function without poles
+([BrennerThomee1979]). Let `r = p/q` be a complex rational function without poles
 in the closed left half-plane, A-stable (`|r(iy)| ≤ 1`), of order `m`
 (`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such that for every possibly
 unbounded operator `A` of a complex Hilbert space, dissipative with `μ - A` onto for some
@@ -276,7 +276,7 @@ theorem error_bound_mdissipative (p q : ℂ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 �
   exact norm_resolventEval_mul_inverse_pow_sub_semigroup_le hAm hq hr hm' hτ n hu
 
 /-- **The error of an A-stable scheme of order `m` for m-dissipative operators, real
-coefficients** ([BrennerThomee1979], Thms 1 and 3): the real form of
+coefficients** ([BrennerThomee1979]): the real form of
 `VonNeumann.error_bound_mdissipative`, over `𝕜 = ℝ` or `ℂ`. Let `r = p/q` be a real rational
 function without poles in the closed left half-plane, A-stable (`|r(iy)| ≤ 1`), of order `m`
 (`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such that for every m-dissipative,

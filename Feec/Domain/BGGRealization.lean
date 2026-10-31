@@ -244,7 +244,7 @@ and the regular decompositions after `J` hold, the BGG complex `bgg J` of their 
 has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, and the explicit map (30) of
 [ArnoldHu2021], Theorem 7 is a quasi-isomorphism (`HilbertData.BGGVerdict`) for every choice of
 right inverses of `S` from `J` on between the domains (none exist when `Sᴶ` is not onto between
-them, as for the Hessian, elasticity and div-div diagrams). -/
+them, as for the Hessian, elasticity and div-div diagrams; not formalized). -/
 theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen Ω) {J : ℤ}
     (hN : ∀ k ≤ J, ∃ N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜, N * M k = 1)
     (htop : (B.maximalData M hM hΩ).RegularDecomposition J)

@@ -37,11 +37,13 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   `ApproxComplexCrime.shifted_nonvacuous`, `ApproxComplexCrime.mixed_nonvacuous`); a Hodge wave
   equation with `L ≠ 0` (`Feec.Examples.idComplex_nonvacuous`) and a nonzero skew generator
   (`Feec.Examples.rotGen_standing_hypotheses`).
-* **The explicit map of the BGG layer on genuine complexes** (`Feec.Domain.smoothBGGVerdict`): the
-  cochain map (30) of Theorem 7 of [ArnoldHu2021] is a quasi-isomorphism on the smooth Hessian,
-  elasticity and div-div complexes, with the Koszul null-homotopies and explicit right inverses,
-  and represents their degree-`0` cohomology by the affine functions, the infinitesimal rigid
-  motions and the lowest-order Raviart–Thomas fields.
+* **The explicit map of the BGG layer on smooth fields (algebraic layer)**
+  (`Feec.Domain.smoothBGGVerdict`): the cochain map (30) of Theorem 7 of [ArnoldHu2021] is a
+  quasi-isomorphism on the smooth Hessian, elasticity and div-div complexes, with the Koszul
+  null-homotopies and explicit right inverses, and the image of the constant pairs represents
+  their degree-`0` cohomology (informally `[c + K⁰ c̃]`: the affine functions, the infinitesimal
+  rigid motions, the lowest-order Raviart–Thomas fields). The explicit-map fields of the analytic
+  `Feec.BGG.HilbertData.BGGVerdict` remain vacuous for these complexes on `L²`.
 
 Not exercised here: a nonzero datum of a Jackson rate class with a non-stationary orbit (the zero
 datum lies in every Whitney class, `Maxwell.zero_mem_cubePMC_ofJackson`).
@@ -173,8 +175,9 @@ structure CrownNonVacuity : Prop where
   idComplex : type_of% @Examples.idComplex_nonvacuous.{u}
   /-- a nonzero bounded skew generator -/
   rotGen : type_of% @Examples.rotGen_standing_hypotheses.{u}
-  /-- the explicit cochain map (30) of the BGG layer (Theorem 7, Corollary 1 in degree `0`) on the
-  smooth Hessian, elasticity and div-div complexes -/
+  /-- the explicit cochain map (30) of the BGG layer (Theorem 7, Corollary 1 in degree `0`) on
+  smooth fields (algebraic layer) of the Hessian, elasticity and div-div complexes; the `L²`
+  explicit-map fields remain vacuous for these complexes -/
   bgg : type_of% @Domain.smoothBGGVerdict.{u}
 
 /-- **The crown is not vacuous** (`CrownNonVacuity`). -/

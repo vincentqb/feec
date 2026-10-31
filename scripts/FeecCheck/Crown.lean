@@ -134,7 +134,8 @@ rated form (`ConformingFamily.feec_rated`) are the verdicts of the layer theorem
 the section on the crown fields check, by `type_of%`, that the type of each field is,
 definitionally, the statement of the layer theorem it is read from (`staticFEEC`, `approxFEEC`,
 `constrainedFEEC`, `heatFEEC`, `dissipFEEC_fullyDiscrete` for the θ-schemes, Crank–Nicolson and
-every time scheme, `SkewFEEC.norm_S_sub_leapfrog_le`, `constrainedFEEC_perturbed`;
+every time scheme, `SkewFEEC.norm_S_sub_leapfrog_le`, `DissipFEEC.norm_step_pow_sub_S_le` (the
+fields `exact_wave`, `exact_heat` of the fully discrete verdict), `constrainedFEEC_perturbed`;
 `ConformingFamily.rate`,
 `ConstrainedFEEC.rate_le`, `ConstrainedFEEC.rate_heat`, `rate_smooth_iterates`). On the cube, the
 heat verdict of `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of
@@ -3019,6 +3020,17 @@ example {T : ℝ} (R : (F.windowFEEC a m K hK).toApprox.RateClass T)
     type_of% ((F.windowFEEC a m K hK).toApprox.norm_S_sub_leapfrog_le R hx h v hτ hc hc1 hw h0
       hn) :=
   (F.feec.full a m K hK).leapfrog R hx h v hτ hc hc1 hw h0 hn
+
+/-- The time discretization of the exact wave and heat equations by an A-stable rational scheme
+(Brenner–Thomée for the unbounded generators) is a field of the crown. -/
+example (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
+    (hτ : 0 < τ) (n : ℕ) {x x' : PiLp 2 fun i : Fin m => V (a + i)}
+    (hx : x ∈ DissipFEEC.iterDomain (H.window a m).wave (p + 1))
+    (hx' : x' ∈ DissipFEEC.iterDomain (-(H.window a m).hodgeLaplacian) (p + 1)) :
+    type_of% ((F.windowFEEC a m K hK).toApprox.norm_step_pow_sub_S_le r hr hp hτ n hx) ∧
+      type_of% ((F.windowFEEC a m K hK).toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx') :=
+  ⟨(F.feec.full a m K hK).exact_wave r hr hp hτ n hx,
+    (F.feec.full a m K hK).exact_heat r hr hp hτ n hx'⟩
 
 open scoped InnerProductSpace in
 example (B : (PiLp 2 fun i : Fin m => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin m => V (a + i))

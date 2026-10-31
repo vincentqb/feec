@@ -24,11 +24,12 @@ so the bound on the circle may omit `-1` (`norm_aeval_le_of_forall_ne_neg_one`).
 closed unit disc, `q(T)` is invertible and `‖p(T) q(T)⁻¹‖ ≤ sup_{|ζ| = 1, ζ ≠ -1} |p(ζ)/q(ζ)|`.
 Factor `q = c ∏ (X - b)`, `|b| > 1`; the polynomials `sₙ = c⁻¹ ∏ (-b⁻¹) ∑_{k<n} (X/b)ᵏ` satisfy
 `q sₙ = ∏ (1 - (X/b)ⁿ) → 1` uniformly on the closed disc and in operator norm at `T`, so
-`p sₙ → p/q` and von Neumann's inequality for `p sₙ` passes to the limit.
+`p sₙ → p/q` and von Neumann's inequality for `p sₙ` passes to the limit. Hence `‖q(T)⁻¹‖` is
+bounded uniformly over the contractions `T` (`exists_norm_inverse_aeval_le`).
 
 **Real coefficients over `𝕜 = ℝ` or `ℂ`** (`norm_aeval_map_mul_inverse_le`): for real polynomials
 `p`, `q` and a contraction of a Hilbert space over `𝕜`, the same bound, through the
-complexification (`Complexification`).
+complexification (`Complexification`); the uniform bound `exists_norm_inverse_aeval_map_le`.
 
 ## References
 
@@ -465,6 +466,25 @@ theorem norm_aeval_mul_inverse_le {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) {p q 
     simpa using ((hδ.const_add 1).const_mul K).add (hδ.const_mul ‖F‖)
   exact ⟨hunit, ge_of_tendsto' hlim hbound⟩
 
+/-- `1/q` is bounded on the unit circle when `q` has no zero in the closed unit disc. -/
+private theorem exists_norm_one_div_eval_le {q : ℂ[X]} (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → q.eval w ≠ 0) :
+    ∃ M : ℝ, ∀ ζ : ℂ, ‖ζ‖ = 1 → ‖(1 : ℂ[X]).eval ζ / q.eval ζ‖ ≤ M := by
+  obtain ⟨M, hM⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
+    (f := fun w : ℂ => (1 : ℂ[X]).eval w / q.eval w)
+    ((Polynomial.continuous _).continuousOn.div (Polynomial.continuous _).continuousOn
+      fun w hw => hq w (mem_sphere_zero_iff_norm.1 hw).le)
+  exact ⟨M, fun ζ hζ => hM ζ (mem_sphere_zero_iff_norm.2 hζ)⟩
+
+/-- **The inverses `q(T)⁻¹` are bounded uniformly over the contractions `T`** of a complex Hilbert
+space, when `q` has no zero in the closed unit disc (von Neumann's inequality for `1/q`). -/
+theorem exists_norm_inverse_aeval_le {q : ℂ[X]} (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → q.eval w ≠ 0) :
+    ∃ M : ℝ, ∀ T : E →L[ℂ] E, ‖T‖ ≤ 1 →
+      IsUnit (aeval T q) ∧ ‖Ring.inverse (aeval T q)‖ ≤ M := by
+  obtain ⟨M, hM⟩ := exists_norm_one_div_eval_le hq
+  refine ⟨M, fun T hT => ?_⟩
+  have h := norm_aeval_mul_inverse_le hT (p := 1) hq fun ζ hζ _ => hM ζ hζ
+  rwa [map_one, one_mul] at h
+
 end Rational
 
 section RealCoefficients
@@ -489,6 +509,19 @@ theorem norm_aeval_map_mul_inverse_le {T : V →L[𝕜] V} (hT : ‖T‖ ≤ 1) 
   refine ⟨hu, norm_le_of_norm_complexification_le ?_⟩
   rw [← complexification_ringInverse hu, ← complexification_mul] at h
   exact h.2
+
+/-- **The inverses `q(T)⁻¹` are bounded uniformly over the contractions `T`** of a Hilbert space
+over `𝕜`, for a real `q` without zero in the closed unit disc. -/
+theorem exists_norm_inverse_aeval_map_le {q : ℝ[X]} (hq : ∀ w : ℂ, ‖w‖ ≤ 1 → aeval w q ≠ 0) :
+    ∃ M : ℝ, ∀ T : V →L[𝕜] V, ‖T‖ ≤ 1 →
+      IsUnit (aeval T (q.map (algebraMap ℝ 𝕜))) ∧
+        ‖Ring.inverse (aeval T (q.map (algebraMap ℝ 𝕜)))‖ ≤ M := by
+  obtain ⟨M, hM⟩ := exists_norm_one_div_eval_le (q := q.map (algebraMap ℝ ℂ))
+    (by simpa only [eval_map_algebraMap] using hq)
+  refine ⟨M, fun T hT => ?_⟩
+  have h := norm_aeval_map_mul_inverse_le hT (p := 1) hq fun ζ hζ _ => by
+    simpa only [eval_map_algebraMap, eval_one, map_one] using hM ζ hζ
+  rwa [Polynomial.map_one, map_one, one_mul] at h
 
 end RealCoefficients
 

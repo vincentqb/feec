@@ -106,6 +106,7 @@ public import Feec.FiniteElement.WhitneyInterpolation
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Analysis.Polynomial
+public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.TimeSlice
@@ -390,6 +391,7 @@ public import Feec.TimeStepping.Convergence
 public import Feec.TimeStepping.Forced
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Rational
+public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RungeKutta
 public import Feec.TimeStepping.Theta
 public import Feec.TimeStepping.Trajectory

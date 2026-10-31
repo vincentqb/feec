@@ -23,7 +23,11 @@ passes from the real bounds of `Feec` to the suprema in `[0, ∞]` (`VonNeumann.
 `Feec.TimeStepping.norm_aeval_mul_inverse_pow_sub_exp_le` with the order from
 `Feec.TimeStepping.X_pow_dvd_sub_mul_expTaylor` (complex coefficients) and
 `Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le` with
-`Feec.TimeStepping.RationalScheme.hasOrder_of_isBigO` (real coefficients).
+`Feec.TimeStepping.RationalScheme.hasOrder_of_isBigO` (real coefficients); for m-dissipative `A`,
+the error bounds from `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_semigroup_le`
+(complex coefficients) and `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`
+(real coefficients), the semigroup from `LinearPMap.IsMDissipative.semigroup` through
+`VonNeumann.isStrongSolution_semigroup` and `VonNeumann.eqOn_semigroup_of_isStrongSolution`.
 
 ## References
 
@@ -230,4 +234,86 @@ theorem error_bound_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval 
   have : IsScalarTower ℝ 𝕜 E := IsScalarTower.of_algebraMap_smul fun _ _ => rfl
   exact r.norm_apply_pow_sub_exp_le hA hr (r.hasOrder_of_isBigO hm) hτ n x
 
+/-- **The error of an A-stable scheme of order `m` for m-dissipative operators**
+([BrennerThomee1979]). Let `r = p/q` be a complex rational function without poles
+in the closed left half-plane, A-stable (`|r(iy)| ≤ 1`), of order `m`
+(`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such that for every possibly
+unbounded operator `A` of a complex Hilbert space, dissipative with `μ - A` onto for some
+`μ > 0` (m-dissipative, [Pazy1983], §1.4): there is a family `S` of bounded operators, `S 0 = 1`,
+whose orbits `t ↦ S t x` from `x ∈ D(A)` are strong solutions of `u' = A u`, and the only ones
+(the semigroup `e^{tA}`), such that for every `τ > 0`, with the resolvent `R = (1 - τA)⁻¹` (the
+only bounded operator mapping `x - τAx` to `x`) and `r(τA) = P(R) Q(R)⁻¹` as in
+`VonNeumann.inequality_mdissipative`, `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖` for every
+`n` and `x ∈ D(A^{m+1})` (a chain `u 0 = x, …, u (m + 1) = A^{m+1} x` in the graph of `A`). -/
+theorem error_bound_mdissipative (p q : ℂ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0)
+    (hr : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ 1) {m : ℕ}
+    (hm : (fun z : ℂ => p.eval z / q.eval z - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
+    ∃ K : ℝ, ∀ {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+      (A : E →ₗ.[ℂ] E), (∀ x : A.domain, (⟪A x, (x : E)⟫_ℂ).re ≤ 0) →
+      (∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : ℂ) • (x : E) - A x = y) →
+      ∃ S : ℝ → E →L[ℂ] E, S 0 = 1 ∧
+        (∀ (x : A.domain) (T : ℝ), IsStrongSolution A (Set.Icc 0 T) fun t => S t x) ∧
+        (∀ (x : A.domain) (T : ℝ) (u : ℝ → E), u 0 = x → IsStrongSolution A (Set.Icc 0 T) u →
+          Set.EqOn u (fun t => S t x) (Set.Icc 0 T)) ∧
+        ∀ τ : ℝ, 0 < τ → ∃ R : E →L[ℂ] E,
+          (∀ T : E →L[ℂ] E, (∀ x : A.domain, T ((x : E) - (τ : ℂ) • A x) = x) ↔ T = R) ∧
+          let P := ∑ k ∈ Finset.range (q.natDegree + 1),
+            p.coeff k • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
+            q.coeff k • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          ∀ (n : ℕ) (u : ℕ → E), (∀ j < m + 1, (u j, u (j + 1)) ∈ A.graph) →
+            ‖((P * Ring.inverse Q) ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
+              K * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
+  have hm' := X_pow_dvd_sub_mul_expTaylor (hq 0 (by simp)) hm
+  refine ⟨(⨆ y : ℝ, ‖((p - q * (expTaylor m).map (algebraMap ℝ ℂ)) /ₘ X ^ (m + 1)).eval
+      (y * Complex.I) / q.eval (y * Complex.I)‖) + 1 / (m + 1).factorial, ?_⟩
+  intro E _ _ _ A hA hA'
+  have hAm : A.IsMDissipative := ⟨hA, hA'⟩
+  refine ⟨hAm.semigroup.S, hAm.semigroup.map_zero, isStrongSolution_semigroup hAm,
+    eqOn_semigroup_of_isStrongSolution hAm, fun τ hτ =>
+      ⟨(τ : ℂ)⁻¹ • Feec.Operator.resolvent A (τ : ℂ)⁻¹, apply_sub_smul_eq_iff hAm hτ, ?_⟩⟩
+  intro P Q n u hu
+  exact norm_resolventEval_mul_inverse_pow_sub_semigroup_le hAm hq hr hm' hτ n hu
+
+/-- **The error of an A-stable scheme of order `m` for m-dissipative operators, real
+coefficients** ([BrennerThomee1979]): the real form of
+`VonNeumann.error_bound_mdissipative`, over `𝕜 = ℝ` or `ℂ`. Let `r = p/q` be a real rational
+function without poles in the closed left half-plane, A-stable (`|r(iy)| ≤ 1`), of order `m`
+(`r(z) - e^z = O(z^{m+1})` at `0`). There is a constant `K` such that for every m-dissipative,
+possibly unbounded, operator `A` of a Hilbert space over `𝕜`, with its semigroup `S` (as in
+`VonNeumann.error_bound_mdissipative`), every `τ > 0` and `r(τA) = P(R) Q(R)⁻¹` at the resolvent
+`R = (1 - τA)⁻¹`, `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖` for every `n` and
+`x ∈ D(A^{m+1})`. -/
+theorem error_bound_mdissipative_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
+    (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) {m : ℕ}
+    (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
+    ∃ K : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+      [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (A : E →ₗ.[𝕜] E),
+      (∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0) →
+      (∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y) →
+      ∃ S : ℝ → E →L[𝕜] E, S 0 = 1 ∧
+        (∀ (x : A.domain) (T : ℝ), IsStrongSolution A (Set.Icc 0 T) fun t => S t x) ∧
+        (∀ (x : A.domain) (T : ℝ) (u : ℝ → E), u 0 = x → IsStrongSolution A (Set.Icc 0 T) u →
+          Set.EqOn u (fun t => S t x) (Set.Icc 0 T)) ∧
+        ∀ τ : ℝ, 0 < τ → ∃ R : E →L[𝕜] E,
+          (∀ T : E →L[𝕜] E, (∀ x : A.domain, T ((x : E) - (τ : 𝕜) • A x) = x) ↔ T = R) ∧
+          let P := ∑ k ∈ Finset.range (q.natDegree + 1),
+            (p.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
+            (q.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          ∀ (n : ℕ) (u : ℕ → E), (∀ j < m + 1, (u j, u (j + 1)) ∈ A.graph) →
+            ‖((P * Ring.inverse Q) ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
+              K * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
+  set r := RationalScheme.ofBounded p q hq hr
+  refine ⟨(r.remainder m).supNorm + 1 / (m + 1).factorial, ?_⟩
+  intro 𝕜 E _ _ _ _ _ _ A hA hA'
+  have hAm : A.IsMDissipative := ⟨hA, hA'⟩
+  refine ⟨hAm.semigroup.S, hAm.semigroup.map_zero, isStrongSolution_semigroup hAm,
+    eqOn_semigroup_of_isStrongSolution hAm, fun τ hτ =>
+      ⟨(τ : 𝕜)⁻¹ • Feec.Operator.resolvent A (τ : 𝕜)⁻¹, apply_sub_smul_eq_iff hAm hτ, ?_⟩⟩
+  intro P Q n u hu
+  rw [show P = _ from (resolventEval_map _ p _).symm,
+    show Q = _ from (resolventEval_map _ q _).symm]
+  have h := r.norm_step_pow_sub_semigroup_le hAm hr (r.hasOrder_of_isBigO hm) hτ n hu
+  rwa [RationalScheme.step_eq_resolventEval] at h
 end VonNeumann

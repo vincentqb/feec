@@ -1,8 +1,8 @@
 module
 
 public import Solution.Defs
-public import Feec.TimeStepping.Rational
-public import Feec.TimeStepping.Theta
+public import Feec.TimeStepping.RationalSemigroup
+public import Feec.Evolution.WellPosed
 
 /-!
 # The bridge from the challenge to `Feec`
@@ -21,6 +21,13 @@ the imaginary axis), with `sup_y |r(iy)| ≤ C`
 `p(L) q(L)⁻¹` by definition (`apply_ofBounded`), and `r(τA)` for an m-dissipative `A` is
 `P(S) Q(S)⁻¹` at the resolvent `S = (1 - τA)⁻¹`
 (`Feec.TimeStepping.RationalScheme.step_eq_resolventEval`, `resolventEval_map`).
+
+For the error bounds of m-dissipative operators, the semigroup of the challenge is the
+Lumer–Phillips semigroup (`LinearPMap.IsMDissipative.semigroup`): its orbits from `D(A)` are
+classical solutions (`Feec.C0Semigroup.isClassicalSolution_orbit` with
+`LinearPMap.IsMDissipative.generator_semigroup`), and strong solutions of a dissipative `A` are
+unique (`Feec.Evolution.IsStrongSolution.unique`); the challenge's `IsStrongSolution` is
+`Feec.Evolution.IsStrongSolution` without forcing (`isStrongSolution_iff`).
 
 ## References
 
@@ -76,5 +83,41 @@ theorem resolventEval_map (N : ℕ) (p : ℝ[X]) (S : E →L[𝕜] E) :
     resolventEval N (p.map (algebraMap ℝ 𝕜)) S =
       ∑ k ∈ Finset.range (N + 1), (p.coeff k : 𝕜) • ((S - 1) ^ k * S ^ (N - k)) := by
   simp only [resolventEval, coeff_map, RCLike.algebraMap_eq_ofReal]
+
+section Semigroup
+
+variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {A : E →ₗ.[𝕜] E}
+
+omit [IsScalarTower ℝ 𝕜 E] in
+/-- The strong solutions of the challenge are those of `Feec.Evolution.IsStrongSolution`, without
+forcing. -/
+theorem isStrongSolution_iff {I : Set ℝ} {u : ℝ → E} :
+    IsStrongSolution A I u ↔ Feec.Evolution.IsStrongSolution A I 0 u := by
+  refine ⟨fun h => ⟨h.1, fun t ht => ?_⟩, fun h => ⟨h.continuousOn, fun t ht => ?_⟩⟩
+  · obtain ⟨v, hv, hd⟩ := h.2 t ht
+    exact ⟨v, hv, by simpa using hd⟩
+  · obtain ⟨v, hv, hd⟩ := h.deriv t ht
+    exact ⟨v, hv, by simpa using hd⟩
+
+variable [CompleteSpace E]
+
+/-- The orbits of the Lumer–Phillips semigroup from `D(A)` are strong solutions. -/
+theorem isStrongSolution_semigroup (hA : A.IsMDissipative) (x : A.domain) (T : ℝ) :
+    IsStrongSolution A (Set.Icc 0 T) fun t => hA.semigroup.S t x := by
+  have h := hA.semigroup.isClassicalSolution_orbit (U₀ := x)
+    (by rw [hA.generator_semigroup]; exact x.2) 0 T
+  rw [hA.generator_semigroup] at h
+  simp only [sub_zero] at h
+  exact isStrongSolution_iff.2 h.toIsStrongSolution
+
+/-- They are the only strong solutions. -/
+theorem eqOn_semigroup_of_isStrongSolution (hA : A.IsMDissipative) (x : A.domain) (T : ℝ)
+    (u : ℝ → E) (hu0 : u 0 = x) (hu : IsStrongSolution A (Set.Icc 0 T) u) :
+    Set.EqOn u (fun t => hA.semigroup.S t x) (Set.Icc 0 T) :=
+  (isStrongSolution_iff.1 hu).unique hA.dissipative
+    (isStrongSolution_iff.1 (isStrongSolution_semigroup hA x T))
+    (by rw [hu0, hA.semigroup.map_zero]; rfl)
+
+end Semigroup
 
 end VonNeumann

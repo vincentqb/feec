@@ -8,6 +8,8 @@ public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Topology.MetricSpace.Antilipschitz
+public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+public import Mathlib.Analysis.Normed.Operator.Banach
 
 /-!
 # The Bernstein–Gelfand–Gelfand construction of Arnold and Hu
@@ -442,6 +444,38 @@ def ofBoundedHom (s : ∀ i, Ht i →L[𝕜] H (i + 1))
     ext x
     simp [CochainComplex.shiftFunctor_obj_d', hs]
 
+/-- **The Moore–Penrose inverse** `s†` of a bounded operator `s : E → F` between Hilbert spaces
+with closed range ([ArnoldHu2021], (29)): the inverse of the bijection `s : N(s)ᗮ → R(s)` on
+`R(s)`, zero on `R(s)ᗮ` (`0` if the range is not closed). -/
+def moorePenrose {E F : Type v} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
+    [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F] (s : E →L[𝕜] F) :
+    F →L[𝕜] E :=
+  open scoped Classical in
+  if h : IsClosed (s.range : Set F) then
+    haveI := h.completeSpace_coe
+    let r : s.kerᗮ →L[𝕜] s.range :=
+      (s ∘L s.kerᗮ.subtypeL).codRestrict s.range fun x => ⟨x, rfl⟩
+    s.kerᗮ.subtypeL ∘L ((ContinuousLinearEquiv.ofBijective r
+        (LinearMap.ker_eq_bot'.2 fun x hx => Subtype.ext <| (Submodule.mem_bot 𝕜).1 <|
+          s.ker.inf_orthogonal_eq_bot ▸ (⟨congrArg Subtype.val hx, x.2⟩ : (x : E) ∈ s.ker ⊓ s.kerᗮ))
+        (LinearMap.range_eq_top.2 fun ⟨_, x, hx⟩ =>
+          ⟨⟨_, s.kerᗮ.starProjection_apply_mem x⟩, Subtype.ext (Eq.trans (by
+            have h0 : s (s.ker.starProjection x) = 0 := s.ker.starProjection_apply_mem x
+            change s _ = s x
+            conv_rhs => rw [← s.ker.starProjection_add_starProjection_orthogonal x, map_add, h0,
+              zero_add]
+            rfl) hx)⟩)).symm : s.range →L[𝕜] s.kerᗮ) ∘L
+      s.range.orthogonalProjectionOnto
+  else 0
+
+/-- **The output spaces** of [ArnoldHu2021], (25), inside `Hⁱ × H̃ⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
+`0 × N(sⁱ)` after `J`. -/
+def Υ (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (J i : ℤ) : Submodule 𝕜 (H i × Ht i) :=
+  if i ≤ J then
+    Submodule.prod (rangeS (ofBoundedHom (hd := hd) (hdt := hdt) s hs) i : Submodule 𝕜 (H i))ᗮ ⊥
+  else Submodule.prod ⊥ (s i).ker
+
 end BGG
 
 /-! ### The theorems -/
@@ -538,6 +572,45 @@ theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
         [FiniteDimensional 𝕜 ((BGG.ofBounded dt hdt).homology i)] →
         IsClosed ((BGG.Δ S J i ⊔ (BGG.Γ S J (i - 1)).map (BGG.twist S (i - 1) i) :
           Submodule 𝕜 _) : Set (H i × Ht i))) := by
+  sorry
+
+/-- **The orthogonal form of Theorem 7: the cochain map (30) with Moore–Penrose inverses**
+([ArnoldHu2021], (24)–(26), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
+operators on Hilbert spaces and `s` bounded connecting maps with `d s = -s d̃`, null-homotopic,
+`sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)), with `sⁱ` injective for `i ≤ J`, surjective for `i ≥ J` ((23)) and
+of closed range for `i < J`; let `tⁱ⁺¹ = (sⁱ)†` (`BGG.moorePenrose`). Then there is a complex `Y`
+with isomorphisms `Yⁱ ≅ Υⁱ` onto the output spaces (`BGG.Υ`: `R(sⁱ⁻¹)ᗮ` up to `J`, `N(sⁱ)` after)
+carrying its differential to the output differentials (26), `P_{R(sⁱ)ᗮ} d` before `J`,
+`d̃ (sᴶ)† d` at `J`, `d̃` after `J`, and a quasi-isomorphism `κ` from the sum complex to `Y` which
+is the map (30): `(ω, μ) ↦ P_{R(sⁱ⁻¹)ᗮ}(ω + Kμ)` up to `J`, and in degree `i + 1 > J`,
+`(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; and `Y` is isomorphic to the BGG complex. -/
+theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
+    [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
+    [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+    [∀ i, CompleteSpace (Ht i)]
+    (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
+    (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (K : ∀ i, Ht i →ₗ[𝕜] H i) (hK : ∀ i μ, s i μ = d i (K i μ) - K (i + 1) (dt i μ))
+    (J : ℤ) (hinj : ∀ i ≤ J, Function.Injective (s i))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (s i))
+    (hR : ∀ i < J, IsClosed (Set.range (s i))) :
+    let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
+    let P := fun i => (BGG.rangeS S i : Submodule 𝕜 (H i))ᗮ.starProjection
+    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ) (e : ∀ i, Y.X i ≃ₗ[𝕜] BGG.Υ (hd := hd) (hdt := hdt) s hs J i)
+      (κ : BGG.twisted (0 : BGG.ofBounded dt hdt ⟶ (BGG.ofBounded d hd)⟦(1 : ℤ)⟧) ⟶ Y),
+      (∀ i < J, ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
+        (P (i + 1) (d i (e i y : H i × Ht i).1), 0)) ∧
+      (∀ y, (e (J + 1) (Y.d J (J + 1) y) : H (J + 1) × Ht (J + 1)) =
+        (0, dt J (BGG.moorePenrose (s J) (d J (e J y : H J × Ht J).1)))) ∧
+      (∀ i, J < i → ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
+        (0, dt i (e i y : H i × Ht i).2)) ∧
+      (∀ i ≤ J, ∀ x : H i × Ht i, (e i ((κ.f i).hom x) : H i × Ht i) = (P i (x.1 + K i x.2), 0)) ∧
+      (∀ i, J ≤ i → ∀ x : H (i + 1) × Ht (i + 1),
+        (e (i + 1) ((κ.f (i + 1)).hom x) : H (i + 1) × Ht (i + 1)) =
+          (0, (s (i + 1)).ker.starProjection (dt i (BGG.moorePenrose (s i) x.1) +
+            (x.2 + dt i (BGG.moorePenrose (s i) (K (i + 1) x.2)))))) ∧
+      QuasiIso κ ∧ Nonempty (Y ≅ BGG.bgg S J) :=
   sorry
 
 end FEEC

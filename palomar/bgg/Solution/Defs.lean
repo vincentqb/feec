@@ -8,6 +8,8 @@ public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Topology.MetricSpace.Antilipschitz
+public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+public import Mathlib.Analysis.Normed.Operator.Banach
 
 /-!
 # The definitions of the challenge
@@ -390,6 +392,38 @@ def ofBoundedHom (s : ∀ i, Ht i →L[𝕜] H (i + 1))
     obtain rfl : i + 1 = j := hij
     ext x
     simp [CochainComplex.shiftFunctor_obj_d', hs]
+
+/-- **The Moore–Penrose inverse** `s†` of a bounded operator `s : E → F` between Hilbert spaces
+with closed range ([ArnoldHu2021], (29)): the inverse of the bijection `s : N(s)ᗮ → R(s)` on
+`R(s)`, zero on `R(s)ᗮ` (`0` if the range is not closed). -/
+def moorePenrose {E F : Type v} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [CompleteSpace E]
+    [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F] (s : E →L[𝕜] F) :
+    F →L[𝕜] E :=
+  open scoped Classical in
+  if h : IsClosed (s.range : Set F) then
+    haveI := h.completeSpace_coe
+    let r : s.kerᗮ →L[𝕜] s.range :=
+      (s ∘L s.kerᗮ.subtypeL).codRestrict s.range fun x => ⟨x, rfl⟩
+    s.kerᗮ.subtypeL ∘L ((ContinuousLinearEquiv.ofBijective r
+        (LinearMap.ker_eq_bot'.2 fun x hx => Subtype.ext <| (Submodule.mem_bot 𝕜).1 <|
+          s.ker.inf_orthogonal_eq_bot ▸ (⟨congrArg Subtype.val hx, x.2⟩ : (x : E) ∈ s.ker ⊓ s.kerᗮ))
+        (LinearMap.range_eq_top.2 fun ⟨_, x, hx⟩ =>
+          ⟨⟨_, s.kerᗮ.starProjection_apply_mem x⟩, Subtype.ext (Eq.trans (by
+            have h0 : s (s.ker.starProjection x) = 0 := s.ker.starProjection_apply_mem x
+            change s _ = s x
+            conv_rhs => rw [← s.ker.starProjection_add_starProjection_orthogonal x, map_add, h0,
+              zero_add]
+            rfl) hx)⟩)).symm : s.range →L[𝕜] s.kerᗮ) ∘L
+      s.range.orthogonalProjectionOnto
+  else 0
+
+/-- **The output spaces** of [ArnoldHu2021], (25), inside `Hⁱ × H̃ⁱ`: `R(Sⁱ⁻¹)ᗮ × 0` up to `J`,
+`0 × N(sⁱ)` after `J`. -/
+def Υ (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (J i : ℤ) : Submodule 𝕜 (H i × Ht i) :=
+  if i ≤ J then
+    Submodule.prod (rangeS (ofBoundedHom (hd := hd) (hdt := hdt) s hs) i : Submodule 𝕜 (H i))ᗮ ⊥
+  else Submodule.prod ⊥ (s i).ker
 
 end BGG
 

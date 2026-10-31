@@ -345,7 +345,9 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   dim Hⁱ(Ṽ)` with equality iff `S` induces zero on cohomology (27); under `S = dK - Kd̃` (28), the
   cohomology of the sum complex (Theorem 7), the explicit cochain map (30) from the sum complex
   (right inverses of `Sⁱ` from `J` on) a quasi-isomorphism carrying cohomology representatives of
-  the rows to those of the BGG complex (Corollary 1, (31)); for bounded Hilbert complexes with `Sⁱ` bounded
+  the rows to those of the BGG complex (Corollary 1, (31)), and for Hilbert rows under (23) its
+  orthogonal form with the Moore–Penrose inverses into the output complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)`
+  (24)–(26) (`Feec.BGG.BoundedData.quasiIso_orthSumMap`); for bounded Hilbert complexes with `Sⁱ` bounded
   below before `J`, `Γⁱ`, `Δⁱ` closed and closed ranges where the rows have finite-dimensional
   cohomology; from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
   `Feec.BGG.Data.finrank_twistComplex_homology_eq_iff`, `Feec.BGG.Data.bggProj`,

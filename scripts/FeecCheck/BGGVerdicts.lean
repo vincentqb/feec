@@ -12,7 +12,11 @@ three-field verdict (closed range, finite-dimensional cohomology, the dimension 
 and derives it from the new structure. `HilbertData.bggVerdict` and
 `Domain.ConstCoeffBGG.maximalData_bggVerdict` now conclude `HilbertData.BGGVerdict`, which extends
 `DerivedVerdict` by the explicit map (30); `bggVerdict_old` and `maximalData_bggVerdict_old` state
-their earlier conclusions verbatim and derive them from the new ones.
+their earlier conclusions verbatim and derive them from the new ones. `BGGVerdict` then gained
+the fields `injective_domainData_S` and `quasiIso_orthSumMap` (the orthogonal form of (30) with the
+Moore–Penrose inverses);
+`bggVerdict_explicit_old` states its earlier fields verbatim and derives them from the new
+structure.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -53,6 +57,26 @@ theorem bggVerdict_old {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
     (htop : D.RegularDecomposition J) (i : ℤ) [FiniteDimensional 𝕜 (D.H.cohomology i)]
     [FiniteDimensional 𝕜 (D.Ht.cohomology i)] : D.DerivedVerdict (J < ·) (· < J) i :=
   (D.bggVerdict hS htop i).toDerivedVerdict
+
+/-- The earlier `HilbertData.BGGVerdict` (before the fields `injective_domainData_S` and
+`quasiIso_orthSumMap`, the orthogonal form of (30) with the Moore–Penrose inverses), from the new
+one. -/
+theorem bggVerdict_explicit_old {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] [∀ i, NormedAddCommGroup (Wt i)]
+    [∀ i, InnerProductSpace 𝕜 (Wt i)] [∀ i, CompleteSpace (Wt i)]
+    {D : HilbertData 𝕜 (ComplexShape.up ℤ) W Wt} {J i : ℤ} (v : D.BGGVerdict J i) :
+    D.DerivedVerdict (J < ·) (· < J) i ∧
+      (∀ {t : ∀ i j, D.H.domainSpace j →ₗ[𝕜] D.Ht.domainSpace i}
+        (ht : D.domainData.InjSurjWith J t) {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i}
+        (hK : D.domainData.IsNullHomotopy K), QuasiIso (D.domainData.bggSumMap t hK ht)) ∧
+      ∀ {t : ∀ i j, D.H.domainSpace j →ₗ[𝕜] D.Ht.domainSpace i}
+        (ht : D.domainData.InjSurjWith J t) {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i}
+        (hK : D.domainData.IsNullHomotopy K)
+        {H : Submodule 𝕜 (D.H.domainSpace i)} {Ht : Submodule 𝕜 (D.Ht.domainSpace i)},
+        D.domainData.rowTop.Represents i H → D.domainData.rowBot.Represents i Ht →
+        (D.domainData.bgg J).Represents i
+          ((H.prod Ht).map ((D.domainData.bggSumMap t hK ht).f i).hom) :=
+  ⟨v.toDerivedVerdict, v.quasiIso_bggSumMap, v.bgg_represents⟩
 
 open MeasureTheory in
 /-- The earlier `Domain.ConstCoeffBGG.maximalData_bggVerdict`, from the new one. -/

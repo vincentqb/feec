@@ -3,6 +3,7 @@ module
 public import Solution.Defs
 public import Feec.HilbertComplex.BGG.Analytic
 public import Feec.HilbertComplex.BGG.Connecting
+public import Feec.HilbertComplex.BGG.Orthogonal
 public import Feec.HilbertComplex.BGG.SumComplex
 
 /-!
@@ -476,6 +477,124 @@ theorem closedRange [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (
     have := D.isClosed_Δ_sup_map_twist hΔ hel i
     rw [hΓ, hΔ', CochainComplex.prev] at this
     exact this
+
+/-- The challenge's Moore–Penrose inverse is that of `Feec`. -/
+theorem moorePenrose_eq {E F : Type v} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    [CompleteSpace E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [CompleteSpace F]
+    (f : E →L[𝕜] F) : moorePenrose f = f.moorePenrose := rfl
+
+theorem bgg_toData_aux {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (G H : ∀ i, Submodule R (V.X i × Vt.X i))
+    (hG : (toData S).Γ (J < ·) = G) (hH : (toData S).Δ (· < J) = H)
+    (hs : ∀ i j, ∀ x ∈ G i, (twisted S).d i j x ∈ G j)
+    (hs' : ∀ i j, ∀ x ∈ (fun i => (H i).comap (G i).subtype) i,
+      (subcomplex (twisted S) G hs).d i j x ∈ (fun i => (H i).comap (G i).subtype) j) :
+    (toData S).bgg J = quotient (subcomplex (twisted S) G hs)
+      (fun i => (H i).comap (G i).subtype) hs' := by
+  subst hG hH
+  rfl
+
+/-- The BGG complex of the challenge is that of `Feec`. -/
+theorem bgg_toData {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) : (toData S).bgg J = bgg S J :=
+  bgg_toData_aux S J _ _ (Γ_toData S J) (Δ_toData S J) _ _
+
+theorem SL_boundedData (i : ℤ) : (boundedData (hd := hd) (hdt := hdt) s hs).SL i (i + 1) = s i :=
+  ContinuousLinearMap.ext fun φ => by
+    change conn (ofBoundedHom (hd := hd) (hdt := hdt) s hs) i (i + 1) φ = s i φ
+    rw [conn_ofBoundedHom]; rfl
+
+theorem Υ_boundedData (J i : ℤ) :
+    (boundedData (hd := hd) (hdt := hdt) s hs).Υ J i = Υ (hd := hd) (hdt := hdt) s hs J i := by
+  unfold Feec.BGG.BoundedData.Υ Υ
+  split_ifs
+  · rfl
+  · rw [SL_boundedData]
+
+variable [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)]
+
+/-- **The orthogonal form of (30)** (`FEEC.bggOrthogonal`), from
+`Feec.BGG.BoundedData.quasiIso_orthSumMap` and `Feec.BGG.BoundedData.isIso_toOrth`. -/
+theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
+    (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (K : ∀ i, Ht i →ₗ[𝕜] H i) (hK : ∀ i μ, s i μ = d i (K i μ) - K (i + 1) (dt i μ))
+    (J : ℤ) (hinj : ∀ i ≤ J, Function.Injective (s i))
+    (hsurj : ∀ i, J ≤ i → Function.Surjective (s i))
+    (hR : ∀ i < J, IsClosed (Set.range (s i))) :
+    let S := ofBoundedHom (hd := hd) (hdt := hdt) s hs
+    let P := fun i => (rangeS S i : Submodule 𝕜 (H i))ᗮ.starProjection
+    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ) (e : ∀ i, Y.X i ≃ₗ[𝕜] Υ (hd := hd) (hdt := hdt) s hs J i)
+      (κ : twisted (0 : ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧) ⟶ Y),
+      (∀ i < J, ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
+        (P (i + 1) (d i (e i y : H i × Ht i).1), 0)) ∧
+      (∀ y, (e (J + 1) (Y.d J (J + 1) y) : H (J + 1) × Ht (J + 1)) =
+        (0, dt J (moorePenrose (s J) (d J (e J y : H J × Ht J).1)))) ∧
+      (∀ i, J < i → ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
+        (0, dt i (e i y : H i × Ht i).2)) ∧
+      (∀ i ≤ J, ∀ x : H i × Ht i, (e i ((κ.f i).hom x) : H i × Ht i) = (P i (x.1 + K i x.2), 0)) ∧
+      (∀ i, J ≤ i → ∀ x : H (i + 1) × Ht (i + 1),
+        (e (i + 1) ((κ.f (i + 1)).hom x) : H (i + 1) × Ht (i + 1)) =
+          (0, (s (i + 1)).ker.starProjection (dt i (moorePenrose (s i) x.1) +
+            (x.2 + dt i (moorePenrose (s i) (K (i + 1) x.2)))))) ∧
+      QuasiIso κ ∧ Nonempty (Y ≅ bgg S J) := by
+  intro S P
+  set D := boundedData (hd := hd) (hdt := hdt) s hs
+  have hS (i : ℤ) (φ : Ht i) : D.S i (i + 1) φ = s i φ := by
+    change conn S i (i + 1) φ = s i φ
+    rw [conn_ofBoundedHom]; rfl
+  have hdD (i : ℤ) (x : H i) : D.d i (i + 1) x = d i x := by
+    change ((ofBounded d hd).d i (i + 1)).hom x = d i x
+    rw [ofBounded_d_succ]; rfl
+  have hdtD (i : ℤ) (x : Ht i) : D.dt i (i + 1) x = dt i x := by
+    change ((ofBounded dt hdt).d i (i + 1)).hom x = dt i x
+    rw [ofBounded_d_succ]; rfl
+  have hmp (i : ℤ) (y : H (i + 1)) : D.mpInv i (i + 1) y = moorePenrose (s i) y := by
+    change (D.SL i (i + 1)).moorePenrose y = _
+    rw [SL_boundedData, moorePenrose_eq]
+  have hinj' : ∀ i ≤ J, Function.Injective (D.S i (i + 1)) := fun i hi a b hab =>
+    hinj i hi (by rwa [hS, hS] at hab)
+  have hsurj' : ∀ i, J ≤ i → Function.Surjective (D.S i (i + 1)) := fun i hi y => by
+    obtain ⟨φ, rfl⟩ := hsurj i hi y
+    exact ⟨φ, hS i φ⟩
+  have hK' : D.IsNullHomotopy K := by
+    rintro i _ rfl μ
+    rw [hS, hdD, hdtD]
+    exact hK i μ
+  have hR' : ∀ i ≤ J, IsClosed ((D.SL (i - 1) i).range : Set (H i)) := fun i hi => by
+    obtain ⟨a, rfl⟩ : ∃ a, i = a + 1 := ⟨i - 1, by ring⟩
+    rw [add_sub_cancel_right, SL_boundedData, LinearMap.coe_range]
+    exact hR a (by omega)
+  have hJb : Function.Bijective (D.S J (J + 1)) := ⟨hinj' J le_rfl, hsurj' J le_rfl⟩
+  have e₀ : twisted (0 : ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧) = D.sumComplex :=
+    (congrArg Feec.BGG.Data.twistComplex (sumData_toData S)).symm
+  let κ := eqToHom e₀ ≫ D.orthSumMap J hinj' hsurj' hK'
+  have hκ (i : ℤ) : κ.f i = (D.orthSumMap J hinj' hsurj' hK').f i := by
+    erw [HomologicalComplex.comp_f, HomologicalComplex.eqToHom_f]
+    exact Category.id_comp _
+  refine ⟨D.orthComplex J hJb, fun i => LinearEquiv.ofEq _ _ (Υ_boundedData s hs J i), κ,
+    fun i hi y => ?_, fun y => ?_, fun i hi y => ?_, fun i hi x => ?_, fun i hi x => ?_, ?_, ?_⟩
+  · refine (Feec.BGG.BoundedData.coe_orthComplex_d hJb i y).trans ?_
+    rw [Feec.BGG.BoundedData.orthDMap_of_lt hi, hdD]
+    rfl
+  · refine (Feec.BGG.BoundedData.coe_orthComplex_d hJb J y).trans ?_
+    rw [Feec.BGG.BoundedData.orthDMap_of_eq, hdD, hmp, hdtD]
+    rfl
+  · refine (Feec.BGG.BoundedData.coe_orthComplex_d hJb i y).trans ?_
+    rw [Feec.BGG.BoundedData.orthDMap_of_gt hi, hdtD]
+    rfl
+  · change Subtype.val ((κ.f i).hom x) = _
+    rw [hκ]
+    exact Feec.BGG.BoundedData.orthSumMap_of_le hK' hinj' hsurj' hi x
+  · change Subtype.val ((κ.f (i + 1)).hom x) = _
+    rw [hκ]
+    refine (Feec.BGG.BoundedData.orthSumMap_of_gt hK' hinj' hsurj' (i := i + 1) (by omega) x).trans ?_
+    rw [Feec.BGG.Data.dt_t_prev rfl, Feec.BGG.Data.dt_t_prev rfl, hmp, hmp, hdtD, hdtD,
+      SL_boundedData]
+  · have := Feec.BGG.BoundedData.quasiIso_orthSumMap hK' hinj' hsurj' hR'
+    exact quasiIso_eqToHom_comp e₀ _
+  · have := Feec.BGG.BoundedData.isIso_toOrth hJb hR'
+    exact ⟨(asIso (D.toOrth J hJb)).symm ≪≫ eqToIso (bgg_toData S J)⟩
 
 end Hilbert
 

@@ -279,14 +279,22 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   `Feec.Algebra.CubicalForm`. Its challenge has its own vocabulary (polynomial forms over
   `MvPolynomial`), not the Hilbert complexes above.
 * `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
-  VonNeumann.inequality_dissipative, VonNeumann.cayley_contraction, about 100 lines, Mathlib
-  vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of
-  every complex inner product space, its rational form on Hilbert spaces,
-  `‖r(τA)‖ ≤ sup_y |r(iy)|` for real rational `r` without poles in the closed left half-plane,
-  bounded dissipative `A` over ℝ or ℂ and `τ ≥ 0` (A-stable schemes are unconditionally stable),
-  and the Cayley transform of an m-dissipative, possibly unbounded, `A` as the unique contraction
-  mapping `x - τAx` to `x + τAx`; from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
-  `Feec.TimeStepping.RationalScheme.ofBounded` and `Feec.TimeStepping.norm_cayley_le`.
+  VonNeumann.inequality_dissipative, VonNeumann.inequality_mdissipative, their real forms
+  VonNeumann.inequality_dissipative_real and VonNeumann.inequality_mdissipative_real,
+  VonNeumann.cayley_contraction and VonNeumann.error_bound, about 190 lines, Mathlib vocabulary
+  only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
+  complex inner product space and its rational form on Hilbert spaces;
+  `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for rational `r` without poles in the closed left half-plane
+  and every bounded dissipative or m-dissipative, possibly unbounded, `A` (complex `r` on
+  complex spaces, real `r` on real or complex spaces; `r(τA)` through the resolvent
+  `(1 - τA)⁻¹` when `A` is unbounded), so A-stable schemes are unconditionally stable; the
+  Cayley transform of an m-dissipative `A` as the unique contraction mapping `x - τAx` to
+  `x + τAx`; and the Brenner–Thomée error bound `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖`
+  of an A-stable scheme of order `m`, `K` depending on `r` only, for bounded dissipative `A`;
+  from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
+  `Feec.TimeStepping.norm_resolventEval_mul_inverse_le`,
+  `Feec.TimeStepping.RationalScheme.ofBounded`, `Feec.TimeStepping.norm_cayley_le` and
+  `Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le`.
 * `palomar/bgg/` (theorems FEEC.bggCohomology and FEEC.bggFinrank, about 280 lines): the
   algebraic BGG construction of [ArnoldHu2021], §5.2 over any ring, for cochain complexes on ℤ
   of any length: for a stacked diagram `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and

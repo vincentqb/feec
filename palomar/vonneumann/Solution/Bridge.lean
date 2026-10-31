@@ -9,12 +9,18 @@ public import Feec.TimeStepping.Theta
 
 The challenge is stated over Mathlib's polynomials and bounded operators, the vocabulary of
 `Feec.ForMathlib.InnerProductSpace.VonNeumann`, which proves von Neumann's inequality and its
-rational form directly. For the dissipative form, a real rational function `p/q` without poles
-in the closed left half-plane and bounded on the imaginary axis is a
-`Feec.TimeStepping.RationalScheme` (`Feec.TimeStepping.RationalScheme.ofBounded`, whose
-`deg p ≤ deg q` follows from the bound along the imaginary axis), with `sup_y |r(iy)| ≤ C`
+rational form directly, with suprema in `[0, ∞]`; `Feec` states the bounds with a real constant.
+`enorm_le_iSup` and `enorm_pow_le_iSup_pow` pass from every real bound to the supremum (vacuous
+when the supremum is infinite).
+
+For the dissipative forms, a real rational function `p/q` without poles in the closed left
+half-plane and bounded on the imaginary axis is a `Feec.TimeStepping.RationalScheme`
+(`Feec.TimeStepping.RationalScheme.ofBounded`, whose `deg p ≤ deg q` follows from the bound along
+the imaginary axis), with `sup_y |r(iy)| ≤ C`
 (`Feec.TimeStepping.RationalScheme.supNorm_ofBounded_le`); its operator `r(L)` is
-`p(L) q(L)⁻¹` by definition (`Feec.TimeStepping.RationalScheme.apply`).
+`p(L) q(L)⁻¹` by definition (`apply_ofBounded`), and `r(τA)` for an m-dissipative `A` is
+`P(S) Q(S)⁻¹` at the resolvent `S = (1 - τA)⁻¹`
+(`Feec.TimeStepping.RationalScheme.step_eq_resolventEval`, `resolventEval_map`).
 
 ## References
 
@@ -23,12 +29,51 @@ in the closed left half-plane and bounded on the imaginary axis is a
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace ENNReal
 open Polynomial Feec.TimeStepping
 
 @[expose] public noncomputable section
 
 namespace VonNeumann
+
+/-- **From real bounds to the supremum in `[0, ∞]`**: if every bound `C` of `‖f i‖` bounds
+`‖a‖`, then `‖a‖ₑ ≤ sup_i ‖f i‖ₑ`. -/
+theorem enorm_le_iSup {ι : Sort*} {M F : Type*} [SeminormedAddCommGroup M]
+    [SeminormedAddCommGroup F] (a : M) (f : ι → F)
+    (h : ∀ C : ℝ, (∀ i, ‖f i‖ ≤ C) → ‖a‖ ≤ C) : ‖a‖ₑ ≤ ⨆ i, ‖f i‖ₑ := by
+  by_cases hs : (⨆ i, ‖f i‖ₑ) = ∞
+  · rw [hs]; exact le_top
+  rw [← ofReal_norm, ← ENNReal.ofReal_toReal hs]
+  refine ENNReal.ofReal_le_ofReal (h _ fun i => ?_)
+  rw [← toReal_enorm]
+  exact ENNReal.toReal_mono hs (le_iSup (fun i => ‖f i‖ₑ) i)
+
+/-- **Powers**: if every bound `C` of `‖f i‖` bounds `‖a‖`, and `‖1‖ ≤ 1`, then
+`‖aⁿ‖ₑ ≤ (sup_i ‖f i‖ₑ)ⁿ`. -/
+theorem enorm_pow_le_iSup_pow {ι : Sort*} {M F : Type*} [SeminormedRing M]
+    [SeminormedAddCommGroup F] (h1 : ‖(1 : M)‖ ≤ 1) (a : M) (f : ι → F)
+    (h : ∀ C : ℝ, (∀ i, ‖f i‖ ≤ C) → ‖a‖ ≤ C) (n : ℕ) :
+    ‖a ^ n‖ₑ ≤ (⨆ i, ‖f i‖ₑ) ^ n := by
+  rcases n with _ | n
+  · rw [pow_zero, pow_zero, ← ofReal_norm, ← ENNReal.ofReal_one]
+    exact ENNReal.ofReal_le_ofReal h1
+  calc ‖a ^ (n + 1)‖ₑ ≤ ‖a‖ₑ ^ (n + 1) := by
+        rw [← ofReal_norm, ← ofReal_norm, ← ENNReal.ofReal_pow (norm_nonneg _)]
+        exact ENNReal.ofReal_le_ofReal (norm_pow_le' a n.succ_pos)
+    _ ≤ (⨆ i, ‖f i‖ₑ) ^ (n + 1) := pow_le_pow_left' (enorm_le_iSup a f h) _
+
+/-- A complex rational function bounded on the imaginary axis is bounded at infinity:
+`deg p ≤ deg q` (`Polynomial.natDegree_le_of_norm_div_le` along `y ↦ iy`). -/
+theorem natDegree_le_of_imaginary {p q : ℂ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {C : ℝ}
+    (hC : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ C) :
+    p.natDegree ≤ q.natDegree := by
+  have hl : Filter.Tendsto (fun y : ℝ => (y : ℂ) * Complex.I) Filter.atTop
+      (Bornology.cobounded ℂ) := by
+    rw [← tendsto_norm_atTop_iff_cobounded]
+    simpa using Filter.tendsto_abs_atTop_atTop
+  exact Polynomial.natDegree_le_of_norm_div_le hl (C := C)
+    (Filter.eventually_map.2 (.of_forall fun y => hq _ (by simp)))
+    (Filter.eventually_map.2 (.of_forall hC))
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
 
@@ -38,5 +83,11 @@ theorem apply_ofBounded {p q : ℝ[X]} (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z
     (RationalScheme.ofBounded p q hq hC).apply L =
       aeval L (p.map (algebraMap ℝ 𝕜)) * Ring.inverse (aeval L (q.map (algebraMap ℝ 𝕜))) :=
   rfl
+
+/-- `P(S) = sᴺ p(1 - 1/s)` at `S`, as written in the challenge. -/
+theorem resolventEval_map (N : ℕ) (p : ℝ[X]) (S : E →L[𝕜] E) :
+    resolventEval N (p.map (algebraMap ℝ 𝕜)) S =
+      ∑ k ∈ Finset.range (N + 1), (p.coeff k : 𝕜) • ((S - 1) ^ k * S ^ (N - k)) := by
+  simp only [resolventEval, coeff_map, RCLike.algebraMap_eq_ofReal]
 
 end VonNeumann

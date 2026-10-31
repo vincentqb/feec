@@ -1,7 +1,19 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["VonNeumann.inequality", "VonNeumann.inequality_rational", "VonNeumann.inequality_dissipative", "VonNeumann.cayley_contraction"],
+  "theorem_names": ["VonNeumann.inequality",
+    "VonNeumann.inequality_rational",
+    "VonNeumann.inequality_dissipative",
+    "VonNeumann.inequality_mdissipative",
+    "VonNeumann.inequality_dissipative_real",
+    "VonNeumann.inequality_mdissipative_real",
+    "VonNeumann.cayley_contraction",
+    "VonNeumann.error_bound"
+  ],
   "definition_names": [],
-  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
+  "permitted_axioms": [
+    "propext",
+    "Quot.sound",
+    "Classical.choice"
+  ]
 }

@@ -91,6 +91,11 @@ def IsCNStep (A : E →ₗ.[𝕜] E) (s : ℝ) (u u' : E) : Prop :=
 def cayley (A : E →ₗ.[𝕜] E) (s : ℝ) : E →L[𝕜] E :=
   (2 * (s : 𝕜)⁻¹) • resolvent A ((s : 𝕜)⁻¹) - 1
 
+/-- The Cayley transform is `2 S - 1` with `S = s⁻¹ R(s⁻¹) = (1 - s A)⁻¹`. -/
+theorem cayley_eq_two_mul_sub_one (A : E →ₗ.[𝕜] E) (s : ℝ) :
+    cayley A s = 2 * ((s : 𝕜)⁻¹ • resolvent A ((s : 𝕜)⁻¹)) - 1 := by
+  rw [cayley, two_mul ((s : 𝕜)⁻¹ • _), two_mul (s : 𝕜)⁻¹, add_smul]
+
 /-- The Cayley transform performs a CN step whenever `R(s⁻¹) = (s⁻¹ - A)⁻¹` exists.
 [QuennevilleBelair2015], Ch. 7 -/
 theorem isCNStep_cayley {R : E →L[𝕜] E} (hR : IsResolvent A ((s : 𝕜)⁻¹) R) (hs : s ≠ 0)

@@ -33,6 +33,17 @@ over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ
   (`norm_step_le_one`). This is `ContinuousLinearMap.norm_aeval_map_mul_inverse_le` for the
   contraction `C`; it is a theorem for every Hilbert space, not only finite-dimensional ones.
   For bounded dissipative `L`: `isUnit_aeval_den`, `norm_apply_le`, `norm_apply_le_one`.
+* **`r(τ A)` through the resolvent** (`RationalScheme.step_eq_resolventEval`): with
+  `S = (1 - τ A)⁻¹` and `N = deg d`, `r(τ A) = P(S) Q(S)⁻¹` for `P(s) = sᴺ n(1 - 1/s)`,
+  `Q(s) = sᴺ d(1 - 1/s)` (`resolventEval`), polynomials in the bounded `S`; `Q(S)` is invertible
+  (`RationalScheme.isUnit_resolventEval_den`), and `S` is the only operator mapping `x - τ A x`
+  to `x` (`apply_sub_smul_eq_iff`).
+* **Complex coefficients** (`norm_resolventEval_mul_inverse_le`): for complex polynomials
+  `p`, `q` with `deg p ≤ deg q`, `q` free of zeros for `re z ≤ 0`, and every m-dissipative `A`
+  of a complex Hilbert space, `‖P(S) Q(S)⁻¹‖ ≤ sup_y |p(iy)/q(iy)|`; for bounded `L`,
+  `P(S) Q(S)⁻¹ = p(L) q(L)⁻¹` at `S = (1 - L)⁻¹` (`resolventEval_eq_aeval`).
+* **Order from the asymptotics** (`RationalScheme.hasOrder_of_isBigO`): `r(z) - e^z = O(z^{p+1})`
+  at `0` gives order `p`.
 * **Consistency** (`RationalScheme.isConsistent`): a scheme of order `p` is consistent of order
   `p` with every bounded dissipative `L`, with constant
   `K = sup_y |(r(iy) - Tₚ(iy))/(iy)^{p+1}| + 1/(p+1)!`: `r = Tₚ + X^{p+1} ρ` with `ρ` the
@@ -65,7 +76,8 @@ Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace ComplexConjugate
-open Polynomial Finset Feec.Operator NormedSpace
+open scoped Topology
+open Polynomial Finset Feec.Operator NormedSpace Asymptotics
 
 @[expose] public noncomputable section
 
@@ -123,6 +135,59 @@ theorem aeval_neg_one_cayleyPoly (q : ℝ[X]) (N : ℕ) :
     aeval (-1 : ℂ) (cayleyPoly N q) = q.coeff N * (-2) ^ N := by
   simp only [cayleyPoly, map_sum, map_mul, map_pow, map_sub, map_add, aeval_X, aeval_C, map_one,
     sum_range_succ, Nat.sub_self, pow_zero, mul_one, neg_add_cancel]
+  rw [sum_eq_zero fun k hk => by
+    rw [zero_pow (by have := mem_range.1 hk; omega), mul_zero], zero_add]
+  norm_num
+
+/-- **`sᴺ f(1 - 1/s)` at `s = S`**: `∑_{k ≤ N} fₖ (S - 1)ᵏ S^{N-k}`. At the resolvent
+`S = (1 - L)⁻¹` of a bounded `L` it is `f(L) Sᴺ` (`1 - S⁻¹ = L`, `resolventEval_eq_mul_aeval`);
+for an unbounded `A` it gives `r(τ A)` as `P(S) Q(S)⁻¹` with `S = (1 - τ A)⁻¹` bounded
+(`RationalScheme.step_eq_resolventEval`). -/
+def resolventEval (N : ℕ) (f : R[X]) (S : A) : A :=
+  ∑ k ∈ range (N + 1), f.coeff k • ((S - 1) ^ k * S ^ (N - k))
+
+/-- **The Cayley transform of polynomials at `2 S - 1`**: `f̃(2 S - 1) = 2ᴺ (sᴺ f(1 - 1/s))(S)`,
+from `w - 1 = 2 (s - 1)` and `w + 1 = 2 s` at `w = 2 s - 1`. -/
+theorem aeval_two_mul_sub_one_cayleyPoly (S : A) (N : ℕ) (f : R[X]) :
+    aeval (2 * S - 1) (cayleyPoly N f) = 2 ^ N * resolventEval N f S := by
+  simp only [cayleyPoly, resolventEval, map_sum, map_mul, map_pow, map_sub, map_add, aeval_X,
+    aeval_C, map_one, mul_sum]
+  refine sum_congr rfl fun k hk => ?_
+  have hk' : k ≤ N := Nat.lt_succ_iff.1 (mem_range.1 hk)
+  have e1 : 2 * S - 1 - 1 = 2 * (S - 1) := by noncomm_ring
+  have e2 : 2 * S - 1 + 1 = 2 * S := by noncomm_ring
+  have h2 : (2 : A) = algebraMap R A 2 := (map_ofNat _ 2).symm
+  rw [e1, e2, (Commute.ofNat_left 2 _).mul_pow, (Commute.ofNat_left 2 S).mul_pow, h2]
+  simp only [← map_pow, ← Algebra.smul_def, smul_mul_assoc, mul_smul_comm, smul_smul]
+  congr 1
+  rw [← Nat.add_sub_cancel' hk', pow_add, Nat.add_sub_cancel_left]
+  ring
+
+/-- **At the resolvent**: if `S (1 - L) = 1` and `S L = L S`, then `sᴺ f(1 - 1/s)` at `S` is
+`Sᴺ f(L)` for `deg f ≤ N` (`S - 1 = S L`). -/
+theorem resolventEval_eq_mul_aeval {S L : A} (hS : S * (1 - L) = 1) (hc : Commute S L) {N : ℕ}
+    {f : R[X]} (hf : f.natDegree ≤ N) : resolventEval N f S = S ^ N * aeval L f := by
+  have hSL : S - 1 = S * L := by rw [← hS]; noncomm_ring
+  rw [resolventEval, aeval_eq_sum_range' (Nat.lt_succ_of_le hf), mul_sum]
+  refine sum_congr rfl fun k hk => ?_
+  have hk' : k ≤ N := Nat.lt_succ_iff.1 (mem_range.1 hk)
+  rw [hSL, hc.mul_pow, mul_assoc, ← (hc.pow_pow (N - k) k).eq, ← mul_assoc, ← pow_add,
+    Nat.add_sub_cancel' hk', mul_smul_comm]
+
+/-- The scalar Cayley transform over `ℂ`: `q̃(w) = (w + 1)ᴺ q((w - 1)/(w + 1))` for `w ≠ -1`. -/
+theorem eval_cayleyPoly {q : ℂ[X]} {N : ℕ} (hq : q.natDegree ≤ N) {w : ℂ} (hw : w ≠ -1) :
+    (cayleyPoly N q).eval w = (w + 1) ^ N * q.eval ((w - 1) / (w + 1)) := by
+  have hw1 : w + 1 ≠ 0 := fun h => hw (eq_neg_of_add_eq_zero_left h)
+  have := aeval_cayleyPoly (R := ℂ) (S := (w + 1) / 2) (L := (w - 1) / (w + 1))
+    (by field_simp; ring) (Commute.all _ _) hq
+  rwa [show 2 * ((w + 1) / 2) - 1 = w by ring, show 2 * ((w + 1) / 2) = w + 1 by ring,
+    coe_aeval_eq_eval, coe_aeval_eq_eval] at this
+
+/-- `q̃(-1) = q_N (-2)ᴺ` over `ℂ`. -/
+theorem eval_neg_one_cayleyPoly (q : ℂ[X]) (N : ℕ) :
+    (cayleyPoly N q).eval (-1) = q.coeff N * (-2) ^ N := by
+  simp only [cayleyPoly, eval_finsetSum, eval_mul, eval_pow, eval_sub, eval_add, eval_X, eval_C,
+    eval_one, sum_range_succ, Nat.sub_self, pow_zero, mul_one, neg_add_cancel]
   rw [sum_eq_zero fun k hk => by
     rw [zero_pow (by have := mem_range.1 hk; omega), mul_zero], zero_add]
   norm_num
@@ -400,6 +465,36 @@ theorem norm_apply_le_one {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x�
     (hr : r.IsAStable) : ‖r.apply L‖ ≤ 1 :=
   (r.norm_apply_le hL).trans (r.isAStable_iff.1 hr)
 
+/-! ### `r(τ A)` through the resolvent -/
+
+omit [CompleteSpace V] in
+/-- **`r(τ A)` through the resolvent**: with `S = (1 - τ A)⁻¹ = τ⁻¹ R(τ⁻¹)` and `N = deg d`,
+`r(τ A) = P(S) Q(S)⁻¹` for `P(s) = sᴺ n(1 - 1/s)` and `Q(s) = sᴺ d(1 - 1/s)` (`resolventEval`),
+since the Cayley transform is `C = 2 S - 1` (`aeval_two_mul_sub_one_cayleyPoly`). -/
+theorem step_eq_resolventEval (A : V →ₗ.[𝕜] V) (τ : ℝ) :
+    r.step A τ =
+      resolventEval r.den.natDegree (r.num.map (algebraMap ℝ 𝕜))
+          ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹) *
+        Ring.inverse (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜))
+          ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹)) := by
+  have h2 : IsUnit (2 : V →L[𝕜] V) := by
+    have := (isUnit_iff_ne_zero.2 (two_ne_zero : (2 : 𝕜) ≠ 0)).map (algebraMap 𝕜 (V →L[𝕜] V))
+    rwa [map_ofNat] at this
+  have hc : ∀ x : V →L[𝕜] V, Commute ((2 : V →L[𝕜] V) ^ r.den.natDegree) x := fun x =>
+    (Commute.ofNat_left 2 x).pow_left _
+  rw [step, cayley_eq_two_mul_sub_one, cnum, cden, cayleyPoly_map, cayleyPoly_map,
+    aeval_two_mul_sub_one_cayleyPoly, aeval_two_mul_sub_one_cayleyPoly]
+  exact mul_inverse_mul_of_commute (h2.pow _) (hc _) (hc _)
+
+/-- `Q(S) = sᴺ d(1 - 1/s)` at `S = (1 - τ A)⁻¹` is invertible, for m-dissipative `A` and
+`τ > 0`. -/
+theorem isUnit_resolventEval_den {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) :
+    IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜))
+      ((τ : 𝕜)⁻¹ • resolvent A (τ : 𝕜)⁻¹)) := by
+  have h := (r.norm_step_le hA hτ).1
+  rw [cayley_eq_two_mul_sub_one, cden, cayleyPoly_map, aeval_two_mul_sub_one_cayleyPoly] at h
+  exact (((Commute.ofNat_left 2 _).pow_left _).isUnit_mul_iff.1 h).2
+
 /-! ### Consistency -/
 
 theorem natDegree_expTaylor_le (p : ℕ) : (expTaylor p).natDegree ≤ p :=
@@ -442,6 +537,40 @@ theorem apply_eq_add {p : ℕ} (hp : r.HasOrder p) {L : V →L[𝕜] V}
     ((expTaylor p).map (algebraMap ℝ 𝕜))).map (aeval L)).eq,
     Ring.mul_inverse_cancel_right _ _ hD, mul_assoc]
   rfl
+
+omit [CompleteSpace V] in
+/-- **Order from the asymptotics**: if `r(z) - e^z = O(z^{p+1})` at `0`, then `r` has order `p`
+(`X^{p+1}` divides `n - d Tₚ = d (r - e^z) + d (e^z - Tₚ)`, `Polynomial.X_pow_dvd_of_isBigO`).
+[HairerWanner1996], §IV.3 -/
+theorem hasOrder_of_isBigO {p : ℕ}
+    (h : (fun z : ℂ => r.eval z - Complex.exp z) =O[𝓝 0] fun z => z ^ (p + 1)) :
+    r.HasOrder p := by
+  set G := (r.num - r.den * expTaylor p).map (algebraMap ℝ ℂ)
+  suffices hG : X ^ (p + 1) ∣ G by
+    rw [HasOrder, X_pow_dvd_iff]
+    intro d hd
+    have := (X_pow_dvd_iff.1 hG) d hd
+    rwa [coeff_map, Complex.coe_algebraMap, Complex.ofReal_eq_zero] at this
+  have hd : Filter.Tendsto (fun z : ℂ => aeval z r.den) (𝓝 0) (𝓝 (aeval 0 r.den)) :=
+    (Polynomial.continuous_aeval _).tendsto 0
+  have hd0 : ∀ᶠ z : ℂ in 𝓝 0, aeval z r.den ≠ 0 :=
+    hd.eventually_ne (r.aeval_den_ne_zero 0 (by simp))
+  have hexp : (fun z : ℂ => Complex.exp z - aeval z (expTaylor p)) =O[𝓝 0]
+      fun z => z ^ (p + 1) := by
+    refine IsBigO.of_bound ((p + 1).succ * ((p + 1).factorial * (p + 1 : ℕ) : ℝ)⁻¹) ?_
+    filter_upwards [Metric.closedBall_mem_nhds (0 : ℂ) one_pos] with z hz
+    rw [mem_closedBall_zero_iff] at hz
+    have e : aeval z (expTaylor p) = ∑ j ∈ range (p + 1), z ^ j / j.factorial := by
+      simp [expTaylor, div_eq_inv_mul]
+    rw [e, norm_pow]
+    exact (Complex.exp_bound hz (Nat.succ_pos p)).trans_eq (mul_comm _ _)
+  have hsum := (hd.isBigO_one ℂ).mul h |>.add ((hd.isBigO_one ℂ).mul hexp)
+  simp only [one_mul] at hsum
+  refine X_pow_dvd_of_isBigO (hsum.congr' ?_ (by simp))
+  filter_upwards [hd0] with z hz
+  simp only [G, eval_map_algebraMap, map_sub, map_mul, eval]
+  field_simp
+  ring
 
 omit [CompleteSpace V] in
 private theorem commute_apply {L : V →L[𝕜] V} {B : V →L[𝕜] V} (h : Commute B L) :
@@ -664,5 +793,78 @@ theorem apply_theta {L : V →L[𝕜] V} (hL : ∀ x, RCLike.re ⟪L x, x⟫_�
   ring
 
 end RationalScheme
+
+/-! ### Complex rational functions -/
+
+section Complex
+
+open RationalScheme
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [CompleteSpace E]
+
+/-- **Von Neumann's inequality in the half-plane, complex coefficients**: for complex
+polynomials `p`, `q` with `deg p ≤ deg q = N`, `q` free of zeros for `re z ≤ 0` and
+`|p(iy)/q(iy)| ≤ K`, every m-dissipative `A` of a complex Hilbert space and `τ > 0`, with the
+resolvent `S = (1 - τ A)⁻¹`, `Q(S) = (sᴺ q(1 - 1/s))(S)` is invertible and
+`‖P(S) Q(S)⁻¹‖ ≤ K`: von Neumann's inequality for the Cayley transform `C = 2 S - 1` and
+`p̃/q̃`, which has no pole in the closed unit disc. [VonNeumann1951]; [HairerWanner1996], §IV.11 -/
+theorem norm_resolventEval_mul_inverse_le {A : E →ₗ.[ℂ] E} (hA : A.IsMDissipative) {τ : ℝ}
+    (hτ : 0 < τ) {p q : ℂ[X]} (hpq : p.natDegree ≤ q.natDegree)
+    (hq : ∀ z : ℂ, z.re ≤ 0 → q.eval z ≠ 0) {K : ℝ}
+    (hK : ∀ y : ℝ, ‖p.eval (y * Complex.I) / q.eval (y * Complex.I)‖ ≤ K) :
+    IsUnit (resolventEval q.natDegree q ((τ : ℂ)⁻¹ • resolvent A (τ : ℂ)⁻¹)) ∧
+      ‖resolventEval q.natDegree p ((τ : ℂ)⁻¹ • resolvent A (τ : ℂ)⁻¹) *
+        Ring.inverse (resolventEval q.natDegree q ((τ : ℂ)⁻¹ • resolvent A (τ : ℂ)⁻¹))‖ ≤ K := by
+  set N := q.natDegree
+  have hq0 : q ≠ 0 := fun h => hq 0 (by simp) (by simp [h])
+  have hq' : ∀ w : ℂ, ‖w‖ ≤ 1 → (cayleyPoly N q).eval w ≠ 0 := fun w hw => by
+    rcases eq_or_ne w (-1) with rfl | hw1
+    · rw [eval_neg_one_cayleyPoly, ← leadingCoeff]
+      exact mul_ne_zero (leadingCoeff_ne_zero.2 hq0) (pow_ne_zero _ (by norm_num))
+    have hw0 : w + 1 ≠ 0 := fun h => hw1 (eq_neg_of_add_eq_zero_left h)
+    rw [eval_cayleyPoly le_rfl hw1]
+    refine mul_ne_zero (pow_ne_zero _ hw0) (hq _ ?_)
+    rw [re_cayley_inv]
+    exact div_nonpos_of_nonpos_of_nonneg (by nlinarith [norm_nonneg w]) (by positivity)
+  have hK' : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 →
+      ‖(cayleyPoly N p).eval ζ / (cayleyPoly N q).eval ζ‖ ≤ K := fun ζ hζ hζ1 => by
+    have hζ0 : ζ + 1 ≠ 0 := fun h => hζ1 (eq_neg_of_add_eq_zero_left h)
+    have hre : ((ζ - 1) / (ζ + 1)).re = 0 := by rw [re_cayley_inv, hζ]; simp
+    have e : ((ζ - 1) / (ζ + 1)).im * Complex.I = (ζ - 1) / (ζ + 1) := by
+      conv_rhs => rw [← Complex.re_add_im ((ζ - 1) / (ζ + 1)), hre]
+      simp
+    rw [eval_cayleyPoly hpq hζ1, eval_cayleyPoly le_rfl hζ1,
+      mul_div_mul_left _ _ (pow_ne_zero _ hζ0), ← e]
+    exact hK _
+  obtain ⟨hu, hn⟩ := ContinuousLinearMap.norm_aeval_mul_inverse_le (norm_cayley_le hA hτ) hq' hK'
+  rw [cayley_eq_two_mul_sub_one, aeval_two_mul_sub_one_cayleyPoly] at hu hn
+  rw [aeval_two_mul_sub_one_cayleyPoly] at hn
+  have hc : ∀ x : E →L[ℂ] E, Commute ((2 : E →L[ℂ] E) ^ N) x := fun x =>
+    (Commute.ofNat_left 2 x).pow_left _
+  have h2 : IsUnit (2 : E →L[ℂ] E) := by
+    have := (isUnit_iff_ne_zero.2 (two_ne_zero : (2 : ℂ) ≠ 0)).map (algebraMap ℂ (E →L[ℂ] E))
+    rwa [map_ofNat] at this
+  refine ⟨((hc _).isUnit_mul_iff.1 hu).2, ?_⟩
+  rwa [mul_inverse_mul_of_commute (h2.pow _) (hc _) (hc _)] at hn
+
+/-- **For bounded `L`, `P(S) Q(S)⁻¹ = p(L) q(L)⁻¹`** at the resolvent `S = (1 - L)⁻¹`, for
+`deg p, deg q ≤ N`, and `Q(S)` is invertible iff `q(L)` is. -/
+theorem resolventEval_eq_aeval {L : E →L[ℂ] E} (hL : ∀ x, RCLike.re ⟪L x, x⟫_ℂ ≤ 0) {N : ℕ}
+    {p q : ℂ[X]} (hp : p.natDegree ≤ N) (hq : q.natDegree ≤ N) :
+    (IsUnit (resolventEval N q (resolvent ((L : E →ₗ[ℂ] E).toPMap ⊤) 1)) ↔
+        IsUnit (aeval L q)) ∧
+      resolventEval N p (resolvent ((L : E →ₗ[ℂ] E).toPMap ⊤) 1) *
+          Ring.inverse (resolventEval N q (resolvent ((L : E →ₗ[ℂ] E).toPMap ⊤) 1)) =
+        aeval L p * Ring.inverse (aeval L q) := by
+  obtain ⟨S, hS, hS', hSL, -, hSe⟩ := exists_cayley_eq hL one_pos
+  simp only [RCLike.ofReal_one, inv_one, one_smul] at hS hS' hSe
+  rw [← hSe, resolventEval_eq_mul_aeval hS hSL hp, resolventEval_eq_mul_aeval hS hSL hq]
+  have hU : IsUnit (S ^ N) := (IsUnit.pow N ⟨⟨S, 1 - L, hS, hS'⟩, rfl⟩)
+  have hc : ∀ f : ℂ[X], Commute (S ^ N) (aeval L f) := fun f =>
+    (commute_aeval hSL.symm f).symm.pow_left N
+  exact ⟨(hc q).isUnit_mul_iff.trans (and_iff_right hU),
+    mul_inverse_mul_of_commute hU (hc p) (hc q)⟩
+
+end Complex
 
 end Feec.TimeStepping

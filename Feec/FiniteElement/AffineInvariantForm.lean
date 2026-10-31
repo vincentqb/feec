@@ -52,7 +52,7 @@ variable {n : ℕ}
 
 /-! ### Monomial forms `x_p^j dx_t` -/
 
-/-- The identity matrix. -/
+/-- The identity matrix, as the coefficient function taken by `polyPullback`. -/
 def idMatrix : Fin n → Fin n → ℝ := fun i l => if i = l then 1 else 0
 
 theorem single_X_pow_mem_homForm {t : Finset (Fin n)} {k : ℕ} (ht : #t = k) (p : Fin n)
@@ -103,7 +103,8 @@ theorem extDeriv_ne_zero_of_koszul_eq_zero {r k : ℕ} (hrk : 0 < r + k) {ω : P
 
 theorem polyPullback_idMatrix_single (b : Fin n → ℝ) (t : Finset (Fin n))
     (q : MvPolynomial (Fin n) ℝ) :
-    polyPullback idMatrix b (Pi.single t q) = Pi.single t (polySubst idMatrix b q) := by
+    polyPullback idMatrix b (Pi.single t q) =
+      Pi.single t (polySubst idMatrix b q) := by
   funext s
   rw [polyPullback_single, wedgeProd_id_cols (B := idMatrix) (s := s) (fun i l _ => rfl)]
   by_cases h : t = s
@@ -147,7 +148,8 @@ theorem translate_single_X_pow (p : Fin n) (c : ℝ) (t : Finset (Fin n)) (q : F
 
 /-- `homComp j` of the translate of `x_p^{j+1} dx_t` by `e_p` is `(j + 1) x_p^j dx_t`. -/
 theorem homComp_translate_single_X_pow (p : Fin n) (t : Finset (Fin n)) (j : ℕ) :
-    homComp j (polyPullback idMatrix (Pi.single p 1 : Fin n → ℝ) (Pi.single t (X p ^ (j + 1)))) =
+    homComp j (polyPullback idMatrix (Pi.single p 1 : Fin n → ℝ)
+        (Pi.single t (X p ^ (j + 1)))) =
       ((j + 1 : ℕ) : ℝ) • (Pi.single t (X p ^ j) : PolyForm ℝ (Fin n)) := by
   rw [translate_single_X_pow, homComp_single, Pi.single_eq_same,
     homogeneousComponent_X_add_C_pow _ _ (Nat.le_succ j), ← Pi.single_smul', smul_eq_C_mul]
@@ -184,9 +186,10 @@ theorem exists_card_eq_mem {k : ℕ} (hk : 1 ≤ k) (hkn : k ≤ n) :
 
 /-! ### The translation lemmas ([AFW2006], Lemma 3.7) -/
 
-/-- **[AFW2006], Lemma 3.7 (1)**: in an affinely invariant space, the closed forms of degree
-`j + 1` bring those of degree `j` (`1 ≤ k ≤ n`): the translate of `x_p^{j+1} dx_t` (`p ∈ t`) by
-`e_p` has the degree-`j` part `(j + 1) x_p^j dx_t`, closed, nonzero, hence not `κ`-closed. -/
+/-- **[AFW2006], Lemma 3.7 (1)**, in the form used in the proof of Theorem 3.6: in an affinely
+invariant space, the closed forms of degree `j + 1` bring those of degree `j` (`1 ≤ k ≤ n`): the
+translate of `x_p^{j+1} dx_t` (`p ∈ t`) by `e_p` has the degree-`j` part `(j + 1) x_p^j dx_t`,
+closed, nonzero, hence not `κ`-closed. -/
 theorem IsAffineInvariant.closed_le_of_succ {V : Submodule ℝ (PolyForm ℝ (Fin n))}
     (hV : IsAffineInvariant V) {j k : ℕ} (hk : 1 ≤ k) (hkn : k ≤ n)
     (h : homForm ℝ (Fin n) (j + 1) k ⊓ LinearMap.ker (extDerivₗ ℝ (Fin n)) ≤ V) :
@@ -204,9 +207,10 @@ theorem IsAffineInvariant.closed_le_of_succ {V : Submodule ℝ (PolyForm ℝ (Fi
     (koszul_ne_zero_of_extDeriv_eq_zero (by omega) (single_X_pow_mem_homForm ht p j)
       (extDeriv_single_X_pow_of_mem hp j) (single_X_pow_ne_zero t p j))
 
-/-- **[AFW2006], Lemma 3.7 (2)**: the `κ`-closed forms of degree `j + 2` bring those of degree
-`j + 1` (`k < n`): for `ω = κ(x_p^{j+1} dx_t)` (`p ∈ t`, `#t = k + 1`) the degree-`(j+1)` part `μ`
-of the translate by `e_p` has `dμ = (j + k + 2)(j + 1) x_p^j dx_t ≠ 0`. -/
+/-- **[AFW2006], Lemma 3.7 (2)**, in the form used in the proof of Theorem 3.6: the `κ`-closed forms
+of degree `j + 2` bring those of degree `j + 1` (`k < n`): for `ω = κ(x_p^{j+1} dx_t)` (`p ∈ t`,
+`#t = k + 1`) the degree-`(j+1)` part `μ` of the translate by `e_p` has
+`dμ = (j + k + 2)(j + 1) x_p^j dx_t ≠ 0`. -/
 theorem IsAffineInvariant.koszulClosed_le_of_succ {V : Submodule ℝ (PolyForm ℝ (Fin n))}
     (hV : IsAffineInvariant V) {j k : ℕ} (hkn : k + 1 ≤ n)
     (h : homForm ℝ (Fin n) (j + 2) k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) ≤ V) :
@@ -228,10 +232,11 @@ theorem IsAffineInvariant.koszulClosed_le_of_succ {V : Submodule ℝ (PolyForm �
   exact smul_ne_zero (mul_ne_zero (Nat.cast_ne_zero.2 (by omega))
     (Nat.cast_ne_zero.2 (by omega))) (single_X_pow_ne_zero t p j)
 
-/-- **[AFW2006], Lemma 3.7 (3)**: the `κ`-closed forms of degree `j + 1` bring the closed forms of
-degree `j` (`1 ≤ k < n`): for `ω = κ(x_q^j dx_t)` (`p ≠ q` in `t`, `#t = k + 1`) the translate by
-`e_p` is `ω + ι_{e_p}(x_q^j dx_t) = ω ± x_q^j dx_{t ∖ p}`, whose degree-`j` part is closed, nonzero,
-hence not `κ`-closed. -/
+/-- **[AFW2006], Lemma 3.7 (3)**, in the form used in the proof of Theorem 3.6: the `κ`-closed forms
+of degree `j + 1` bring the closed forms of degree `j` (`1 ≤ k < n`): for `ω = κ(x_q^j dx_t)`
+(`p ≠ q` in `t`, `#t = k + 1`) the translate by `e_p` is
+`ω + ι_{e_p}(x_q^j dx_t) = ω ± x_q^j dx_{t ∖ p}`, whose degree-`j` part is closed, nonzero, hence
+not `κ`-closed. -/
 theorem IsAffineInvariant.closed_le_of_koszulClosed_le {V : Submodule ℝ (PolyForm ℝ (Fin n))}
     (hV : IsAffineInvariant V) {j k : ℕ} (hk : 1 ≤ k) (hkn : k + 1 ≤ n)
     (h : homForm ℝ (Fin n) (j + 1) k ⊓ LinearMap.ker (koszulₗ ℝ (Fin n)) ≤ V) :
@@ -410,16 +415,6 @@ theorem IsLinearInvariant.le_of_summands {V T : Submodule ℝ (PolyForm ℝ (Fin
     · rw [hκ, Koszul.extDeriv_zero, smul_zero]; exact T.zero_mem
     · exact hD j (hV.closed_le hξ hξH hκ) h2
 
-theorem le_of_le_of_succ {P : ℕ → Prop} (h : ∀ m, P (m + 1) → P m) {a : ℕ} (ha : P a) :
-    ∀ m ≤ a, P m := by
-  induction a with
-  | zero => intro m hm; rwa [Nat.le_zero.1 hm]
-  | succ a ih =>
-    intro m hm
-    rcases Nat.lt_or_ge m (a + 1) with hlt | hge
-    · exact ih (h a ha) m (by omega)
-    · rwa [le_antisymm hm hge]
-
 /-- **[AFW2006], Theorem 3.6: the affinely invariant spaces of polynomial `k`-forms.** For
 `0 < k < n`, a nonzero finite-dimensional space `V` of polynomial `k`-forms on `ℝⁿ` with
 `φ^* V ⊆ V` for every affine map `φ : ℝⁿ → ℝⁿ` is one of the spaces `X(r, s, k, n)` of
@@ -488,8 +483,8 @@ theorem IsAffineInvariant.eq_sup {V : Submodule ℝ (PolyForm ℝ (Fin n))} (hV 
     obtain ⟨j₀, hj₀⟩ := hDex
     have ha : D a ≤ V := Nat.findGreatest_spec (P := fun j => D j ≤ V) (hDN j₀ hj₀) hj₀
     exact fun j => ⟨fun hj => Nat.le_findGreatest (hDN j hj) hj,
-      le_of_le_of_succ (P := fun j => D j ≤ V)
-        (fun m hm => hV.closed_le_of_succ hk hkn.le hm) ha j⟩
+      fun hj => Nat.decreasingInduction (motive := fun j _ => D j ≤ V)
+        (fun _ _ hm => hV.closed_le_of_succ hk hkn.le hm) ha hj⟩
   have hdP : (polyForm ℝ (Fin n) (a + 1) (k - 1)).map (extDerivₗ ℝ (Fin n)) ≤ V := by
     rintro _ ⟨η, hη, rfl⟩
     change Koszul.extDeriv η ∈ V
@@ -513,8 +508,8 @@ theorem IsAffineInvariant.eq_sup {V : Submodule ℝ (PolyForm ℝ (Fin n))} (hV 
       have hb : K (b + 1) ≤ V :=
         Nat.findGreatest_spec (P := fun i => K (i + 1) ≤ V) (hKN i₀ hi₀) hi₀
       exact fun i => ⟨fun hi => Nat.le_findGreatest (hKN i hi) hi,
-        le_of_le_of_succ (P := fun i => K (i + 1) ≤ V)
-          (fun m hm => hV.koszulClosed_le_of_succ hkn hm) hb i⟩
+        fun hi => Nat.decreasingInduction (motive := fun i _ => K (i + 1) ≤ V)
+          (fun _ _ hm => hV.koszulClosed_le_of_succ hkn hm) hb hi⟩
     have hba : b ≤ a :=
       (hDa b).1 (hV.closed_le_of_koszulClosed_le hk hkn ((hKb b).2 le_rfl))
     refine Or.inr ⟨b, hba, le_antisymm ?_ (sup_le hdP ?_)⟩

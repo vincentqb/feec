@@ -284,12 +284,17 @@ def invariantForm (r s k : ℕ) : Submodule ℝ (Form ℝ n) :=
 
 /-- **The affinely invariant spaces of polynomial forms** on `ℝⁿ` ([AFW2006], §3.4). -/
 structure AffineInvariantForms : Prop where
-  /-- the linearly invariant subspaces of `H_rΛᵏ` (`r = m + 1`, `k = k' + 1`) are `0`,
-  `dH_{r+1}Λ^{k-1}`, `κH_{r-1}Λ^{k+1}` and `H_rΛᵏ` (§3.4, before Lemma 3.7) -/
-  eq_of_le_homForm (m k : ℕ) (W : Submodule ℝ (Form ℝ n)) (hW : IsLinearInvariant n W)
-    (hle : W ≤ homForm ℝ n (m + 1) (k + 1)) :
-    W = ⊥ ∨ W = (homForm ℝ n (m + 2) k).map (extDeriv ℝ n) ∨
-      W = (homForm ℝ n m (k + 2)).map (koszul ℝ n) ∨ W = homForm ℝ n (m + 1) (k + 1)
+  /-- the images `dH_rΛᵏ` and `κH_rΛᵏ` are linearly invariant, among them the summands
+  `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` (§3.4) -/
+  isLinearInvariant_map_homForm (r k : ℕ) :
+    IsLinearInvariant n ((homForm ℝ n r k).map (extDeriv ℝ n)) ∧
+      IsLinearInvariant n ((homForm ℝ n r k).map (koszul ℝ n))
+  /-- the linearly invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
+  `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` (§3.4, before Lemma 3.7) -/
+  eq_of_le_homForm (r k : ℕ) (W : Submodule ℝ (Form ℝ n)) (hW : IsLinearInvariant n W)
+    (hle : W ≤ homForm ℝ n (r + 1) (k + 1)) :
+    W = ⊥ ∨ W = (homForm ℝ n (r + 2) k).map (extDeriv ℝ n) ∨
+      W = (homForm ℝ n r (k + 2)).map (koszul ℝ n) ∨ W = homForm ℝ n (r + 1) (k + 1)
   /-- `dP_{r+1}Λ^{k-1}` is affinely invariant ((3.18)) -/
   isAffineInvariant_map_extDeriv (r k : ℕ) :
     IsAffineInvariant n ((polyForm ℝ n (r + 1) (k - 1)).map (extDeriv ℝ n))
@@ -302,6 +307,10 @@ structure AffineInvariantForms : Prop where
   /-- `X(r + 1, r, k) = P_{r+1}Λᵏ` (Theorem 3.5, case `s = r - 1`) -/
   invariantForm_eq_polyForm (r k : ℕ) (hk : 1 ≤ k) :
     invariantForm n (r + 1) r k = polyForm ℝ n (r + 1) k
+  /-- `dP_1Λ^{k-1} = P_0Λᵏ`, that is `X(0, -1, k) = P_0Λᵏ` (Theorem 3.5, case `s = r - 1`,
+  `r = 0`) -/
+  map_extDeriv_polyForm_one (k : ℕ) (hk : 1 ≤ k) :
+    (polyForm ℝ n 1 (k - 1)).map (extDeriv ℝ n) = polyForm ℝ n 0 k
   /-- for `0 < k < n` every nonzero finite-dimensional affinely invariant space of `k`-forms is
   `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r` (Theorem 3.6) -/
   eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule ℝ (Form ℝ n))

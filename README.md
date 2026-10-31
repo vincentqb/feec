@@ -279,7 +279,7 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   bound; from
   `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms, about 370
+* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms, about 385
   lines): the algebra of the periodic table in every dimension, for polynomial forms
   `MvPolynomial ⊗ ExteriorAlgebra` of Mathlib: the dimensions of `H_rΛᵏ`, `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_b⁻Λᵏ` (any multidegree), the Leibniz rule
   for `κ` and the wedge closure of `P_rΛ` and `P_r⁻Λ` and, in characteristic `0`, their

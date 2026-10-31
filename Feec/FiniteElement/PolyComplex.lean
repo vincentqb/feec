@@ -292,20 +292,14 @@ end PolyKind
 
 namespace PolySeq
 
-/-- **The spaces of an admissible sequence are affinely invariant spaces `X(r, s, k, n)`**
-([AFW2006], Theorem 3.5) in every degree `k ≥ 1`: the first two of the three kinds of
-affinely invariant spaces of polynomial `k`-forms, which are all of them for `0 < k < n`
-([AFW2006], Theorem 3.6, `IsAffineInvariant.eq_sup`); the third, `s < r - 1`, is in no admissible
-sequence. -/
-theorem exists_space_eq_sup (S : PolySeq) {k : ℕ} (hk : 1 ≤ k) :
-    ∃ r s, s ≤ r ∧
-      IsAffineInvariant ((Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map (Koszul.extDerivₗ ℝ (Fin n)) ⊔
-        (Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Koszul.koszulₗ ℝ (Fin n))) ∧
-      S.space n k = ((Koszul.polyForm ℝ (Fin n) (r + 1) (k - 1)).map (Koszul.extDerivₗ ℝ (Fin n)) ⊔
-        (Koszul.polyForm ℝ (Fin n) s (k + 1)).map (Koszul.koszulₗ ℝ (Fin n))).map (evalForm n) := by
-  refine ⟨(S.kind k).dDeg (S.deg k), S.deg k - 1, (S.kind k).le_dDeg _,
-    isAffineInvariant_sup hk ((S.kind k).le_dDeg _), ?_⟩
-  rw [PolySeq.space, PolyKind.space_eq_map_form, PolyKind.form_eq_sup _ (S.one_le_deg k) hk]
+/-- **The shape spaces of an admissible sequence are affinely invariant** ([AFW2006],
+Theorem 3.5) in every degree `k ≥ 1`: the spaces `P_rΛᵏ = X(r, r - 1)` and `P_r⁻Λᵏ = X(r - 1, r - 1)`
+(`PolyKind.form_eq_sup`), the first two of the three kinds of affinely invariant spaces of
+polynomial `k`-forms, which are all of them for `0 < k < n` ([AFW2006], Theorem 3.6,
+`IsAffineInvariant.eq_sup`). -/
+theorem isAffineInvariant_form (S : PolySeq) {k : ℕ} (hk : 1 ≤ k) :
+    IsAffineInvariant ((S.kind k).form (n := n) (S.deg k) k) :=
+  (S.kind k).isAffineInvariant_form (S.one_le_deg k) hk
 
 end PolySeq
 

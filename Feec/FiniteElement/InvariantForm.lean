@@ -14,7 +14,7 @@ of every linear map, and *affinely invariant* (`IsAffineInvariant`) if also by t
 The main result: **the linearly invariant subspaces of `H_mΛᵏ`** (`m + k > 0`) are `0`, the closed
 forms `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ^{k+1}` and `H_mΛᵏ`, so the two summands
 of the Koszul decomposition `H_mΛᵏ = κH_{m-1}Λ^{k+1} ⊕ dH_{m+1}Λ^{k-1}` are irreducible
-([AFW2006], §3.4, which takes it from the representation theory of `GL(n)`, [FultonHarris2004],
+([AFW2006], §3.4, which takes it from the representation theory of `GL(n)`, [FultonHarris1991],
 §6.1, (6.9)). The proof is elementary, by pullbacks and linear algebra:
 
 * **weight parts**: the diagonal pullback along `diag(c^{e₁}, …, c^{eₙ})` is `Σⱼ cʲ ω_{(j)}` for
@@ -48,7 +48,8 @@ The invariance is under all linear maps, singular ones included, as in the hypot
 
 * `IsLinearInvariant.eq_of_le_homForm`: **the linearly invariant subspaces of `H_mΛᵏ`**, and
   `IsLinearInvariant.eq_of_le_homForm_succ` with the summands as the images `dH_{m+1}Λ^{k-1}`,
-  `κH_{m-1}Λ^{k+1}` (`homForm_inf_ker_extDeriv`, `homForm_inf_ker_koszul`);
+  `κH_{m-1}Λ^{k+1}` (`homForm_inf_ker_extDeriv`, `homForm_inf_ker_koszul`), which are linearly
+  invariant (`isLinearInvariant_map_extDeriv_homForm`, `isLinearInvariant_map_koszul_homForm`);
 * `IsLinearInvariant.closed_le`, `IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero`: a form
   of an invariant space with `κω ≠ 0` (resp. `dω ≠ 0`) brings the whole closed (resp. `κ`-closed)
   summand;
@@ -58,7 +59,7 @@ The invariance is under all linear maps, singular ones included, as in the hypot
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3.4 (the decomposition (3.10) into irreducible linear-invariant subspaces, before Lemma 3.7)
-* [W. Fulton, J. Harris, *Representation Theory: A First Course*][FultonHarris2004], §6.1, (6.9)
+* [W. Fulton, J. Harris, *Representation Theory: A First Course*][FultonHarris1991], §6.1, (6.9)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -66,19 +67,6 @@ Bibliography: [references.bib](../../docs/references.bib)
 open Finset MvPolynomial
 
 @[expose] public noncomputable section
-
-namespace Feec.Koszul
-
-variable {R : Type*} [CommRing R] {d : Type*} [LinearOrder d] [Fintype d]
-
-omit [Fintype d] in
-theorem extDeriv_sub (ω η : PolyForm R d) : extDeriv (ω - η) = extDeriv ω - extDeriv η :=
-  map_sub (extDerivₗ R d) ω η
-
-theorem koszul_sub (ω η : PolyForm R d) : koszul (ω - η) = koszul ω - koszul η :=
-  map_sub (koszulₗ R d) ω η
-
-end Feec.Koszul
 
 namespace Feec.FiniteElement
 
@@ -155,7 +143,7 @@ theorem restrictForm_restrictForm (P Q : Finset (Fin n) → (Fin n →₀ ℕ) �
 
 /-! ### Diagonal pullbacks -/
 
-/-- The diagonal matrix `diag μ`. -/
+/-- The diagonal matrix `diag μ`, as the coefficient function taken by `polyPullback`. -/
 def diagMatrix (μ : Fin n → ℝ) : Fin n → Fin n → ℝ := fun i l => if i = l then μ i else 0
 
 theorem coeff_aeval_C_mul_X (μ : Fin n → ℝ) (p : MvPolynomial (Fin n) ℝ) (α : Fin n →₀ ℕ) :
@@ -811,14 +799,14 @@ theorem IsLinearInvariant.koszulClosed_le_of_extDeriv_ne_zero
   have hω' := W.sub_mem hω (hDW hD)
   rw [eq_sub_of_add_eq heq.symm] at hK
   refine hW.koszulClosed_le hω' hK.1 (LinearMap.mem_ker.1 hK.2) fun h => hd ?_
-  have := congrArg Koszul.extDeriv h
-  rwa [Koszul.extDeriv_sub, Koszul.extDeriv_smul, Koszul.extDeriv_extDeriv, smul_zero, sub_zero,
-    Koszul.extDeriv_zero] at this
+  have := congrArg (extDerivₗ ℝ (Fin n)) h
+  rw [map_sub, map_zero, Koszul.extDerivₗ_apply, Koszul.extDerivₗ_apply] at this
+  rwa [Koszul.extDeriv_smul, Koszul.extDeriv_extDeriv, smul_zero, sub_zero] at this
 
 /-- **The linearly invariant subspaces of `H_mΛᵏ`** (`m + k > 0`): `0`, the closed forms
 `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ^{k+1}` and `H_mΛᵏ`; that is, the two summands
 of the Koszul decomposition `H_mΛᵏ = κH_{m-1}Λ^{k+1} ⊕ dH_{m+1}Λ^{k-1}` are irreducible.
-[AFW2006], §3.4 (before Lemma 3.7, from [FultonHarris2004], (6.9)) -/
+[AFW2006], §3.4 (before Lemma 3.7, from [FultonHarris1991], (6.9)) -/
 theorem IsLinearInvariant.eq_of_le_homForm {W : Submodule ℝ (PolyForm ℝ (Fin n))}
     (hW : IsLinearInvariant W) {m k : ℕ} (hmk : 0 < m + k) (hle : W ≤ homForm ℝ (Fin n) m k) :
     W = ⊥ ∨ W = homForm ℝ (Fin n) m k ⊓ LinearMap.ker (extDerivₗ ℝ (Fin n)) ∨
@@ -869,6 +857,26 @@ theorem homForm_inf_ker_koszul (m k : ℕ) :
   · rintro _ ⟨η, hη, rfl⟩
     exact ⟨by simpa using Koszul.koszul_mem_homForm hη,
       LinearMap.mem_ker.2 (Koszul.koszul_koszul η)⟩
+
+/-- `H_mΛᵏ` is linearly invariant: linear substitutions preserve homogeneity. -/
+theorem isLinearInvariant_homForm (m k : ℕ) : IsLinearInvariant (homForm ℝ (Fin n) m k) :=
+  fun B ω hω => ⟨isDeg_polyPullback hω.1 B 0, fun t => by
+    rw [polyPullback_apply]
+    exact IsHomogeneous.sum _ _ _ fun s _ => by
+      simpa using (isHomogeneous_polySubst_zero B (hω.2 s)).mul (isHomogeneous_C _ _)⟩
+
+/-- **`dH_mΛᵏ` is linearly invariant**, as `B^* d = d B^*` ([AFW2006], §3.4). -/
+theorem isLinearInvariant_map_extDeriv_homForm (m k : ℕ) :
+    IsLinearInvariant ((homForm ℝ (Fin n) m k).map (extDerivₗ ℝ (Fin n))) := by
+  rintro B _ ⟨η, hη, rfl⟩
+  exact ⟨_, isLinearInvariant_homForm m k B η hη, (polyPullback_extDeriv B 0 η).symm⟩
+
+/-- **`κH_mΛᵏ` is linearly invariant**, as `B^* κ = κ B^*` for linear `B` ([AFW2006], §3.4,
+(3.7)). -/
+theorem isLinearInvariant_map_koszul_homForm (m k : ℕ) :
+    IsLinearInvariant ((homForm ℝ (Fin n) m k).map (koszulₗ ℝ (Fin n))) := by
+  rintro B _ ⟨η, hη, rfl⟩
+  exact ⟨_, isLinearInvariant_homForm m k B η hη, (polyPullback_koszul_linear B η).symm⟩
 
 /-- **[AFW2006], §3.4: `H_rΛᵏ` has exactly the invariant subspaces `0`, `κH_{r-1}Λ^{k+1}`,
 `dH_{r+1}Λ^{k-1}` and `H_rΛᵏ`** (`r, k ≥ 1`; with `r = m + 1`, `k = k' + 1`). -/

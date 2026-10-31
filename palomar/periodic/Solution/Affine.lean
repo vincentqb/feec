@@ -111,6 +111,10 @@ theorem map_map_extDeriv_polyForm (r k : ℕ) :
 
 variable (n) in
 theorem affineInvariantForms_of_feec : AffineInvariantForms n where
+  isLinearInvariant_map_homForm r k := by
+    rw [isLinearInvariant_iff, isLinearInvariant_iff, map_map_extDeriv, map_map_koszul, map_homForm]
+    exact ⟨Feec.FiniteElement.isLinearInvariant_map_extDeriv_homForm r k,
+      Feec.FiniteElement.isLinearInvariant_map_koszul_homForm r k⟩
   eq_of_le_homForm m k W hW hle := by
     have h := ((isLinearInvariant_iff W).1 hW).eq_of_le_homForm_succ
       (by rw [← map_homForm]; exact (map_le_iff (n := n)).2 hle)
@@ -135,6 +139,9 @@ theorem affineInvariantForms_of_feec : AffineInvariantForms n where
   invariantForm_eq_polyForm r k hk := by
     rw [← map_eq_iff, map_invariantForm, map_polyForm]
     exact Feec.FiniteElement.sup_eq_polyForm hk
+  map_extDeriv_polyForm_one k hk := by
+    rw [← map_eq_iff, map_map_extDeriv_polyForm, map_polyForm]
+    exact Feec.FiniteElement.map_extDeriv_polyForm_one_eq hk
   eq_invariantForm k hk hkn V hfin hV hdeg hne := by
     have : FiniteDimensional ℝ (V.map (Φ).toLinearMap) := Module.Finite.map V _
     have hdeg' : ∀ ω ∈ V.map (Φ).toLinearMap, Feec.ExteriorFibre.IsDeg k ω := by

@@ -10,8 +10,9 @@ The de Rham complex of `ℝ³` (`deRhamVec 1`) stacked over the de Rham complex 
 `𝕜³` (`deRhamVec 3`), linked by `S⁰ = I`, `S¹ = 2 vskw` (`(S¹ u)ₖ = u_{k+1,k+2} − u_{k+2,k+1}`,
 the normalization `curl S⁰ = -S¹ grad` of [QuennevilleBelair2015], §5.1) and `S² = tr`, is BGG
 data of constant-coefficient operators (`hessianBGG`). `S⁰, S¹, S²` are onto, so the
-injectivity/surjectivity condition holds at `J = 0` (**`injSurj_hessianBGG`**): a de Rham instance
-of `Feec.BGG.Data.InjSurj` (the first two rows of [ArnoldHu2021], (32)). Its BGG complex `bgg 0`
+injectivity/surjectivity condition holds at `J = 0` with the explicit right inverses `hessianT`
+(**`injSurjWith_hessianBGG`**, `injSurj_hessianBGG`): a de Rham instance of
+`Feec.BGG.Data.InjSurjWith` (the first two rows of [ArnoldHu2021], (32)). Its BGG complex `bgg 0`
 eliminates `V¹, V², V³` against `S⁰, S¹, S²`, and **is the Hessian complex**
 `𝕜 --grad grad--> Sym --curl--> T --div--> 𝕜³` of `Feec.Domain.HessianComplex` on smooth fields
 (**`hessianBGGIso`**): in degree `0` the pairs `(σ, grad σ)` (`S⁰` is bijective), with
@@ -27,7 +28,7 @@ Hence the smooth Hessian complex has the cohomology of the twisted de Rham compl
 
 ## Main results
 
-* **`injSurj_hessianBGG`**, `hessianBGGHomologyIso`.
+* **`injSurjWith_hessianBGG`**, `injSurj_hessianBGG`, `hessianBGGHomologyIso`.
 * **`hessianBGGIso`**, `hessianSmoothComplexHomologyIso`.
 
 ## References
@@ -169,31 +170,55 @@ theorem hessS2_mul_hessN2 : hessS2 * hessN2 = (1 : Matrix _ _ 𝕜) := by
   fin_cases i; fin_cases i'
   simp [Matrix.mul_apply, hessS2, hessN2]
 
-/-- **The Hessian diagram satisfies the injectivity/surjectivity condition at `J = 0`**: `I`,
-`2 vskw` and `tr` are onto. The first de Rham instance of `Data.InjSurj` ([ArnoldHu2021], (23),
+theorem hessN0_mul_hessS0 : hessN0 * hessS0 = (1 : Matrix (Fin 3) (Fin 3) 𝕜) := by
+  ext j j'
+  fin_cases j <;> fin_cases j' <;>
+    simp [Matrix.mul_apply, hessS0, hessN0, Fintype.sum_prod_type]
+
+variable (𝕜) in
+/-- The right inverses `hessN0`, `hessN1`, `hessN2` of `I`, `2 vskw`, `tr` on smooth fields. -/
+def hessianT : ∀ k : ℤ, smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 1 (k + 1)) →ₗ[𝕜]
+    smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 k)
+  | .ofNat 0 => (ofMatrix hessN0).smoothMap
+  | .ofNat 1 => (ofMatrix hessN1).smoothMap
+  | .ofNat 2 => (ofMatrix hessN2).smoothMap
+  | .ofNat (_ + 3) => 0
+  | .negSucc _ => 0
+
+/-- **The Hessian diagram satisfies the injectivity/surjectivity condition at `J = 0` with the
+right inverses `hessianT`**: `I`, `2 vskw` and `tr` are onto, with right inverses `hessN0`,
+`hessN1`, `hessN2`. The first de Rham instance of `Data.InjSurjWith` ([ArnoldHu2021], (23),
 (32)). -/
-theorem injSurj_hessianBGG : (hessianBGG 𝕜).smoothData.InjSurj 0 := by
-  refine ⟨fun i hi => ?_, fun i hi => ?_⟩
-  · rw [ConstCoeffBGG.smoothData_S]
-    have := isEmpty_vecIdx 3 (k := i) (Or.inl hi)
-    have hs := subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜) (ι := vecIdx 3 i)
-    exact fun a b _ => hs.elim a b
-  · rw [ConstCoeffBGG.smoothData_S]
-    by_cases h0 : i = 0
-    · subst h0
-      have h := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (hessS0_mul_hessN0 (𝕜 := 𝕜))
-      exact h
-    by_cases h1 : i = 1
-    · subst h1
-      have h := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (hessS1_mul_hessN1 (𝕜 := 𝕜))
-      exact h
-    by_cases h2 : i = 2
-    · subst h2
-      have h := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (hessS2_mul_hessN2 (𝕜 := 𝕜))
-      exact h
-    have := isEmpty_vecIdx 1 (k := i + 1) (Or.inr (by omega))
-    have hs := subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜) (ι := vecIdx 1 (i + 1))
-    exact fun y => ⟨0, hs.elim _ _⟩
+theorem injSurjWith_hessianBGG :
+    (hessianBGG 𝕜).smoothData.InjSurjWith 0 ((hessianBGG 𝕜).predMap (hessianT 𝕜)) := by
+  refine ConstCoeffBGG.injSurjWith_predMap _ (fun k hk => ?_) fun k hk v => ?_
+  · by_cases h0 : k = 0
+    · subst h0; exact smoothMap_ofMatrix_injective (hessN0_mul_hessS0 (𝕜 := 𝕜))
+    have := isEmpty_vecIdx 3 (k := k) (Or.inl (by omega))
+    exact fun a b _ => (subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜)).elim a b
+  · refine Subtype.ext ?_
+    match k, hk with
+    | .ofNat 0, _ =>
+      change (ofMatrix hessS0 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
+        ((ofMatrix hessN0).apply v.1) = v.1
+      rw [ofMatrix_apply_ofMatrix, hessS0_mul_hessN0, ofMatrix_one_apply]
+    | .ofNat 1, _ =>
+      change (ofMatrix hessS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
+        ((ofMatrix hessN1).apply v.1) = v.1
+      rw [ofMatrix_apply_ofMatrix, hessS1_mul_hessN1, ofMatrix_one_apply]
+    | .ofNat 2, _ =>
+      change (ofMatrix hessS2 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
+        ((ofMatrix hessN2).apply v.1) = v.1
+      rw [ofMatrix_apply_ofMatrix, hessS2_mul_hessN2, ofMatrix_one_apply]
+    | .ofNat (n + 3), _ =>
+      have := isEmpty_vecIdx 1 (k := .ofNat (n + 3) + 1)
+        (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega))
+      exact funext fun i => isEmptyElim i
+
+/-- **The Hessian diagram satisfies the injectivity/surjectivity condition at `J = 0`**
+(`injSurjWith_hessianBGG`): `I`, `2 vskw` and `tr` are onto. [ArnoldHu2021], (23), (32) -/
+theorem injSurj_hessianBGG : (hessianBGG 𝕜).smoothData.InjSurj 0 :=
+  injSurjWith_hessianBGG.injSurj
 
 /-- **The Hessian BGG complex has the cohomology of the twisted de Rham complex.**
 [ArnoldHu2021], §5.2 -/
@@ -204,17 +229,9 @@ def hessianBGGHomologyIso (i : ℤ) :
 
 /-! ### The BGG complex is the smooth Hessian complex -/
 
-theorem hessN0_mul_hessS0 : hessN0 * hessS0 = (1 : Matrix (Fin 3) (Fin 3) 𝕜) := by
-  ext j j'
-  fin_cases j <;> fin_cases j' <;>
-    simp [Matrix.mul_apply, hessS0, hessN0, Fintype.sum_prod_type]
-
 theorem bijective_hessianBGG_S_zero :
-    Function.Bijective ((hessianBGG 𝕜).smoothData.S 0 (0 + 1)) := by
-  rw [ConstCoeffBGG.smoothData_S]
-  have h1 := smoothMap_ofMatrix_injective (E := Fin 3 → ℝ) (hessN0_mul_hessS0 (𝕜 := 𝕜))
-  have h2 := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (hessS0_mul_hessN0 (𝕜 := 𝕜))
-  exact ⟨h1, h2⟩
+    Function.Bijective ((hessianBGG 𝕜).smoothData.S 0 (0 + 1)) :=
+  injSurjWith_hessianBGG.bijective
 
 /-- The BGG complex of the Hessian diagram has no exact part: `Δⁱ = 0`. -/
 theorem hessianBGG_Δ_eq_bot (i : ℤ) : (hessianBGG 𝕜).smoothData.Δ (· < 0) i = ⊥ := by

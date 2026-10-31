@@ -1,6 +1,7 @@
 module
 
 public import Feec.Domain.BGGRealization
+public import Feec.Instances.CrownNonVacuity
 
 /-!
 # Regression test: the analytic BGG verdict
@@ -13,6 +14,9 @@ and derives it from the new structure. `HilbertData.bggVerdict` and
 `Domain.ConstCoeffBGG.maximalData_bggVerdict` now conclude `HilbertData.BGGVerdict`, which extends
 `DerivedVerdict` by the explicit map (30); `bggVerdict_old` and `maximalData_bggVerdict_old` state
 their earlier conclusions verbatim and derive them from the new ones.
+`Instances.CrownNonVacuity` gained a last field `bgg`, the explicit map (30) on the smooth
+Hessian, elasticity and div-div complexes; `crownNonVacuity_bgg` checks, by `type_of%`, that it is
+the statement of `Domain.smoothBGGVerdict`.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -68,5 +72,11 @@ theorem maximalData_bggVerdict_old {E : Type*} [NormedAddCommGroup E] [NormedSpa
     [FiniteDimensional 𝕜 ((B.bot.maximalComplex hΩ).cohomology i)] :
     (B.maximalData M hM hΩ).DerivedVerdict (J < ·) (· < J) i :=
   (B.maximalData_bggVerdict M hM hΩ hN htop i).toDerivedVerdict
+
+universe u in
+/-- The last field of `Instances.CrownNonVacuity` is the statement of `Domain.smoothBGGVerdict`. -/
+theorem crownNonVacuity_bgg (h : Instances.CrownNonVacuity.{u}) :
+    type_of% @Domain.smoothBGGVerdict.{u} :=
+  h.bgg
 
 end FeecCheck.BGGVerdicts

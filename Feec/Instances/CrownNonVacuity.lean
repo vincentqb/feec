@@ -4,6 +4,7 @@ public import Feec.Instances.Corollaries
 public import Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness
 public import Feec.Counterexamples.Fredholm
 public import Feec.Examples.NonVacuity
+public import Feec.Domain.BGGKoszul
 
 /-!
 # Non-vacuity of the crown
@@ -36,6 +37,11 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   `ApproxComplexCrime.shifted_nonvacuous`, `ApproxComplexCrime.mixed_nonvacuous`); a Hodge wave
   equation with `L ≠ 0` (`Feec.Examples.idComplex_nonvacuous`) and a nonzero skew generator
   (`Feec.Examples.rotGen_standing_hypotheses`).
+* **The explicit map of the BGG layer on genuine complexes** (`Feec.Domain.smoothBGGVerdict`): the
+  cochain map (30) of Theorem 7 of [ArnoldHu2021] is a quasi-isomorphism on the smooth Hessian,
+  elasticity and div-div complexes, with the Koszul null-homotopies and explicit right inverses,
+  and represents their degree-`0` cohomology by the affine functions, the infinitesimal rigid
+  motions and the lowest-order Raviart–Thomas fields.
 
 Not exercised here: a nonzero datum of a Jackson rate class with a non-stationary orbit (the zero
 datum lies in every Whitney class, `Maxwell.zero_mem_cubePMC_ofJackson`).
@@ -53,6 +59,7 @@ datum lies in every Whitney class, `Maxwell.zero_mem_cubePMC_ofJackson`).
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3, §5
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], Theorem 7, Corollary 1
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
   §3
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -166,6 +173,9 @@ structure CrownNonVacuity : Prop where
   idComplex : type_of% @Examples.idComplex_nonvacuous.{u}
   /-- a nonzero bounded skew generator -/
   rotGen : type_of% @Examples.rotGen_standing_hypotheses.{u}
+  /-- the explicit cochain map (30) of the BGG layer (Theorem 7, Corollary 1 in degree `0`) on the
+  smooth Hessian, elasticity and div-div complexes -/
+  bgg : type_of% @Domain.smoothBGGVerdict.{u}
 
 /-- **The crown is not vacuous** (`CrownNonVacuity`). -/
 theorem crownNonVacuity : CrownNonVacuity.{u} :=
@@ -174,6 +184,6 @@ theorem crownNonVacuity : CrownNonVacuity.{u} :=
     ApproxFEEC.perturbed_nonvacuous, ApproxFEEC.projPerturbed_nonvacuous,
     ApproxComplex.scaled_nonvacuous, ApproxComplexCrime.shifted_nonvacuous,
     ApproxComplexCrime.mixed_nonvacuous, Examples.idComplex_nonvacuous,
-    Examples.rotGen_standing_hypotheses⟩
+    Examples.rotGen_standing_hypotheses, Domain.smoothBGGVerdict⟩
 
 end Feec.Instances

@@ -11,7 +11,8 @@ The de Rham complex of `ℝ³` with values in `𝕜³` (`deRhamVec 3`) stacked o
 `S⁰ = -mskw` (`(S⁰ψ)_{i,i+1} = -ψ_{i+2}`), `S¹ u = uᵀ - tr u · I` and `S² = 2 vskw`
 (`(S² u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}`), is BGG data of constant-coefficient operators
 (`elasticityBGG`): `S⁰` is one-to-one, `S¹` is bijective and `S²` is onto, so the
-injectivity/surjectivity condition holds at `J = 1` (**`injSurj_elasticityBGG`**). Its BGG complex
+injectivity/surjectivity condition holds at `J = 1` with the explicit right inverses `elasticityT`
+(**`injSurjWith_elasticityBGG`**, `injSurj_elasticityBGG`). Its BGG complex
 `bgg 1` eliminates `V²`, `V³` against `S¹`, `S²` and `Ṽ⁰` against `S⁰`, and **is the elasticity
 complex** `𝕜³ --sym grad--> Sym --inc--> Sym --div--> 𝕜³` of `Feec.Domain.Elasticity` on smooth
 fields (**`elasticityBGGIso`**): in degree `0` the quotient `V⁰ = (V⁰ × Ṽ⁰) / (0 × Ṽ⁰)`, in degree
@@ -29,7 +30,7 @@ the cohomology of the twisted de Rham complex (`elasticitySmoothComplexHomologyI
 
 ## Main results
 
-* **`injSurj_elasticityBGG`**, `elasticityBGGHomologyIso`.
+* **`injSurjWith_elasticityBGG`**, `injSurj_elasticityBGG`, `elasticityBGGHomologyIso`.
 * **`elasticityBGGIso`**, `elasticitySmoothComplexHomologyIso`.
 
 ## References
@@ -183,30 +184,48 @@ theorem elS2_mul_elN2 : elS2 * elN2 = (1 : Matrix (Fin 3) (Fin 3) 𝕜) := by
   fin_cases i <;> fin_cases i' <;>
     simp [Matrix.mul_apply, elS2, elN2]
 
-/-- **The elasticity diagram satisfies the injectivity/surjectivity condition at `J = 1`**:
-`-mskw` is one-to-one, `T - tr` and `2 vskw` are onto. [ArnoldHu2021], (23), §4.1 -/
-theorem injSurj_elasticityBGG : (elasticityBGG 𝕜).smoothData.InjSurj 1 := by
-  refine ⟨fun i hi => ?_, fun i hi => ?_⟩
-  · rw [ConstCoeffBGG.smoothData_S]
-    by_cases h0 : i = 0
-    · subst h0
-      have h := smoothMap_ofMatrix_injective (E := Fin 3 → ℝ) (elN0_mul_elS0 (𝕜 := 𝕜))
-      exact h
-    have := isEmpty_vecIdx 3 (k := i) (Or.inl (by omega))
-    have hs := subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜) (ι := vecIdx 3 i)
-    exact fun a b _ => hs.elim a b
-  · rw [ConstCoeffBGG.smoothData_S]
-    by_cases h1 : i = 1
-    · subst h1
-      have h := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (elS1_mul_elN1 (𝕜 := 𝕜))
-      exact h
-    by_cases h2 : i = 2
-    · subst h2
-      have h := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (elS2_mul_elN2 (𝕜 := 𝕜))
-      exact h
-    have := isEmpty_vecIdx 3 (k := i + 1) (Or.inr (by omega))
-    have hs := subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜) (ι := vecIdx 3 (i + 1))
-    exact fun y => ⟨0, hs.elim _ _⟩
+variable (𝕜) in
+/-- The right inverses `elN1`, `elN2` of `T - tr`, `2 vskw` on smooth fields (`0` elsewhere). -/
+def elasticityT : ∀ k : ℤ, smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 (k + 1)) →ₗ[𝕜]
+    smoothFields (Fin 3 → ℝ) 𝕜 (vecIdx 3 k)
+  | .ofNat 1 => (ofMatrix elN1).smoothMap
+  | .ofNat 2 => (ofMatrix elN2).smoothMap
+  | _ => 0
+
+/-- **The elasticity diagram satisfies the injectivity/surjectivity condition at `J = 1` with the
+right inverses `elasticityT`**: `-mskw` and `T - tr` are one-to-one, `T - tr` and `2 vskw` are
+onto. [ArnoldHu2021], (23), §4.1 -/
+theorem injSurjWith_elasticityBGG :
+    (elasticityBGG 𝕜).smoothData.InjSurjWith 1 ((elasticityBGG 𝕜).predMap (elasticityT 𝕜)) := by
+  refine ConstCoeffBGG.injSurjWith_predMap _ (fun k hk => ?_) fun k hk v => ?_
+  · match k, hk with
+    | .ofNat 0, _ => exact smoothMap_ofMatrix_injective (elN0_mul_elS0 (𝕜 := 𝕜))
+    | .ofNat 1, _ => exact smoothMap_ofMatrix_injective (elN1_mul_elS1 (𝕜 := 𝕜))
+    | .ofNat (n + 2), hk => exact absurd hk (by simp only [Int.ofNat_eq_natCast]; omega)
+    | .negSucc n, _ =>
+      have := isEmpty_vecIdx 3 (k := .negSucc n) (Or.inl (Int.negSucc_lt_zero n))
+      exact fun a b _ => (subsingleton_smoothFields (E := Fin 3 → ℝ) (𝕜 := 𝕜)).elim a b
+  · refine Subtype.ext ?_
+    match k, hk with
+    | .ofNat 1, _ =>
+      change (ofMatrix elS1 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
+        ((ofMatrix elN1).apply v.1) = v.1
+      rw [ofMatrix_apply_ofMatrix, elS1_mul_elN1, ofMatrix_one_apply]
+    | .ofNat 2, _ =>
+      change (ofMatrix elS2 : ConstCoeffOp (Fin 3 → ℝ) 𝕜 _ _).apply
+        ((ofMatrix elN2).apply v.1) = v.1
+      rw [ofMatrix_apply_ofMatrix, elS2_mul_elN2, ofMatrix_one_apply]
+    | .ofNat (n + 3), _ =>
+      have := isEmpty_vecIdx 3 (k := .ofNat (n + 3) + 1)
+        (Or.inr (by simp only [Int.ofNat_eq_natCast]; omega))
+      exact funext fun i => isEmptyElim i
+    | .ofNat 0, hk => exact absurd hk (by decide)
+    | .negSucc n, hk => exact absurd hk (by simp only [not_le]; omega)
+
+/-- **The elasticity diagram satisfies the injectivity/surjectivity condition at `J = 1`**
+(`injSurjWith_elasticityBGG`). [ArnoldHu2021], (23), §4.1 -/
+theorem injSurj_elasticityBGG : (elasticityBGG 𝕜).smoothData.InjSurj 1 :=
+  injSurjWith_elasticityBGG.injSurj
 
 /-- **The elasticity BGG complex has the cohomology of the twisted de Rham complex.**
 [ArnoldHu2021], §5.2 -/
@@ -316,11 +335,8 @@ abbrev elasticitySmoothComplex : CochainComplex (ModuleCat 𝕜) ℤ :=
   (elasticityConstCoeffComplex 𝕜).smoothComplex (elasticityMat 𝕜) elasticityOp_matMapsTo
 
 theorem bijective_elasticityBGG_S_one :
-    Function.Bijective ((elasticityBGG 𝕜).smoothData.S 1 (1 + 1)) := by
-  rw [ConstCoeffBGG.smoothData_S]
-  have h1 := smoothMap_ofMatrix_injective (E := Fin 3 → ℝ) (elN1_mul_elS1 (𝕜 := 𝕜))
-  have h2 := smoothMap_ofMatrix_surjective (E := Fin 3 → ℝ) (elS1_mul_elN1 (𝕜 := 𝕜))
-  exact ⟨h1, h2⟩
+    Function.Bijective ((elasticityBGG 𝕜).smoothData.S 1 (1 + 1)) :=
+  injSurjWith_elasticityBGG.bijective
 
 theorem range_elasticityBGG_S_neg_one :
     LinearMap.range ((elasticityBGG 𝕜).smoothData.S (0 - 1) 0) = ⊥ := by

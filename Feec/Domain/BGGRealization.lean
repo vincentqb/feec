@@ -35,6 +35,14 @@ derived from the cube results on `deRham` either: over `ℝ`, the downstream mod
 every open `Ω ⊆ ℝ³` (`deRhamVec_maximalComplex_eq_map`), but the cohomology is not transported,
 and the instances here are over a general `𝕜`.
 
+The explicit cochain map (30) of Theorem 7 in `HilbertData.BGGVerdict` assumes right inverses of
+the connecting maps between the domain complexes (`Feec.BGG.Data.InjSurjWith` for
+`HilbertData.domainData`). For these three diagrams there are none: `Sᴶ` is not onto between the
+domains (for the Hessian, `S⁰ = I` maps `H¹(Ω; 𝕜³)` into `H(curl; Ω)`, a proper subspace for every
+nonempty open `Ω`; not formalized), so the explicit-map fields hold vacuously here. The explicit
+map applies unconditionally on smooth fields, where the matrices are onto pointwise
+(`Feec.Domain.smoothBGGVerdict` in `Feec.Domain.BGGKoszul`).
+
 ## Main definitions
 
 * `Feec.Domain.L2F.ofMatrixCLM M`: a constant matrix acting on `L²(Ω; 𝕜^ι)`;
@@ -234,7 +242,9 @@ theorem maximalData_S (hΩ : IsOpen Ω) (k : ℤ) :
 inverses, then wherever the maximal complexes of the two rows have finite-dimensional cohomology
 and the regular decompositions after `J` hold, the BGG complex `bgg J` of their domain complexes
 has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, and the explicit map (30) of
-[ArnoldHu2021], Theorem 7 is a quasi-isomorphism (`HilbertData.BGGVerdict`). -/
+[ArnoldHu2021], Theorem 7 is a quasi-isomorphism (`HilbertData.BGGVerdict`) for every choice of
+right inverses of `S` from `J` on between the domains (none exist when `Sᴶ` is not onto between
+them, as for the Hessian, elasticity and div-div diagrams). -/
 theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen Ω) {J : ℤ}
     (hN : ∀ k ≤ J, ∃ N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜, N * M k = 1)
     (htop : (B.maximalData M hM hΩ).RegularDecomposition J)

@@ -135,7 +135,9 @@ the section on the crown fields check, by `type_of%`, that the type of each fiel
 definitionally, the statement of the layer theorem it is read from (`staticFEEC`, `approxFEEC`,
 `constrainedFEEC`, `heatFEEC`, `dissipFEEC_fullyDiscrete` for the θ-schemes, Crank–Nicolson and
 every time scheme, `SkewFEEC.norm_S_sub_leapfrog_le`, `DissipFEEC.norm_step_pow_sub_S_le` (the
-fields `exact_wave`, `exact_heat` of the fully discrete verdict), `constrainedFEEC_perturbed`;
+fields `exact_wave`, `exact_heat` of the fully discrete verdict),
+`DissipFEEC.exists_norm_step_pow_sub_perturb_le` (the fields `exact_perturbed_wave`,
+`exact_perturbed_heat`), `constrainedFEEC_perturbed`;
 `ConformingFamily.rate`,
 `ConstrainedFEEC.rate_le`, `ConstrainedFEEC.rate_heat`, `rate_smooth_iterates`). On the cube, the
 heat verdict of `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the crown of
@@ -3031,6 +3033,14 @@ example (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.H
       type_of% ((F.windowFEEC a m K hK).toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx') :=
   ⟨(F.feec.full a m K hK).exact_wave r hr hp hτ n hx,
     (F.feec.full a m K hK).exact_heat r hr hp hτ n hx'⟩
+
+/-- The time discretization of the exact wave and heat equations with every bounded perturbation
+(Brenner–Thomée for quasi-contractive semigroups) is a field of the crown. -/
+example (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
+    type_of% ((F.windowFEEC a m K hK).toApprox.exists_norm_step_pow_sub_perturb_le r hr hp) ∧
+      type_of% ((F.windowFEEC a m K hK).toHeat.exists_norm_step_pow_sub_perturb_le r hr hp) :=
+  ⟨(F.feec.full a m K hK).exact_perturbed_wave r hr hp,
+    (F.feec.full a m K hK).exact_perturbed_heat r hr hp⟩
 
 open scoped InnerProductSpace in
 example (B : (PiLp 2 fun i : Fin m => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin m => V (a + i))

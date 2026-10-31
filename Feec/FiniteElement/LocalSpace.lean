@@ -231,13 +231,17 @@ theorem evalForm_wedgeForm (ω η : Koszul.PolyForm ℝ (Fin n)) (x : Fin n → 
 
 /-! ### Affine substitution in polynomials -/
 
+section Subst
+
+variable {R : Type*} [CommRing R]
+
 /-- The affine substitution `p ↦ p ∘ F`, `F(x̂) = B x̂ + b`. -/
-def polySubst (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) :
-    MvPolynomial (Fin n) ℝ →ₐ[ℝ] MvPolynomial (Fin m) ℝ :=
+def polySubst (B : Fin n → Fin m → R) (b : Fin n → R) :
+    MvPolynomial (Fin n) R →ₐ[R] MvPolynomial (Fin m) R :=
   aeval fun i => ∑ l, C (B i l) * X l + C (b i)
 
-theorem eval_polySubst (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (p : MvPolynomial (Fin n) ℝ)
-    (x : Fin m → ℝ) : eval x (polySubst B b p) = eval (affine B b x) p := by
+theorem eval_polySubst (B : Fin n → Fin m → R) (b : Fin n → R) (p : MvPolynomial (Fin n) R)
+    (x : Fin m → R) : eval x (polySubst B b p) = eval (affine B b x) p := by
   induction p using MvPolynomial.induction_on with
   | C a => simp [polySubst]
   | add p q hp hq => simp [hp, hq]
@@ -245,15 +249,16 @@ theorem eval_polySubst (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (p : Mv
     rw [map_mul, map_mul, hp, polySubst, aeval_X]
     simp [affine_apply]
 
-theorem totalDegree_affineCoord_le (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (i : Fin n) :
-    (∑ l, C (B i l) * X l + C (b i) : MvPolynomial (Fin m) ℝ).totalDegree ≤ 1 := by
+theorem totalDegree_affineCoord_le (B : Fin n → Fin m → R) (b : Fin n → R) (i : Fin n) :
+    (∑ l, C (B i l) * X l + C (b i) : MvPolynomial (Fin m) R).totalDegree ≤ 1 := by
+  nontriviality R using Subsingleton.elim _ (0 : MvPolynomial (Fin m) R), totalDegree_zero
   refine (totalDegree_add _ _).trans (max_le ((totalDegree_finsetSum _ _).trans
     (Finset.sup_le fun l _ => ?_)) (by simp))
   exact (totalDegree_mul _ _).trans (by rw [totalDegree_C, totalDegree_X])
 
 /-- Affine substitution does not raise the total degree. -/
-theorem totalDegree_polySubst_le (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
-    (p : MvPolynomial (Fin n) ℝ) : (polySubst B b p).totalDegree ≤ p.totalDegree := by
+theorem totalDegree_polySubst_le (B : Fin n → Fin m → R) (b : Fin n → R)
+    (p : MvPolynomial (Fin n) R) : (polySubst B b p).totalDegree ≤ p.totalDegree := by
   conv_lhs => rw [p.as_sum, map_sum]
   refine (totalDegree_finsetSum _ _).trans (Finset.sup_le fun v hv => ?_)
   rw [polySubst, aeval_monomial]
@@ -268,12 +273,12 @@ theorem totalDegree_polySubst_le (B : Fin n → Fin m → ℝ) (b : Fin n → �
 /-! ### Affine pullback of polynomial forms -/
 
 /-- The pullback of a polynomial form along `F(x̂) = B x̂ + b`, as a polynomial form. -/
-def polyPullback (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) (ω : Koszul.PolyForm ℝ (Fin n)) :
-    Koszul.PolyForm ℝ (Fin m) :=
+def polyPullback (B : Fin n → Fin m → R) (b : Fin n → R) (ω : Koszul.PolyForm R (Fin n)) :
+    Koszul.PolyForm R (Fin m) :=
   ExteriorFibre.pullback (fun i l => C (B i l)) (fun s => polySubst B b (ω s))
 
-theorem polyPullback_apply (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
-    (ω : Koszul.PolyForm ℝ (Fin n)) (t : Finset (Fin m)) :
+theorem polyPullback_apply (B : Fin n → Fin m → R) (b : Fin n → R)
+    (ω : Koszul.PolyForm R (Fin n)) (t : Finset (Fin m)) :
     polyPullback B b ω t = ∑ s, polySubst B b (ω s) * C (wedgeProd B s t) := by
   rw [polyPullback, pullback_apply]
   refine sum_congr rfl fun s _ => ?_
@@ -288,16 +293,16 @@ theorem evalForm_polyPullback (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
   rw [evalForm_apply, polyPullback_apply, affinePullback_apply, pullback_apply]
   simp only [map_sum, map_mul, eval_C, eval_polySubst, evalForm_apply]
 
-theorem polyPullback_add (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
-    (ω η : Koszul.PolyForm ℝ (Fin n)) :
+theorem polyPullback_add (B : Fin n → Fin m → R) (b : Fin n → R)
+    (ω η : Koszul.PolyForm R (Fin n)) :
     polyPullback B b (ω + η) = polyPullback B b ω + polyPullback B b η := by
   rw [polyPullback, polyPullback, polyPullback, ← pullback_add]
   congr 1; funext s; simp
 
 /-- **`F^* P_rΛᵏ(ℝⁿ) ⊆ P_rΛᵏ(ℝᵐ)`** for every affine `F : ℝᵐ → ℝⁿ`. -/
-theorem polyPullback_mem_polyForm (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) {r k : ℕ}
-    {ω : Koszul.PolyForm ℝ (Fin n)} (h : ω ∈ Koszul.polyForm ℝ (Fin n) r k) :
-    polyPullback B b ω ∈ Koszul.polyForm ℝ (Fin m) r k := by
+theorem polyPullback_mem_polyForm (B : Fin n → Fin m → R) (b : Fin n → R) {r k : ℕ}
+    {ω : Koszul.PolyForm R (Fin n)} (h : ω ∈ Koszul.polyForm R (Fin n) r k) :
+    polyPullback B b ω ∈ Koszul.polyForm R (Fin m) r k := by
   refine ⟨IsDeg.pullback (fun s hs => by simp [h.1 s hs]) _, fun t => ?_⟩
   rw [polyPullback_apply]
   refine (totalDegree_finsetSum _ _).trans (Finset.sup_le fun s _ => (totalDegree_mul _ _).trans ?_)
@@ -305,8 +310,8 @@ theorem polyPullback_mem_polyForm (B : Fin n → Fin m → ℝ) (b : Fin n → �
   exact (totalDegree_polySubst_le B b _).trans (h.2 s)
 
 /-- The pullback of `κ ω` along `F(x̂) = B x̂ + b`: `F^*(κ ω) = κ (F^* ω) + F^*(ι_b ω)`. -/
-theorem polyPullback_koszul (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
-    (ω : Koszul.PolyForm ℝ (Fin n)) :
+theorem polyPullback_koszul (B : Fin n → Fin m → R) (b : Fin n → R)
+    (ω : Koszul.PolyForm R (Fin n)) :
     polyPullback B b (Koszul.koszul ω) = Koszul.koszul (polyPullback B b ω) +
       polyPullback B b (interior (fun j => C (b j)) ω) := by
   have hsub : (fun s => polySubst B b (Koszul.koszul ω s)) =
@@ -328,9 +333,10 @@ theorem polyPullback_koszul (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ)
 
 /-- **`F^* P_r⁻Λᵏ(ℝⁿ) ⊆ P_r⁻Λᵏ(ℝᵐ)`** for every affine `F : ℝᵐ → ℝⁿ` ([AFW2010], §5.1.3: the
 trimmed spaces do not depend on the base point of `κ`). -/
-theorem polyPullback_mem_polyFormMinus (B : Fin n → Fin m → ℝ) (b : Fin n → ℝ) {r k : ℕ}
-    {ω : Koszul.PolyForm ℝ (Fin n)} (h : ω ∈ Koszul.polyFormMinus ℝ (Fin n) r k) :
-    polyPullback B b ω ∈ Koszul.polyFormMinus ℝ (Fin m) r k := by
+theorem polyPullback_mem_polyFormMinus {K : Type*} [Field K] (B : Fin n → Fin m → K)
+    (b : Fin n → K) {r k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
+    (h : ω ∈ Koszul.polyFormMinus K (Fin n) r k) :
+    polyPullback B b ω ∈ Koszul.polyFormMinus K (Fin m) r k := by
   obtain ⟨a, ha, c, ⟨c, hc, rfl⟩, rfl⟩ := Submodule.mem_sup.1 h
   rw [polyPullback_add]
   refine Submodule.add_mem _ (Submodule.mem_sup_left (polyPullback_mem_polyForm B b ha)) ?_
@@ -340,6 +346,8 @@ theorem polyPullback_mem_polyFormMinus (B : Fin n → Fin m → ℝ) (b : Fin n 
     (polyPullback_mem_polyForm B b (Koszul.homForm_le_polyForm _ _ hc))) ?_
   exact Submodule.mem_sup_left (polyPullback_mem_polyForm B b
     (Koszul.interior_C_mem_polyForm b (Koszul.homForm_le_polyForm _ _ hc)))
+
+end Subst
 
 /-! ### The spaces `P_rΛᵏ(ℝⁿ)`, `P_r⁻Λᵏ(ℝⁿ)` of form fields -/
 

@@ -3,12 +3,12 @@ module
 public import Mathlib.Algebra.Category.ModuleCat.Basic
 public import Mathlib.Algebra.Homology.ShortComplex.HomologicalComplex
 public import Mathlib.Algebra.MvPolynomial.PDeriv
-public import Mathlib.Basic.Real.Basic
 public import Mathlib.LinearAlgebra.CliffordAlgebra.Contraction
 public import Mathlib.LinearAlgebra.Dimension.Finrank
 public import Mathlib.LinearAlgebra.Dual.Defs
 public import Mathlib.LinearAlgebra.ExteriorAlgebra.Basic
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup.Defs
 public import Mathlib.LinearAlgebra.Matrix.ToLin
 public import Mathlib.LinearAlgebra.TensorProduct.Map
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
@@ -262,62 +262,69 @@ structure PeriodicTable : Prop where
   ker_inf_polyFormMinus_le [CharZero K] (r k : ℕ) :
     ker (extDeriv K n) ⊓ polyFormMinus K n (r + 1) k ≤ polyForm K n r k
 
-/-! ### Affinely invariant spaces of polynomial forms on `ℝⁿ` ([AFW2006], §3.4) -/
+/-! ### Affinely invariant spaces of polynomial forms on `Kⁿ` ([AFW2006], §3.4) -/
 
-/-- The **pullback** of polynomial forms on `ℝⁿ` along the affine map `φ(x) = B x + b`:
+/-- The **pullback** of polynomial forms on `Kⁿ` along the affine map `φ(x) = B x + b`:
 `φ^*(p ⊗ θ) = (p ∘ φ) ⊗ Λ(Bᵀ) θ`, with `Bᵀ ξ = ξ ∘ B` on the covectors. -/
-def pullback (B : Fin n → Fin n → ℝ) (b : Fin n → ℝ) : Form ℝ n →ₗ[ℝ] Form ℝ n :=
+def pullback (B : Matrix (Fin n) (Fin n) K) (b : Fin n → K) : Form K n →ₗ[K] Form K n :=
   TensorProduct.map (aeval fun i => ∑ l, C (B i l) * X l + C (b i)).toLinearMap
-    (ExteriorAlgebra.map (Matrix.toLin' (Matrix.of B)).dualMap).toLinearMap
+    (ExteriorAlgebra.map (Matrix.toLin' B).dualMap).toLinearMap
 
-/-- `V` is mapped into itself by the pullback along every affine map `φ : ℝⁿ → ℝⁿ`. -/
-def IsAffineInvariant (V : Submodule ℝ (Form ℝ n)) : Prop :=
-  ∀ B b, V.map (pullback n B b) ≤ V
+/-- `V` is mapped into itself by the pullback along every affine map `φ : Kⁿ → Kⁿ`. -/
+def IsAffineInvariant (V : Submodule K (Form K n)) : Prop :=
+  ∀ B b, V.map (pullback K n B b) ≤ V
 
-/-- `V` is mapped into itself by the pullback along every linear map `x ↦ B x` of `ℝⁿ`. -/
-def IsLinearInvariant (V : Submodule ℝ (Form ℝ n)) : Prop :=
-  ∀ B, V.map (pullback n B 0) ≤ V
+/-- `V` is mapped into itself by the pullback along every linear map `x ↦ B x` of `Kⁿ`. -/
+def IsLinearInvariant (V : Submodule K (Form K n)) : Prop :=
+  ∀ B, V.map (pullback K n B 0) ≤ V
+
+/-- `V` is mapped into itself by the pullback along every invertible linear map `x ↦ g x`,
+`g ∈ GL(n, K)`. -/
+def IsGLInvariant (V : Submodule K (Form K n)) : Prop :=
+  ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
 
 /-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5). -/
-def invariantForm (r s k : ℕ) : Submodule ℝ (Form ℝ n) :=
-  (polyForm ℝ n (r + 1) (k - 1)).map (extDeriv ℝ n) ⊔ (polyForm ℝ n s (k + 1)).map (koszul ℝ n)
+def invariantForm (r s k : ℕ) : Submodule K (Form K n) :=
+  (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ⊔ (polyForm K n s (k + 1)).map (koszul K n)
 
-/-- **The affinely invariant spaces of polynomial forms** on `ℝⁿ` ([AFW2006], §3.4). -/
-structure AffineInvariantForms : Prop where
+/-- **The affinely invariant spaces of polynomial forms** on `Kⁿ`, `K` of characteristic `0`
+([AFW2006], §3.4). -/
+structure AffineInvariantForms [CharZero K] : Prop where
   /-- the images `dH_rΛᵏ` and `κH_rΛᵏ` are linearly invariant, among them the summands
   `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` (§3.4) -/
   isLinearInvariant_map_homForm (r k : ℕ) :
-    IsLinearInvariant n ((homForm ℝ n r k).map (extDeriv ℝ n)) ∧
-      IsLinearInvariant n ((homForm ℝ n r k).map (koszul ℝ n))
-  /-- the linearly invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
+    IsLinearInvariant K n ((homForm K n r k).map (extDeriv K n)) ∧
+      IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
+  /-- the `GL(n)`-invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
   `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` (§3.4, before Lemma 3.7) -/
-  eq_of_le_homForm (r k : ℕ) (W : Submodule ℝ (Form ℝ n)) (hW : IsLinearInvariant n W)
-    (hle : W ≤ homForm ℝ n (r + 1) (k + 1)) :
-    W = ⊥ ∨ W = (homForm ℝ n (r + 2) k).map (extDeriv ℝ n) ∨
-      W = (homForm ℝ n r (k + 2)).map (koszul ℝ n) ∨ W = homForm ℝ n (r + 1) (k + 1)
+  eq_of_le_homForm (r k : ℕ) (W : Submodule K (Form K n)) (hW : IsGLInvariant K n W)
+    (hle : W ≤ homForm K n (r + 1) (k + 1)) :
+    W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
+      W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1)
   /-- `dP_{r+1}Λ^{k-1}` is affinely invariant ((3.18)) -/
   isAffineInvariant_map_extDeriv (r k : ℕ) :
-    IsAffineInvariant n ((polyForm ℝ n (r + 1) (k - 1)).map (extDeriv ℝ n))
+    IsAffineInvariant K n ((polyForm K n (r + 1) (k - 1)).map (extDeriv K n))
   /-- `X(r, s, k)` is affinely invariant for `s ≤ r`, `k ≥ 1` (Theorem 3.5) -/
   isAffineInvariant_invariantForm (r s k : ℕ) (hk : 1 ≤ k) (hs : s ≤ r) :
-    IsAffineInvariant n (invariantForm n r s k)
+    IsAffineInvariant K n (invariantForm K n r s k)
   /-- `X(r, r, k) = P_{r+1}⁻Λᵏ` (Theorem 3.5, case `s = r`) -/
   invariantForm_eq_polyFormMinus (r k : ℕ) (hk : 1 ≤ k) :
-    invariantForm n r r k = polyFormMinus ℝ n (r + 1) k
+    invariantForm K n r r k = polyFormMinus K n (r + 1) k
   /-- `X(r + 1, r, k) = P_{r+1}Λᵏ` (Theorem 3.5, case `s = r - 1`) -/
   invariantForm_eq_polyForm (r k : ℕ) (hk : 1 ≤ k) :
-    invariantForm n (r + 1) r k = polyForm ℝ n (r + 1) k
+    invariantForm K n (r + 1) r k = polyForm K n (r + 1) k
   /-- `dP_1Λ^{k-1} = P_0Λᵏ`, that is `X(0, -1, k) = P_0Λᵏ` (Theorem 3.5, case `s = r - 1`,
   `r = 0`) -/
   map_extDeriv_polyForm_one (k : ℕ) (hk : 1 ≤ k) :
-    (polyForm ℝ n 1 (k - 1)).map (extDeriv ℝ n) = polyForm ℝ n 0 k
-  /-- for `0 < k < n` every nonzero finite-dimensional affinely invariant space of `k`-forms is
-  `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r` (Theorem 3.6) -/
-  eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule ℝ (Form ℝ n))
-    [FiniteDimensional ℝ V] (hV : IsAffineInvariant n V) (hdeg : V ≤ kForm ℝ n ⊤ k)
-    (hne : V ≠ ⊥) :
-    ∃ r, V = (polyForm ℝ n (r + 1) (k - 1)).map (extDeriv ℝ n) ∨
-      ∃ s ≤ r, V = invariantForm n r s k
+    (polyForm K n 1 (k - 1)).map (extDeriv K n) = polyForm K n 0 k
+  /-- for `0 < k < n` every nonzero finite-dimensional space of `k`-forms mapped into itself by the
+  pullback along every invertible affine map is `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r`
+  (Theorem 3.6) -/
+  eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule K (Form K n))
+    [FiniteDimensional K V] (hV : ∀ (g : GL (Fin n) K) b, V.map (pullback K n g b) ≤ V)
+    (hdeg : V ≤ kForm K n ⊤ k) (hne : V ≠ ⊥) :
+    ∃ r, V = (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ∨
+      ∃ s ≤ r, V = invariantForm K n r s k
 
 /-! ### The theorem -/
 

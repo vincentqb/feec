@@ -494,6 +494,33 @@ theorem generator_ofBounded_apply (B : E →L[𝕜] E) (x : (ofBounded B).genera
     (ofBounded B).generator x = B x :=
   (ofBounded B).generator_apply_eq (by simpa using hasDerivAt_exp_ofReal_smul_apply B x 0)
 
+theorem mem_graph_generator_ofBounded (B : E →L[𝕜] E) (x : E) :
+    (x, B x) ∈ (ofBounded B).generator.graph := by
+  rw [generator_ofBounded]
+  exact LinearPMap.mem_graph ((B : E →ₗ[𝕜] E).toPMap ⊤) ⟨x, trivial⟩
+
+theorem eq_of_mem_graph_generator_ofBounded {B : E →L[𝕜] E} {x y : E}
+    (h : (x, y) ∈ (ofBounded B).generator.graph) : y = B x := by
+  obtain ⟨z, hz, hzy⟩ := (LinearPMap.mem_graph_iff _).1 h
+  simp only at hz hzy
+  rw [← hzy, generator_ofBounded_apply, hz]
+
+/-- **Chains in the graph of `B` are `Bʲ x`**: `D(Bᵏ) = E` and `uⱼ = Bʲ u₀`. -/
+theorem eq_pow_apply_of_chain {B : E →L[𝕜] E} {k : ℕ} {u : ℕ → E}
+    (hu : ∀ j < k, (u j, u (j + 1)) ∈ (ofBounded B).generator.graph) :
+    ∀ j ≤ k, u j = (B ^ j) (u 0)
+  | 0, _ => by simp
+  | j + 1, hj => by
+    rw [eq_of_mem_graph_generator_ofBounded (hu j (by omega)),
+      eq_pow_apply_of_chain hu j (by omega), pow_succ']
+    rfl
+
+/-- The chain `Bʲ x` in the graph of the generator `B`. -/
+theorem pow_apply_mem_graph_generator_ofBounded (B : E →L[𝕜] E) (x : E) (j : ℕ) :
+    ((B ^ j) x, (B ^ (j + 1)) x) ∈ (ofBounded B).generator.graph := by
+  rw [pow_succ']
+  exact mem_graph_generator_ofBounded B _
+
 end Bounded
 
 section BoundedSkew

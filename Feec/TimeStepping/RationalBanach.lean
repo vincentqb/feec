@@ -11,11 +11,14 @@ generator `A`, and `r` a rational scheme of order `p`. With the resolvent `R = (
 operator `r(τA)` is `P(R) Q(R)⁻¹` (`RationalScheme.resolventStep`; `P(s) = sᴺ n(1 - 1/s)`,
 `Q(s) = sᴺ d(1 - 1/s)`, `Feec.TimeStepping.resolventEval`), the form that
 `Feec.TimeStepping.RationalScheme.step` takes on Hilbert spaces
-(`RationalScheme.step_eq_resolventStep`). On a Banach space neither the stability of `r(τA)`
-nor the boundedness of the remainder `ρ(τA)`, `ρ = (r - Tₚ)/z^{p+1}`, is automatic (von Neumann's
-inequality fails off Hilbert spaces); both enter as hypotheses, as in [BrennerThomee1979], where
-they come from the Hille–Phillips functional calculus. Under them, **Brenner–Thomée's error bound**
-holds:
+(`RationalScheme.step_eq_resolventStep`). On a Banach space the stability of `r(τA)` is not
+automatic (von Neumann's inequality fails off Hilbert spaces) and is a hypothesis, as in
+[BrennerThomee1979]. So are the invertibility of `Q(R)` and the boundedness of the remainder
+`ρ(τA)`, `ρ = (r - Tₚ)/z^{p+1}`, although for A-stable `r` both follow from resolvent estimates
+alone: `Q(R)` is a product of factors `R (τA - ζ)` over the poles `ζ` of `r`, and the partial
+fractions of `ρ` bound `‖ρ(τA)‖` by the Hille–Yosida bounds
+`‖(λ - A)^{-m}‖ ≤ M/(re λ - ω)^m` at `λ = ζ/τ`. These estimates are not formalized here. Under
+the three hypotheses, **Brenner–Thomée's error bound** holds:
 
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`
 
@@ -24,29 +27,27 @@ for `x ∈ D(A^{p+1})`, with `‖r(τA)ᵏ‖ ≤ Mₛ` (`k ≤ n`), `‖ρ(τA)
 
 ## Main results
 
-* `C0Semigroup.norm_S_sub_taylor_le`: **Taylor's formula for the semigroup**, on a Banach space:
-  `‖S(t) x - Σ_{j<p} tʲ/j! Aʲ x‖ ≤ M tᵖ/p! ‖Aᵖ x‖` for `x ∈ D(Aᵖ)` and `‖S‖ ≤ M` on `[0, t]`;
-* **`C0Semigroup.norm_pow_apply_sub_S_le`** (Lax–Richtmyer, [Thomee2006], Ch. 7): stability
-  `‖Pᵏ‖ ≤ Mₛ` and consistency `‖P y - S(τ) y‖ ≤ K τ^{p+1} ‖A^{p+1} y‖` on `D(A^{p+1})` give
-  `‖Pⁿ x - S(nτ) x‖ ≤ Mₛ K M nτ τᵖ ‖A^{p+1} x‖`;
 * `resolventEval_mul`, `resolventEval_add`: `P ↦ P(s) = sᴺ f(1 - 1/s)` is additive and
   multiplicative (degrees add), proved by evaluation at the points `s ≠ 0`;
 * `RationalScheme.resolventStep_apply_eq`: **the expansion `r(τA) x = Tₚ(τA) x + (τA)^{p+1} ρ(τA) x`
   on `D(A^{p+1})`**, from `n = d Tₚ + X^{p+1} ρ`, with `(R - 1) x = τ R A x` on `D(A)`;
 * `RationalScheme.norm_resolventStep_sub_S_le`: consistency,
   `‖r(τA) x - S(τ) x‖ ≤ (K₀ + M/(p+1)!) τ^{p+1} ‖A^{p+1} x‖`;
-* **`RationalScheme.norm_resolventStep_pow_sub_S_le`**: Brenner–Thomée on Banach spaces.
+* **`RationalScheme.norm_resolventStep_pow_sub_S_le`**: Brenner–Thomée on Banach spaces, from
+  Taylor's formula and Lax–Richtmyer for semigroups (`C0Semigroup.norm_S_sub_taylor_le`,
+  `C0Semigroup.norm_pow_apply_sub_S_le`, `Feec.TimeStepping.Convergence`);
+* `RationalScheme.norm_step_pow_sub_S_le`: the same on Hilbert spaces for
+  `Feec.TimeStepping.RationalScheme.step`, given a resolvent of `A` at `1/τ`.
 
-The quasi-contractive case on Hilbert spaces, where von Neumann's inequality discharges both
-hypotheses after a shift, is `Feec.TimeStepping.RationalQuasi`.
+On Hilbert spaces von Neumann's inequality discharges the three hypotheses: for contraction
+semigroups directly (`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`), for
+quasi-contractive ones after a shift (`Feec.TimeStepping.RationalQuasi`).
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–8
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 9
 * [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
-* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (the orbit calculus)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -56,111 +57,6 @@ open Set Finset Polynomial
 @[expose] public noncomputable section
 
 namespace Feec
-
-/-! ### Taylor's formula and the Lax–Richtmyer theorem for semigroups -/
-
-namespace C0Semigroup
-
-variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedSpace ℝ E]
-  [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
-
-/-- **Taylor's formula for a semigroup**: for a chain `u₀, …, u_p` in the graph of the generator
-(`u₀ ∈ D(Aᵖ)`, `uⱼ = Aʲ u₀`) and `‖S(s)‖ ≤ M` on `[0, T]`,
-`‖S(t) u₀ - Σ_{j<p} tʲ/j! uⱼ‖ ≤ M tᵖ/p! ‖u_p‖` for `t ∈ [0, T]`. [Pazy1983], §1.2 -/
-theorem norm_S_sub_taylor_le {T M : ℝ} (hM : ∀ t ∈ Icc 0 T, ‖G.S t‖ ≤ M) (p : ℕ) :
-    ∀ {u : ℕ → E}, (∀ j < p, (u j, u (j + 1)) ∈ G.generator.graph) → ∀ {t : ℝ}, t ∈ Icc 0 T →
-      ‖G.S t (u 0) - ∑ j ∈ range p, (t ^ j / j.factorial) • u j‖ ≤
-        M * (t ^ p / p.factorial) * ‖u p‖ := by
-  induction p with
-  | zero =>
-    intro u _ t ht
-    simpa using ((G.S t).le_opNorm (u 0)).trans
-      (mul_le_mul_of_nonneg_right (hM t ht) (norm_nonneg _))
-  | succ p ih =>
-    intro u hu t ht
-    set F : ℝ → E := fun s => G.S s (u 0) - ∑ j ∈ range (p + 1), (s ^ j / j.factorial) • u j
-    set F' : ℝ → E := fun s => G.S s (u 1) - ∑ j ∈ range p, (s ^ j / j.factorial) • u (j + 1)
-    have hF : ∀ s, F s = G.S s (u 0) - u 0 -
-        ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • u (j + 1) := fun s => by
-      simp only [F, sum_range_succ', pow_zero, Nat.factorial_zero, Nat.cast_one, div_one,
-        one_smul]
-      abel
-    obtain ⟨hx, hAx⟩ := LinearPMap.mem_graph_iff_exists.1 (hu 0 (Nat.succ_pos p))
-    have hsum : ∀ s : ℝ, HasDerivAt
-        (fun s : ℝ => ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • u (j + 1))
-        (∑ j ∈ range p, (s ^ j / j.factorial) • u (j + 1)) s := fun s => by
-      have := HasDerivAt.sum (u := range p) (x := s)
-        (A := fun j (s : ℝ) => (s ^ (j + 1) / (j + 1).factorial) • u (j + 1))
-        (A' := fun j => (s ^ j / j.factorial) • u (j + 1)) fun j _ => by
-          have h := ((hasDerivAt_pow (j + 1) s).div_const ((j + 1).factorial : ℝ)).smul_const
-            (u (j + 1))
-          convert h using 2
-          rw [Nat.factorial_succ, Nat.cast_mul, Nat.add_sub_cancel]
-          have : (j.factorial : ℝ) ≠ 0 := by positivity
-          field_simp
-      convert this using 1
-      ext s'; simp
-    have hd : ∀ s ∈ Ico 0 t, HasDerivWithinAt F (F' s) (Ici s) s := fun s hs => by
-      have h1 := G.hasDerivWithinAt_Ici_apply ⟨u 0, hx⟩ hs.1
-      rw [hAx] at h1
-      exact ((h1.sub_const (u 0)).sub (hsum s).hasDerivWithinAt).congr (fun y _ => hF y) (hF s)
-    have hc : ContinuousOn F (Icc 0 t) := by
-      rw [show F = fun s : ℝ => G.S s (u 0) - u 0 -
-        ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • u (j + 1) from funext hF]
-      exact (((G.strongCont (u 0)).mono Icc_subset_Ici_self).sub continuousOn_const).sub
-        (continuous_iff_continuousAt.2 fun s => (hsum s).continuousAt).continuousOn
-    have hB : ∀ s, HasDerivAt (fun s : ℝ => M * (s ^ (p + 1) / (p + 1).factorial) * ‖u (p + 1)‖)
-        (M * (s ^ p / p.factorial) * ‖u (p + 1)‖) s := fun s => by
-      have h := (((hasDerivAt_pow (p + 1) s).div_const ((p + 1).factorial : ℝ)).const_mul
-        M).mul_const ‖u (p + 1)‖
-      convert h using 1
-      rw [Nat.factorial_succ, Nat.cast_mul, Nat.add_sub_cancel]
-      have : (p.factorial : ℝ) ≠ 0 := by positivity
-      field_simp
-    refine image_norm_le_of_norm_deriv_right_le_deriv_boundary hc hd (by simp [F, sum_range_succ'])
-      hB (fun s hs => ?_) ⟨ht.1, le_rfl⟩
-    exact ih (u := fun j => u (j + 1)) (fun j hj => hu (j + 1) (by omega))
-      ⟨hs.1, hs.2.le.trans ht.2⟩
-
-/-- **Lax–Richtmyer for semigroups**: if `‖Pᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖S(t)‖ ≤ M` on `[0, nτ]`, and
-`P` is consistent of order `p` on `D(A^{p+1})`, `‖P v₀ - S(τ) v₀‖ ≤ K τ^{p+1} ‖v_{p+1}‖` for every
-chain `v` in the graph of the generator, then
-`‖Pⁿ u₀ - S(nτ) u₀‖ ≤ Mₛ K M nτ τᵖ ‖u_{p+1}‖` for every chain `u`. [Thomee2006], Ch. 7;
-[BrennerThomee1979] -/
-theorem norm_pow_apply_sub_S_le {P : E →L[𝕜] E} {n : ℕ} {τ : ℝ} (hτ : 0 ≤ τ) {Ms M K : ℝ}
-    {p : ℕ} (hK : 0 ≤ K) (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ Ms) (hS : ∀ t ∈ Icc 0 (n * τ), ‖G.S t‖ ≤ M)
-    (hc : ∀ v : ℕ → E, (∀ j < p + 1, (v j, v (j + 1)) ∈ G.generator.graph) →
-      ‖P (v 0) - G.S τ (v 0)‖ ≤ K * τ ^ (p + 1) * ‖v (p + 1)‖)
-    {u : ℕ → E} (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
-    ‖(P ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤ Ms * K * M * (n * τ) * τ ^ p * ‖u (p + 1)‖ := by
-  have hMs : 0 ≤ Ms := (norm_nonneg _).trans (hP 0 (Nat.zero_le _))
-  set w : ℕ → E := fun k => G.S (k * τ) (u 0)
-  have h := TimeStepping.norm_sub_le_of_step (U := fun k => (P ^ k) (u 0)) (g := fun _ => 0)
-    (w := w) hP (fun k => by simp [pow_succ'])
-  have hw0 : (P ^ 0) (u 0) - w 0 = 0 := by simp [w]
-  have hdef : ∀ k ∈ range n, ‖w (k + 1) - P (w k) - 0‖ ≤ K * τ ^ (p + 1) * (M * ‖u (p + 1)‖) := by
-    intro k hk
-    have hk' : (k : ℝ) < n := by exact_mod_cast mem_range.1 hk
-    have hkτ : 0 ≤ (k : ℝ) * τ := by positivity
-    have hkn : (k : ℝ) * τ ∈ Icc 0 (n * τ) :=
-      ⟨hkτ, mul_le_mul_of_nonneg_right hk'.le hτ⟩
-    have e1 : w (k + 1) = G.S τ (w k) := by
-      simp only [w]
-      rw [show (((k + 1 : ℕ) : ℝ) * τ) = τ + k * τ by push_cast; ring,
-        G.S_add_apply hτ hkτ]
-    rw [sub_zero, e1, norm_sub_rev]
-    refine (hc (fun j => G.S (k * τ) (u j)) fun j hj => G.S_mem_graph (hu j hj) hkτ).trans ?_
-    have hn : ‖G.S (k * τ) (u (p + 1))‖ ≤ M * ‖u (p + 1)‖ :=
-      ((G.S _).le_opNorm _).trans (mul_le_mul_of_nonneg_right (hS _ hkn) (norm_nonneg _))
-    exact mul_le_mul_of_nonneg_left hn (by positivity)
-  refine h.trans ?_
-  rw [hw0, norm_zero, zero_add]
-  calc Ms * ∑ k ∈ range n, ‖w (k + 1) - P (w k) - 0‖
-      ≤ Ms * ∑ _k ∈ range n, K * τ ^ (p + 1) * (M * ‖u (p + 1)‖) :=
-        mul_le_mul_of_nonneg_left (sum_le_sum hdef) hMs
-    _ = _ := by rw [sum_const, card_range, nsmul_eq_mul]; ring
-
-end C0Semigroup
 
 namespace TimeStepping
 
@@ -434,7 +330,7 @@ generator `A` on a Banach space, `‖S(t)‖ ≤ M` on `[0, nτ]`, `r` a rationa
 inequality gives `Mₛ = 1` and `K₀ = sup_y |ρ(iy)|` for contraction semigroups
 (`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le`), and exponential bounds for
 quasi-contractive ones (`Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le`).
-[BrennerThomee1979]; [Thomee2006], Ch. 7–8 -/
+[BrennerThomee1979]; [Thomee2006], Ch. 9 -/
 theorem norm_resolventStep_pow_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 ≤ τ)
     {R : E →L[𝕜] E} (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x)
     (hinj : Function.Injective R)
@@ -453,6 +349,32 @@ theorem norm_resolventStep_pow_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ}
     (le_mul_of_one_le_left hτ (by exact_mod_cast hn))⟩
   exact G.norm_pow_apply_sub_S_le hτ hK hst hS
     (fun v hv => r.norm_resolventStep_sub_S_le G hp hτ hR hinj hQ hS1 hρ hv) hu
+
+/-- **Brenner–Thomée on Hilbert spaces, in the `step` form**: for `G` generated by `A`, `τ > 0`,
+`R` a resolvent of `A` at `1/τ` (so `(1/τ) R = (1 - τA)⁻¹`), `Q((1/τ) R)` invertible,
+`‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖ρ(τA)‖ ≤ K₀` and `‖S(t)‖ ≤ M` on `[0, nτ]`:
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` on `D(A^{p+1})`. -/
+theorem norm_step_pow_sub_S_le {V : Type*} [NormedAddCommGroup V] [InnerProductSpace 𝕜 V]
+    [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V] (G : C0Semigroup 𝕜 V) {A : V →ₗ.[𝕜] V}
+    (hG : G.generator = A) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {R : V →L[𝕜] V}
+    (hR : Operator.IsResolvent A (τ : 𝕜)⁻¹ R)
+    (hQ : IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) ((τ : 𝕜)⁻¹ • R)))
+    {n : ℕ} {Ms M K₀ : ℝ} (hst : ∀ k ≤ n, ‖r.step A τ ^ k‖ ≤ Ms)
+    (hS : ∀ t ∈ Icc 0 (n * τ), ‖G.S t‖ ≤ M) (hρ : ‖(r.remainder p).step A τ‖ ≤ K₀)
+    {u : ℕ → V} (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ A.graph) :
+    ‖(r.step A τ ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
+      Ms * (K₀ + M / (p + 1).factorial) * M * (n * τ) * τ ^ p * ‖u (p + 1)‖ := by
+  subst hG
+  have hτ0 : (τ : 𝕜) ≠ 0 := by exact_mod_cast hτ.ne'
+  have hX : ∀ s : RationalScheme, s.step G.generator τ = s.resolventStep ((τ : 𝕜)⁻¹ • R) :=
+    fun s => by rw [s.step_eq_resolventStep, hR.resolvent_eq]
+  rw [hX] at hst hρ ⊢
+  refine r.norm_resolventStep_pow_sub_S_le G hp hτ.le (fun x y hxy => ?_) (fun a b hab => ?_) hQ
+    hst hS hρ hu
+  · obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 hxy
+    rw [_root_.smul_apply, ← _root_.map_smul, smul_sub, smul_smul, inv_mul_cancel₀ hτ0, one_smul]
+    exact hR.apply_sub ⟨x, hx⟩
+  · exact hR.injective (smul_right_injective V (inv_ne_zero hτ0) hab)
 
 end Semigroup
 

@@ -1,6 +1,6 @@
 module
 
-public import Feec.TimeStepping.Rational
+public import Feec.TimeStepping.RationalBanach
 
 /-!
 # Rational approximations of semigroups with unbounded generators
@@ -9,7 +9,7 @@ Let `A` be an m-dissipative, possibly unbounded, operator of a Hilbert space ove
 `S(t)` the contraction semigroup it generates (Lumer–Phillips,
 `LinearPMap.IsMDissipative.semigroup`), and `r` an A-stable rational scheme of order `p`. Then
 **Brenner–Thomée's error bound** holds with the constant of the bounded case
-([BrennerThomee1979]; [Thomee2006], Ch. 7–8):
+([BrennerThomee1979]; [Thomee2006], Ch. 9):
 
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K nτ τᵖ ‖A^{p+1} x‖`, `K = sup_y |ρ(iy)| + 1/(p+1)!`,
 
@@ -27,8 +27,15 @@ chain `u₀ = x, …, u_k = y` with `(u_j, u_{j+1})` in the graph of `A`.
 
 ## Proof
 
-Through the Yosida approximations `A_m = c_m A (c_m - A)⁻¹` (`Feec.LumerPhillips.yosida`), bounded
-and dissipative: the bounded theorem (`RationalScheme.norm_apply_pow_sub_exp_le`) holds for each
+For real `r`, directly from Brenner–Thomée on Banach spaces
+(`Feec.TimeStepping.RationalScheme.norm_step_pow_sub_S_le`): von Neumann's inequality gives the
+stability `‖r(τA)‖ ≤ 1`, the remainder bound `‖ρ(τA)‖ ≤ sup_y |ρ(iy)|` and the invertibility of
+`Q(R)` (`RationalScheme.norm_step_le`, `RationalScheme.isUnit_resolventEval_den`), and `S` is a
+contraction semigroup.
+
+For complex `r`, the θ-schemes and Crank–Nicolson, through the Yosida approximations
+`A_m = c_m A (c_m - A)⁻¹` (`Feec.LumerPhillips.yosida`), bounded
+and dissipative: the bounded theorem holds for each
 `A_m` with the same constant, `A_m^k x = J_mᵏ Aᵏ x` on `D(Aᵏ)` with the contractions
 `J_m = c_m (c_m - A)⁻¹` (`Feec.LumerPhillips.yosida_pow_apply`), and both sides converge: `exp(t A_m) x → S(t) x` by
 construction of `S`, and `r(τ A_m) → r(τ A)` strongly. For the latter, the resolvents converge
@@ -36,13 +43,12 @@ strongly (`Feec.LumerPhillips.tendsto_resolvent_yosida`: `(z - A_m)⁻¹ y - (z 
 `x = (z - A)⁻¹ y`), hence the Cayley transforms; polynomials in uniformly bounded, strongly
 convergent operators converge strongly (`ContinuousLinearMap.tendsto_aeval_apply`), and so do
 the inverses `q̃(C_m)⁻¹` (`ContinuousLinearMap.tendsto_inverse_apply`), uniformly bounded by
-von Neumann's inequality for `1/q̃` (`ContinuousLinearMap.exists_norm_inverse_aeval_map_le`).
-No Taylor formula for the unbounded semigroup is needed: it is inherited from the bounded case.
+von Neumann's inequality for `1/q̃` (`ContinuousLinearMap.exists_norm_inverse_aeval_le`).
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–8
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.3 (the Yosida approximation), §1.4
 
@@ -149,38 +155,25 @@ section Unbounded
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
   [CompleteSpace E] {A : E →ₗ.[𝕜] E}
 
-/-- **`r(τ A_m) → r(τ A)` strongly** for the Yosida approximations `A_m` of an m-dissipative `A`
-and `τ > 0`. -/
-theorem RationalScheme.tendsto_step_yosida (r : RationalScheme) (hA : A.IsMDissipative) {τ : ℝ}
-    (hτ : 0 < τ) (y : E) :
-    Tendsto (fun m => r.step ((yosida A m : E →ₗ[𝕜] E).toPMap ⊤) τ y) atTop
-      (𝓝 (r.step A τ y)) := by
-  obtain ⟨M, hM⟩ := ContinuousLinearMap.exists_norm_inverse_aeval_map_le (V := E) (𝕜 := 𝕜)
-    fun w hw => r.aeval_cden_ne_zero hw
-  have hC : ∀ m, ‖cayley ((yosida A m : E →ₗ[𝕜] E).toPMap ⊤) τ‖ ≤ 1 := fun m =>
-    norm_cayley_le (isMDissipative_yosida hA m) hτ
-  exact ContinuousLinearMap.tendsto_aeval_mul_inverse_apply hC (tendsto_cayley_yosida hA hτ) _ _
-    (fun m => (hM _ (hC m)).1) (hM _ (norm_cayley_le hA hτ)).1 (fun m => (hM _ (hC m)).2) y
-
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 /-- **Brenner–Thomée for unbounded generators**: for an A-stable rational scheme `r` of order `p`,
 every m-dissipative `A` with semigroup `S`, `τ > 0`, `n` and `u₀ ∈ D(A^{p+1})` (a chain
 `u₀, …, u_{p+1}` in the graph of `A`, `A^{p+1} u₀ = u_{p+1}`),
 `‖r(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ K nτ τᵖ ‖A^{p+1} u₀‖` with `K = sup_y |ρ(iy)| + 1/(p+1)!` (`ρ` the
-remainder), the constant of the bounded case. [BrennerThomee1979]; [Thomee2006], Ch. 7–8 -/
+remainder), the constant of the bounded case. [BrennerThomee1979]; [Thomee2006], Ch. 9 -/
 theorem RationalScheme.norm_step_pow_sub_semigroup_le (r : RationalScheme) (hA : A.IsMDissipative)
     (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E}
     (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ A.graph) :
     ‖(r.step A τ ^ n) (u 0) - hA.semigroup.S (n * τ) (u 0)‖ ≤
       ((r.remainder p).supNorm + 1 / (p + 1).factorial) * (n * τ) * τ ^ p * ‖u (p + 1)‖ := by
-  have hK : 0 ≤ (r.remainder p).supNorm + 1 / ((p + 1).factorial : ℝ) :=
-    add_nonneg (r.remainder p).supNorm_nonneg (by positivity)
-  refine norm_pow_apply_sub_semigroup_le hA
-    (fun m => r.norm_step_le_one (isMDissipative_yosida hA m) hτ hr) (r.tendsto_step_yosida hA hτ)
-    n (by positivity) hu (by positivity) fun m => ?_
-  rw [r.step_toPMap (re_inner_yosida_le hA m) hτ]
-  exact r.norm_apply_pow_sub_exp_le (re_inner_yosida_le hA m) hr hp hτ.le n (u 0)
+  have hτinv : 0 < RCLike.re ((τ : 𝕜)⁻¹) := by
+    rw [← RCLike.ofReal_inv, RCLike.ofReal_re]; positivity
+  have h := r.norm_step_pow_sub_S_le hA.semigroup hA.generator_semigroup hp hτ (n := n)
+    (hA.isResolvent_of_re_pos hτinv) (r.isUnit_resolventEval_den hA hτ)
+    (fun k _ => norm_pow_le_one (r.norm_step_le_one hA hτ hr) k)
+    (fun t ht => hA.isContraction_semigroup t ht.1) ((r.remainder p).norm_step_le hA hτ).2 hu
+  simpa using h
 
 /-- **Brenner–Thomée for the θ-schemes** (`θ ≥ 1/2`): for every m-dissipative `A`, `τ > 0`, `n`
 and `u₀ ∈ D(A²)`, `‖r_θ(τA)ⁿ u₀ - S(nτ) u₀‖ ≤ (θ + 1/2) nτ τ ‖A² u₀‖`; `θ = 1` is implicit

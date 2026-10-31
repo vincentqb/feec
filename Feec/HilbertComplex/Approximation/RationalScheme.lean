@@ -173,9 +173,6 @@ theorem exists_norm_step_pow_sub_perturb_le [CompleteSpace E] [NormedSpace ℝ E
     simp [sub_eq_add_neg, add_comm]
   exact h (norm_nonneg B) hB _
     (by rw [C0Semigroup.generator_perturb, F.isMDissipative.generator_semigroup])
-    (fun t ht => by
-      simpa using F.isMDissipative.semigroup.norm_perturb_le B (ω := 0) zero_le_one
-        (fun s hs => by simpa using F.isMDissipative.isContraction_semigroup s hs) ht)
     hτ hBτ n (mem_graph_of_mem_iterDomain hx)
 
 end DissipFEEC

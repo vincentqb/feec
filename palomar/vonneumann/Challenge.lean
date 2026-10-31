@@ -71,7 +71,7 @@ of bounded operators; a real polynomial acts over `𝕜` through `Polynomial.map
   (A-stability, order), §IV.11 (contractivity, von Neumann's theorem)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983], §1.4, §1.5, §3.1
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–8
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -330,7 +330,7 @@ theorem error_bound_quasi_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → 
   sorry
 
 /-- **The error of a stable scheme of order `m` on Banach spaces** ([BrennerThomee1979];
-[Thomee2006], Ch. 7–8). Let `S` be a strongly continuous semigroup of bounded operators of a
+[Thomee2006], Ch. 9). Let `S` be a strongly continuous semigroup of bounded operators of a
 Banach space over `𝕜` (`S 0 = 1`, `S (s + t) = S s S t` and `t ↦ S t x` continuous for
 `s, t ≥ 0`), with generator `A`: `x ∈ D(A)` with `A x = y` iff `t ↦ S t x` has right derivative
 `y` at `0`. Let `r = p/q` be a real rational function with `deg p ≤ deg q`, without poles in the

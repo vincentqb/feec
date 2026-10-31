@@ -323,14 +323,15 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   bound `K e^{κωnτ} nτ τᵐ ‖A^{m+1} x‖` for `ωτ ≤ c₀`, `c₀`, `K`, `κ` depending on `r` only; and
   on Banach spaces, for a strongly continuous semigroup, the bound
   `Mₛ (K₀ + M/(m+1)!) M nτ τᵐ ‖A^{m+1} x‖` given the stability `‖r(τA)ᵏ‖ ≤ Mₛ` and the
-  remainder bound `‖ρ(τA)‖ ≤ K₀` (not automatic off Hilbert spaces);
+  remainder bound `‖ρ(τA)‖ ≤ K₀`, with `Q(R)` invertible (not automatic off Hilbert spaces);
   from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
   `Feec.TimeStepping.norm_resolventEval_mul_inverse_le`,
   `Feec.TimeStepping.RationalScheme.ofBounded`, `Feec.TimeStepping.norm_cayley_le` and
   `Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le` and
   `Feec.TimeStepping.norm_aeval_mul_inverse_pow_sub_exp_le`, and for unbounded `A`
-  `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le` and
-  `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_semigroup_le` (Yosida limit),
+  `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le` (from the Banach-space
+  bound) and `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_semigroup_le` (Yosida
+  limit),
   `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` (shift `r(z + ωτ)`) and
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le` (Lax–Richtmyer on Banach
   spaces).

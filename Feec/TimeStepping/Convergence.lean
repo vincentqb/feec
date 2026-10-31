@@ -17,6 +17,11 @@ layers.
   plus the accumulated consistency defects. This is the discrete counterpart of
   `Feec.HilbertComplex.norm_sub_le_of_defect_of_dissipative` ("best approximation plus
   consistency"), and the operator form of `TimeStepping.norm_sub_le_sum_of_isDirichletCNStep`.
+* **Strongly continuous semigroups on Banach spaces** (`C0Semigroup.norm_S_sub_taylor_le`,
+  Taylor's formula `‖S(t) x - Σ_{j<p} tʲ/j! Aʲ x‖ ≤ M tᵖ/p! ‖Aᵖ x‖` on `D(Aᵖ)` for `‖S‖ ≤ M`,
+  and **`C0Semigroup.norm_pow_apply_sub_S_le`**, Lax–Richtmyer: `‖Pᵏ‖ ≤ Mₛ` and consistency of
+  order `p` on `D(A^{p+1})` give `‖Pⁿ x - S(nτ) x‖ ≤ Mₛ K M nτ τᵖ ‖A^{p+1} x‖`). The bounded
+  case below is `S(t) = e^{tL}`.
 * **Bounded dissipative generators** (`re ⟪L x, x⟫ ≤ 0`, so `e^{tL}` is a contraction for `t ≥ 0`):
   the Taylor remainder `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`
   (`norm_exp_sub_taylor_le`); a scheme `P` is **consistent of order `p` with constant `K`**
@@ -61,6 +66,8 @@ data into convergence for all data (`Feec.HilbertComplex.DissipFEEC.TimeScheme.c
   (order `p` rational schemes: `O(t τᵖ ‖A^{p+1} x‖)`)
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
   (single step methods: stability and consistency), Ch. 8–9
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.2 (the orbit calculus behind Taylor's formula)
 * [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
   (stability and accuracy of rational approximations of semigroups)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -125,15 +132,130 @@ theorem norm_sub_le_of_step {M : ℝ} {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ �
   rw [e]
   exact ((P ^ j).le_opNorm _).trans (mul_le_mul_of_nonneg_right (hP j hj'.le) (norm_nonneg _))
 
+/-- `‖Pᵏ‖ ≤ aᵏ` for `‖P‖ ≤ a`. -/
+theorem norm_pow_le_pow {P : X →L[𝕜] X} {a : ℝ} (hP : ‖P‖ ≤ a) (k : ℕ) : ‖P ^ k‖ ≤ a ^ k := by
+  induction k with
+  | zero => exact ContinuousLinearMap.norm_id_le
+  | succ k ih =>
+    rw [pow_succ, pow_succ]
+    exact (norm_mul_le _ _).trans (mul_le_mul ih hP (norm_nonneg _) ((norm_nonneg _).trans ih))
+
 /-- Powers of a contraction are contractions. -/
 theorem norm_pow_le_one {P : X →L[𝕜] X} (hP : ‖P‖ ≤ 1) (n : ℕ) : ‖P ^ n‖ ≤ 1 := by
-  induction n with
-  | zero => exact ContinuousLinearMap.norm_id_le
-  | succ n ih =>
-    rw [pow_succ]
-    exact (norm_mul_le _ _).trans (by nlinarith [norm_nonneg (P ^ n), norm_nonneg P])
+  simpa using norm_pow_le_pow hP n
 
 end Duhamel
+
+end Feec.TimeStepping
+
+/-! ### Semigroups: Taylor's formula and the Lax–Richtmyer theorem -/
+
+namespace Feec.C0Semigroup
+
+open Set (Icc Ico Ici)
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [NormedSpace ℝ E]
+  [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
+
+/-- **Taylor's formula for a semigroup**: for a chain `u₀, …, u_p` in the graph of the generator
+(`u₀ ∈ D(Aᵖ)`, `uⱼ = Aʲ u₀`) and `‖S(s)‖ ≤ M` on `[0, T]`,
+`‖S(t) u₀ - Σ_{j<p} tʲ/j! uⱼ‖ ≤ M tᵖ/p! ‖u_p‖` for `t ∈ [0, T]`. [Pazy1983], §1.2 -/
+theorem norm_S_sub_taylor_le {T M : ℝ} (hM : ∀ t ∈ Icc 0 T, ‖G.S t‖ ≤ M) (p : ℕ) :
+    ∀ {u : ℕ → E}, (∀ j < p, (u j, u (j + 1)) ∈ G.generator.graph) → ∀ {t : ℝ}, t ∈ Icc 0 T →
+      ‖G.S t (u 0) - ∑ j ∈ range p, (t ^ j / j.factorial) • u j‖ ≤
+        M * (t ^ p / p.factorial) * ‖u p‖ := by
+  induction p with
+  | zero =>
+    intro u _ t ht
+    simpa using ((G.S t).le_opNorm (u 0)).trans
+      (mul_le_mul_of_nonneg_right (hM t ht) (norm_nonneg _))
+  | succ p ih =>
+    intro u hu t ht
+    set F : ℝ → E := fun s => G.S s (u 0) - ∑ j ∈ range (p + 1), (s ^ j / j.factorial) • u j
+    set F' : ℝ → E := fun s => G.S s (u 1) - ∑ j ∈ range p, (s ^ j / j.factorial) • u (j + 1)
+    have hF : ∀ s, F s = G.S s (u 0) - u 0 -
+        ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • u (j + 1) := fun s => by
+      simp only [F, sum_range_succ', pow_zero, Nat.factorial_zero, Nat.cast_one, div_one,
+        one_smul]
+      abel
+    obtain ⟨hx, hAx⟩ := LinearPMap.mem_graph_iff_exists.1 (hu 0 (Nat.succ_pos p))
+    have hsum : ∀ s : ℝ, HasDerivAt
+        (fun s : ℝ => ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • u (j + 1))
+        (∑ j ∈ range p, (s ^ j / j.factorial) • u (j + 1)) s := fun s => by
+      have := HasDerivAt.sum (u := range p) (x := s)
+        (A := fun j (s : ℝ) => (s ^ (j + 1) / (j + 1).factorial) • u (j + 1))
+        (A' := fun j => (s ^ j / j.factorial) • u (j + 1)) fun j _ => by
+          have h := ((hasDerivAt_pow (j + 1) s).div_const ((j + 1).factorial : ℝ)).smul_const
+            (u (j + 1))
+          convert h using 2
+          rw [Nat.factorial_succ, Nat.cast_mul, Nat.add_sub_cancel]
+          have : (j.factorial : ℝ) ≠ 0 := by positivity
+          field_simp
+      convert this using 1
+      ext s'; simp
+    have hd : ∀ s ∈ Ico 0 t, HasDerivWithinAt F (F' s) (Ici s) s := fun s hs => by
+      have h1 := G.hasDerivWithinAt_Ici_apply ⟨u 0, hx⟩ hs.1
+      rw [hAx] at h1
+      exact ((h1.sub_const (u 0)).sub (hsum s).hasDerivWithinAt).congr (fun y _ => hF y) (hF s)
+    have hc : ContinuousOn F (Icc 0 t) := by
+      rw [show F = fun s : ℝ => G.S s (u 0) - u 0 -
+        ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • u (j + 1) from funext hF]
+      exact (((G.strongCont (u 0)).mono Set.Icc_subset_Ici_self).sub continuousOn_const).sub
+        (continuous_iff_continuousAt.2 fun s => (hsum s).continuousAt).continuousOn
+    have hB : ∀ s, HasDerivAt (fun s : ℝ => M * (s ^ (p + 1) / (p + 1).factorial) * ‖u (p + 1)‖)
+        (M * (s ^ p / p.factorial) * ‖u (p + 1)‖) s := fun s => by
+      have h := (((hasDerivAt_pow (p + 1) s).div_const ((p + 1).factorial : ℝ)).const_mul
+        M).mul_const ‖u (p + 1)‖
+      convert h using 1
+      rw [Nat.factorial_succ, Nat.cast_mul, Nat.add_sub_cancel]
+      have : (p.factorial : ℝ) ≠ 0 := by positivity
+      field_simp
+    refine image_norm_le_of_norm_deriv_right_le_deriv_boundary hc hd (by simp [F, sum_range_succ'])
+      hB (fun s hs => ?_) ⟨ht.1, le_rfl⟩
+    exact ih (u := fun j => u (j + 1)) (fun j hj => hu (j + 1) (by omega))
+      ⟨hs.1, hs.2.le.trans ht.2⟩
+
+/-- **Lax–Richtmyer for semigroups**: if `‖Pᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖S(t)‖ ≤ M` on `[0, nτ]`, and
+`P` is consistent of order `p` on `D(A^{p+1})`, `‖P v₀ - S(τ) v₀‖ ≤ K τ^{p+1} ‖v_{p+1}‖` for every
+chain `v` in the graph of the generator, then
+`‖Pⁿ u₀ - S(nτ) u₀‖ ≤ Mₛ K M nτ τᵖ ‖u_{p+1}‖` for every chain `u`. [Thomee2006], Ch. 9;
+[BrennerThomee1979] -/
+theorem norm_pow_apply_sub_S_le {P : E →L[𝕜] E} {n : ℕ} {τ : ℝ} (hτ : 0 ≤ τ) {Ms M K : ℝ}
+    {p : ℕ} (hK : 0 ≤ K) (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ Ms) (hS : ∀ t ∈ Icc 0 (n * τ), ‖G.S t‖ ≤ M)
+    (hc : ∀ v : ℕ → E, (∀ j < p + 1, (v j, v (j + 1)) ∈ G.generator.graph) →
+      ‖P (v 0) - G.S τ (v 0)‖ ≤ K * τ ^ (p + 1) * ‖v (p + 1)‖)
+    {u : ℕ → E} (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
+    ‖(P ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤ Ms * K * M * (n * τ) * τ ^ p * ‖u (p + 1)‖ := by
+  have hMs : 0 ≤ Ms := (norm_nonneg _).trans (hP 0 (Nat.zero_le _))
+  set w : ℕ → E := fun k => G.S (k * τ) (u 0)
+  have h := TimeStepping.norm_sub_le_of_step (U := fun k => (P ^ k) (u 0)) (g := fun _ => 0)
+    (w := w) hP (fun k => by simp [pow_succ'])
+  have hw0 : (P ^ 0) (u 0) - w 0 = 0 := by simp [w]
+  have hdef : ∀ k ∈ range n, ‖w (k + 1) - P (w k) - 0‖ ≤ K * τ ^ (p + 1) * (M * ‖u (p + 1)‖) := by
+    intro k hk
+    have hk' : (k : ℝ) < n := by exact_mod_cast mem_range.1 hk
+    have hkτ : 0 ≤ (k : ℝ) * τ := by positivity
+    have hkn : (k : ℝ) * τ ∈ Icc 0 (n * τ) :=
+      ⟨hkτ, mul_le_mul_of_nonneg_right hk'.le hτ⟩
+    have e1 : w (k + 1) = G.S τ (w k) := by
+      simp only [w]
+      rw [show (((k + 1 : ℕ) : ℝ) * τ) = τ + k * τ by push_cast; ring,
+        G.S_add_apply hτ hkτ]
+    rw [sub_zero, e1, norm_sub_rev]
+    refine (hc (fun j => G.S (k * τ) (u j)) fun j hj => G.S_mem_graph (hu j hj) hkτ).trans ?_
+    have hn : ‖G.S (k * τ) (u (p + 1))‖ ≤ M * ‖u (p + 1)‖ :=
+      ((G.S _).le_opNorm _).trans (mul_le_mul_of_nonneg_right (hS _ hkn) (norm_nonneg _))
+    exact mul_le_mul_of_nonneg_left hn (by positivity)
+  refine h.trans ?_
+  rw [hw0, norm_zero, zero_add]
+  calc Ms * ∑ k ∈ range n, ‖w (k + 1) - P (w k) - 0‖
+      ≤ Ms * ∑ _k ∈ range n, K * τ ^ (p + 1) * (M * ‖u (p + 1)‖) :=
+        mul_le_mul_of_nonneg_left (sum_le_sum hdef) hMs
+    _ = _ := by rw [sum_const, card_range, nsmul_eq_mul]; ring
+
+end Feec.C0Semigroup
+
+namespace Feec.TimeStepping
 
 /-! ### Bounded dissipative generators: Taylor remainders and consistency -/
 
@@ -144,66 +266,23 @@ variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
+/-- `‖e^{tL}‖ ≤ 1` for bounded dissipative `L` and `t ≥ 0`. -/
+theorem norm_exp_le_one (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {t : ℝ} (ht : 0 ≤ t) :
+    ‖(C0Group.ofBounded L).S t‖ ≤ 1 :=
+  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+    simpa using LumerPhillips.norm_exp_smul_apply_le hL ht x
+
 /-- **The Taylor remainder of a contraction semigroup**: for bounded dissipative `L`, `t ≥ 0`,
-`‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖` (the derivative of the order-`p + 1` remainder
-in `t` is the order-`p` remainder of `L y`). -/
+`‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`, Taylor's formula for the semigroup
+`e^{tL}` (`C0Semigroup.norm_S_sub_taylor_le`). -/
 theorem norm_exp_sub_taylor_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) (p : ℕ) {t : ℝ} (ht : 0 ≤ t)
     (y : X) :
     ‖exp ((t : 𝕜) • L) y - ∑ j ∈ range p, (t ^ j / j.factorial) • (L ^ j) y‖ ≤
       t ^ p / p.factorial * ‖(L ^ p) y‖ := by
-  induction p generalizing y t with
-  | zero => simpa using LumerPhillips.norm_exp_smul_apply_le hL ht y
-  | succ p ih =>
-    set F : ℝ → X := fun s => exp ((s : 𝕜) • L) y -
-      ∑ j ∈ range (p + 1), (s ^ j / j.factorial) • (L ^ j) y
-    set G : ℝ → X := fun s => exp ((s : 𝕜) • L) (L y) -
-      ∑ j ∈ range p, (s ^ j / j.factorial) • (L ^ j) (L y)
-    have hF : ∀ s, F s = exp ((s : 𝕜) • L) y - y -
-        ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • (L ^ j) (L y) := fun s => by
-      simp only [F, sum_range_succ', pow_zero, Nat.factorial_zero, Nat.cast_one, div_one,
-        one_smul, ContinuousLinearMap.one_def, ContinuousLinearMap.id_apply]
-      rw [sub_add_eq_sub_sub_swap]
-      congr 2
-    have hd : ∀ s, HasDerivAt F (G s) s := fun s => by
-      have he : HasDerivAt (fun s : ℝ => exp ((s : 𝕜) • L) y) (exp ((s : 𝕜) • L) (L y)) s := by
-        have := C0Group.hasDerivAt_exp_ofReal_smul_apply L y s
-        rwa [show L (exp ((s : 𝕜) • L) y) = exp ((s : 𝕜) • L) (L y) from
-          congrArg (fun C : X →L[𝕜] X => C y) (C0Group.commute_exp_ofReal_smul L s).eq] at this
-      have hsum : HasDerivAt
-          (fun s : ℝ => ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • (L ^ j) (L y))
-          (∑ j ∈ range p, (s ^ j / j.factorial) • (L ^ j) (L y)) s := by
-        have := HasDerivAt.sum (u := range p) (x := s)
-          (A := fun j (s : ℝ) => (s ^ (j + 1) / (j + 1).factorial) • (L ^ j) (L y))
-          (A' := fun j => (s ^ j / j.factorial) • (L ^ j) (L y)) fun j _ => by
-            have h := ((hasDerivAt_pow (j + 1) s).div_const ((j + 1).factorial : ℝ)).smul_const
-              ((L ^ j) (L y))
-            convert h using 2
-            rw [Nat.factorial_succ, Nat.cast_mul, Nat.add_sub_cancel]
-            have : (j.factorial : ℝ) ≠ 0 := by positivity
-            field_simp
-        convert this using 1
-        ext s'; simp
-      have := (he.sub_const y).sub hsum
-      rw [show F = fun s : ℝ => exp ((s : 𝕜) • L) y - y -
-        ∑ j ∈ range p, (s ^ (j + 1) / (j + 1).factorial) • (L ^ j) (L y) from funext hF]
-      exact this
-    have hB : ∀ s, HasDerivAt (fun s : ℝ => s ^ (p + 1) / (p + 1).factorial * ‖(L ^ (p + 1)) y‖)
-        (s ^ p / p.factorial * ‖(L ^ (p + 1)) y‖) s := fun s => by
-      have h := ((hasDerivAt_pow (p + 1) s).div_const ((p + 1).factorial : ℝ)).mul_const
-        ‖(L ^ (p + 1)) y‖
-      convert h using 1
-      rw [Nat.factorial_succ, Nat.cast_mul, Nat.add_sub_cancel]
-      have : (p.factorial : ℝ) ≠ 0 := by positivity
-      field_simp
-    have key := image_norm_le_of_norm_deriv_right_le_deriv_boundary (a := 0) (b := t) (f := F)
-      (f' := G) (fun s _ => (hd s).continuousAt.continuousWithinAt)
-      (fun s _ => (hd s).hasDerivWithinAt) (B := fun s =>
-        s ^ (p + 1) / (p + 1).factorial * ‖(L ^ (p + 1)) y‖)
-      (by simp [F, sum_range_succ']) hB (fun s hs => by
-        have := ih hs.1 (L y)
-        rwa [show (L ^ p) (L y) = (L ^ (p + 1)) y by rw [pow_succ]; rfl] at this)
-      ⟨ht, le_rfl⟩
-    exact key
+  have h := (C0Group.ofBounded L).toC0Semigroup.norm_S_sub_taylor_le (T := t)
+    (fun s hs => norm_exp_le_one hL hs.1) p (u := fun j => (L ^ j) y)
+    (fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded L y j) ⟨ht, le_rfl⟩
+  simpa using h
 
 /-- A scheme `P` is **consistent of order `p` with constant `K`** with the flow `e^{τL}`:
 `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖` for every `y`. [Thomee2006], Ch. 7 -/
@@ -236,38 +315,18 @@ theorem isConsistent_of_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P ρ : X 
 
 /-- **Stability and consistency of order `p` give the rate `M K t τᵖ`**: if `‖Pᵏ‖ ≤ M` for
 `k ≤ n` and `P` is consistent of order `p` with constant `K`, then
-`‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+`‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`: the semigroup `e^{tL}` case of
+`C0Semigroup.norm_pow_apply_sub_S_le`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P : X →L[𝕜] X} {M : ℝ}
     {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ M) {τ : ℝ} (hτ : 0 ≤ τ) {p : ℕ} {K : ℝ} (hK : 0 ≤ K)
     (hc : IsConsistent L P τ p K) (y : X) :
     ‖(P ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤ M * K * (n * τ) * τ ^ p * ‖(L ^ (p + 1)) y‖ := by
-  have hM : 0 ≤ M := (norm_nonneg _).trans (hP 0 (Nat.zero_le _))
-  set w : ℕ → X := fun k => exp (((k * τ : ℝ) : 𝕜) • L) y
-  have h := norm_sub_le_of_step (U := fun k => (P ^ k) y) (g := fun _ => 0) (w := w) hP
-    (fun k => by simp [pow_succ'])
-  have hw0 : (P ^ 0) y - w 0 = 0 := by simp [w]
-  have hdef : ∀ k, ‖w (k + 1) - P (w k) - 0‖ ≤ K * τ ^ (p + 1) * ‖(L ^ (p + 1)) y‖ := by
-    intro k
-    have hk : 0 ≤ (k : ℝ) * τ := by positivity
-    have e1 : w (k + 1) = exp ((τ : 𝕜) • L) (w k) := by
-      simp only [w]
-      rw [show (((k + 1 : ℕ) * τ : ℝ)) = τ + k * τ by push_cast; ring,
-        C0Group.exp_ofReal_smul_add]
-      rfl
-    have e2 : (L ^ (p + 1)) (w k) = exp (((k * τ : ℝ) : 𝕜) • L) ((L ^ (p + 1)) y) :=
-      congrArg (fun C : X →L[𝕜] X => C y)
-        ((C0Group.commute_exp_ofReal_smul L (k * τ)).pow_left (p + 1)).eq
-    rw [sub_zero, e1, norm_sub_rev]
-    refine (hc (w k)).trans ?_
-    rw [e2]
-    have hK' : 0 ≤ K * τ ^ (p + 1) := by positivity
-    exact mul_le_mul_of_nonneg_left (LumerPhillips.norm_exp_smul_apply_le hL hk _) hK'
-  refine h.trans ?_
-  rw [hw0, norm_zero, zero_add]
-  calc M * ∑ k ∈ range n, ‖w (k + 1) - P (w k) - 0‖
-      ≤ M * ∑ _k ∈ range n, K * τ ^ (p + 1) * ‖(L ^ (p + 1)) y‖ :=
-        mul_le_mul_of_nonneg_left (sum_le_sum fun k _ => hdef k) hM
-    _ = _ := by rw [sum_const, card_range, nsmul_eq_mul]; ring
+  have h := (C0Group.ofBounded L).toC0Semigroup.norm_pow_apply_sub_S_le hτ hK hP
+    (fun t ht => norm_exp_le_one hL ht.1) (fun v hv => by
+      rw [C0Group.eq_pow_apply_of_chain hv (p + 1) le_rfl]
+      exact hc (v 0))
+    (u := fun j => (L ^ j) y) (fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded L y j)
+  simpa using h
 
 /-! ### Smoothing by time averages -/
 

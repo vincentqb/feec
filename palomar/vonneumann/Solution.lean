@@ -38,7 +38,7 @@ the semigroup `e^{ωt} S_{A-ω}(t)`; on Banach spaces, from
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.11
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983], §1.4
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–8
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -320,6 +320,7 @@ theorem error_bound_mdissipative_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤
     show Q = _ from (resolventEval_map _ q _).symm]
   have h := r.norm_step_pow_sub_semigroup_le hAm hr (r.hasOrder_of_isBigO hm) hτ n hu
   rwa [RationalScheme.step_eq_resolventEval] at h
+
 theorem error_bound_quasi_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
     (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
@@ -373,8 +374,7 @@ theorem error_bound_quasi_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → 
   intro P Q n u hu
   rw [show P = _ from (resolventEval_map _ p _).symm,
     show Q = _ from (resolventEval_map _ q _).symm]
-  have h' := h hω hB G hG (fun t ht => hB.norm_rescale_semigroup_le ht) hτ
-    (hωτ.trans (min_le_left _ _)) n hu
+  have h' := h hω hB G hG hτ (hωτ.trans (min_le_left _ _)) n hu
   rwa [RationalScheme.step_eq_resolventEval] at h'
 
 theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)

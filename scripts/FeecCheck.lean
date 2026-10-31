@@ -11,6 +11,7 @@ public import FeecCheck.LinAlg
 public import FeecCheck.Proxy3
 public import FeecCheck.InstanceVerdicts
 public import FeecCheck.RoughRates
+public import FeecCheck.BGGVerdicts
 
 public section
 

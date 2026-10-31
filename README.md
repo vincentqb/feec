@@ -309,18 +309,20 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   `Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le` and
   `Feec.TimeStepping.norm_aeval_mul_inverse_pow_sub_exp_le`.
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
-  FEEC.bggSum and FEEC.bggClosedRange, about 500 lines): the BGG construction of [ArnoldHu2021],
+  FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram
   `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and onto modulo `d` for `i ≥ J`, the inclusion
   `Γ → T` into the twisted complex and the projection `Γ → Γ / Δ` onto the BGG complex are
   quasi-isomorphisms; `Γ / Δ` is the output complex (24)–(26) (`Vⁱ / R(Sⁱ⁻¹)` before `J`,
   `N(Sⁱ)` after, `d̃ (Sᴶ)⁻¹ d` at `J`); over a field, Theorem 6: `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) +
   dim Hⁱ(Ṽ)` with equality iff `S` induces zero on cohomology (27); under `S = dK - Kd̃` (28), the
-  cohomology of the sum complex (Theorem 7); for bounded Hilbert complexes with `Sⁱ` bounded
+  cohomology of the sum complex (Theorem 7), the explicit cochain map (30) from the sum complex
+  (right inverses of `Sⁱ` from `J` on) a quasi-isomorphism carrying cohomology representatives of
+  the rows to those of the BGG complex (Corollary 1, (31)); for bounded Hilbert complexes with `Sⁱ` bounded
   below before `J`, `Γⁱ`, `Δⁱ` closed and closed ranges where the rows have finite-dimensional
   cohomology; from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
-  `Feec.BGG.Data.finrank_twistComplex_homology_eq_iff` and
-  `Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist`.
+  `Feec.BGG.Data.finrank_twistComplex_homology_eq_iff`, `Feec.BGG.Data.bggProj`,
+  `Feec.BGG.Data.quasiIso_of_Γι_comp` and `Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist`.
 
 The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
 package (each directory `palomar/*/` with a `comparator.json`) that `Solution/Defs.lean` is the

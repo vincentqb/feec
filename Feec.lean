@@ -187,6 +187,7 @@ public import Feec.HilbertComplex.BGG.Discrete
 public import Feec.HilbertComplex.BGG.DiscreteWave
 public import Feec.HilbertComplex.BGG.EllipticProjection
 public import Feec.HilbertComplex.BGG.Harmonic
+public import Feec.HilbertComplex.BGG.SumComplex
 public import Feec.HilbertComplex.BGG.TimeDependent
 public import Feec.HilbertComplex.BGG.ToComplex
 public import Feec.HilbertComplex.BGG.Twisted

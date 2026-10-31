@@ -1,6 +1,7 @@
 module
 
 public import Feec.HilbertComplex.BGG.Analytic
+public import Feec.HilbertComplex.BGG.SumComplex
 public import Feec.HilbertComplex.BGG.Twisted
 
 /-!
@@ -25,7 +26,9 @@ domain complexes are.
 * `HilbertData.domainIncl_domainS`: `ι (S v) = S (ι v)`.
 * `HilbertData.domainBggHomologyIso`, `HilbertData.domainBgg_acyclic`.
 * `HilbertData.DerivedVerdict`, **`HilbertData.derivedVerdict`**: the analytic BGG theorem for
-  Hilbert complexes (closed exact part, elimination hypotheses).
+  Hilbert complexes (closed exact part, elimination hypotheses): closed range, the dimension
+  bound, the Hilbert quotient norm of `Γ / Δ` (`BoundedData.derivedQuotLEquiv`), and Theorem 7
+  and Corollary 1 of [ArnoldHu2021] (`Data.quasiIso_sumIso_comp`, `Data.derived_represents`).
 * `HilbertData.antilipschitz_domainS`: `S` bounded below is bounded below between the domains.
 * `HilbertData.isClosed_Δ_and_eliminates_bgg`, **`HilbertData.bggVerdict`**: the analytic BGG
   theorem for the BGG complex `bgg J`, from the connecting maps up to `J` bounded below and the
@@ -34,7 +37,7 @@ domain complexes are.
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 (bounded Hilbert complexes
-  and linking maps, Theorem 6), §2 (regular decompositions)
+  and linking maps, Theorems 6 and 7, Corollary 1), §2 (regular decompositions)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1.2 (domain complex)
 * [A. Čap, K. Hu, *BGG sequences with weak regularity and applications*][CapHu2024] (BGG
@@ -131,12 +134,37 @@ def domainRowBotCohomologyEquiv (i : ι) :
 
 variable (E F : ι → Prop) in
 /-- **The analytic BGG verdict at `i`**: the derived complex of the domain complexes has closed
-range at `i` and finite-dimensional cohomology, of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`. -/
+range at `i` and finite-dimensional cohomology, of dimension at most `dim Hⁱ(W) + dim Hⁱ(W̃)`;
+the quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm of `Υⁱ`, with the bounded differentials of the
+quotient; and, for null-homotopic connecting maps `S = dK - Kd̃`, every cochain map from the
+twisted complex to `Γ / Δ` extending the projection, composed with `(ω, μ) ↦ (ω + Kμ, μ)`, induces
+an isomorphism on cohomology (Theorem 7) and carries cohomology representatives of the rows to
+cohomology representatives (Corollary 1). -/
 structure DerivedVerdict (i : ι) : Prop where
   closedRangeAt : (D.domainData.derivedComplex E F).ClosedRangeAt i
   finiteDimensional : FiniteDimensional 𝕜 ((D.domainData.derivedComplex E F).cohomology i)
   finrank_le : Module.finrank 𝕜 ((D.domainData.derivedComplex E F).cohomology i) ≤
     Module.finrank 𝕜 (D.H.cohomology i) + Module.finrank 𝕜 (D.Ht.cohomology i)
+  /-- `Υⁱ → Γⁱ / Δⁱ`, an isometry for the quotient norm, is onto ([ArnoldHu2021], Theorem 6:
+  the output complex is a Hilbert space) -/
+  quotient_surjective : Function.Surjective (D.domainData.toDerivedQuotL E F i)
+  /-- it carries the differential of `Υ` to the bounded differential of `Γ / Δ` -/
+  quotient_d : ∀ y, D.domainData.derivedQuotD E F i (c.next i) (D.domainData.toDerivedQuotL E F i y)
+    = D.domainData.toDerivedQuotL E F (c.next i) (D.domainData.derivedD E F i (c.next i) y)
+  /-- [ArnoldHu2021], Theorem 7 -/
+  quasiIso_sum : ∀ {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i}
+    (hK : D.domainData.IsNullHomotopy K)
+    {r : D.domainData.twistComplex ⟶ D.domainData.derived E F},
+    D.domainData.Γι E ≫ r = D.domainData.derivedπ E F → QuasiIso ((D.domainData.sumIso hK).hom ≫ r)
+  /-- [ArnoldHu2021], Corollary 1 -/
+  represents : ∀ {K : ∀ i, D.Ht.domainSpace i →ₗ[𝕜] D.H.domainSpace i}
+    (hK : D.domainData.IsNullHomotopy K)
+    {r : D.domainData.twistComplex ⟶ D.domainData.derived E F},
+    D.domainData.Γι E ≫ r = D.domainData.derivedπ E F →
+    ∀ {H : Submodule 𝕜 (D.H.domainSpace i)} {Ht : Submodule 𝕜 (D.Ht.domainSpace i)},
+      D.domainData.rowTop.Represents i H → D.domainData.rowBot.Represents i Ht →
+      (D.domainData.derived E F).Represents i
+        ((H.prod Ht).map (((D.domainData.sumIso hK).hom ≫ r).f i).hom)
 
 variable {E F : ι → Prop}
   (hΔ : ∀ i, IsClosed (D.domainData.Δ F i : Set (D.H.domainSpace i × D.Ht.domainSpace i)))
@@ -154,7 +182,11 @@ theorem derivedVerdict : D.DerivedVerdict E F i := by
   have := (D.domainRowTopCohomologyEquiv i).symm.finiteDimensional
   have := (D.domainRowBotCohomologyEquiv i).symm.finiteDimensional
   refine ⟨D.domainData.derivedComplex_closedRangeAt hΔ h i,
-    D.domainData.finiteDimensional_derivedComplex_cohomology hΔ h i, ?_⟩
+    D.domainData.finiteDimensional_derivedComplex_cohomology hΔ h i, ?_,
+    D.domainData.toDerivedQuotL_surjective E hΔ i,
+    D.domainData.derivedQuotD_toDerivedQuotL E hΔ i (c.next i),
+    fun hK _ hr => Data.quasiIso_sumIso_comp hK h hr,
+    fun hK _ hr _ _ hH hHt => Data.derived_represents hK h hr hH hHt⟩
   rw [← (D.domainRowTopCohomologyEquiv i).finrank_eq,
     ← (D.domainRowBotCohomologyEquiv i).finrank_eq]
   exact D.domainData.finrank_derivedComplex_cohomology_le hΔ h i

@@ -20,7 +20,7 @@ coefficients).
 `a πₕ a⁻¹` commute with `d'` and are bounded in degree `i` by `‖a i‖ ‖(a i)⁻¹‖ C`, the condition
 number of the weight times the bound `C` of `πₕ` (`ConformingFamily.norm_conj_π_le`), and the
 approximation property transfers degreewise. A Jackson estimate transfers
-with the constants multiplied by `max ‖a i‖ ‖a (i + 1)‖` (`ConformingFamily.Jackson.conj`), on the
+with the constants multiplied by `max ‖a i‖ ‖a (i + 1)‖` (`SubcomplexFamily.Jackson.conj`), on the
 classes of forms `x'` whose unweighted form `a⁻¹ x'` is regular. Hence the FEEC theorem
 (`ConformingFamily.feec`, `ConformingFamily.feec_rated`) holds for every reweighted complex.
 
@@ -29,7 +29,7 @@ classes of forms `x'` whose unweighted form `a⁻¹ x'` is regular. Hence the FE
 * `Subcomplex.conj`, `Subcomplex.CochainProjection.conj`: the image subcomplex `a Vₕ` and the
   conjugated projection `a π a⁻¹`.
 * `ConformingFamily.conj`: the conforming family `a Vₕ` of `H.conj a`.
-* `ConformingFamily.Jackson.conj`: its Jackson estimate.
+* `SubcomplexFamily.Jackson.conj`: its Jackson estimate.
 
 ## Main statements
 
@@ -143,7 +143,7 @@ theorem norm_conj_π_le (F : ConformingFamily H κ) (h : κ) (i : ι) (x : W' i)
 /-- **The Jackson estimate of the reweighted family**: a Jackson estimate of `F`, on the classes
 of the forms `x'` whose unweighted form `a⁻¹ x'` is regular, with the constants multiplied by
 `max ‖a i‖ ‖a (i + 1)‖` (the weights of the form and of its differential). -/
-def Jackson.conj {F : ConformingFamily H κ} {ρ : Type*} (J : F.Jackson ρ) :
+def _root_.Feec.HilbertComplex.SubcomplexFamily.Jackson.conj {F : ConformingFamily H κ} {ρ : Type*} (J : F.Jackson ρ) :
     (F.conj a ha).Jackson ρ where
   meshSize := J.meshSize
   meshSize_nonneg := J.meshSize_nonneg

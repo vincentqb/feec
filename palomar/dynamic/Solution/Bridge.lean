@@ -8,11 +8,14 @@ public import Feec.HilbertComplex.Approximation.Crown
 
 The vocabulary of `Challenge.lean` restates over Mathlib the objects of `Feec`: a Hilbert complex
 of the challenge is a `Feec.HilbertComplex` on `ComplexShape.up ℤ` (`HilbertComplex.toFeec`, the
-same fields), and so are its subcomplexes and cochain projections; a family of subcomplexes with
-cochain projections bounded in `W` and the approximation property in `W` is a
-`Feec.HilbertComplex.ConformingFamily` (`SubcomplexFamily.toFeec`). This module identifies the
-challenge's window operators and discrete operators with those of `Feec`, and turns the verdicts
-of `Feec.HilbertComplex.ConformingFamily.feec` and the conforming rate
+same fields), and so are its subcomplexes, cochain projections and families of subcomplexes
+(`SubcomplexFamily.toFeec`). The approximation property in the graph norm in the degrees of a
+window makes the window of the family a `Feec.HilbertComplex.ConstrainedFEEC`
+(`SubcomplexFamily.windowFEEC`), and the graph-norm bounds of the projections in the window are
+those of `Feec` (`SubcomplexFamily.isGraphBounded_window`). This module identifies the challenge's
+window operators and discrete operators with those of `Feec`, and turns the verdicts of
+`Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.dissipFEEC_fullyDiscrete`,
+`Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and the conforming rate
 `Feec.HilbertComplex.ConstrainedFEEC.rate_le` into the conclusions of the challenge
 (`SubcomplexFamily.waveVerdict`, `SubcomplexFamily.heatVerdict`).
 
@@ -76,31 +79,22 @@ end Subcomplex
 
 variable {H} {κ : Type*}
 
-/-- **A family of subcomplexes with `W`-bounded projections and the approximation property in `W` is a
-`Feec` conforming family.** -/
-def SubcomplexFamily.toFeec (F : H.SubcomplexFamily κ)
-    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
-    (happrox : ∀ (i : ℤ) (w : W i),
-      Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0)) :
-    Feec.HilbertComplex.ConformingFamily H.toFeec κ where
+/-- The family of subcomplexes as a `Feec` family of subcomplexes. -/
+def SubcomplexFamily.toFeec (F : H.SubcomplexFamily κ) :
+    Feec.HilbertComplex.SubcomplexFamily H.toFeec κ where
   l := F.l
   V h := (F.V h).toFeec
   finiteDimensional h i := F.finiteDimensional h i
   π h := (F.π h).toFeec
-  bound_π := hπ
-  approx := happrox
 
-/-- **The subcomplex `Vₕ` alone** as a `Feec` conforming family over `Unit` (along `⊥`): the
-setting of the per-`h` error bound (`SubcomplexFamily.error_le`). -/
-def SubcomplexFamily.single (F : H.SubcomplexFamily κ)
-    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖) (h : κ) :
-    Feec.HilbertComplex.ConformingFamily H.toFeec Unit where
+/-- **The subcomplex `Vₕ` alone** as a `Feec` family over `Unit` (along `⊥`): the setting of the
+per-`h` error bound (`SubcomplexFamily.error_le`). -/
+def SubcomplexFamily.single (F : H.SubcomplexFamily κ) (h : κ) :
+    Feec.HilbertComplex.SubcomplexFamily H.toFeec Unit where
   l := ⊥
   V _ := (F.V h).toFeec
   finiteDimensional _ i := F.finiteDimensional h i
   π _ := (F.π h).toFeec
-  bound_π := by obtain ⟨C, hC⟩ := hπ; exact ⟨C, fun _ => hC h⟩
-  approx _ _ := tendsto_bot
 
 end HilbertComplex
 
@@ -200,6 +194,18 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
     filter_upwards [htheta θ hθ τ hτ hτ0 x (fun h => w h 0) hw0 T ε hε] with h hh n hn
     rw [theta_eq_pow (hB h) hθ (hτ h) (hw h) n, hSS' _ hn.1]
     exact hh n hn
+  theta_temporal θ hθ h τ hτ w hw n := by
+    rw [theta_eq_pow (hB h) hθ hτ hw n, norm_sub_rev]
+    exact Feec.TimeStepping.norm_thetaStep_pow_sub_exp_le (hB h) hθ hτ n (w 0)
+  crankNicolson_temporal h τ hτ w hw n := by
+    have e1 : ((1 / 2 : ℝ) : 𝕜) = 1 / 2 := by push_cast; ring
+    have e2 : (1 - (1 / 2 : 𝕜)) = 1 / 2 := by ring
+    have hw' : ∀ n, w (n + 1) - w n = (τ : 𝕜) •
+        B h (((1 / 2 : ℝ) : 𝕜) • w (n + 1) + (1 - ((1 / 2 : ℝ) : 𝕜)) • w n) := fun n => by
+      rw [hw n, e1, e2, smul_add]
+    rw [theta_eq_pow (hB h) le_rfl hτ hw' n, norm_sub_rev,
+      ← Feec.TimeStepping.cayley_half_eq_thetaStep]
+    exact Feec.TimeStepping.norm_cayley_pow_sub_exp_le (hB h) hτ n (w 0)
 
 end Evolution
 
@@ -253,26 +259,103 @@ theorem closedRangeAt_window
       Submodule.bot_coe]
     exact isClosed_singleton
 
-/-- Finite-dimensional harmonic fields `N(L)` give finite-dimensional harmonic forms of every
-degree of the window. -/
-theorem finiteDimensional_harmonic_window [FiniteDimensional 𝕜 (H.wave a m).ker] (i : Fin m) :
-    FiniteDimensional 𝕜 ((H.toFeec.window a m).harmonic i) := by
-  have : FiniteDimensional 𝕜 (H.toFeec.window a m).wave.ker := by
-    rw [← wave_eq]; infer_instance
-  classical
-  let f : (H.toFeec.window a m).harmonic i →ₗ[𝕜] PiLp 2 fun i : Fin m => W (a + ((i : ℕ) : ℤ)) :=
-    (WithLp.linearEquiv 2 𝕜 (∀ i : Fin m, W (a + ((i : ℕ) : ℤ)))).symm.toLinearMap ∘ₗ
-      LinearMap.single 𝕜 (fun i : Fin m => W (a + ((i : ℕ) : ℤ))) i ∘ₗ
-        ((H.toFeec.window a m).harmonic i).subtype
-  have hf : Function.Injective f := fun v w hvw => Subtype.ext (by
-    simpa [f] using congrFun (congrArg WithLp.ofLp hvw) i)
-  refine Module.Finite.of_injective (LinearMap.codRestrict ((H.toFeec.window a m).wave.ker) f
-    fun v => (H.toFeec.window a m).mem_ker_wave_iff.2 fun j => ?_) fun v w hvw =>
-      hf (congrArg Subtype.val hvw)
-  by_cases hj : j = i
-  · subst hj
-    simp [f]
-  · simp [f, hj]
+/-- **The window of a `Feec` family of subcomplexes, approximating in the graph norm in every
+degree of the window, with a closed constraint**, a constrained FEEC discretization. -/
+def windowFEEC {ι' : Type*} (G : Feec.HilbertComplex.SubcomplexFamily H.toFeec ι')
+    (hG : ∀ i, (G.window a m).Approximates i) (K : Submodule 𝕜 (Total W a m))
+    (hK : IsClosed (K : Set (Total W a m))) :
+    Feec.HilbertComplex.ConstrainedFEEC (H.toFeec.window a m) ι' where
+  toSubcomplexFamily := G.window a m
+  approximates := hG
+  K := K
+  isClosed_K := hK
+
+/-- The degree after `a + i` is `a + (i + 1)`. -/
+theorem add_succ (i : ℕ) : a + (i : ℤ) + 1 = a + ((i + 1 : ℕ) : ℤ) := by push_cast; ring
+
+variable {H} {κ : Type*} (F : H.SubcomplexFamily κ)
+
+/-- The approximation property in degree `i`, read in the graph norm of `d i j`, `j = i + 1`. -/
+theorem SubcomplexFamily.Approximates.of_eq {i j : ℤ} (hj : i + 1 = j) (hA : F.Approximates i)
+    (x : (H.d i j).domain) :
+    Tendsto (fun h => (F.V h).graphDist i j x (H.d i j x)) F.l (𝓝 0) := by
+  subst hj; exact hA x
+
+/-- **Eventually a graph-norm `ε`-approximation** in `Vₕⁱ`. -/
+theorem SubcomplexFamily.Approximates.eventually {i j : ℤ} (hj : i + 1 = j)
+    (hA : F.Approximates i) (x : (H.d i j).domain) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in F.l, ∃ v : (F.V h).V i, ‖(x : W i) - v‖ +
+      ‖H.d i j x - H.d i j ⟨v, (F.V h).le_domain i j v.2⟩‖ < ε := by
+  filter_upwards [(tendsto_order.1 (hA.of_eq F hj x)).2 ε hε] with h hh
+  exact exists_lt_of_ciInf_lt hh
+
+/-- **The window of the family approximates in the graph norm in every degree of the window**:
+in a degree with a successor in the window, by the approximation property in the graph norm; in
+the last degree (no differential in the window), by the approximation property in `W`. -/
+theorem SubcomplexFamily.approximates_window
+    (happrox : ∀ i : Fin m, (i : ℕ) + 1 < m → F.Approximates (a + (i : ℕ)))
+    (happrox' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
+      Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0))
+    (i : Fin m) : (F.toFeec.window a m).Approximates i := by
+  intro σ
+  refine tendsto_order.2 ⟨fun b hb => Eventually.of_forall fun _ => hb.trans_le
+    Metric.infDist_nonneg, fun ε hε => ?_⟩
+  by_cases hi : (i : ℕ) + 1 < m
+  · have hij : (ComplexShape.window m).Rel i ⟨(i : ℕ) + 1, hi⟩ := rfl
+    filter_upwards [(happrox i hi).eventually F (add_succ a i)
+      ((H.toFeec.window a m).domainCoord i ⟨(i : ℕ) + 1, hi⟩ σ) hε] with h ⟨v, hv⟩
+    have := (F.toFeec.window a m).finiteDimensional h
+    exact (Feec.HilbertComplex.Subcomplex.infDist_domainSub_le ((F.toFeec.window a m).V h) hij σ
+      (v := (v : W (a + (i : ℕ)))) v.2).trans_lt hv
+  · have hni : ∀ k, ¬ (ComplexShape.window m).Rel i k := fun k hk => by
+      rw [ComplexShape.window_rel] at hk; omega
+    filter_upwards [(tendsto_order.1 (happrox' i (by omega)
+      ((H.toFeec.window a m).domainIncl i σ))).2 ε hε] with h hh
+    obtain ⟨v, hv, hvd⟩ := (Metric.infDist_lt_iff ⟨0, Submodule.zero_mem _⟩).1 hh
+    have := (F.toFeec.window a m).finiteDimensional h
+    have hz : ∀ z, (H.toFeec.window a m).d i ((ComplexShape.window m).next i) z = 0 :=
+      fun z => (H.toFeec.window a m).apply_eq_zero_of_not_rel (hni _) z
+    refine (Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_of_next
+      ((F.toFeec.window a m).V h) σ (v := v) hv).trans_lt ?_
+    rw [hz, hz, sub_zero, norm_zero, add_zero, ← dist_eq_norm]
+    exact hvd
+
+/-- The graph-norm bound in degree `i`, read in the graph norm of `d i j`, `j = i + 1`. -/
+theorem SubcomplexFamily.IsGraphBounded.of_eq {i j : ℤ} (hj : i + 1 = j) (hb : F.IsGraphBounded i) :
+    ∃ C : ℝ, ∀ (h : κ) (x : (H.d i j).domain), ‖(F.π h).π i x‖ +
+      ‖H.d i j ⟨(F.π h).π i x, (F.V h).le_domain i j ((F.π h).mem i x)⟩‖ ≤
+        C * (‖(x : W i)‖ + ‖H.d i j x‖) := by
+  subst hj; exact hb
+
+/-- **The projections of the window are bounded in the graph norm in every degree of the
+window**: in a degree with a successor in the window by the graph-norm bound, in the last degree
+(no differential in the window) by the bound in `W`. -/
+theorem SubcomplexFamily.isGraphBounded_window
+    (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
+    (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m →
+      ∃ C : ℝ, ∀ (h : κ) (x : W (a + (i : ℕ))), ‖(F.π h).π _ x‖ ≤ C * ‖x‖)
+    (i : Fin m) : (F.toFeec.window a m).IsGraphBounded i := by
+  by_cases hi : (i : ℕ) + 1 < m
+  · have hij : (ComplexShape.window m).Rel i ⟨(i : ℕ) + 1, hi⟩ := rfl
+    obtain ⟨C, hC⟩ := (hπ i hi).of_eq F (add_succ a i)
+    refine ⟨√2 * |C|, fun h => ?_⟩
+    show ((F.toFeec.window a m).π h).IsGraphBounded i ((ComplexShape.window m).next i) (√2 * |C|)
+    rw [ComplexShape.next_eq' _ hij]
+    exact Feec.HilbertComplex.Subcomplex.CochainProjection.isGraphBounded_of_add_le _ fun x =>
+      (hC h x).trans (mul_le_mul_of_nonneg_right (le_abs_self C) (by positivity))
+  · have hni : ¬ (ComplexShape.window m).Rel i ((ComplexShape.window m).next i) := fun hk => by
+      rw [ComplexShape.window_rel] at hk; omega
+    obtain ⟨C, hC⟩ := hπ' i (by omega)
+    refine ⟨|C|, fun h x => ?_⟩
+    have hz : ∀ z, (H.toFeec.window a m).d i ((ComplexShape.window m).next i) z = 0 :=
+      fun z => (H.toFeec.window a m).apply_eq_zero_of_not_rel hni z
+    rw [hz, hz, norm_zero, sq_abs]
+    have h1 : ‖(F.π h).π (a + (i : ℕ)) x‖ ≤ |C| * ‖(x : W (a + (i : ℕ)))‖ :=
+      (hC h x).trans (mul_le_mul_of_nonneg_right (le_abs_self C) (norm_nonneg _))
+    have h2 := pow_le_pow_left₀ (norm_nonneg _) h1 2
+    rw [mul_pow, sq_abs] at h2
+    change ‖(F.π h).π (a + (i : ℕ)) x‖ ^ 2 + 0 ^ 2 ≤ C ^ 2 * (‖(x : W (a + (i : ℕ)))‖ ^ 2 + 0 ^ 2)
+    nlinarith
 
 end Window
 
@@ -287,24 +370,31 @@ theorem isReducing_iff {E : Type*} [NormedAddCommGroup E] [InnerProductSpace �
 
 namespace HilbertComplex.SubcomplexFamily
 
-variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ)
-  (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
-  (happrox : ∀ (i : ℤ) (w : W i),
-    Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0))
-  (a : ℤ) (m : ℕ) (K : Submodule 𝕜 (Total W a m)) (hK : IsClosed (K : Set (Total W a m)))
+variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) (a : ℤ) (m : ℕ)
+  (happrox : ∀ i, (F.toFeec.window a m).Approximates i)
+  (K : Submodule 𝕜 (Total W a m)) (hK : IsClosed (K : Set (Total W a m)))
 
 instance (h : κ) : CompleteSpace (F.Xh a m h) := FiniteDimensional.complete 𝕜 _
 
-theorem Dh_eq (h : κ) : F.Dh a m h = ((F.toFeec hπ happrox).windowFEEC a m K hK).discreteD h :=
+/-- The window of `F` with the constraint `K`, a constrained FEEC discretization. -/
+abbrev feecWindow : Feec.HilbertComplex.ConstrainedFEEC (H.toFeec.window a m) κ :=
+  windowFEEC H a m F.toFeec happrox K hK
+
+/-- The subcomplex `Vₕ` alone on the window, a constrained FEEC discretization over `Unit`. -/
+abbrev singleWindow (h : κ) : Feec.HilbertComplex.ConstrainedFEEC (H.toFeec.window a m) Unit :=
+  windowFEEC H a m (F.single h) (fun _ _ => tendsto_bot) ⊤
+    (by rw [Submodule.top_coe]; exact isClosed_univ)
+
+theorem Dh_eq (h : κ) : F.Dh a m h = (F.feecWindow a m happrox K hK).discreteD h :=
   ContinuousLinearMap.ext fun _ => Subtype.ext (LinearPMap.apply_eq_of_eq (H.totalD_eq a m) _ _ rfl)
 
-theorem Lh_eq (h : κ) : F.Lh a m h = ((F.toFeec hπ happrox).windowFEEC a m K hK).discreteWave h := by
-  rw [Lh, F.Dh_eq hπ happrox a m K hK]
+theorem Lh_eq (h : κ) : F.Lh a m h = (F.feecWindow a m happrox K hK).discreteWave h := by
+  rw [Lh, F.Dh_eq a m happrox K hK]
   rfl
 
 theorem Lh_sq_eq (h : κ) :
-    (F.Lh a m h ^ 2 : F.Xh a m h →L[𝕜] F.Xh a m h) = ((F.toFeec hπ happrox).windowFEEC a m K hK).heatGen h := by
-  set G := (F.toFeec hπ happrox).windowFEEC a m K hK
+    (F.Lh a m h ^ 2 : F.Xh a m h →L[𝕜] F.Xh a m h) = (F.feecWindow a m happrox K hK).heatGen h := by
+  set G := F.feecWindow a m happrox K hK
   set D := G.discreteD h
   have hdh : (G.totalSubcomplex h).dh () () = D := ContinuousLinearMap.ext fun _ => rfl
   have hD : D * D = 0 := ContinuousLinearMap.ext fun x => Subtype.ext
@@ -313,7 +403,7 @@ theorem Lh_sq_eq (h : κ) :
     rw [ContinuousLinearMap.mul_def, ← ContinuousLinearMap.adjoint_comp,
       ← ContinuousLinearMap.mul_def, hD]
     exact LinearIsometryEquiv.map_zero _
-  rw [pow_two, F.Lh_eq hπ happrox a m K hK]
+  rw [pow_two, F.Lh_eq a m happrox K hK]
   show (G.discreteWave h * G.discreteWave h : G.Xh h →L[𝕜] G.Xh h) = _
   rw [Feec.HilbertComplex.ConstrainedFEEC.discreteWave, sub_mul,
     mul_sub, mul_sub, hD, hD', Feec.HilbertComplex.ConstrainedFEEC.heatGen,
@@ -329,8 +419,8 @@ variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 theorem Lh_single (h : κ) : F.Lh a m h =
-    ((F.single hπ h).windowFEEC a m ⊤ (isClosed_top a m)).discreteWave () := by
-  have hD : F.Dh a m h = ((F.single hπ h).windowFEEC a m ⊤ (isClosed_top a m)).discreteD () :=
+    (F.singleWindow a m h).discreteWave () := by
+  have hD : F.Dh a m h = (F.singleWindow a m h).discreteD () :=
     ContinuousLinearMap.ext fun _ => Subtype.ext (LinearPMap.apply_eq_of_eq (H.totalD_eq a m) _ _ rfl)
   rw [Lh, hD]
   rfl
@@ -339,7 +429,6 @@ omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 theorem graphDist_nonneg (h : κ) (y : (H.totalD a m).domain) : 0 ≤ F.graphDist a m h y :=
   le_ciInf fun _ => by positivity
 
-include hπ in
 /-- **The per-`h` error bound with slack** `δ > 0`, from the conforming rate
 `Feec.HilbertComplex.ConstrainedFEEC.rate_le` on the subcomplex `Vₕ` alone (`SubcomplexFamily.single`), for the
 rate class of the single datum `x` with norm `M + δ`. -/
@@ -354,7 +443,7 @@ theorem error_le_add (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
       ‖(v : Total W a m) - x‖ +
         2 * (1 + Feec.HilbertComplex.ellipticConst (H.toFeec.window a m)) * (1 + t) * (M + δ) := by
   set H' := H.toFeec.window a m
-  set G := (F.single hπ h).windowFEEC a m ⊤ (isClosed_top a m)
+  set G := F.singleWindow a m h
   have hx' : x ∈ H'.wave.domain := by rw [← H.wave_eq a m]; exact hx
   have eL : H.wave a m ⟨x, hx⟩ = H'.wave ⟨x, hx'⟩ :=
     LinearPMap.apply_eq_of_eq (H.wave_eq a m) _ _ rfl
@@ -401,7 +490,7 @@ theorem error_le_add (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
   set P : F.Xh a m h := G.ellipticProj () ζ
   -- the discrete solution is the semiflow of the elliptic projection
   have hsol : H'.totalD.graphFst (G.discrete () ζ t) = (semiflow (F.Lh a m h) t P : Total W a m) := by
-    rw [← G.toApprox_sol, Feec.HilbertComplex.ConstrainedFEEC.toApprox_sol_eq, F.Lh_single hπ a m h]
+    rw [← G.toApprox_sol, Feec.HilbertComplex.ConstrainedFEEC.toApprox_sol_eq, F.Lh_single a m h]
     rfl
   rw [hsol] at hr
   -- the initial error
@@ -412,7 +501,7 @@ theorem error_le_add (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
   have hCP := Feec.HilbertComplex.ellipticConst_nonneg H'
   -- `semiflow` is unitary
   have hiso : ‖(semiflow (F.Lh a m h) t (P - v) : Total W a m)‖ = ‖P - v‖ := by
-    rw [F.Lh_single hπ a m h]
+    rw [F.Lh_single a m h]
     exact Feec.C0Group.isIsometric_ofBounded (G.discreteWave_skew ()) t (P - v)
   have e1 : ‖(H'.waveGroup.S t x : Total W a m) - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
       ‖H'.waveGroup.S t x - (semiflow (F.Lh a m h) t P : Total W a m)‖ +
@@ -428,9 +517,8 @@ theorem error_le_add (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
   rw [hiso] at e1
   nlinarith
 
-include hπ in
-/-- **The per-`h` error bound** `‖S(t) x - exp(t Lₕ) v‖ ≤ ‖v - x‖ + 2 (1 + C_P) (1 + t) M`
-(`error_le_add` with `δ → 0`). -/
+/-- **The per-`h` error bound** `‖S(t) x - exp(t Lₕ) v‖ ≤ ‖v - x‖ + 2 (1 + C_P) (1 + t) M`,
+`C_P = 4√3` (`error_le_add` with `δ → 0`, `Feec.HilbertComplex.ellipticConst_le`). -/
 theorem error_le (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
     (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) (v : F.Xh a m h) {t M : ℝ}
     (ht : 0 ≤ t)
@@ -439,68 +527,102 @@ theorem error_le (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
         (y : Total W a m) = (H.toFeec.window a m).waveGroup.S s (H.wave a m ⟨x, hx⟩) →
         F.graphDist a m h y ≤ M) :
     ‖(H.toFeec.window a m).waveGroup.S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
-      ‖(v : Total W a m) - x‖ +
-        2 * (1 + Feec.HilbertComplex.ellipticConst (H.toFeec.window a m)) * (1 + t) * M := by
+      ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M := by
+  have hM0 : 0 ≤ M := by
+    have hxD : x ∈ (H.totalD a m).domain := by
+      rw [H.totalD_eq a m]; exact ((H.toFeec.window a m).mem_wave_domain.1 (H.wave_eq a m ▸ hx)).1
+    refine (F.graphDist_nonneg a m h ⟨x, hxD⟩).trans (hM 0 ⟨le_rfl, ht⟩ ⟨x, hxD⟩ (Or.inl ?_))
+    rw [Feec.C0Group.S_zero_apply]
   set c := 2 * (1 + Feec.HilbertComplex.ellipticConst (H.toFeec.window a m)) * (1 + t)
   have hc : 0 < c := by have := Feec.HilbertComplex.ellipticConst_nonneg (H.toFeec.window a m); positivity
+  have hcc : c * M ≤ 2 * (1 + 4 * √3) * (1 + t) * M := by
+    have := Feec.HilbertComplex.ellipticConst_le (H.toFeec.window a m)
+    have : c ≤ 2 * (1 + 4 * √3) * (1 + t) := by
+      simp only [c]
+      exact mul_le_mul_of_nonneg_right (by linarith) (by linarith)
+    exact mul_le_mul_of_nonneg_right this hM0
   refine le_of_forall_pos_lt_add fun ε hε => ?_
-  have h1 := F.error_le_add hπ a m x hx hx2 h v ht (div_pos hε (by linarith : (0 : ℝ) < 2 * c)) hM
+  have h1 := F.error_le_add a m x hx hx2 h v ht (div_pos hε (by linarith : (0 : ℝ) < 2 * c)) hM
   have : c * (M + ε / (2 * c)) = c * M + ε / 2 := by field_simp
   linarith
 
-include hπ happrox in
+include happrox in
 /-- **The wave verdict** from `Feec`'s approximating, skew-adjoint and fully discrete FEEC
 theorems on the window and the per-`h` error bound (`error_le`). -/
 theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
-  set G := (F.toFeec hπ happrox).windowFEEC a m ⊤ (isClosed_top a m)
-  have V := (F.toFeec hπ happrox).feec.wave a m ⊤ (isClosed_top a m)
-  have VF := (F.toFeec hπ happrox).feec.full a m ⊤ (isClosed_top a m)
+  set G := F.feecWindow a m happrox ⊤ (isClosed_top a m)
+  have V := Feec.HilbertComplex.approxFEEC G.toApprox G.toCore
   have hprop : ∀ (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection],
       IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, G.toApprox.U t x ∈ K := fun K _ => by
     have hK : IsClosed (K : Set (Total W a m)) := by
       rw [← K.orthogonal_orthogonal]; exact Kᗮ.isClosed_orthogonal
-    have VK := (F.toFeec hπ happrox).feec.wave a m K hK
+    have VK := Feec.HilbertComplex.approxFEEC (F.feecWindow a m happrox K hK).toApprox
+      (F.feecWindow a m happrox K hK).toCore
     rw [isReducing_iff, H.wave_eq a m]
     exact VK.isReducing_iff_invariant
-  refine ⟨G.toApprox.U, ⟨?_, V.norm_U, fun s t => G.toApprox.isSkewAdjoint.group.map_add s t,
-    ⟨2 * (1 + Feec.HilbertComplex.ellipticConst (H.toFeec.window a m)),
-      fun x hx hx2 h v t M ht hM => ?_⟩, hprop, fun K _ hK x hx h v t => ?_⟩⟩
-  · have hL : F.Lh a m = fun h => G.discreteWave h := funext (F.Lh_eq hπ happrox a m ⊤ (isClosed_top a m))
+  have hL : F.Lh a m = fun h => G.discreteWave h := funext (F.Lh_eq a m happrox ⊤ (isClosed_top a m))
+  have hEV : EvolutionVerdict (H.wave a m) F.l (F.Xh a m) (F.Lh a m) G.toApprox.U := by
     rw [H.wave_eq a m, hL]
     exact evolutionVerdict_of (S' := G.toApprox.S) (fun t ht => (V.S_eq_U ht).symm)
       G.toApprox.isMDissipative G.toApprox.dissipative V.isClassicalSolution V.unique V.antitone
       (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
       (fun x v hv T => V.converges (G.mem_toCore_closure x) hv T)
       (fun θ hθ τ hτ hτ0 x v hv T ε hε =>
-        (VF.wave (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
+        (Feec.HilbertComplex.dissipFEEC_fullyDiscrete G.toCore
+          (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
           (G.mem_toCore_closure x) hv hτ0 T hε)
-  · exact F.error_le hπ a m x hx hx2 h v ht hM
+  refine ⟨G.toApprox.U, ⟨hEV, V.norm_U, fun s t => G.toApprox.isSkewAdjoint.group.map_add s t,
+    fun x hx hx2 h v _ _ ht hM => F.error_le a m x hx hx2 h v ht hM,
+    fun x hx hx2 θ hθ h τ hτ w hw n M hM => ?_, fun x hx hx2 h τ hτ w hw n M hM => ?_, hprop,
+    fun K _ hK x hx h v t => ?_⟩⟩
+  · have h1 : ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ ≤
+        ‖(w 0 : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + n * τ) * M :=
+      F.error_le a m x hx hx2 h (w 0) (t := n * τ) (M := M) (by positivity) hM
+    have h2 := hEV.theta_temporal θ hθ h hτ w hw n
+    calc ‖G.toApprox.U (n * τ) x - (w n : Total W a m)‖ ≤
+          ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ +
+            ‖semiflow (F.Lh a m h) (n * τ) (w 0) - w n‖ := by
+          rw [← Submodule.norm_coe, Submodule.coe_sub]
+          exact norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ ≤ _ := by linarith
+  · have h1 : ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ ≤
+        ‖(w 0 : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + n * τ) * M :=
+      F.error_le a m x hx hx2 h (w 0) (t := n * τ) (M := M) (by positivity) hM
+    have h2 := hEV.crankNicolson_temporal h hτ w hw n
+    calc ‖G.toApprox.U (n * τ) x - (w n : Total W a m)‖ ≤
+          ‖G.toApprox.U (n * τ) x - (semiflow (F.Lh a m h) (n * τ) (w 0) : Total W a m)‖ +
+            ‖semiflow (F.Lh a m h) (n * τ) (w 0) - w n‖ := by
+          rw [← Submodule.norm_coe, Submodule.coe_sub]
+          exact norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ ≤ _ := by linarith
   · rw [norm_sub_rev, ← dist_eq_norm]
     exact Metric.infDist_le_dist_of_mem ((hprop K).1 hK t x hx)
 
-include hπ happrox in
+include happrox in
 /-- **The heat verdict** from `Feec`'s heat and fully discrete FEEC theorems on the window. -/
-theorem heatVerdict
-    (hcr : ∀ i : Fin m, 0 < (i : ℕ) → IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ)))))
-    [FiniteDimensional 𝕜 (H.wave a m).ker] : ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
+theorem heatVerdict (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
+    (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m →
+      ∃ C : ℝ, ∀ (h : κ) (x : W (a + (i : ℕ))), ‖(F.π h).π _ x‖ ≤ C * ‖x‖)
+    (hcr : ∀ i : Fin m, 0 < (i : ℕ) → IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
+    ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S := by
   have hcrw := H.closedRangeAt_window a m hcr
-  have := H.finiteDimensional_harmonic_window a m
-  set G := (F.toFeec hπ happrox).windowFEEC a m ⊤ (isClosed_top a m)
-  have V := (F.toFeec hπ happrox).feec.heat a m ⊤ (isClosed_top a m) hcrw
-  have VF := (F.toFeec hπ happrox).feec.full a m ⊤ (isClosed_top a m)
-  have hZ : ∀ x, x ∈ (G.heatCore hcrw).Data.topologicalClosure := fun x => by
-    rw [G.dense_heatCore_data hcrw]; exact Submodule.mem_top
+  have hb := F.isGraphBounded_window a m hπ hπ'
+  set G := F.feecWindow a m happrox ⊤ (isClosed_top a m)
+  have V := G.heatFEEC hcrw hb
+  have hZ : ∀ x, x ∈ (G.heatCore hcrw hb).Data.topologicalClosure := fun x => by
+    rw [G.dense_heatCore_data hcrw hb]; exact Submodule.mem_top
   refine ⟨G.toHeat.S, ?_⟩
   have hL : (fun h => F.Lh a m h ^ 2) = fun h => G.heatGen h :=
-    funext (F.Lh_sq_eq hπ happrox a m ⊤ (isClosed_top a m))
+    funext (F.Lh_sq_eq a m happrox ⊤ (isClosed_top a m))
   rw [H.heat_eq a m, hL]
   exact evolutionVerdict_of (S' := G.toHeat.S) (fun _ _ => rfl) G.toHeat.isMDissipative
     G.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
     (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
     (fun x v hv T => V.converges (hZ x) hv T)
     (fun θ hθ τ hτ hτ0 x v hv T ε hε =>
-      (VF.heat hcrw (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
+      (Feec.HilbertComplex.dissipFEEC_fullyDiscrete (G.heatCore hcrw hb)
+        (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
         (hZ x) hv hτ0 T hε)
 
 end HilbertComplex.SubcomplexFamily

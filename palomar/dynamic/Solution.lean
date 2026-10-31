@@ -5,9 +5,9 @@ public import Solution.Bridge
 /-!
 # The FEEC theorem for the Hodge wave and heat equations (solution)
 
-`FEEC.dynamicFEEC` of `Challenge.lean`, proved from `Feec.HilbertComplex.ConformingFamily.feec`
-and `Feec.HilbertComplex.ConstrainedFEEC.rate_le` through the bridge `Solution.Bridge`: the wave
-verdict (`SubcomplexFamily.waveVerdict`) and the heat verdict (`SubcomplexFamily.heatVerdict`).
+`FEEC.dynamicFEEC` of `Challenge.lean`, proved from `Feec.HilbertComplex.approxFEEC`,
+`Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and `Feec.HilbertComplex.ConstrainedFEEC.rate_le`
+through the bridge `Solution.Bridge`: the wave verdict (`SubcomplexFamily.waveVerdict`) and the heat verdict (`SubcomplexFamily.heatVerdict`).
 
 ## References
 
@@ -30,15 +30,15 @@ variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommG
 
 /-- **The FEEC theorem for the Hodge wave and heat equations** ([QuennevilleBelair2015], Thms 4.6,
 4.7, 4.14, Props 4.13, 4.17; [Thomee2006], Ch. 7; [GilletteHolstZhu2017]). Let `F` be a family of
-subcomplexes whose cochain projections are bounded uniformly in `W`, `‖πₕ x‖ ≤ C ‖x‖`, and which
-approximates every `w ∈ Wⁱ`. On every window, `F` satisfies the wave and heat verdicts
+subcomplexes which approximates in the graph norm in the degrees `a, …, a + m - 2` and in `W` in
+the degree `a + m - 1`. On the window `[a, a + m)`, `F` satisfies the wave and heat verdicts
 (`SubcomplexFamily.DynamicVerdict`). -/
-theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
-    (hπ : ∃ C : ℝ, ∀ (h : κ) (i : ℤ) (x : W i), ‖(F.π h).π i x‖ ≤ C * ‖x‖)
-    (happrox : ∀ (i : ℤ) (w : W i),
-      Tendsto (fun h => Metric.infDist w ((F.V h).V i : Set (W i))) F.l (𝓝 0))
-    (a : ℤ) (m : ℕ) : F.DynamicVerdict a m where
-  wave := F.waveVerdict hπ happrox a m
-  heat hcr _ := F.heatVerdict hπ happrox a m hcr
+theorem dynamicFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (a : ℤ)
+    (m : ℕ) (happrox : ∀ i : Fin m, (i : ℕ) + 1 < m → F.Approximates (a + (i : ℕ)))
+    (happrox' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
+      Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0)) :
+    F.DynamicVerdict a m where
+  wave := F.waveVerdict a m (F.approximates_window a m happrox happrox')
+  heat hπ hπ' hcr := F.heatVerdict a m (F.approximates_window a m happrox happrox') hπ hπ' hcr
 
 end FEEC

@@ -292,7 +292,7 @@ theorem cubePMC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine (((FEM.whitneyFamily n).feec_rated (FEM.whitneyJackson n)).rate_wave a 3 _ _ () hΛ hx N
     ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, FEM.whitneyJackson, Real.rpow_one, Fintype.card_fin]
+    SubcomplexFamily.Jackson.window, FEM.whitneyJackson, Real.rpow_one, Fintype.card_fin]
   ring
 
 /-- `cubePEC_rate`, verbatim. -/
@@ -306,7 +306,7 @@ theorem cubePEC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine (((FEM.whitneyFamilyMin n).feec_rated (FEM.whitneyJacksonMin n)).rate_wave a 3 _ _ () hΛ
     hx N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, FEM.whitneyJacksonMin, Real.rpow_one, Fintype.card_fin]
+    SubcomplexFamily.Jackson.window, FEM.whitneyJacksonMin, Real.rpow_one, Fintype.card_fin]
   ring
 
 /-- `cubePolyPMC_rate`, verbatim. -/
@@ -321,7 +321,7 @@ theorem cubePolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   refine (((FEM.polyFamily n S).feec_rated (FEM.polyJackson n S)).rate_wave a 3 _ _ s hΛ
     (mem_ofDegreewise_of_imp (fun i _ hy => ⟨hS.polyOrderAt _, hy⟩) hx) N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, FEM.polyJackson, Real.rpow_one, Real.rpow_natCast,
+    SubcomplexFamily.Jackson.window, FEM.polyJackson, Real.rpow_one, Real.rpow_natCast,
     Fintype.card_fin]
   ring
 
@@ -337,7 +337,7 @@ theorem cubePolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   refine (((FEM.polyFamilyMin n S).feec_rated (FEM.polyJacksonMin n S)).rate_wave a 3 _ _ s hΛ
     (mem_ofDegreewise_of_imp (fun i _ hy => ⟨hS.polyOrderAt _, hy⟩) hx) N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, FEM.polyJacksonMin, Real.rpow_one, Real.rpow_natCast,
+    SubcomplexFamily.Jackson.window, FEM.polyJacksonMin, Real.rpow_one, Real.rpow_natCast,
     Fintype.card_fin]
   ring
 
@@ -433,7 +433,7 @@ theorem paraPMC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine (((whitneyFamily A hA b).feec_rated (whitneyJackson A hA b)).rate_wave a 3 _ _ () hΛ hx N
     ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, whitneyJackson, Real.rpow_one, Fintype.card_fin]
+    SubcomplexFamily.Jackson.window, whitneyJackson, Real.rpow_one, Fintype.card_fin]
   ring
 
 /-- `paraPEC_rate`, verbatim. -/
@@ -447,7 +447,7 @@ theorem paraPEC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine (((whitneyFamilyMin A hA b).feec_rated (whitneyJacksonMin A hA b)).rate_wave a 3 _ _ ()
     hΛ hx N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, whitneyJacksonMin, Real.rpow_one, Fintype.card_fin]
+    SubcomplexFamily.Jackson.window, whitneyJacksonMin, Real.rpow_one, Fintype.card_fin]
   ring
 
 /-- `paraPolyPMC_rate`, verbatim. -/
@@ -462,7 +462,7 @@ theorem paraPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   refine (((polyFamily A hA b S).feec_rated (polyJackson A hA b S)).rate_wave a 3 _ _ s hΛ
     (mem_ofDegreewise_of_imp (fun i _ hy => ⟨hS.polyOrderAt _, hy⟩) hx) N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, polyJackson, Real.rpow_one, Real.rpow_natCast,
+    SubcomplexFamily.Jackson.window, polyJackson, Real.rpow_one, Real.rpow_natCast,
     Fintype.card_fin]
   ring
 
@@ -478,7 +478,7 @@ theorem paraPolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   refine (((polyFamilyMin A hA b S).feec_rated (polyJacksonMin A hA b S)).rate_wave a 3 _ _ s hΛ
     (mem_ofDegreewise_of_imp (fun i _ hy => ⟨hS.polyOrderAt _, hy⟩) hx) N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, polyJacksonMin, Real.rpow_one, Real.rpow_natCast,
+    SubcomplexFamily.Jackson.window, polyJacksonMin, Real.rpow_one, Real.rpow_natCast,
     Fintype.card_fin]
   ring
 
@@ -532,7 +532,7 @@ theorem starPMC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine ((M.whitneyFamily.feec_rated M.whitneyJackson).rate_wave a 3 _ _ () hΛ hx N
     ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, MeshFamily.whitneyJackson, Real.rpow_one, Fintype.card_fin]
+    SubcomplexFamily.Jackson.window, MeshFamily.whitneyJackson, Real.rpow_one, Fintype.card_fin]
   ring
 
 /-- `starPEC_rate`, verbatim. -/
@@ -546,7 +546,7 @@ theorem starPEC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   refine ((M.whitneyFamilyMin.feec_rated M.whitneyJacksonMin).rate_wave a 3 _ _ () hΛ hx N
     ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, MeshFamily.whitneyJacksonMin, Real.rpow_one,
+    SubcomplexFamily.Jackson.window, MeshFamily.whitneyJacksonMin, Real.rpow_one,
     Fintype.card_fin]
   ring
 
@@ -562,7 +562,7 @@ theorem starPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   refine (((M.polyFamily S).feec_rated (M.polyJackson S)).rate_wave a 3 _ _ s hΛ
     (mem_ofDegreewise_of_imp (fun i _ hy => ⟨hS.polyOrderAt _, hy⟩) hx) N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, MeshFamily.polyJackson, Real.rpow_one, Real.rpow_natCast,
+    SubcomplexFamily.Jackson.window, MeshFamily.polyJackson, Real.rpow_one, Real.rpow_natCast,
     Fintype.card_fin]
   ring
 
@@ -578,7 +578,7 @@ theorem starPolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   refine (((M.polyFamilyMin S).feec_rated (M.polyJacksonMin S)).rate_wave a 3 _ _ s hΛ
     (mem_ofDegreewise_of_imp (fun i _ hy => ⟨hS.polyOrderAt _, hy⟩) hx) N ht).trans_eq ?_
   simp only [ConstrainedFEEC.RateClass.ofJackson, ConstrainedFEEC.RateClass.ofDegreewise,
-    ConformingFamily.Jackson.window, MeshFamily.polyJacksonMin, Real.rpow_one, Real.rpow_natCast,
+    SubcomplexFamily.Jackson.window, MeshFamily.polyJacksonMin, Real.rpow_one, Real.rpow_natCast,
     Fintype.card_fin]
   ring
 

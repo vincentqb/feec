@@ -33,7 +33,7 @@ Hilbert complex, with the **Gauss laws** `σ = 0`, `d†E = 0`, `dB = 0` as cons
   `L`, propagate, and the Gauss residual of the semi-discrete solutions tends to `0`. Every other
   field of the FEEC theorem applies to the window as well: the approximating, heat and fully
   discrete theorems (`F.feec.wave a 3 (windowGauss H a) _`, …), and under a Jackson estimate `J`
-  of `F` (`ConformingFamily.Jackson`; for the models `FEM.whitneyJackson`, `FEM.polyJackson`, …)
+  of `F` (`SubcomplexFamily.Jackson`; for the models `FEM.whitneyJackson`, `FEM.polyJackson`, …)
   the rate `(1 + C_P)(1 + 2t) O(hᵒʳᵈ⁽ˢ⁾)` for data whose orbit stays `s`-regular
   (`(F.feec_rated J).rate_wave a 3 (windowGauss H a) _`, on the classes
   `ConstrainedFEEC.RateClass.ofJackson`).
@@ -372,6 +372,9 @@ conforming window of `F` with the Gauss laws as constraint (`ConformingFamily.wi
 def feec : ConstrainedFEEC (H.window a 3) κ :=
   F.windowFEEC a 3 (windowGauss H a) (isClosed_gauss _ _)
 
+/-- The projections of `feec F a` are bounded in `W` (those of the conforming family `F`). -/
+theorem bound_feec : ∃ C, ∀ h i x, ‖((feec F a).π h).π i x‖ ≤ C * ‖x‖ := (F.window a 3).bound_π
+
 variable [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
 
 /-- **The conclusions of the FEEC theorem for Maxwell's equations** (`maxwellFEEC`) in the window
@@ -705,7 +708,8 @@ theorem starPMC_discretePoincare {cP : ℝ} (hP : HasPoincare D.complex cP) {i j
     ∃ C, 0 ≤ C ∧ ∀ N, ∀ x (hx : x ∈ ((starPMC M a).V N).V i),
       (∀ y ∈ ((starPMC M a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
         ‖x‖ ≤ C * cP * ‖(D.complex.window a 3).d i j ⟨x, ((starPMC M a).V N).le_domain i j hx⟩‖ :=
-  constrainedFEEC_discretePoincare (starPMC M a) hij (window_poincare hP a hij)
+  constrainedFEEC_discretePoincare (starPMC M a)
+    (bound_feec M.whitneyFamily a) hij (window_poincare hP a hij)
 
 /-- **The uniform discrete Poincaré inequality** for the Maxwell window on a star-shaped domain
 (perfect electric conductor), under the Poincaré inequality of `H̊Λ(Ω)`. [AFW2010], Thm 3.6 -/
@@ -715,7 +719,8 @@ theorem starPEC_discretePoincare {cP : ℝ} (hP : HasPoincare D.complexMin cP) {
       (∀ y ∈ ((starPEC M a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
         ‖x‖ ≤ C * cP *
           ‖(D.complexMin.window a 3).d i j ⟨x, ((starPEC M a).V N).le_domain i j hx⟩‖ :=
-  constrainedFEEC_discretePoincare (starPEC M a) hij (window_poincare hP a hij)
+  constrainedFEEC_discretePoincare (starPEC M a)
+    (bound_feec M.whitneyFamilyMin a) hij (window_poincare hP a hij)
 
 end StarShaped
 
@@ -734,7 +739,7 @@ theorem cubePMC_discretePoincare {i j : Fin 3} (hij : (ComplexShape.window 3).Re
       (∀ y ∈ ((cubePMC n a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
         ‖x‖ ≤ C * (2 * Real.pi)⁻¹ *
           ‖((FEM.complex n).window a 3).d i j ⟨x, ((cubePMC n a).V N).le_domain i j hx⟩‖ :=
-  constrainedFEEC_discretePoincare (cubePMC n a) hij
+  constrainedFEEC_discretePoincare (cubePMC n a) (bound_feec (FEM.whitneyFamily n) a) hij
     (window_poincare (H := FEM.complex n) (CubeWitness.hasPoincare n) a hij)
 
 /-- **The uniform discrete Poincaré inequality on the cube** (perfect electric conductor), with
@@ -744,7 +749,7 @@ theorem cubePEC_discretePoincare {i j : Fin 3} (hij : (ComplexShape.window 3).Re
       (∀ y ∈ ((cubePEC n a).V N).cyclesW i, ⟪y, x⟫_ℝ = 0) →
         ‖x‖ ≤ C * (2 * Real.pi)⁻¹ *
           ‖((FEM.complexMin n).window a 3).d i j ⟨x, ((cubePEC n a).V N).le_domain i j hx⟩‖ :=
-  constrainedFEEC_discretePoincare (cubePEC n a) hij
+  constrainedFEEC_discretePoincare (cubePEC n a) (bound_feec (FEM.whitneyFamilyMin n) a) hij
     (window_poincare (H := FEM.complexMin n) (CubeWitness.hasPoincareMin n) a hij)
 
 /-- **The uniform discrete Poincaré inequality on the parallelepiped** `Ω = A · Q + b` (perfect
@@ -756,7 +761,8 @@ theorem paraPMC_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A
         ‖x‖ ≤ C * Feec.Models.Parallelepiped.poincareConst A *
           ‖((Feec.Models.Parallelepiped.complex A b).window a 3).d i j
             ⟨x, ((paraPMC A hA b a).V N).le_domain i j hx⟩‖ :=
-  constrainedFEEC_discretePoincare (paraPMC A hA b a) hij
+  constrainedFEEC_discretePoincare (paraPMC A hA b a)
+    (bound_feec (Feec.Models.Parallelepiped.whitneyFamily A hA b) a) hij
     (window_poincare (Feec.Models.Parallelepiped.poincare A hA b) a hij)
 
 /-- **The uniform discrete Poincaré inequality on the parallelepiped** (perfect electric
@@ -768,7 +774,8 @@ theorem paraPEC_discretePoincare (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A
         ‖x‖ ≤ C * Feec.Models.Parallelepiped.poincareConst A *
           ‖((Feec.Models.Parallelepiped.complexMin A b).window a 3).d i j
             ⟨x, ((paraPEC A hA b a).V N).le_domain i j hx⟩‖ :=
-  constrainedFEEC_discretePoincare (paraPEC A hA b a) hij
+  constrainedFEEC_discretePoincare (paraPEC A hA b a)
+    (bound_feec (Feec.Models.Parallelepiped.whitneyFamilyMin A hA b) a) hij
     (window_poincare (Feec.Models.Parallelepiped.poincare_min A hA b) a hij)
 
 end UnconditionalPoincare
@@ -788,9 +795,9 @@ constraint does not reduce `L` (`torus_not_isReducing_potential`), so the non-re
 clauses of the verdict are not vacuous; `torus_potential_residual_of_approxFEEC` discharges the
 graded one. -/
 theorem torus_potential_approxFEEC [Nonempty d] :
-    ((torus d 0).withConstraint (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
+    ((torusFamily d).windowFEEC 0 3 (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
         isClosed_potential).toApprox.Verdict
-      ((torus d 0).withConstraint (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
+      ((torusFamily d).windowFEEC 0 3 (potential ℂ fun i : Fin 3 => L2Form d (0 + i))
         isClosed_potential).toCore ∧
     ¬ ((complex d).window 0 3).wave.IsReducing (potential ℂ fun i : Fin 3 => L2Form d (0 + i)) :=
   ⟨(torusFamily d).feec.wave 0 3 _ isClosed_potential, torus_not_isReducing_potential⟩

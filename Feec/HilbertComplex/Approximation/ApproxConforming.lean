@@ -9,11 +9,12 @@ Two families of discretizations without variational crimes are approximating FEE
 discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion of a subspace of `W`:
 
 * **Constrained FEEC discretizations** (`Feec.HilbertComplex.ConstrainedFEEC`, finite-dimensional
-  subcomplexes with bounded commuting cochain projections): `ConstrainedFEEC.toApprox` has
+  subcomplexes approximating in the graph norm): `ConstrainedFEEC.toApprox` has
   `Xₕ = ∏ Vₕⁱ ⊆ W` with the `W` inner product, the discrete wave operator `Lₕ` of (4.10)
   (`ConstrainedFEEC.discreteWave`, `⟪Lₕ x, ψ⟫ = ⟪𝐝 x, ψ⟫ - ⟪x, 𝐝 ψ⟫`), `ιₕ` the inclusion and
-  `πₕ = Πₕ`. Its **wave Ritz projection** (`ConstrainedFEEC.waveRitz`, a
-  `DissipFEEC.Ritz` of the graph lift `ApproxFEEC.graphLift`) is the elliptic projection (4.11),
+  `πₕ = Qₕ` the orthogonal projection onto `Xₕ`. Its **wave Ritz projection**
+  (`ConstrainedFEEC.waveRitz`, a `DissipFEEC.Ritz` of the graph lift `ApproxFEEC.graphLift`) is
+  the elliptic projection (4.11),
   with the defect identity `Rₕ (L y) - Lₕ Rₕ y = Qₕ (Pₕ - 1)(L y) - Qₕ (Pₕ - 1) y` (`Qₕ` the
   orthogonal projection onto `Xₕ`; `ConstrainedFEEC.ellipticProj_defect`). Its core
   `ConstrainedFEEC.toCore` (data `D(L²)`, dense) is the core of the wave Ritz projection, and the
@@ -25,7 +26,7 @@ discretizations (`Feec.HilbertComplex.ApproxFEEC`), with `ιₕ` the inclusion o
   improved rate `(1 + C_P)(1 + 2t) C hᵅ ‖ξ₀‖_class` (`ConstrainedFEEC.rate_le`) and the rate
   `(1 + C_P)(1 + t)²` of `constrainedFEEC_rate` (`1 + 2t ≤ (1 + t)²`). **The constrained FEEC
   theorem** `constrainedFEEC` (`ConstrainedFEEC.Verdict`) is proved here from the verdict of
-  `approxFEEC` for `toApprox`: it is the special case `ιₕ` = inclusion, `πₕ = Πₕ`. The consistency
+  `approxFEEC` for `toApprox`: it is the special case `ιₕ` = inclusion, `πₕ = Qₕ`. The consistency
   defect of this special case is in general not zero: by `ConstrainedFEEC.ellipticProj_defect` it
   is `Δₕ(L y) - Δₕ(y)` along the orbit, which tends to `0` (the conforming discretization commits
   no variational crime, but `Rₕ` does not commute with `L`). Non-vacuity:
@@ -157,11 +158,6 @@ theorem norm_ellipticProj_le (h : κ) : ‖F.ellipticProj h‖ ≤ ellipticConst
   ContinuousLinearMap.opNorm_le_bound _ (ellipticConst_nonneg H) fun ζ =>
     (norm_graphFst_le _).trans ((F.V h).norm_ellipticProjection_le ζ)
 
-/-- The total cochain projection `Πₕ` as a bounded map `W → Xₕ`. -/
-def piProjL (h : κ) : PiLp 2 W →L[𝕜] F.Xh h :=
-  (LinearMap.mkContinuous (F.piProj h) F.projConst (F.norm_piProj_le h)).codRestrict
-    (totalSub (F.V h).V) (F.piProj_mem h)
-
 /-- The orthogonal projection `Qₕ : W → Xₕ`. -/
 abbrev orthProj (h : κ) : PiLp 2 W →L[𝕜] F.Xh h := (totalSub (F.V h).V).orthogonalProjectionOnto
 
@@ -247,7 +243,8 @@ theorem norm_ellipticDefect_le_of_mem (h : κ) (ζ : H.totalD.GraphSpace)
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **Every constrained FEEC discretization is an approximating one**: `Xₕ = ∏ Vₕⁱ`, `ιₕ` the
-inclusion, `πₕ = Πₕ`, `Lₕ` the discrete wave operator of (4.10). -/
+inclusion, `πₕ = Qₕ` the orthogonal projection onto `Xₕ`, `Lₕ` the discrete wave operator of
+(4.10). -/
 def toApprox : ApproxFEEC H κ where
   K := F.K
   isClosed_K := F.isClosed_K
@@ -257,14 +254,12 @@ def toApprox : ApproxFEEC H κ where
   isSkewAdjoint := H.isSkewAdjoint_wave
   skew := F.discreteWave_skew
   incl h := (totalSub (F.V h).V).subtypeL
-  proj := F.piProjL
-  proj_incl h x := Subtype.ext (F.piProj_of_mem h x.2)
-  bound := ⟨max 1 F.projConst, fun h =>
-    ⟨(ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
-      rw [one_mul]; exact le_rfl).trans
-      (le_max_left _ _),
-    (ContinuousLinearMap.opNorm_le_bound _ F.projConst_nonneg fun x =>
-      F.norm_piProj_le h x).trans (le_max_right _ _)⟩⟩
+  proj := F.orthProj
+  proj_incl h x := Submodule.orthogonalProjectionOnto_mem_subspace_eq_self x
+  bound := ⟨1, fun h =>
+    ⟨ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [one_mul]; exact le_rfl,
+      ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+        rw [one_mul]; exact (totalSub (F.V h).V).norm_orthogonalProjectionOnto_apply_le x⟩⟩
 
 theorem norm_toApprox_incl_le (h : κ) : ‖F.toApprox.incl h‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by rw [one_mul]; exact le_rfl
@@ -493,10 +488,10 @@ theorem tendsto_incl_ellipticProj (x : H.wave.domain) :
     ((F.isApproximating.tendstoUniformlyOn_ellipticProjection isCompact_singleton).tendsto_at
       (mem_singleton (waveLift H x)))
 
-/-- **The constrained FEEC theorem**, the special case `ιₕ` = inclusion, `πₕ = Πₕ` of the
+/-- **The constrained FEEC theorem**, the special case `ιₕ` = inclusion, `πₕ = Qₕ` of the
 approximating one. For a constrained FEEC discretization `F` (a Hilbert complex on any finite
-window, a closed constraint `K`, finite-dimensional subcomplexes `Vₕ` with uniformly bounded
-commuting cochain projections and the approximation property) of the Hodge wave equation
+window, a closed constraint `K`, finite-dimensional subcomplexes `Vₕ` with commuting cochain
+projections and the approximation property in the graph norm) of the Hodge wave equation
 `ξ' = L ξ` (`ConstrainedFEEC.Verdict`):
 
 1. (**well-posedness**, Stone) for `ξ₀ ∈ D(L)`, `t ↦ e^{tL} ξ₀` is a classical solution on
@@ -517,12 +512,13 @@ commuting cochain projections and the approximation property) of the Hodge wave 
    (c) on a graded complex, for an `R`-invariant `K` with `D(L) ∩ K` dense in `K`, some
    `ξ₀ ∈ D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the residuals `dist(ξₕ(t), K)` of the
    discrete solutions with `ξₕ(0) = Pₕ ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`;
-5. (**discrete cohomology**) where `H` has closed range and finite-dimensional harmonic forms,
-   `πₕ` eventually induces isomorphisms `Hⁱ(H) ≅ Hⁱ(Vₕ)`.
+5. (**discrete cohomology**) where the projections are bounded in the graph norm, `H` has closed
+   range and finite-dimensional harmonic forms, `πₕ` eventually induces isomorphisms
+   `Hⁱ(H) ≅ Hⁱ(Vₕ)`.
 
 Items 1–4 are read off the verdict of `approxFEEC` for `toApprox` with the core `toCore` of the
 wave Ritz projection (data `D(L²)`, dense); the cohomology field is
-`ConformingFamily.eventually_bijective_cohomologyMap`. The bridges are `toApprox_sol` (the
+`SubcomplexFamily.eventually_bijective_cohomologyMap`. The bridges are `toApprox_sol` (the
 semi-discrete solutions of (4.10) from `Pₕ ξ₀` are the discrete orbits from `Rₕ ξ₀`),
 `exists_eq_sol` (every semi-discrete solution is a discrete orbit), the density of the core
 (`mem_toCore_closure`), `tendsto_incl_ellipticProj`, and `constrainedFEEC_rate`.
@@ -587,14 +583,15 @@ theorem _root_.Feec.HilbertComplex.constrainedFEEC : F.Verdict := by
       leaves := fun hK _ hT => ?_
       leaves_symm := fun hK hd _ hT => ?_
       leaves_graded := fun hp hRK hdense hK _ hT => ?_
-      cohomology := fun hi => F.eventually_bijective_cohomologyMap hi }
-  · -- existence of a convergent family: the solutions from `Πₕ ξ₀`
-    refine ⟨fun h => F.discrete h (F.liftXh h (F.piProjL h x)),
-      fun h => F.discreteDeriv h (F.liftXh h (F.piProjL h x)),
+      cohomology := fun hb _ hi =>
+        SubcomplexFamily.eventually_bijective_cohomologyMap hb (F.approximates _) hi }
+  · -- existence of a convergent family: the solutions from `Qₕ ξ₀`
+    refine ⟨fun h => F.discrete h (F.liftXh h (F.orthProj h x)),
+      fun h => F.discreteDeriv h (F.liftXh h (F.orthProj h x)),
       fun h => F.isSemidiscreteSolution_discrete h _ _, ?_⟩
     refine (V3 T x (F.mem_toCore_closure x)).1.congr fun h => ?_
-    change ((F.piProjL h x : F.Xh h) : PiLp 2 W) =
-      H.totalD.graphFst (F.discrete h (F.liftXh h (F.piProjL h x)) 0)
+    change ((F.orthProj h x : F.Xh h) : PiLp 2 W) =
+      H.totalD.graphFst (F.discrete h (F.liftXh h (F.orthProj h x)) 0)
     rw [F.discrete_zero, ellipticProjection_of_mem _ (F.liftXh_mem _ _), graphFst_liftXh]
   · -- reducing constraint: the residual bound
     rw [← F.toApprox_sol, norm_sub_rev, ← dist_eq_norm]
@@ -688,7 +685,7 @@ theorem RateClass.zero_mem_ofDegreewise {F : ConstrainedFEEC H κ} {T : ℝ}
   · rw [_root_.map_zero]; exact h0 _
   · rw [_root_.map_zero, e]; exact h0 _
 
-/-- **The rate class of a Jackson estimate** (`ConformingFamily.Jackson`) of the conforming
+/-- **The rate class of a Jackson estimate** (`SubcomplexFamily.Jackson`) of the conforming
 family: `RateClass.ofDegreewise` for the `s`-regular forms with bound `L`, so the data are the
 `ξ₀ ∈ D(L²)` whose trajectory and that of `L ξ₀` stay `s`-regular with bound `L` on `[0, T]`, the
 constant is `(m + m²) Σᵢ B_{s,i}`, the order `hₕ^{ord s}` and the class norm `L`.

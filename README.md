@@ -268,11 +268,16 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   convergence; one constant `Φ(c, c_P)` of the projection bound and the Poincaré constant only,
   for every complex (FEEC.staticFEEC_uniform); from `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`
   and the explicit constants of `Feec`.
-* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 310 lines): the Hodge wave and heat
-  equations on every window for `W`-bounded projections: well-posedness, convergence for every
-  datum, the error bound `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + C (1 + t) M` by the graph-norm
-  best approximation of the trajectory, θ-schemes, propagation of constraints iff reducing and the
-  residual bound; from `Feec.HilbertComplex.ConformingFamily.feec` and
+* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 370 lines): the Hodge wave and heat
+  equations on every window in which the subcomplexes approximate in the graph norm of the
+  window ([AFW2010], §3.3; graph norm in all but the last degree, `W` in the last; no bound of
+  the projections for the wave, projections bounded in these same norms for the heat):
+  well-posedness, convergence for every datum, the error bound
+  `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + 2 (1 + 4√3) (1 + t) M` by the graph-norm best
+  approximation of the trajectory, θ-schemes with their temporal and fully discrete error bounds
+  (second order for Crank–Nicolson), propagation of constraints iff reducing and the residual
+  bound; from
+  `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
 * `palomar/periodic/` (theorem FEEC.periodicTable, about 160 lines): the algebra of the periodic
   table in every dimension: the dimensions of `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_r⁻Λᵏ` and, in

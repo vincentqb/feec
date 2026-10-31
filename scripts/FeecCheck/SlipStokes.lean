@@ -37,7 +37,8 @@ theorem slip_old_exists_ne_zero_window (m : ℕ) :
 `HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` and a nonzero datum of `ker 𝐝†`, in degree `0`. -/
 theorem slip_old_slipStokes [NeZero n] (S : PolySeq) :
     ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Verdict
-        ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)) ∧
+        ((slipStokesFEEC (polyFamily n S) 0 (n + 1)).heatCore (closedRangeAt_heatWindow n)
+          ((polyFamily n S).isGraphBounded_windowFEEC 0 (n + 1) _ _)) ∧
       (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.Keeps
         (slipStokesFEEC (polyFamily n S) 0 (n + 1)).toHeat.K) ∧
       ∃ x ∈ ((heatWindow n).totalD†).ker, x ≠ 0 := by

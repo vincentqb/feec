@@ -20,7 +20,7 @@ the conjugated variables `(σ, e E, m H)` ([AFW2010], §6.1; [Monk2003]).
 family `F` of `H` gives the conforming family `mediumFamily F a M` of the reweighted complex
 (`ConformingFamily.conj`, the same finite element spaces with the weighted inner products, in the
 conjugated variables), and every Jackson estimate of `F` gives one of it
-(`ConformingFamily.Jackson.conj`). Hence the Maxwell verdict (`maxwellFEEC`: well-posedness,
+(`SubcomplexFamily.Jackson.conj`). Hence the Maxwell verdict (`maxwellFEEC`: well-posedness,
 convergence, the Gauss laws reduce `L` and propagate, the Gauss residual tends to `0`) and the
 rated FEEC theorem hold in every medium (`medium_maxwellFEEC`). The projections of the reweighted
 family are bounded by `max (Medium.cond M) 1` times those of `F` (`norm_mediumFamily_π_le`), where

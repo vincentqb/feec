@@ -55,12 +55,13 @@ instance (i : Fin (n + 1)) : FiniteDimensional ℝ ((heatWindow n).harmonic i) :
 
 /-- **The heat core of every discretization of the window has a nonzero datum**
 (`ConstrainedFEEC.exists_mem_heatCore_data_ne_zero`; the constants are nonzero). -/
-theorem exists_mem_heatCore_data_ne_zero {κ : Type*} (F : (heatWindow n).ConstrainedFEEC κ) :
-    ∃ x ∈ (F.heatCore (closedRangeAt_heatWindow n)).Data, x ≠ 0 := by
+theorem exists_mem_heatCore_data_ne_zero {κ : Type*} (F : (heatWindow n).ConstrainedFEEC κ)
+    (hb : ∀ i, F.IsGraphBounded i) :
+    ∃ x ∈ (F.heatCore (closedRangeAt_heatWindow n) hb).Data, x ≠ 0 := by
   have : Nontrivial (L2F ℝ (cubeDomain n) (formIdx n (0 + (((0 : Fin (n + 1)) : ℕ) : ℤ)))) := by
     rw [show (0 : ℤ) + (((0 : Fin (n + 1)) : ℕ) : ℤ) = 0 by simp]
     exact ⟨⟨oneForm n, 0, oneForm_ne_zero⟩⟩
-  exact F.exists_mem_heatCore_data_ne_zero _
+  exact F.exists_mem_heatCore_data_ne_zero _ hb
 
 variable [NeZero n]
 
@@ -70,12 +71,18 @@ def heatFamily (S : PolySeq) : (heatWindow n).ConstrainedFEEC ℕ :=
   ((polyFamily n S).window 0 (n + 1)).withConstraint ⊤
     (by rw [Submodule.top_coe]; exact isClosed_univ)
 
+/-- The projections of `heatFamily` are bounded in the graph norm. -/
+theorem isGraphBounded_heatFamily (S : PolySeq) : ∀ i, (heatFamily n S).IsGraphBounded i :=
+  ((polyFamily n S).window 0 (n + 1)).isGraphBounded_toSubcomplexFamily
+
 /-- **The heat FEEC theorem on the cube, not vacuously**: for every admissible sequence `S`, the
 heat FEEC verdict holds for the Hodge heat equation of the window `HΛ⁰(Q) → ⋯ → HΛⁿ(Q)` and its
 core `D(Δ²)` contains a nonzero datum. -/
 theorem crown_heat_nonvacuous (S : PolySeq) :
-    (heatFamily n S).toHeat.Verdict ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)) ∧
-      ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)).Data, x ≠ 0 :=
-  ⟨(heatFamily n S).heatFEEC _, exists_mem_heatCore_data_ne_zero n _⟩
+    (heatFamily n S).toHeat.Verdict ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)
+        (isGraphBounded_heatFamily n S)) ∧
+      ∃ x ∈ ((heatFamily n S).heatCore (closedRangeAt_heatWindow n)
+        (isGraphBounded_heatFamily n S)).Data, x ≠ 0 :=
+  ⟨(heatFamily n S).heatFEEC _ _, exists_mem_heatCore_data_ne_zero n _ _⟩
 
 end Feec.Models.Cube.FEM

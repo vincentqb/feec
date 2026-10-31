@@ -1203,7 +1203,7 @@ variable (n) in
 sequence reproducing `P_p` in the degrees of the form and of its differential, in every dimension:
 `Hˢ(Q)` components (`SobComp`), `s ≥ 0`, at the order `h_N^{min(s, p + 1)}`, from the best
 approximation `infDist_poly_le_sobAt_high` through the projections
-(`ConformingFamily.Jackson.ofInfDist`). -/
+(`SubcomplexFamily.Jackson.ofInfDist`). -/
 def sobolevHighJackson [NeZero n] (S : PolySeq) (p : ℕ) :
     (polyFamily n S).Jackson (Set.Ici (0 : ℝ)) :=
   .ofInfDist _ meshSize (fun N => (meshSize_pos N).le) tendsto_meshSize

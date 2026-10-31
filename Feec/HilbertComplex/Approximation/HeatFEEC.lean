@@ -19,7 +19,9 @@ the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
   total complex `H.total` (`W = ⊕ Wⁱ` with `𝐝`), so its Green operator `G` is a solution operator
   and the static theory of [AFW2010], §3.4 applies to `Δ` in all degrees at once, the boundary
   degrees of a window included. The total spaces with the total cochain projections are a
-  conforming family of `H.total` (`ConstrainedFEEC.totalFamily`).
+  family of subcomplexes of `H.total` (`ConstrainedFEEC.totalFamily`), approximating in the
+  graph norm, and bounded in the graph norm when the projections are bounded in the graph norm in
+  every degree (`ConstrainedFEEC.isGraphBounded_totalFamily`): the hypothesis of the heat theory.
 * **The discrete side**: the discrete Hodge Laplacian `Δₕ = dₕ dₕ* + dₕ* dₕ`
   (`Subcomplex.laplacian`, bounded), the discrete Green operator `Gₕ` (the solution operator of
   the discrete total complex, `Δₕ Gₕ = 1 - P_ℌₕ`, `Subcomplex.laplacian_solutionOp`) and the
@@ -39,7 +41,7 @@ the **heat Ritz projection**: the static FEEC theorem drives the dynamic one.
   so the heat Ritz projection gives a core (`heatCore`, data `D(Δ²)`, dense) and the full
   `DissipFEEC.Verdict` (`heatFEEC`).
 * **Rates**: with a Jackson estimate, the static rate `e(f) ≤ K L hᵒʳᵈ` ([AFW2010], Thm 3.9,
-  `ConformingFamily.StaticVerdict.rate`) along the orbit gives
+  `SubcomplexFamily.StaticVerdict.rate`) along the orbit gives
   `‖S(t) x - ιₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 + 3t) K L hᵒʳᵈ` (`rate_heat_of_static`, `rate_heat`): the
   static constant enters the dynamic bound.
 
@@ -189,14 +191,90 @@ def totalProjection (h : κ) : (F.totalSubcomplex h).CochainProjection where
   proj _ _ hx := F.piProj_of_mem h hx
   comm _ _ x := F.totalD_piProj h x
 
-/-- **The total family**: the total spaces with the total cochain projections, a conforming
-family of the total complex `H.total`. -/
-def totalFamily : ConformingFamily H.total κ where
+/-- **The total family**: the total spaces with the total cochain projections, a family of
+subcomplexes of the total complex `H.total`. -/
+def totalFamily : SubcomplexFamily H.total κ where
   l := F.l
   V := F.totalSubcomplex
   π := F.totalProjection
-  bound_π := ⟨F.projConst, fun h _ x => F.norm_piProj_le h x⟩
-  approx _ w := (tendsto_infDist_submodule_iff _ w).2 fun ε hε => F.dense w ε hε
+
+/-- **The total family approximates in the graph norm** (`ConstrainedFEEC.dense_graph`). -/
+theorem approximates_totalFamily : F.totalFamily.Approximates () := fun σ => by
+  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun _ => ha.trans_le Metric.infDist_nonneg,
+    fun a ha => ?_⟩
+  obtain ⟨x, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq σ
+  filter_upwards [F.dense_graph (H.totalD.toGraphSpace x) (a / 2) (half_pos ha)] with h
+    ⟨w, hw, hlt⟩
+  obtain ⟨y, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq w
+  refine ((F.totalSubcomplex h).infDist_domainSub_le_of_next (H := H.total) (i := ())
+    (H.totalD.toGraphSpace x) (v := (y : PiLp 2 W)) hw).trans_lt ?_
+  have e : H.totalD.toGraphSpace x - H.totalD.toGraphSpace y = H.totalD.toGraphSpace (x - y) :=
+    (LinearPMap.toGraphSpace_sub _ x y).symm
+  rw [e] at hlt
+  have hsq := HodgeWave.norm_sq_graphSpace (H.totalD.toGraphSpace (x - y))
+  rw [graphFst_toGraphSpace, graphSnd_toGraphSpace, LinearPMap.map_sub, Submodule.coe_sub] at hsq
+  have n0 := norm_nonneg (H.totalD.toGraphSpace (x - y))
+  have h1 : ‖(x : PiLp 2 W) - y‖ ≤ ‖H.totalD.toGraphSpace (x - y)‖ := by
+    nlinarith [norm_nonneg ((x : PiLp 2 W) - y), sq_nonneg ‖H.totalD x - H.totalD y‖]
+  have h2 : ‖H.totalD x - H.totalD y‖ ≤ ‖H.totalD.toGraphSpace (x - y)‖ := by
+    nlinarith [norm_nonneg (H.totalD x - H.totalD y), sq_nonneg ‖(x : PiLp 2 W) - y‖]
+  change ‖(x : PiLp 2 W) - y‖ + ‖H.totalD x - H.totalD ⟨y, _⟩‖ < a
+  linarith
+
+/-- **The total projections are bounded in the graph norm of `𝐝`** when the projections are
+bounded in the graph norm in every degree: `‖Πₕ x‖ + ‖𝐝 Πₕ x‖ ≤ (m + 1) m √2 C (‖x‖ + ‖𝐝 x‖)`,
+`m` the number of degrees (`Subcomplex.CochainProjection.isGraphBounded_of_add_le`). -/
+theorem isGraphBounded_totalFamily (hb : ∀ i, F.IsGraphBounded i) :
+    F.totalFamily.IsGraphBounded () := by
+  choose C hC using hb
+  set C' : ℝ := ∑ i, |C i|
+  have hC'0 : 0 ≤ C' := Finset.sum_nonneg fun i _ => abs_nonneg _
+  have hle : ∀ h i (y : (H.d i (c.next i)).domain), ‖(F.π h).π i y‖ +
+      ‖H.d i (c.next i) ⟨(F.π h).π i y, (F.V h).le_domain i _ ((F.π h).mem i y)⟩‖ ≤
+        √2 * C' * (‖(y : W i)‖ + ‖H.d i (c.next i) y‖) := fun h i y => by
+    have hci : |C i| ≤ C' := Finset.single_le_sum (f := fun i => |C i|)
+      (fun i _ => abs_nonneg _) (Finset.mem_univ i)
+    have hb' : (F.π h).IsGraphBounded i (c.next i) C' := fun x =>
+      (hC i h x).trans (mul_le_mul_of_nonneg_right
+        (by rw [← sq_abs (C i)]; exact pow_le_pow_left₀ (abs_nonneg _) hci 2) (by positivity))
+    exact hb'.add_le hC'0 y
+  set m : ℝ := (Fintype.card ι : ℝ)
+  have hm : 0 ≤ m := Nat.cast_nonneg _
+  refine ⟨√2 * ((m + 1) * m * (√2 * C')), fun h => ?_⟩
+  refine Subcomplex.CochainProjection.isGraphBounded_of_add_le _ fun x => ?_
+  set y : PiLp 2 W := F.piProj h x
+  have hy : y ∈ H.totalD.domain := F.piProj_mem_domain h x
+  -- the degreewise terms
+  have hdi : ∀ i j, ‖H.d i j ⟨(F.π h).π i ((x : PiLp 2 W) i),
+      (F.V h).le_domain i j ((F.π h).mem i _)⟩‖ ≤ ‖H.d i (c.next i) ⟨(F.π h).π i
+        ((x : PiLp 2 W) i), (F.V h).le_domain i _ ((F.π h).mem i _)⟩‖ := fun i j => by
+    by_cases hj : j = c.next i
+    · subst hj; exact le_rfl
+    · rw [apply_eq_zero_of_eq_zero (H.d_eq_zero_of_ne_next hj), norm_zero]; exact norm_nonneg _
+  set a : ι → ℝ := fun i => ‖(F.π h).π i ((x : PiLp 2 W) i)‖ +
+    ‖H.d i (c.next i) ⟨(F.π h).π i ((x : PiLp 2 W) i), (F.V h).le_domain i _ ((F.π h).mem i _)⟩‖
+  have ha : ∀ i, a i ≤ √2 * C' * (‖(x : PiLp 2 W)‖ + ‖H.totalD x‖) := fun i =>
+    (hle h i ⟨(x : PiLp 2 W) i, x.2 i _⟩).trans (mul_le_mul_of_nonneg_left (add_le_add
+      (PiLp.norm_apply_le (x : PiLp 2 W) i) (H.norm_d_le_norm_totalD x i _)) (by positivity))
+  have h1 : ‖y‖ ≤ ∑ i, a i := (PiLp.norm_le_sum_norm y).trans (Finset.sum_le_sum fun i _ =>
+    le_add_of_le_of_nonneg (le_of_eq rfl) (norm_nonneg _))
+  have h2 : ‖H.totalD ⟨y, hy⟩‖ ≤ m * ∑ i, a i := by
+    refine (PiLp.norm_le_sum_norm _).trans ?_
+    have : ∀ j, ‖(H.totalD ⟨y, hy⟩) j‖ ≤ ∑ i, a i := fun j => by
+      rw [totalD_apply]
+      refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun i _ => (hdi i j).trans ?_)
+      exact le_add_of_nonneg_left (norm_nonneg _)
+    refine (Finset.sum_le_sum fun j _ => this j).trans_eq ?_
+    simp [m]
+  have hsum : ∑ i, a i ≤ m * (√2 * C' * (‖(x : PiLp 2 W)‖ + ‖H.totalD x‖)) :=
+    (Finset.sum_le_sum fun i _ => ha i).trans_eq (by simp [m])
+  have ha0 : 0 ≤ ∑ i, a i := Finset.sum_nonneg fun i _ => by positivity
+  change ‖y‖ + ‖H.totalD ⟨y, hy⟩‖ ≤
+    (m + 1) * m * (√2 * C') * (‖(x : PiLp 2 W)‖ + ‖H.totalD x‖)
+  calc ‖y‖ + ‖H.totalD ⟨y, hy⟩‖ ≤ (m + 1) * ∑ i, a i := by nlinarith
+    _ ≤ (m + 1) * (m * (√2 * C' * (‖(x : PiLp 2 W)‖ + ‖H.totalD x‖))) :=
+        mul_le_mul_of_nonneg_left hsum (by positivity)
+    _ = _ := by ring
 
 /-- **The total Jackson estimate**: a Jackson estimate of the family is one of the total family
 (`totalFamily`), for the forms of `D(𝐝)` whose components are `s`-regular with bound `L`, with the
@@ -274,10 +352,10 @@ variable (hcr : ∀ i, H.ClosedRangeAt i)
 
 /-- **The static FEEC theorem for the total family** ([AFW2010], Thm 3.4–3.9, for the mixed
 Hodge Laplacian `Δ` of `W = ⊕ Wⁱ`). -/
-theorem staticVerdict_total (hcr : ∀ i, H.ClosedRangeAt i)
-    [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
+theorem staticVerdict_total (hb : ∀ i, F.IsGraphBounded i) (hcr : ∀ i, H.ClosedRangeAt i) :
     F.totalFamily.StaticVerdict () :=
-  F.totalFamily.staticFEEC (H.closedRangeAt_total hcr) ()
+  F.totalFamily.staticFEEC () (F.isGraphBounded_totalFamily hb) (F.isGraphBounded_totalFamily hb)
+    (H.closedRangeAt_total hcr ()) fun k _ => H.closedRangeAt_total hcr k
 
 /-- **The static error** `‖σ - σₕ‖_V + ‖u - uₕ‖_V + ‖p - pₕ‖` of the mixed method for `Δ` with
 data `f` on the total spaces `Xₕ`. -/
@@ -317,31 +395,33 @@ theorem norm_harmonicProj_sub_le (h : κ) (f : PiLp 2 W) :
   unfold staticError Subcomplex.mixedError
   exact le_add_of_nonneg_left (add_nonneg (norm_nonneg _) (norm_nonneg _))
 
-variable [∀ i, FiniteDimensional 𝕜 (H.harmonic i)]
+variable (hb : ∀ i, F.IsGraphBounded i)
+include hcr hb
 
 /-- **The static error tends to `0`** ([AFW2010], Thm 3.9 with the approximation property). -/
 theorem tendsto_staticError (f : PiLp 2 W) :
     Tendsto (fun h => F.staticError hcr h f) F.l (𝓝 0) :=
-  (F.staticVerdict_total hcr).converges (loop_rel () ()) (loop_rel () ())
+  (F.staticVerdict_total hb hcr).converges (loop_rel () ()) (loop_rel () ())
+    F.approximates_totalFamily F.approximates_totalFamily
     (H.isMixedSolution_totalMixedSolution hcr f)
 
 theorem tendsto_discreteGreen (f : PiLp 2 W) :
     Tendsto (fun h => (F.discreteGreen h (F.orthProj h f) : PiLp 2 W)) F.l (𝓝 (H.greenOp hcr f)) :=
   tendsto_iff_norm_sub_tendsto_zero.2 (squeeze_zero (fun _ => norm_nonneg _)
     (fun h => (norm_sub_rev _ _).trans_le (F.norm_greenOp_sub_le hcr h f))
-    (F.tendsto_staticError hcr f))
+    (F.tendsto_staticError hcr hb f))
 
-theorem tendsto_discreteHarmonicProj (hcr : ∀ i, H.ClosedRangeAt i) (f : PiLp 2 W) :
+theorem tendsto_discreteHarmonicProj (f : PiLp 2 W) :
     Tendsto (fun h => (F.discreteHarmonicProj h (F.orthProj h f) : PiLp 2 W)) F.l
       (𝓝 ((H.total.harmonic ()).starProjection f)) :=
   tendsto_iff_norm_sub_tendsto_zero.2 (squeeze_zero (fun _ => norm_nonneg _)
     (fun h => (norm_sub_rev _ _).trans_le (F.norm_harmonicProj_sub_le hcr h f))
-    (F.tendsto_staticError hcr f))
+    (F.tendsto_staticError hcr hb f))
 
 /-- **Uniform stability of the discrete Green operators** ([AFW2010], Thm 3.8). -/
-theorem exists_norm_discreteGreen_le (hcr : ∀ i, H.ClosedRangeAt i) :
+theorem exists_norm_discreteGreen_le :
     ∃ C, 0 ≤ C ∧ ∀ h, ‖F.discreteGreen h‖ ≤ C := by
-  obtain ⟨C, hC⟩ := (F.staticVerdict_total hcr).wellPosed (loop_rel () ()) (loop_rel () ())
+  obtain ⟨C, hC⟩ := (F.staticVerdict_total hb hcr).wellPosed (loop_rel () ()) (loop_rel () ())
   refine ⟨max C 0, le_max_right _ _, fun h => ContinuousLinearMap.opNorm_le_bound _
     (le_max_right _ _) fun f => ?_⟩
   have hx := (hC h f).2 _ ((F.totalSubcomplex h).toHilbertComplex.mixedForm_mixedSolution
@@ -483,12 +563,14 @@ def RegMixed (L : ℝ) (f : PiLp 2 W) : Prop :=
     J.Reg s () L ((H.totalMixedSolution hcr f).snd.snd : PiLp 2 W)
 
 /-- **The static rate for the total family** ([AFW2010], Thm 3.9 with a Jackson estimate,
-`ConformingFamily.StaticVerdict.rate`): `e(f) ≤ K L hᵒʳᵈ` for data with `s`-regular mixed
+`SubcomplexFamily.StaticVerdict.rate`): `e(f) ≤ K L hᵒʳᵈ` for data with `s`-regular mixed
 solutions. -/
-theorem exists_staticError_le [∀ i, FiniteDimensional 𝕜 (H.harmonic i)] :
+theorem exists_staticError_le (hb : ∀ i, F.IsGraphBounded i) :
     ∃ K, 0 ≤ K ∧ ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L →
     F.RegMixed hcr J s L f → ∀ h, F.staticError hcr h f ≤ K * L * J.meshSize h ^ J.ord s := by
-  obtain ⟨K, hK⟩ := (F.staticVerdict_total hcr).rate J s (loop_rel () ()) (loop_rel () ())
+  obtain ⟨C, hC⟩ := F.isGraphBounded_totalFamily hb
+  obtain ⟨K, hK⟩ := (F.staticVerdict_total hb hcr).rate J s (loop_rel () ()) (loop_rel () ())
+    (abs_nonneg C) fun h x => by rw [sq_abs]; exact hC h x
   refine ⟨max K 0, le_max_right _ _, fun {L f} hL hf h => (hK (H.isMixedSolution_totalMixedSolution
     hcr f) hL hf.1 hf.2.1 hf.2.2.1 hf.2.2.2 h).trans ?_⟩
   exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right (le_max_left _ _) hL)
@@ -582,8 +664,9 @@ theorem norm_toHeat_incl_le (h : κ) : ‖F.toHeat.incl h‖ ≤ 1 :=
 def heatLift : F.toHeat.Lift (PiLp 2 W × PiLp 2 W) :=
   DissipFEEC.Lift.graph F.toHeat (H.heatRead hcr) fun _ hy => H.heatRead_lift hcr hy.1
 
-variable [∀ i, FiniteDimensional 𝕜 (H.harmonic i)]
+variable (hb : ∀ i, F.IsGraphBounded i)
 
+include hb in
 /-- **The heat Ritz projection** of the heat FEEC discretization, for the graph lift of `D(Δ²)`:
 `Rₕ = ritzR`, defects `Δₕ = ritzDefect`, `Δₕ' = 0`, uniformly bounded by the uniform stability of
 the discrete mixed problem ([AFW2010], Thm 3.8). -/
@@ -600,7 +683,7 @@ def heatRitz : F.toHeat.Ritz (F.heatLift hcr) where
     exact (F.heatRitz_defect_eq h y).trans
       ((F.ritzDefect_lift hcr h hy2 hPa).symm.trans (add_zero _).symm)
   bound := by
-    obtain ⟨C, hC0, hC⟩ := F.exists_norm_discreteGreen_le hcr
+    obtain ⟨C, hC0, hC⟩ := F.exists_norm_discreteGreen_le hcr hb
     set B := ‖H.greenOp hcr‖
     refine ⟨4 + B + C, fun h => ⟨?_, ?_, by rw [norm_zero]; positivity⟩⟩
     · refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun g => ?_
@@ -633,34 +716,37 @@ def heatRitz : F.toHeat.Ritz (F.heatLift hcr) where
       have := norm_sub_le (F.orthProj h (H.greenOp hcr g.2)) (F.discreteGreen h (F.orthProj h g.2))
       nlinarith [norm_nonneg g]
 
+include hb in
 /-- **The heat core**: the core of the heat Ritz projection, data `D(Δ²)` (dense,
 `dense_heatCore_data`), from the convergence of the static mixed method (the static error tends
 to `0`, [AFW2010], Thm 3.9). -/
 def heatCore : F.toHeat.Core :=
-  (F.heatRitz hcr).toCore
-    (fun g => ((F.tendsto_discreteHarmonicProj hcr g.1).sub (F.tendsto_discreteGreen hcr g.2)))
+  (F.heatRitz hcr hb).toCore
+    (fun g => ((F.tendsto_discreteHarmonicProj hcr hb g.1).sub
+      (F.tendsto_discreteGreen hcr hb g.2)))
     (fun g => squeeze_zero (fun _ => norm_nonneg _) (fun h => F.norm_ritzDefect_le hcr h g) (by
       show Tendsto _ F.l _
-      simpa using ((F.tendsto_staticError hcr _).const_mul 2).add (F.tendsto_staticError hcr g.2)))
+      simpa using ((F.tendsto_staticError hcr hb _).const_mul 2).add
+        (F.tendsto_staticError hcr hb g.2)))
     (fun _ => tendsto_const_nhds.congr fun _ => norm_zero.symm)
 
-theorem heatCore_data : (F.heatCore hcr).Data = (-H.hodgeLaplacian).sqDomain := rfl
+theorem heatCore_data : (F.heatCore hcr hb).Data = (-H.hodgeLaplacian).sqDomain := rfl
 
 /-- The data `D(Δ²)` of the heat core are dense: the heat FEEC theorem applies to every datum. -/
-theorem dense_heatCore_data : (F.heatCore hcr).Data.topologicalClosure = ⊤ :=
+theorem dense_heatCore_data : (F.heatCore hcr hb).Data.topologicalClosure = ⊤ :=
   Submodule.dense_iff_topologicalClosure_eq_top.1 H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain
 
 /-- **The heat core has nonzero data** as soon as the window is nonzero (`dense_heatCore_data`). -/
 theorem exists_mem_heatCore_data_ne_zero [Nontrivial (PiLp 2 W)] :
-    ∃ x ∈ (F.heatCore hcr).Data, x ≠ 0 :=
+    ∃ x ∈ (F.heatCore hcr hb).Data, x ≠ 0 :=
   H.isMDissipative_neg_hodgeLaplacian.dense_sqDomain.exists_mem_open isOpen_ne (exists_ne 0)
 
 /-- **The heat FEEC theorem** (`DissipFEEC.Verdict` of the heat FEEC discretization with the heat
 core): well-posedness and the energy identity, propagation of `K`, convergence of the discrete
 heat flows from every convergent family of discrete data (every datum: `dense_heatCore_data`),
 rates for every rate class (`rate_heat`), the constraint residual. -/
-theorem heatFEEC : F.toHeat.Verdict (F.heatCore hcr) :=
-  dissipFEEC F.toHeat (F.heatCore hcr)
+theorem heatFEEC : F.toHeat.Verdict (F.heatCore hcr hb) :=
+  dissipFEEC F.toHeat (F.heatCore hcr hb)
 
 section Rate
 
@@ -668,13 +754,13 @@ variable {ρ : Type*} {J : F.totalFamily.Jackson ρ} {s : ρ} {K : ℝ} (hK0 : 0
   (hK : ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L →
     F.RegMixed hcr J s L f → ∀ h, F.staticError hcr h f ≤ K * L * J.meshSize h ^ J.ord s)
   {L : ℝ} (hL : 0 ≤ L)
-include hK0 hK hL
+include hK0 hK hL hb
 
 /-- **The heat rate class** on `[0, T]` of the heat Ritz projection: data `x ∈ D(Δ²)` whose orbit
 stays in the regular states with bound `L`, approximation constant `2K` and consistency constant
 `3K`, `K` the constant of the static rate. -/
 def heatRateClass (T : ℝ) : F.toHeat.RateClass T :=
-  (F.heatRitz hcr).toRateClass (DissipFEEC.RegScale.trajectory F.toHeat T
+  (F.heatRitz hcr hb).toRateClass (DissipFEEC.RegScale.trajectory F.toHeat T
       (-H.hodgeLaplacian).sqDomain (F.heatReg hcr J s L) (fun _ => L) (fun _ => L))
     (fun _ hx => hx.1) J.meshSize J.meshSize_nonneg (J.ord s) (2 * K) (3 * K) (by positivity)
     (by positivity)
@@ -695,7 +781,7 @@ theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplac
     (ht : t ∈ Icc 0 T) :
     ‖F.toHeat.S t x - F.toHeat.sol h (F.ritzR h (x, DissipFEEC.genExt (-H.hodgeLaplacian) x)) t‖ ≤
       (2 + 3 * t) * K * L * J.meshSize h ^ J.ord s := by
-  set R := F.heatRateClass hcr hK0 hK hL T
+  set R := F.heatRateClass hcr hb hK0 hK hL T
   have hxR : x ∈ R.Data := ⟨hx, fun t ht => ⟨hreg t ht, le_rfl⟩⟩
   have hp : R.p x h 0 = F.ritzR h (x, DissipFEEC.genExt (-H.hodgeLaplacian) x) := by
     change F.ritzR h ((F.heatLift hcr).lift (F.toHeat.S 0 x)) = _
@@ -717,6 +803,7 @@ theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplac
 
 end Rate
 
+include hb in
 /-- **The heat rate** ([AFW2010], Thm 3.9 along the heat flow): there is a constant `K`, the
 constant of the static rate of the total family (`exists_staticError_le`), such that for
 `x ∈ D(Δ²)` whose orbit on `[0, T]` stays in the regular states with bound `L`,
@@ -727,17 +814,17 @@ theorem rate_heat {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) :
     (∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ F.heatReg hcr J s L) → ∀ (h : κ), ∀ t ∈ Icc 0 T,
     ‖F.toHeat.S t x - F.toHeat.sol h (F.ritzR h (x, DissipFEEC.genExt (-H.hodgeLaplacian) x)) t‖ ≤
       (2 + 3 * t) * K * L * J.meshSize h ^ J.ord s := by
-  obtain ⟨K, hK0, hK⟩ := F.exists_staticError_le hcr J s
+  obtain ⟨K, hK0, hK⟩ := F.exists_staticError_le hcr J s hb
   exact ⟨K, hK0, fun {_} hL {_ _} hx hreg h _ ht =>
-    F.rate_heat_of_static hcr hK0 hK hL hx hreg h ht⟩
+    F.rate_heat_of_static hcr hb hK0 hK hL hx hreg h ht⟩
 
 /-- **The heat rate class of a Jackson estimate** `J` of the total family: `heatRateClass` with
 the constant `K` of the static rate (`exists_staticError_le`), approximation constant `2K` and
 consistency constant `3K`. -/
 def jacksonHeatRateClass {ρ : Type*} (J : F.totalFamily.Jackson ρ) (s : ρ) {L : ℝ} (hL : 0 ≤ L)
     (T : ℝ) : F.toHeat.RateClass T :=
-  F.heatRateClass hcr (F.exists_staticError_le hcr J s).choose_spec.1
-    (F.exists_staticError_le hcr J s).choose_spec.2 hL T
+  F.heatRateClass hcr hb (F.exists_staticError_le hcr J s hb).choose_spec.1
+    (F.exists_staticError_le hcr J s hb).choose_spec.2 hL T
 
 end Heat
 

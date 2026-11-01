@@ -75,7 +75,10 @@ inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the coc
 and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 The Banach-space `√n` modules (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
 `ForMathlib.Analysis.{HalfLineAlgebra, Carlson, Fourier.Plancherel}`) are tied only through
-`Instances.RungeKutta.banach_radauIIA2`, a corollary off Hilbert spaces that no crown field
+`Instances.RungeKutta.banach_radauIIA2`, and the smooth-data modules
+(`Semigroup.HillePhillipsTranslate`, `TimeStepping.RationalSharp`,
+`ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`) only through
+`Instances.RungeKutta.banach_sharp`: corollaries off Hilbert spaces that no crown field
 consumes (the FEEC families are Hilbert complexes; the tie is documentary).
 
 ## The approximating FEEC theorem
@@ -320,7 +323,8 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
   VonNeumann.error_bound_quasi_real, VonNeumann.resolvent_estimates_banach,
   VonNeumann.error_bound_backward_euler_banach, VonNeumann.error_bound_banach_real_hille_yosida,
-  VonNeumann.error_bound_banach_real and VonNeumann.error_bound_banach_sqrt, about 500 lines,
+  VonNeumann.error_bound_banach_real, VonNeumann.error_bound_banach_sqrt and
+  VonNeumann.error_bound_banach_sharp, about 540 lines,
   Mathlib vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
   complex inner product space and its rational form on Hilbert spaces;
   `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for rational `r` without poles in the closed left half-plane
@@ -357,9 +361,14 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   bounded semigroups of complex Banach spaces and A-stable `r` with `|r(∞)| < 1`
   (theorem VonNeumann.error_bound_banach_sqrt) the resolvent, `Q(R)` invertible, the
   Brenner–Thomée stability `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and an error bound with its `√n` loss
-  (order `m - 1/2` at fixed `nτ`; the sources' sharp smooth-data rate `τᵐ` is not formalized),
+  (order `m - 1/2` at fixed `nτ`),
   from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`.
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`; and for every A-stable
+  `r`, `|r(∞)| = 1` included (theorem VonNeumann.error_bound_banach_sharp), Brenner–Thomée's
+  smooth-data estimate `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`, from
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (the calculus on
+  translates of kernels, `Feec.C0Semigroup.hillePhillipsKernel_translate`, and the bound
+  `‖kₙ‖₁ ≤ C n` on Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
   FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram

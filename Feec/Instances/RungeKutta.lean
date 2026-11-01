@@ -3,6 +3,7 @@ module
 public import Feec.HilbertComplex.Approximation.RationalScheme
 public import Feec.Instances.Corollaries
 public import Feec.TimeStepping.RationalHillePhillips
+public import Feec.TimeStepping.RationalSharp
 
 /-!
 # Rational and Runge–Kutta time stepping in the FEEC theorem
@@ -29,8 +30,12 @@ space (`banach_radauIIA2`, a corollary of the Banach-space theory alone: the FEE
 their fully discrete verdicts do not use it): **Radau IIA and SDIRK converge with the `√n` loss
 of the stability bound**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖`
 (`p = 3`, `2`), i.e. at fixed `T = nτ` with rates `τ^{5/2}` and `τ^{3/2}`, by the Hille–Phillips
-calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`). The sources'
-smooth-data rate `τᵖ` without `√n` ([HershKato1979], for `x ∈ D(A^{p+2})`) is not formalized.
+calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`); and
+**Gauss–Legendre, Radau IIA and SDIRK converge at the sharp rate**,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r M nτ τᵖ ‖A^{p+1} x‖` (`p = 4`, `3`, `2`; `banach_sharp`), by
+Brenner–Thomée's smooth-data estimate
+(`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`), which needs only
+A-stability, so covers the Gauss method (`|r(∞)| = 1`).
 
 ## References
 
@@ -145,6 +150,35 @@ theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
       RationalScheme.isLStable_radauIIA2.isStronglyAStable RationalScheme.hasOrder_radauIIA2 hτ n,
     RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
       RationalScheme.isLStable_sdirk2.isStronglyAStable RationalScheme.hasOrder_sdirk2 hτ n⟩
+
+/-- **Gauss–Legendre, Radau IIA and SDIRK at the sharp rate on every bounded semigroup of a complex
+Banach space**: for `τ > 0`, every `n` and `x ∈ D(A^{p+1})`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r M nτ τᵖ ‖A^{p+1} x‖` with `p = 4` (two-stage Gauss–Legendre, A-stable
+with `|r(∞)| = 1`), `p = 3` (Radau IIA) and `p = 2` (SDIRK), by Brenner–Thomée's smooth-data
+estimate (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`): order `p` at
+fixed `nτ`, without the `√n` of `banach_radauIIA2`, and for the Gauss method, which the stability
+bound does not cover. A corollary of the Banach-space theory only, like `banach_radauIIA2`.
+[BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
+theorem banach_sharp {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ((∀ j < 4 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.gaussLegendre2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        RationalScheme.gaussLegendre2.sharpConst 4 * M * (n * τ) * τ ^ 4 * ‖u (4 + 1)‖) ∧
+    ((∀ j < 3 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.radauIIA2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        RationalScheme.radauIIA2.sharpConst 3 * M * (n * τ) * τ ^ 3 * ‖u (3 + 1)‖) ∧
+    ((∀ j < 2 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.sdirk2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        RationalScheme.sdirk2.sharpConst 2 * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
+  ⟨RationalScheme.norm_resolventStep_pow_sub_S_le_sharp G hM
+      RationalScheme.isSymmetric_gaussLegendre2.isAStable RationalScheme.hasOrder_gaussLegendre2
+      hτ n,
+    RationalScheme.norm_resolventStep_pow_sub_S_le_sharp G hM
+      RationalScheme.isAStable_radauIIA2 RationalScheme.hasOrder_radauIIA2 hτ n,
+    RationalScheme.norm_resolventStep_pow_sub_S_le_sharp G hM
+      RationalScheme.isAStable_sdirk2 RationalScheme.hasOrder_sdirk2 hτ n⟩
 
 end Banach
 

@@ -2,6 +2,7 @@ module
 
 public import Solution.Bridge
 public import Feec.FiniteElement.AffineInvariantForm
+public import Feec.Counterexamples.PositiveCharacteristic
 
 /-!
 # The bridge for the affinely invariant spaces
@@ -13,7 +14,9 @@ fibre pullback `Feec.ExteriorFibre.pullback B` (`coeffs_map_dualMap`), both bein
 and agreeing on the covectors. The invariance predicates and the spaces `X(r, s, k)` correspond
 (`isAffineInvariant_iff`, `isLinearInvariant_iff`, `map_invariantForm`), and the conclusions are
 those of `Feec.FiniteElement.InvariantForm` and `Feec.FiniteElement.AffineInvariantForm`
-(`affineInvariantForms_of_feec`).
+(`affineInvariantForms_of_feec`); that characteristic `0` is necessary is
+`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_succ`
+(`charZero_iff_classification_of_feec`).
 
 ## References
 
@@ -182,5 +185,24 @@ theorem affineInvariantForms_of_feec [CharZero K] : AffineInvariantForms K n whe
     · right
       refine ⟨s, hs, ?_⟩
       rwa [← map_invariantForm, map_eq_iff] at h
+
+variable (K) in
+theorem charZero_iff_classification_of_feec :
+    CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
+      W ≤ homForm K n (r + 1) (k + 1) →
+        W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
+          W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) := by
+  refine ⟨fun _ n r k W hW hle => (affineInvariantForms_of_feec K n).eq_of_le_homForm r k W hW hle,
+    fun h => (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_succ K).2
+      fun n W hW m k hle => ?_⟩
+  set e := Feec.Koszul.formEquiv K (Fin n)
+  set V := W.comap e.toLinearMap
+  have hV : V.map e.toLinearMap = W := Submodule.map_comap_eq_of_surjective e.surjective W
+  have hVle : V ≤ homForm K n (m + 1) (k + 1) := map_le_iff.1 (by rwa [hV, map_homForm])
+  rcases h n m k V ((isGLInvariant_iff V).2 (hV ▸ hW)) hVle with h | h | h | h
+  · left; rw [← hV, h, Submodule.map_bot]
+  · right; left; rw [← hV, h, map_map_extDeriv, map_homForm]
+  · right; right; left; rw [← hV, h, map_map_koszul, map_homForm]
+  · right; right; right; rw [← hV, h, map_homForm]
 
 end FEEC

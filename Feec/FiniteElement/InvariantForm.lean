@@ -46,13 +46,13 @@ by pullbacks and linear algebra:
 
 Characteristic `0` enters only through the integers inverted: `m + 1`, the multinomial
 coefficients of degree `m + 1` and the constants `m + k`, `m + k + 1` of the homotopy formula and
-the Poincaré lemma. It cannot be dropped: in characteristic `3` the binary quartics `x⁴, x³y, xy³,
-y⁴` span a subspace of `H_4Λ⁰(K²)` invariant under every linear map (`(ax + by)³ = a³x³ + b³y³`)
-that is neither `0`, nor `H_4Λ⁰`, nor closed (`d(x³y) = x³ dy`), while every `0`-form is
-`κ`-closed; for `1`-forms, if `U` is their span, `U dx + U dy` (dimension `8`) is invariant in
-`H_4Λ¹(K²)` and none of `0`, `dH_5Λ⁰` (dimension `6`), `κH_3Λ²` (`4`), `H_4Λ¹` (`10`). Over a finite field `F_q` the polynomial `x^q y - x y^q` spans a line of `H_{q+1}Λ⁰`
-mapped to itself by every linear map (`B^*` multiplies it by `det B`), and not closed
-(`d(x^q y - x y^q) = x^q dy - y^q dx`).
+the Poincaré lemma. It cannot be dropped: over every field of characteristic `p > 0` the `1`-forms
+with coefficients in the span of the `x_i^{p²}` are a linearly invariant subspace of `H_{p²}Λ¹`
+(`n ≥ 2`, as `(Σ_l b_l x_l)^{p²} = Σ_l b_l^{p²} x_l^{p²}`) that is none of the four, and
+`x^{p-1} dx` is closed and not exact, so the classification and the Poincaré lemma for `H_mΛᵏ` hold
+in every dimension iff the characteristic is `0`
+(`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification`,
+`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact`).
 
 ## Main definitions
 
@@ -1053,6 +1053,9 @@ theorem polyPullback_mem_of_forall_units [Infinite K] {W : Submodule K (PolyForm
 /-- Invariance under the pullbacks `x ↦ g x` by the invertible linear maps, `g ∈ GL(n)`. -/
 def IsGLInvariant (W : Submodule K (PolyForm K (Fin n))) : Prop :=
   ∀ g : GL (Fin n) K, ∀ ω ∈ W, polyPullback (g : Matrix (Fin n) (Fin n) K) 0 ω ∈ W
+
+theorem IsLinearInvariant.isGLInvariant {W : Submodule K (PolyForm K (Fin n))}
+    (hW : IsLinearInvariant W) : IsGLInvariant W := fun g => hW g
 
 /-- **Over an infinite field, invariance under `GL(n)` is invariance under all linear maps.** -/
 theorem IsGLInvariant.isLinearInvariant [Infinite K] {W : Submodule K (PolyForm K (Fin n))}

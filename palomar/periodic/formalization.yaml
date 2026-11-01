@@ -62,7 +62,12 @@ project:
     affinely invariant for s <= r, X(r, r, k) = P_(r+1)^- Lambda^k, X(r+1, r, k) = P_(r+1) Lambda^k
     and d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
     finite-dimensional space of k-forms invariant under the invertible affine maps is
-    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). The
+    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). A third compared theorem,
+    FEEC.charZero_iff_classification, states over every field K that characteristic 0 is
+    necessary: the classification of the GL(n)-invariant subspaces of H_(r+1) Lambda^(k+1) holds
+    in every dimension n and all r, k iff K has characteristic 0 (over a field of characteristic
+    p > 0, n = 2, the 1-forms with coefficients in the span of x^(p^2), y^(p^2) are a
+    counterexample). The
     statement is self-contained over Mathlib (MvPolynomial and its submodules
     homogeneousSubmodule, restrictTotalDegree and restrictSupport, TensorProduct, ExteriorAlgebra,
     exteriorPower, CliffordAlgebra.contractLeft, CochainComplex, ModuleCat, finrank); the proof is
@@ -122,10 +127,15 @@ sources:
       infinite field c -> (B + c I)^* omega is a polynomial curve, in a GL(n)-invariant space at
       the cofinitely many c with det(B + c I) != 0, hence with its value B^* omega at c = 0
       (Feec.FiniteElement.polyPullback_mem_of_forall_units). Characteristic 0 cannot be dropped
-      (checked by hand, not formalized): in characteristic 3, with U the span of x^4, x^3 y,
-      x y^3, y^4, the space U dx + U dy of H_4 Lambda^1(K^2) (dimension 8) is invariant under
-      every linear map and is none of 0, d H_5 Lambda^0 (dimension 6), kappa H_3 Lambda^2 (4)
-      and H_4 Lambda^1 (10). Not formalized: the description of the third kind of
+      (formalized and compared, FEEC.charZero_iff_classification): over every field of
+      characteristic p > 0, with q = p^2 and U the span of the x_i^q, the 1-forms with
+      coefficients in U are invariant under every linear map, as (sum_l b_l x_l)^q =
+      sum_l b_l^q x_l^q, and for n >= 2 are none of 0, d H_(q+1) Lambda^0, kappa H_(q-1) Lambda^2
+      and H_q Lambda^1 (they contain x_1^q dx_1, with kappa(x_1^q dx_1) = x_1^(q+1) != 0, and miss
+      d(x_1^(q-1) x_2^2), whose coefficient q - 1 = -1 on x_1^(q-2) x_2^2 dx_1 does not vanish);
+      Feec.Counterexamples.PositiveCharacteristic. Proved in Feec, not compared: the same for the
+      summands as kernels (charZero_iff_classification) and the failure of the Poincare lemma
+      (3.2) in characteristic p, x^(p-1) dx closed and not exact (charZero_iff_closed_eq_exact). Not formalized: the description of the third kind of
       Theorem 3.5 (s < r - 1) as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its
       strict inclusions, the identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate
       statements (used in the proofs, Feec.FiniteElement.polyPullback_mem_polyForm,
@@ -203,7 +213,10 @@ status:
     Formalized and compared: FEEC.periodicTable (Challenge.lean) for every field (of
     characteristic 0 where marked), every n, k, r and multidegree b (r >= 1 where the sources
     require it), and FEEC.affineInvariantForms over every field of characteristic 0, every n,
-    k, r, s. Not compared (proved in Feec, outside the statement): the homotopy formula over
+    k, r, s, and FEEC.charZero_iff_classification (characteristic 0 is necessary for the
+    GL(n)-classification) over every field. Not compared (proved in Feec, outside the statement):
+    the failure of the Poincare lemma for H_r Lambda^k in positive characteristic
+    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact), the homotopy formula over
     every commutative ring, the tensor-product characterization of Q_b^- Lambda^k as a span of
     products of one-dimensional factors (Feec.Koszul.cubeFormMinus_eq_span), the serendipity
     spaces S_r Lambda^k, the admissible P/P^- sequences of the periodic table
@@ -279,7 +292,10 @@ fidelity:
     on I^n (the identification Alt^k R^m (x) Alt^l R^n -> Alt^(k+l) R^(m+n)), roughly 150 more
     lines of statement for the same space.
     (6) AFW2006 §3.4 is stated over every field K of characteristic 0 (FEEC.affineInvariantForms;
-    the source works over R). The conclusions of invariance (the summands of (3.10), (3.18),
+    the source works over R). The hypothesis is necessary for the classification of the
+    GL(n)-invariant subspaces of H_r Lambda^k (FEEC.charZero_iff_classification: it holds in every
+    dimension iff K has characteristic 0; the counterexample is over every field of
+    characteristic p > 0, in dimension 2). The conclusions of invariance (the summands of (3.10), (3.18),
     Theorem 3.5) are stated for the pullback of every linear (resp. affine) map, singular ones
     included; the hypotheses of the classifications only for the invertible ones: GL(n, K) for
     the subspaces of H_r Lambda^k (AFW's sentence concerns GL(n)), the invertible affine maps
@@ -320,7 +336,7 @@ review:
     (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
     mathematical review; the Challenge statement awaits the author's review (in particular the
     2026-10-31 restatement of FEEC.AffineInvariantForms over fields of characteristic 0 with
-    GL(n) hypotheses).
+    GL(n) hypotheses, and the 2026-11-01 statement FEEC.charZero_iff_classification).
 
 alignment:
   namespace: "FEEC"
@@ -373,5 +389,15 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Compared theorem; proved in Solution.lean from FEEC.affineInvariantForms_of_feec (Solution/Affine.lean)."
+    - source: "[AFW2006] §3.4 (the hypothesis: characteristic 0 is necessary for the irreducibility of the summands of (3.10))"
+      lean: "FEEC.charZero_iff_classification"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Compared theorem (added 2026-11-01, not yet reviewed by the author); proved in
+        Solution.lean from FEEC.charZero_iff_classification_of_feec (Solution/Affine.lean), from
+        Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_succ. The source
+        works over R and does not discuss other fields; this is a fidelity statement about the
+        generalization (1), (6).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

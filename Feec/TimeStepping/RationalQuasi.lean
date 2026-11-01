@@ -1,6 +1,6 @@
 module
 
-public import Feec.TimeStepping.RationalBanach
+public import Feec.TimeStepping.RationalHilleYosida
 public import Feec.Semigroup.Rescale
 public import Feec.Semigroup.Spectral
 
@@ -30,7 +30,9 @@ With `B = A - ω` and `c = ωτ`, `τA = τB + c`, so `r(τA) = r_c(τB)` for th
 derivative being bounded there, `exists_norm_div_le_of_isClosed`) and the remainder
 `‖ρ(τA)‖ ≤ sup_{re z ≤ c₀} |ρ(z)|`; these are the stability and remainder hypotheses of
 Brenner–Thomée on Banach spaces (`RationalScheme.norm_resolventStep_pow_sub_S_le`), and
-`‖r(τA)ᵏ‖ ≤ e^{K₁ ωτ k}`.
+`‖r(τA)ᵏ‖ ≤ e^{K₁ ωτ k}`; the invertibility of `Q(X)` holds for every semigroup with
+`‖S(t)‖ ≤ e^{ωt}` and `r` without poles in `re z ≤ ωτ`, by the Hille–Yosida estimates
+(`RationalScheme.isUnit_resolventEval_den_of_generator`).
 
 ## References
 
@@ -83,27 +85,6 @@ variable (r : RationalScheme)
 theorem eval_eq (z : ℂ) :
     r.eval z = (r.num.map (algebraMap ℝ ℂ)).eval z / (r.den.map (algebraMap ℝ ℂ)).eval z := by
   rw [eval, eval_map_algebraMap, eval_map_algebraMap]
-
-/-- **A pole-free strip**: `r` has no pole on `re z ≤ c₀` for some `0 < c₀ ≤ 1/2` (the poles are
-finitely many, in `re z > 0`). -/
-theorem exists_den_ne_zero :
-    ∃ c₀ : ℝ, 0 < c₀ ∧ c₀ ≤ 1 / 2 ∧ ∀ z : ℂ, z.re ≤ c₀ → aeval z r.den ≠ 0 := by
-  set q := r.den.map (algebraMap ℝ ℂ)
-  have hq0 : q ≠ 0 := (Polynomial.map_ne_zero_iff (algebraMap ℝ ℂ).injective).2 r.den_ne_zero
-  set s := q.roots.toFinset
-  have hpos : ∀ ζ ∈ s, 0 < ζ.re := fun ζ hζ => by
-    by_contra h
-    rw [Multiset.mem_toFinset, mem_roots hq0, IsRoot, eval_map_algebraMap] at hζ
-    exact r.aeval_den_ne_zero ζ (not_lt.1 h) hζ
-  obtain ⟨c, hc, hcs⟩ : ∃ c : ℝ, 0 < c ∧ ∀ ζ ∈ s, c < ζ.re := by
-    rcases s.eq_empty_or_nonempty with hs | hs
-    · exact ⟨1, one_pos, fun ζ hζ => by simp [hs] at hζ⟩
-    obtain ⟨ζ₀, h0, hmin⟩ := s.exists_min_image (fun ζ => ζ.re) hs
-    exact ⟨ζ₀.re / 2, by linarith [hpos ζ₀ h0], fun ζ hζ => by linarith [hmin ζ hζ, hpos ζ₀ h0]⟩
-  refine ⟨min c (1 / 2), lt_min hc (by norm_num), min_le_right _ _, fun z hz h => ?_⟩
-  have hzs : z ∈ s := by
-    rw [Multiset.mem_toFinset, mem_roots hq0, IsRoot, eval_map_algebraMap]; exact h
-  linarith [hcs z hzs, min_le_left c (1 / 2)]
 
 /-- **`r` is Lipschitz to the right of the imaginary axis**: if `r` has no pole on `re z ≤ c₀`,
 then `|r(iy + c)| ≤ |r(iy)| + K c` for `0 ≤ c ≤ c₀` (the derivative
@@ -238,15 +219,11 @@ private theorem mul_inverse_mul_of_commute' {M : Type*} [MonoidWithZero M] {U n 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
 /-- **`r(τA) = r_c(τB)` in the resolvent form**: if `(1 - cY) U = 1`, `U` invertible and
-commuting with `Y`, then `r` at `Y U` is the shifted scheme `r_c` at `Y`, and `Q_r(Y U)` is
-invertible when `Q_{r_c}(Y)` is. -/
+commuting with `Y`, then `r` at `Y U` is the shifted scheme `r_c` at `Y`. -/
 theorem resolventStep_mul_eq_shift {Y U : E →L[𝕜] E} {c : ℝ}
     (hc : ∀ z : ℂ, z.re ≤ c → aeval z r.den ≠ 0) (hU : (1 - (c : 𝕜) • Y) * U = 1)
     (hUu : IsUnit U) (hYU : Commute Y U) :
-    r.resolventStep (Y * U) = (r.shift c hc).resolventStep Y ∧
-      (IsUnit (resolventEval (r.shift c hc).den.natDegree ((r.shift c hc).den.map
-          (algebraMap ℝ 𝕜)) Y) →
-        IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) (Y * U))) := by
+    r.resolventStep (Y * U) = (r.shift c hc).resolventStep Y := by
   have hmap : ∀ f : ℝ[X], (f.comp (X + C c)).map (algebraMap ℝ 𝕜) =
       (f.map (algebraMap ℝ 𝕜)).comp (X + C (c : 𝕜)) := fun f => by
     rw [Polynomial.map_comp]; simp
@@ -261,14 +238,9 @@ theorem resolventStep_mul_eq_shift {Y U : E →L[𝕜] E} {c : ℝ}
       rw [aeval_X] at h
       rw [← h]
       exact (commute_aeval (hYU.pow_right _) _).symm
-  refine ⟨?_, fun h => ?_⟩
-  · rw [resolventStep, resolventStep, hN, hn, hd]
-    simp only [shift, hmap]
-    exact mul_inverse_mul_of_commute' (hUu.pow _) (hcomm _) (hcomm _)
-  · rw [hN] at h
-    rw [hd]
-    simp only [shift, hmap] at h
-    exact (hUu.pow _).mul h
+  rw [resolventStep, resolventStep, hN, hn, hd]
+  simp only [shift, hmap]
+  exact mul_inverse_mul_of_commute' (hUu.pow _) (hcomm _) (hcomm _)
 
 /-! ### Quasi-contractive semigroups on Hilbert spaces -/
 
@@ -352,7 +324,7 @@ theorem norm_step_pow_sub_le_of_shift (hr : r.IsAStable) {p : ℕ}
   have hstepB : ∀ s : RationalScheme, s.resolventStep Y = s.step B τ := fun s =>
     (s.step_eq_resolventStep B τ).symm
   have hP : ‖r.resolventStep X‖ ≤ Real.exp (K₁ * c) := by
-    rw [hXeq, hsr.1, hstepB]
+    rw [hXeq, hsr, hstepB]
     refine ((r.shift c hcF).norm_step_le hB hτ).2.trans ((ciSup_le (c := 1 + K₁ * c)
       fun y => ?_).trans
       (by linarith [Real.add_one_le_exp (K₁ * c)]))
@@ -366,12 +338,15 @@ theorem norm_step_pow_sub_le_of_shift (hr : r.IsAStable) {p : ℕ}
     calc (k : ℝ) * (K₁ * c) = K₁ * ω * (k * τ) := by simp only [c]; ring
       _ ≤ K₁ * ω * (n * τ) := by gcongr
   have hρ' : ‖(r.remainder p).resolventStep X‖ ≤ Kρ := by
-    rw [hXeq, hsρ.1, hstepB]
+    rw [hXeq, hsρ, hstepB]
     refine (((r.remainder p).shift c hcFρ).norm_step_le hB hτ).2.trans (ciSup_le fun y => ?_)
     rw [eval_shift]
     exact hρ _ (by simpa using hωτ)
-  have hQ : IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) X) := by
-    rw [hXeq]; exact hsr.2 ((r.shift c hcF).isUnit_resolventEval_den hB hτ)
+  have hQ : IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) X) :=
+    r.isUnit_resolventEval_den_of_generator G (M := 1)
+      (fun t ht => (one_mul (Real.exp (ω * t))).symm ▸ hB.norm_S_le_of_generator_eq hG ht) hτ
+      (by linarith) hcF fun x y hxy => by
+        rw [hXR]; exact hRA.inv_smul_apply_sub hτ.ne' (hG ▸ hxy)
   have hS : ∀ t ∈ Icc 0 (n * τ), ‖G.S t‖ ≤ Real.exp (ω * (n * τ)) := fun t ht =>
     (hB.norm_S_le_of_generator_eq hG ht.1).trans
       (Real.exp_le_exp.2 (mul_le_mul_of_nonneg_left ht.2 hω))

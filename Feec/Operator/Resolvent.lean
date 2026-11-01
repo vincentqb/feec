@@ -6,7 +6,7 @@ public import Mathlib.Analysis.InnerProductSpace.Adjoint
 /-!
 # Resolvents of unbounded operators
 
-For a linear operator `A : E →ₗ.[𝕜] E` on a Hilbert space over `𝕜 = ℝ` or `ℂ` and `z : 𝕜`:
+For a linear operator `A : E →ₗ.[𝕜] E` on a normed space over `𝕜 = ℝ` or `ℂ` and `z : 𝕜`:
 
 * `IsResolvent A z R`: the bounded operator `R` is a two-sided inverse of `z - A : D(A) → E`.
   It is unique (`IsResolvent.unique`), and `resolvent A z` is it when it exists
@@ -15,11 +15,11 @@ For a linear operator `A : E →ₗ.[𝕜] E` on a Hilbert space over `𝕜 = �
   (`A R y = z R y - y`), `IsResolvent.apply_domain` (`R A x = z R x - x`), the **resolvent
   identity** `IsResolvent.sub_eq` (`R(z) - R(w) = (w - z) R(z) R(w)`) and
   `IsResolvent.commute`.
-* Lower bounds: `IsDissipative.re_mul_norm_le_norm_shiftOp` (`re z ‖x‖ ≤ ‖(z - A) x‖`),
-  `re_mul_norm_le_norm_smul_sub` (`re z ‖x‖ ≤ ‖z x - A x‖` when
+* `IsResolvent.norm_apply_le` (`‖R‖ ≤ 1/c` from the lower bound `c ‖x‖ ≤ ‖z x - A x‖`).
+* Lower bounds, on inner product spaces: `IsDissipative.re_mul_norm_le_norm_shiftOp`
+  (`re z ‖x‖ ≤ ‖(z - A) x‖`), `re_mul_norm_le_norm_smul_sub` (`re z ‖x‖ ≤ ‖z x - A x‖` when
   `re ⟪A x, x⟫ ≤ 0`), `abs_re_mul_norm_le_norm_smul_sub` (`|re z| ‖x‖ ≤ ‖z x - A x‖` when
-  `re ⟪A x, x⟫ = 0`), and `IsResolvent.norm_apply_le` (`‖R‖ ≤ 1/c` from
-  `c ‖x‖ ≤ ‖z x - A x‖`).
+  `re ⟪A x, x⟫ = 0`).
 * **Skew-adjoint operators** (`A.IsSkewAdjoint`, i.e. `A† = -A`): for `re z ≠ 0`, `z - A` is
   bijective (`IsSkewSymmetric.injective_shiftOp`, needing only skew-symmetry, and
   `surjective_shiftOp`), so `resolvent A z` is a resolvent (`isResolvent_resolvent`) with
@@ -44,11 +44,11 @@ open LinearPMap Filter Topology
 
 namespace Feec.Operator
 
-variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
 /-! ### `z - A` and the resolvent predicate -/
+
+section Normed
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
 /-- `z - A : D(A) → E`. -/
 def shiftOp (A : E →ₗ.[𝕜] E) (z : 𝕜) : A.domain →ₗ[𝕜] E := z • A.domain.subtype - A.toFun
@@ -177,7 +177,39 @@ theorem norm_le (hR : IsResolvent A z R) {c : ℝ} (hc : 0 < c)
     (hb : ∀ x : A.domain, c * ‖(x : E)‖ ≤ ‖z • (x : E) - A x‖) : ‖R‖ ≤ c⁻¹ :=
   R.opNorm_le_bound (inv_nonneg.2 hc.le) (hR.norm_apply_le hc hb)
 
+/-- **`(1 - τA)⁻¹ = τ⁻¹ (τ⁻¹ - A)⁻¹`**: an operator `R'` with `R' (x - τ A x) = x` on `D(A)` is
+`τ⁻¹ R`, for the resolvent `R` at `τ⁻¹`. -/
+theorem eq_inv_smul_of_apply_sub {τ : ℝ} (hR : IsResolvent A (τ : 𝕜)⁻¹ R) (hτ : τ ≠ 0)
+    {R' : E →L[𝕜] E} (hR' : ∀ x y, (x, y) ∈ A.graph → R' (x - (τ : 𝕜) • y) = x) :
+    R' = (τ : 𝕜)⁻¹ • R := by
+  have hτ' : (τ : 𝕜) ≠ 0 := by exact_mod_cast hτ
+  ext y
+  set x := hR.toDomain y
+  have h := hR' ((τ : 𝕜)⁻¹ • (x : E)) (A ((τ : 𝕜)⁻¹ • x)) (A.mem_graph ((τ : 𝕜)⁻¹ • x))
+  have e : (τ : 𝕜)⁻¹ • (x : E) - (τ : 𝕜) • A ((τ : 𝕜)⁻¹ • x) = y := by
+    rw [LinearPMap.map_smul, smul_smul, mul_inv_cancel₀ hτ', one_smul]
+    exact hR.sub_apply_toDomain y
+  rw [e] at h
+  rw [h, _root_.smul_apply]
+  rfl
+
+/-- `τ⁻¹ R (x - τ A x) = x` on `D(A)`, for the resolvent `R` at `τ⁻¹`. -/
+theorem inv_smul_apply_sub {τ : ℝ} (hR : IsResolvent A (τ : 𝕜)⁻¹ R) (hτ : τ ≠ 0) {x y : E}
+    (h : (x, y) ∈ A.graph) : ((τ : 𝕜)⁻¹ • R) (x - (τ : 𝕜) • y) = x := by
+  have hτ' : (τ : 𝕜) ≠ 0 := by exact_mod_cast hτ
+  obtain ⟨x', rfl, rfl⟩ := (A.mem_graph_iff).1 h
+  rw [_root_.smul_apply, ← _root_.map_smul, smul_sub, smul_smul, inv_mul_cancel₀ hτ', one_smul]
+  exact hR.apply_sub x'
+
 end IsResolvent
+
+end Normed
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+
+local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
+
+variable {A : E →ₗ.[𝕜] E} {z w : 𝕜} {R S : E →L[𝕜] E}
 
 /-! ### Lower bounds -/
 

@@ -13,12 +13,11 @@ operator `r(τA)` is `P(R) Q(R)⁻¹` (`RationalScheme.resolventStep`; `P(s) = s
 `Feec.TimeStepping.RationalScheme.step` takes on Hilbert spaces
 (`RationalScheme.step_eq_resolventStep`). On a Banach space the stability of `r(τA)` is not
 automatic (von Neumann's inequality fails off Hilbert spaces) and is a hypothesis, as in
-[BrennerThomee1979]. So are the invertibility of `Q(R)` and the boundedness of the remainder
-`ρ(τA)`, `ρ = (r - Tₚ)/z^{p+1}`, although for A-stable `r` both follow from resolvent estimates
-alone: `Q(R)` is a product of factors `R (τA - ζ)` over the poles `ζ` of `r`, and the partial
-fractions of `ρ` bound `‖ρ(τA)‖` by the Hille–Yosida bounds
-`‖(λ - A)^{-m}‖ ≤ M/(re λ - ω)^m` at `λ = ζ/τ`. These estimates are not formalized here. Under
-the three hypotheses, **Brenner–Thomée's error bound** holds:
+[BrennerThomee1979]. Here so are the invertibility of `Q(R)` and the boundedness of the remainder
+`ρ(τA)`, `ρ = (r - Tₚ)/z^{p+1}`; both follow from the Hille–Yosida estimates alone, for every
+rational scheme (`Feec.TimeStepping.RationalHilleYosida`: `Q(R)` is a product of factors
+`R (τA - ζ)` over the poles `ζ` of `r`, inverted by the resolvents at `ζ/τ`). Under the three
+hypotheses, **Brenner–Thomée's error bound** holds:
 
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`
 
@@ -369,12 +368,9 @@ theorem norm_step_pow_sub_S_le {V : Type*} [NormedAddCommGroup V] [InnerProductS
   have hX : ∀ s : RationalScheme, s.step G.generator τ = s.resolventStep ((τ : 𝕜)⁻¹ • R) :=
     fun s => by rw [s.step_eq_resolventStep, hR.resolvent_eq]
   rw [hX] at hst hρ ⊢
-  refine r.norm_resolventStep_pow_sub_S_le G hp hτ.le (fun x y hxy => ?_) (fun a b hab => ?_) hQ
-    hst hS hρ hu
-  · obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 hxy
-    rw [_root_.smul_apply, ← _root_.map_smul, smul_sub, smul_smul, inv_mul_cancel₀ hτ0, one_smul]
-    exact hR.apply_sub ⟨x, hx⟩
-  · exact hR.injective (smul_right_injective V (inv_ne_zero hτ0) hab)
+  exact r.norm_resolventStep_pow_sub_S_le G hp hτ.le
+    (fun x y hxy => hR.inv_smul_apply_sub hτ.ne' hxy)
+    (fun a b hab => hR.injective (smul_right_injective V (inv_ne_zero hτ0) hab)) hQ hst hS hρ hu
 
 end Semigroup
 

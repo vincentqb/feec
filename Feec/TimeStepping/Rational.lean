@@ -389,6 +389,27 @@ theorem bddAbove : BddAbove (Set.range fun y : ℝ => ‖r.eval (y * Complex.I)�
     (by simpa only [natDegree_map] using r.natDegree_num_le)
     (fun z hz => by rw [eval_map_algebraMap]; exact r.aeval_den_ne_zero z hz)
 
+/-- **A pole-free strip**: `r` has no pole on `re z ≤ c₀` for some `0 < c₀ ≤ 1/2` (the poles are
+finitely many, in `re z > 0`). -/
+theorem exists_den_ne_zero :
+    ∃ c₀ : ℝ, 0 < c₀ ∧ c₀ ≤ 1 / 2 ∧ ∀ z : ℂ, z.re ≤ c₀ → aeval z r.den ≠ 0 := by
+  set q := r.den.map (algebraMap ℝ ℂ)
+  have hq0 : q ≠ 0 := (Polynomial.map_ne_zero_iff (algebraMap ℝ ℂ).injective).2 r.den_ne_zero
+  set s := q.roots.toFinset
+  have hpos : ∀ ζ ∈ s, 0 < ζ.re := fun ζ hζ => by
+    by_contra h
+    rw [Multiset.mem_toFinset, mem_roots hq0, IsRoot, eval_map_algebraMap] at hζ
+    exact r.aeval_den_ne_zero ζ (not_lt.1 h) hζ
+  obtain ⟨c, hc, hcs⟩ : ∃ c : ℝ, 0 < c ∧ ∀ ζ ∈ s, c < ζ.re := by
+    rcases s.eq_empty_or_nonempty with hs | hs
+    · exact ⟨1, one_pos, fun ζ hζ => by simp [hs] at hζ⟩
+    obtain ⟨ζ₀, h0, hmin⟩ := s.exists_min_image (fun ζ => ζ.re) hs
+    exact ⟨ζ₀.re / 2, by linarith [hpos ζ₀ h0], fun ζ hζ => by linarith [hmin ζ hζ, hpos ζ₀ h0]⟩
+  refine ⟨min c (1 / 2), lt_min hc (by norm_num), min_le_right _ _, fun z hz h => ?_⟩
+  have hzs : z ∈ s := by
+    rw [Multiset.mem_toFinset, mem_roots hq0, IsRoot, eval_map_algebraMap]; exact h
+  linarith [hcs z hzs, min_le_left c (1 / 2)]
+
 theorem norm_eval_le_supNorm (y : ℝ) : ‖r.eval (y * Complex.I)‖ ≤ r.supNorm :=
   le_ciSup r.bddAbove y
 

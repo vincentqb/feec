@@ -51,7 +51,17 @@ project:
     R(x - tau A x) = x on D(A) and Q(R) invertible, the stability hypotheses
     ||r(tau A)^k|| <= M_s (k <= n) and ||rho(tau A)|| <= K_0 (rho the remainder of r) and
     ||S(t)|| <= M on [0, n tau] give ||r(tau A)^n x - S(n tau) x|| <= M_s (K_0 + M/(m+1)!) M
-    n tau tau^m ||A^(m+1) x||. So A-stable schemes are
+    n tau tau^m ||A^(m+1) x||; Hille-Yosida on Banach spaces: if moreover
+    ||S(t)|| <= M e^(omega t) for t >= 0, then on complex spaces every z with re z > omega is in
+    the resolvent set of A, with ||(z - A)^(-m)|| <= M/(re z - omega)^m; backward Euler
+    r(z) = 1/(1 - z), for which r(tau A) = R = (1 - tau A)^(-1), is stable,
+    ||R^k|| <= M/(1 - omega tau)^k, and ||R^n x - S(n tau) x|| <= (M/(1 - omega tau)^n)
+    (M/(1 - omega tau) + M e^(omega n tau)/2) M e^(omega n tau) n tau tau ||A^2 x|| for
+    omega >= 0, omega tau < 1; and for r as in (10) there are c > 0 (depending on r and m) and,
+    for every M, K_0 (depending on r, m and M) such that for omega >= 0, omega tau <= c and
+    R(x - tau A x) = x on D(A): Q(R) is invertible, ||rho(tau A)|| <= K_0, and
+    ||r(tau A)^k|| <= M_s (k <= n) gives ||r(tau A)^n x - S(n tau) x|| <= M_s (K_0 +
+    M e^(omega n tau)/(m+1)!) M e^(omega n tau) n tau tau^m ||A^(m+1) x||. So A-stable schemes are
     contractions, with all their powers, for every step size and every m-dissipative A, and
     converge at the order of the scheme for smooth data. The
     statements use Mathlib's polynomials (Polynomial.aeval), bounded operators, partially defined
@@ -60,7 +70,8 @@ project:
     library Feec of this repository (Feec.ForMathlib.InnerProductSpace.VonNeumann,
     Feec.TimeStepping.Rational, Feec.TimeStepping.Theta, Feec.TimeStepping.RationalSemigroup,
     Feec.Semigroup.LumerPhillips, Feec.TimeStepping.RationalBanach, Feec.TimeStepping.RationalQuasi,
-    Feec.Semigroup.Rescale).
+    Feec.Semigroup.Rescale, Feec.Semigroup.HilleYosida, Feec.Semigroup.Complexification,
+    Feec.ForMathlib.Analysis.NormedComplexification, Feec.TimeStepping.RationalHilleYosida).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -134,8 +145,10 @@ sources:
       uniform in A, the space, tau and n; for quasi-contractive semigroups on Hilbert spaces
       (A - omega m-dissipative), with the growth e^(kappa omega n tau) and omega tau <= c_0; and
       on Banach spaces with the stability of r(tau A)^n and the boundedness of the remainder
-      rho(tau A) as hypotheses (the remainder bound follows from Hille-Yosida resolvent
-      estimates, not formalized). Not compared: the Hille-Phillips functional calculus, which on
+      rho(tau A) as hypotheses, and, for semigroups with ||S(t)|| <= M e^(omega t) and
+      omega tau <= c, with the invertibility of Q(R) and the remainder bound derived from the
+      Hille-Yosida resolvent estimates (stability still a hypothesis), and for backward Euler
+      with no stability hypothesis. Not compared: the Hille-Phillips functional calculus, which on
       Banach spaces gives the stability ||r(tau A)^n|| <= C sqrt(n)
       for A-acceptable r and bounded semigroups (the stability is a hypothesis here), and the
       estimates for less smooth data (x in the domain of a lower power of A, with a lower rate).
@@ -177,8 +190,9 @@ status:
     VonNeumann.inequality_dissipative_real, VonNeumann.inequality_mdissipative_real,
     VonNeumann.cayley_contraction, VonNeumann.error_bound, VonNeumann.error_bound_real,
     VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
-    VonNeumann.error_bound_quasi_real and VonNeumann.error_bound_banach_real
-    (Challenge.lean). Not compared
+    VonNeumann.error_bound_quasi_real, VonNeumann.resolvent_estimates_banach,
+    VonNeumann.error_bound_backward_euler_banach, VonNeumann.error_bound_banach_real_hille_yosida
+    and VonNeumann.error_bound_banach_real (Challenge.lean). Not compared
     (proved in Feec, outside the statement): that P(S) Q(S)^(-1) is p(tau A) q(tau A)^(-1) for
     bounded A (Feec.TimeStepping.resolventEval_eq_aeval,
     Feec.TimeStepping.RationalScheme.step_toPMap), symmetric schemes as isometries for skew A,
@@ -245,7 +259,18 @@ automation:
     semigroup and the expansion r(tau A) x = T_m(tau A) x + (tau A)^(m+1) rho(tau A) x on
     D(A^(m+1)) in the resolvent form; for A - omega m-dissipative, r(tau A) = r_c(tau(A - omega))
     for the shifted scheme r_c(z) = r(z + c), c = omega tau, so von Neumann's inequality gives
-    ||r(tau A)|| <= sup_y |r(iy + c)| <= 1 + K_1 c and bounds the remainder.
+    ||r(tau A)|| <= sup_y |r(iy + c)| <= 1 + K_1 c and bounds the remainder. On Banach spaces
+    (Feec.Semigroup.HilleYosida) the resolvent of the generator at z, re z > omega, is the
+    Laplace transform, and ||(z - A)^(-m)|| <= M/(re z - omega)^m comes from the weighted bound
+    ||S(s) int_0^inf e^(-zt) S(t) w dt|| <= (K/(re z - omega)) e^(omega s) whenever
+    ||S(s) w|| <= K e^(omega s), iterated; complex z by the complex rescaling e^(-zt) S(t). Q(R)
+    factors over the roots zeta of q into (1 - zeta) R - 1 with the inverse
+    -1 - (1 - zeta)(zeta - tau A)^(-1), bounded by 1 + |1 - zeta| M/(re zeta - omega tau);
+    for real spaces on the complexification with the Taylor norm (an operator is invertible
+    when its complexification is, Feec.ForMathlib.Analysis.NormedComplexification). The
+    remainder bound is ||P_rho(R)|| ||Q(R)^(-1)|| with ||R|| <= M/(1 - omega tau)
+    (Feec.TimeStepping.RationalScheme.exists_norm_remainder_resolventStep_le).
+
 
 fidelity:
   divergences: >-
@@ -294,9 +319,27 @@ fidelity:
     fails. For A-stable r the last two follow from resolvent estimates alone (Q(R) is a product
     of factors R (tau A - zeta) over the poles zeta of r, and the partial fractions of rho bound
     ||rho(tau A)|| through the Hille-Yosida bounds ||(lambda - A)^(-m)|| <= M/(re lambda -
-    omega)^m), which are not formalized; stability is a genuine hypothesis, and Brenner-Thomee's
+    omega)^m), formalized below; stability is a genuine hypothesis, and Brenner-Thomee's
     sufficient condition ||r(tau A)^n|| <= C sqrt(n) for bounded semigroups (through the
-    Hille-Phillips functional calculus) is not formalized. Nonsmooth data are not
+    Hille-Phillips functional calculus) is not formalized. Hille-Yosida
+    (VonNeumann.resolvent_estimates_banach, complex spaces;
+    VonNeumann.error_bound_backward_euler_banach and
+    VonNeumann.error_bound_banach_real_hille_yosida, real r, real or complex spaces): the
+    semigroup is given as above with the growth bound ||S(t)|| <= M e^(omega t) for all t >= 0,
+    omega >= 0 in the error bounds (every strongly continuous semigroup has one,
+    Feec.C0Semigroup.exists_norm_S_le_exp, not compared); R is any R with R(x - tau A x) = x on
+    D(A) (it is then the resolvent and injective, Feec.TimeStepping.eq_inv_smul_resolvent_of_generator).
+    In VonNeumann.error_bound_banach_real_hille_yosida the invertibility of Q(R) and
+    ||rho(tau A)|| <= K_0 are conclusions, for omega tau <= c, with c and K_0 existential (per
+    universe, as K above; K_0 depends on M). It does not supersede
+    VonNeumann.error_bound_banach_real, which holds for every tau >= 0 with Q(R) invertible,
+    any K_0 >= ||rho(tau A)|| (e.g. its exact value) and ||S(t)|| <= M only on [0, n tau]; both
+    are compared. The explicit bounds, ||Q(R)^(-1)|| <= |q_N|^(-1) prod_zeta (1 + |1 - zeta|
+    M/(re zeta - omega tau)) over the roots zeta of q, are in Feec
+    (Feec.TimeStepping.isUnit_resolventEval_of_generator,
+    Feec.TimeStepping.RationalScheme.norm_resolventStep_le_of_generator), not compared. For
+    backward Euler the stability follows from the Hille-Yosida estimates, so its error bound has
+    no stability hypothesis. Nonsmooth data are not
     covered. Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
     Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
     hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.
@@ -308,8 +351,10 @@ review:
   notes: >-
     The author reviewed the Challenge statements except VonNeumann.IsStrongSolution,
     VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
-    VonNeumann.error_bound_quasi_real and VonNeumann.error_bound_banach_real, added after that
-    review and not yet reviewed by the author. Every merge of the library was gated by a full
+    VonNeumann.error_bound_quasi_real, VonNeumann.error_bound_banach_real,
+    VonNeumann.resolvent_estimates_banach, VonNeumann.error_bound_backward_euler_banach and
+    VonNeumann.error_bound_banach_real_hille_yosida, added after that review and not yet
+    reviewed by the author. Every merge of the library was gated by a full
     build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
     independent AI review. No external mathematical review.
 
@@ -376,6 +421,21 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Real A-stable r of order m, A - omega m-dissipative, growth e^(kappa omega n tau)."
+    - source: "[Pazy1983], §1.5"
+      lean: "VonNeumann.resolvent_estimates_banach"
+      module: "Challenge"
+      status: "proved"
+      note: "Hille-Yosida estimates at complex z, re z > omega, complex Banach spaces."
+    - source: "[BrennerThomee1979]; [Pazy1983], §1.5"
+      lean: "VonNeumann.error_bound_backward_euler_banach"
+      module: "Challenge"
+      status: "proved"
+      note: "Backward Euler on Banach spaces: stability from Hille-Yosida, error bound with no stability hypothesis."
+    - source: "[BrennerThomee1979]; [Thomee2006], Ch. 9; [Pazy1983], §1.5"
+      lean: "VonNeumann.error_bound_banach_real_hille_yosida"
+      module: "Challenge"
+      status: "proved"
+      note: "Banach spaces, growth bound M e^(omega t), omega tau <= c; Q(R) invertible and remainder bound derived, stability assumed."
     - source: "[BrennerThomee1979]; [Thomee2006], Ch. 9"
       lean: "VonNeumann.error_bound_banach_real"
       module: "Challenge"

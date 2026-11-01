@@ -1,5 +1,6 @@
 module
 
+public import Feec.Algebra.PolynomialFormClassical
 public import Feec.FiniteElement.AffineInvariantForm
 public import Feec.FiniteElement.PolyElement
 
@@ -28,7 +29,20 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
   (§5.3, §6.3): `PolySeq.lowestOrder` (`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³`) and `PolySeq.lagrangeP2`
   (`P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³`) (`PolySeq.lowestOrder_eq_ofKinds`,
   `PolySeq.lagrangeP2_eq_ofKinds`).
-* **The classical elements in closed form**: in `ℝ³`, `dim P_rΛ⁰ = dim P_rΛ³ = (r+1)(r+2)(r+3)/6`
+* **The algebra over a field**: the shape spaces are polynomial forms over every commutative ring
+  `K` (`PolyKind.form`, `PolySeq.form`; over `ℝ` the form fields are their evaluations,
+  `PolySeq.space_eq_map_form`), and so are the test forms of the degrees of freedom
+  (`PolyKind.testForm`, `PolySeq.test_eq_map_testForm`). For every admissible sequence `S`,
+  `d (S.form K k) ⊆ S.form K (k + 1)` over every commutative ring (`PolySeq.extDeriv_mem_form`)
+  and, over every field of characteristic `0`, the complex is exact (`PolySeq.exists_extDeriv_eq`)
+  with the constants as closed `0`-forms (`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), its
+  dimensions are the numbers of degrees of freedom of a simplex,
+  `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13,
+  `PolySeq.finrank_form_eq_sum`), and its shape spaces are affinely invariant
+  (`PolySeq.isAffineInvariant_form`).
+* **The classical elements in closed form**, over every field `K` (of characteristic `0` for the
+  trimmed spaces; `Koszul.finrank_polyForm_three_zero`, …, `Koszul.finrank_polyFormMinus_two_one`
+  of `Feec.Algebra.PolynomialFormClassical`), and over `ℝ` for the form fields: in `ℝ³`, `dim P_rΛ⁰ = dim P_rΛ³ = (r+1)(r+2)(r+3)/6`
   (Lagrange, discontinuous `P_r`), `dim P_r⁻Λ¹ = r(r+2)(r+3)/2` (Nédélec first kind),
   `dim P_rΛ¹ = dim P_rΛ² = (r+1)(r+2)(r+3)/2` (Nédélec second kind, Brezzi–Douglas–Marini),
   `dim P_r⁻Λ² = r(r+1)(r+3)/2` (Raviart–Thomas–Nédélec): `finrank_polySpace_three_zero`, …,
@@ -248,43 +262,40 @@ theorem lagrangeP2_eq_ofKinds :
 
 end PolySeq
 
-/-! ### The shape spaces among the affinely invariant spaces -/
+
+/-! ### The shape spaces over a field
+
+The shape spaces `P_rΛᵏ`, `P_r⁻Λᵏ` are spaces of polynomial forms (`Koszul.PolyForm`) over any
+commutative ring `K` (`PolyKind.form`, `Feec.FiniteElement.PolyKind`), and the form fields
+`PolyKind.space` over `ℝ` are their evaluations (`PolyKind.space_eq_map_form`); likewise the test
+forms of the degrees of freedom (`PolyKind.testForm`, `PolyKind.test_eq_map_testForm`). The algebra of an admissible sequence holds
+over every field of characteristic `0`: `d` maps each space into the next one
+(`PolySeq.extDeriv_mem_form`, over every commutative ring), the complex is exact
+(`PolySeq.exists_extDeriv_eq`) with the constants as closed `0`-forms
+(`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), the dimension is the number of degrees of
+freedom of a simplex (`PolySeq.finrank_form_eq_sum`), and the shape spaces are affinely invariant
+(`PolySeq.isAffineInvariant_form`). -/
 
 namespace PolyKind
 
-/-- The polynomial forms of the family, `P_rΛᵏ` or `P_r⁻Λᵏ`, in `Koszul.PolyForm`. -/
-def form : PolyKind → ℕ → ℕ → Submodule ℝ (Koszul.PolyForm ℝ (Fin n))
-  | full, r, k => Koszul.polyForm ℝ (Fin n) r k
-  | trimmed, r, k => Koszul.polyFormMinus ℝ (Fin n) r k
-
-theorem space_eq_map_form (κ : PolyKind) (r k : ℕ) :
-    κ.space n r k = (κ.form r k).map (evalForm n) := by
-  cases κ <;> rfl
-
-/-- The degree `r'` of the `d`-part `dP_{r'+1}Λ^{k-1}` of the family: `r` for `P_rΛᵏ`, `r - 1`
-for `P_r⁻Λᵏ`. -/
-def dDeg : PolyKind → ℕ → ℕ
-  | full, r => r
-  | trimmed, r => r - 1
+variable {K : Type*} [Field K] [CharZero K]
 
 /-- **The shape spaces of the periodic table are spaces `X(r', r - 1, k, n)` of [AFW2006],
-Theorem 3.5** (`1 ≤ r`, `1 ≤ k`): `P_rΛᵏ = dP_{r+1}Λ^{k-1} + κP_{r-1}Λ^{k+1}` and
-`P_r⁻Λᵏ = dP_rΛ^{k-1} + κP_{r-1}Λ^{k+1}`. -/
+Theorem 3.5** (`1 ≤ r`, `1 ≤ k`), over every field of characteristic `0`:
+`P_rΛᵏ = dP_{r+1}Λ^{k-1} + κP_{r-1}Λ^{k+1}` and `P_r⁻Λᵏ = dP_rΛ^{k-1} + κP_{r-1}Λ^{k+1}`. -/
 theorem form_eq_sup (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
-    κ.form (n := n) r k =
-      (Koszul.polyForm ℝ (Fin n) (κ.dDeg r + 1) (k - 1)).map (Koszul.extDerivₗ ℝ (Fin n)) ⊔
-        (Koszul.polyForm ℝ (Fin n) (r - 1) (k + 1)).map (Koszul.koszulₗ ℝ (Fin n)) := by
+    κ.form K (n := n) r k =
+      (Koszul.polyForm K (Fin n) (κ.dDeg r + 1) (k - 1)).map (Koszul.extDerivₗ K (Fin n)) ⊔
+        (Koszul.polyForm K (Fin n) (r - 1) (k + 1)).map (Koszul.koszulₗ K (Fin n)) := by
   obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
   cases κ
   · exact (sup_eq_polyForm hk).symm
   · exact (sup_eq_polyFormMinus hk).symm
 
-theorem le_dDeg (κ : PolyKind) (r : ℕ) : r - 1 ≤ κ.dDeg r := by
-  cases κ <;> simp [dDeg]
-
-/-- **The shape spaces of the periodic table are affinely invariant** ([AFW2006], Theorem 3.5). -/
+/-- **The shape spaces of the periodic table are affinely invariant** ([AFW2006], Theorem 3.5),
+over every field of characteristic `0`. -/
 theorem isAffineInvariant_form (κ : PolyKind) {r k : ℕ} (hr : 1 ≤ r) (hk : 1 ≤ k) :
-    IsAffineInvariant (κ.form (n := n) r k) := by
+    IsAffineInvariant (κ.form K (n := n) r k) := by
   rw [κ.form_eq_sup hr hk]
   exact isAffineInvariant_sup hk (κ.le_dDeg r)
 
@@ -292,110 +303,138 @@ end PolyKind
 
 namespace PolySeq
 
+section CommRing
+
+variable (K : Type*) [CommRing K] (S : PolySeq)
+
+/-- The space `P_{r_k}Λᵏ(Kⁿ)` or `P_{r_k}⁻Λᵏ(Kⁿ)` of polynomial forms of the sequence in degree `k`,
+over `K`. -/
+abbrev form (k : ℕ) : Submodule K (Koszul.PolyForm K (Fin n)) := (S.kind k).form K (S.deg k) k
+
+/-- The test forms over `K` of the degree-`k` degrees of freedom on `m`-faces. -/
+abbrev testForm (k m : ℕ) : Submodule K (Koszul.PolyForm K (Fin m)) :=
+  (S.kind k).testForm K (S.deg k) k m
+
+variable {K}
+
+theorem space_eq_map_form (k : ℕ) : S.space n k = (S.form ℝ k).map (evalForm n) :=
+  PolyKind.space_eq_map_form _ _ _
+
+theorem test_eq_map_testForm (k m : ℕ) : S.test k m = (S.testForm ℝ k m).map (evalForm m) :=
+  PolyKind.test_eq_map_testForm _ _ _ _
+
+/-- **The polynomial complex of an admissible sequence**, over every commutative ring:
+`d (S.form K k) ⊆ S.form K (k + 1)`. [AFW2006], §5; [AFW2010], §5.2 -/
+theorem extDeriv_mem_form {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ S.form K k) :
+    Koszul.extDeriv ω ∈ S.form K (k + 1) :=
+  (S.kind k).extDeriv_mem_form (S.transition k) hω
+
+end CommRing
+
+variable {K : Type*} [Field K] [CharZero K] (S : PolySeq)
+
+/-- **The polynomial complex of an admissible sequence is exact**, over every field of
+characteristic `0`: a closed form of `S.form K (k + 1)` is `d η`, `η ∈ S.form K k`.
+[AFW2010], §5.1.4, (71), (72); [ArnoldLogg2014] -/
+theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ S.form K (k + 1))
+    (hd : Koszul.extDeriv ω = 0) : ∃ η ∈ S.form K k, Koszul.extDeriv η = ω :=
+  (S.kind k).exists_extDeriv_eq (S.one_le_deg k) (S.transition k) hω hd
+
+/-- **The closed `0`-forms of an admissible sequence are the constants**, over every field of
+characteristic `0`: the polynomial complex is a resolution of `K`. -/
+theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : Koszul.PolyForm K (Fin n)}
+    (hω : ω ∈ S.form K 0) (hd : Koszul.extDeriv ω = 0) : ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
+  (S.kind 0).mem_polyForm_zero_of_extDeriv_eq_zero (S.one_le_deg 0) hω hd
+
+/-- **`dim = #DOF`**: the dimension of the shape space in degree `k` is the number of degrees of
+freedom of a simplex, `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`, over every field of
+characteristic `0`. [AFW2006], Thms 4.9, 4.13 -/
+theorem finrank_form_eq_sum (k : ℕ) :
+    Module.finrank K (S.form K (n := n) k) =
+      ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) * Module.finrank K (S.testForm K k m) :=
+  (S.kind k).finrank_form_eq_sum (S.one_le_deg k) k
+
 /-- **The shape spaces of an admissible sequence are affinely invariant** ([AFW2006],
-Theorem 3.5) in every degree `k ≥ 1`: the spaces `P_rΛᵏ = X(r, r - 1)` and `P_r⁻Λᵏ = X(r - 1, r - 1)`
-(`PolyKind.form_eq_sup`), the first two of the three kinds of affinely invariant spaces of
-polynomial `k`-forms, which are all of them for `0 < k < n` ([AFW2006], Theorem 3.6,
-`IsAffineInvariant.eq_sup`). -/
-theorem isAffineInvariant_form (S : PolySeq) {k : ℕ} (hk : 1 ≤ k) :
-    IsAffineInvariant ((S.kind k).form (n := n) (S.deg k) k) :=
+Theorem 3.5) in every degree `k ≥ 1`, over every field of characteristic `0`: the spaces
+`P_rΛᵏ = X(r, r - 1)` and `P_r⁻Λᵏ = X(r - 1, r - 1)` (`PolyKind.form_eq_sup`), the first two of
+the three kinds of affinely invariant spaces of polynomial `k`-forms, which are all of them for
+`0 < k < n` ([AFW2006], Theorem 3.6, `IsAffineInvariant.eq_sup`). -/
+theorem isAffineInvariant_form {k : ℕ} (hk : 1 ≤ k) : IsAffineInvariant (S.form K (n := n) k) :=
   (S.kind k).isAffineInvariant_form (S.one_le_deg k) hk
 
 end PolySeq
 
 /-! ### The classical elements in `ℝ³` and `ℝ²`
 
-The local spaces of the periodic table ([ArnoldLogg2014]; [AFW2006], §3; [AFW2010], §5.1),
-specializing `finrank_polySpace`, `finrank_polyMinusSpace`. -/
-
-private theorem two_mul_choose_two (m : ℕ) : 2 * (m + 2).choose 2 = (m + 2) * (m + 1) := by
-  have := Nat.add_one_mul_choose_eq (m + 1) 1
-  simp only [Nat.choose_one_right] at this
-  linarith
-
-private theorem six_mul_choose_three (m : ℕ) :
-    6 * (m + 3).choose 3 = (m + 3) * (m + 2) * (m + 1) := by
-  have h := Nat.add_one_mul_choose_eq (m + 2) 2
-  have h2 := two_mul_choose_two m
-  nlinarith
+The form fields have the dimensions of the polynomial forms
+(`PolyKind.finrank_space_eq_finrank_form`), given in closed form in
+`Feec.Algebra.PolynomialFormClassical`. -/
 
 /-- **Lagrange `P_r` on tetrahedra**: `dim P_rΛ⁰(ℝ³) = (r+1)(r+2)(r+3)/6`. [AFW2006], §3 -/
 theorem finrank_polySpace_three_zero (r : ℕ) :
     6 * Module.finrank ℝ (polySpace 3 r 0) = (r + 1) * (r + 2) * (r + 3) := by
-  rw [finrank_polySpace, add_zero, Nat.choose_zero_right, mul_one,
-    Nat.choose_symm_of_eq_add (show r + 3 = r + 3 by rfl), six_mul_choose_three]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_three_zero (Fintype.card_fin 3) r
 
 /-- **Nédélec edge elements of the second kind** ([Nedelec1986]):
 `dim P_rΛ¹(ℝ³) = (r+1)(r+2)(r+3)/2`. -/
 theorem finrank_polySpace_three_one (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 3 r 1) = (r + 1) * (r + 2) * (r + 3) := by
-  rw [finrank_polySpace, Nat.choose_one_right,
-    Nat.choose_symm_of_eq_add (show r + 3 = r + 1 + 2 by omega), ← mul_assoc,
-    show r + 1 + 2 = r + 1 + 2 from rfl, two_mul_choose_two (r + 1)]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_three_one (Fintype.card_fin 3) r
 
 /-- **Brezzi–Douglas–Marini face elements** ([BrezziDouglasMarini1985], [Nedelec1986]):
 `dim P_rΛ²(ℝ³) = (r+1)(r+2)(r+3)/2`. -/
 theorem finrank_polySpace_three_two (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 3 r 2) = (r + 1) * (r + 2) * (r + 3) := by
-  rw [finrank_polySpace, Nat.choose_symm_of_eq_add (show r + 3 = r + 2 + 1 by omega),
-    Nat.choose_one_right, mul_left_comm, two_mul_choose_two r]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_three_two (Fintype.card_fin 3) r
 
 /-- **Discontinuous `P_r` on tetrahedra**: `dim P_rΛ³(ℝ³) = (r+1)(r+2)(r+3)/6`. [AFW2006], §3 -/
 theorem finrank_polySpace_three_three (r : ℕ) :
     6 * Module.finrank ℝ (polySpace 3 r 3) = (r + 1) * (r + 2) * (r + 3) := by
-  rw [finrank_polySpace, Nat.choose_self, one_mul, six_mul_choose_three]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_three_three (Fintype.card_fin 3) r
 
 /-- **Nédélec edge elements of the first kind** ([Nedelec1980]):
 `dim P_r⁻Λ¹(ℝ³) = r(r+2)(r+3)/2`. -/
 theorem finrank_polyMinusSpace_three_one {r : ℕ} (hr : 1 ≤ r) :
     2 * Module.finrank ℝ (polyMinusSpace 3 r 1) = r * (r + 2) * (r + 3) := by
-  rw [finrank_polyMinusSpace 3 hr, Nat.add_sub_cancel, Nat.choose_one_right,
-    Nat.choose_symm_of_eq_add (show r + 3 = r + 1 + 2 by omega), ← mul_assoc,
-    two_mul_choose_two (r + 1)]
-  ring
+  rw [← PolyKind.space_trimmed, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyFormMinus_three_one (Fintype.card_fin 3) hr
 
 /-- **Raviart–Thomas–Nédélec face elements** ([RaviartThomas1977], [Nedelec1980]):
 `dim P_r⁻Λ²(ℝ³) = r(r+1)(r+3)/2`. -/
 theorem finrank_polyMinusSpace_three_two {r : ℕ} (hr : 1 ≤ r) :
     2 * Module.finrank ℝ (polyMinusSpace 3 r 2) = r * (r + 1) * (r + 3) := by
-  obtain ⟨t, rfl⟩ : ∃ t, r = t + 1 := ⟨r - 1, by omega⟩
-  rw [finrank_polyMinusSpace 3 hr, Nat.choose_symm_of_eq_add (show t + 1 + 3 = t + 1 + 2 + 1 by
-    omega), Nat.choose_one_right, show t + 1 + 2 - 1 = t + 2 by omega, mul_left_comm,
-    two_mul_choose_two t]
-  ring
+  rw [← PolyKind.space_trimmed, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyFormMinus_three_two (Fintype.card_fin 3) hr
 
 /-- **Lagrange `P_r` on triangles**: `dim P_rΛ⁰(ℝ²) = (r+1)(r+2)/2`. [AFW2006], §3 -/
 theorem finrank_polySpace_two_zero (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 2 r 0) = (r + 1) * (r + 2) := by
-  rw [finrank_polySpace, add_zero, Nat.choose_zero_right, mul_one,
-    Nat.choose_symm_of_eq_add (show r + 2 = r + 2 by rfl), two_mul_choose_two]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_two_zero (Fintype.card_fin 2) r
 
 /-- **Brezzi–Douglas–Marini elements on triangles** ([BrezziDouglasMarini1985]):
 `dim P_rΛ¹(ℝ²) = (r+1)(r+2)`. -/
 theorem finrank_polySpace_two_one (r : ℕ) :
     Module.finrank ℝ (polySpace 2 r 1) = (r + 1) * (r + 2) := by
-  rw [finrank_polySpace, Nat.choose_symm_of_eq_add (show r + 2 = r + 1 + 1 by omega),
-    Nat.choose_one_right, Nat.choose_one_right]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_two_one (Fintype.card_fin 2) r
 
 /-- **Discontinuous `P_r` on triangles**: `dim P_rΛ²(ℝ²) = (r+1)(r+2)/2`. [AFW2006], §3 -/
 theorem finrank_polySpace_two_two (r : ℕ) :
     2 * Module.finrank ℝ (polySpace 2 r 2) = (r + 1) * (r + 2) := by
-  rw [finrank_polySpace, Nat.choose_self, one_mul, two_mul_choose_two]
-  ring
+  rw [← PolyKind.space_full, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyForm_two_two (Fintype.card_fin 2) r
 
 /-- **Raviart–Thomas elements on triangles** ([RaviartThomas1977]; the rotated Nédélec edge
 elements of the first kind): `dim P_r⁻Λ¹(ℝ²) = r(r+2)`. -/
 theorem finrank_polyMinusSpace_two_one {r : ℕ} (hr : 1 ≤ r) :
     Module.finrank ℝ (polyMinusSpace 2 r 1) = r * (r + 2) := by
-  rw [finrank_polyMinusSpace 2 hr, Nat.add_sub_cancel, Nat.choose_one_right,
-    Nat.choose_symm_of_eq_add (show r + 2 = r + 1 + 1 by omega), Nat.choose_one_right]
-  ring
+  rw [← PolyKind.space_trimmed, PolyKind.finrank_space_eq_finrank_form]
+  exact Koszul.finrank_polyFormMinus_two_one (Fintype.card_fin 2) hr
 
 namespace PolySeq
 

@@ -52,6 +52,11 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
   family of every admissible sequence, whose shape spaces are in every degree `k ≥ 1` affinely
   invariant spaces `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Thm 3.5), the classified
   affinely invariant spaces ([AFW2006], Thm 3.6);
+* **the polynomial complexes of the periodic table** (`Cube.FEM.feec_polyComplex`): the FEEC
+  verdict of the family of every admissible sequence, whose shape spaces are the evaluations of
+  polynomial forms that over every field of characteristic `0` form a resolution of the constants
+  with the dimensions of the degrees of freedom of a simplex ([AFW2006], §3, Thms 4.9, 4.13;
+  [ArnoldLogg2014]);
 * **magnetostatics** (`Cube.FEM.magnetostatic`, `Parallelepiped.magnetostatic`): the static FEEC
   verdict of `HΛ` and `H̊Λ` in degrees `1` and `2` in dimension `3`, the mixed formulations of
   `curl curl u - grad div u = f` with natural and essential boundary conditions
@@ -63,7 +68,9 @@ Freudenthal meshes of the cube `Q = (0, ½)ⁿ`, on parallelepipeds and on star-
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.2 (the Hodge Laplacian), Thms 3.4–3.9
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.4, Thms 3.5–3.6 (affinely invariant spaces of polynomial forms)
+  §3.4, Thms 3.5–3.6 (affinely invariant spaces of polynomial forms), Thms 4.9, 4.13 (the
+  dimension counts)
+* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Thms 4.6, 4.7, 4.14, Prop. 4.17
 * [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
@@ -301,17 +308,39 @@ theorem feec_sobolev (S : PolySeq) (p : ℕ) :
 
 /-- **The FEEC theorem on affinely invariant shape spaces**: for every admissible sequence `S`, the
 FEEC verdict of its family on the cube, whose shape spaces `S.space n k`, the polynomial forms
-`(S.kind k).form (S.deg k) k` (`P_rΛᵏ` or `P_r⁻Λᵏ`), are in every degree `k ≥ 1` affinely
+`S.form ℝ k` (`P_rΛᵏ` or `P_r⁻Λᵏ`), are in every degree `k ≥ 1` affinely
 invariant ([AFW2006], Theorem 3.5, `PolySeq.isAffineInvariant_form`): spaces
 `dP_{r'+1}Λ^{k-1} + κP_{r-1}Λ^{k+1}` (`PolyKind.form_eq_sup`), which with the spaces
 `dP_{r+1}Λ^{k-1}` are for `0 < k < n` all the nonzero finite-dimensional affinely invariant spaces of
 polynomial `k`-forms ([AFW2006], Theorem 3.6, `Feec.FiniteElement.IsAffineInvariant.eq_sup`). -/
 theorem feec_affineInvariant (S : PolySeq) :
     (polyFamily n S).Verdict ∧ ∀ k, 1 ≤ k →
-      S.space n k = ((S.kind k).form (S.deg k) k).map (evalForm n) ∧
-        IsAffineInvariant ((S.kind k).form (n := n) (S.deg k) k) :=
-  ⟨(polyFamily n S).feec, fun _ hk =>
-    ⟨PolyKind.space_eq_map_form _ _ _, S.isAffineInvariant_form hk⟩⟩
+      S.space n k = (S.form ℝ k).map (evalForm n) ∧ IsAffineInvariant (S.form ℝ (n := n) k) :=
+  ⟨(polyFamily n S).feec, fun k hk => ⟨S.space_eq_map_form k, S.isAffineInvariant_form hk⟩⟩
+
+/-- **The FEEC theorem on the polynomial complexes of the periodic table**: for every admissible
+sequence `S`, the FEEC verdict of its family on the cube, whose shape spaces `S.space n k` are the
+evaluations of the polynomial forms `S.form ℝ k`; over every field `K` of characteristic `0` the
+spaces `S.form K k` form a complex (`PolySeq.extDeriv_mem_form`), exact in every positive degree
+(`PolySeq.exists_extDeriv_eq`) with the constants as closed `0`-forms
+(`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), whose dimensions are the numbers of degrees of
+freedom of a simplex, `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`
+(`PolySeq.finrank_form_eq_sum`), and so are those of the shape spaces `S.space n k` over `ℝ`
+(`PolyKind.finrank_space_eq_sum`, the same count at `K = ℝ`). [AFW2006], §3, Thms 4.9, 4.13;
+[AFW2010], §5.1.4; [ArnoldLogg2014] -/
+theorem feec_polyComplex (K : Type*) [Field K] [CharZero K] (S : PolySeq) :
+    (polyFamily n S).Verdict ∧ (∀ k, S.space n k = (S.form ℝ k).map (evalForm n)) ∧
+      (∀ k, ∀ ω ∈ S.form K (n := n) k, Koszul.extDeriv ω ∈ S.form K (k + 1)) ∧
+      (∀ k, ∀ ω ∈ S.form K (n := n) (k + 1), Koszul.extDeriv ω = 0 →
+        ∃ η ∈ S.form K k, Koszul.extDeriv η = ω) ∧
+      (∀ ω ∈ S.form K (n := n) 0, Koszul.extDeriv ω = 0 → ω ∈ Koszul.polyForm K (Fin n) 0 0) ∧
+      (∀ k, Module.finrank K (S.form K (n := n) k) =
+        ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) * Module.finrank K (S.testForm K k m)) ∧
+      ∀ k, Module.finrank ℝ (S.space n k) =
+        ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) * Module.finrank ℝ (S.test k m) :=
+  ⟨(polyFamily n S).feec, S.space_eq_map_form, fun _ _ => S.extDeriv_mem_form,
+    fun _ _ => S.exists_extDeriv_eq, fun _ => S.mem_polyForm_zero_of_extDeriv_eq_zero,
+    S.finrank_form_eq_sum, fun k => (S.kind k).finrank_space_eq_sum (S.one_le_deg k) k⟩
 
 end Cube.FEM
 

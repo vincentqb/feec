@@ -2,6 +2,7 @@ module
 
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.LocalDof
+public import Feec.FiniteElement.PolyKind
 
 /-!
 # The global element families `P_rΛᵏ` and `P_r⁻Λᵏ` of any order
@@ -33,8 +34,10 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
 
 ## Main definitions
 
-* `Feec.FiniteElement.PolyKind`: `full` (`P_rΛᵏ`) or `trimmed` (`P_r⁻Λᵏ`); `PolyKind.space`,
-  `PolyKind.test`, `PolyKind.testDim`, `PolyKind.Transition`.
+* `PolyKind.space`, `PolyKind.test`: the form fields over `ℝ` of the families
+  `Feec.FiniteElement.PolyKind` (defined in `Feec.FiniteElement.PolyKind`), the evaluations of the polynomial
+  forms `PolyKind.form ℝ`, `PolyKind.testForm ℝ` (`PolyKind.space_eq_map_form`,
+  `PolyKind.test_eq_map_testForm`).
 * `Feec.FiniteElement.lexEnum g m`: the points of `g` in lexicographic order.
 * `Feec.FiniteElement.vertexMoment q η ω = ∫_{T̂_m} F_q^* ω ∧ η`, `degField k ω`, `degMoment`.
 * `Feec.FiniteElement.PolySeq`: admissible sequences; `PolySeq.DofIdx`, `PolySeq.dof`.
@@ -49,7 +52,8 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
 * `vertexMoment_extDeriv`: Stokes' formula for moments along any vertex family;
 * `PolySeq.isUnisolvent_dof`, `PolySeq.tangentialTraceEq_of_dof_eq`, `PolySeq.dof_congr`,
   `PolySeq.dof_comp_extDerivC1_mem_span`: the axioms of an element family;
-* `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`.
+* `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`, the
+  count `PolyKind.finrank_form_eq_sum` over `ℝ`.
 
 ## References
 
@@ -72,16 +76,7 @@ open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
 
-/-! ### The two polynomial families -/
-
-/-- The two families of polynomial differential forms of finite element exterior calculus: the
-full spaces `P_rΛᵏ` and the trimmed spaces `P_r⁻Λᵏ` ([AFW2006], §3). -/
-inductive PolyKind
-  /-- `P_rΛᵏ` -/
-  | full
-  /-- `P_r⁻Λᵏ` -/
-  | trimmed
-  deriving DecidableEq
+/-! ### The form fields of the two polynomial families -/
 
 namespace PolyKind
 
@@ -140,44 +135,41 @@ theorem test_eq_bot {κ : PolyKind} {r k m : ℕ} (h : ¬(k ≤ m ∧ m < r + k)
   · exact testSpace_eq_bot h
   · exact testSpaceMinus_eq_bot h
 
-/-- The dimension of the test space: `C(r+k, r) C(r-1, m-k)` for `P_rΛᵏ`, `C(r+k-1, r-1)
-C(r-1, m-k)` for `P_r⁻Λᵏ`, when `k ≤ m < r + k`, and `0` otherwise. -/
-def testDim (κ : PolyKind) (r k m : ℕ) : ℕ :=
-  (match κ with
-    | full => (r + k).choose r
-    | trimmed => (r + k - 1).choose (r - 1)) *
-  if k ≤ m ∧ m < r + k then (r - 1).choose (m - k) else 0
+/-- The form fields are the evaluations of the polynomial forms over `ℝ`. -/
+theorem space_eq_map_form (κ : PolyKind) (r k : ℕ) :
+    κ.space n r k = (κ.form ℝ r k).map (evalForm n) := by
+  cases κ <;> rfl
+
+theorem test_eq_map_testForm (κ : PolyKind) (r k m : ℕ) :
+    κ.test r k m = (κ.testForm ℝ r k m).map (evalForm m) := by
+  by_cases h : k ≤ m ∧ m < r + k
+  · cases κ
+    · rw [test_full, testSpace_eq h, testForm_full h]; rfl
+    · rw [test_trimmed, testSpaceMinus_eq h, testForm_trimmed h]; rfl
+  · rw [κ.testForm_eq_bot h, Submodule.map_bot]
+    exact test_eq_bot h
+
+/-- The form fields have the dimension of the polynomial forms (`evalForm` is injective). -/
+theorem finrank_map_evalForm (W : Submodule ℝ (Koszul.PolyForm ℝ (Fin n))) :
+    Module.finrank ℝ (W.map (evalForm n)) = Module.finrank ℝ W :=
+  Koszul.finrank_map_of_injOn _ _ fun _ _ hx => evalForm_injective (by rw [hx, map_zero])
+
+theorem finrank_space_eq_finrank_form (κ : PolyKind) (r k : ℕ) :
+    Module.finrank ℝ (κ.space n r k) = Module.finrank ℝ (κ.form ℝ (n := n) r k) := by
+  rw [κ.space_eq_map_form, finrank_map_evalForm]
 
 theorem finrank_test (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k m : ℕ) :
     Module.finrank ℝ (κ.test r k m) = κ.testDim r k m := by
-  cases κ
-  · exact finrank_testSpace r k m
-  · exact finrank_testSpaceMinus hr k m
+  rw [κ.test_eq_map_testForm, finrank_map_evalForm, κ.finrank_testForm hr]
 
 /-- `dim P_rΛᵏ(ℝⁿ)` (resp. `P_r⁻Λᵏ`) is the number of degrees of freedom:
-`Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13). -/
+`Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13; over every field
+of characteristic `0`, `PolyKind.finrank_form_eq_sum`). -/
 theorem finrank_space_eq_sum (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     Module.finrank ℝ (κ.space n r k) =
       ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) * Module.finrank ℝ (κ.test r k m) := by
-  by_cases hk : k ≤ n
-  · have hsum : ∀ (V : ℕ → ℕ), Fintype.card (Σ f : Face n, Fin (V f.dim)) =
-        ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) * V m := fun V => by
-      rw [Fintype.card_sigma]
-      simp only [Fintype.card_fin]
-      rw [sum_face_eq V]
-      simp only [smul_eq_mul]
-    cases κ
-    · have h := card_dofIndex (n := n) hr hk
-      rw [hsum fun m => Module.finrank ℝ (testSpace r k m)] at h
-      rw [space_full, finrank_polySpace, ← h]
-      rfl
-    · have h := card_dofIndexMinus (n := n) hr hk
-      rw [hsum fun m => Module.finrank ℝ (testSpaceMinus r k m)] at h
-      rw [space_trimmed, finrank_polyMinusSpace n hr, ← h]
-      rfl
-  · rw [space_eq_bot_of_lt (by omega), finrank_bot]
-    refine (sum_eq_zero fun m hm => ?_).symm
-    rw [test_eq_bot (by simp at hm; omega), finrank_bot, mul_zero]
+  simp only [κ.finrank_space_eq_finrank_form, κ.finrank_form_eq_sum hr, κ.finrank_testForm hr,
+    κ.finrank_test hr]
 
 /-- **Vanishing moments force `ω = 0`** on `P_rΛᵏ(T)` (resp. `P_r⁻Λᵏ(T)`)
 (`eq_zero_of_faceMoment_eq_zero_simplex`, `eq_zero_of_faceMoment_eq_zero_minus_simplex`). -/
@@ -208,13 +200,6 @@ theorem faceTrace_eq {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind)
       fun g hg i => h g hg _ (testBasisMinus r k g.dim i).2
 
 /-! ### Admissible transitions -/
-
-/-- **The admissible transitions** `Xᵏ → Yᵏ⁺¹` of the two families ([AFW2006], §5; [AFW2010],
-§5.2): from `P_rΛᵏ` or `P_r⁻Λᵏ` the exterior derivative maps into `P_r⁻Λᵏ⁺¹` and into
-`P_{r-1}Λᵏ⁺¹`. The condition on the target `(κ', r')` does not depend on the kind of the
-source. -/
-def Transition (r : ℕ) (κ' : PolyKind) (r' : ℕ) : Prop :=
-  (κ' = trimmed ∧ r' = r) ∨ (κ' = full ∧ r' + 1 = r)
 
 /-- **`d` maps the source space into the target space** along an admissible transition:
 `d P_rΛᵏ ⊆ P_{r-1}Λᵏ⁺¹ ⊆ P_r⁻Λᵏ⁺¹` and `d P_r⁻Λᵏ ⊆ P_{r-1}Λᵏ⁺¹ ⊆ P_r⁻Λᵏ⁺¹` (`r ≥ 1`). -/

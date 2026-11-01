@@ -24,7 +24,8 @@ the challenge. The solution imports this module, the bridge to `Feec` and proves
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.1–§3.3, §3.5
+  §3.1–§3.3, §3.5, §5 (admissible sequences)
+* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
   §5
 
@@ -102,6 +103,18 @@ def deRham (hd : extDeriv K n ∘ₗ extDeriv K n = 0) {S : ℕ → Submodule K 
     (fun k => ModuleCat.ofHom
       ((extDeriv K n).restrict fun _ h => hS k (Submodule.mem_map_of_mem h)))
     fun _ => by ext ω; exact LinearMap.congr_fun hd ω.1
+
+/-- **An admissible sequence** of the periodic table ([AFW2006], §5; [ArnoldLogg2014]): in every
+form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
+`r_k ≥ 1`, followed in degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. -/
+structure Admissible (full : ℕ → Bool) (r : ℕ → ℕ) : Prop where
+  one_le (k : ℕ) : 1 ≤ r k
+  transition (k : ℕ) :
+    (full (k + 1) = false ∧ r (k + 1) = r k) ∨ (full (k + 1) = true ∧ r (k + 1) + 1 = r k)
+
+/-- The space `P_{r_k}Λᵏ` (`full k = true`) or `P_{r_k}⁻Λᵏ` in degree `k` of a sequence. -/
+def seqForm (full : ℕ → Bool) (r : ℕ → ℕ) (k : ℕ) : Submodule K (Form K n) :=
+  if full k then polyForm K n (r k) k else polyFormMinus K n (r k) k
 
 /-- **The algebra of the periodic table** over `K` in dimension `n`: dimensions, the polynomial
 de Rham complexes and their exactness, the homotopy formula and the Koszul decompositions. -/
@@ -261,6 +274,25 @@ structure PeriodicTable : Prop where
   /-- a closed form of `P_{r+1}⁻Λᵏ` lies in `P_rΛᵏ` -/
   ker_inf_polyFormMinus_le [CharZero K] (r k : ℕ) :
     ker (extDeriv K n) ⊓ polyFormMinus K n (r + 1) k ≤ polyForm K n r k
+  /-- `dim P_rΛᵏ = Σ_{m ≤ n} C(n + 1, m + 1) dim P⁻_{r+k-m}Λ^{m-k}(Kᵐ)` (`r ≥ 1`, the summand `0`
+  unless `k ≤ m < r + k`): the degrees of freedom of `P_rΛᵏ` on the `m`-faces of a simplex -/
+  finrank_polyForm_eq_sum [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
+    finrank K (polyForm K n r k) = ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) *
+      if k ≤ m ∧ m < r + k then finrank K (polyFormMinus K m (r + k - m) (m - k)) else 0
+  /-- `dim P_r⁻Λᵏ = Σ_{m ≤ n} C(n + 1, m + 1) dim P_{r+k-m-1}Λ^{m-k}(Kᵐ)` (`r ≥ 1`, the summand `0`
+  unless `k ≤ m < r + k`): the degrees of freedom of `P_r⁻Λᵏ` on the `m`-faces of a simplex -/
+  finrank_polyFormMinus_eq_sum [CharZero K] (r k : ℕ) (hr : 1 ≤ r) :
+    finrank K (polyFormMinus K n r k) = ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) *
+      if k ≤ m ∧ m < r + k then finrank K (polyForm K m (r + k - m - 1) (m - k)) else 0
+  /-- `d` maps each space of an admissible sequence into the next one -/
+  map_seqForm_le (full : ℕ → Bool) (r : ℕ → ℕ) (h : Admissible full r) (k : ℕ) :
+    (seqForm K n full r k).map (extDeriv K n) ≤ seqForm K n full r (k + 1)
+  /-- the complex `S₀ → S₁ → ⋯` of an admissible sequence is exact in positive degree -/
+  exactAt_seqForm [CharZero K] (full : ℕ → Bool) (r : ℕ → ℕ) (h : Admissible full r) (k : ℕ) :
+    (deRham extDeriv_comp_extDeriv (map_seqForm_le full r h)).ExactAt (k + 1)
+  /-- the closed `0`-forms of an admissible sequence are the constants -/
+  closed_seqForm [CharZero K] (full : ℕ → Bool) (r : ℕ → ℕ) (h : Admissible full r) :
+    ker (extDeriv K n) ⊓ seqForm K n full r 0 = polyForm K n 0 0
 
 /-! ### Affinely invariant spaces of polynomial forms on `Kⁿ` ([AFW2006], §3.4) -/
 

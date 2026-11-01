@@ -3,6 +3,7 @@ module
 public import Feec.HilbertComplex.Approximation.RationalScheme
 public import Feec.Instances.Corollaries
 public import Feec.TimeStepping.RationalHillePhillips
+public import Feec.TimeStepping.RationalAStable
 
 /-!
 # Rational and Runge–Kutta time stepping in the FEEC theorem
@@ -29,8 +30,13 @@ space (`banach_radauIIA2`, a corollary of the Banach-space theory alone: the FEE
 their fully discrete verdicts do not use it): **Radau IIA and SDIRK converge with the `√n` loss
 of the stability bound**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖`
 (`p = 3`, `2`), i.e. at fixed `T = nτ` with rates `τ^{5/2}` and `τ^{3/2}`, by the Hille–Phillips
-calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`). The sources'
-smooth-data rate `τᵖ` without `√n` ([HershKato1979], for `x ∈ D(A^{p+2})`) is not formalized.
+calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`); and so do
+**Crank–Nicolson and the Gauss–Legendre method**, which have `|r(∞)| = 1` and are not strongly
+A-stable (`banach_implicitMidpoint`, `banach_gaussLegendre2`: `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and rates
+`τ^{3/2}`, `τ^{7/2}`, by
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`). The
+sources' smooth-data rate `τᵖ` without `√n` ([HershKato1979], for `x ∈ D(A^{p+2})`) is not
+formalized.
 
 ## References
 
@@ -145,6 +151,49 @@ theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
       RationalScheme.isLStable_radauIIA2.isStronglyAStable RationalScheme.hasOrder_radauIIA2 hτ n,
     RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
       RationalScheme.isLStable_sdirk2.isStronglyAStable RationalScheme.hasOrder_sdirk2 hτ n⟩
+
+/-- **Crank–Nicolson on every bounded semigroup of a complex Banach space** (the implicit
+midpoint rule, `r(z) = (1 + z/2)/(1 - z/2)`, order `2`): `|r(∞)| = 1`, so it is not strongly
+A-stable, and yet `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and, for `x ∈ D(A³)`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C √n) (M ‖μ_ρ‖ + M/3!) M nτ τ² ‖A³ x‖` (rate `τ^{3/2}` at fixed
+`nτ`), with `C = RationalScheme.sqrtConst`. [BrennerThomee1979] -/
+theorem banach_implicitMidpoint {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ¬ RationalScheme.implicitMidpoint.IsStronglyAStable ∧
+    ‖RationalScheme.implicitMidpoint.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n‖ ≤
+      M * (1 + RationalScheme.implicitMidpoint.sqrtConst * √n) ∧
+    ((∀ j < 2 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.implicitMidpoint.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.implicitMidpoint.sqrtConst * √n) *
+          (M * (RationalScheme.implicitMidpoint.remainder 2).hpMeasure.variation +
+            M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
+  ⟨RationalScheme.isSymmetric_implicitMidpoint.not_isStronglyAStable,
+    RationalScheme.norm_resolventStep_pow_le_of_isAStable G hM
+      RationalScheme.isSymmetric_implicitMidpoint.isAStable hτ.le n,
+    RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM
+      RationalScheme.isSymmetric_implicitMidpoint.isAStable RationalScheme.hasOrder_implicitMidpoint
+      hτ n⟩
+
+/-- **The two-stage Gauss–Legendre method on every bounded semigroup of a complex Banach
+space** (order `4`): `|r(∞)| = 1`, not strongly A-stable, and `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and, for
+`x ∈ D(A⁵)`, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C √n) (M ‖μ_ρ‖ + M/5!) M nτ τ⁴ ‖A⁵ x‖` (rate
+`τ^{7/2}` at fixed `nτ`). [BrennerThomee1979]; [HairerWanner1996], §IV.5 -/
+theorem banach_gaussLegendre2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ¬ RationalScheme.gaussLegendre2.IsStronglyAStable ∧
+    ‖RationalScheme.gaussLegendre2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n‖ ≤
+      M * (1 + RationalScheme.gaussLegendre2.sqrtConst * √n) ∧
+    ((∀ j < 4 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.gaussLegendre2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.gaussLegendre2.sqrtConst * √n) *
+          (M * (RationalScheme.gaussLegendre2.remainder 4).hpMeasure.variation +
+            M / (4 + 1).factorial) * M * (n * τ) * τ ^ 4 * ‖u (4 + 1)‖) :=
+  ⟨RationalScheme.isSymmetric_gaussLegendre2.not_isStronglyAStable,
+    RationalScheme.norm_resolventStep_pow_le_of_isAStable G hM
+      RationalScheme.isSymmetric_gaussLegendre2.isAStable hτ.le n,
+    RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM
+      RationalScheme.isSymmetric_gaussLegendre2.isAStable RationalScheme.hasOrder_gaussLegendre2
+      hτ n⟩
 
 end Banach
 

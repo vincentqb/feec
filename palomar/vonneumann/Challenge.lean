@@ -59,8 +59,8 @@ only (`VonNeumann.error_bound_quasi_real`). On a Banach space, for a strongly co
 semigroup with generator `A`, stability of `r(τA)` and boundedness of the remainder are not
 automatic; given them, the bound holds with the stability constant
 (`VonNeumann.error_bound_banach_real`). For bounded semigroups of complex Banach spaces and
-A-stable `r` with `|r(∞)| < 1` both are theorems: the Hille–Phillips functional calculus gives
-`Q(R)` invertible, `‖ρ(τA)‖` bounded and Brenner–Thomée's stability bound
+every A-stable `r` (including `|r(∞)| = 1`) both are theorems: the Hille–Phillips functional
+calculus gives `Q(R)` invertible, `‖ρ(τA)‖` bounded and Brenner–Thomée's stability bound
 `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` ([BrennerThomee1979]), so the order-`m` error holds with the `√n`
 loss of the stability bound, i.e. with rate `τ^{m-1/2}` at fixed `T = nτ`
 (`VonNeumann.error_bound_banach_sqrt`). The sources' smooth-data rate `τᵐ`, without `√n`
@@ -465,7 +465,8 @@ theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
 /-- **Brenner–Thomée's `√n` stability bound, and the `√n`-lossy error bound, for bounded
 semigroups on Banach spaces** ([BrennerThomee1979] for the stability bound). Let `r = p/q` be a
 real rational function with `deg p ≤ deg q`, without poles in the closed left half-plane,
-A-stable (`|r(iy)| ≤ 1`), with `|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There
+A-stable (`|r(iy)| ≤ 1`; `|r(∞)| = 1` allowed, as for Crank–Nicolson and the Gauss methods), of
+order `m`. There
 are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
 semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A`
 (right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
@@ -475,11 +476,10 @@ semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0
 chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the
 stability bound times consistency: at fixed `T = nτ` it is of order `m - 1/2`, weaker by `√n`
 than the smooth-data estimates of the sources (`O(τᵐ)` for `x ∈ D(A^{m+2})` [HershKato1979]),
-which are not formalized; the case `|r(∞)| = 1` is not covered. -/
+which are not formalized. -/
 theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
-    (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1)
-    (hinf : |p.coeff q.natDegree| < |q.leadingCoeff|) {m : ℕ}
+    (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
     ∃ C K : ℝ, 0 ≤ C ∧ ∀ {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
       (S : ℝ → E →L[ℂ] E) (M : ℝ), S 0 = 1 →

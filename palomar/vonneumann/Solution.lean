@@ -31,9 +31,10 @@ the error bounds from `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_
 for quasi-contractive `A`, from `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` with
 the semigroup `e^{ωt} S_{A-ω}(t)`; on Banach spaces, from
 `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le`, and for bounded semigroups
-with `|r(∞)| < 1` from `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le` and
-`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt` (the Hille–Phillips
-calculus, `Feec.C0Semigroup.laplaceResolvent`, `Feec.C0Semigroup.eq_laplaceResolvent`).
+and every A-stable `r` from
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_isAStable` and
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable` (the
+Hille–Phillips calculus, `Feec.C0Semigroup.laplaceResolvent`, `Feec.C0Semigroup.eq_laplaceResolvent`).
 
 On Banach spaces with the growth bound `‖S(t)‖ ≤ M e^{ωt}`: the Hille–Yosida estimates from
 `Feec.C0Semigroup.isResolvent_resolvent` and `Feec.C0Semigroup.norm_resolvent_pow_le`, backward
@@ -547,7 +548,8 @@ theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
 /-- **Brenner–Thomée's `√n` stability bound, and the `√n`-lossy error bound, for bounded
 semigroups on Banach spaces** ([BrennerThomee1979] for the stability bound). Let `r = p/q` be a
 real rational function with `deg p ≤ deg q`, without poles in the closed left half-plane,
-A-stable (`|r(iy)| ≤ 1`), with `|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There
+A-stable (`|r(iy)| ≤ 1`; `|r(∞)| = 1` allowed, as for Crank–Nicolson and the Gauss methods), of
+order `m`. There
 are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
 semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A`
 (right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
@@ -557,11 +559,10 @@ semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0
 chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the
 stability bound times consistency: at fixed `T = nτ` it is of order `m - 1/2`, weaker by `√n`
 than the smooth-data estimates of the sources (`O(τᵐ)` for `x ∈ D(A^{m+2})` [HershKato1979]),
-which are not formalized; the case `|r(∞)| = 1` is not covered. -/
+which are not formalized. -/
 theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
-    (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1)
-    (hinf : |p.coeff q.natDegree| < |q.leadingCoeff|) {m : ℕ}
+    (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
     ∃ C K : ℝ, 0 ≤ C ∧ ∀ {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
       (S : ℝ → E →L[ℂ] E) (M : ℝ), S 0 = 1 →
@@ -580,9 +581,9 @@ theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
           ‖((P * Ring.inverse Q) ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
             K * M ^ 3 * (1 + C * √n) * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
   set r : RationalScheme := ⟨p, q, hpq, hq⟩
-  have hr' : r.IsStronglyAStable := ⟨hr, hinf⟩
-  refine ⟨r.stabilityConst, (r.remainder m).hpMeasure.variation + 1 / (m + 1).factorial,
-    Real.sqrt_nonneg _, ?_⟩
+  have hr' : r.IsAStable := hr
+  refine ⟨r.sqrtConst, (r.remainder m).hpMeasure.variation + 1 / (m + 1).factorial,
+    r.sqrtConst_nonneg, ?_⟩
   intro E _ _ _ S M hS0 hSadd hSc hM τ hτ
   set G : Feec.C0Semigroup ℂ E := ⟨S, hS0, hSadd, hSc⟩
   have hM' : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M := hM
@@ -606,8 +607,8 @@ theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
       resolventEval_map] at this
   refine ⟨hQ, fun n => ?_, fun n u hu => ?_⟩
   · rw [← hP]
-    exact RationalScheme.norm_resolventStep_pow_le G hM' hr' hτ.le n
-  · have h := RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM' hr'
+    exact RationalScheme.norm_resolventStep_pow_le_of_isAStable G hM' hr' hτ.le n
+  · have h := RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM' hr'
       (r.hasOrder_of_isBigO hm) hτ n (u := u) fun j hj => (mem_graph_generator_iff G).2 (hu j hj)
     rw [hP] at h
     refine h.trans_eq ?_

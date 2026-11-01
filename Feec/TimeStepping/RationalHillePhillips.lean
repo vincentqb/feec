@@ -34,8 +34,9 @@ pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹
 
 The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
 argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable
-schemes but not the Gauss/diagonal Padé schemes (`|r(∞)| = 1`). Complex Banach spaces only: the
-measure `μ_r` is complex.
+schemes but not the Gauss/diagonal Padé schemes (`|r(∞)| = 1`); every A-stable `r` is covered,
+by a dyadic decomposition of `μ_rⁿ`, in `Feec.TimeStepping.RationalAStable`. Complex Banach
+spaces only: the measure `μ_r` is complex.
 
 ## References
 

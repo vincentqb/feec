@@ -13,7 +13,8 @@
     "VonNeumann.error_bound_mdissipative",
     "VonNeumann.error_bound_mdissipative_real",
     "VonNeumann.error_bound_quasi_real",
-    "VonNeumann.error_bound_banach_real"
+    "VonNeumann.error_bound_banach_real",
+    "VonNeumann.error_bound_banach_sqrt"
   ],
   "definition_names": [],
   "permitted_axioms": [

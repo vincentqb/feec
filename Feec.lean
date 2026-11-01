@@ -106,7 +106,10 @@ public import Feec.FiniteElement.WeakSymmetryMaps
 public import Feec.FiniteElement.Whitney
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.WhitneyInterpolation
+public import Feec.ForMathlib.Analysis.Carlson
+public import Feec.ForMathlib.Analysis.Fourier.Plancherel
 public import Feec.ForMathlib.Analysis.Gronwall
+public import Feec.ForMathlib.Analysis.HalfLineAlgebra
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Analysis.Polynomial
 public import Feec.ForMathlib.Analysis.StrongConvergence
@@ -386,6 +389,7 @@ public import Feec.Semigroup.Basic
 public import Feec.Semigroup.DissipativeInvariance
 public import Feec.Semigroup.DissipativePerturbation
 public import Feec.Semigroup.DomainSq
+public import Feec.Semigroup.HillePhillips
 public import Feec.Semigroup.Impedance
 public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.LumerPhillips
@@ -401,6 +405,7 @@ public import Feec.TimeStepping.Forced
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Rational
 public import Feec.TimeStepping.RationalBanach
+public import Feec.TimeStepping.RationalHillePhillips
 public import Feec.TimeStepping.RationalQuasi
 public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RungeKutta

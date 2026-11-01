@@ -307,8 +307,8 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   VonNeumann.inequality_dissipative_real and VonNeumann.inequality_mdissipative_real,
   VonNeumann.cayley_contraction, VonNeumann.error_bound, VonNeumann.error_bound_real,
   VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
-  VonNeumann.error_bound_quasi_real and VonNeumann.error_bound_banach_real, about
-  370 lines, Mathlib vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
+  VonNeumann.error_bound_quasi_real, VonNeumann.error_bound_banach_real and
+  VonNeumann.error_bound_banach_sqrt, about 410 lines, Mathlib vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
   complex inner product space and its rational form on Hilbert spaces;
   `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for rational `r` without poles in the closed left half-plane
   and every bounded dissipative or m-dissipative, possibly unbounded, `A` (complex `r` on
@@ -335,7 +335,11 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   limit),
   `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` (shift `r(z + ωτ)`) and
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le` (Lax–Richtmyer on Banach
-  spaces).
+  spaces); for bounded semigroups of complex Banach spaces and A-stable `r` with `|r(∞)| < 1`
+  (theorem VonNeumann.error_bound_banach_sqrt) the resolvent, `Q(R)` invertible, the
+  Brenner–Thomée–Hersh–Kato stability `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and the error with the extra
+  factor `√n`, from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`.
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
   FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram

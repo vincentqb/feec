@@ -17,11 +17,11 @@ A verbatim copy of the definitions of `Challenge.lean` (everything but the theor
 `VonNeumann.inequality_mdissipative`, their real forms `VonNeumann.inequality_dissipative_real`
 and `VonNeumann.inequality_mdissipative_real`, `VonNeumann.cayley_contraction`,
 `VonNeumann.error_bound`, `VonNeumann.error_bound_real`, `VonNeumann.error_bound_mdissipative`,
-`VonNeumann.error_bound_mdissipative_real`, `VonNeumann.error_bound_quasi_real` and
-`VonNeumann.error_bound_banach_real`), compiled against Mathlib alone so that their
+`VonNeumann.error_bound_mdissipative_real`, `VonNeumann.error_bound_quasi_real`,
+`VonNeumann.error_bound_banach_real` and `VonNeumann.error_bound_banach_sqrt`), compiled against Mathlib alone so that their
 elaborated values are those of the challenge: its imports, opens and the one definition
 `VonNeumann.IsStrongSolution`. The solution imports this module, the bridge to `Feec` and proves
-the thirteen theorems (`Solution.lean`).
+the fourteen theorems (`Solution.lean`).
 
 ## References
 

@@ -240,6 +240,21 @@ def imCLM [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] : NormedComplexificatio
         rw [im_ofReal_smul, RCLike.real_smul_eq_coe_smul (K := 𝕜)] }
     1 fun p => by rw [one_mul]; exact norm_im_le p
 
+/-- The embedding `x ↦ x + i 0` as a real continuous linear map. -/
+def ofRealCLM [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] : E →L[ℝ] NormedComplexification 𝕜 E :=
+  LinearMap.mkContinuous
+    { toFun := fun x => mk x 0
+      map_add' := fun x y => by ext <;> simp
+      map_smul' := fun a x => by
+        change mk (a • x) 0 = ((a : ℂ) • mk x 0 : NormedComplexification 𝕜 E)
+        ext
+        · rw [re_ofReal_smul, re_mk, re_mk, RCLike.real_smul_eq_coe_smul (K := 𝕜)]
+        · rw [im_ofReal_smul, im_mk, im_mk, smul_zero] }
+    1 fun x => by rw [one_mul]; exact (norm_mk_zero x).le
+
+@[simp] theorem ofRealCLM_apply [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (x : E) :
+    (ofRealCLM x : NormedComplexification 𝕜 E) = mk x 0 := rfl
+
 @[simp] theorem reCLM_apply [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
     (p : NormedComplexification 𝕜 E) : reCLM p = p.re := rfl
 

@@ -20,11 +20,13 @@ with `C = RationalScheme.sharpConst r p` depending only on `r` and `p`; at fixed
 generator, `t = nτ`; at `s = p + 1`, `t^{p+1}/nᵖ = nτ τᵖ`), as stated
 in [GomilkoTomilov2024], Thm 1.1(ii), after [BrennerThomee1979] (Thms 1 and 4 there, per
 [GomilkoTomilov2024]; the paper itself was not consulted), for every A-stable `r`, `|r(∞)| = 1`
-included (Crank–Nicolson, the Gauss methods): unlike the stability bound `‖r(τA)ⁿ‖ ≤ C √n`
-(`RationalScheme.norm_resolventStep_pow_le`, `|r(∞)| < 1` here), the error bound needs no
-condition at infinity. Less smooth data (`s < p + 1`; below `s = (p+1)/2` the rate of
-[GomilkoTomilov2024], Thm 1.1(ii), is `n^{1/2-s}`, with a factor `log (n+1)` at `s = (p+1)/2`)
-are not formalized. [HershKato1979] obtain `O(τᵖ)` for `x ∈ D(A^{p+2})`, one power of `A` more
+included (Crank–Nicolson, the Gauss methods), and without the `√n` loss of the stability bound
+`‖r(τA)ⁿ‖ ≤ M (1 + C √n)` (`RationalScheme.norm_resolventStep_pow_le_of_isAStable`), which the
+proof does not use. On real or complex Banach spaces, by complexification:
+`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`
+(`Feec.TimeStepping.RationalHillePhillipsReal`). Less smooth data (`s < p + 1`; below
+`s = (p+1)/2` the rate of [GomilkoTomilov2024], Thm 1.1(ii), is `n^{1/2-s}`, with a factor
+`log (n+1)` at `s = (p+1)/2`) are not formalized. [HershKato1979] obtain `O(τᵖ)` for `x ∈ D(A^{p+2})`, one power of `A` more
 (per its abstract).
 
 The proof is the Hille–Phillips calculus extended by translations: with `μ = μ_r` the measure of
@@ -196,7 +198,8 @@ theorem resolventStep_pow_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (
           rw [C0Semigroup.hillePhillipsKernel_translate, e1, hS]
           rfl
   rw [show (n : ℝ) * τ = τ * n by ring, G.S_mul_natCast hτ.le n, ← sub_apply,
-    pow_sub_pow_eq_sum_pow_mul_sub_mul_pow, _root_.sum_apply, sum_congr rfl fun j _ => hterm j _, ← smul_sum]
+    pow_sub_pow_eq_sum_pow_mul_sub_mul_pow, _root_.sum_apply, sum_congr rfl fun j _ => hterm j _,
+    ← smul_sum]
   congr 1
   change _ = (G'.hillePhillipsKernelHom hM' (∑ j ∈ range n, HalfLineKernel.translate _ _ _))
     (u (p + 1))
@@ -210,7 +213,8 @@ generator `A`, `τ > 0`, every `n` and `x ∈ D(A^{p+1})` (a chain `u` in the gr
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M nτ τᵖ ‖A^{p+1} x‖`,
 
 `C = sharpConst r p` depending only on `r` and `p`; `r(τA) = P(R) Q(R)⁻¹` through the resolvent
-`R = (1 - τA)⁻¹` (`C0Semigroup.laplaceResolvent`). [BrennerThomee1979];
+`R = (1 - τA)⁻¹` (`C0Semigroup.laplaceResolvent`); over `ℝ` or `ℂ` and for every such `R`,
+`norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`. [BrennerThomee1979];
 [GomilkoTomilov2024], Thm 1.1(ii) -/
 theorem norm_resolventStep_pow_sub_S_le_sharp {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E}

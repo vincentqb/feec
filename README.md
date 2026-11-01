@@ -76,12 +76,13 @@ and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 The Banach-space `√n` modules (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
 `TimeStepping.RationalAStable`, `TimeStepping.RationalHillePhillipsReal`,
 `ForMathlib.Analysis.{HalfLineAlgebra, HalfLinePowers, Carlson, Fourier.Plancherel}`) are tied
-only through `Instances.RungeKutta.banach_radauIIA2`, `banach_radauIIA2_of_resolvent` (real or
-complex spaces) and through `banach_implicitMidpoint` and
-`banach_gaussLegendre2` (Crank–Nicolson and two-stage Gauss, `|r(∞)| = 1`), and the smooth-data
-modules (`Semigroup.HillePhillipsTranslate`, `TimeStepping.RationalSharp`,
-`ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`) only through
-`Instances.RungeKutta.banach_sharp`: corollaries off Hilbert spaces that no crown field
+only through `Instances.RungeKutta.banach_radauIIA2_of_resolvent` and through
+`banach_implicitMidpoint_of_resolvent` and `banach_gaussLegendre2_of_resolvent` (Crank–Nicolson
+and two-stage Gauss, `|r(∞)| = 1`), and the smooth-data modules (`Semigroup.HillePhillipsTranslate`,
+`TimeStepping.RationalSharp`, `ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`)
+only through `Instances.RungeKutta.banach_sharp_of_resolvent`, all on real or complex Banach
+spaces, each with a complex corollary (`banach_radauIIA2`, `banach_implicitMidpoint`,
+`banach_gaussLegendre2`, `banach_sharp`): corollaries off Hilbert spaces that no crown field
 consumes (the FEEC families are Hilbert complexes; the tie is documentary).
 
 ## The approximating FEEC theorem
@@ -367,14 +368,17 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   Brenner–Thomée stability `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and an error bound with its `√n` loss
   (order `m - 1/2` at fixed `nτ`),
   from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`, brought to
-  real spaces by complexification
-  (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`); and for
-  every A-stable `r` (theorem VonNeumann.error_bound_banach_sharp), Brenner–Thomée's smooth-data
-  estimate `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`, from
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_isAStable`, on real spaces by
+  complexification
+  (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`);
+  and on Banach spaces over `ℝ` or `ℂ` for every A-stable `r` (theorem
+  VonNeumann.error_bound_banach_sharp), Brenner–Thomée's smooth-data estimate
+  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`, from
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (the calculus on
   translates of kernels, `Feec.C0Semigroup.hillePhillipsKernel_translate`, and the bound
-  `‖kₙ‖₁ ≤ C n` on Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).
+  `‖kₙ‖₁ ≤ C n` on Brenner–Thomée's error kernel,
+  `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`), on real spaces by complexification
+  (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`).
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
   FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram

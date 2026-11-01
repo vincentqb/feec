@@ -1,12 +1,14 @@
 module
 
 public import Feec.TimeStepping.RationalAStable
+public import Feec.TimeStepping.RationalSharp
 public import Feec.TimeStepping.RationalHilleYosida
 
 /-!
-# The `√n` stability and error bounds on real Banach spaces
+# The Hille–Phillips bounds on real Banach spaces
 
-The Hille–Phillips bounds of `Feec.TimeStepping.RationalHillePhillips` hold on complex Banach
+The Hille–Phillips bounds of `Feec.TimeStepping.RationalHillePhillips`,
+`Feec.TimeStepping.RationalAStable` and `Feec.TimeStepping.RationalSharp` hold on complex Banach
 spaces (the Hille–Phillips measure `μ_r` is complex). They reach every Banach space `E` over
 `𝕜 = ℝ` or `ℂ` through the complexification `E_ℂ` with the Taylor norm (`NormedComplexification`,
 `C0Semigroup.complexification`), since a rational scheme `r` has real coefficients. For a
@@ -17,19 +19,26 @@ semigroup with `‖S(t)‖ ≤ M`, `τ > 0` and `R` with `R (x - τ A x) = x` on
 * hence `Q(R)` is invertible, `R` is injective and `r(τA)_ℂ = r(τA_ℂ)`
   (`RationalScheme.map_resolventStep_of_resolvent`: complexification is a ring homomorphism,
   commutes with real polynomials in `R` and with inverses), so `‖r(τA)ⁿ‖ = ‖r(τA_ℂ)ⁿ‖`;
-* **Brenner–Thomée's stability bound** `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for strongly A-stable `r`
-  (`RationalScheme.norm_resolventStep_pow_le_of_resolvent`) and for every A-stable `r`,
-  `|r(∞)| = 1` included (`RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`),
-  the Hille–Phillips bound `‖r(τA)‖ ≤ M ‖μ_r‖` for every `r`
-  (`RationalScheme.norm_resolventStep_le_of_resolvent`), and the **`√n`-lossy error bound** (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`,
-  `RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`), with the constants
-  of the complex case.
+* the Hille–Phillips bound `‖r(τA)‖ ≤ M ‖μ_r‖` for every `r`
+  (`RationalScheme.norm_resolventStep_le_of_resolvent`);
+* **Brenner–Thomée's stability bound** `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`: for strongly A-stable `r`
+  with the explicit constant `C_r = stabilityConst r`
+  (`RationalScheme.norm_resolventStep_pow_le_of_resolvent`), and for every A-stable `r`,
+  `|r(∞)| = 1` included, with `C_r = sqrtConst r`, which comes from compactness and is not
+  explicit (`RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`);
+* the **`√n`-lossy error bound**, with the same two constants
+  (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`,
+  `RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`; for symmetric
+  schemes, `RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_of_resolvent`);
+* **Brenner–Thomée's smooth-data estimate** `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r M nτ τᵖ ‖A^{p+1} x‖` for
+  every A-stable `r` of order `p`
+  (`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`), applied to `x + i 0`
+  (`C0Semigroup.mk_mem_graph_complexification`).
 
-The error bound needs no complexified data: the Lax–Richtmyer form
+The `√n`-lossy error bound needs no complexified data: the Lax–Richtmyer form
 `RationalScheme.norm_resolventStep_pow_sub_S_le` holds over `𝕜`, and only its hypotheses (`Q(R)`
-invertible, `R` injective, stability, the remainder bound) are transferred. As in the complex
-case, it is weaker by `√n` than the smooth-data estimate
-(`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`, on complex spaces).
+invertible, `R` injective, stability, the remainder bound) are transferred. At fixed `T = nτ` it
+is weaker by `√n` than the smooth-data estimate.
 
 ## References
 
@@ -119,7 +128,9 @@ theorem norm_resolventStep_le_of_resolvent {τ : ℝ} (hτ : 0 < τ) {R : E →L
 
 /-- **Brenner–Thomée's stability bound over `𝕜 = ℝ` or `ℂ`** [BrennerThomee1979]: for a strongly
 A-stable rational scheme `r`, a bounded semigroup `‖S(t)‖ ≤ M` on a Banach space, `τ > 0` and
-`R = (1 - τA)⁻¹`, `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for every `n`. -/
+`R = (1 - τA)⁻¹`, `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for every `n`. Every A-stable `r` is covered by
+`norm_resolventStep_pow_le_of_resolvent_of_isAStable`; this form is kept for its explicit
+constant `C_r = stabilityConst r` (`sqrtConst r` there comes from compactness). -/
 theorem norm_resolventStep_pow_le_of_resolvent {r : RationalScheme} (hr : r.IsStronglyAStable)
     {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
     (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (n : ℕ) :
@@ -159,10 +170,11 @@ private theorem norm_resolventStep_pow_sub_S_le_of_resolvent_of_stable {r : Rati
 
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`,
 
-the bound of `norm_resolventStep_pow_sub_S_le_sqrt` (complex spaces), with the same constants.
-As there, the rate at fixed `T = nτ` is `τ^{p-1/2}`, weaker by `√n` than the smooth-data estimate
-`norm_resolventStep_pow_sub_S_le_sharp` (complex spaces); every A-stable `r` in
-`norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`. [BrennerThomee1979] -/
+Brenner–Thomée's stability bound times order-`p` consistency (`ρ` the remainder scheme). At
+fixed `T = nτ` the rate is `τ^{p-1/2}`, weaker by `√n` than the smooth-data estimate
+`norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`. Every A-stable `r` is covered by
+`norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`; this form is kept for its explicit
+constant `C_r = stabilityConst r`. [BrennerThomee1979] -/
 theorem norm_resolventStep_pow_sub_S_le_of_resolvent {r : RationalScheme}
     (hr : r.IsStronglyAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
     (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (n : ℕ) {u : ℕ → E}
@@ -180,8 +192,9 @@ theorem norm_resolventStep_pow_sub_S_le_of_resolvent {r : RationalScheme}
 
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`,
 
-with `C_r = sqrtConst r`, the bound of `norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`
-(complex spaces). [BrennerThomee1979] -/
+with `C_r = sqrtConst r`, the stability bound
+`norm_resolventStep_pow_le_of_resolvent_of_isAStable` times order-`p` consistency.
+[BrennerThomee1979] -/
 theorem norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable {r : RationalScheme}
     (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
     (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (n : ℕ) {u : ℕ → E}
@@ -192,6 +205,49 @@ theorem norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable {r : RationalS
           τ ^ p * ‖u (p + 1)‖ :=
   norm_resolventStep_pow_sub_S_le_of_resolvent_of_stable G hM r.sqrtConst_nonneg hp hτ hR
     (norm_resolventStep_pow_le_of_resolvent_of_isAStable G hM hr hτ hR) n hu
+
+/-- **Symmetric schemes over `𝕜 = ℝ` or `ℂ`** (the diagonal Padé and Gauss methods): a symmetric
+scheme `r` of order `p` is not strongly A-stable, and yet, for `τ > 0` and `R` with
+`R (x - τ A x) = x` on `D(A)`, `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` and, for `x ∈ D(A^{p+1})`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`, with
+`C_r = sqrtConst r`. [BrennerThomee1979] -/
+theorem IsSymmetric.norm_resolventStep_pow_sub_S_le_of_resolvent {r : RationalScheme}
+    (h : r.IsSymmetric) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
+    (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (n : ℕ) {u : ℕ → E} :
+    ¬ r.IsStronglyAStable ∧ ‖r.resolventStep R ^ n‖ ≤ M * (1 + r.sqrtConst * √n) ∧
+    ((∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(r.resolventStep R ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
+        M * (1 + r.sqrtConst * √n) *
+          (M * (r.remainder p).hpMeasure.variation + M / (p + 1).factorial) * M * (n * τ) *
+            τ ^ p * ‖u (p + 1)‖) :=
+  ⟨h.not_isStronglyAStable,
+    norm_resolventStep_pow_le_of_resolvent_of_isAStable G hM h.isAStable hτ hR n,
+    norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable G hM h.isAStable hp hτ hR n⟩
+
+/-- **Brenner–Thomée's smooth-data error estimate over `𝕜 = ℝ` or `ℂ`**: for an A-stable rational
+scheme `r` of order `p` (`|r(∞)| = 1` included), a bounded semigroup `‖S(t)‖ ≤ M` on a Banach
+space with generator `A`, `τ > 0`, `R` with `R (x - τ A x) = x` on `D(A)`, every `n` and
+`x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
+
+  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M nτ τᵖ ‖A^{p+1} x‖`,
+
+`C = sharpConst r p`, the constant of the complex case `norm_resolventStep_pow_sub_S_le_sharp`,
+applied to `x + i 0` on the complexification. [BrennerThomee1979] -/
+theorem norm_resolventStep_pow_sub_S_le_sharp_of_resolvent {r : RationalScheme}
+    (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
+    (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) (n : ℕ) {u : ℕ → E}
+    (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
+    ‖(r.resolventStep R ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
+      r.sharpConst p * M * (n * τ) * τ ^ p * ‖u (p + 1)‖ := by
+  have h := norm_resolventStep_pow_sub_S_le_sharp G.complexification
+    (G.norm_complexification_S_le hM) hr hp hτ n (u := fun j => NormedComplexification.mk (u j) 0)
+    fun j hj => G.mk_mem_graph_complexification (hu j hj)
+  rw [← r.map_resolventStep_of_resolvent G hM hτ hR, ← mapHom_apply, ← map_pow, mapHom_apply,
+    C0Semigroup.complexification_S, map_mk, map_mk, map_zero, map_zero, norm_mk_zero] at h
+  have e : ∀ a b : E, (NormedComplexification.mk a 0 - NormedComplexification.mk b 0 :
+      NormedComplexification 𝕜 E) = NormedComplexification.mk (a - b) 0 := fun a b => by
+    ext <;> simp
+  rwa [e, norm_mk_zero] at h
 
 end TimeStepping.RationalScheme
 

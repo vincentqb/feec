@@ -12,8 +12,9 @@ For a strongly continuous semigroup `G` on a normed space `E` over `𝕜 = ℝ` 
 complexification `E_ℂ` (`NormedComplexification`, Taylor norm), with `‖S(t)_ℂ‖ = ‖S(t)‖`.
 Its generator acts componentwise: if `(p, q)` is in its graph, so are `(re p, re q)` and
 `(im p, im q)` in the graph of the generator `A` of `G`
-(`C0Semigroup.mem_graph_of_mem_graph_complexification`). Hence an operator `R` with
-`R (x - τ A x) = x` on `D(A)` has a complexification with the same property
+(`C0Semigroup.mem_graph_of_mem_graph_complexification`), and `(x, y)` in the graph of `A` gives
+`(x + i 0, y + i 0)` in its graph (`C0Semigroup.mk_mem_graph_complexification`). Hence an
+operator `R` with `R (x - τ A x) = x` on `D(A)` has a complexification with the same property
 (`C0Semigroup.map_apply_sub_smul`). This brings the complex points of the spectrum, through the
 complex Hille–Yosida estimates, to real Banach spaces.
 
@@ -59,6 +60,21 @@ theorem mem_graph_of_mem_graph_complexification {p q : NormedComplexification �
       (Ici 0) 0 := (imCLM (𝕜 := 𝕜) (E := E)).hasFDerivAt.comp_hasDerivWithinAt 0 d
   exact ⟨LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, dre⟩, G.generator_apply_eq dre⟩,
     LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, dim⟩, G.generator_apply_eq dim⟩⟩
+
+/-- Conversely, `(x, y)` in the graph of the generator gives `(x + i 0, y + i 0)` in the graph of
+the generator of the complexification. -/
+theorem mk_mem_graph_complexification {x y : E} (h : (x, y) ∈ G.generator.graph) :
+    (NormedComplexification.mk x 0, NormedComplexification.mk y 0) ∈
+      G.complexification.generator.graph := by
+  obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 h
+  have e : (fun t => G.complexification.S t (NormedComplexification.mk x 0)) =
+      ofRealCLM ∘ fun t => G.S t x :=
+    funext fun t => by ext <;> simp [map_mk]
+  have d : HasDerivWithinAt (fun t => G.complexification.S t (NormedComplexification.mk x 0))
+      (NormedComplexification.mk (G.generator ⟨x, hx⟩) 0) (Ici 0) 0 :=
+    e ▸ (ofRealCLM (𝕜 := 𝕜) (E := E)).hasFDerivAt.comp_hasDerivWithinAt 0
+      (G.hasDerivWithinAt_generator ⟨x, hx⟩)
+  exact LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, d⟩, G.complexification.generator_apply_eq d⟩
 
 /-- An operator `R` with `R (x - τ y) = x` on the graph of the generator has a complexification
 with the same property for the complexified semigroup. -/

@@ -20,21 +20,24 @@ pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹
   (`IsStronglyAStable`: `|r(iy)| ≤ 1`, `|r(∞)| < 1`), from the total variation bound
   `‖μ_rⁿ‖ ≤ 1 + C_r √n` (`variation_hpMeasure_pow_le`,
   `Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`);
-* **an error bound with the `√n` loss of the stability bound**
-  (`norm_resolventStep_pow_sub_S_le_sqrt`): the stability bound times order-`p` consistency, in
-  the Lax–Richtmyer form `RationalScheme.norm_resolventStep_pow_sub_S_le`, all of whose
-  hypotheses are discharged. It is `O(√n nτ τᵖ)` for `x ∈ D(A^{p+1})`, i.e. of order `p - 1/2` at
-  fixed `T = nτ`. The sources' smooth-data estimate has no `√n`: `O(τᵖ)` for `x ∈ D(A^{p+2})`
+* hence the hypotheses of the Lax–Richtmyer form `RationalScheme.norm_resolventStep_pow_sub_S_le`,
+  and **an error bound with the `√n` loss of the stability bound**: the stability bound times
+  order-`p` consistency, `O(√n nτ τᵖ)` for `x ∈ D(A^{p+1})`, i.e. of order `p - 1/2` at fixed
+  `T = nτ`. It is stated over `ℝ` or `ℂ` in `Feec.TimeStepping.RationalHillePhillipsReal`
+  (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`, for every `R = (1 - τA)⁻¹`).
+  The sources' smooth-data estimate has no `√n`: `O(τᵖ)` for `x ∈ D(A^{p+2})`
   [HershKato1979] (per its abstract), and `O(nτ τᵖ) ‖A^{p+1} x‖` for `x ∈ D(A^{p+1})`
   [BrennerThomee1979]; the latter, for every A-stable `r`, is
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`
-  (`Feec.TimeStepping.RationalSharp`), with `S(nτ)` reached through translates of kernels.
+  (`Feec.TimeStepping.RationalSharp`), with `S(nτ)` reached through translates of kernels;
+  over `ℝ` or `ℂ`, `RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`.
 
 The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
 argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable
 schemes but not the Gauss/diagonal Padé schemes (`|r(∞)| = 1`); every A-stable `r` is covered,
-by a dyadic decomposition of `μ_rⁿ`, in `Feec.TimeStepping.RationalAStable`. Complex Banach
-spaces only: the measure `μ_r` is complex.
+by a dyadic decomposition of `μ_rⁿ`, in `Feec.TimeStepping.RationalAStable`. The measure `μ_r` is
+complex, so this file is on complex Banach spaces; real ones are reached by complexification in
+`Feec.TimeStepping.RationalHillePhillipsReal`.
 
 ## References
 
@@ -178,7 +181,9 @@ def stabilityConst : ℝ :=
     (1 - ‖r.hpMeasure.fst‖) ^ 2))
 
 /-- **The total variation of `μ_rⁿ` is at most `1 + C_r √n`** for strongly A-stable `r`
-(`Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`). -/
+(`Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`). Every A-stable `r` is covered by
+`variation_hpMeasure_pow_le_sqrtConst`; this form is kept for its explicit constant
+`C_r = stabilityConst r` (`sqrtConst r` there comes from compactness). -/
 theorem variation_hpMeasure_pow_le {r : RationalScheme} (hr : r.IsStronglyAStable) (n : ℕ) :
     (r.hpMeasure ^ n).variation ≤ 1 + r.stabilityConst * √n := by
   have ha := norm_fst_hpMeasure_lt hr
@@ -240,43 +245,15 @@ theorem norm_resolventStep_le {τ : ℝ} (hτ : 0 ≤ τ) :
 /-- **Brenner–Thomée's stability bound** [BrennerThomee1979]: for a strongly
 A-stable rational scheme `r` and a bounded semigroup, `‖S(t)‖ ≤ M`, on a complex Banach space,
 `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for all `τ ≥ 0` and `n`, with `C_r` depending only on `r`
-(`RationalScheme.stabilityConst`). -/
+(`RationalScheme.stabilityConst`). Every A-stable `r` is covered by
+`norm_resolventStep_pow_le_of_isAStable`; this form is kept for its explicit constant
+(`sqrtConst r` there comes from compactness). -/
 theorem norm_resolventStep_pow_le {r : RationalScheme} (hr : r.IsStronglyAStable) {τ : ℝ}
     (hτ : 0 ≤ τ) (n : ℕ) :
     ‖r.resolventStep (G.laplaceResolvent hM τ hτ) ^ n‖ ≤ M * (1 + r.stabilityConst * √n) := by
   rw [← r.hillePhillips_hpMeasure G hM hτ, ← map_pow]
   exact ((G.dilate τ hτ).norm_hillePhillips_le _ _).trans (mul_le_mul_of_nonneg_left
     (variation_hpMeasure_pow_le hr n) ((norm_nonneg _).trans (hM 0 le_rfl)))
-
-/-- **The `√n`-lossy error bound for bounded semigroups on Banach spaces**: for a strongly
-A-stable rational scheme `r` of order `p`, a bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach
-space with generator `A`, `τ > 0` and `x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`,
-
-Brenner–Thomée's stability bound times order-`p` consistency (`ρ` the remainder scheme). At
-fixed `T = nτ` the rate is `τ^{p-1/2}`: weaker by `√n` than the smooth-data estimates of
-[HershKato1979] (`O(τᵖ)` for `x ∈ D(A^{p+2})`) and [BrennerThomee1979]
-(`O(nτ τᵖ) ‖A^{p+1} x‖`, `norm_resolventStep_pow_sub_S_le_sharp`). This bound covers only
-`|r(∞)| < 1`; every A-stable `r` in `norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`.
-Every hypothesis of `RationalScheme.norm_resolventStep_pow_sub_S_le` is discharged: `R` is the
-Laplace transform of the semigroup, `Q(R)` is invertible and `ρ(τA)` bounded by the
-Hille–Phillips calculus, stability by `norm_resolventStep_pow_le`. -/
-theorem norm_resolventStep_pow_sub_S_le_sqrt {r : RationalScheme} (hr : r.IsStronglyAStable)
-    {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E}
-    (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
-    ‖(r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
-      M * (1 + r.stabilityConst * √n) *
-        (M * (r.remainder p).hpMeasure.variation + M / (p + 1).factorial) * M * (n * τ) *
-          τ ^ p * ‖u (p + 1)‖ := by
-  refine r.norm_resolventStep_pow_sub_S_le G hp hτ.le
-    (fun x y hxy => G.laplaceResolvent_apply_sub hM hτ.le hxy)
-    (G.injective_laplaceResolvent hM hτ) (r.isUnit_resolventEval_den_laplaceResolvent G hM hτ.le)
-    (fun k hk => (norm_resolventStep_pow_le G hM hr hτ.le k).trans ?_)
-    (fun t ht => hM t ht.1) ((r.remainder p).norm_resolventStep_le G hM hτ.le) hu
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0 le_rfl)
-  have hC : 0 ≤ r.stabilityConst := Real.sqrt_nonneg _
-  gcongr
 
 end Semigroup
 

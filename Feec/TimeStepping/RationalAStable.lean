@@ -18,20 +18,20 @@ has no zeros on the closed disc `|s - 1/2| ≤ 1/2`, the image of `re z ≤ 0` a
 (`eval_denPoly_ne_zero`). By compactness, `μ̂_r - r(∞) = O(ν̂)` and `μ̂_r' = O(ν̂²)`
 (**`RationalScheme.exists_decay`**, for every rational scheme), the hypotheses of the power bound
 `Feec.HalfLineAlgebra.variation_pow_le`, which holds whether or not `|r(∞)| < 1`. Hence, for a
-bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space and A-stable `r`:
-
-* **`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`** (`norm_resolventStep_pow_le_of_isAStable`,
-  `C_r = RationalScheme.sqrtConst`) [BrennerThomee1979];
-* the error bound with the `√n` loss of the stability bound,
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` for order `p`
-  and `x ∈ D(A^{p+1})` (`norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`; order `p - 1/2` at
-  fixed `nτ`, weaker by `√n` than the smooth-data estimates of the sources, not formalized here).
-
-Both hold for every symmetric scheme, which is A-stable but not strongly A-stable
-(`IsSymmetric.norm_resolventStep_pow_sub_S_le_sqrt`).
+bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space and A-stable `r`,
+**`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)`** (`norm_resolventStep_pow_le_of_isAStable`,
+`C_r = RationalScheme.sqrtConst`) [BrennerThomee1979]; this covers every symmetric scheme,
+A-stable but not strongly A-stable.
 
 The constant `C_r` is not explicit: it comes from the bounds of `R'` and `(R - R(0))/s` on the
-disc. Complex Banach spaces only.
+disc; the strongly A-stable bound `RationalScheme.norm_resolventStep_pow_le` keeps the explicit
+`RationalScheme.stabilityConst`. The error bound with the `√n` loss of this stability bound, and
+the bound itself on real Banach spaces, are in `Feec.TimeStepping.RationalHillePhillipsReal`
+(`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`,
+`RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_of_resolvent`, over `ℝ` or `ℂ`); it is
+of order `p - 1/2` at fixed `nτ`, weaker by `√n` than Brenner–Thomée's smooth-data estimate
+`RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (`Feec.TimeStepping.RationalSharp`), which
+needs no stability bound.
 
 ## References
 
@@ -183,53 +183,13 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E
 [BrennerThomee1979]: for `r` A-stable (`|r(iy)| ≤ 1`; `|r(∞)| = 1` allowed, e.g. Crank–Nicolson
 and the Gauss methods) and a bounded semigroup, `‖S(t)‖ ≤ M`, on a complex Banach space,
 `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for all `τ ≥ 0` and `n`, with `C_r` depending only on `r`
-(`RationalScheme.sqrtConst`). -/
+(`RationalScheme.sqrtConst`, not explicit). -/
 theorem norm_resolventStep_pow_le_of_isAStable {r : RationalScheme} (hr : r.IsAStable) {τ : ℝ}
     (hτ : 0 ≤ τ) (n : ℕ) :
     ‖r.resolventStep (G.laplaceResolvent hM τ hτ) ^ n‖ ≤ M * (1 + r.sqrtConst * √n) := by
   rw [← r.hillePhillips_hpMeasure G hM hτ, ← map_pow]
   exact ((G.dilate τ hτ).norm_hillePhillips_le _ _).trans (mul_le_mul_of_nonneg_left
     (variation_hpMeasure_pow_le_sqrtConst hr n) ((norm_nonneg _).trans (hM 0 le_rfl)))
-
-/-- **The `√n`-lossy error bound for every A-stable scheme on Banach spaces**: for an A-stable
-rational scheme `r` of order `p`, a bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space
-with generator `A`, `τ > 0` and `x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
-
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`,
-
-the stability bound `norm_resolventStep_pow_le_of_isAStable` times order-`p` consistency
-(`RationalScheme.norm_resolventStep_pow_sub_S_le`); `|r(∞)| = 1` is allowed. -/
-theorem norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable {r : RationalScheme}
-    (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E}
-    (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
-    ‖(r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
-      M * (1 + r.sqrtConst * √n) *
-        (M * (r.remainder p).hpMeasure.variation + M / (p + 1).factorial) * M * (n * τ) *
-          τ ^ p * ‖u (p + 1)‖ := by
-  refine r.norm_resolventStep_pow_sub_S_le G hp hτ.le
-    (fun x y hxy => G.laplaceResolvent_apply_sub hM hτ.le hxy)
-    (G.injective_laplaceResolvent hM hτ) (r.isUnit_resolventEval_den_laplaceResolvent G hM hτ.le)
-    (fun k hk => (norm_resolventStep_pow_le_of_isAStable G hM hr hτ.le k).trans ?_)
-    (fun t ht => hM t ht.1) ((r.remainder p).norm_resolventStep_le G hM hτ.le) hu
-  have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0 le_rfl)
-  have hC := r.sqrtConst_nonneg
-  gcongr
-
-/-- **Symmetric schemes on every bounded semigroup of a complex Banach space** (the diagonal Padé
-and Gauss methods): a symmetric scheme `r` of order `p` is not strongly A-stable, and yet
-`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` and, for `x ∈ D(A^{p+1})`,
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`. -/
-theorem IsSymmetric.norm_resolventStep_pow_sub_S_le_sqrt {r : RationalScheme}
-    (h : r.IsSymmetric) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
-    ¬ r.IsStronglyAStable ∧
-    ‖r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n‖ ≤ M * (1 + r.sqrtConst * √n) ∧
-    ((∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
-      ‖(r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
-        M * (1 + r.sqrtConst * √n) *
-          (M * (r.remainder p).hpMeasure.variation + M / (p + 1).factorial) * M * (n * τ) *
-            τ ^ p * ‖u (p + 1)‖) :=
-  ⟨h.not_isStronglyAStable, norm_resolventStep_pow_le_of_isAStable G hM h.isAStable hτ.le n,
-    norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM h.isAStable hp hτ n⟩
 
 end Semigroup
 

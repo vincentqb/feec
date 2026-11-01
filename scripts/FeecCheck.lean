@@ -15,6 +15,7 @@ public import FeecCheck.Sharpness
 public import FeecCheck.BGGVerdicts
 public import FeecCheck.InvariantForms
 public import FeecCheck.PolyFields
+public import FeecCheck.BanachSchemes
 
 public section
 

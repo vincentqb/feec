@@ -73,7 +73,8 @@ theorem hillePhillipsKernel_translate {s : ℝ} (hs : 0 ≤ s) (f : HalfLineKern
 
 /-- **Taylor's formula for the semigroup with integral remainder**: for `τ > 0` and a chain `u`
 in the graph of the generator, `S(τ) u₀ = Σ_{j≤p} τʲ/j! uⱼ + τ^{p+1} Φ_τ(eₚ) u_{p+1}`, with
-`Φ_τ` the Hille–Phillips calculus of `S(τ ·)` and `eₚ` the Taylor kernel. Cf. [Pazy1983], §1.2, Thm 2.4 (iterated) -/
+`Φ_τ` the Hille–Phillips calculus of `S(τ ·)` and `eₚ` the Taylor kernel.
+Cf. [Pazy1983], §1.2, Thm 2.4 (iterated) -/
 theorem S_apply_eq_sum_add_taylor {τ : ℝ} (hτ : 0 < τ) (p : ℕ) {u : ℕ → E}
     (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
     G.S τ (u 0) = ∑ j ∈ range (p + 1), ((τ : ℂ) ^ j / j.factorial) • u j +

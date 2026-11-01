@@ -20,10 +20,10 @@ and `VonNeumann.inequality_mdissipative_real`, `VonNeumann.cayley_contraction`,
 `VonNeumann.error_bound_mdissipative_real`, `VonNeumann.error_bound_quasi_real`,
 `VonNeumann.resolvent_estimates_banach`, `VonNeumann.error_bound_backward_euler_banach`,
 `VonNeumann.error_bound_banach_real_hille_yosida`, `VonNeumann.error_bound_banach_real`,
-`VonNeumann.error_bound_banach_sqrt` and `VonNeumann.error_bound_banach_sharp`), compiled against Mathlib alone so that their elaborated
-values are those of the challenge: its imports, opens and the one definition
-`VonNeumann.IsStrongSolution`. The solution imports this module, the bridge to `Feec` and proves
-the eighteen theorems (`Solution.lean`).
+`VonNeumann.error_bound_banach_sqrt` and `VonNeumann.error_bound_banach_sharp`), compiled
+against Mathlib alone so that their elaborated values are those of the challenge: its imports,
+opens and the one definition `VonNeumann.IsStrongSolution`. The solution imports this module, the
+bridge to `Feec` and proves the eighteen theorems (`Solution.lean`).
 
 ## References
 

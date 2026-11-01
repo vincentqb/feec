@@ -34,6 +34,7 @@ public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PeriodicFamily
 public import Feec.Counterexamples.PolynomialForms
+public import Feec.Counterexamples.PositiveCharacteristic
 public import Feec.Counterexamples.Sharpness
 public import Feec.Domain.Affine
 public import Feec.Domain.BGG

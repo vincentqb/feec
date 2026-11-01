@@ -11,7 +11,8 @@ public import Solution.Bridge
 identifies the forms `MvPolynomial ⊗ ExteriorAlgebra` of the challenge with the coefficient forms of
 `Feec` (`Feec.Algebra.ExteriorAlgebraForm`), and `FEEC.affineInvariantForms` from
 `Feec.FiniteElement.InvariantForm` and `Feec.FiniteElement.AffineInvariantForm` through
-`Solution.Affine` (`affineInvariantForms_of_feec`).
+`Solution.Affine` (`affineInvariantForms_of_feec`), and `FEEC.charZero_iff_classification` from
+`Feec.Counterexamples.PositiveCharacteristic` (`charZero_iff_classification_of_feec`).
 
 ## References
 
@@ -45,5 +46,17 @@ characteristic `0` ([AFW2006], Theorems 3.5–3.6): for `0 < k < n` they are the
 theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
     AffineInvariantForms K n :=
   affineInvariantForms_of_feec K n
+
+/-- **Characteristic `0` is necessary for the classification**: the `GL(n)`-invariant subspaces
+of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` in every dimension
+`n` and all degrees iff `K` has characteristic `0`. This concerns the hypothesis of the
+generalization in `affineInvariantForms` of the decomposition of [AFW2006], §3.4, which is
+stated there over `ℝ` only. -/
+theorem charZero_iff_classification (K : Type u) [Field K] :
+    CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
+      W ≤ homForm K n (r + 1) (k + 1) →
+        W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
+          W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) :=
+  charZero_iff_classification_of_feec K
 
 end FEEC

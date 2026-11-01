@@ -290,8 +290,9 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   bound; from
   `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms, about 385
-  lines): the algebra of the periodic table in every dimension, for polynomial forms
+* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms,
+  FEEC.charZero_iff_classification, about 405 lines): the algebra of the periodic table in
+  every dimension, for polynomial forms
   `MvPolynomial ⊗ ExteriorAlgebra` of Mathlib: the dimensions of `H_rΛᵏ`, `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_b⁻Λᵏ` (any multidegree), the Leibniz rule
   for `κ` and the wedge closure of `P_rΛ` and `P_r⁻Λ` and, in characteristic `0`, their
   polynomial de Rham complexes as Mathlib cochain complexes, exact in positive degree with
@@ -303,7 +304,10 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   characteristic `0`) the classification of the affinely invariant spaces of [AFW2006],
   Thms 3.5–3.6, with the irreducibility of the summands of `H_rΛᵏ` under `GL(n)` alone proved
   without representation theory
-  (`Feec.FiniteElement.InvariantForm`, `Feec.FiniteElement.AffineInvariantForm`).
+  (`Feec.FiniteElement.InvariantForm`, `Feec.FiniteElement.AffineInvariantForm`); and (theorem
+  FEEC.charZero_iff_classification) that characteristic `0` is necessary for it, by a
+  counterexample over every field of positive characteristic
+  (`Feec.Counterexamples.PositiveCharacteristic`).
 * `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
   VonNeumann.inequality_dissipative, VonNeumann.inequality_mdissipative, their real forms
   VonNeumann.inequality_dissipative_real and VonNeumann.inequality_mdissipative_real,

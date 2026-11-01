@@ -15,6 +15,7 @@ public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PeriodicFamily
 public import Feec.Counterexamples.PolynomialForms
+public import Feec.Counterexamples.PositiveCharacteristic
 public import Feec.Domain.BGGRealization
 
 /-!
@@ -27,7 +28,9 @@ statement of a theorem, by reference (`type_of%`). Only closed range is shown to
 (dropping it breaks a conclusion of the crown); the bounded-projection hypothesis of the static
 layer is characterized (it is equivalent to discrete stability); for the reducing and subcomplex
 hypotheses the entries show that they fail for the constraints and spaces of interest, so the
-crown does not give the corresponding conclusions there.
+crown does not give the corresponding conclusions there. Of the hypotheses of the layers below the
+crown, characteristic `0` is shown to be necessary for the Poincaré lemma of the polynomial forms
+behind the shape spaces.
 
 * **Closed range** (the hypothesis `hcr` of `Verdict.static`). Closed range of `𝔅ᵏ` is necessary
   for the static verdict at `j → k`: its uniform discrete Poincaré inequality forces it
@@ -70,6 +73,16 @@ crown does not give the corresponding conclusions there.
   `divDivMaximalData_not_injSurjWith`; e.g. `S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)`). So on `L²` these
   fields hold only vacuously; the explicit map is exercised on smooth fields
   (`Feec.Domain.smoothBGGVerdict`).
+* **Characteristic `0`** (the hypothesis of the polynomial Poincaré lemma
+  `Feec.Koszul.exists_extDeriv_eq_of_mem_polyForm`, behind the unisolvence of the shape spaces
+  `P_rΛᵏ` of the conforming families, `Feec.FiniteElement.eq_zero_of_isBubble_of_mem_polyForm`).
+  It is necessary: the closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every dimension iff the
+  field has characteristic `0` (`PositiveCharacteristic.charZero_iff_closed_eq_exact`); in
+  characteristic `p > 0`, `x^{p-1} dx` is closed and not exact. The crown's instances are over
+  `ℝ`, so this bounds the generality of the polynomial layer, not a hypothesis of the crown. (That
+  characteristic `0` is also necessary for the `GL(n)`-classification of [AFW2006], §3.4,
+  `PositiveCharacteristic.charZero_iff_classification`, is a result of the shape-space layer that
+  the crown does not use.)
 
 ## Thesis corrections
 
@@ -131,6 +144,8 @@ on is documentary, stated below.
   §2.4, §2.8, §4.2, §4.6, §4.8, §4.10–4.11, §5.2, §6.2
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3, Thms 3.6, 3.7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3.4
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 5
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -164,7 +179,8 @@ closed range is necessary for the static verdict; the reducing hypothesis of the
 fails for the TSD constraint, so only the departure branch applies to it; the subcomplex
 hypothesis fails for the pairs `P_{r+1}Λ⁰ × P_r⁻Λ¹`; bounded cochain projections are equivalent
 to discrete stability; the right inverses of the explicit BGG map do not exist between the `L²`
-domains of the Hessian, elasticity and div-div diagrams. Each field is the statement of the named
+domains of the Hessian, elasticity and div-div diagrams; the Poincaré lemma of the polynomial
+forms behind the shape spaces needs characteristic `0`. Each field is the statement of the named
 theorem. -/
 structure CrownSharpness : Prop where
   /-- `Verdict.static`, closed range is necessary: no conforming family of the periodic complex
@@ -208,6 +224,10 @@ structure CrownSharpness : Prop where
   injSurjWith_elasticity : type_of% @Domain.elasticityMaximalData_not_injSurjWith.{u}
   /-- the same for the div-div diagram from any `J ≤ 2` (`S² = I : H(div) → L²`) -/
   injSurjWith_divDiv : type_of% @Domain.divDivMaximalData_not_injSurjWith.{u}
+  /-- the shape spaces, characteristic `0` (the hypothesis of the polynomial Poincaré lemma
+  `Koszul.exists_extDeriv_eq_of_mem_polyForm`): the closed forms of `H_mΛ^{k+1}` are exact in
+  every dimension iff the field has characteristic `0` -/
+  charZero_exact : type_of% @PositiveCharacteristic.charZero_iff_closed_eq_exact.{u}
 
 /-- **What the counterexamples show about the crown's hypotheses** (`CrownSharpness`). -/
 theorem crownSharpness : CrownSharpness.{u, v} :=
@@ -219,7 +239,7 @@ theorem crownSharpness : CrownSharpness.{u, v} :=
     PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus,
     HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff,
     Domain.hessianMaximalData_not_injSurjWith, Domain.elasticityMaximalData_not_injSurjWith,
-    Domain.divDivMaximalData_not_injSurjWith⟩
+    Domain.divDivMaximalData_not_injSurjWith, PositiveCharacteristic.charZero_iff_closed_eq_exact⟩
 
 /-! ### Thesis corrections -/
 

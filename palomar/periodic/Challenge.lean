@@ -60,7 +60,10 @@ states the classification of the affinely invariant spaces of [AFW2006], §3.4, 
 `X(r, s, k) = dP_{r+1}Λᵏ⁻¹ + κP_sΛ^{k+1}` (`s ≤ r`) are invariant under every affine map,
 `X(r, r, k) = P_{r+1}⁻Λᵏ`, `X(r + 1, r, k) = P_{r+1}Λᵏ`, `dP_1Λᵏ⁻¹ = P_0Λᵏ` (Theorem 3.5); and for
 `0 < k < n` every nonzero finite-dimensional space of `k`-forms invariant under the invertible
-affine maps is `dP_{r+1}Λᵏ⁻¹` or some `X(r, s, k)` (Theorem 3.6).
+affine maps is `dP_{r+1}Λᵏ⁻¹` or some `X(r, s, k)` (Theorem 3.6). A third theorem
+(`FEEC.charZero_iff_classification`) states that characteristic `0` is necessary: the
+classification of the `GL(n)`-invariant subspaces of `H_rΛᵏ` holds in every dimension iff `K` has
+characteristic `0`.
 
 ## References
 
@@ -388,6 +391,18 @@ characteristic `0` ([AFW2006], Theorems 3.5–3.6): for `0 < k < n` they are the
 (`AffineInvariantForms`). -/
 theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
     AffineInvariantForms K n := by
+  sorry
+
+/-- **Characteristic `0` is necessary for the classification**: the `GL(n)`-invariant subspaces
+of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` in every dimension
+`n` and all degrees iff `K` has characteristic `0`. This concerns the hypothesis of the
+generalization in `affineInvariantForms` of the decomposition of [AFW2006], §3.4, which is
+stated there over `ℝ` only. -/
+theorem charZero_iff_classification (K : Type u) [Field K] :
+    CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
+      W ≤ homForm K n (r + 1) (k + 1) →
+        W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
+          W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) := by
   sorry
 
 end FEEC

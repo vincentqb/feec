@@ -27,8 +27,9 @@ statement of a theorem, by reference (`type_of%`). Only closed range is shown to
 (dropping it breaks a conclusion of the crown); the bounded-projection hypothesis of the static
 layer is characterized (it is equivalent to discrete stability); for the reducing and subcomplex
 hypotheses the entries show that they fail for the constraints and spaces of interest, so the
-crown does not give the corresponding conclusions there. Characteristic `0`, under which the
-polynomial algebra of the shape spaces is proved, is necessary for it.
+crown does not give the corresponding conclusions there. Of the hypotheses of the layers below the
+crown, characteristic `0` is shown to be necessary for the Poincaré lemma of the polynomial forms
+behind the shape spaces.
 
 * **Closed range** (the hypothesis `hcr` of `Verdict.static`). Closed range of `𝔅ᵏ` is necessary
   for the static verdict at `j → k`: its uniform discrete Poincaré inequality forces it
@@ -62,15 +63,16 @@ polynomial algebra of the shape spaces is proved, is necessary for it.
   suffices: for a complex with closed range, uniformly bounded cochain projections exist iff the
   discrete Poincaré inequality and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly
   (`HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff`; [AFW2010], Thms 3.6, 3.7, (30)).
-* **Characteristic `0`** (the polynomial algebra behind the shape spaces `P_rΛᵏ`, `P_r⁻Λᵏ` of the
-  conforming families, `Feec.FiniteElement.PolyComplex`, is proved over any field of
-  characteristic `0`). It is necessary: in every dimension the `GL(n)`-invariant subspaces of
-  `H_mΛᵏ` are `0`, the closed forms, the `κ`-closed forms and `H_mΛᵏ`
-  (`PositiveCharacteristic.charZero_iff_classification`; the summands as images,
-  [AFW2006], §3.4: `PositiveCharacteristic.charZero_iff_classification_succ`), and the closed forms
-  of `H_mΛ^{k+1}` are exact (`PositiveCharacteristic.charZero_iff_closed_eq_exact`), iff the field
-  has characteristic `0`: over a field of characteristic `p > 0` the forms with coefficients in the
-  span of the `x_i^{p²}` are invariant and none of these, and `x^{p-1} dx` is closed, not exact.
+* **Characteristic `0`** (the hypothesis of the polynomial Poincaré lemma
+  `Feec.Koszul.exists_extDeriv_eq_of_mem_polyForm`, behind the unisolvence of the shape spaces
+  `P_rΛᵏ` of the conforming families, `Feec.FiniteElement.eq_zero_of_isBubble_of_mem_polyForm`).
+  It is necessary: the closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every dimension iff the
+  field has characteristic `0` (`PositiveCharacteristic.charZero_iff_closed_eq_exact`); in
+  characteristic `p > 0`, `x^{p-1} dx` is closed and not exact. The crown's instances are over
+  `ℝ`, so this bounds the generality of the polynomial layer, not a hypothesis of the crown. (That
+  characteristic `0` is also necessary for the `GL(n)`-classification of [AFW2006], §3.4,
+  `PositiveCharacteristic.charZero_iff_classification`, is a result of the shape-space layer that
+  the crown does not use.)
 
 ## Thesis corrections
 
@@ -166,8 +168,8 @@ universe u v w
 closed range is necessary for the static verdict; the reducing hypothesis of the residual clauses
 fails for the TSD constraint, so only the departure branch applies to it; the subcomplex
 hypothesis fails for the pairs `P_{r+1}Λ⁰ × P_r⁻Λ¹`; bounded cochain projections are equivalent
-to discrete stability; the algebra of the polynomial shape spaces needs characteristic `0`. Each field is the statement of the named
-theorem. -/
+to discrete stability; the Poincaré lemma of the polynomial forms behind the shape spaces needs
+characteristic `0`. Each field is the statement of the named theorem. -/
 structure CrownSharpness : Prop where
   /-- `Verdict.static`, closed range is necessary: no conforming family of the periodic complex
   (`ℌ = 0`) has the static verdict in even degrees -/
@@ -202,14 +204,9 @@ structure CrownSharpness : Prop where
   uniformly graph-bounded projections exists iff the discrete Poincaré inequality and the
   harmonic bound hold uniformly (a characterization; [AFW2010], Thms 3.6, 3.7) -/
   projections : type_of% @HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff.{u, v, u, v}
-  /-- the polynomial shape spaces, characteristic `0`: the classification of the `GL(n)`-invariant
-  subspaces of `H_mΛᵏ` holds in every dimension iff the field has characteristic `0` -/
-  charZero_classification : type_of% @PositiveCharacteristic.charZero_iff_classification.{u}
-  /-- the same with the summands as the images `dH_{r+1}Λ^{k-1}`, `κH_{r-1}Λ^{k+1}` ([AFW2006],
-  §3.4) -/
-  charZero_classification_succ : type_of% @PositiveCharacteristic.charZero_iff_classification_succ.{u}
-  /-- the polynomial shape spaces, characteristic `0`: the closed forms of `H_mΛ^{k+1}` are exact
-  in every dimension iff the field has characteristic `0` -/
+  /-- the shape spaces, characteristic `0` (the hypothesis of the polynomial Poincaré lemma
+  `Koszul.exists_extDeriv_eq_of_mem_polyForm`): the closed forms of `H_mΛ^{k+1}` are exact in
+  every dimension iff the field has characteristic `0` -/
   charZero_exact : type_of% @PositiveCharacteristic.charZero_iff_closed_eq_exact.{u}
 
 /-- **What the counterexamples show about the crown's hypotheses** (`CrownSharpness`). -/
@@ -221,8 +218,6 @@ theorem crownSharpness : CrownSharpness.{u, v} :=
     BoxStationary.mem_invariantCore_tsd_iff_box, BallEigenDense.coreSub_le_stationary_ball3_iff,
     PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus,
     HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff,
-    PositiveCharacteristic.charZero_iff_classification,
-    PositiveCharacteristic.charZero_iff_classification_succ,
     PositiveCharacteristic.charZero_iff_closed_eq_exact⟩
 
 /-! ### Thesis corrections -/

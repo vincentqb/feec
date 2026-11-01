@@ -393,9 +393,11 @@ theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
     AffineInvariantForms K n := by
   sorry
 
-/-- **Characteristic `0` is necessary for the classification** ([AFW2006], §3.4): the
-`GL(n)`-invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and
-`H_{r+1}Λ^{k+1}` in every dimension `n` and all degrees iff `K` has characteristic `0`. -/
+/-- **Characteristic `0` is necessary for the classification**: the `GL(n)`-invariant subspaces
+of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` in every dimension
+`n` and all degrees iff `K` has characteristic `0`. This concerns the hypothesis of the
+generalization in `affineInvariantForms` of the decomposition of [AFW2006], §3.4, which is
+stated there over `ℝ` only. -/
 theorem charZero_iff_classification (K : Type u) [Field K] :
     CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
       W ≤ homForm K n (r + 1) (k + 1) →

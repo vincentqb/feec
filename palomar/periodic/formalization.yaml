@@ -134,13 +134,13 @@ sources:
       and H_q Lambda^1 (they contain x_1^q dx_1, with kappa(x_1^q dx_1) = x_1^(q+1) != 0, and miss
       d(x_1^(q-1) x_2^2), whose coefficient q - 1 = -1 on x_1^(q-2) x_2^2 dx_1 does not vanish);
       Feec.Counterexamples.PositiveCharacteristic. Proved in Feec, not compared: the same for the
-      summands as kernels (charZero_iff_classification) and the failure of the Poincare lemma
-      (3.2) in characteristic p, x^(p-1) dx closed and not exact (charZero_iff_closed_eq_exact). Not formalized: the description of the third kind of
-      Theorem 3.5 (s < r - 1) as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its
-      strict inclusions, the identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate
-      statements (used in the proofs, Feec.FiniteElement.polyPullback_mem_polyForm,
-      polyPullback_koszul, IsAffineInvariant.closed_le_of_succ), the 2^(n-1) intermediate
-      resolutions of §3.5, §3.6.
+      summands as kernels (charZero_iff_classification_ker) and the failure of the Poincare lemma
+      (3.2) in characteristic p, x^(p-1) dx closed and not exact (charZero_iff_closed_eq_exact).
+      Not formalized: the description of the third kind of Theorem 3.5 (s < r - 1) as
+      {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its strict inclusions, the
+      identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate statements (used in the proofs,
+      Feec.FiniteElement.polyPullback_mem_polyForm, polyPullback_koszul,
+      IsAffineInvariant.closed_le_of_succ), the 2^(n-1) intermediate resolutions of §3.5, §3.6.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -396,7 +396,7 @@ alignment:
       note: >-
         Compared theorem (added 2026-11-01, not yet reviewed by the author); proved in
         Solution.lean from FEEC.charZero_iff_classification_of_feec (Solution/Affine.lean), from
-        Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_succ. The source
+        Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification. The source
         works over R and does not discuss other fields; this is a fidelity statement about the
         generalization (1), (6).
 

@@ -51,7 +51,7 @@ with coefficients in the span of the `x_i^{p²}` are a linearly invariant subspa
 (`n ≥ 2`, as `(Σ_l b_l x_l)^{p²} = Σ_l b_l^{p²} x_l^{p²}`) that is none of the four, and
 `x^{p-1} dx` is closed and not exact, so the classification and the Poincaré lemma for `H_mΛᵏ` hold
 in every dimension iff the characteristic is `0`
-(`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification`,
+(`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker`,
 `Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact`).
 
 ## Main definitions

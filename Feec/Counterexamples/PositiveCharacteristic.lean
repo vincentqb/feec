@@ -11,7 +11,7 @@ are `0`, the closed forms `dH_{m+1}Λ^{k-1}`, the `κ`-closed forms `κH_{m-1}Λ
 (`Feec.FiniteElement.IsGLInvariant.eq_of_le_homForm`, [AFW2006], §3.4), and the closed forms of
 `H_mΛ^{k+1}` are exact (`Feec.FiniteElement.homForm_inf_ker_extDeriv`). Both fail over **every**
 field of characteristic `p > 0`, so both hold in all dimensions and degrees exactly in
-characteristic `0` (`charZero_iff_classification`, `charZero_iff_classification_succ`,
+characteristic `0` (`charZero_iff_classification_ker`, `charZero_iff_classification`,
 `charZero_iff_closed_eq_exact`):
 
 * **a Frobenius-twisted invariant subspace** (`coeffForm_powSpan_not_classified`,
@@ -37,7 +37,7 @@ characteristic `0` invert. In dimension `1` every subspace of `H_mΛᵏ` is `0` 
 
 ## Main results
 
-* `charZero_iff_classification`, `charZero_iff_classification_succ`: the classification of the
+* `charZero_iff_classification_ker`, `charZero_iff_classification`: the classification of the
   `GL(n)`-invariant subspaces of `H_mΛᵏ` holds in every dimension iff `K` has characteristic `0`;
 * `charZero_iff_closed_eq_exact`: the closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every
   dimension iff `K` has characteristic `0`;
@@ -151,11 +151,11 @@ theorem koszul_powDx_ne_zero (i : Fin n) (q : ℕ) : Koszul.koszul (powDx (K := 
   fun h => by simpa [koszul_powDx] using congrFun h ∅
 
 /-- `d(x_i^m x_j^2)`, an exact `1`-form. -/
-def exactForm (i j : Fin n) (m : ℕ) : PolyForm K (Fin n) :=
+def dPowMulSq (i j : Fin n) (m : ℕ) : PolyForm K (Fin n) :=
   Koszul.extDeriv (Pi.single ∅ (X i ^ m * X j ^ 2))
 
-theorem exactForm_mem_map (i j : Fin n) (m : ℕ) :
-    exactForm (K := K) i j m ∈ (homForm K (Fin n) (m + 2) 0).map (extDerivₗ K (Fin n)) := by
+theorem dPowMulSq_mem_map (i j : Fin n) (m : ℕ) :
+    dPowMulSq (K := K) i j m ∈ (homForm K (Fin n) (m + 2) 0).map (extDerivₗ K (Fin n)) := by
   refine ⟨Pi.single ∅ (X i ^ m * X j ^ 2), ⟨fun s hs => ?_, fun s => ?_⟩, rfl⟩
   · rw [Pi.single_apply, ite_eq_right fun h => absurd (by rw [h, card_empty]) hs]
   · rw [Pi.single_apply]
@@ -164,8 +164,8 @@ theorem exactForm_mem_map (i j : Fin n) (m : ℕ) :
     · exact isHomogeneous_zero _ _ _
 
 /-- The coefficient of `x_i^{m-1} x_j^2 dx_i` in `d(x_i^m x_j^2)` is `m`. -/
-theorem coeff_exactForm {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : 1 ≤ m) :
-    (exactForm (K := K) i j m {i}).coeff (Finsupp.single i (m - 1) + Finsupp.single j 2) =
+theorem coeff_dPowMulSq {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : 1 ≤ m) :
+    (dPowMulSq (K := K) i j m {i}).coeff (Finsupp.single i (m - 1) + Finsupp.single j 2) =
       (m : K) := by
   have he : Finsupp.single i m + Finsupp.single j 2 - Finsupp.single i 1 =
       Finsupp.single i (m - 1) + Finsupp.single j 2 := by
@@ -173,21 +173,22 @@ theorem coeff_exactForm {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : 1 ≤ m) :
     simp only [Finsupp.coe_tsub, Finsupp.coe_add, Pi.sub_apply, Pi.add_apply,
       Finsupp.single_apply]
     split_ifs <;> omega
-  rw [exactForm, Koszul.extDeriv_apply, sum_singleton, erase_singleton, Pi.single_eq_same,
+  rw [dPowMulSq, Koszul.extDeriv_apply, sum_singleton, erase_singleton, Pi.single_eq_same,
     X_pow_eq_monomial, X_pow_eq_monomial, monomial_mul_monomial, one_mul, pderiv_monomial, he]
   simp [sgn, Finset.filter_singleton, hij.symm]
 
-theorem exactForm_mem_homForm (i j : Fin n) (m : ℕ) :
-    exactForm (K := K) i j m ∈ homForm K (Fin n) (m + 1) 1 ⊓ LinearMap.ker (extDerivₗ K (Fin n)) := by
-  obtain ⟨η, hη, hηd⟩ := exactForm_mem_map (K := K) i j m
+theorem dPowMulSq_mem_homForm (i j : Fin n) (m : ℕ) :
+    dPowMulSq (K := K) i j m ∈
+      homForm K (Fin n) (m + 1) 1 ⊓ LinearMap.ker (extDerivₗ K (Fin n)) := by
+  obtain ⟨η, hη, hηd⟩ := dPowMulSq_mem_map (K := K) i j m
   rw [← hηd, Koszul.extDerivₗ_apply]
   exact ⟨by simpa using Koszul.extDeriv_mem_homForm hη, by
     rw [SetLike.mem_coe, LinearMap.mem_ker, Koszul.extDerivₗ_apply, Koszul.extDeriv_extDeriv]⟩
 
 /-- `d(x_i^{q-1} x_j^2) ∉ UΛ¹` for `q = p²`: its coefficient `q - 1 = -1` on `x_i^{q-2} x_j^2 dx_i`
 does not vanish, and `x_i^{q-2} x_j^2` is not a `q`-th power of a coordinate. -/
-theorem exactForm_not_mem [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : m + 1 = p ^ 2) :
-    exactForm (K := K) i j m ∉ coeffForm K 1 (powSpan K n (m + 1)) := fun h => by
+theorem dPowMulSq_notMem [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ} (hm : m + 1 = p ^ 2) :
+    dPowMulSq (K := K) i j m ∉ coeffForm K 1 (powSpan K n (m + 1)) := fun h => by
   have hp := (Fact.out : p.Prime).two_le
   have hq : 4 ≤ p ^ 2 := by nlinarith
   have h0 := coeff_eq_zero_of_mem_powSpan (h.2 {i})
@@ -195,7 +196,7 @@ theorem exactForm_not_mem [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ}
       have := DFunLike.congr_fun hl j
       simp only [Finsupp.add_apply, Finsupp.single_apply, hij, ite_true] at this
       split_ifs at this <;> omega
-  rw [coeff_exactForm hij (by omega)] at h0
+  rw [coeff_dPowMulSq hij (by omega)] at h0
   have hq0 : ((m + 1 : ℕ) : K) = 0 := by
     rw [hm, Nat.cast_pow, CharP.cast_eq_zero, zero_pow two_ne_zero]
   push_cast at hq0
@@ -212,30 +213,31 @@ theorem coeffForm_powSpan_not_classified [Fact p.Prime] {i j : Fin n} (hij : i �
       coeffForm K 1 (powSpan K n (m + 1)) =
         homForm K (Fin n) (m + 1) 1 ⊓ LinearMap.ker (koszulₗ K (Fin n)) ∨
       coeffForm K 1 (powSpan K n (m + 1)) = homForm K (Fin n) (m + 1) 1) := by
-  have hψ := exactForm_not_mem (K := K) p hij hm
+  have hψ := dPowMulSq_notMem (K := K) p hij hm
   have hξ := powDx_mem_coeffForm (K := K) i (m + 1)
   rintro (h | h | h | h) <;> rw [h] at hξ hψ
   · exact koszul_powDx_ne_zero i _ (by rw [(Submodule.mem_bot K).1 hξ, Koszul.koszul_zero])
-  · exact hψ (exactForm_mem_homForm i j m)
+  · exact hψ (dPowMulSq_mem_homForm i j m)
   · exact koszul_powDx_ne_zero i _ (LinearMap.mem_ker.1 hξ.2)
-  · exact hψ (exactForm_mem_homForm i j m).1
+  · exact hψ (dPowMulSq_mem_homForm i j m).1
 
 /-- **In characteristic `p > 0`, `UΛ¹` is none of `0`, `dH_{p²+1}Λ⁰`, `κH_{p²-1}Λ²` and
 `H_{p²}Λ¹`** (`n ≥ 2`), against `IsLinearInvariant.eq_of_le_homForm_succ` ([AFW2006], §3.4). -/
 theorem coeffForm_powSpan_not_classified_succ [Fact p.Prime] {i j : Fin n} (hij : i ≠ j) {m : ℕ}
     (hm : m + 1 = p ^ 2) :
     ¬ (coeffForm K 1 (powSpan K n (m + 1)) = ⊥ ∨
-      coeffForm K 1 (powSpan K n (m + 1)) = (homForm K (Fin n) (m + 2) 0).map (extDerivₗ K (Fin n)) ∨
+      coeffForm K 1 (powSpan K n (m + 1)) =
+        (homForm K (Fin n) (m + 2) 0).map (extDerivₗ K (Fin n)) ∨
       coeffForm K 1 (powSpan K n (m + 1)) = (homForm K (Fin n) m 2).map (koszulₗ K (Fin n)) ∨
       coeffForm K 1 (powSpan K n (m + 1)) = homForm K (Fin n) (m + 1) 1) := by
-  have hψ := exactForm_not_mem (K := K) p hij hm
+  have hψ := dPowMulSq_notMem (K := K) p hij hm
   have hξ := powDx_mem_coeffForm (K := K) i (m + 1)
   rintro (h | h | h | h) <;> rw [h] at hξ hψ
   · exact koszul_powDx_ne_zero i _ (by rw [(Submodule.mem_bot K).1 hξ, Koszul.koszul_zero])
-  · exact hψ (exactForm_mem_map i j m)
+  · exact hψ (dPowMulSq_mem_map i j m)
   · obtain ⟨η, -, hη⟩ := hξ
     exact koszul_powDx_ne_zero i _ (by rw [← hη, Koszul.koszulₗ_apply, Koszul.koszul_koszul])
-  · exact hψ (exactForm_mem_homForm i j m).1
+  · exact hψ (dPowMulSq_mem_homForm i j m).1
 
 /-! ### A closed form that is not exact -/
 
@@ -266,18 +268,11 @@ end Frobenius
 
 /-! ### Characteristic `0` is necessary -/
 
-/-- A field of positive characteristic: `CharP K p` for a prime `p`. -/
-theorem exists_prime_charP_of_not_charZero (hK : ¬ CharZero K) :
-    ∃ p, p.Prime ∧ CharP K p := by
-  rcases CharP.char_is_prime_or_zero K (ringChar K) with h | h
-  · exact ⟨ringChar K, h, ringChar.charP K⟩
-  · exact absurd ((CharP.charP_zero_iff_charZero K).1 (h ▸ ringChar.charP K)) hK
-
 variable (K) in
 /-- **The classification of the `GL(n)`-invariant subspaces of `H_mΛᵏ` (`m + k > 0`) as `0`, the
 closed forms, the `κ`-closed forms and `H_mΛᵏ` holds in every dimension iff `K` has characteristic
 `0`** (`IsGLInvariant.eq_of_le_homForm`, `coeffForm_powSpan_not_classified`). -/
-theorem charZero_iff_classification :
+theorem charZero_iff_classification_ker :
     CharZero K ↔ ∀ (n : ℕ) (W : Submodule K (PolyForm K (Fin n))), IsGLInvariant W →
       ∀ m k, 0 < m + k → W ≤ homForm K (Fin n) m k →
         W = ⊥ ∨ W = homForm K (Fin n) m k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ∨
@@ -285,17 +280,18 @@ theorem charZero_iff_classification :
             W = homForm K (Fin n) m k := by
   refine ⟨fun _ n W hW m k hmk hle => hW.eq_of_le_homForm hmk hle, fun h => ?_⟩
   by_contra hK
-  obtain ⟨p, hp, _⟩ := exists_prime_charP_of_not_charZero hK
-  have := Fact.mk hp
-  obtain ⟨m, hm⟩ : ∃ m, m + 1 = p ^ 2 := ⟨p ^ 2 - 1, by have := Nat.one_le_pow 2 p hp.pos; omega⟩
+  obtain ⟨p, _, _⟩ := (CharP.exists' K).resolve_left hK
+  have hp := (Fact.out : p.Prime).pos
+  obtain ⟨m, hm⟩ : ∃ m, m + 1 = p ^ 2 := ⟨p ^ 2 - 1, by have := Nat.one_le_pow 2 p hp; omega⟩
   exact coeffForm_powSpan_not_classified (n := 2) p (i := 0) (j := 1) (by decide) hm
-    (h 2 _ (hm ▸ isLinearInvariant_coeffForm_powSpan p 1).isGLInvariant (m + 1) 1 (by omega) (coeffForm_powSpan_le_homForm _ 1))
+    (h 2 _ (hm ▸ isLinearInvariant_coeffForm_powSpan p 1).isGLInvariant (m + 1) 1 (by omega)
+      (coeffForm_powSpan_le_homForm _ 1))
 
 variable (K) in
 /-- **[AFW2006], §3.4: the `GL(n)`-invariant subspaces of `H_rΛᵏ` (`r, k ≥ 1`) are `0`,
 `dH_{r+1}Λ^{k-1}`, `κH_{r-1}Λ^{k+1}` and `H_rΛᵏ` in every dimension iff `K` has characteristic
 `0`** (`IsGLInvariant.eq_of_le_homForm_succ`, `coeffForm_powSpan_not_classified_succ`). -/
-theorem charZero_iff_classification_succ :
+theorem charZero_iff_classification :
     CharZero K ↔ ∀ (n : ℕ) (W : Submodule K (PolyForm K (Fin n))), IsGLInvariant W →
       ∀ m k, W ≤ homForm K (Fin n) (m + 1) (k + 1) →
         W = ⊥ ∨ W = (homForm K (Fin n) (m + 2) k).map (extDerivₗ K (Fin n)) ∨
@@ -303,11 +299,12 @@ theorem charZero_iff_classification_succ :
             W = homForm K (Fin n) (m + 1) (k + 1) := by
   refine ⟨fun _ n W hW m k hle => hW.eq_of_le_homForm_succ hle, fun h => ?_⟩
   by_contra hK
-  obtain ⟨p, hp, _⟩ := exists_prime_charP_of_not_charZero hK
-  have := Fact.mk hp
-  obtain ⟨m, hm⟩ : ∃ m, m + 1 = p ^ 2 := ⟨p ^ 2 - 1, by have := Nat.one_le_pow 2 p hp.pos; omega⟩
+  obtain ⟨p, _, _⟩ := (CharP.exists' K).resolve_left hK
+  have hp := (Fact.out : p.Prime).pos
+  obtain ⟨m, hm⟩ : ∃ m, m + 1 = p ^ 2 := ⟨p ^ 2 - 1, by have := Nat.one_le_pow 2 p hp; omega⟩
   exact coeffForm_powSpan_not_classified_succ (n := 2) p (i := 0) (j := 1) (by decide) hm
-    (h 2 _ (hm ▸ isLinearInvariant_coeffForm_powSpan p 1).isGLInvariant m 0 (coeffForm_powSpan_le_homForm _ 1))
+    (h 2 _ (hm ▸ isLinearInvariant_coeffForm_powSpan p 1).isGLInvariant m 0
+      (coeffForm_powSpan_le_homForm _ 1))
 
 variable (K) in
 /-- **The closed forms of `H_mΛ^{k+1}` are `dH_{m+1}Λᵏ` in every dimension iff `K` has
@@ -317,9 +314,8 @@ theorem charZero_iff_closed_eq_exact :
       (homForm K (Fin n) (m + 1) k).map (extDerivₗ K (Fin n)) := by
   refine ⟨fun _ n m k => homForm_inf_ker_extDeriv m k, fun h => ?_⟩
   by_contra hK
-  obtain ⟨p, hp, _⟩ := exists_prime_charP_of_not_charZero hK
-  have := Fact.mk hp
-  obtain ⟨m, hm⟩ : ∃ m, m + 1 = p := ⟨p - 1, by have := hp.pos; omega⟩
+  obtain ⟨p, _, _⟩ := (CharP.exists' K).resolve_left hK
+  obtain ⟨m, hm⟩ : ∃ m, m + 1 = p := ⟨p - 1, by have := (Fact.out : p.Prime).pos; omega⟩
   obtain ⟨h1, h2⟩ := closed_not_exact (K := K) p (0 : Fin 1) hm
   exact h2 (h 1 m 0 ▸ h1)
 

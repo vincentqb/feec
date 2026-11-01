@@ -9,9 +9,9 @@ The statements of `Feec.HilbertComplex.Subcomplex.exists_cochainProjection` ([AF
 and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` (Thms 3.6, 3.7 and (30)), written
 out verbatim and proved from the library, and the field `projections` of the crown's sharpness
 record `Feec.Counterexamples.CrownSharpness` (`SubcomplexFamily.exists_isGraphBounded_iff`), read
-back with `SubcomplexFamily.IsGraphBounded` unfolded, and its fields `charZero_classification`,
-`charZero_classification_succ`, `charZero_exact` (characteristic `0` is necessary for the
-classification of the invariant subspaces of `H_mΛᵏ` and for its Poincaré lemma), with the
+back with `SubcomplexFamily.IsGraphBounded` unfolded, its field `charZero_exact` (characteristic
+`0` is necessary for the Poincaré lemma of `H_mΛᵏ`), and the statements that characteristic `0`
+is necessary for the classification of the invariant subspaces of `H_mΛᵏ`, with the
 counterexamples behind them. A change of any of these statements fails `lake build FeecCheck`.
 
 ## References
@@ -76,25 +76,26 @@ open Koszul (PolyForm homForm coeffForm koszulₗ extDerivₗ)
 
 variable (K : Type) [Field K]
 
-/-- The crown's sharpness field `charZero_classification`. -/
+/-- `charZero_iff_classification_ker`: the summands as kernels. -/
 example : CharZero K ↔ ∀ (n : ℕ) (W : Submodule K (PolyForm K (Fin n))), IsGLInvariant W →
     ∀ m k, 0 < m + k → W ≤ homForm K (Fin n) m k →
       W = ⊥ ∨ W = homForm K (Fin n) m k ⊓ LinearMap.ker (extDerivₗ K (Fin n)) ∨
         W = homForm K (Fin n) m k ⊓ LinearMap.ker (koszulₗ K (Fin n)) ∨
           W = homForm K (Fin n) m k :=
-  Feec.Counterexamples.crownSharpness.{0, 0}.charZero_classification K
+  charZero_iff_classification_ker K
 
-/-- The crown's sharpness field `charZero_classification_succ` ([AFW2006], §3.4). -/
+/-- `charZero_iff_classification`: the summands as images ([AFW2006], §3.4). -/
 example : CharZero K ↔ ∀ (n : ℕ) (W : Submodule K (PolyForm K (Fin n))), IsGLInvariant W →
     ∀ m k, W ≤ homForm K (Fin n) (m + 1) (k + 1) →
       W = ⊥ ∨ W = (homForm K (Fin n) (m + 2) k).map (extDerivₗ K (Fin n)) ∨
         W = (homForm K (Fin n) m (k + 2)).map (koszulₗ K (Fin n)) ∨
           W = homForm K (Fin n) (m + 1) (k + 1) :=
-  Feec.Counterexamples.crownSharpness.{0, 0}.charZero_classification_succ K
+  charZero_iff_classification K
 
 /-- The crown's sharpness field `charZero_exact`. -/
-example : CharZero K ↔ ∀ n m k, homForm K (Fin n) m (k + 1) ⊓ LinearMap.ker (extDerivₗ K (Fin n)) =
-    (homForm K (Fin n) (m + 1) k).map (extDerivₗ K (Fin n)) :=
+example : CharZero K ↔ ∀ n m k,
+    homForm K (Fin n) m (k + 1) ⊓ LinearMap.ker (extDerivₗ K (Fin n)) =
+      (homForm K (Fin n) (m + 1) k).map (extDerivₗ K (Fin n)) :=
   Feec.Counterexamples.crownSharpness.{0, 0}.charZero_exact K
 
 variable {K} {n : ℕ} (p : ℕ) [Fact p.Prime] [CharP K p]

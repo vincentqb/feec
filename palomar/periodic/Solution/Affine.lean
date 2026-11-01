@@ -15,7 +15,7 @@ and agreeing on the covectors. The invariance predicates and the spaces `X(r, s,
 (`isAffineInvariant_iff`, `isLinearInvariant_iff`, `map_invariantForm`), and the conclusions are
 those of `Feec.FiniteElement.InvariantForm` and `Feec.FiniteElement.AffineInvariantForm`
 (`affineInvariantForms_of_feec`); that characteristic `0` is necessary is
-`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_succ`
+`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification`
 (`charZero_iff_classification_of_feec`).
 
 ## References
@@ -193,7 +193,7 @@ theorem charZero_iff_classification_of_feec :
         W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
           W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) := by
   refine ⟨fun _ n r k W hW hle => (affineInvariantForms_of_feec K n).eq_of_le_homForm r k W hW hle,
-    fun h => (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_succ K).2
+    fun h => (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification K).2
       fun n W hW m k hle => ?_⟩
   set e := Feec.Koszul.formEquiv K (Fin n)
   set V := W.comap e.toLinearMap

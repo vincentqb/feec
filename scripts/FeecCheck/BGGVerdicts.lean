@@ -21,6 +21,10 @@ structure.
 `Instances.CrownNonVacuity` gained a last field `bgg`, the explicit map (30) on the smooth
 Hessian, elasticity and div-div complexes; `crownNonVacuity_bgg` checks, by `type_of%`, that it is
 the statement of `Domain.smoothBGGVerdict`.
+Between the `L²` domains the explicit-map hypothesis `Data.InjSurjWith` fails:
+`not_surjective_maximalData_domainS_statement` states the general non-surjectivity of `Sᵏ`
+verbatim (the corresponding fields of `Counterexamples.CrownSharpness` are read back in
+`FeecCheck.Sharpness`).
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -102,5 +106,21 @@ universe u in
 theorem crownNonVacuity_bgg (h : Instances.CrownNonVacuity.{u}) :
     type_of% @Domain.smoothBGGVerdict.{u} :=
   h.bgg
+
+open MeasureTheory in
+/-- `Domain.ConstCoeffBGG.not_surjective_maximalData_domainS`, verbatim: `Sᵏ` is not onto between
+the `L²` domains when `Aᵏ⁺¹ Sᵏ ψ = 0 ≠ Aᵏ ψ` for a smooth compactly supported `ψ`. -/
+theorem not_surjective_maximalData_domainS_statement {E : Type*} [NormedAddCommGroup E]
+    [NormedSpace ℝ E] [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
+    [(volume : Measure E).IsAddHaarMeasure] {Ω : Set E} (B : Domain.ConstCoeffBGG E 𝕜)
+    (M : ∀ k, Matrix (B.top.ι (k + 1)) (B.bot.ι k) 𝕜)
+    (hM : ∀ k f, (B.S k).apply f = (Domain.ConstCoeffOp.ofMatrix (M k)).apply f)
+    (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {k : ℤ} [DecidableEq (B.bot.ι k)]
+    {N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜} (hN : N * M k = 1) {a r : ℕ}
+    (htop : (B.top.A (k + 1)).IsHomogeneous a) (hbot : (B.bot.A k).IsHomogeneous r) (hr : 0 < r)
+    {ψ : B.bot.ι k → E → 𝕜} (hψ : Domain.IsTestField Set.univ ψ)
+    (hSψ : (B.top.A (k + 1)).apply ((B.S k).apply ψ) = 0) (hdψ : (B.bot.A k).apply ψ ≠ 0) :
+    ¬ Function.Surjective ((B.maximalData M hM hΩ).domainData.S k (k + 1)) :=
+  B.not_surjective_maximalData_domainS M hM hΩ hne hN htop hbot hr hψ hSψ hdψ
 
 end FeecCheck.BGGVerdicts

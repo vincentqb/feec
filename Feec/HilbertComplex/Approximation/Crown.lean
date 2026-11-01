@@ -141,8 +141,10 @@ constraint (only `leaves` applies to it) and the subcomplex hypothesis for non-m
 polynomial pairs, and with the characterization of the bounded-projection hypothesis of the
 static layer: under closed range, uniformly graph-bounded cochain projections exist iff the
 discrete Poincaré inequality and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly
-(`SubcomplexFamily.exists_isGraphBounded_iff`, [AFW2010], Thms 3.6, 3.7).
-`Feec.Instances.CrownNonVacuity` (`crownNonVacuity`) instantiates the rated crown on the Whitney
+(`SubcomplexFamily.exists_isGraphBounded_iff`, [AFW2010], Thms 3.6, 3.7), and with the failure
+of the right inverses `BGG.Data.InjSurjWith` of the explicit BGG map between the `L²` domains of
+the Hessian, elasticity and div-div diagrams (`Domain.hessianMaximalData_not_injSurjWith` and
+siblings). `Feec.Instances.CrownNonVacuity` (`crownNonVacuity`) instantiates the rated crown on the Whitney
 forms of the cube: closed range with `ℌ⁰ ≠ 0`, a non-reducing constraint for which `leaves`
 fires, and a nonzero heat datum. `Feec.Counterexamples.Sharpness`
 (`crownCorrections`) also collects, by reference, the thesis corrections bearing on the crown

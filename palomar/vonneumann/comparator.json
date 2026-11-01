@@ -13,6 +13,8 @@
     "VonNeumann.error_bound_mdissipative",
     "VonNeumann.error_bound_mdissipative_real",
     "VonNeumann.error_bound_quasi_real",
+    "VonNeumann.resolvent_estimates_banach",
+    "VonNeumann.error_bound_backward_euler_banach",
     "VonNeumann.error_bound_banach_real"
   ],
   "definition_names": [],

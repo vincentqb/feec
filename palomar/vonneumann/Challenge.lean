@@ -55,10 +55,15 @@ unique, so `S t` is determined on `D(A)`; `x ∈ D(A^{m+1})` with `A^{m+1} x = y
 **Quasi-contractive semigroups and Banach spaces** ([BrennerThomee1979]). For `A` with `A - ω`
 m-dissipative (`‖e^{tA}‖ ≤ e^{ωt}`) and an A-stable scheme of order `m` the bound holds with
 exponential growth, `K e^{κωnτ} nτ τᵐ ‖A^{m+1} x‖`, for `ωτ ≤ c₀`, `c₀`, `K`, `κ` depending on `r`
-only (`VonNeumann.error_bound_quasi_real`). On a Banach space, for a strongly continuous
-semigroup with generator `A`, stability of `r(τA)` and boundedness of the remainder are not
-automatic; given them, the bound holds with the stability constant
-(`VonNeumann.error_bound_banach_real`).
+only (`VonNeumann.error_bound_quasi_real`). On a Banach space, a strongly continuous semigroup
+with `‖S(t)‖ ≤ M e^{ωt}` has the complex half-plane `re z > ω` in the resolvent set of its
+generator, with the Hille–Yosida estimates `‖(z - A)⁻ᵐ‖ ≤ M/(re z - ω)ᵐ`
+(`VonNeumann.resolvent_estimates_banach`, [Pazy1983], §1.5). They make `Q(R)` invertible and
+bound the remainder `ρ(τA)` uniformly in `ωτ ≤ c`; the stability of `r(τA)` is not automatic
+(for A-stable `r` and bounded semigroups, Brenner and Thomée bound `‖r(τA)ⁿ‖` by `C √n`), and
+given it the bound holds with the stability constant (`VonNeumann.error_bound_banach_real`). For backward Euler `r(τA) = R` the
+stability is the Hille–Yosida estimate, and the bound holds unconditionally
+(`VonNeumann.error_bound_backward_euler_banach`).
 
 The operator `p(T)` is `Polynomial.aeval T p`; `q(T)⁻¹` is `Ring.inverse` in the Banach algebra
 of bounded operators; a real polynomial acts over `𝕜` through `Polynomial.map (algebraMap ℝ 𝕜)`;
@@ -329,41 +334,84 @@ theorem error_bound_quasi_real (p q : ℝ[X]) (hq : ∀ z : ℂ, z.re ≤ 0 → 
               K * Real.exp (κ * ω * (n * τ)) * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
   sorry
 
+/-- **The Hille–Yosida estimates** ([Pazy1983], §1.5). Let `S` be a strongly continuous
+semigroup of bounded operators of a complex Banach space (`S 0 = 1`, `S (s + t) = S s S t` and
+`t ↦ S t x` continuous for `s, t ≥ 0`) with `‖S t‖ ≤ M e^{ωt}` for `t ≥ 0`, and generator `A`:
+`x ∈ D(A)` with `A x = y` iff `t ↦ S t x` has right derivative `y` at `0`. Every `z` with
+`re z > ω` is in the resolvent set of `A`: there is a bounded `R` with `R (z x - A x) = x` on
+`D(A)` and `R y ∈ D(A)`, `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. -/
+theorem resolvent_estimates_banach {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E]
+    [CompleteSpace E] (S : ℝ → E →L[ℂ] E) (hS0 : S 0 = 1)
+    (hSadd : ∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t)
+    (hSc : ∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) {M ω : ℝ}
+    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) (z : ℂ) (hz : ω < z.re) :
+    ∃ R : E →L[ℂ] E,
+      (∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 → R (z • x - y) = x) ∧
+      (∀ y : E, HasDerivWithinAt (fun t => S t (R y)) (z • R y - y) (Set.Ici 0) 0) ∧
+      ∀ m : ℕ, ‖R ^ m‖ ≤ M / (z.re - ω) ^ m := by
+  sorry
+
+/-- **Backward Euler on Banach spaces** ([BrennerThomee1979]; [Pazy1983], §1.5). Let `S` be a
+strongly continuous semigroup of a Banach space over `𝕜` with `‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`) and
+generator `A` (as in `VonNeumann.resolvent_estimates_banach`), `τ > 0` with `ωτ < 1`, and `R`
+with `R (x - τ A x) = x` on `D(A)`. Backward Euler, `r(z) = 1/(1 - z)`, is `r(τA) = R`. It is
+stable, `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` (the Hille–Yosida estimates), and for every `n` and
+`x ∈ D(A²)` (a chain `u 0 = x, u 1 = A x, u 2 = A² x` of right derivatives)
+`‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`. -/
+theorem error_bound_backward_euler_banach {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+    (S : ℝ → E →L[𝕜] E) (hS0 : S 0 = 1)
+    (hSadd : ∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t)
+    (hSc : ∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) {M ω : ℝ} (hω : 0 ≤ ω)
+    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) {τ : ℝ} (hτ : 0 < τ)
+    (hωτ : ω * τ < 1) (R : E →L[𝕜] E)
+    (hR : ∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 → R (x - (τ : 𝕜) • y) = x) :
+    (∀ k : ℕ, ‖R ^ k‖ ≤ M / (1 - ω * τ) ^ k) ∧
+      ∀ (n : ℕ) (u : ℕ → E),
+        (∀ j < 2, HasDerivWithinAt (fun t => S t (u j)) (u (j + 1)) (Set.Ici 0) 0) →
+        ‖(R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤ M / (1 - ω * τ) ^ n *
+          (M / (1 - ω * τ) + M * Real.exp (ω * (n * τ)) / 2) * (M * Real.exp (ω * (n * τ))) *
+            (n * τ) * τ * ‖u 2‖ := by
+  sorry
+
 /-- **The error of a stable scheme of order `m` on Banach spaces** ([BrennerThomee1979];
-[Thomee2006], Ch. 9). Let `S` be a strongly continuous semigroup of bounded operators of a
-Banach space over `𝕜` (`S 0 = 1`, `S (s + t) = S s S t` and `t ↦ S t x` continuous for
-`s, t ≥ 0`), with generator `A`: `x ∈ D(A)` with `A x = y` iff `t ↦ S t x` has right derivative
-`y` at `0`. Let `r = p/q` be a real rational function with `deg p ≤ deg q`, without poles in the
-closed left half-plane, of order `m`, with remainder `ρ = (p - q Tₘ)/X^{m+1}`,
-`Tₘ = Σ_{j≤m} Xʲ/j!`. Let `τ ≥ 0` and `R` injective with `R (x - τ A x) = x` on `D(A)` (the
-resolvent `(1 - τA)⁻¹`), and `r(τA) = P(R) Q(R)⁻¹`, `ρ(τA) = P_ρ(R) Q(R)⁻¹` as in
-`VonNeumann.inequality_mdissipative`, `Q(R)` invertible. Off Hilbert spaces stability is not
-automatic (von Neumann's inequality fails); if `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, `‖ρ(τA)‖ ≤ K₀` and
-`‖S t‖ ≤ M` on `[0, nτ]`, then `‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M/(m+1)!) M nτ τᵐ ‖A^{m+1} x‖`
-for every `x ∈ D(A^{m+1})` (a chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). -/
+[Thomee2006], Ch. 9). Let `r = p/q` be a real rational function with `deg p ≤ deg q`, without
+poles in the closed left half-plane, of order `m`, with remainder `ρ = (p - q Tₘ)/X^{m+1}`,
+`Tₘ = Σ_{j≤m} Xʲ/j!`. There are `c > 0`, depending on `r` only, and for every `M` a `K₀`,
+depending on `r` and `M` only, such that for every strongly continuous semigroup `S` of a Banach
+space over `𝕜` with `‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`) and generator `A` (as in
+`VonNeumann.resolvent_estimates_banach`), every `τ > 0` with `ωτ ≤ c` and `R` with
+`R (x - τ A x) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`), with `r(τA) = P(R) Q(R)⁻¹` and
+`ρ(τA) = P_ρ(R) Q(R)⁻¹` as in `VonNeumann.inequality_mdissipative`: `Q(R)` is invertible,
+`‖ρ(τA)‖ ≤ K₀`, and if `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n` (off Hilbert spaces stability is not
+automatic, von Neumann's inequality fails), then
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M e^{ωnτ}/(m+1)!) M e^{ωnτ} nτ τᵐ ‖A^{m+1} x‖` for every
+`x ∈ D(A^{m+1})` (a chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). -/
 theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {m : ℕ}
-    (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1))
-    {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
-    [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (hS0 : S 0 = 1)
-    (hSadd : ∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t)
-    (hSc : ∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) {τ : ℝ} (hτ : 0 ≤ τ)
-    (R : E →L[𝕜] E)
-    (hR : ∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 → R (x - (τ : 𝕜) • y) = x)
-    (hRi : Function.Injective R) :
-    let P := ∑ k ∈ Finset.range (q.natDegree + 1),
-      (p.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
-    let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
-      (q.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
-    let ρ : ℝ[X] := (p - q * ∑ j ∈ Finset.range (m + 1), C (1 / (j.factorial : ℝ)) * X ^ j) /ₘ
-      X ^ (m + 1)
-    let Pρ := ∑ k ∈ Finset.range (q.natDegree + 1),
-      (ρ.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
-    IsUnit Q → ∀ (n : ℕ) (Ms M K₀ : ℝ), (∀ k ≤ n, ‖(P * Ring.inverse Q) ^ k‖ ≤ Ms) →
-      (∀ t ∈ Set.Icc 0 (n * τ), ‖S t‖ ≤ M) → ‖Pρ * Ring.inverse Q‖ ≤ K₀ →
-      ∀ u : ℕ → E, (∀ j < m + 1, HasDerivWithinAt (fun t => S t (u j)) (u (j + 1)) (Set.Ici 0) 0) →
-        ‖((P * Ring.inverse Q) ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
-          Ms * (K₀ + M / (m + 1).factorial) * M * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
+    (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
+    ∃ c : ℝ, 0 < c ∧ ∀ M : ℝ, ∃ K₀ : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+      [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+      (S : ℝ → E →L[𝕜] E), S 0 = 1 → (∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t) →
+      (∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) → ∀ ω : ℝ, 0 ≤ ω →
+      (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) → ∀ τ : ℝ, 0 < τ → ω * τ ≤ c →
+      ∀ R : E →L[𝕜] E,
+      (∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 → R (x - (τ : 𝕜) • y) = x) →
+      let P := ∑ k ∈ Finset.range (q.natDegree + 1),
+        (p.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+      let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
+        (q.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+      let ρ : ℝ[X] := (p - q * ∑ j ∈ Finset.range (m + 1), C (1 / (j.factorial : ℝ)) * X ^ j) /ₘ
+        X ^ (m + 1)
+      let Pρ := ∑ k ∈ Finset.range (q.natDegree + 1),
+        (ρ.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+      IsUnit Q ∧ ‖Pρ * Ring.inverse Q‖ ≤ K₀ ∧
+        ∀ (n : ℕ) (Ms : ℝ), (∀ k ≤ n, ‖(P * Ring.inverse Q) ^ k‖ ≤ Ms) →
+        ∀ u : ℕ → E,
+          (∀ j < m + 1, HasDerivWithinAt (fun t => S t (u j)) (u (j + 1)) (Set.Ici 0) 0) →
+          ‖((P * Ring.inverse Q) ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
+            Ms * (K₀ + M * Real.exp (ω * (n * τ)) / (m + 1).factorial) *
+              (M * Real.exp (ω * (n * τ))) * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
   sorry
 
 end VonNeumann

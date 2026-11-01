@@ -3,6 +3,7 @@ module
 public import Solution.Defs
 public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RationalQuasi
+public import Feec.TimeStepping.RationalHillePhillips
 public import Feec.Evolution.WellPosed
 
 /-!

@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.RationalScheme
 public import Feec.Instances.Corollaries
+public import Feec.TimeStepping.RationalHillePhillips
 
 /-!
 # Rational and Runge–Kutta time stepping in the FEEC theorem
@@ -23,13 +24,17 @@ conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
   the fully discrete verdicts;
 
 and on the cube, at every polynomial order of the periodic table (`Cube.FEM.maxwell_gaussLegendre2`,
-`Cube.FEM.heat_radauIIA2`).
+`Cube.FEM.heat_radauIIA2`). Off Hilbert spaces, for every bounded semigroup of a complex Banach
+space (`banach_radauIIA2`): **Radau IIA and SDIRK converge with orders `3` and `2` up to a factor
+`√n`**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖`, by the Hille–Phillips calculus
+(`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`).
 
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
   §IV.5, §IV.6
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -104,6 +109,39 @@ theorem heat_radauIIA2 (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fi
     (F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _⟩
 
 end Family
+
+/-! ### Bounded semigroups on Banach spaces -/
+
+section Banach
+
+variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
+  (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
+
+/-- **Radau IIA and SDIRK on every bounded semigroup of a complex Banach space**: with the
+resolvent `R = (1 - τA)⁻¹` of the generator `A` (`C0Semigroup.laplaceResolvent`), for `τ > 0`,
+every `n` and `x ∈ D(A⁴)` (resp. `D(A³)`), `‖r(τA)ⁿ x - S(nτ) x‖` is at most
+`M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` with `p = 3` (Radau IIA) and `p = 2`
+(SDIRK): both are L-stable, hence strongly A-stable. [BrennerThomee1979]; [HairerWanner1996],
+§IV.5, §IV.6 -/
+theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ((∀ j < 3 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.radauIIA2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.radauIIA2.stabilityConst * √n) *
+          (M * (RationalScheme.radauIIA2.remainder 3).hpMeasure.variation +
+            M / (3 + 1).factorial) * M * (n * τ) * τ ^ 3 * ‖u (3 + 1)‖) ∧
+    ((∀ j < 2 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.sdirk2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.sdirk2.stabilityConst * √n) *
+          (M * (RationalScheme.sdirk2.remainder 2).hpMeasure.variation +
+            M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
+  ⟨RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
+      RationalScheme.isLStable_radauIIA2.isStronglyAStable RationalScheme.hasOrder_radauIIA2 hτ n,
+    RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
+      RationalScheme.isLStable_sdirk2.isStronglyAStable RationalScheme.hasOrder_sdirk2 hτ n⟩
+
+end Banach
 
 /-! ### The cube -/
 

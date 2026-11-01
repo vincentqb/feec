@@ -148,11 +148,43 @@ sources:
       rho(tau A) as hypotheses, and, for semigroups with ||S(t)|| <= M e^(omega t) and
       omega tau <= c, with the invertibility of Q(R) and the remainder bound derived from the
       Hille-Yosida resolvent estimates (stability still a hypothesis), and for backward Euler
-      with no stability hypothesis. Not compared: the Hille-Phillips functional calculus, which on
-      Banach spaces gives the stability ||r(tau A)^n|| <= C sqrt(n)
-      for A-acceptable r and bounded semigroups (the stability is a hypothesis here), and the
-      estimates for less smooth data (x in the domain of a lower power of A, with a lower rate).
+      with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of complex Banach
+      spaces and A-stable r with |r(infinity)| < 1, through the Hille-Phillips functional
+      calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability
+      ||r(tau A)^n|| <= M (1 + C sqrt(n)) and the error with the extra factor sqrt(n), all
+      proved (VonNeumann.error_bound_banach_sqrt). Not formalized: the sqrt(n) bound for
+      A-acceptable r with |r(infinity)| = 1 (Crank-Nicolson, Gauss methods) and on real Banach
+      spaces, and the estimates for less smooth data (x in the domain of a lower power of A,
+      with a lower rate).
       Paper not consulted; statement and scope as recalled, so no theorem numbers are cited.
+    author_endorsement: "not-contacted"
+  - title: "High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems"
+    authors:
+      - "Reuben Hersh"
+      - "Tosio Kato"
+    id: "doi:10.1137/0716050"
+    type: "article"
+    location: "SIAM J. Numer. Anal. 16 (1979)"
+    relationship: "formalizes"
+    note: >-
+      Stability of rational approximations of bounded semigroups on Banach spaces with growth
+      C sqrt(n), through the Hille-Phillips functional calculus; formalized for A-stable r with
+      |r(infinity)| < 1 on complex Banach spaces (VonNeumann.error_bound_banach_sqrt). Paper
+      not consulted; statement and scope as recalled, so no theorem numbers are cited.
+    author_endorsement: "not-contacted"
+  - title: "Functional Analysis and Semi-Groups"
+    authors:
+      - "Einar Hille"
+      - "Ralph S. Phillips"
+    id: "doi:10.1090/coll/031"
+    type: "book"
+    location: "Amer. Math. Soc. Colloq. Publ. 31 (1957), Ch. XV"
+    relationship: "background"
+    note: >-
+      The operational calculus of a semigroup, a + integral of g(t) S(t) dt for measures
+      a delta_0 + g dt on [0, infinity), through which r(tau A) is bounded on Banach spaces.
+      Formalized as an algebra homomorphism from the convolution algebra of the half-line
+      (Feec.C0Semigroup.hillePhillips). Chapter as recalled, not consulted.
     author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
@@ -191,8 +223,9 @@ status:
     VonNeumann.cayley_contraction, VonNeumann.error_bound, VonNeumann.error_bound_real,
     VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
     VonNeumann.error_bound_quasi_real, VonNeumann.resolvent_estimates_banach,
-    VonNeumann.error_bound_backward_euler_banach, VonNeumann.error_bound_banach_real_hille_yosida
-    and VonNeumann.error_bound_banach_real (Challenge.lean). Not compared
+    VonNeumann.error_bound_backward_euler_banach, VonNeumann.error_bound_banach_real_hille_yosida,
+    VonNeumann.error_bound_banach_real and VonNeumann.error_bound_banach_sqrt (Challenge.lean).
+    Not compared
     (proved in Feec, outside the statement): that P(S) Q(S)^(-1) is p(tau A) q(tau A)^(-1) for
     bounded A (Feec.TimeStepping.resolventEval_eq_aeval,
     Feec.TimeStepping.RationalScheme.step_toPMap), symmetric schemes as isometries for skew A,
@@ -319,9 +352,12 @@ fidelity:
     fails. For A-stable r the last two follow from resolvent estimates alone (Q(R) is a product
     of factors R (tau A - zeta) over the poles zeta of r, and the partial fractions of rho bound
     ||rho(tau A)|| through the Hille-Yosida bounds ||(lambda - A)^(-m)|| <= M/(re lambda -
-    omega)^m), formalized below; stability is a genuine hypothesis, and Brenner-Thomee's
-    sufficient condition ||r(tau A)^n|| <= C sqrt(n) for bounded semigroups (through the
-    Hille-Phillips functional calculus) is not formalized. Hille-Yosida
+    omega)^m), formalized below; in VonNeumann.error_bound_banach_real and
+    VonNeumann.error_bound_banach_real_hille_yosida stability is a genuine hypothesis, and
+    Brenner-Thomee's sufficient condition ||r(tau A)^n|| <= C sqrt(n) for bounded semigroups
+    (through the Hille-Phillips functional calculus) is proved in
+    VonNeumann.error_bound_banach_sqrt (below) for complex spaces and |r(infinity)| < 1.
+    Hille-Yosida
     (VonNeumann.resolvent_estimates_banach, complex spaces;
     VonNeumann.error_bound_backward_euler_banach and
     VonNeumann.error_bound_banach_real_hille_yosida, real r, real or complex spaces): the
@@ -339,7 +375,15 @@ fidelity:
     (Feec.TimeStepping.isUnit_resolventEval_of_generator,
     Feec.TimeStepping.RationalScheme.norm_resolventStep_le_of_generator), not compared. For
     backward Euler the stability follows from the Hille-Yosida estimates, so its error bound has
-    no stability hypothesis. Nonsmooth data are not
+    no stability hypothesis. Bounded semigroups of complex Banach spaces
+    (VonNeumann.error_bound_banach_sqrt): the three hypotheses are proved for A-stable r with
+    |r(infinity)| < 1 (|p_N| < |q_N|, N = deg q): the resolvent is the unique R with
+    R(x - tau A x) = x on D(A) (existence and uniqueness stated), Q(R) is invertible,
+    ||r(tau A)^n|| <= M (1 + C sqrt(n)) and the error is K M^3 (1 + C sqrt(n)) n tau tau^m
+    ||A^(m+1) x||, with C, K depending on r only (per universe); the proof is the Hille-Phillips
+    calculus r(tau A) = Phi(mu_r) and a Fourier bound on the total variation of mu_r^n
+    (Plancherel and Carlson's inequality). The case |r(infinity)| = 1 (Crank-Nicolson, Gauss
+    methods) and real Banach spaces are not covered there. Nonsmooth data are not
     covered. Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
     Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
     hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.
@@ -352,9 +396,10 @@ review:
     The author reviewed the Challenge statements except VonNeumann.IsStrongSolution,
     VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
     VonNeumann.error_bound_quasi_real, VonNeumann.error_bound_banach_real,
-    VonNeumann.resolvent_estimates_banach, VonNeumann.error_bound_backward_euler_banach and
-    VonNeumann.error_bound_banach_real_hille_yosida, added after that review and not yet
-    reviewed by the author. Every merge of the library was gated by a full
+    VonNeumann.resolvent_estimates_banach, VonNeumann.error_bound_backward_euler_banach,
+    VonNeumann.error_bound_banach_real_hille_yosida and VonNeumann.error_bound_banach_sqrt,
+    added after that review and not yet reviewed by the author. Every merge of the library was
+    gated by a full
     build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
     independent AI review. No external mathematical review.
 
@@ -441,5 +486,10 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Banach spaces, strongly continuous semigroups; stability and remainder bound assumed."
+    - source: "[BrennerThomee1979]; [HershKato1979]"
+      lean: "VonNeumann.error_bound_banach_sqrt"
+      module: "Challenge"
+      status: "proved"
+      note: "Complex Banach spaces, bounded semigroups, A-stable r with |r(infinity)| < 1: resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), error with the factor sqrt(n)."
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

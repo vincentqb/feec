@@ -181,8 +181,11 @@ sources:
       delta_(n-1-j) mu^j h, h the consistency kernel (z^(m+1) h^ = r(z) - e^z), and ||k_n||_1 <= C n
       by Carlson's inequality and Plancherel on the geometric sum k_n(. + n)^ = e^(-z) h^ sum_j
       (e^(-z) r(z))^j. The proof is not the paper's (local Carlson estimates on a partition of
-      unity, per Gomilko-Tomilov). Not formalized: the estimates for less smooth data (x in the
-      domain of A^s, s < m + 1, rate tau^(s m/(m+1))), the sqrt(n) stability bound for
+      unity, per Gomilko-Tomilov). Not formalized: the estimates for less smooth data, x in the
+      domain of A^s with s < m + 1 (Gomilko-Tomilov Thm 1.1(ii): error t^s/n^(s m/(m+1)) for s in
+      ((m+1)/2, m+1], t^s log(n+1)/n^(m/2) at s = (m+1)/2, t^s/n^(s-1/2) for s in
+      (0, (m+1)/2); the case s = m + 1, t^(m+1)/n^m = n tau tau^m, is the one formalized), the
+      sqrt(n) stability bound for
       |r(infinity)| = 1 (Crank-Nicolson, Gauss methods), and real Banach spaces.
       Paper itself not consulted beyond its abstract; the statement is as quoted by
       Gomilko-Tomilov.
@@ -421,7 +424,7 @@ fidelity:
     included, the resolvent and Q(R) as above and ||r(tau A)^n x - S(n tau) x|| <=
     K M n tau tau^m ||A^(m+1) x||, K depending on r and m only (per universe); the stability
     bound is not needed (the error operator is the calculus of one kernel, of L^1 norm O(n)).
-    Nonsmooth data are not covered.
+    Less smooth data (x in D(A^s), s < m + 1) are not covered.
     Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
     Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
     hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.

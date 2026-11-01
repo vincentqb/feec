@@ -8,6 +8,8 @@ public import Feec.ForMathlib.Analysis.HalfLineTranslate
 
 For a bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space with generator `A`:
 
+* `S(τ m) = S(τ)ᵐ` (`C0Semigroup.S_mul_natCast`) and, on kernels, the calculus is the kernel
+  calculus, `Φ(inr k) = Φ_kernel(k)` (`C0Semigroup.hillePhillips_inr`);
 * **point masses act as the semigroup**: `Φ(δ_s ⋆ f) = Φ(f) S(s)` for `s ≥ 0`
   (`C0Semigroup.hillePhillipsKernel_translate`), so `Φ` extends to the kernels translated by
   `δ_s` without adjoining `δ_s` to the algebra;
@@ -22,7 +24,7 @@ For a bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space with genera
 * [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
   (the operational calculus of a semigroup)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.2 (Taylor's formula along the semigroup)
+  §1.2, Thm 2.4 (`S(t) x - x = ∫₀ᵗ S(s) A x ds`; iterated, Taylor's formula along the semigroup)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -38,7 +40,20 @@ namespace C0Semigroup
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
   (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
 
+omit [CompleteSpace E] in
+/-- `S(τ m) = S(τ)ᵐ` for `τ ≥ 0`. -/
+theorem S_mul_natCast {τ : ℝ} (hτ : 0 ≤ τ) (m : ℕ) : G.S (τ * m) = G.S τ ^ m := by
+  induction m with
+  | zero => simp [G.map_zero]
+  | succ m ih =>
+    rw [Nat.cast_succ, mul_add, mul_one, G.map_add _ _ (by positivity) hτ, ih, pow_succ]
+
 include hM
+
+/-- `Φ(inr k) = Φ_kernel(k)`: on kernels (no atom), the calculus is the kernel calculus. -/
+theorem hillePhillips_inr (k : HalfLineKernel) :
+    G.hillePhillips hM (Unitization.inr k) = G.hillePhillipsKernel hM k := by
+  rw [hillePhillips_apply, Unitization.fst_inr, Unitization.snd_inr, _root_.map_zero, zero_add]
 
 omit [CompleteSpace E] in
 /-- **Point masses act as the semigroup**: `Φ(δ_s ⋆ f) = Φ(f) S(s)`, i.e.
@@ -58,7 +73,7 @@ theorem hillePhillipsKernel_translate {s : ℝ} (hs : 0 ≤ s) (f : HalfLineKern
 
 /-- **Taylor's formula for the semigroup with integral remainder**: for `τ > 0` and a chain `u`
 in the graph of the generator, `S(τ) u₀ = Σ_{j≤p} τʲ/j! uⱼ + τ^{p+1} Φ_τ(eₚ) u_{p+1}`, with
-`Φ_τ` the Hille–Phillips calculus of `S(τ ·)` and `eₚ` the Taylor kernel. [Pazy1983], §1.2 -/
+`Φ_τ` the Hille–Phillips calculus of `S(τ ·)` and `eₚ` the Taylor kernel. Cf. [Pazy1983], §1.2, Thm 2.4 (iterated) -/
 theorem S_apply_eq_sum_add_taylor {τ : ℝ} (hτ : 0 < τ) (p : ℕ) {u : ℕ → E}
     (hu : ∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) :
     G.S τ (u 0) = ∑ j ∈ range (p + 1), ((τ : ℂ) ^ j / j.factorial) • u j +

@@ -480,7 +480,7 @@ semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0
 chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the
 stability bound times consistency: at fixed `T = nτ` it is of order `m - 1/2`, weaker by `√n`
 than the smooth-data estimates of the sources (`O(τᵐ)` for `x ∈ D(A^{m+2})` [HershKato1979];
-`VonNeumann.error_bound_banach_sharp`); the case `|r(∞)| = 1` is not covered. -/
+`VonNeumann.error_bound_banach_sharp`). This bound covers only `|r(∞)| < 1`. -/
 theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
     (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1)

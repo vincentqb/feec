@@ -2,6 +2,7 @@ module
 
 public import Feec.TimeStepping.RationalHillePhillips
 public import Feec.Semigroup.HillePhillipsTranslate
+public import Feec.ForMathlib.Algebra.GeomSum
 
 /-!
 # Brenner–Thomée's smooth-data error estimate on Banach spaces
@@ -15,12 +16,16 @@ generator `A`. **Brenner–Thomée's smooth-data estimate**
 
 with `C = RationalScheme.sharpConst r p` depending only on `r` and `p`; at fixed `T = nτ`, order
 `p`. This is the smooth-data case `s = p + 1` of Brenner and Thomée's estimate
-`‖e^{-tA} x - rⁿ(tA/n) x‖ ≤ C M t^s/n^{sp/(p+1)} ‖Aˢ x‖` (`-A` the generator, `t = nτ`), as stated
+`‖e^{-tA} x - rⁿ(tA/n) x‖ ≤ C M t^s/n^{sp/(p+1)} ‖Aˢ x‖` for `s ∈ ((p+1)/2, p+1]` (`-A` the
+generator, `t = nτ`; at `s = p + 1`, `t^{p+1}/nᵖ = nτ τᵖ`), as stated
 in [GomilkoTomilov2024], Thm 1.1(ii), after [BrennerThomee1979] (Thms 1 and 4 there, per
 [GomilkoTomilov2024]; the paper itself was not consulted), for every A-stable `r`, `|r(∞)| = 1`
 included (Crank–Nicolson, the Gauss methods): unlike the stability bound `‖r(τA)ⁿ‖ ≤ C √n`
 (`RationalScheme.norm_resolventStep_pow_le`, `|r(∞)| < 1` here), the error bound needs no
-condition at infinity. Less smooth data (`s < p + 1`) are not formalized.
+condition at infinity. Less smooth data (`s < p + 1`; below `s = (p+1)/2` the rate of
+[GomilkoTomilov2024], Thm 1.1(ii), is `n^{1/2-s}`, with a factor `log (n+1)` at `s = (p+1)/2`)
+are not formalized. [HershKato1979] obtain `O(τᵖ)` for `x ∈ D(A^{p+2})`, one power of `A` more
+(per its abstract).
 
 The proof is the Hille–Phillips calculus extended by translations: with `μ = μ_r` the measure of
 `r` (`RationalScheme.hpMeasure`) and the **consistency kernel** `h = μ_ρ - eₚ`
@@ -56,22 +61,6 @@ open Set Finset Polynomial MeasureTheory Unitization FourierTransform
 namespace Feec
 
 namespace TimeStepping
-
-/-- `aⁿ - bⁿ = Σ_{j<n} aʲ (a - b) b^{n-1-j}` in any ring. -/
-theorem pow_sub_pow_eq_sum {R : Type*} [Ring R] (a b : R) (n : ℕ) :
-    a ^ n - b ^ n = ∑ j ∈ range n, a ^ j * (a - b) * b ^ (n - 1 - j) := by
-  induction n with
-  | zero => simp
-  | succ n ih =>
-    rw [sum_range_succ, Nat.add_sub_cancel, Nat.sub_self, pow_zero, mul_one]
-    have : ∑ j ∈ range n, a ^ j * (a - b) * b ^ (n - j) =
-        (∑ j ∈ range n, a ^ j * (a - b) * b ^ (n - 1 - j)) * b := by
-      rw [sum_mul]
-      refine sum_congr rfl fun j hj => ?_
-      rw [show n - j = n - 1 - j + 1 by have := mem_range.1 hj; omega, pow_succ]
-      simp only [mul_assoc]
-    rw [this, ← ih, pow_succ, pow_succ]
-    noncomm_ring
 
 namespace RationalScheme
 
@@ -141,18 +130,6 @@ section Semigroup
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
   (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
 
-omit [CompleteSpace E] in
-theorem S_nat_mul (τ : ℝ) (hτ : 0 ≤ τ) (m : ℕ) : G.S (τ * m) = G.S τ ^ m := by
-  induction m with
-  | zero => simp [G.map_zero]
-  | succ m ih =>
-    rw [Nat.cast_succ, mul_add, mul_one, G.map_add _ _ (by positivity) hτ, ih, pow_succ]
-
-/-- `Φ(inr k) = Φ(k)`: the calculus on kernels. -/
-theorem hillePhillips_inr (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
-    (k : HalfLineKernel) : G.hillePhillips hM (inr k) = G.hillePhillipsKernel hM k := by
-  rw [C0Semigroup.hillePhillips_apply, fst_inr, snd_inr, _root_.map_zero, zero_add]
-
 /-- **The consistency identity** `r(τA) x - S(τ) x = τ^{p+1} Φ_τ(h) A^{p+1} x` on `D(A^{p+1})`
 (a chain `u`), `Φ_τ` the calculus of `S(τ ·)` and `h` the consistency kernel. -/
 theorem resolventStep_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) {u : ℕ → E}
@@ -191,7 +168,7 @@ theorem resolventStep_pow_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (
   set P := r.resolventStep (G.laplaceResolvent hM τ hτ.le)
   set h := r.consistencyKernel p
   have hP : G'.hillePhillips hM' r.hpMeasure = P := r.hillePhillips_hpMeasure G hM hτ.le
-  have hS : ∀ m : ℕ, G'.S m = G.S τ ^ m := fun m => S_nat_mul G τ hτ.le m
+  have hS : ∀ m : ℕ, G'.S m = G.S τ ^ m := fun m => G.S_mul_natCast hτ.le m
   -- each term of the telescoping sum
   have hterm : ∀ j m : ℕ, (P ^ j * (P - G.S τ) * G.S τ ^ m) (u 0) =
       (τ : ℂ) ^ (p + 1) • G'.hillePhillipsKernel hM'
@@ -200,7 +177,7 @@ theorem resolventStep_pow_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (
     intro j m
     have hv : ∀ i < p + 1, ((G.S τ ^ m) (u i), (G.S τ ^ m) (u (i + 1))) ∈ G.generator.graph :=
       fun i hi => by
-        rw [← S_nat_mul G τ hτ.le m]
+        rw [← G.S_mul_natCast hτ.le m]
         exact G.S_mem_graph (hu i hi) (by positivity)
     have h1 := r.resolventStep_sub_S_apply G hM hp hτ hv
     have hmul : r.hpMeasure ^ j * inr h = inr (r.hpMeasure ^ j * inr h).snd := by
@@ -215,11 +192,11 @@ theorem resolventStep_pow_sub_S_apply {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (
           congr 1
           have e1 : G'.hillePhillipsKernel hM' (r.hpMeasure ^ j * inr h).snd =
               P ^ j * G'.hillePhillipsKernel hM' h := by
-            rw [← hillePhillips_inr G' hM', ← hmul, map_mul, map_pow, hP, hillePhillips_inr]
+            rw [← G'.hillePhillips_inr hM', ← hmul, map_mul, map_pow, hP, G'.hillePhillips_inr]
           rw [C0Semigroup.hillePhillipsKernel_translate, e1, hS]
           rfl
-  rw [show (n : ℝ) * τ = τ * n by ring, S_nat_mul G τ hτ.le n, ← sub_apply,
-    pow_sub_pow_eq_sum, _root_.sum_apply, sum_congr rfl fun j _ => hterm j _, ← smul_sum]
+  rw [show (n : ℝ) * τ = τ * n by ring, G.S_mul_natCast hτ.le n, ← sub_apply,
+    pow_sub_pow_eq_sum_pow_mul_sub_mul_pow, _root_.sum_apply, sum_congr rfl fun j _ => hterm j _, ← smul_sum]
   congr 1
   change _ = (G'.hillePhillipsKernelHom hM' (∑ j ∈ range n, HalfLineKernel.translate _ _ _))
     (u (p + 1))

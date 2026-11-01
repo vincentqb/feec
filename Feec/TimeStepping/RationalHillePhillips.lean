@@ -20,9 +20,15 @@ pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹
   (`IsStronglyAStable`: `|r(iy)| ≤ 1`, `|r(∞)| < 1`), from the total variation bound
   `‖μ_rⁿ‖ ≤ 1 + C_r √n` (`variation_hpMeasure_pow_le`,
   `Feec.HalfLineAlgebra.integral_norm_pow_snd_pow_four_le`);
-* **the order-`p` error with the extra factor `√n`**
-  (`norm_resolventStep_pow_sub_S_le_sqrt`): every hypothesis of the Banach-space
-  Brenner–Thomée theorem `RationalScheme.norm_resolventStep_pow_sub_S_le` is discharged.
+* **an error bound with the `√n` loss of the stability bound**
+  (`norm_resolventStep_pow_sub_S_le_sqrt`): the stability bound times order-`p` consistency, in
+  the Lax–Richtmyer form `RationalScheme.norm_resolventStep_pow_sub_S_le`, all of whose
+  hypotheses are discharged. It is `O(√n nτ τᵖ)` for `x ∈ D(A^{p+1})`, i.e. of order `p - 1/2` at
+  fixed `T = nτ`. This is **not** the sources' smooth-data estimate, which has no `√n`:
+  `O(τᵖ)` for `x ∈ D(A^{p+2})` [HershKato1979] (per its abstract), and, as recalled (not checked
+  against the paper), `O(nτ τᵖ) ‖A^{p+1} x‖` for `x ∈ D(A^{p+1})` [BrennerThomee1979]. Those are
+  not formalized: their proof bounds the measure of `(rⁿ(z) - e^{nz})/z^{p+1}`, which carries the
+  point mass of `e^{nz}` at `n` and is not of the form `a δ₀ + g` of the half-line algebra.
 
 The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
 argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable
@@ -33,7 +39,7 @@ measure `μ_r` is complex.
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957], Ch. XV
+* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -59,15 +65,6 @@ theorem resolventEval_zero (N : ℕ) (f : ℂ[X]) :
 theorem resolventEval_eq_eval {A : Type*} [Ring A] [Algebra ℂ A] (N : ℕ) (f : ℂ[X]) (S : A) :
     resolventEval N f S = aeval S (resolventEval N f (X : ℂ[X])) := by
   rw [map_resolventEval, aeval_X]
-
-/-- `φ` commutes with `Ring.inverse` at units. -/
-theorem map_ringInverse {A B : Type*} [Ring A] [Ring B] {F : Type*} [FunLike F A B]
-    [MonoidHomClass F A B] (φ : F) {a : A} (ha : IsUnit a) :
-    φ (Ring.inverse a) = Ring.inverse (φ a) := by
-  obtain ⟨u, rfl⟩ := ha
-  have : φ ↑u = ↑(Units.map (φ : A →* B) u) := rfl
-  rw [this, Ring.inverse_unit, Ring.inverse_unit]
-  rfl
 
 namespace RationalScheme
 
@@ -127,7 +124,7 @@ theorem map_hpMeasure {B : Type*} [Ring B] [Algebra ℂ B] (φ : HalfLineAlgebra
     φ r.hpMeasure = resolventEval r.den.natDegree (r.num.map (algebraMap ℝ ℂ))
       (φ HalfLineAlgebra.resolvent) * Ring.inverse (resolventEval r.den.natDegree
         (r.den.map (algebraMap ℝ ℂ)) (φ HalfLineAlgebra.resolvent)) := by
-  rw [hpMeasure, map_mul, map_ringInverse φ r.isUnit_resolventEval_den_resolvent,
+  rw [hpMeasure, map_mul, r.isUnit_resolventEval_den_resolvent.map_ringInverse φ,
     map_resolventEval, map_resolventEval]
 
 /-- **`μ̂_r(ξ) = r(-2πiξ)`**. -/
@@ -160,18 +157,6 @@ theorem fst_hpMeasure :
     mul_inv_cancel₀ (pow_ne_zero _ (by norm_num))
   linear_combination (algebraMap ℝ ℂ (r.num.coeff r.den.natDegree) *
     (algebraMap ℝ ℂ (r.den.coeff r.den.natDegree))⁻¹) * this
-
-/-- **Strong A-stability**: A-stable with `|r(∞)| < 1` (`|n_N| < |d_N|`, `N = deg d`); every
-L-stable scheme is strongly A-stable. [HairerWanner1996], §IV.3 -/
-def IsStronglyAStable : Prop :=
-  r.IsAStable ∧ |r.num.coeff r.den.natDegree| < |r.den.leadingCoeff|
-
-/-- L-stable schemes are strongly A-stable (`r(∞) = 0`). -/
-theorem IsLStable.isStronglyAStable {r : RationalScheme} (hr : r.IsLStable) :
-    r.IsStronglyAStable := by
-  refine ⟨hr.1, ?_⟩
-  rw [coeff_eq_zero_of_degree_lt (hr.2.trans_eq (degree_eq_natDegree r.den_ne_zero)), abs_zero]
-  exact abs_pos.2 (leadingCoeff_ne_zero.2 r.den_ne_zero)
 
 theorem norm_fst_hpMeasure_lt {r : RationalScheme} (hr : r.IsStronglyAStable) :
     ‖r.hpMeasure.fst‖ < 1 := by
@@ -245,13 +230,13 @@ theorem isUnit_resolventEval_den_laplaceResolvent {τ : ℝ} (hτ : 0 ≤ τ) :
 
 /-- **The Hille–Phillips bound**: `‖r(τA)‖ ≤ M ‖μ_r‖` for every rational scheme and every
 bounded semigroup, `‖S(t)‖ ≤ M`; in particular the remainder `ρ(τA)` is bounded uniformly in
-`τ`. [HillePhillips1957], Ch. XV -/
+`τ`. [HillePhillips1957] -/
 theorem norm_resolventStep_le {τ : ℝ} (hτ : 0 ≤ τ) :
     ‖r.resolventStep (G.laplaceResolvent hM τ hτ)‖ ≤ M * r.hpMeasure.variation := by
   rw [← r.hillePhillips_hpMeasure G hM hτ]
   exact (G.dilate τ hτ).norm_hillePhillips_le _ _
 
-/-- **Brenner–Thomée's stability bound** [BrennerThomee1979]; [HershKato1979]: for a strongly
+/-- **Brenner–Thomée's stability bound** [BrennerThomee1979]: for a strongly
 A-stable rational scheme `r` and a bounded semigroup, `‖S(t)‖ ≤ M`, on a complex Banach space,
 `‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` for all `τ ≥ 0` and `n`, with `C_r` depending only on `r`
 (`RationalScheme.stabilityConst`). -/
@@ -262,13 +247,16 @@ theorem norm_resolventStep_pow_le {r : RationalScheme} (hr : r.IsStronglyAStable
   exact ((G.dilate τ hτ).norm_hillePhillips_le _ _).trans (mul_le_mul_of_nonneg_left
     (variation_hpMeasure_pow_le hr n) ((norm_nonneg _).trans (hM 0 le_rfl)))
 
-/-- **Brenner–Thomée's error bound for bounded semigroups on Banach spaces**: for a strongly
+/-- **The `√n`-lossy error bound for bounded semigroups on Banach spaces**: for a strongly
 A-stable rational scheme `r` of order `p`, a bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach
 space with generator `A`, `τ > 0` and `x ∈ D(A^{p+1})` (a chain `u` in the graph of `A`),
 
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`,
 
-an order-`p` bound with the extra factor `√n` of [BrennerThomee1979] (`ρ` the remainder scheme).
+Brenner–Thomée's stability bound times order-`p` consistency (`ρ` the remainder scheme). At
+fixed `T = nτ` the rate is `τ^{p-1/2}`: weaker by `√n` than the smooth-data estimates of
+[HershKato1979] (`O(τᵖ)` for `x ∈ D(A^{p+2})`) and, as recalled, [BrennerThomee1979]
+(`O(nτ τᵖ) ‖A^{p+1} x‖`), which are not formalized; only `|r(∞)| < 1` is covered.
 Every hypothesis of `RationalScheme.norm_resolventStep_pow_sub_S_le` is discharged: `R` is the
 Laplace transform of the semigroup, `Q(R)` is invertible and `ρ(τA)` bounded by the
 Hille–Phillips calculus, stability by `norm_resolventStep_pow_le`. -/

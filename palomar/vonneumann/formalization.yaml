@@ -61,7 +61,14 @@ project:
     for every M, K_0 (depending on r, m and M) such that for omega >= 0, omega tau <= c and
     R(x - tau A x) = x on D(A): Q(R) is invertible, ||rho(tau A)|| <= K_0, and
     ||r(tau A)^k|| <= M_s (k <= n) gives ||r(tau A)^n x - S(n tau) x|| <= M_s (K_0 +
-    M e^(omega n tau)/(m+1)!) M e^(omega n tau) n tau tau^m ||A^(m+1) x||. So A-stable schemes are
+    M e^(omega n tau)/(m+1)!) M e^(omega n tau) n tau tau^m ||A^(m+1) x||; (11) bounded
+    semigroups of complex Banach spaces: for a real rational r as in (10), A-stable with
+    |r(infinity)| < 1 (exactly this case; |r(infinity)| = 1 is not covered), there are C >= 0
+    and K, depending on r only, such that for every such S with ||S(t)|| <= M and every tau > 0
+    the resolvent R exists and is unique, Q(R) is invertible, ||r(tau A)^n|| <= M (1 + C sqrt(n))
+    and ||r(tau A)^n x - S(n tau) x|| <= K M^3 (1 + C sqrt(n)) n tau tau^m ||A^(m+1) x|| (the
+    sqrt(n) loss of the stability bound kept: order m - 1/2 at fixed n tau, weaker than the
+    sources' smooth-data rate tau^m, which is not formalized). So A-stable schemes are
     contractions, with all their powers, for every step size and every m-dissipative A, and
     converge at the order of the scheme for smooth data. The
     statements use Mathlib's polynomials (Polynomial.aeval), bounded operators, partially defined
@@ -71,7 +78,8 @@ project:
     Feec.TimeStepping.Rational, Feec.TimeStepping.Theta, Feec.TimeStepping.RationalSemigroup,
     Feec.Semigroup.LumerPhillips, Feec.TimeStepping.RationalBanach, Feec.TimeStepping.RationalQuasi,
     Feec.Semigroup.Rescale, Feec.Semigroup.HilleYosida, Feec.Semigroup.Complexification,
-    Feec.ForMathlib.Analysis.NormedComplexification, Feec.TimeStepping.RationalHilleYosida).
+    Feec.ForMathlib.Analysis.NormedComplexification, Feec.TimeStepping.RationalHilleYosida,
+    Feec.Semigroup.HillePhillips, Feec.TimeStepping.RationalHillePhillips).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -151,12 +159,19 @@ sources:
       with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of complex Banach
       spaces and A-stable r with |r(infinity)| < 1, through the Hille-Phillips functional
       calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability
-      ||r(tau A)^n|| <= M (1 + C sqrt(n)) and the error with the extra factor sqrt(n), all
-      proved (VonNeumann.error_bound_banach_sqrt). Not formalized: the sqrt(n) bound for
-      A-acceptable r with |r(infinity)| = 1 (Crank-Nicolson, Gauss methods) and on real Banach
-      spaces, and the estimates for less smooth data (x in the domain of a lower power of A,
-      with a lower rate).
-      Paper not consulted; statement and scope as recalled, so no theorem numbers are cited.
+      ||r(tau A)^n|| <= M (1 + C sqrt(n)) (the paper's stability bound, ||r^n(hA)|| <= C n^(1/2)
+      for t bounded and A-acceptable r, per its abstract, checked via Crossref) and an error bound
+      that carries this sqrt(n) loss, all proved (VonNeumann.error_bound_banach_sqrt). That error
+      bound is stability times consistency, of order m - 1/2 at fixed t = n tau; the paper's
+      smooth-data convergence estimates have no sqrt(n) loss (as recalled: O(t tau^m) for x in
+      D(A^(m+1)); the abstract only says convergence is discussed). Not formalized: those sharp
+      smooth-data estimates (their proof bounds the measure of (r(z)^n - e^(nz))/z^(m+1), which
+      contains the point mass of e^(nz) at n and so lies outside the half-line algebra
+      C delta_0 + L^1 used here), the sqrt(n) bound for A-acceptable r with |r(infinity)| = 1
+      (Crank-Nicolson, Gauss methods) and on real Banach spaces, and the estimates for less
+      smooth data (x in the domain of a lower power of A, with a lower rate).
+      Paper not consulted beyond its abstract; statement and scope as recalled, so no theorem
+      numbers are cited.
     author_endorsement: "not-contacted"
   - title: "High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems"
     authors:
@@ -165,12 +180,13 @@ sources:
     id: "doi:10.1137/0716050"
     type: "article"
     location: "SIAM J. Numer. Anal. 16 (1979)"
-    relationship: "formalizes"
+    relationship: "background"
     note: >-
-      Stability of rational approximations of bounded semigroups on Banach spaces with growth
-      C sqrt(n), through the Hille-Phillips functional calculus; formalized for A-stable r with
-      |r(infinity)| < 1 on complex Banach spaces (VonNeumann.error_bound_banach_sqrt). Paper
-      not consulted; statement and scope as recalled, so no theorem numbers are cited.
+      Per its abstract (checked via Crossref): for |r(z)| <= 1 on re z <= 0, order q and
+      u(0) in D(A^(q+2)), the error of v(t + h) = r(hA) v(t) is O(h^q), with no sqrt(n) loss.
+      Not formalized; the formalized Banach-space error bound
+      (VonNeumann.error_bound_banach_sqrt) is weaker (an extra factor sqrt(n), order m - 1/2 at
+      fixed t), but asks for one power of A less. Paper not consulted beyond its abstract.
     author_endorsement: "not-contacted"
   - title: "Functional Analysis and Semi-Groups"
     authors:
@@ -178,13 +194,13 @@ sources:
       - "Ralph S. Phillips"
     id: "doi:10.1090/coll/031"
     type: "book"
-    location: "Amer. Math. Soc. Colloq. Publ. 31 (1957), Ch. XV"
+    location: "Amer. Math. Soc. Colloq. Publ. 31 (1957)"
     relationship: "background"
     note: >-
       The operational calculus of a semigroup, a + integral of g(t) S(t) dt for measures
       a delta_0 + g dt on [0, infinity), through which r(tau A) is bounded on Banach spaces.
       Formalized as an algebra homomorphism from the convolution algebra of the half-line
-      (Feec.C0Semigroup.hillePhillips). Chapter as recalled, not consulted.
+      (Feec.C0Semigroup.hillePhillips). Book not consulted, so no chapter is cited.
     author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
@@ -205,7 +221,7 @@ sources:
       - "Vidar Thomée"
     id: "doi:10.1007/3-540-33122-0"
     type: "book"
-    location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 7-9"
+    location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 7, 9"
     relationship: "background"
     note: >-
       Single step methods: stability and consistency give convergence (the Lax-Richtmyer form
@@ -383,8 +399,11 @@ fidelity:
     ||A^(m+1) x||, with C, K depending on r only (per universe); the proof is the Hille-Phillips
     calculus r(tau A) = Phi(mu_r) and a Fourier bound on the total variation of mu_r^n
     (Plancherel and Carlson's inequality). The case |r(infinity)| = 1 (Crank-Nicolson, Gauss
-    methods) and real Banach spaces are not covered there. Nonsmooth data are not
-    covered. Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
+    methods) and real Banach spaces are not covered there. This error bound keeps the sqrt(n)
+    loss of the stability bound (order m - 1/2 at fixed n tau); the sources' smooth-data
+    estimates without that loss ([HershKato1979], O(tau^m) for x in D(A^(m+2));
+    [BrennerThomee1979], as recalled) are not formalized. Nonsmooth data are not covered.
+    Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
     Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
     hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.
 
@@ -486,10 +505,10 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Banach spaces, strongly continuous semigroups; stability and remainder bound assumed."
-    - source: "[BrennerThomee1979]; [HershKato1979]"
+    - source: "[BrennerThomee1979] (the sqrt(n) stability bound)"
       lean: "VonNeumann.error_bound_banach_sqrt"
       module: "Challenge"
       status: "proved"
-      note: "Complex Banach spaces, bounded semigroups, A-stable r with |r(infinity)| < 1: resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), error with the factor sqrt(n)."
+      note: "Complex Banach spaces, bounded semigroups, A-stable r with |r(infinity)| < 1: resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), and an error bound with the factor sqrt(n) (order m - 1/2 at fixed n tau), weaker than the sources' smooth-data rate tau^m, which is not formalized."
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

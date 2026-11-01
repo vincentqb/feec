@@ -42,7 +42,7 @@ invertible whenever `re(1 - 1/s) > 0`, with inverse `s⁻¹ (1 + s⁻¹ e_{1 - 1
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957], Ch. XV
+* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
   (the operational calculus of a semigroup)
 
 Bibliography: [references.bib](../../../docs/references.bib)

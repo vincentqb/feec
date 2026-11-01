@@ -29,7 +29,8 @@ and is the only operator with `R (x - τ A x) = x` on `D(A)` (`eq_laplaceResolve
 
 ## References
 
-* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957], Ch. XV
+* [E. Hille, R. S. Phillips, *Functional Analysis and Semi-Groups*][HillePhillips1957]
+  (the operational calculus of a semigroup)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.3 (the resolvent as a Laplace transform)
 
@@ -164,8 +165,7 @@ def hillePhillipsKernelHom : HalfLineKernel →ₙₐ[ℂ] (E →L[ℂ] E) where
   map_mul' := G.hillePhillipsKernel_mul hM
 
 /-- **The Hille–Phillips functional calculus** of a bounded semigroup, `‖S(t)‖ ≤ M`: the algebra
-homomorphism `a δ₀ + g ↦ a + ∫₀^∞ g(t) S(t) dt` from the half-line algebra. [HillePhillips1957],
-Ch. XV -/
+homomorphism `a δ₀ + g ↦ a + ∫₀^∞ g(t) S(t) dt` from the half-line algebra. [HillePhillips1957] -/
 def hillePhillips : HalfLineAlgebra →ₐ[ℂ] (E →L[ℂ] E) := lift (G.hillePhillipsKernelHom hM)
 
 theorem hillePhillips_apply (μ : HalfLineAlgebra) :

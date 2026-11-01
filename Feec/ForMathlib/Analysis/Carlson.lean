@@ -27,8 +27,8 @@ transform; this is the estimate behind Brenner–Thomée's stability bound `‖r
 
 ## References
 
-* [L. Larsson, L. Maligranda, J. Pečarić, L.-E. Persson, *Multiplicative Inequalities of Carlson Type and Interpolation*][LarssonMaligrandaPecaricPersson2006],
-  Ch. 1 (Carlson's inequality)
+* [L. Larsson, L. Maligranda, J. Pečarić, L.-E. Persson, *Multiplicative Inequalities of Carlson Type and Interpolation*][LarssonMaligrandaPecaricPersson2006]
+  (Carlson's inequality)
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -94,7 +94,7 @@ theorem integrable_of_mul (hg : MemLp g 2) (hg' : MemLp (fun t : ℝ => t • g 
   exact norm_le_carlson one_pos one_pos t (g t)
 
 /-- **Carlson's inequality** on `ℝ`: `(∫ ‖g‖)⁴ ≤ 4π² (∫ ‖g‖²) (∫ ‖t g‖²)`.
-[LarssonMaligrandaPecaricPersson2006], Ch. 1 -/
+[LarssonMaligrandaPecaricPersson2006] -/
 theorem integral_norm_pow_four_le (hg : MemLp g 2) (hg' : MemLp (fun t : ℝ => t • g t) 2) :
     (∫ t, ‖g t‖) ^ 4 ≤ 4 * π ^ 2 * (∫ t, ‖g t‖ ^ 2) * ∫ t, ‖t • g t‖ ^ 2 := by
   set I := ∫ t, ‖g t‖

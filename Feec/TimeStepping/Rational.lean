@@ -14,7 +14,8 @@ exponential by the one-step scheme `u ↦ r(τ A) u` for `u' = A u`. It is **A-s
 (`RationalScheme.IsAStable`) if `|r(iy)| ≤ 1` on the imaginary axis (by the maximum principle this
 is the usual condition on the closed left half-plane, [HairerWanner1996], §IV.3; only the
 imaginary axis is used here, and the equivalence is not formalized), **L-stable**
-(`RationalScheme.IsLStable`) if moreover `r(∞) = 0`, i.e. `deg n < deg d`, and of **order `p`**
+(`RationalScheme.IsLStable`) if moreover `r(∞) = 0`, i.e. `deg n < deg d` (**strongly A-stable**,
+`RationalScheme.IsStronglyAStable`, if only `|r(∞)| < 1`), and of **order `p`**
 (`RationalScheme.HasOrder`) if `r(z) - e^z = O(z^{p+1})`, i.e. `X^{p+1}` divides `n - d Tₚ` with
 `Tₚ = ∑_{j≤p} Xʲ/j!` (`expTaylor`).
 
@@ -344,6 +345,11 @@ def IsAStable : Prop := ∀ y : ℝ, ‖r.eval (y * Complex.I)‖ ≤ 1
 /-- **L-stability**: A-stable with `r(∞) = 0`, i.e. `deg n < deg d`. [HairerWanner1996], §IV.3 -/
 def IsLStable : Prop := r.IsAStable ∧ r.num.degree < r.den.degree
 
+/-- **Strong A-stability**: A-stable with `|r(∞)| < 1` (`|n_N| < |d_N|`, `N = deg d`); every
+L-stable scheme is strongly A-stable. [HairerWanner1996], §IV.3 -/
+def IsStronglyAStable : Prop :=
+  r.IsAStable ∧ |r.num.coeff r.den.natDegree| < |r.den.leadingCoeff|
+
 /-- The supremum `sup_{y ∈ ℝ} |r(iy)|` (finite, `bddAbove`). -/
 def supNorm : ℝ := ⨆ y : ℝ, ‖r.eval (y * Complex.I)‖
 
@@ -358,6 +364,13 @@ def cnum : ℝ[X] := cayleyPoly r.den.natDegree r.num
 def cden : ℝ[X] := cayleyPoly r.den.natDegree r.den
 
 theorem den_ne_zero : r.den ≠ 0 := fun h => r.aeval_den_ne_zero 0 (by simp) (by simp [h])
+
+/-- L-stable schemes are strongly A-stable (`r(∞) = 0`). -/
+theorem IsLStable.isStronglyAStable {r : RationalScheme} (hr : r.IsLStable) :
+    r.IsStronglyAStable := by
+  refine ⟨hr.1, ?_⟩
+  rw [coeff_eq_zero_of_degree_lt (hr.2.trans_eq (degree_eq_natDegree r.den_ne_zero)), abs_zero]
+  exact abs_pos.2 (leadingCoeff_ne_zero.2 r.den_ne_zero)
 
 /-- `d̃` has no zero in the closed unit disc. -/
 theorem aeval_cden_ne_zero {w : ℂ} (hw : ‖w‖ ≤ 1) : aeval w r.cden ≠ 0 := by

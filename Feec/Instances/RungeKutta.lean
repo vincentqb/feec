@@ -25,9 +25,12 @@ conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
 
 and on the cube, at every polynomial order of the periodic table (`Cube.FEM.maxwell_gaussLegendre2`,
 `Cube.FEM.heat_radauIIA2`). Off Hilbert spaces, for every bounded semigroup of a complex Banach
-space (`banach_radauIIA2`): **Radau IIA and SDIRK converge with orders `3` and `2` up to a factor
-`√n`**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖`, by the Hille–Phillips calculus
-(`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`).
+space (`banach_radauIIA2`, a corollary of the Banach-space theory alone: the FEEC families and
+their fully discrete verdicts do not use it): **Radau IIA and SDIRK converge with the `√n` loss
+of the stability bound**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖`
+(`p = 3`, `2`), i.e. at fixed `T = nτ` with rates `τ^{5/2}` and `τ^{3/2}`, by the Hille–Phillips
+calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`). The sources'
+smooth-data rate `τᵖ` without `√n` ([HershKato1979], for `x ∈ D(A^{p+2})`) is not formalized.
 
 ## References
 
@@ -121,8 +124,10 @@ variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E
 resolvent `R = (1 - τA)⁻¹` of the generator `A` (`C0Semigroup.laplaceResolvent`), for `τ > 0`,
 every `n` and `x ∈ D(A⁴)` (resp. `D(A³)`), `‖r(τA)ⁿ x - S(nτ) x‖` is at most
 `M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` with `p = 3` (Radau IIA) and `p = 2`
-(SDIRK): both are L-stable, hence strongly A-stable. [BrennerThomee1979]; [HairerWanner1996],
-§IV.5, §IV.6 -/
+(SDIRK): both are L-stable, hence strongly A-stable. The factor `√n` is the loss of
+Brenner–Thomée's stability bound (rates `τ^{5/2}`, `τ^{3/2}` at fixed `nτ`). A corollary of the
+Banach-space theory only: the FEEC families and their fully discrete verdicts are on Hilbert
+spaces and do not use it. [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
 theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
     ((∀ j < 3 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
       ‖(RationalScheme.radauIIA2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -

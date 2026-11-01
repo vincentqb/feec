@@ -19,8 +19,8 @@ distributions given by locally integrable functions determine them almost everyw
 
 ## References
 
-* [E. M. Stein, G. Weiss, *Introduction to Fourier Analysis on Euclidean Spaces*][SteinWeiss1971],
-  Ch. I, Thm 2.1
+* [E. M. Stein, G. Weiss, *Introduction to Fourier Analysis on Euclidean Spaces*][SteinWeiss1971]
+  (the `L²` theory of the Fourier transform)
 
 Bibliography: [references.bib](../../../../docs/references.bib)
 -/
@@ -64,8 +64,7 @@ theorem fourier_toLp_ae_eq {f : V → F} (hf : Integrable f) (hf2 : MemLp f 2) :
 theorem fourier {f : V → F} (hf : Integrable f) (hf2 : MemLp f 2) : MemLp (𝓕 f) 2 :=
   (Lp.memLp _).ae_eq (fourier_toLp_ae_eq hf hf2)
 
-/-- **Plancherel's theorem**: `∫ ‖𝓕 f‖² = ∫ ‖f‖²` for `f ∈ L¹ ∩ L²`. [SteinWeiss1971],
-Ch. I, Thm 2.1 -/
+/-- **Plancherel's theorem**: `∫ ‖𝓕 f‖² = ∫ ‖f‖²` for `f ∈ L¹ ∩ L²`. [SteinWeiss1971] -/
 theorem integral_norm_fourier_sq {f : V → F} (hf : Integrable f) (hf2 : MemLp f 2) :
     ∫ ξ, ‖𝓕 f ξ‖ ^ 2 = ∫ x, ‖f x‖ ^ 2 := by
   have key : ∀ h : Lp F 2 (volume : Measure V), ∫ x, ‖h x‖ ^ 2 = ‖h‖ ^ 2 := fun h => by

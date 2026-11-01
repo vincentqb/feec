@@ -59,10 +59,12 @@ only (`VonNeumann.error_bound_quasi_real`). On a Banach space, for a strongly co
 semigroup with generator `A`, stability of `r(τA)` and boundedness of the remainder are not
 automatic; given them, the bound holds with the stability constant
 (`VonNeumann.error_bound_banach_real`). For bounded semigroups of complex Banach spaces and
-A-stable `r` with `|r(∞)| < 1` both are theorems ([BrennerThomee1979]; [HershKato1979]): the
-Hille–Phillips functional calculus gives `Q(R)` invertible and `‖ρ(τA)‖` bounded, and
-`‖r(τA)ⁿ‖ ≤ M (1 + C √n)`, so the order-`m` error holds with an extra factor `√n`
-(`VonNeumann.error_bound_banach_sqrt`).
+A-stable `r` with `|r(∞)| < 1` both are theorems: the Hille–Phillips functional calculus gives
+`Q(R)` invertible, `‖ρ(τA)‖` bounded and Brenner–Thomée's stability bound
+`‖r(τA)ⁿ‖ ≤ M (1 + C √n)` ([BrennerThomee1979]), so the order-`m` error holds with the `√n`
+loss of the stability bound, i.e. with rate `τ^{m-1/2}` at fixed `T = nτ`
+(`VonNeumann.error_bound_banach_sqrt`). The sources' smooth-data rate `τᵐ`, without `√n`
+([HershKato1979], for `x ∈ D(A^{m+2})`), is not formalized.
 
 The operator `p(T)` is `Polynomial.aeval T p`; `q(T)⁻¹` is `Ring.inverse` in the Banach algebra
 of bounded operators; a real polynomial acts over `𝕜` through `Polynomial.map (algebraMap ℝ 𝕜)`;
@@ -85,7 +87,7 @@ stability is the Hille–Yosida estimate and the bound needs nothing beyond the 
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983], §1.4, §1.5, §3.1
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [R. Hersh, T. Kato, *High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems*][HershKato1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7–9
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -460,17 +462,20 @@ theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
           Ms * (K₀ + M / (m + 1).factorial) * M * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
   sorry
 
-/-- **Brenner–Thomée's `√n` stability and error bounds for bounded semigroups on Banach
-spaces** ([BrennerThomee1979]; [HershKato1979]). Let `r = p/q` be a real rational function with
-`deg p ≤ deg q`, without poles in the closed left half-plane, A-stable (`|r(iy)| ≤ 1`), with
-`|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There are constants `C ≥ 0` and `K`,
-depending on `r` only, such that for every strongly continuous semigroup `S` of a complex Banach
-space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A` (right derivatives at `0`), and
-every `τ > 0`: exactly one bounded operator `R` satisfies `R (x - τAx) = x` on `D(A)` (the
+/-- **Brenner–Thomée's `√n` stability bound, and the `√n`-lossy error bound, for bounded
+semigroups on Banach spaces** ([BrennerThomee1979] for the stability bound). Let `r = p/q` be a
+real rational function with `deg p ≤ deg q`, without poles in the closed left half-plane,
+A-stable (`|r(iy)| ≤ 1`), with `|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There
+are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
+semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A`
+(right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies `R (x - τAx) = x` on `D(A)` (the
 resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible; `r(τA) = P(R) Q(R)⁻¹` (as in
 `VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M³ (1 + C √n) nτ τᵐ ‖A^{m+1} x‖` for every `n` and `x ∈ D(A^{m+1})` (a
-chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). -/
+chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the
+stability bound times consistency: at fixed `T = nτ` it is of order `m - 1/2`, weaker by `√n`
+than the smooth-data estimates of the sources (`O(τᵐ)` for `x ∈ D(A^{m+2})` [HershKato1979]),
+which are not formalized; the case `|r(∞)| = 1` is not covered. -/
 theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
     (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1)

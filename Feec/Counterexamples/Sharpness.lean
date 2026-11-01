@@ -15,6 +15,7 @@ public import Feec.Counterexamples.MixedWave
 public import Feec.Counterexamples.NonClosedRangeEuclidean
 public import Feec.Counterexamples.PeriodicFamily
 public import Feec.Counterexamples.PolynomialForms
+public import Feec.Domain.BGGRealization
 
 /-!
 # Sharpness of the crown's hypotheses
@@ -60,6 +61,15 @@ crown does not give the corresponding conclusions there.
   suffices: for a complex with closed range, uniformly bounded cochain projections exist iff the
   discrete Poincaré inequality and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly
   (`HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff`; [AFW2010], Thms 3.6, 3.7, (30)).
+* **Right inverses of the connecting maps** (the hypothesis `Feec.BGG.Data.InjSurjWith` of the
+  explicit-map fields of `Feec.BGG.HilbertData.BGGVerdict`, the analytic BGG verdict behind the
+  crown's discrete BGG complexes, `BGG.HilbertData.StackedFamily.bggVerdict`). It fails between
+  the `L²` domain complexes of the Hessian, elasticity and div-div diagrams on every nonempty
+  open `Ω ⊆ ℝ³`, from every `J ≤ 0`, `1`, `2`: `Sᴶ` is not onto there
+  (`Feec.Domain.hessianMaximalData_not_injSurjWith`, `elasticityMaximalData_not_injSurjWith`,
+  `divDivMaximalData_not_injSurjWith`; e.g. `S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)`). So on `L²` these
+  fields hold only vacuously; the explicit map is exercised on smooth fields
+  (`Feec.Domain.smoothBGGVerdict`).
 
 ## Thesis corrections
 
@@ -153,7 +163,8 @@ universe u v w
 closed range is necessary for the static verdict; the reducing hypothesis of the residual clauses
 fails for the TSD constraint, so only the departure branch applies to it; the subcomplex
 hypothesis fails for the pairs `P_{r+1}Λ⁰ × P_r⁻Λ¹`; bounded cochain projections are equivalent
-to discrete stability. Each field is the statement of the named
+to discrete stability; the right inverses of the explicit BGG map do not exist between the `L²`
+domains of the Hessian, elasticity and div-div diagrams. Each field is the statement of the named
 theorem. -/
 structure CrownSharpness : Prop where
   /-- `Verdict.static`, closed range is necessary: no conforming family of the periodic complex
@@ -189,6 +200,14 @@ structure CrownSharpness : Prop where
   uniformly graph-bounded projections exists iff the discrete Poincaré inequality and the
   harmonic bound hold uniformly (a characterization; [AFW2010], Thms 3.6, 3.7) -/
   projections : type_of% @HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff.{u, v, u, v}
+  /-- `BGG.HilbertData.BGGVerdict`, right inverses of `Sᴶ` (`BGG.Data.InjSurjWith`): none exist
+  between the `L²` domains of the Hessian diagram from any `J ≤ 0`, `S⁰ = I : H¹ → H(curl)` is
+  not onto, so the explicit-map fields are vacuous there -/
+  injSurjWith_hessian : type_of% @Domain.hessianMaximalData_not_injSurjWith.{u}
+  /-- the same for the elasticity diagram from any `J ≤ 1` (`S¹ = T - tr`) -/
+  injSurjWith_elasticity : type_of% @Domain.elasticityMaximalData_not_injSurjWith.{u}
+  /-- the same for the div-div diagram from any `J ≤ 2` (`S² = I : H(div) → L²`) -/
+  injSurjWith_divDiv : type_of% @Domain.divDivMaximalData_not_injSurjWith.{u}
 
 /-- **What the counterexamples show about the crown's hypotheses** (`CrownSharpness`). -/
 theorem crownSharpness : CrownSharpness.{u, v} :=
@@ -198,7 +217,9 @@ theorem crownSharpness : CrownSharpness.{u, v} :=
     BoundedBGG.bggComplex_verdict, CubeStationary.mem_invariantCore_tsd_iff,
     BoxStationary.mem_invariantCore_tsd_iff_box, BallEigenDense.coreSub_le_stationary_ball3_iff,
     PolynomialForms.not_map_extDeriv_polyForm_le_polyFormMinus,
-    HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff⟩
+    HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff,
+    Domain.hessianMaximalData_not_injSurjWith, Domain.elasticityMaximalData_not_injSurjWith,
+    Domain.divDivMaximalData_not_injSurjWith⟩
 
 /-! ### Thesis corrections -/
 

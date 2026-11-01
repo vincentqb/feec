@@ -61,6 +61,7 @@ public import Feec.Domain.Mollify
 public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
 public import Feec.Domain.Rellich
+public import Feec.Domain.Scaling
 public import Feec.Domain.StarShapedSmoothing
 public import Feec.Domain.VectorProxy
 public import Feec.Domain.WholeSpace

@@ -177,10 +177,17 @@ status:
     Corollary 1 in degree 0, where the image of the constant pairs under (30) represents the
     cohomology (Feec.Domain.smoothBGGVerdict); that image is [c + K^0 c~], informally the affine
     functions, the infinitesimal rigid motions and the lowest-order Raviart-Thomas fields (the
-    identification is not formalized). Between the L^2 domain complexes S^J is not onto (not
-    formalized), so the explicit-map fields of Feec.BGG.HilbertData.BGGVerdict, including
-    quasiIso_orthSumMap (its surjectivity hypothesis fails at J), are vacuous for these three
-    complexes on L^2 domains. The challenge itself
+    identification is not formalized). Between the L^2 domain complexes S^J is not onto, on every
+    nonempty open set of R^3 (proved in Feec, not compared: Feec.Domain.hessianMaximalData_not_surjective,
+    S^0 = I : H^1(Omega; K^3) -> H(curl; Omega), elasticityMaximalData_not_surjective,
+    S^1 = T - tr : H(curl; Omega; M) -> H(div; Omega; M), divDivMaximalData_not_surjective,
+    S^2 = I : H(div; Omega) -> L^2(Omega; K^3); the general criterion
+    Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS, by open mapping and rescaled test
+    fields, Feec.Domain.ConstCoeffOp.exists_lt_norm_testField_comp_aff), so (23) fails from every
+    J <= 0, 1, 2 (Feec.Domain.hessianMaximalData_not_injSurjWith, elasticityMaximalData_not_injSurjWith,
+    divDivMaximalData_not_injSurjWith) and the explicit-map fields of
+    Feec.BGG.HilbertData.BGGVerdict, including quasiIso_orthSumMap (its surjectivity hypothesis
+    fails at J), are vacuous for these three complexes on L^2 domains. The challenge itself
     proves that S = 𝟙 : V[1] -> V[1] satisfies the hypotheses at every J (FEEC.BGG.hypotheses_id).
   sorry_count: 0
   sorry_in_definitions: 0

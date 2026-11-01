@@ -39,7 +39,8 @@ the form index; here `x` acts on the value index.
 `Feec.BGG.Data.InjSurjWith` between the domain complexes of the `L²` realizations
 (`Feec.Domain.hessianMaximalData`, …), and it fails there: `Sᴶ` is not onto between the domains
 (for the Hessian, `S⁰ = I` maps `H¹(Ω; 𝕜³)` into `H(curl; Ω)`, a proper subspace for every
-nonempty open `Ω`; this is not formalized). Pointwise surjectivity gives right inverses on smooth
+nonempty open `Ω`, `Feec.Domain.hessianMaximalData_not_injSurjWith` and its elasticity and
+div-div analogues). Pointwise surjectivity gives right inverses on smooth
 fields, not on the graph spaces, so the explicit map is stated here on smooth fields, as in the
 smooth and Sobolev settings of [ArnoldHu2021], §4. The cohomology of the smooth de Rham complexes
 in positive degrees (the Poincaré lemma on `ℝ³`) is not formalized: Corollary 1 is stated for any

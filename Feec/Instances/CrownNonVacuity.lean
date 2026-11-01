@@ -43,7 +43,9 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   null-homotopies and explicit right inverses, and the image of the constant pairs represents
   their degree-`0` cohomology (informally `[c + K⁰ c̃]`: the affine functions, the infinitesimal
   rigid motions, the lowest-order Raviart–Thomas fields). The explicit-map fields of the analytic
-  `Feec.BGG.HilbertData.BGGVerdict` remain vacuous for these complexes on `L²`.
+  `Feec.BGG.HilbertData.BGGVerdict` remain vacuous for these complexes on `L²`: their hypothesis
+  fails there (`Feec.Domain.hessianMaximalData_not_injSurjWith`, recorded in
+  `Feec.Counterexamples.CrownSharpness`).
 
 Not exercised here: a nonzero datum of a Jackson rate class with a non-stationary orbit (the zero
 datum lies in every Whitney class, `Maxwell.zero_mem_cubePMC_ofJackson`).

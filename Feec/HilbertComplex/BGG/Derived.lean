@@ -70,8 +70,9 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
 * `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
   the condition at every `J`. The de Rham instance is the Hessian diagram on smooth fields
   (`Feec.Domain.injSurj_hessianBGG`, whose BGG complex is the Hessian complex,
-  `Feec.Domain.hessianBGGIso`). On the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto;
-  [ArnoldHu2021] use rows of shifted regularity (not formalized).
+  `Feec.Domain.hessianBGGIso`). On the plain `HΛ` rows `S⁰ : H¹ ⊗ ℝ³ → H(curl)` is not onto
+  (`Feec.Domain.hessianMaximalData_not_surjective`); [ArnoldHu2021] use rows of shifted
+  regularity (not formalized).
 
 ## References
 

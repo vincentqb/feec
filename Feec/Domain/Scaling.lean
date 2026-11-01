@@ -31,8 +31,6 @@ which the derivative vanishes, and these leave its support).
 ## References
 
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.6.1 (the scaling argument)
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2 (change of variables in Sobolev spaces)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -125,7 +123,7 @@ theorem integral_comp_aff {a : ℝ} (ha : a ≠ 0) (b : E) (g : E → ℝ) :
 
 /-- **Homogeneous operators of positive order are unbounded on rescaled test fields.** If `B` is
 homogeneous of order `r > 0` and `B ψ ≠ 0` for a smooth compactly supported field `ψ`, then on
-every nonempty open `Ω`, for every `C`, a rescaling `ψ ∘ aff a b` (`a > 0`) of `ψ` is a test
+every nonempty open `Ω`, for every `C`, a rescaling `ψ ∘ aff a b` of `ψ` is a test
 field on `Ω` with `C ‖ψ ∘ aff a b‖ < ‖B (ψ ∘ aff a b)‖` in `L²(Ω)`. -/
 theorem ConstCoeffOp.exists_lt_norm_testField_comp_aff (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
     {κ : Type*} [Fintype κ] {B : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (hB : B.IsHomogeneous r)

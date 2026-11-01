@@ -67,7 +67,8 @@ unconditionally on smooth fields, where the matrices are onto pointwise
 * `ConstCoeffBGG.maximalData_bggVerdict`.
 * `hessianMaximalData_derivedVerdict`, `elasticityMaximalData_derivedVerdict`,
   `divDivMaximalData_derivedVerdict`.
-* **`ConstCoeffBGG.not_surjective_maximalData_domainS`**, `ConstCoeffBGG.not_injSurjWith_maximalData`;
+* **`ConstCoeffBGG.not_surjective_maximalData_domainS`**,
+  `ConstCoeffBGG.not_injSurjWith_maximalData`;
   **`hessianMaximalData_not_surjective`**, `elasticityMaximalData_not_surjective`,
   `divDivMaximalData_not_surjective`; `hessianMaximalData_not_injSurjWith`,
   `elasticityMaximalData_not_injSurjWith`, `divDivMaximalData_not_injSurjWith`.
@@ -298,10 +299,11 @@ theorem not_surjective_maximalData_domainS (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
   have hinj : Function.Injective ((B.maximalData M hM hΩ).domainS k (k + 1)) :=
     (B.maximalData M hM hΩ).injective_domainS (by
       rw [maximalData_S]; exact (L2F.antilipschitz_ofMatrixCLM hN).injective)
-  obtain ⟨K, hK⟩ := ((B.maximalData M hM hΩ).domainS k (k + 1)).antilipschitz_of_injective_of_isClosed_range
-    hinj (by
-      rw [Function.Surjective.range_eq (f := (B.maximalData M hM hΩ).domainS k (k + 1)) hs]
-      exact isClosed_univ)
+  obtain ⟨K, hK⟩ :=
+    ((B.maximalData M hM hΩ).domainS k (k + 1)).antilipschitz_of_injective_of_isClosed_range
+      hinj (by
+        rw [Function.Surjective.range_eq (f := (B.maximalData M hM hΩ).domainS k (k + 1)) hs]
+        exact isClosed_univ)
   obtain ⟨α, β, hφ, hlt⟩ := ConstCoeffOp.exists_lt_norm_testField_comp_aff hΩ hne hbot hr hψ hdψ
     (K * ‖(L2F.ofMatrixCLM (M k) : L2F 𝕜 Ω (B.bot.ι k) →L[𝕜] L2F 𝕜 Ω (B.top.ι (k + 1)))‖)
   have hMφ := (ConstCoeffOp.ofMatrix (M k)).isTestField_apply hφ
@@ -570,7 +572,8 @@ theorem elasticityMaximalData_not_surjective (hΩ : IsOpen Ω) (hne : Ω.Nonempt
   have hψ := (ofMatrix (elS0 (𝕜 := 𝕜))).isTestField_apply hg
   have hcurl := curlOp_elS0 (𝕜 := 𝕜) fun l x => fderiv ℝ χ x (coordDir l)
   refine (elasticityBGG 𝕜).not_surjective_maximalData_domainS elasticitySMat elasticityS_apply_eq
-    hΩ hne hN (isHomogeneous_vecOp (𝕜 := 𝕜) 3 (1 + 1)) (isHomogeneous_vecOp 3 1) one_pos hψ ?_ fun h => ?_
+    hΩ hne hN (isHomogeneous_vecOp (𝕜 := 𝕜) 3 (1 + 1)) (isHomogeneous_vecOp 3 1) one_pos hψ ?_
+    fun h => ?_
   · change (divOp 3 3).apply ((ofMatrix elS1).apply _) = 0
     rw [divOp_elS1 fun a => (hψ a).contDiff, hcurl]
     funext i

@@ -2,7 +2,6 @@ module
 
 public import Feec.Domain.BGGRealization
 public import Feec.Instances.CrownNonVacuity
-public import Feec.Counterexamples.Sharpness
 
 /-!
 # Regression test: the analytic BGG verdict
@@ -22,10 +21,10 @@ structure.
 `Instances.CrownNonVacuity` gained a last field `bgg`, the explicit map (30) on the smooth
 Hessian, elasticity and div-div complexes; `crownNonVacuity_bgg` checks, by `type_of%`, that it is
 the statement of `Domain.smoothBGGVerdict`.
-`Counterexamples.CrownSharpness` gained the last fields `injSurjWith_hessian`,
-`injSurjWith_elasticity`, `injSurjWith_divDiv`: between the `L²` domains the explicit-map
-hypothesis `Data.InjSurjWith` fails; `not_surjective_maximalData_domainS_statement` states the
-general non-surjectivity of `Sᵏ` verbatim, and `crownSharpness_injSurjWith` reads the fields back.
+Between the `L²` domains the explicit-map hypothesis `Data.InjSurjWith` fails:
+`not_surjective_maximalData_domainS_statement` states the general non-surjectivity of `Sᵏ`
+verbatim (the corresponding fields of `Counterexamples.CrownSharpness` are read back in
+`FeecCheck.Sharpness`).
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -123,14 +122,5 @@ theorem not_surjective_maximalData_domainS_statement {E : Type*} [NormedAddCommG
     (hSψ : (B.top.A (k + 1)).apply ((B.S k).apply ψ) = 0) (hdψ : (B.bot.A k).apply ψ ≠ 0) :
     ¬ Function.Surjective ((B.maximalData M hM hΩ).domainData.S k (k + 1)) :=
   B.not_surjective_maximalData_domainS M hM hΩ hne hN htop hbot hr hψ hSψ hdψ
-
-universe u w in
-/-- The last fields of `Counterexamples.CrownSharpness` are the statements of
-`Domain.hessianMaximalData_not_injSurjWith` and its elasticity and div-div analogues. -/
-theorem crownSharpness_injSurjWith (h : Counterexamples.CrownSharpness.{u, w}) :
-    type_of% @Domain.hessianMaximalData_not_injSurjWith.{u} ∧
-      type_of% @Domain.elasticityMaximalData_not_injSurjWith.{u} ∧
-      type_of% @Domain.divDivMaximalData_not_injSurjWith.{u} :=
-  ⟨h.injSurjWith_hessian, h.injSurjWith_elasticity, h.injSurjWith_divDiv⟩
 
 end FeecCheck.BGGVerdicts

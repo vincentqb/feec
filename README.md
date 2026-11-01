@@ -37,7 +37,9 @@ departure clause applies to it) and that `P_{r+1}Λ⁰ × P_r⁻Λ¹` is not a s
 characterization of the static layer's hypothesis: under closed range, uniformly graph-bounded
 cochain projections exist iff the discrete Poincaré inequality and `‖q‖ ≤ c ‖P_ℌ q‖` on `ℌₕ` hold
 uniformly (`Feec.HilbertComplex.SubcomplexFamily.exists_isGraphBounded_iff`;
-Arnold–Falk–Winther 2010, Thms 3.6, 3.7).
+Arnold–Falk–Winther 2010, Thms 3.6, 3.7), and with the failure of the right inverses
+`BGG.Data.InjSurjWith` of the explicit BGG map between the `L²` domains of the Hessian,
+elasticity and div-div diagrams (`Feec.Domain.hessianMaximalData_not_injSurjWith` and siblings).
 `Feec.Counterexamples.crownCorrections` (same file) collects, by reference, the thesis
 corrections bearing on the crown (the statements involve no crown object; the tie is documentary):
 the weak-symmetry discretization, not a stacked BGG family, has no uniqueness without exactness at

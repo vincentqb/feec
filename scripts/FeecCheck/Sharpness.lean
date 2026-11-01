@@ -9,7 +9,8 @@ The statements of `Feec.HilbertComplex.Subcomplex.exists_cochainProjection` ([AF
 and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` (Thms 3.6, 3.7 and (30)), written
 out verbatim and proved from the library, and the field `projections` of the crown's sharpness
 record `Feec.Counterexamples.CrownSharpness` (`SubcomplexFamily.exists_isGraphBounded_iff`), read
-back with `SubcomplexFamily.IsGraphBounded` unfolded. A change of any of these statements fails
+back with `SubcomplexFamily.IsGraphBounded` unfolded, and its fields `injSurjWith_*` (no right
+inverses of the explicit BGG map between `L²` domains). A change of any of these statements fails
 `lake build FeecCheck`.
 
 ## References
@@ -62,5 +63,16 @@ example {κ : Type} (l : Filter κ) (V : κ → H.Subcomplex) [∀ h i, FiniteDi
             C ^ 2 * (‖(x : W i)‖ ^ 2 + ‖H.d i (c.next i) x‖ ^ 2)) ↔
       ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).DiscretePoincare i c₁ ∧ (V h).HarmonicBound i c₂ :=
   Feec.Counterexamples.crownSharpness.{0, 0}.projections l V hcr
+
+universe u w in
+/-- The crown's sharpness fields `injSurjWith_hessian`, `injSurjWith_elasticity`,
+`injSurjWith_divDiv` are the statements of `Domain.hessianMaximalData_not_injSurjWith` and its
+elasticity and div-div analogues: the right inverses of the explicit BGG map do not exist between
+the `L²` domains. -/
+theorem crownSharpness_injSurjWith (h : Feec.Counterexamples.CrownSharpness.{u, w}) :
+    type_of% @Feec.Domain.hessianMaximalData_not_injSurjWith.{u} ∧
+      type_of% @Feec.Domain.elasticityMaximalData_not_injSurjWith.{u} ∧
+      type_of% @Feec.Domain.divDivMaximalData_not_injSurjWith.{u} :=
+  ⟨h.injSurjWith_hessian, h.injSurjWith_elasticity, h.injSurjWith_divDiv⟩
 
 end FeecCheck.Sharpness

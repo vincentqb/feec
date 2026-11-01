@@ -74,9 +74,11 @@ inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the coc
 (`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`
 and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 The Banach-space `√n` modules (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
-`ForMathlib.Analysis.{HalfLineAlgebra, Carlson, Fourier.Plancherel}`) are tied only through
-`Instances.RungeKutta.banach_radauIIA2`, and the smooth-data modules
-(`Semigroup.HillePhillipsTranslate`, `TimeStepping.RationalSharp`,
+`TimeStepping.RationalAStable`,
+`ForMathlib.Analysis.{HalfLineAlgebra, HalfLinePowers, Carlson, Fourier.Plancherel}`) are tied
+only through `Instances.RungeKutta.banach_radauIIA2` and through `banach_implicitMidpoint` and
+`banach_gaussLegendre2` (Crank–Nicolson and two-stage Gauss, `|r(∞)| = 1`), and the smooth-data
+modules (`Semigroup.HillePhillipsTranslate`, `TimeStepping.RationalSharp`,
 `ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`) only through
 `Instances.RungeKutta.banach_sharp`: corollaries off Hilbert spaces that no crown field
 consumes (the FEEC families are Hilbert complexes; the tie is documentary).
@@ -358,14 +360,14 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   spaces), with `Feec.TimeStepping.RationalScheme.exists_norm_resolventStep_pow_sub_S_le` and
   `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le` (Hille–Yosida,
   `Feec.C0Semigroup.norm_resolvent_pow_le`, on the complexification for real spaces); for
-  bounded semigroups of complex Banach spaces and A-stable `r` with `|r(∞)| < 1`
+  bounded semigroups of complex Banach spaces and every A-stable `r` (`|r(∞)| = 1` included)
   (theorem VonNeumann.error_bound_banach_sqrt) the resolvent, `Q(R)` invertible, the
   Brenner–Thomée stability `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and an error bound with its `√n` loss
   (order `m - 1/2` at fixed `nτ`),
   from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`; and for every A-stable
-  `r`, `|r(∞)| = 1` included (theorem VonNeumann.error_bound_banach_sharp), Brenner–Thomée's
-  smooth-data estimate `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`, from
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`; and for
+  every A-stable `r` (theorem VonNeumann.error_bound_banach_sharp), Brenner–Thomée's smooth-data
+  estimate `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`, from
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (the calculus on
   translates of kernels, `Feec.C0Semigroup.hillePhillipsKernel_translate`, and the bound
   `‖kₙ‖₁ ≤ C n` on Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).

@@ -116,6 +116,7 @@ public import Feec.ForMathlib.Analysis.Fourier.GeomSumMultiplier
 public import Feec.ForMathlib.Analysis.Fourier.Plancherel
 public import Feec.ForMathlib.Analysis.Gronwall
 public import Feec.ForMathlib.Analysis.HalfLineAlgebra
+public import Feec.ForMathlib.Analysis.HalfLinePowers
 public import Feec.ForMathlib.Analysis.HalfLineTranslate
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Analysis.NormedComplexification
@@ -415,6 +416,7 @@ public import Feec.TimeStepping.Convergence
 public import Feec.TimeStepping.Forced
 public import Feec.TimeStepping.Leapfrog
 public import Feec.TimeStepping.Rational
+public import Feec.TimeStepping.RationalAStable
 public import Feec.TimeStepping.RationalBanach
 public import Feec.TimeStepping.RationalHillePhillips
 public import Feec.TimeStepping.RationalHilleYosida

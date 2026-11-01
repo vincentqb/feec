@@ -32,8 +32,9 @@ pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹
 
 The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
 argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable
-schemes but not the Gauss/diagonal Padé schemes (`|r(∞)| = 1`). Complex Banach spaces only: the
-measure `μ_r` is complex.
+schemes but not the Gauss/diagonal Padé schemes (`|r(∞)| = 1`); every A-stable `r` is covered,
+by a dyadic decomposition of `μ_rⁿ`, in `Feec.TimeStepping.RationalAStable`. Complex Banach
+spaces only: the measure `μ_r` is complex.
 
 ## References
 
@@ -257,7 +258,7 @@ Brenner–Thomée's stability bound times order-`p` consistency (`ρ` the remain
 fixed `T = nτ` the rate is `τ^{p-1/2}`: weaker by `√n` than the smooth-data estimates of
 [HershKato1979] (`O(τᵖ)` for `x ∈ D(A^{p+2})`) and [BrennerThomee1979]
 (`O(nτ τᵖ) ‖A^{p+1} x‖`, `norm_resolventStep_pow_sub_S_le_sharp`). This bound covers only
-`|r(∞)| < 1`.
+`|r(∞)| < 1`; every A-stable `r` in `norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`.
 Every hypothesis of `RationalScheme.norm_resolventStep_pow_sub_S_le` is discharged: `R` is the
 Laplace transform of the semigroup, `Q(R)` is invertible and `ρ(τA)` bounded by the
 Hille–Phillips calculus, stability by `norm_resolventStep_pow_le`. -/

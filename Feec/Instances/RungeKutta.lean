@@ -3,6 +3,7 @@ module
 public import Feec.HilbertComplex.Approximation.RationalScheme
 public import Feec.Instances.Corollaries
 public import Feec.TimeStepping.RationalHillePhillips
+public import Feec.TimeStepping.RationalAStable
 public import Feec.TimeStepping.RationalSharp
 
 /-!
@@ -30,12 +31,16 @@ space (`banach_radauIIA2`, a corollary of the Banach-space theory alone: the FEE
 their fully discrete verdicts do not use it): **Radau IIA and SDIRK converge with the `√n` loss
 of the stability bound**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖`
 (`p = 3`, `2`), i.e. at fixed `T = nτ` with rates `τ^{5/2}` and `τ^{3/2}`, by the Hille–Phillips
-calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`); and
-**Gauss–Legendre, Radau IIA and SDIRK converge at the sharp rate**,
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r M nτ τᵖ ‖A^{p+1} x‖` (`p = 4`, `3`, `2`; `banach_sharp`), by
-Brenner–Thomée's smooth-data estimate
+calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`); and so do
+**Crank–Nicolson and the Gauss–Legendre method**, which have `|r(∞)| = 1` and are not strongly
+A-stable (`banach_implicitMidpoint`, `banach_gaussLegendre2`: `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and rates
+`τ^{3/2}`, `τ^{7/2}`, by
+`Feec.TimeStepping.RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_sqrt`, for every
+symmetric scheme). Without the `√n` loss, **Gauss–Legendre, Radau IIA and SDIRK converge at the
+sharp rate**, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r M nτ τᵖ ‖A^{p+1} x‖` (`p = 4`, `3`, `2`;
+`banach_sharp`), by Brenner–Thomée's smooth-data estimate
 (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`), which needs only
-A-stability, so covers the Gauss method (`|r(∞)| = 1`).
+A-stability.
 
 ## References
 
@@ -151,13 +156,48 @@ theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
     RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
       RationalScheme.isLStable_sdirk2.isStronglyAStable RationalScheme.hasOrder_sdirk2 hτ n⟩
 
+/-- **Crank–Nicolson on every bounded semigroup of a complex Banach space** (the implicit
+midpoint rule, `r(z) = (1 + z/2)/(1 - z/2)`, order `2`): `|r(∞)| = 1`, so it is not strongly
+A-stable, and yet `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and, for `x ∈ D(A³)`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C √n) (M ‖μ_ρ‖ + M/3!) M nτ τ² ‖A³ x‖` (rate `τ^{3/2}` at fixed
+`nτ`), with `C = RationalScheme.sqrtConst`. [BrennerThomee1979] -/
+theorem banach_implicitMidpoint {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ¬ RationalScheme.implicitMidpoint.IsStronglyAStable ∧
+    ‖RationalScheme.implicitMidpoint.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n‖ ≤
+      M * (1 + RationalScheme.implicitMidpoint.sqrtConst * √n) ∧
+    ((∀ j < 2 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.implicitMidpoint.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.implicitMidpoint.sqrtConst * √n) *
+          (M * (RationalScheme.implicitMidpoint.remainder 2).hpMeasure.variation +
+            M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
+  RationalScheme.isSymmetric_implicitMidpoint.norm_resolventStep_pow_sub_S_le_sqrt G hM
+    RationalScheme.hasOrder_implicitMidpoint hτ n
+
+/-- **The two-stage Gauss–Legendre method on every bounded semigroup of a complex Banach
+space** (order `4`): `|r(∞)| = 1`, not strongly A-stable, and `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and, for
+`x ∈ D(A⁵)`, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C √n) (M ‖μ_ρ‖ + M/5!) M nτ τ⁴ ‖A⁵ x‖` (rate
+`τ^{7/2}` at fixed `nτ`). [BrennerThomee1979]; [HairerWanner1996], §IV.5 -/
+theorem banach_gaussLegendre2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ¬ RationalScheme.gaussLegendre2.IsStronglyAStable ∧
+    ‖RationalScheme.gaussLegendre2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n‖ ≤
+      M * (1 + RationalScheme.gaussLegendre2.sqrtConst * √n) ∧
+    ((∀ j < 4 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.gaussLegendre2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.gaussLegendre2.sqrtConst * √n) *
+          (M * (RationalScheme.gaussLegendre2.remainder 4).hpMeasure.variation +
+            M / (4 + 1).factorial) * M * (n * τ) * τ ^ 4 * ‖u (4 + 1)‖) :=
+  RationalScheme.isSymmetric_gaussLegendre2.norm_resolventStep_pow_sub_S_le_sqrt G hM
+    RationalScheme.hasOrder_gaussLegendre2 hτ n
+
 /-- **Gauss–Legendre, Radau IIA and SDIRK at the sharp rate on every bounded semigroup of a complex
 Banach space**: for `τ > 0`, every `n` and `x ∈ D(A^{p+1})`,
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r M nτ τᵖ ‖A^{p+1} x‖` with `p = 4` (two-stage Gauss–Legendre, A-stable
 with `|r(∞)| = 1`), `p = 3` (Radau IIA) and `p = 2` (SDIRK), by Brenner–Thomée's smooth-data
 estimate (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`): order `p` at
-fixed `nτ`, without the `√n` of `banach_radauIIA2`, and for the Gauss method, which the stability
-bound does not cover. A corollary of the Banach-space theory only, like `banach_radauIIA2`.
+fixed `nτ`, without the `√n` of `banach_radauIIA2` and `banach_gaussLegendre2`. A corollary of
+the Banach-space theory only, like `banach_radauIIA2`.
 [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
 theorem banach_sharp {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
     ((∀ j < 4 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →

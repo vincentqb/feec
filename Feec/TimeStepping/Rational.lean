@@ -65,7 +65,8 @@ over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ
 * **Discrete constraint propagation** (`RationalScheme.apply_mem_of_mapsTo`): a closed subspace
   `K` with `L K ⊆ K` is kept by `r(L)`.
 * **Symmetric schemes** (`RationalScheme.IsSymmetric`, `n(z) = d(-z)`: the diagonal Padé and
-  Gauss methods): `|r(iy)| = 1`, so they are A-stable (`IsSymmetric.isAStable`), and
+  Gauss methods): `|r(iy)| = 1`, so they are A-stable (`IsSymmetric.isAStable`), but
+  `|r(∞)| = 1`, so never strongly A-stable (`IsSymmetric.not_isStronglyAStable`), and
   `r(L)` is an isometry for skew `L` (`IsSymmetric.norm_apply_apply`).
 * **The θ-schemes** (`RationalScheme.theta`): A-stable for `θ ≥ 1/2`, order `1`, and
   Crank–Nicolson (`θ = 1/2`) symmetric of order `2`; `r_θ(τ L)` is the θ-step
@@ -811,6 +812,16 @@ theorem IsSymmetric.norm_eval {r : RationalScheme} (h : r.IsSymmetric) (y : ℝ)
 
 theorem IsSymmetric.isAStable {r : RationalScheme} (h : r.IsSymmetric) : r.IsAStable :=
   fun y => (h.norm_eval y).le
+
+/-- **Symmetric schemes have `|r(∞)| = 1`**: `n(z) = d(-z)` gives `n_N = (-1)ᴺ d_N`. -/
+theorem IsSymmetric.abs_coeff_num {r : RationalScheme} (h : r.IsSymmetric) :
+    |r.num.coeff r.den.natDegree| = |r.den.leadingCoeff| := by
+  rw [h, show (-X : ℝ[X]) = C (-1) * X by simp, comp_C_mul_X_coeff, abs_mul, abs_pow, abs_neg,
+    abs_one, one_pow, mul_one, leadingCoeff]
+
+/-- Symmetric schemes (the Gauss methods, Crank–Nicolson) are not strongly A-stable. -/
+theorem IsSymmetric.not_isStronglyAStable {r : RationalScheme} (h : r.IsSymmetric) :
+    ¬ r.IsStronglyAStable := fun h' => (lt_irrefl _) (h.abs_coeff_num ▸ h'.2)
 
 /-- **A symmetric scheme of a skew operator is an isometry**: `‖r(L) x‖ = ‖x‖` when
 `re ⟪L x, x⟫ = 0`. -/

@@ -17,7 +17,8 @@
     "VonNeumann.error_bound_banach_real_hille_yosida",
     "VonNeumann.error_bound_quasi_real",
     "VonNeumann.error_bound_banach_real",
-    "VonNeumann.error_bound_banach_sqrt"
+    "VonNeumann.error_bound_banach_sqrt",
+    "VonNeumann.error_bound_banach_sharp"
   ],
   "definition_names": [],
   "permitted_axioms": [

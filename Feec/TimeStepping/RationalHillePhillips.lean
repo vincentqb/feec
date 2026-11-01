@@ -24,13 +24,11 @@ pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹
   (`norm_resolventStep_pow_sub_S_le_sqrt`): the stability bound times order-`p` consistency, in
   the Lax–Richtmyer form `RationalScheme.norm_resolventStep_pow_sub_S_le`, all of whose
   hypotheses are discharged. It is `O(√n nτ τᵖ)` for `x ∈ D(A^{p+1})`, i.e. of order `p - 1/2` at
-  fixed `T = nτ`. This is **not** the sources' smooth-data estimate, which has no `√n`:
-  `O(τᵖ)` for `x ∈ D(A^{p+2})` [HershKato1979] (per its abstract), and, as recalled (not checked
-  against the paper), `O(nτ τᵖ) ‖A^{p+1} x‖` for `x ∈ D(A^{p+1})` [BrennerThomee1979]. Those are
-  not formalized: the half-line algebra here has no point masses `δ_t` with `t > 0`, so the
-  calculus cannot express `S(nτ)` itself or an identity `rⁿ - e^{nz} = z^{p+1} g` with `g` in the
-  algebra (the quotient `(rⁿ(z) - e^{nz})/z^{p+1}` is itself an `L¹` density; it is `S(nτ)` that
-  is missing). How the sources prove the sharp estimate was not checked.
+  fixed `T = nτ`. The sources' smooth-data estimate has no `√n`: `O(τᵖ)` for `x ∈ D(A^{p+2})`
+  [HershKato1979] (per its abstract), and `O(nτ τᵖ) ‖A^{p+1} x‖` for `x ∈ D(A^{p+1})`
+  [BrennerThomee1979]; the latter, for every A-stable `r`, is
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp`
+  (`Feec.TimeStepping.RationalSharp`), with `S(nτ)` reached through translates of kernels.
 
 The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
 argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable
@@ -257,8 +255,9 @@ space with generator `A`, `τ > 0` and `x ∈ D(A^{p+1})` (a chain `u` in the gr
 
 Brenner–Thomée's stability bound times order-`p` consistency (`ρ` the remainder scheme). At
 fixed `T = nτ` the rate is `τ^{p-1/2}`: weaker by `√n` than the smooth-data estimates of
-[HershKato1979] (`O(τᵖ)` for `x ∈ D(A^{p+2})`) and, as recalled, [BrennerThomee1979]
-(`O(nτ τᵖ) ‖A^{p+1} x‖`), which are not formalized; only `|r(∞)| < 1` is covered.
+[HershKato1979] (`O(τᵖ)` for `x ∈ D(A^{p+2})`) and [BrennerThomee1979]
+(`O(nτ τᵖ) ‖A^{p+1} x‖`, `norm_resolventStep_pow_sub_S_le_sharp`). This bound covers only
+`|r(∞)| < 1`.
 Every hypothesis of `RationalScheme.norm_resolventStep_pow_sub_S_le` is discharged: `R` is the
 Laplace transform of the semigroup, `Q(R)` is invertible and `ρ(τA)` bounded by the
 Hille–Phillips calculus, stability by `norm_resolventStep_pow_le`. -/

@@ -325,19 +325,22 @@ spaces `S.form K k` form a complex (`PolySeq.extDeriv_mem_form`), exact in every
 (`PolySeq.exists_extDeriv_eq`) with the constants as closed `0`-forms
 (`PolySeq.mem_polyForm_zero_of_extDeriv_eq_zero`), whose dimensions are the numbers of degrees of
 freedom of a simplex, `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`
-(`PolySeq.finrank_form_eq_sum`). [AFW2006], §3, Thms 4.9, 4.13; [AFW2010], §5.1.4;
-[ArnoldLogg2014] -/
+(`PolySeq.finrank_form_eq_sum`), and so are those of the shape spaces `S.space n k` over `ℝ`
+(`PolyKind.finrank_space_eq_sum`, the same count at `K = ℝ`). [AFW2006], §3, Thms 4.9, 4.13;
+[AFW2010], §5.1.4; [ArnoldLogg2014] -/
 theorem feec_polyComplex (K : Type*) [Field K] [CharZero K] (S : PolySeq) :
     (polyFamily n S).Verdict ∧ (∀ k, S.space n k = (S.form ℝ k).map (evalForm n)) ∧
       (∀ k, ∀ ω ∈ S.form K (n := n) k, Koszul.extDeriv ω ∈ S.form K (k + 1)) ∧
       (∀ k, ∀ ω ∈ S.form K (n := n) (k + 1), Koszul.extDeriv ω = 0 →
         ∃ η ∈ S.form K k, Koszul.extDeriv η = ω) ∧
       (∀ ω ∈ S.form K (n := n) 0, Koszul.extDeriv ω = 0 → ω ∈ Koszul.polyForm K (Fin n) 0 0) ∧
-      ∀ k, Module.finrank K (S.form K (n := n) k) =
-        ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) * Module.finrank K (S.testForm K k m) :=
+      (∀ k, Module.finrank K (S.form K (n := n) k) =
+        ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) * Module.finrank K (S.testForm K k m)) ∧
+      ∀ k, Module.finrank ℝ (S.space n k) =
+        ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) * Module.finrank ℝ (S.test k m) :=
   ⟨(polyFamily n S).feec, S.space_eq_map_form, fun _ _ => S.extDeriv_mem_form,
     fun _ _ => S.exists_extDeriv_eq, fun _ => S.mem_polyForm_zero_of_extDeriv_eq_zero,
-    S.finrank_form_eq_sum⟩
+    S.finrank_form_eq_sum, fun k => (S.kind k).finrank_space_eq_sum (S.one_le_deg k) k⟩
 
 end Cube.FEM
 

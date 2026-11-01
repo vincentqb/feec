@@ -221,7 +221,7 @@ status:
     products of one-dimensional factors (Feec.Koszul.cubeFormMinus_eq_span), the serendipity
     spaces S_r Lambda^k, the parametrization of the admissible P/P^- sequences ending in
     P_s Lambda^n by their kinds (Feec.FiniteElement.PolySeq.ofKinds), the closed-form dimensions
-    of the classical elements in K^2 and K^3 (Feec.FiniteElement.finrank_polyForm_three_one, ...),
+    of the classical elements in K^2 and K^3 (Feec.Koszul.finrank_polyForm_three_one, ...),
     and the finite element spaces on meshes (degrees of freedom, unisolvence, Whitney forms).
   sorry_count: 0
   sorry_in_definitions: 0

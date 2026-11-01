@@ -8,6 +8,7 @@ public import Feec.Algebra.LeviCivita
 public import Feec.Algebra.MatrixSymbol
 public import Feec.Algebra.Metric
 public import Feec.Algebra.PolynomialForm
+public import Feec.Algebra.PolynomialFormClassical
 public import Feec.Algebra.PolynomialFormDim
 public import Feec.Algebra.Proxy3
 public import Feec.Algebra.SerendipityForm
@@ -95,6 +96,7 @@ public import Feec.FiniteElement.PolyElement
 public import Feec.FiniteElement.PolyElementMixed
 public import Feec.FiniteElement.PolyInterpolation
 public import Feec.FiniteElement.PolyInverseEstimate
+public import Feec.FiniteElement.PolyKind
 public import Feec.FiniteElement.ShapeRegularInverse
 public import Feec.FiniteElement.ShapeRegularSmoothing
 public import Feec.FiniteElement.SimplexIntegral

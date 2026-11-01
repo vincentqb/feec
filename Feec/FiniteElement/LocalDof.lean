@@ -1,6 +1,7 @@
 module
 
 public import Feec.FiniteElement.LocalSpace
+public import Feec.FiniteElement.PolyKind
 public import Mathlib.Data.Nat.Choose.Vandermonde
 public import Mathlib.Data.Nat.Choose.Sum
 
@@ -102,30 +103,6 @@ theorem sum_face_eq {M : Type*} [AddCommMonoid M] (g : ℕ → M) :
   refine sum_congr rfl fun m _ => ?_
   change ∑ _y : {f : Finset (Fin (n + 1)) // #f = m + 1}, g m = _
   rw [sum_const, card_univ, Fintype.card_finset_len, Fintype.card_fin]
-
-/-- The binomial identity behind the dimension count of the degrees of freedom ([AFW2006],
-Thm 4.9): `Σ_{m=k}^{n} (n+1 choose m+1) (r-1 choose m-k) = (n + r choose n - k)`. -/
-theorem sum_choose_mul_choose_eq {n r k : ℕ} (hk : k ≤ n) (hr : 1 ≤ r) :
-    ∑ m ∈ range (n + 1), (n + 1).choose (m + 1) *
-      (if k ≤ m ∧ m < r + k then (r - 1).choose (m - k) else 0) = (n + r).choose (n - k) := by
-  have h1 : ∀ m ∈ range (n + 1), (n + 1).choose (m + 1) *
-      (if k ≤ m ∧ m < r + k then (r - 1).choose (m - k) else 0) =
-      if k ≤ m then (n + 1).choose (m + 1) * (r - 1).choose (m - k) else 0 := by
-    intro m _
-    by_cases hkm : k ≤ m
-    · by_cases hmr : m < r + k
-      · simp [hkm, hmr]
-      · simp [hkm, hmr, Nat.choose_eq_zero_of_lt (show r - 1 < m - k by omega)]
-    · simp [hkm]
-  rw [sum_congr rfl h1, ← sum_filter, show (range (n + 1)).filter (fun m => k ≤ m) = Ico k (n + 1)
-    by ext m; simp; omega, sum_Ico_eq_sum_range,
-    show n + r = (r - 1) + (n + 1) by omega, Nat.add_choose_eq,
-    Nat.sum_antidiagonal_eq_sum_range_succ_mk, show n + 1 - k = (n - k).succ by omega]
-  refine sum_congr rfl fun i hi => ?_
-  have hi' : i ≤ n - k := by simp at hi; omega
-  rw [mul_comm, show k + i - k = i by omega]
-  congr 1
-  exact Nat.choose_symm_of_eq_add (by omega)
 
 /-! ### Dimensions of the polynomial form fields -/
 

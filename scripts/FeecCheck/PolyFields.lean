@@ -10,7 +10,7 @@ description as spaces `X(r', r - 1, k)` of [AFW2006], Theorem 3.5, and their aff
 `ℝ`, and the closed-form dimensions of the classical elements for the form fields over `ℝ³`, `ℝ²`.
 The spaces are now defined over every commutative ring and the algebra holds over every field (of
 characteristic `0` for the trimmed spaces and the invariance); the closed-form dimensions over `ℝ`
-are specializations of those over every field (`finrank_polyForm_three_one`, …). The theorems below
+are specializations of those over every field (`Feec.Koszul.finrank_polyForm_three_one`, …). The theorems below
 state the old real results verbatim (with the field `ℝ` explicit) and derive them from the new ones
 at `K = ℝ`.
 

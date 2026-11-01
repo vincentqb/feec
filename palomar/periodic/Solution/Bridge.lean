@@ -2,7 +2,7 @@ module
 
 public import Solution.Defs
 public import Feec.Algebra.ExteriorAlgebraForm
-public import Feec.FiniteElement.PolyComplex
+public import Feec.FiniteElement.PolyKind
 public import Mathlib.Algebra.Homology.ShortComplex.ModuleCat
 
 /-!

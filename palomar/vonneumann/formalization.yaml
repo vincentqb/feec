@@ -165,9 +165,9 @@ sources:
       bound is stability times consistency, of order m - 1/2 at fixed t = n tau; the paper's
       smooth-data convergence estimates have no sqrt(n) loss (as recalled: O(t tau^m) for x in
       D(A^(m+1)); the abstract only says convergence is discussed). Not formalized: those sharp
-      smooth-data estimates (their proof bounds the measure of (r(z)^n - e^(nz))/z^(m+1), which
-      contains the point mass of e^(nz) at n and so lies outside the half-line algebra
-      C delta_0 + L^1 used here), the sqrt(n) bound for A-acceptable r with |r(infinity)| = 1
+      smooth-data estimates (the half-line algebra C delta_0 + L^1 used here has no point masses
+      delta_t with t > 0, so its calculus cannot express S(n tau) itself; how the sources prove the
+      sharp estimate was not checked), the sqrt(n) bound for A-acceptable r with |r(infinity)| = 1
       (Crank-Nicolson, Gauss methods) and on real Banach spaces, and the estimates for less
       smooth data (x in the domain of a lower power of A, with a lower rate).
       Paper not consulted beyond its abstract; statement and scope as recalled, so no theorem

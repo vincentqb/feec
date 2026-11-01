@@ -27,8 +27,10 @@ pole of `r`), so `r` has a **Hille–Phillips measure** `μ_r = P(ν) Q(ν)⁻¹
   fixed `T = nτ`. This is **not** the sources' smooth-data estimate, which has no `√n`:
   `O(τᵖ)` for `x ∈ D(A^{p+2})` [HershKato1979] (per its abstract), and, as recalled (not checked
   against the paper), `O(nτ τᵖ) ‖A^{p+1} x‖` for `x ∈ D(A^{p+1})` [BrennerThomee1979]. Those are
-  not formalized: their proof bounds the measure of `(rⁿ(z) - e^{nz})/z^{p+1}`, which carries the
-  point mass of `e^{nz}` at `n` and is not of the form `a δ₀ + g` of the half-line algebra.
+  not formalized: the half-line algebra here has no point masses `δ_t` with `t > 0`, so the
+  calculus cannot express `S(nτ)` itself or an identity `rⁿ - e^{nz} = z^{p+1} g` with `g` in the
+  algebra (the quotient `(rⁿ(z) - e^{nz})/z^{p+1}` is itself an `L¹` density; it is `S(nτ)` that
+  is missing). How the sources prove the sharp estimate was not checked.
 
 The bound `C √n` holds for every A-acceptable `r` in [BrennerThomee1979]; the Fourier
 argument here uses `|r(∞)| < 1` (it bounds `‖gₙ‖₂` uniformly in `n`), which covers the L-stable

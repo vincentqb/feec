@@ -550,8 +550,8 @@ real rational function with `deg p ≤ deg q`, without poles in the closed left 
 A-stable (`|r(iy)| ≤ 1`), with `|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There
 are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
 semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A`
-(right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies `R (x - τAx) = x` on `D(A)` (the
-resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible; `r(τA) = P(R) Q(R)⁻¹` (as in
+(right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
+`R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible; `r(τA) = P(R) Q(R)⁻¹` (as in
 `VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M³ (1 + C √n) nτ τᵐ ‖A^{m+1} x‖` for every `n` and `x ∈ D(A^{m+1})` (a
 chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the

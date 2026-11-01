@@ -99,11 +99,41 @@ def person (a : String) : Except String String := do
   | last :: first :: _ => return s!"{← initials first} {last}"
   | _ => throw s!"author {pyRepr a} is not `Last, First`"
 
+/-- The top-level structure of a BibTeX file: outside entries only blank space and `%` comment
+lines, every `@type{…}` entry with balanced braces. Catches entries truncated by a bad merge
+and leftover merge-conflict markers. -/
+def bibStructure (src : Array Char) : Except String Unit := do
+  let mut i := 0
+  while i < src.size do
+    let c := src[i]!
+    if c == '%' then
+      i := (findFrom src "\n" i).getD src.size
+    else if c == '@' then
+      let start := i
+      while i < src.size && src[i]! != '{' do i := i + 1
+      if i == src.size then throw s!"line {lineOf src start}: entry without an opening brace"
+      let mut depth := 0
+      let mut closed := false
+      while i < src.size && !closed do
+        if src[i]! == '{' then depth := depth + 1
+        else if src[i]! == '}' then
+          depth := depth - 1
+          if depth == 0 then closed := true
+        else if src[i]! == '@' && i > 0 && src[i-1]! == '\n' then
+          throw s!"line {lineOf src start}: entry not closed before the next entry"
+        i := i + 1
+      unless closed do throw s!"line {lineOf src start}: entry with unbalanced braces"
+    else if isPySpace c then
+      i := i + 1
+    else
+      throw s!"line {lineOf src i}: text outside any entry"
+
 /-- `docs/references.bib`: key ↦ (authors, title) as displayed in `## References`, and the keys
 in order of appearance. -/
 def readBib (path : System.FilePath := "docs/references.bib") :
     IO (Except String (Std.HashMap String (String × String))) := do
   let src := chars (← readText path)
+  if let .error e := bibStructure src then return .error e
   let entry := seqs [chr '@', .group 1 (plus word), chr '{',
     .group 2 (plus (.cls fun c => c != ',' && !isPySpace c)), chr ',']
   let andSep := seqs [plus space, lit "and", plus space]

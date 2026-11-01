@@ -62,7 +62,7 @@ project:
     R(x - tau A x) = x on D(A): Q(R) is invertible, ||rho(tau A)|| <= K_0, and
     ||r(tau A)^k|| <= M_s (k <= n) gives ||r(tau A)^n x - S(n tau) x|| <= M_s (K_0 +
     M e^(omega n tau)/(m+1)!) M e^(omega n tau) n tau tau^m ||A^(m+1) x||; (11) bounded
-    semigroups of complex Banach spaces: for a real rational r as in (10), A-stable with
+    semigroups of real or complex Banach spaces: for a real rational r as in (10), A-stable with
     |r(infinity)| < 1 (exactly this case; |r(infinity)| = 1 is not covered), there are C >= 0
     and K, depending on r only, such that for every such S with ||S(t)|| <= M and every tau > 0
     the resolvent R exists and is unique, Q(R) is invertible, ||r(tau A)^n|| <= M (1 + C sqrt(n))
@@ -79,7 +79,8 @@ project:
     Feec.Semigroup.LumerPhillips, Feec.TimeStepping.RationalBanach, Feec.TimeStepping.RationalQuasi,
     Feec.Semigroup.Rescale, Feec.Semigroup.HilleYosida, Feec.Semigroup.Complexification,
     Feec.ForMathlib.Analysis.NormedComplexification, Feec.TimeStepping.RationalHilleYosida,
-    Feec.Semigroup.HillePhillips, Feec.TimeStepping.RationalHillePhillips).
+    Feec.Semigroup.HillePhillips, Feec.TimeStepping.RationalHillePhillips,
+    Feec.TimeStepping.RationalHillePhillipsReal).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -156,8 +157,8 @@ sources:
       rho(tau A) as hypotheses, and, for semigroups with ||S(t)|| <= M e^(omega t) and
       omega tau <= c, with the invertibility of Q(R) and the remainder bound derived from the
       Hille-Yosida resolvent estimates (stability still a hypothesis), and for backward Euler
-      with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of complex Banach
-      spaces and A-stable r with |r(infinity)| < 1, through the Hille-Phillips functional
+      with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of real or complex
+      Banach spaces (real ones through the complexification) and A-stable r with |r(infinity)| < 1, through the Hille-Phillips functional
       calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability
       ||r(tau A)^n|| <= M (1 + C sqrt(n)) (the paper's stability bound, ||r^n(hA)|| <= C n^(1/2)
       for t bounded and A-acceptable r, per its abstract, checked via Crossref) and an error bound
@@ -168,7 +169,7 @@ sources:
       smooth-data estimates (the half-line algebra C delta_0 + L^1 used here has no point masses
       delta_t with t > 0, so its calculus cannot express S(n tau) itself; how the sources prove the
       sharp estimate was not checked), the sqrt(n) bound for A-acceptable r with |r(infinity)| = 1
-      (Crank-Nicolson, Gauss methods) and on real Banach spaces, and the estimates for less
+      (Crank-Nicolson, Gauss methods), and the estimates for less
       smooth data (x in the domain of a lower power of A, with a lower rate).
       Paper not consulted beyond its abstract; statement and scope as recalled, so no theorem
       numbers are cited.
@@ -372,7 +373,7 @@ fidelity:
     VonNeumann.error_bound_banach_real_hille_yosida stability is a genuine hypothesis, and
     Brenner-Thomee's sufficient condition ||r(tau A)^n|| <= C sqrt(n) for bounded semigroups
     (through the Hille-Phillips functional calculus) is proved in
-    VonNeumann.error_bound_banach_sqrt (below) for complex spaces and |r(infinity)| < 1.
+    VonNeumann.error_bound_banach_sqrt (below) for real or complex spaces and |r(infinity)| < 1.
     Hille-Yosida
     (VonNeumann.resolvent_estimates_banach, complex spaces;
     VonNeumann.error_bound_backward_euler_banach and
@@ -391,15 +392,19 @@ fidelity:
     (Feec.TimeStepping.isUnit_resolventEval_of_generator,
     Feec.TimeStepping.RationalScheme.norm_resolventStep_le_of_generator), not compared. For
     backward Euler the stability follows from the Hille-Yosida estimates, so its error bound has
-    no stability hypothesis. Bounded semigroups of complex Banach spaces
-    (VonNeumann.error_bound_banach_sqrt): the three hypotheses are proved for A-stable r with
+    no stability hypothesis. Bounded semigroups of Banach spaces over K = R or C
+    (VonNeumann.error_bound_banach_sqrt; generalized from complex spaces after the author's
+    review): the three hypotheses are proved for A-stable r with
     |r(infinity)| < 1 (|p_N| < |q_N|, N = deg q): the resolvent is the unique R with
     R(x - tau A x) = x on D(A) (existence and uniqueness stated), Q(R) is invertible,
     ||r(tau A)^n|| <= M (1 + C sqrt(n)) and the error is K M^3 (1 + C sqrt(n)) n tau tau^m
     ||A^(m+1) x||, with C, K depending on r only (per universe); the proof is the Hille-Phillips
     calculus r(tau A) = Phi(mu_r) and a Fourier bound on the total variation of mu_r^n
-    (Plancherel and Carlson's inequality). The case |r(infinity)| = 1 (Crank-Nicolson, Gauss
-    methods) and real Banach spaces are not covered there. This error bound keeps the sqrt(n)
+    (Plancherel and Carlson's inequality), on real spaces applied to the complexification
+    E_C = E x E with the Taylor norm (||T_C|| = ||T||, R_C the resolvent of the complexified
+    semigroup, r(tau A)_C = r(tau A_C) since r has real coefficients;
+    Feec.TimeStepping.RationalHillePhillipsReal). The case |r(infinity)| = 1 (Crank-Nicolson,
+    Gauss methods) is not covered there. This error bound keeps the sqrt(n)
     loss of the stability bound (order m - 1/2 at fixed n tau); the sources' smooth-data
     estimates without that loss ([HershKato1979], O(tau^m) for x in D(A^(m+2));
     [BrennerThomee1979], as recalled) are not formalized. Nonsmooth data are not covered.
@@ -417,10 +422,10 @@ review:
     VonNeumann.error_bound_quasi_real, VonNeumann.error_bound_banach_real,
     VonNeumann.resolvent_estimates_banach, VonNeumann.error_bound_backward_euler_banach,
     VonNeumann.error_bound_banach_real_hille_yosida and VonNeumann.error_bound_banach_sqrt,
-    added after that review and not yet reviewed by the author. Every merge of the library was
-    gated by a full
-    build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
-    independent AI review. No external mathematical review.
+    added after that review and not yet reviewed by the author (VonNeumann.error_bound_banach_sqrt
+    since generalized from complex to real or complex Banach spaces, also not yet reviewed).
+    Every merge of the library was gated by a full build (zero warnings), an axiom audit
+    (propext, Classical.choice, Quot.sound only) and an independent AI review. No external mathematical review.
 
 alignment:
   namespace: "VonNeumann"
@@ -509,6 +514,6 @@ alignment:
       lean: "VonNeumann.error_bound_banach_sqrt"
       module: "Challenge"
       status: "proved"
-      note: "Complex Banach spaces, bounded semigroups, A-stable r with |r(infinity)| < 1: resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), and an error bound with the factor sqrt(n) (order m - 1/2 at fixed n tau), weaker than the sources' smooth-data rate tau^m, which is not formalized."
+      note: "Real or complex Banach spaces, bounded semigroups, A-stable r with |r(infinity)| < 1: resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), and an error bound with the factor sqrt(n) (order m - 1/2 at fixed n tau), weaker than the sources' smooth-data rate tau^m, which is not formalized."
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

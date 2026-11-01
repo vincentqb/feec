@@ -74,9 +74,11 @@ inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the coc
 (`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`
 and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 The Banach-space `√n` modules (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
+`TimeStepping.RationalHillePhillipsReal`,
 `ForMathlib.Analysis.{HalfLineAlgebra, Carlson, Fourier.Plancherel}`) are tied only through
-`Instances.RungeKutta.banach_radauIIA2`, a corollary off Hilbert spaces that no crown field
-consumes (the FEEC families are Hilbert complexes; the tie is documentary).
+`Instances.RungeKutta.banach_radauIIA2` and `banach_radauIIA2_of_resolvent`, corollaries off
+Hilbert spaces that no crown field consumes (the FEEC families are Hilbert complexes; the tie is
+documentary).
 
 ## The approximating FEEC theorem
 
@@ -354,12 +356,13 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   spaces), with `Feec.TimeStepping.RationalScheme.exists_norm_resolventStep_pow_sub_S_le` and
   `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le` (Hille–Yosida,
   `Feec.C0Semigroup.norm_resolvent_pow_le`, on the complexification for real spaces); for
-  bounded semigroups of complex Banach spaces and A-stable `r` with `|r(∞)| < 1`
+  bounded semigroups of Banach spaces over `ℝ` or `ℂ` and A-stable `r` with `|r(∞)| < 1`
   (theorem VonNeumann.error_bound_banach_sqrt) the resolvent, `Q(R)` invertible, the
   Brenner–Thomée stability `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and an error bound with its `√n` loss
   (order `m - 1/2` at fixed `nτ`; the sources' sharp smooth-data rate `τᵐ` is not formalized),
   from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`.
+  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`, brought to real spaces
+  by complexification (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded`).
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
   FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram

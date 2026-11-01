@@ -58,8 +58,9 @@ exponential growth, `K e^{κωnτ} nτ τᵐ ‖A^{m+1} x‖`, for `ωτ ≤ c�
 only (`VonNeumann.error_bound_quasi_real`). On a Banach space, for a strongly continuous
 semigroup with generator `A`, stability of `r(τA)` and boundedness of the remainder are not
 automatic; given them, the bound holds with the stability constant
-(`VonNeumann.error_bound_banach_real`). For bounded semigroups of complex Banach spaces and
-A-stable `r` with `|r(∞)| < 1` both are theorems: the Hille–Phillips functional calculus gives
+(`VonNeumann.error_bound_banach_real`). For bounded semigroups of real or complex Banach spaces
+and A-stable `r` with `|r(∞)| < 1` both are theorems: the Hille–Phillips functional calculus
+(on the complexification, for real spaces) gives
 `Q(R)` invertible, `‖ρ(τA)‖` bounded and Brenner–Thomée's stability bound
 `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` ([BrennerThomee1979]), so the order-`m` error holds with the `√n`
 loss of the stability bound, i.e. with rate `τ^{m-1/2}` at fixed `T = nτ`
@@ -467,8 +468,8 @@ semigroups on Banach spaces** ([BrennerThomee1979] for the stability bound). Let
 real rational function with `deg p ≤ deg q`, without poles in the closed left half-plane,
 A-stable (`|r(iy)| ≤ 1`), with `|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There
 are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
-semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A`
-(right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
+semigroup `S` of a Banach space over `𝕜 = ℝ` or `ℂ`, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with
+generator `A` (right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
 `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible; `r(τA) = P(R) Q(R)⁻¹` (as in
 `VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M³ (1 + C √n) nτ τᵐ ‖A^{m+1} x‖` for every `n` and `x ∈ D(A^{m+1})` (a
@@ -481,17 +482,18 @@ theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
     (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1)
     (hinf : |p.coeff q.natDegree| < |q.leadingCoeff|) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
-    ∃ C K : ℝ, 0 ≤ C ∧ ∀ {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
-      (S : ℝ → E →L[ℂ] E) (M : ℝ), S 0 = 1 →
+    ∃ C K : ℝ, 0 ≤ C ∧ ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+      [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+      (S : ℝ → E →L[𝕜] E) (M : ℝ), S 0 = 1 →
       (∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t) →
       (∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) →
-      ∀ τ : ℝ, 0 < τ → ∃ R : E →L[ℂ] E,
-        (∀ T : E →L[ℂ] E, (∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 →
-          T (x - (τ : ℂ) • y) = x) ↔ T = R) ∧
+      ∀ τ : ℝ, 0 < τ → ∃ R : E →L[𝕜] E,
+        (∀ T : E →L[𝕜] E, (∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 →
+          T (x - (τ : 𝕜) • y) = x) ↔ T = R) ∧
         let P := ∑ k ∈ Finset.range (q.natDegree + 1),
-          (p.coeff k : ℂ) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          (p.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
         let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
-          (q.coeff k : ℂ) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          (q.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
         IsUnit Q ∧ (∀ n : ℕ, ‖(P * Ring.inverse Q) ^ n‖ ≤ M * (1 + C * √n)) ∧
         ∀ (n : ℕ) (u : ℕ → E),
           (∀ j < m + 1, HasDerivWithinAt (fun t => S t (u j)) (u (j + 1)) (Set.Ici 0) 0) →

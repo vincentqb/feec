@@ -25,11 +25,12 @@ A-stable but not strongly A-stable.
 
 The constant `C_r` is not explicit: it comes from the bounds of `R'` and `(R - R(0))/s` on the
 disc; the strongly A-stable bound `RationalScheme.norm_resolventStep_pow_le` keeps the explicit
-`RationalScheme.stabilityConst`. The error bound with the `√n` loss of this stability bound, and
-the bound itself on real Banach spaces, are in `Feec.TimeStepping.RationalHillePhillipsReal`
-(`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`,
-`RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_of_resolvent`, over `ℝ` or `ℂ`); it is
-of order `p - 1/2` at fixed `nτ`, weaker by `√n` than Brenner–Thomée's smooth-data estimate
+`RationalScheme.stabilityConst`. The bound on real Banach spaces
+(`RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`) and the error bound with
+its `√n` loss (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`,
+`RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_of_resolvent`), over `ℝ` or `ℂ`, are
+in `Feec.TimeStepping.RationalHillePhillipsReal`; that error bound is of order `p - 1/2` at fixed
+`nτ`, weaker by `√n` than Brenner–Thomée's smooth-data estimate
 `RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (`Feec.TimeStepping.RationalSharp`), which
 needs no stability bound.
 

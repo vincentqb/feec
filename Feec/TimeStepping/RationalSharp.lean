@@ -26,8 +26,8 @@ proof does not use. On real or complex Banach spaces, by complexification:
 `RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`
 (`Feec.TimeStepping.RationalHillePhillipsReal`). Less smooth data (`s < p + 1`; below
 `s = (p+1)/2` the rate of [GomilkoTomilov2024], Thm 1.1(ii), is `n^{1/2-s}`, with a factor
-`log (n+1)` at `s = (p+1)/2`) are not formalized. [HershKato1979] obtain `O(τᵖ)` for `x ∈ D(A^{p+2})`, one power of `A` more
-(per its abstract).
+`log (n+1)` at `s = (p+1)/2`) are not formalized. [HershKato1979] obtain `O(τᵖ)` for
+`x ∈ D(A^{p+2})`, one power of `A` more (per its abstract).
 
 The proof is the Hille–Phillips calculus extended by translations: with `μ = μ_r` the measure of
 `r` (`RationalScheme.hpMeasure`) and the **consistency kernel** `h = μ_ρ - eₚ`

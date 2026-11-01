@@ -288,12 +288,13 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   bound; from
   `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
   `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms, about 385
+* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms, about 430
   lines): the algebra of the periodic table in every dimension, for polynomial forms
   `MvPolynomial ⊗ ExteriorAlgebra` of Mathlib: the dimensions of `H_rΛᵏ`, `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_b⁻Λᵏ` (any multidegree), the Leibniz rule
   for `κ` and the wedge closure of `P_rΛ` and `P_r⁻Λ` and, in characteristic `0`, their
   polynomial de Rham complexes as Mathlib cochain complexes, exact in positive degree with
-  the constants as closed `0`-forms, the exact homogeneous and Koszul complexes, the homotopy
+  the constants as closed `0`-forms, and so the complex of every admissible sequence; the
+  dimension counts of the degrees of freedom; the exact homogeneous and Koszul complexes, the homotopy
   formula and the Koszul decompositions of
   [AFW2006], §3 and [ArnoldBoffiBonizzoni2015], §5; from `Feec.Algebra.ExteriorAlgebraForm`
   (coefficient forms as Mathlib's exterior algebra), `Feec.Algebra.PolynomialFormDim` and

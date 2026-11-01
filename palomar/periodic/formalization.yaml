@@ -51,7 +51,13 @@ project:
     (r + k >= 1), the strict inclusions
     P_(r-1) Lambda^k < P_r^- Lambda^k (k < n) and P_r^- Lambda^(k+1) < P_r Lambda^(k+1) (k < n),
     and that a closed form of P_(r+1)^- Lambda^k lies in P_r Lambda^k (H_r: the forms with
-    homogeneous coefficients of degree r). A second compared theorem, FEEC.affineInvariantForms,
+    homogeneous coefficients of degree r); (4) the dimension counts of the degrees of freedom,
+    dim P_r Lambda^k = sum_(m <= n) C(n+1, m+1) dim P_(r+k-m)^- Lambda^(m-k)(K^m) and
+    dim P_r^- Lambda^k = sum_(m <= n) C(n+1, m+1) dim P_(r+k-m-1) Lambda^(m-k)(K^m) (r >= 1, the
+    summand 0 unless k <= m < r + k), and for every admissible sequence (in each degree k the
+    space P_(r_k) Lambda^k or P_(r_k)^- Lambda^k, r_k >= 1, followed by P_(r_k)^- Lambda^(k+1)
+    or P_(r_k - 1) Lambda^(k+1)) that its spaces form a cochain complex, exact in positive degree
+    [CharZero K] with the constants as closed 0-forms. A second compared theorem, FEEC.affineInvariantForms,
     states over every field K of characteristic 0 the classification of the affinely invariant
     spaces of AFW2006 §3.4, with the pullback
     phi^*(p (x) theta) = (p o phi) (x) Lambda(B^T) theta along phi(x) = B x + b
@@ -89,7 +95,7 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
     type: "article"
-    location: "Acta Numerica 15 (2006), §3.1-§3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.6, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.18), the decomposition (3.10) into irreducible linear-invariant subspaces, (3.21), (3.22), Lemma 3.8"
+    location: "Acta Numerica 15 (2006), §3.1-§3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.6, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.18), the decomposition (3.10) into irreducible linear-invariant subspaces, (3.21), (3.22), the 2^(n-1) intermediate resolutions of §3.5, Lemma 3.8; §4: the dimension counts of Theorems 4.9 and 4.13; §5: admissible sequences"
     relationship: "formalizes"
     note: >-
       Locators checked against the published text (author-hosted PDF of the Acta Numerica
@@ -102,7 +108,14 @@ sources:
       P_(r-1) + kappa P_(r-1), the convention P_r^- Lambda^k = 0 for r <= 0, the equivalent
       definition, P_r^- Lambda^0 = P_r Lambda^0, P_r^- Lambda^n = P_(r-1) Lambda^n, the strict
       inclusions, the closure P_r wedge P_s in P_(r+s), (3.16) and (3.17); Theorem 3.4; the
-      resolutions (3.21), (3.22) of §3.5 and the subcomplex inclusion (3.21) in (3.22);
+      resolutions (3.21), (3.22) of §3.5 and the subcomplex inclusion (3.21) in (3.22), and every
+      intermediate resolution of §3.5, as the complex of an admissible sequence (Admissible,
+      seqForm: in each degree P_(r_k) or P_(r_k)^-, with the transitions of §5; stated for every
+      admissible sequence, not only those ending in a given P_s Lambda^n, and without the count
+      2^(n-1)); the dimension counts of Theorems 4.9 and 4.13 (dim P_r Lambda^k and
+      dim P_r^- Lambda^k as sums over the faces of a simplex of the dimensions of the test
+      spaces; the degrees of freedom themselves and their unisolvence, which need integration over
+      faces, are proved in Feec over R and not compared);
       Lemma 3.8: (1) is the definition and d P_r Lambda^k in P_(r-1) Lambda^(k+1)
       (map_polyFormSeq_le), (2) is Theorem 3.4 (ker_inf_polyFormMinus_le), (3) is
       map_extDeriv_polyFormMinus (d P_r^- = d P_r), from the identity
@@ -129,8 +142,8 @@ sources:
       Theorem 3.5 (s < r - 1) as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its
       strict inclusions, the identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate
       statements (used in the proofs, Feec.FiniteElement.polyPullback_mem_polyForm,
-      polyPullback_koszul, IsAffineInvariant.closed_le_of_succ), the 2^(n-1) intermediate
-      resolutions of §3.5, §3.6.
+      polyPullback_koszul, IsAffineInvariant.closed_le_of_succ), the count 2^(n-1) of the
+      intermediate resolutions of §3.5, §3.6.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -206,9 +219,10 @@ status:
     k, r, s. Not compared (proved in Feec, outside the statement): the homotopy formula over
     every commutative ring, the tensor-product characterization of Q_b^- Lambda^k as a span of
     products of one-dimensional factors (Feec.Koszul.cubeFormMinus_eq_span), the serendipity
-    spaces S_r Lambda^k, the admissible P/P^- sequences of the periodic table
-    (Feec.FiniteElement.PolySeq.ofKinds), and the finite element spaces on meshes (degrees of
-    freedom, unisolvence, Whitney forms).
+    spaces S_r Lambda^k, the parametrization of the admissible P/P^- sequences ending in
+    P_s Lambda^n by their kinds (Feec.FiniteElement.PolySeq.ofKinds), the closed-form dimensions
+    of the classical elements in K^2 and K^3 (Feec.FiniteElement.finrank_polyForm_three_one, ...),
+    and the finite element spaces on meshes (degrees of freedom, unisolvence, Whitney forms).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -294,11 +308,11 @@ fidelity:
     polyPullback_koszul, Feec.Koszul.interior_C_mem_polyForm), nor the translation lemmas of
     Lemma 3.7 (Feec proves them in the form used by the proof of Theorem 3.6,
     Feec.FiniteElement.IsAffineInvariant.closed_le_of_succ, koszulClosed_le_of_succ,
-    closed_le_of_koszulClosed_le). The 2^(n-1) intermediate resolutions of §3.5 (proved in Feec
-    as admissible sequences, Feec.FiniteElement.PolySeq.ofKinds; about 40 lines of statement for
-    the sequence encoding, while the two extreme resolutions, their inclusion and Lemma 3.8 are
-    stated). §3.6 (change of origin). Everything beyond the polynomial algebra: meshes, degrees of
-    freedom, unisolvence and the serendipity column of the periodic table (Feec proves them;
+    closed_le_of_koszulClosed_le). The 2^(n-1) intermediate resolutions of §3.5 are stated as the
+    complexes of all admissible sequences (Admissible, seqForm; the full and trimmed kinds encoded
+    by a Boolean sequence), without their count. §3.6 (change of origin). Everything beyond the
+    polynomial algebra and the dimension counts of Theorems 4.9, 4.13: meshes, the degrees of
+    freedom as moments, unisolvence and the serendipity column of the periodic table (Feec proves them;
     their statement needs integration over the faces of simplices and cubes and would not fit the
     budget of a self-contained challenge). The exactness of the homogeneous de Rham and Koszul
     complexes and of the non-homogeneous Koszul complex is stated as kernel-in-image identities
@@ -320,7 +334,8 @@ review:
     (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
     mathematical review; the Challenge statement awaits the author's review (in particular the
     2026-10-31 restatement of FEEC.AffineInvariantForms over fields of characteristic 0 with
-    GL(n) hypotheses).
+    GL(n) hypotheses, and the 2026-11-01 fields of FEEC.PeriodicTable on admissible sequences and
+    degrees of freedom).
 
 alignment:
   namespace: "FEEC"
@@ -349,7 +364,12 @@ alignment:
         polyFormMinus_zero, polyFormMinus_top, polyFormMinus_eq_inf_comap,
         polyForm_lt_polyFormMinus, polyFormMinus_lt_polyForm (§3.3), map_extDeriv_polyFormMinus
         (Lemma 3.8 (3); AFW2010 Theorem 5.4, second sentence), ker_inf_polyFormMinus_le
-        (Theorem 3.4; Lemma 3.8 (2)).
+        (Theorem 3.4; Lemma 3.8 (2)), finrank_polyForm_eq_sum, finrank_polyFormMinus_eq_sum
+        (the dimension counts of Theorems 4.9, 4.13), map_seqForm_le, exactAt_seqForm,
+        closed_seqForm (the resolutions of §3.5 of every admissible sequence, §5; definitions
+        Admissible, seqForm). Added 2026-11-01: finrank_polyForm_eq_sum,
+        finrank_polyFormMinus_eq_sum, map_seqForm_le, exactAt_seqForm, closed_seqForm and the
+        definitions Admissible, seqForm are not yet reviewed by the author.
     - source: "[AFW2006] §3; [ArnoldBoffiBonizzoni2015] §5"
       lean: "FEEC.periodicTable"
       module: "Challenge"

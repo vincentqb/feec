@@ -2,6 +2,7 @@ module
 
 public import Solution.Defs
 public import Feec.Algebra.ExteriorAlgebraForm
+public import Feec.FiniteElement.PolyComplex
 public import Mathlib.Algebra.Homology.ShortComplex.ModuleCat
 
 /-!
@@ -306,6 +307,28 @@ theorem polyFormMinus_eq_inf_comap' [CharZero K] (r k : ℕ) (hrk : 1 ≤ r + k)
 
 end Helpers
 
+/-! ### Admissible sequences
+
+An admissible sequence of the challenge is a sequence of families `Feec.FiniteElement.PolyKind`
+(`kindOf`) with admissible transitions (`transition_of_admissible`), whose spaces are carried to
+`Feec.FiniteElement.PolyKind.form` (`map_seqForm`). -/
+
+/-- The family `P_rΛ` (`true`) or `P_r⁻Λ` (`false`). -/
+def kindOf (b : Bool) : Feec.FiniteElement.PolyKind := if b then .full else .trimmed
+
+theorem map_seqForm {full : ℕ → Bool} {r : ℕ → ℕ} (h : Admissible full r) (k : ℕ) :
+    (seqForm K n full r k).map (Φ).toLinearMap = (kindOf (full k)).form K (r k) k := by
+  unfold seqForm kindOf
+  cases full k
+  · simpa using map_polyFormMinus_of_le (h.one_le k) k
+  · simpa using map_polyForm (r k) k
+
+theorem transition_of_admissible {full : ℕ → Bool} {r : ℕ → ℕ} (h : Admissible full r) (k : ℕ) :
+    Feec.FiniteElement.PolyKind.Transition (r k) (kindOf (full (k + 1))) (r (k + 1)) := by
+  rcases h.transition k with ⟨h1, h2⟩ | ⟨h1, h2⟩
+  · exact Or.inl ⟨by simp [kindOf, h1], h2⟩
+  · exact Or.inr ⟨by simp [kindOf, h1], h2⟩
+
 /-! ### The theorem -/
 
 /-- **The algebra of the periodic table**, from `Feec.Algebra.PolynomialFormDim` and
@@ -537,5 +560,38 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     rw [← map_le_iff, map_inf, map_ker_extDeriv, map_polyFormMinus, map_polyForm]
     rintro ω ⟨hd, hω⟩
     simpa using Feec.Koszul.mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero (by omega) hω hd
+  finrank_polyForm_eq_sum r k hr := by
+    rw [finrank_eq, map_polyForm, ← Feec.FiniteElement.PolyKind.form_full,
+      Feec.FiniteElement.PolyKind.finrank_form_eq_sum _ hr]
+    refine sum_congr rfl fun m _ => congrArg _ ?_
+    by_cases h : k ≤ m ∧ m < r + k
+    · rw [Feec.FiniteElement.PolyKind.testForm_full h, finrank_eq,
+        map_polyFormMinus_of_le (by omega)]
+      simp only [h, and_self, ↓reduceIte]
+    · rw [Feec.FiniteElement.PolyKind.testForm_eq_bot _ h, finrank_bot]
+      simp only [h, ↓reduceIte]
+  finrank_polyFormMinus_eq_sum r k hr := by
+    rw [finrank_eq, map_polyFormMinus_of_le hr, ← Feec.FiniteElement.PolyKind.form_trimmed,
+      Feec.FiniteElement.PolyKind.finrank_form_eq_sum _ hr]
+    refine sum_congr rfl fun m _ => congrArg _ ?_
+    by_cases h : k ≤ m ∧ m < r + k
+    · rw [Feec.FiniteElement.PolyKind.testForm_trimmed h, finrank_eq, map_polyForm]
+      simp only [h, and_self, ↓reduceIte]
+    · rw [Feec.FiniteElement.PolyKind.testForm_eq_bot _ h, finrank_bot]
+      simp only [h, ↓reduceIte]
+  map_seqForm_le full r h k := by
+    rw [← map_le_iff, map_map_extDeriv, map_seqForm h, map_seqForm h]
+    rintro _ ⟨ω, hω, rfl⟩
+    exact (kindOf (full k)).extDeriv_mem_form (transition_of_admissible h k) hω
+  exactAt_seqForm full r h k := by
+    refine exactAt_deRham_of_feec _ _ k fun ω hω hd => ?_
+    rw [map_seqForm h] at hω ⊢
+    exact (kindOf (full k)).exists_extDeriv_eq (h.one_le k) (transition_of_admissible h k) hω hd
+  closed_seqForm full r h := by
+    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm h, map_polyForm]
+    exact ker_inf_eq_const ((kindOf (full 0)).form_le_polyForm (h.one_le 0) 0)
+      ((Feec.Koszul.polyForm_mono (Nat.zero_le _) 0).trans
+        ((Feec.Koszul.polyForm_le_polyFormMinus _ 0).trans
+          ((kindOf (full 0)).polyFormMinus_le_form (h.one_le 0) 0)))
 
 end FEEC

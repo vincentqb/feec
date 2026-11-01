@@ -14,6 +14,7 @@ public import FeecCheck.RoughRates
 public import FeecCheck.Sharpness
 public import FeecCheck.BGGVerdicts
 public import FeecCheck.InvariantForms
+public import FeecCheck.PolyFields
 
 public section
 

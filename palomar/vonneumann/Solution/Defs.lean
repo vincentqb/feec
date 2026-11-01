@@ -18,11 +18,11 @@ A verbatim copy of the definitions of `Challenge.lean` (everything but the theor
 and `VonNeumann.inequality_mdissipative_real`, `VonNeumann.cayley_contraction`,
 `VonNeumann.error_bound`, `VonNeumann.error_bound_real`, `VonNeumann.error_bound_mdissipative`,
 `VonNeumann.error_bound_mdissipative_real`, `VonNeumann.error_bound_quasi_real`,
-`VonNeumann.resolvent_estimates_banach`, `VonNeumann.error_bound_backward_euler_banach` and
-`VonNeumann.error_bound_banach_real`), compiled against Mathlib alone so that their
-elaborated values are those of the challenge: its imports, opens and the one definition
-`VonNeumann.IsStrongSolution`. The solution imports this module, the bridge to `Feec` and proves
-the fifteen theorems (`Solution.lean`).
+`VonNeumann.resolvent_estimates_banach`, `VonNeumann.error_bound_backward_euler_banach`,
+`VonNeumann.error_bound_banach_real_hille_yosida` and `VonNeumann.error_bound_banach_real`),
+compiled against Mathlib alone so that their elaborated values are those of the challenge: its
+imports, opens and the one definition `VonNeumann.IsStrongSolution`. The solution imports this
+module, the bridge to `Feec` and proves the sixteen theorems (`Solution.lean`).
 
 ## References
 

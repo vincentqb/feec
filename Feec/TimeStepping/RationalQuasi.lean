@@ -219,15 +219,11 @@ private theorem mul_inverse_mul_of_commute' {M : Type*} [MonoidWithZero M] {U n 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
 /-- **`r(τA) = r_c(τB)` in the resolvent form**: if `(1 - cY) U = 1`, `U` invertible and
-commuting with `Y`, then `r` at `Y U` is the shifted scheme `r_c` at `Y`, and `Q_r(Y U)` is
-invertible when `Q_{r_c}(Y)` is. -/
+commuting with `Y`, then `r` at `Y U` is the shifted scheme `r_c` at `Y`. -/
 theorem resolventStep_mul_eq_shift {Y U : E →L[𝕜] E} {c : ℝ}
     (hc : ∀ z : ℂ, z.re ≤ c → aeval z r.den ≠ 0) (hU : (1 - (c : 𝕜) • Y) * U = 1)
     (hUu : IsUnit U) (hYU : Commute Y U) :
-    r.resolventStep (Y * U) = (r.shift c hc).resolventStep Y ∧
-      (IsUnit (resolventEval (r.shift c hc).den.natDegree ((r.shift c hc).den.map
-          (algebraMap ℝ 𝕜)) Y) →
-        IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) (Y * U))) := by
+    r.resolventStep (Y * U) = (r.shift c hc).resolventStep Y := by
   have hmap : ∀ f : ℝ[X], (f.comp (X + C c)).map (algebraMap ℝ 𝕜) =
       (f.map (algebraMap ℝ 𝕜)).comp (X + C (c : 𝕜)) := fun f => by
     rw [Polynomial.map_comp]; simp
@@ -242,14 +238,9 @@ theorem resolventStep_mul_eq_shift {Y U : E →L[𝕜] E} {c : ℝ}
       rw [aeval_X] at h
       rw [← h]
       exact (commute_aeval (hYU.pow_right _) _).symm
-  refine ⟨?_, fun h => ?_⟩
-  · rw [resolventStep, resolventStep, hN, hn, hd]
-    simp only [shift, hmap]
-    exact mul_inverse_mul_of_commute' (hUu.pow _) (hcomm _) (hcomm _)
-  · rw [hN] at h
-    rw [hd]
-    simp only [shift, hmap] at h
-    exact (hUu.pow _).mul h
+  rw [resolventStep, resolventStep, hN, hn, hd]
+  simp only [shift, hmap]
+  exact mul_inverse_mul_of_commute' (hUu.pow _) (hcomm _) (hcomm _)
 
 /-! ### Quasi-contractive semigroups on Hilbert spaces -/
 
@@ -333,7 +324,7 @@ theorem norm_step_pow_sub_le_of_shift (hr : r.IsAStable) {p : ℕ}
   have hstepB : ∀ s : RationalScheme, s.resolventStep Y = s.step B τ := fun s =>
     (s.step_eq_resolventStep B τ).symm
   have hP : ‖r.resolventStep X‖ ≤ Real.exp (K₁ * c) := by
-    rw [hXeq, hsr.1, hstepB]
+    rw [hXeq, hsr, hstepB]
     refine ((r.shift c hcF).norm_step_le hB hτ).2.trans ((ciSup_le (c := 1 + K₁ * c)
       fun y => ?_).trans
       (by linarith [Real.add_one_le_exp (K₁ * c)]))
@@ -347,7 +338,7 @@ theorem norm_step_pow_sub_le_of_shift (hr : r.IsAStable) {p : ℕ}
     calc (k : ℝ) * (K₁ * c) = K₁ * ω * (k * τ) := by simp only [c]; ring
       _ ≤ K₁ * ω * (n * τ) := by gcongr
   have hρ' : ‖(r.remainder p).resolventStep X‖ ≤ Kρ := by
-    rw [hXeq, hsρ.1, hstepB]
+    rw [hXeq, hsρ, hstepB]
     refine (((r.remainder p).shift c hcFρ).norm_step_le hB hτ).2.trans (ciSup_le fun y => ?_)
     rw [eval_shift]
     exact hρ _ (by simpa using hωτ)

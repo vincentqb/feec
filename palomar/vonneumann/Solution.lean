@@ -29,7 +29,10 @@ the error bounds from `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_
 (real coefficients), the semigroup from `LinearPMap.IsMDissipative.semigroup` through
 `VonNeumann.isStrongSolution_semigroup` and `VonNeumann.eqOn_semigroup_of_isStrongSolution`;
 for quasi-contractive `A`, from `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` with
-the semigroup `e^{ωt} S_{A-ω}(t)`; on Banach spaces, the Hille–Yosida estimates from
+the semigroup `e^{ωt} S_{A-ω}(t)`; on Banach spaces, from
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le`.
+
+On Banach spaces with the growth bound `‖S(t)‖ ≤ M e^{ωt}`: the Hille–Yosida estimates from
 `Feec.C0Semigroup.isResolvent_resolvent` and `Feec.C0Semigroup.norm_resolvent_pow_le`, backward
 Euler from `Feec.TimeStepping.norm_pow_le_of_generator` and
 `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`, and the general scheme from
@@ -432,20 +435,20 @@ theorem error_bound_backward_euler_banach {𝕜 E : Type*} [RCLike 𝕜] [Normed
     RationalScheme.norm_backwardEuler_pow_sub_S_le G hω hSb hτ hωτ hR' n
       fun j hj => (mem_graph_generator_iff G).2 (hu j hj)⟩
 
-/-- **The error of a stable scheme of order `m` on Banach spaces** ([BrennerThomee1979];
-[Thomee2006], Ch. 9). Let `r = p/q` be a real rational function with `deg p ≤ deg q`, without
-poles in the closed left half-plane, of order `m`, with remainder `ρ = (p - q Tₘ)/X^{m+1}`,
-`Tₘ = Σ_{j≤m} Xʲ/j!`. There are `c > 0`, depending on `r` only, and for every `M` a `K₀`,
-depending on `r` and `M` only, such that for every strongly continuous semigroup `S` of a Banach
-space over `𝕜` with `‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`) and generator `A` (as in
-`VonNeumann.resolvent_estimates_banach`), every `τ > 0` with `ωτ ≤ c` and `R` with
-`R (x - τ A x) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`), with `r(τA) = P(R) Q(R)⁻¹` and
-`ρ(τA) = P_ρ(R) Q(R)⁻¹` as in `VonNeumann.inequality_mdissipative`: `Q(R)` is invertible,
-`‖ρ(τA)‖ ≤ K₀`, and if `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n` (off Hilbert spaces stability is not
-automatic, von Neumann's inequality fails), then
+/-- **The error of a stable scheme of order `m` on Banach spaces, from the Hille–Yosida
+estimates** ([BrennerThomee1979]; [Thomee2006], Ch. 9). Let `r = p/q` be as in
+`VonNeumann.error_bound_banach_real`, of order `m`, with remainder `ρ`. There are `c > 0`,
+depending on `r` and `m` only, and for every `M` a `K₀`, depending on `r`, `m` and `M` only, such
+that for every strongly continuous semigroup `S` of a Banach space over `𝕜` with
+`‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`) and generator `A` (as in `VonNeumann.resolvent_estimates_banach`),
+every `τ > 0` with `ωτ ≤ c` and `R` with `R (x - τ A x) = x` on `D(A)` (the resolvent
+`(1 - τA)⁻¹`), with `r(τA) = P(R) Q(R)⁻¹` and `ρ(τA) = P_ρ(R) Q(R)⁻¹`: `Q(R)` is invertible,
+`‖ρ(τA)‖ ≤ K₀`, and if `‖r(τA)ᵏ‖ ≤ Mₛ` for `k ≤ n`, then
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ Mₛ (K₀ + M e^{ωnτ}/(m+1)!) M e^{ωnτ} nτ τᵐ ‖A^{m+1} x‖` for every
-`x ∈ D(A^{m+1})` (a chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). -/
-theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
+`x ∈ D(A^{m+1})`. Compared with `VonNeumann.error_bound_banach_real`, the invertibility of
+`Q(R)`, the injectivity of `R` and the remainder bound are conclusions, for the price of a growth
+bound on all of `t ≥ 0` and of `ωτ ≤ c`. -/
+theorem error_bound_banach_real_hille_yosida (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
     ∃ c : ℝ, 0 < c ∧ ∀ M : ℝ, ∃ K₀ : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
@@ -488,10 +491,53 @@ theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
   have hQ : resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) R = Q := by
     show resolventEval q.natDegree (q.map (algebraMap ℝ 𝕜)) R = Q
     rw [resolventEval_map]
-  obtain ⟨hu, hρ, h⟩ := hK₀ G hω hSb hτ hωτ fun x y hxy => hR x y ((mem_graph_generator_iff G).1 hxy)
+  obtain ⟨hu, hρ, h⟩ := hK₀ G hω hSb hτ hωτ fun x y hxy =>
+    hR x y ((mem_graph_generator_iff G).1 hxy)
   refine ⟨hQ ▸ hu, hPρ ▸ hρ, fun n Ms hst u hu' => ?_⟩
   have h' := h (n := n) (Ms := Ms) (hP ▸ hst) (u := u)
     fun j hj => (mem_graph_generator_iff G).2 (hu' j hj)
   rwa [hP] at h'
+
+theorem error_bound_banach_real (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegree)
+    (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) {m : ℕ}
+    (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1))
+    {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
+    [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (hS0 : S 0 = 1)
+    (hSadd : ∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t)
+    (hSc : ∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) {τ : ℝ} (hτ : 0 ≤ τ)
+    (R : E →L[𝕜] E)
+    (hR : ∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 → R (x - (τ : 𝕜) • y) = x)
+    (hRi : Function.Injective R) :
+    let P := ∑ k ∈ Finset.range (q.natDegree + 1),
+      (p.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+    let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
+      (q.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+    let ρ : ℝ[X] := (p - q * ∑ j ∈ Finset.range (m + 1), C (1 / (j.factorial : ℝ)) * X ^ j) /ₘ
+      X ^ (m + 1)
+    let Pρ := ∑ k ∈ Finset.range (q.natDegree + 1),
+      (ρ.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+    IsUnit Q → ∀ (n : ℕ) (Ms M K₀ : ℝ), (∀ k ≤ n, ‖(P * Ring.inverse Q) ^ k‖ ≤ Ms) →
+      (∀ t ∈ Set.Icc 0 (n * τ), ‖S t‖ ≤ M) → ‖Pρ * Ring.inverse Q‖ ≤ K₀ →
+      ∀ u : ℕ → E, (∀ j < m + 1, HasDerivWithinAt (fun t => S t (u j)) (u (j + 1)) (Set.Ici 0) 0) →
+        ‖((P * Ring.inverse Q) ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
+          Ms * (K₀ + M / (m + 1).factorial) * M * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
+  intro P Q ρ Pρ hQ n Ms M K₀ hst hS hρ u hu
+  set r : RationalScheme := ⟨p, q, hpq, hq⟩
+  set G : Feec.C0Semigroup 𝕜 E := ⟨S, hS0, hSadd, hSc⟩
+  have hP : r.resolventStep R = P * Ring.inverse Q := by
+    show resolventEval q.natDegree (p.map (algebraMap ℝ 𝕜)) R *
+      Ring.inverse (resolventEval q.natDegree (q.map (algebraMap ℝ 𝕜)) R) = _
+    rw [resolventEval_map, resolventEval_map]
+  have hPρ : (r.remainder m).resolventStep R = Pρ * Ring.inverse Q := by
+    show resolventEval q.natDegree (ρ.map (algebraMap ℝ 𝕜)) R *
+      Ring.inverse (resolventEval q.natDegree (q.map (algebraMap ℝ 𝕜)) R) = _
+    rw [resolventEval_map, resolventEval_map]
+  have hQ' : IsUnit (resolventEval r.den.natDegree (r.den.map (algebraMap ℝ 𝕜)) R) := by
+    show IsUnit (resolventEval q.natDegree (q.map (algebraMap ℝ 𝕜)) R)
+    rw [resolventEval_map]; exact hQ
+  have h := r.norm_resolventStep_pow_sub_S_le G (r.hasOrder_of_isBigO hm) hτ
+    (fun x y hxy => hR x y ((mem_graph_generator_iff G).1 hxy)) hRi hQ'
+    (hP ▸ hst) hS (hPρ ▸ hρ) (fun j hj => (mem_graph_generator_iff G).2 (hu j hj))
+  rwa [hP] at h
 
 end VonNeumann

@@ -188,7 +188,8 @@ theorem normedSpaceCore : NormedSpace.Core ℂ (NormedComplexification 𝕜 E) w
       · exact norm_le_zero_iff.1 (h ▸ norm_re_le p)
       · exact norm_le_zero_iff.1 (h ▸ norm_im_le p)
     · rintro rfl
-      exact le_antisymm ((norm_le_add _).trans (by simp)) (by simpa using norm_re_le (0 : NormedComplexification 𝕜 E))
+      exact le_antisymm ((norm_le_add _).trans (by simp))
+        (by simpa using norm_re_le (0 : NormedComplexification 𝕜 E))
 
 instance : NormedAddCommGroup (NormedComplexification 𝕜 E) :=
   NormedAddCommGroup.ofCore normedSpaceCore

@@ -368,7 +368,8 @@ theorem norm_step_pow_sub_S_le {V : Type*} [NormedAddCommGroup V] [InnerProductS
   have hX : ∀ s : RationalScheme, s.step G.generator τ = s.resolventStep ((τ : 𝕜)⁻¹ • R) :=
     fun s => by rw [s.step_eq_resolventStep, hR.resolvent_eq]
   rw [hX] at hst hρ ⊢
-  exact r.norm_resolventStep_pow_sub_S_le G hp hτ.le (fun x y hxy => hR.inv_smul_apply_sub hτ.ne' hxy)
+  exact r.norm_resolventStep_pow_sub_S_le G hp hτ.le
+    (fun x y hxy => hR.inv_smul_apply_sub hτ.ne' hxy)
     (fun a b hab => hR.injective (smul_right_injective V (inv_ne_zero hτ0) hab)) hQ hst hS hρ hu
 
 end Semigroup

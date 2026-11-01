@@ -27,15 +27,22 @@ Brenner–Thomée on Banach spaces (`RationalScheme.norm_resolventStep_pow_sub_S
 invertible, and the remainder `ρ = (r - Tₚ)/z^{p+1}` is bounded, `‖ρ(τA)‖ ≤ K₀` uniformly in
 `ωτ ≤ c` with `c > 0` and `K₀` depending only on `r`, `p` and `M`
 (`RationalScheme.exists_norm_remainder_resolventStep_le`); A-stability is not needed. What
-remains is the **stability** `‖r(τA)ⁿ‖ ≤ Mₛ` (`RationalScheme.exists_norm_resolventStep_pow_sub_S_le`).
-It is not automatic on Banach spaces, even for A-stable `r` (for bounded semigroups Brenner and
-Thomée bound `‖r(τA)ⁿ‖` by `C √n`, [BrennerThomee1979]); it holds for **backward Euler**
-`r = 1/(1 - z)`, for which `r(τA) = R` (`RationalScheme.resolventStep_theta_one`) and the Hille–Yosida estimates
-`‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` give it (`norm_pow_le_of_generator`). Backward Euler therefore has the error
+remains is the **stability** `‖r(τA)ⁿ‖ ≤ Mₛ`
+(`RationalScheme.exists_norm_resolventStep_pow_sub_S_le`). It is not automatic on Banach spaces,
+even for A-stable `r` (for bounded semigroups Brenner and Thomée bound `‖r(τA)ⁿ‖` by `C √n`,
+[BrennerThomee1979]); it holds for **backward Euler** `r = 1/(1 - z)`, for which `r(τA) = R`
+(`RationalScheme.resolventStep_theta_one`) and the Hille–Yosida estimates `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ`
+give it (`norm_pow_le_of_generator`). Backward Euler therefore has the error
 bound with no hypothesis beyond the growth bound of the semigroup
 (`RationalScheme.norm_backwardEuler_pow_sub_S_le`):
 
   `‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`.
+
+The same estimates give stability for every positive combination `r = Σ c_k (1 - bz)^{-k}`,
+`b > 0`, `c_k ≥ 0`, of powers of one resolvent; this is not formalized, since such `r` are
+absolutely monotone on `z < 1/b` and positivity-preserving rational approximations of `e^z`
+have order at most `1` ([BolleyCrouzeix1978], as recalled; the paper was not consulted), so they
+add no order beyond backward Euler.
 
 ## Main results
 
@@ -53,6 +60,7 @@ bound with no hypothesis beyond the growth bound of the semigroup
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 9
+* [C. Bolley, M. Crouzeix, *Conservation de la positivité lors de la discrétisation des problèmes d'évolution paraboliques*][BolleyCrouzeix1978]
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.5 (the Hille–Yosida estimates)
 
@@ -399,30 +407,9 @@ theorem norm_resolventStep_le_of_generator {M ω τ : ℝ}
   refine (norm_mul_le _ _).trans (mul_le_mul (hP.trans ?_) hQ (norm_nonneg _) (by positivity))
   exact mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (by positivity) (by linarith) _) hs
 
-/-- **A pole-free strip**: `r` has no pole on `re z ≤ c₀` for some `0 < c₀ ≤ 1/2` (the poles are
-finitely many, in `re z > 0`). -/
-theorem exists_den_ne_zero :
-    ∃ c₀ : ℝ, 0 < c₀ ∧ c₀ ≤ 1 / 2 ∧ ∀ z : ℂ, z.re ≤ c₀ → aeval z r.den ≠ 0 := by
-  set q := r.den.map (algebraMap ℝ ℂ)
-  have hq0 : q ≠ 0 := (Polynomial.map_ne_zero_iff (algebraMap ℝ ℂ).injective).2 r.den_ne_zero
-  set s := q.roots.toFinset
-  have hpos : ∀ ζ ∈ s, 0 < ζ.re := fun ζ hζ => by
-    by_contra h
-    rw [Multiset.mem_toFinset, mem_roots hq0, IsRoot, eval_map_algebraMap] at hζ
-    exact r.aeval_den_ne_zero ζ (not_lt.1 h) hζ
-  obtain ⟨c, hc, hcs⟩ : ∃ c : ℝ, 0 < c ∧ ∀ ζ ∈ s, c < ζ.re := by
-    rcases s.eq_empty_or_nonempty with hs | hs
-    · exact ⟨1, one_pos, fun ζ hζ => by simp [hs] at hζ⟩
-    obtain ⟨ζ₀, h0, hmin⟩ := s.exists_min_image (fun ζ => ζ.re) hs
-    exact ⟨ζ₀.re / 2, by linarith [hpos ζ₀ h0], fun ζ hζ => by linarith [hmin ζ hζ, hpos ζ₀ h0]⟩
-  refine ⟨min c (1 / 2), lt_min hc (by norm_num), min_le_right _ _, fun z hz h => ?_⟩
-  have hzs : z ∈ s := by
-    rw [Multiset.mem_toFinset, mem_roots hq0, IsRoot, eval_map_algebraMap]; exact h
-  linarith [hcs z hzs, min_le_left c (1 / 2)]
-
 /-- **The remainder bound of Brenner–Thomée from the Hille–Yosida estimates**: for a rational
-scheme `r` and `p`, there are `c > 0`, depending only on `r`, and for every `M` a `K₀`,
-depending only on `r`, `p` and `M`, such that for every strongly continuous semigroup with
+scheme `r` and `p`, there are `c > 0`, depending only on `r` and `p` (in the proof, on `r`
+only), and for every `M` a `K₀`, depending only on `r`, `p` and `M`, such that for every strongly continuous semigroup with
 `‖S(t)‖ ≤ M e^{ωt}` on a Banach space, every `τ > 0` with `ωτ ≤ c` and `R = (1 - τA)⁻¹`:
 `Q(R)` is invertible and `‖ρ(τA)‖ ≤ K₀`. [BrennerThomee1979]; [Thomee2006], Ch. 9 -/
 theorem exists_norm_remainder_resolventStep_le (p : ℕ) :
@@ -436,7 +423,8 @@ theorem exists_norm_remainder_resolventStep_le (p : ℕ) :
   obtain ⟨c₀, hc₀, hc₀2, hden⟩ := r.exists_den_ne_zero
   refine ⟨c₀ / 2, by positivity, fun M => ⟨(∑ k ∈ range (r.den.natDegree + 1),
     |(r.remainder p).num.coeff k|) * (2 * M + 1) ^ r.den.natDegree * (|r.den.leadingCoeff|⁻¹ *
-      ((r.den.map (algebraMap ℝ ℂ)).roots.map fun ζ => 1 + ‖1 - ζ‖ * (2 * M / c₀)).prod),
+      ((r.den.map (algebraMap ℝ ℂ)).roots.map
+        fun ζ => 1 + ‖1 - ζ‖ * (2 * M / c₀)).prod),
     fun G ω τ hS hτ hωτ R hR => ?_⟩⟩
   have hM : 0 ≤ M := by simpa using (norm_nonneg _).trans (hS 0 le_rfl)
   have hωτ1 : ω * τ < 1 := by linarith
@@ -477,8 +465,8 @@ theorem exists_norm_remainder_resolventStep_le (p : ℕ) :
     exact add_le_add_right (mul_le_mul_of_nonneg_left this (norm_nonneg _)) 1
 
 /-- **Brenner–Thomée on Banach spaces with only the stability assumed**: for a rational scheme `r`
-of order `p` there are `c > 0`, depending only on `r`, and for every `M` a `K₀`, depending only on
-`r`, `p` and `M`, such that for every strongly continuous semigroup with `‖S(t)‖ ≤ M e^{ωt}`,
+of order `p` there are `c > 0`, depending only on `r` and `p`, and for every `M` a `K₀`, depending
+only on `r`, `p` and `M`, such that for every strongly continuous semigroup with `‖S(t)‖ ≤ M e^{ωt}`,
 `ω ≥ 0`, on a Banach space, every `τ > 0` with `ωτ ≤ c` and `R = (1 - τA)⁻¹`: `Q(R)` is
 invertible, `‖ρ(τA)‖ ≤ K₀` (`exists_norm_remainder_resolventStep_le`), and for `n` with
 `‖r(τA)ᵏ‖ ≤ Mₛ` (`k ≤ n`) and `x ∈ D(A^{p+1})`,

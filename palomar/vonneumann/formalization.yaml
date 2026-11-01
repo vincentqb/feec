@@ -158,8 +158,9 @@ sources:
       omega tau <= c, with the invertibility of Q(R) and the remainder bound derived from the
       Hille-Yosida resolvent estimates (stability still a hypothesis), and for backward Euler
       with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of real or complex
-      Banach spaces (real ones through the complexification) and A-stable r with |r(infinity)| < 1, through the Hille-Phillips functional
-      calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability
+      Banach spaces (real ones through the complexification) and A-stable r with
+      |r(infinity)| < 1, through the Hille-Phillips functional calculus, with Q(R) invertible,
+      ||rho(tau A)|| bounded, the stability
       ||r(tau A)^n|| <= M (1 + C sqrt(n)) (the paper's stability bound, ||r^n(hA)|| <= C n^(1/2)
       for t bounded and A-acceptable r, per its abstract, checked via Crossref) and an error bound
       that carries this sqrt(n) loss, all proved (VonNeumann.error_bound_banach_sqrt). That error
@@ -393,8 +394,8 @@ fidelity:
     Feec.TimeStepping.RationalScheme.norm_resolventStep_le_of_generator), not compared. For
     backward Euler the stability follows from the Hille-Yosida estimates, so its error bound has
     no stability hypothesis. Bounded semigroups of Banach spaces over K = R or C
-    (VonNeumann.error_bound_banach_sqrt; generalized from complex spaces after the author's
-    review): the three hypotheses are proved for A-stable r with
+    (VonNeumann.error_bound_banach_sqrt; generalized from complex to real or complex spaces;
+    neither form reviewed by the author): the three hypotheses are proved for A-stable r with
     |r(infinity)| < 1 (|p_N| < |q_N|, N = deg q): the resolvent is the unique R with
     R(x - tau A x) = x on D(A) (existence and uniqueness stated), Q(R) is invertible,
     ||r(tau A)^n|| <= M (1 + C sqrt(n)) and the error is K M^3 (1 + C sqrt(n)) n tau tau^m
@@ -425,7 +426,8 @@ review:
     added after that review and not yet reviewed by the author (VonNeumann.error_bound_banach_sqrt
     since generalized from complex to real or complex Banach spaces, also not yet reviewed).
     Every merge of the library was gated by a full build (zero warnings), an axiom audit
-    (propext, Classical.choice, Quot.sound only) and an independent AI review. No external mathematical review.
+    (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
+    mathematical review.
 
 alignment:
   namespace: "VonNeumann"

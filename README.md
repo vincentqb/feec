@@ -362,7 +362,8 @@ on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others
   (order `m - 1/2` at fixed `nτ`; the sources' sharp smooth-data rate `τᵐ` is not formalized),
   from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt`, brought to real spaces
-  by complexification (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded`).
+  by complexification
+  (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`).
 * `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
   FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
   §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram

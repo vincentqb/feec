@@ -31,8 +31,8 @@ the error bounds from `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_
 for quasi-contractive `A`, from `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` with
 the semigroup `e^{ωt} S_{A-ω}(t)`; on Banach spaces, from
 `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le`, and for bounded semigroups
-with `|r(∞)| < 1` from `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_bounded` and
-`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded` (the Hille–Phillips
+with `|r(∞)| < 1` from `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_resolvent` and
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent` (the Hille–Phillips
 calculus on the complexification, `Feec.C0Semigroup.map_eq_laplaceResolvent`; the resolvent from
 `Feec.C0Semigroup.isResolvent_resolvent_ofReal`).
 
@@ -551,9 +551,9 @@ real rational function with `deg p ≤ deg q`, without poles in the closed left 
 A-stable (`|r(iy)| ≤ 1`), with `|r(∞)| < 1` (`|p_N| < |q_N|`, `N = deg q`), of order `m`. There
 are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
 semigroup `S` of a Banach space over `𝕜 = ℝ` or `ℂ`, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with
-generator `A` (right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
-`R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible; `r(τA) = P(R) Q(R)⁻¹` (as in
-`VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
+generator `A` (right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R`
+satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible;
+`r(τA) = P(R) Q(R)⁻¹` (as in `VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M³ (1 + C √n) nτ τᵐ ‖A^{m+1} x‖` for every `n` and `x ∈ D(A^{m+1})` (a
 chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the
 stability bound times consistency: at fixed `T = nτ` it is of order `m - 1/2`, weaker by `√n`
@@ -604,13 +604,13 @@ theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
       Ring.inverse (resolventEval q.natDegree (q.map (algebraMap ℝ 𝕜)) R) = _
     rw [resolventEval_map, resolventEval_map]
   have hQ : IsUnit Q := by
-    have := r.isUnit_resolventEval_den_of_bounded G hM' hτ hR
+    have := r.isUnit_resolventEval_den_of_resolvent G hM' hτ hR
     rwa [show r.den.natDegree = q.natDegree from rfl, show r.den = q from rfl,
       resolventEval_map] at this
   refine ⟨hQ, fun n => ?_, fun n u hu => ?_⟩
   · rw [← hP]
-    exact RationalScheme.norm_resolventStep_pow_le_of_bounded G hM' hr' hτ hR n
-  · have h := RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded G hM' hr'
+    exact RationalScheme.norm_resolventStep_pow_le_of_resolvent G hM' hr' hτ hR n
+  · have h := RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent G hM' hr'
       (r.hasOrder_of_isBigO hm) hτ hR n (u := u)
       fun j hj => (mem_graph_generator_iff G).2 (hu j hj)
     rw [hP] at h

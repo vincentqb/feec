@@ -123,36 +123,15 @@ section Banach
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
   (G : C0Semigroup ℂ E) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M)
 
-/-- **Radau IIA and SDIRK on every bounded semigroup of a complex Banach space**: with the
-resolvent `R = (1 - τA)⁻¹` of the generator `A` (`C0Semigroup.laplaceResolvent`), for `τ > 0`,
-every `n` and `x ∈ D(A⁴)` (resp. `D(A³)`), `‖r(τA)ⁿ x - S(nτ) x‖` is at most
-`M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` with `p = 3` (Radau IIA) and `p = 2`
-(SDIRK): both are L-stable, hence strongly A-stable. The factor `√n` is the loss of
-Brenner–Thomée's stability bound (rates `τ^{5/2}`, `τ^{3/2}` at fixed `nτ`). A corollary of the
-Banach-space theory only: the FEEC families and their fully discrete verdicts are on Hilbert
-spaces and do not use it. [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
-theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
-    ((∀ j < 3 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
-      ‖(RationalScheme.radauIIA2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
-          G.S (n * τ) (u 0)‖ ≤
-        M * (1 + RationalScheme.radauIIA2.stabilityConst * √n) *
-          (M * (RationalScheme.radauIIA2.remainder 3).hpMeasure.variation +
-            M / (3 + 1).factorial) * M * (n * τ) * τ ^ 3 * ‖u (3 + 1)‖) ∧
-    ((∀ j < 2 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
-      ‖(RationalScheme.sdirk2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
-          G.S (n * τ) (u 0)‖ ≤
-        M * (1 + RationalScheme.sdirk2.stabilityConst * √n) *
-          (M * (RationalScheme.sdirk2.remainder 2).hpMeasure.variation +
-            M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
-  ⟨RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
-      RationalScheme.isLStable_radauIIA2.isStronglyAStable RationalScheme.hasOrder_radauIIA2 hτ n,
-    RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt G hM
-      RationalScheme.isLStable_sdirk2.isStronglyAStable RationalScheme.hasOrder_sdirk2 hτ n⟩
-
-/-- **Radau IIA and SDIRK on every bounded semigroup of a real or complex Banach space**: the
-bounds of `banach_radauIIA2`, with the same constants, for `R` with `R (x - τ A x) = x` on
-`D(A)` (the resolvent `(1 - τA)⁻¹`) on a Banach space over `𝕜 = ℝ` or `ℂ`, by complexification
-(`RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded`). [BrennerThomee1979] -/
+/-- **Radau IIA and SDIRK on every bounded semigroup of a real or complex Banach space**: on a
+Banach space over `𝕜 = ℝ` or `ℂ`, with `R` such that `R (x - τ A x) = x` on `D(A)` (the resolvent
+`(1 - τA)⁻¹` of the generator `A`), for `τ > 0`, every `n` and `x ∈ D(A⁴)` (resp. `D(A³)`),
+`‖r(τA)ⁿ x - S(nτ) x‖` is at most `M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖` with
+`p = 3` (Radau IIA) and `p = 2` (SDIRK): both are L-stable, hence strongly A-stable
+(`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`, by complexification). The factor
+`√n` is the loss of Brenner–Thomée's stability bound (rates `τ^{5/2}`, `τ^{3/2}` at fixed `nτ`).
+A corollary of the Banach-space theory only: the FEEC families and their fully discrete verdicts
+are on Hilbert spaces and do not use it. [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
 theorem banach_radauIIA2_of_resolvent {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F]
     [NormedSpace 𝕜 F] [CompleteSpace F] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     (G : C0Semigroup 𝕜 F) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M) {τ : ℝ} (hτ : 0 < τ)
@@ -168,10 +147,28 @@ theorem banach_radauIIA2_of_resolvent {𝕜 F : Type*} [RCLike 𝕜] [NormedAddC
         M * (1 + RationalScheme.sdirk2.stabilityConst * √n) *
           (M * (RationalScheme.sdirk2.remainder 2).hpMeasure.variation +
             M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
-  ⟨RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded G hM
-      RationalScheme.isLStable_radauIIA2.isStronglyAStable RationalScheme.hasOrder_radauIIA2 hτ hR n,
-    RationalScheme.norm_resolventStep_pow_sub_S_le_of_bounded G hM
+  ⟨RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent G hM
+      RationalScheme.isLStable_radauIIA2.isStronglyAStable RationalScheme.hasOrder_radauIIA2 hτ hR
+      n,
+    RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent G hM
       RationalScheme.isLStable_sdirk2.isStronglyAStable RationalScheme.hasOrder_sdirk2 hτ hR n⟩
+
+/-- **Radau IIA and SDIRK on every bounded semigroup of a complex Banach space**: the case
+`𝕜 = ℂ`, `R = C0Semigroup.laplaceResolvent` of `banach_radauIIA2_of_resolvent`. -/
+theorem banach_radauIIA2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ((∀ j < 3 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.radauIIA2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.radauIIA2.stabilityConst * √n) *
+          (M * (RationalScheme.radauIIA2.remainder 3).hpMeasure.variation +
+            M / (3 + 1).factorial) * M * (n * τ) * τ ^ 3 * ‖u (3 + 1)‖) ∧
+    ((∀ j < 2 + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(RationalScheme.sdirk2.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) -
+          G.S (n * τ) (u 0)‖ ≤
+        M * (1 + RationalScheme.sdirk2.stabilityConst * √n) *
+          (M * (RationalScheme.sdirk2.remainder 2).hpMeasure.variation +
+            M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
+  banach_radauIIA2_of_resolvent G hM hτ (fun _ _ h => G.laplaceResolvent_apply_sub hM hτ.le h) n
 
 end Banach
 

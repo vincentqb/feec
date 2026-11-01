@@ -27,6 +27,9 @@ bounded semigroup `‖S(t)‖ ≤ M` on a complex Banach space and A-stable `r`:
   and `x ∈ D(A^{p+1})` (`norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`; order `p - 1/2` at
   fixed `nτ`, weaker by `√n` than the smooth-data estimates of the sources, not formalized here).
 
+Both hold for every symmetric scheme, which is A-stable but not strongly A-stable
+(`IsSymmetric.norm_resolventStep_pow_sub_S_le_sqrt`).
+
 The constant `C_r` is not explicit: it comes from the bounds of `R'` and `(R - R(0))/s` on the
 disc. Complex Banach spaces only.
 
@@ -53,13 +56,13 @@ variable (r : RationalScheme)
 /-- `P(s) = sᴺ n(1 - 1/s)` as a complex polynomial, `N = deg d`. -/
 def numPoly : ℂ[X] := resolventEval r.den.natDegree (r.num.map (algebraMap ℝ ℂ)) X
 
-/-- `μ̂_r(ξ) = P(s)/Q(s)` at `s = ν̂(ξ)`. -/
 theorem resolventEval_num_X :
     resolventEval r.den.natDegree (r.num.map (algebraMap ℝ ℂ)) (X : ℂ[X]) = r.numPoly := rfl
 
 theorem resolventEval_den_X :
     resolventEval r.den.natDegree (r.den.map (algebraMap ℝ ℂ)) (X : ℂ[X]) = r.denPoly := rfl
 
+/-- `μ̂_r(ξ) = P(s)/Q(s)` at `s = ν̂(ξ)`. -/
 theorem fourier_hpMeasure_eq_div (ξ : ℝ) :
     HalfLineAlgebra.fourier ξ r.hpMeasure =
       r.numPoly.eval (HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent) /
@@ -94,22 +97,6 @@ theorem eval_denPoly_ne_zero {s : ℂ} (hs : ‖s - 1 / 2‖ ≤ 1 / 2) : r.denP
     Complex.normSq_apply]
   nlinarith [h2]
 
-/-- `ν̂(ξ) = 1/(1 + 2πiξ)` lies on the circle `|s - 1/2| = 1/2`. -/
-theorem norm_fourier_resolvent_sub_half (ξ : ℝ) :
-    ‖HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent - 1 / 2‖ ≤ 1 / 2 := by
-  rw [HalfLineAlgebra.fourier_resolvent]
-  have hne : (1 : ℂ) + 2 * Real.pi * ξ * Complex.I ≠ 0 := by
-    simpa using HalfLineAlgebra.add_two_pi_mul_I_ne_zero one_pos ξ
-  have e : (1 + 2 * Real.pi * ξ * Complex.I)⁻¹ - 1 / 2 =
-      (starRingEnd ℂ) (1 + 2 * Real.pi * ξ * Complex.I) /
-        (2 * (1 + 2 * Real.pi * ξ * Complex.I)) := by
-    simp only [map_add, map_one, map_mul, Complex.conj_ofReal, Complex.conj_I, map_ofNat]
-    field_simp
-    ring
-  rw [e, norm_div, norm_mul, Complex.norm_conj, Complex.norm_two]
-  rw [div_le_iff₀ (by simpa using hne)]
-  linarith
-
 /-- **The decay of `μ_r` at high frequencies**: `|μ̂_r(ξ) - r(∞)| ≤ C₁ |ν̂(ξ)|` and
 `|μ̂_r'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`, for every rational scheme: `μ̂_r = R(ν̂)` with `R = P/Q` analytic
 on the closed disc `|s - 1/2| ≤ 1/2`, so `R(s) - R(0) = s T(s)/(Q(s) Q(0))` and `R'` are bounded
@@ -140,7 +127,7 @@ theorem exists_decay : ∃ C₁ C₂ : ℝ, ∀ ξ,
       (P.continuous.continuousOn.mul Q.derivative.continuous.continuousOn)).div
       (Q.continuous.continuousOn.pow 2) fun s hs => pow_ne_zero _ (hQ s hs))
   refine ⟨C₁, C₂, fun ξ => ⟨?_, ?_⟩⟩
-  · have hs := mem_closedBall_iff_norm.2 (norm_fourier_resolvent_sub_half ξ)
+  · have hs := mem_closedBall_iff_norm.2 (HalfLineAlgebra.norm_fourier_resolvent_sub_half ξ)
     rw [fourier_hpMeasure_eq_div, fst_hpMeasure_eq_div]
     generalize HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent = s at hs ⊢
     have hTs := congrArg (Polynomial.eval s) hT
@@ -152,25 +139,21 @@ theorem exists_decay : ∃ C₁ C₂ : ℝ, ∀ ξ,
       linear_combination hTs
     rw [e, norm_mul, mul_comm]
     exact mul_le_mul_of_nonneg_right (hC₁ s hs) (norm_nonneg _)
-  · set σ : ℝ → ℂ := fun ξ => (((1 : ℝ) : ℂ) + 2 * Real.pi * ξ * Complex.I)⁻¹
-    have hσ : ∀ ξ, σ ξ = HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent := fun ξ => by
-      simp [σ, HalfLineAlgebra.fourier_resolvent]
-    have hs : σ ξ ∈ K := mem_closedBall_iff_norm.2 (hσ ξ ▸ norm_fourier_resolvent_sub_half ξ)
-    have hR := ((P.hasDerivAt (σ ξ)).div (Q.hasDerivAt (σ ξ)) (hQ _ hs)).comp ξ
-      (HalfLineAlgebra.hasDerivAt_inv_add 1 ξ one_pos)
+  · have hs := mem_closedBall_iff_norm.2 (HalfLineAlgebra.norm_fourier_resolvent_sub_half ξ)
+    have hR := ((P.hasDerivAt _).div (Q.hasDerivAt _) (hQ _ hs)).comp ξ
+      (HalfLineAlgebra.hasDerivAt_fourier_resolvent ξ)
     have hfun : (fun ξ => HalfLineAlgebra.fourier ξ r.hpMeasure) =
-        (fun s => P.eval s / Q.eval s) ∘ σ := by
-      ext ξ
-      rw [Function.comp_apply, hσ, fourier_hpMeasure_eq_div]
-    have h1 := HalfLineAlgebra.hasDerivAt_fourier r.hpMeasure ξ
-    rw [hfun] at h1
-    have huniq := h1.unique hR
+        (fun s => P.eval s / Q.eval s) ∘
+          fun ξ => HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent :=
+      funext r.fourier_hpMeasure_eq_div
+    have huniq := ((HalfLineAlgebra.hasDerivAt_fourier r.hpMeasure ξ).congr_of_eventuallyEq
+      (Filter.EventuallyEq.of_eq hfun.symm)).unique hR
     have hc : (-2 * (Real.pi : ℂ) * Complex.I) ≠ 0 := by simp [Real.pi_ne_zero]
+    generalize HalfLineAlgebra.fourier ξ HalfLineAlgebra.resolvent = s at hs huniq ⊢
     have e : HalfLineAlgebra.moment r.hpMeasure ξ =
-        (P.derivative.eval (σ ξ) * Q.eval (σ ξ) - P.eval (σ ξ) * Q.derivative.eval (σ ξ)) /
-          Q.eval (σ ξ) ^ 2 * σ ξ ^ 2 :=
+        (P.derivative.eval s * Q.eval s - P.eval s * Q.derivative.eval s) / Q.eval s ^ 2 * s ^ 2 :=
       mul_left_cancel₀ hc (by rw [huniq]; ring)
-    rw [e, norm_mul, norm_pow, ← hσ]
+    rw [e, norm_mul, norm_pow]
     exact mul_le_mul_of_nonneg_right (hC₂ _ hs) (by positivity)
 
 /-- **The constant of the `√n` bound for an A-stable scheme**,
@@ -188,18 +171,6 @@ theorem variation_hpMeasure_pow_le_sqrtConst {r : RationalScheme} (hr : r.IsASta
   have h := Classical.choose_spec (Classical.choose_spec r.exists_decay)
   HalfLineAlgebra.variation_pow_le _ (norm_fourier_hpMeasure_le hr) (fun ξ => (h ξ).1)
     (fun ξ => (h ξ).2) n
-
-/-- **Symmetric schemes have `|r(∞)| = 1`**: `n(z) = d(-z)` gives `n_N = (-1)ᴺ d_N`. -/
-theorem IsSymmetric.abs_coeff_num {r : RationalScheme} (h : r.IsSymmetric) :
-    |r.num.coeff r.den.natDegree| = |r.den.leadingCoeff| := by
-  rw [h, show (-X : ℝ[X]) = C (-1) * X by simp, comp_C_mul_X_coeff, abs_mul, abs_pow, abs_neg,
-    abs_one, one_pow, mul_one, leadingCoeff]
-
-/-- Symmetric schemes (the Gauss methods, Crank–Nicolson) are not strongly A-stable, so
-`norm_resolventStep_pow_le` does not apply to them; `norm_resolventStep_pow_le_of_isAStable`
-does. -/
-theorem IsSymmetric.not_isStronglyAStable {r : RationalScheme} (h : r.IsSymmetric) :
-    ¬ r.IsStronglyAStable := fun h' => (lt_irrefl _) (h.abs_coeff_num ▸ h'.2)
 
 /-! ### Bounded semigroups on Banach spaces -/
 
@@ -243,6 +214,22 @@ theorem norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable {r : RationalScheme}
   have hM0 : 0 ≤ M := (norm_nonneg _).trans (hM 0 le_rfl)
   have hC := r.sqrtConst_nonneg
   gcongr
+
+/-- **Symmetric schemes on every bounded semigroup of a complex Banach space** (the diagonal Padé
+and Gauss methods): a symmetric scheme `r` of order `p` is not strongly A-stable, and yet
+`‖r(τA)ⁿ‖ ≤ M (1 + C_r √n)` and, for `x ∈ D(A^{p+1})`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ M (1 + C_r √n) (M ‖μ_ρ‖ + M/(p+1)!) M nτ τᵖ ‖A^{p+1} x‖`. -/
+theorem IsSymmetric.norm_resolventStep_pow_sub_S_le_sqrt {r : RationalScheme}
+    (h : r.IsSymmetric) {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E} :
+    ¬ r.IsStronglyAStable ∧
+    ‖r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n‖ ≤ M * (1 + r.sqrtConst * √n) ∧
+    ((∀ j < p + 1, (u j, u (j + 1)) ∈ G.generator.graph) →
+      ‖(r.resolventStep (G.laplaceResolvent hM τ hτ.le) ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
+        M * (1 + r.sqrtConst * √n) *
+          (M * (r.remainder p).hpMeasure.variation + M / (p + 1).factorial) * M * (n * τ) *
+            τ ^ p * ‖u (p + 1)‖) :=
+  ⟨h.not_isStronglyAStable, norm_resolventStep_pow_le_of_isAStable G hM h.isAStable hτ.le n,
+    norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM h.isAStable hp hτ n⟩
 
 end Semigroup
 

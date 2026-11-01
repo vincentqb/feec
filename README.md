@@ -76,9 +76,8 @@ and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 The Banach-space `√n` modules (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
 `TimeStepping.RationalAStable`,
 `ForMathlib.Analysis.{HalfLineAlgebra, HalfLinePowers, Carlson, Fourier.Plancherel}`) are tied
-only through `Instances.RungeKutta.banach_radauIIA2` and, for every A-stable scheme with
-`|r(∞)| = 1`, `banach_implicitMidpoint` and `banach_gaussLegendre2` (Crank–Nicolson, Gauss),
-corollaries off Hilbert spaces that no crown field consumes (the FEEC families are Hilbert
+only through `Instances.RungeKutta.banach_radauIIA2` and through `banach_implicitMidpoint` and
+`banach_gaussLegendre2` (Crank–Nicolson and two-stage Gauss, `|r(∞)| = 1`), corollaries off Hilbert spaces that no crown field consumes (the FEEC families are Hilbert
 complexes; the tie is documentary).
 
 ## The approximating FEEC theorem

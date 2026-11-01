@@ -259,7 +259,8 @@ space with generator `A`, `τ > 0` and `x ∈ D(A^{p+1})` (a chain `u` in the gr
 Brenner–Thomée's stability bound times order-`p` consistency (`ρ` the remainder scheme). At
 fixed `T = nτ` the rate is `τ^{p-1/2}`: weaker by `√n` than the smooth-data estimates of
 [HershKato1979] (`O(τᵖ)` for `x ∈ D(A^{p+2})`) and, as recalled, [BrennerThomee1979]
-(`O(nτ τᵖ) ‖A^{p+1} x‖`), which are not formalized; only `|r(∞)| < 1` is covered.
+(`O(nτ τᵖ) ‖A^{p+1} x‖`), which are not formalized; only `|r(∞)| < 1` is covered here, every
+A-stable `r` in `norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`.
 Every hypothesis of `RationalScheme.norm_resolventStep_pow_sub_S_le` is discharged: `R` is the
 Laplace transform of the semigroup, `Q(R)` is invertible and `ρ(τA)` bounded by the
 Hille–Phillips calculus, stability by `norm_resolventStep_pow_le`. -/

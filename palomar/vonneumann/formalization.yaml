@@ -157,21 +157,19 @@ sources:
       omega tau <= c, with the invertibility of Q(R) and the remainder bound derived from the
       Hille-Yosida resolvent estimates (stability still a hypothesis), and for backward Euler
       with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of complex Banach
-      spaces and every A-stable r (|r(infinity)| = 1 included), through the Hille-Phillips functional
-      calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability
-      ||r(tau A)^n|| <= M (1 + C sqrt(n)) (the paper's stability bound, ||r^n(hA)|| <= C n^(1/2)
-      for t bounded and A-acceptable r, per its abstract, checked via Crossref) and an error bound
-      that carries this sqrt(n) loss, all proved (VonNeumann.error_bound_banach_sqrt). That error
-      bound is stability times consistency, of order m - 1/2 at fixed t = n tau; the paper's
-      smooth-data convergence estimates have no sqrt(n) loss (as recalled: O(t tau^m) for x in
-      D(A^(m+1)); the abstract only says convergence is discussed). Not formalized: those sharp
-      smooth-data estimates (the half-line algebra C delta_0 + L^1 used here has no point masses
-      delta_t with t > 0, so its calculus cannot express S(n tau) itself; how the sources prove the
-      sharp estimate was not checked), the sqrt(n) bound on real Banach spaces, and the estimates
-      for less
-      smooth data (x in the domain of a lower power of A, with a lower rate).
-      Paper not consulted beyond its abstract; statement and scope as recalled, so no theorem
-      numbers are cited.
+      spaces and every A-stable r (|r(infinity)| = 1 included), through the Hille-Phillips
+      functional calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability ||r(tau
+      A)^n|| <= M (1 + C sqrt(n)) (the paper's stability bound, ||r^n(hA)|| <= C n^(1/2) for t
+      bounded and A-acceptable r, per its abstract, checked via Crossref) and an error bound that
+      carries this sqrt(n) loss, all proved (VonNeumann.error_bound_banach_sqrt). That error bound
+      is stability times consistency, of order m - 1/2 at fixed t = n tau; the paper's smooth-data
+      convergence estimates have no sqrt(n) loss (as recalled: O(t tau^m) for x in D(A^(m+1)); the
+      abstract only says convergence is discussed). Not formalized: those sharp smooth-data
+      estimates (the half-line algebra C delta_0 + L^1 used here has no point masses delta_t with t
+      > 0, so its calculus cannot express S(n tau) itself; how the sources prove the sharp estimate
+      was not checked), the sqrt(n) bound on real Banach spaces, and the estimates for less smooth
+      data (x in the domain of a lower power of A, with a lower rate). Paper not consulted beyond
+      its abstract; statement and scope as recalled, so no theorem numbers are cited.
     author_endorsement: "not-contacted"
   - title: "High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems"
     authors:
@@ -401,13 +399,13 @@ fidelity:
     (Plancherel and Carlson's inequality, applied to the pieces of a dyadic decomposition of
     mu_r^n by the exponential measures c e^(-ct) dt, c = 2^j, so that |r(infinity)| = 1 is
     covered: Feec.HalfLineAlgebra.variation_pow_le, Feec.TimeStepping.RationalScheme.exists_decay;
-    whether this is the paper's proof was not checked). Real Banach spaces are not covered there. This error bound keeps the sqrt(n)
-    loss of the stability bound (order m - 1/2 at fixed n tau); the sources' smooth-data
-    estimates without that loss ([HershKato1979], O(tau^m) for x in D(A^(m+2));
-    [BrennerThomee1979], as recalled) are not formalized. Nonsmooth data are not covered.
-    Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of
-    Hairer-Wanner, §IV.3; stability is A-stability, the Hilbert-space form of the stability
-    hypothesis ||r(tau A)^n|| <= C of Brenner-Thomee.
+    whether this is the paper's proof was not checked). Real Banach spaces are not covered there.
+    This error bound keeps the sqrt(n) loss of the stability bound (order m - 1/2 at fixed n tau);
+    the sources' smooth-data estimates without that loss ([HershKato1979], O(tau^m) for x in
+    D(A^(m+2)); [BrennerThomee1979], as recalled) are not formalized. Nonsmooth data are not
+    covered. Order m is the asymptotic condition r(z) - e^z = O(z^(m+1)) at 0 of Hairer-Wanner,
+    §IV.3; stability is A-stability, the Hilbert-space form of the stability hypothesis
+    ||r(tau A)^n|| <= C of Brenner-Thomee.
 
 review:
   status: "self-assessed"
@@ -418,12 +416,11 @@ review:
     VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
     VonNeumann.error_bound_quasi_real, VonNeumann.error_bound_banach_real,
     VonNeumann.resolvent_estimates_banach, VonNeumann.error_bound_backward_euler_banach,
-    VonNeumann.error_bound_banach_real_hille_yosida and VonNeumann.error_bound_banach_sqrt,
-    added after that review and not yet reviewed by the author (the hypothesis |r(infinity)| < 1
-    of VonNeumann.error_bound_banach_sqrt was later dropped, also not yet reviewed). Every merge of the library was
-    gated by a full
-    build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
-    independent AI review. No external mathematical review.
+    VonNeumann.error_bound_banach_real_hille_yosida and VonNeumann.error_bound_banach_sqrt, added
+    after that review and not yet reviewed by the author (the hypothesis |r(infinity)| < 1 of
+    VonNeumann.error_bound_banach_sqrt was later dropped, also not yet reviewed). Every merge of the
+    library was gated by a full build (zero warnings), an axiom audit (propext, Classical.choice,
+    Quot.sound only) and an independent AI review. No external mathematical review.
 
 alignment:
   namespace: "VonNeumann"

@@ -1,6 +1,7 @@
 module
 
 public import Feec.ForMathlib.Analysis.HalfLineAlgebra
+import Feec.ForMathlib.Analysis.Inequalities
 
 /-!
 # Powers of measures on the half-line whose atom may have modulus one
@@ -120,12 +121,12 @@ theorem integral_norm_snd_pow_four_le {μ : HalfLineAlgebra} (hμ : μ.fst = 0) 
 
 /-! ### Exponential measures -/
 
-theorem add_two_pi_mul_I_ne_zero {c : ℝ} (hc : 0 < c) (ξ : ℝ) :
+private theorem add_two_pi_mul_I_ne_zero {c : ℝ} (hc : 0 < c) (ξ : ℝ) :
     (c : ℂ) + 2 * Real.pi * ξ * Complex.I ≠ 0 := fun h => by
   have := congrArg Complex.re h
   simp at this; linarith
 
-theorem hasDerivAt_inv_add (c ξ : ℝ) (hc : 0 < c) :
+private theorem hasDerivAt_inv_add (c ξ : ℝ) (hc : 0 < c) :
     HasDerivAt (fun ξ : ℝ => ((c : ℂ) + 2 * Real.pi * ξ * Complex.I)⁻¹)
       (-2 * Real.pi * Complex.I * ((c : ℂ) + 2 * Real.pi * ξ * Complex.I)⁻¹ ^ 2) ξ := by
   have hne := add_two_pi_mul_I_ne_zero hc ξ
@@ -254,9 +255,6 @@ theorem norm_fourier_expMeasure_sub_sq (c : ℝ) (hc : 0 < c) (ξ : ℝ) :
 
 /-! ### The pieces of a Littlewood–Paley decomposition -/
 
-theorem norm_add_sq_le (a b : ℂ) : ‖a + b‖ ^ 2 ≤ 2 * ‖a‖ ^ 2 + 2 * ‖b‖ ^ 2 := by
-  nlinarith [norm_add_le a b, norm_nonneg (a + b), sq_nonneg (‖a‖ - ‖b‖)]
-
 /-- **One piece**: for `x` without atom and any `m`, Carlson's inequality bounds `∫ |(x m)ₛ|` by
 `L²` bounds of `x̂ m̂` and of its derivative `(x m)^‸' ∝ x̂' m̂ + x̂ m̂'`. -/
 theorem integral_norm_snd_mul_pow_four_le {x m : HalfLineAlgebra} (hx : x.fst = 0)
@@ -298,7 +296,7 @@ theorem integral_norm_snd_mul_low_pow_four_le (hβ : 0 ≤ β) (hx2 : ∀ ξ, �
     exact mul_le_mul_of_nonneg_right (hx2 ξ) (weight_pos one_pos ξ).le
   · have w0 := (weight_pos one_pos ξ).le
     have w1 : weight 1 ξ ≤ 1 := by simpa using sq_mul_weight_le_one one_pos ξ
-    refine (norm_add_sq_le _ _).trans ?_
+    refine (norm_add_sq_le_two_mul _ _).trans ?_
     rw [norm_mul, norm_mul, mul_pow, mul_pow, norm_fourier_expMeasure_sq,
       norm_moment_expMeasure_sq, one_pow, one_mul, one_mul]
     calc 2 * (‖moment x ξ‖ ^ 2 * weight 1 ξ) + 2 * (‖fourier ξ x‖ ^ 2 * weight 1 ξ ^ 2)
@@ -350,8 +348,8 @@ theorem integral_norm_snd_mul_mid_pow_four_le (hβ : 0 ≤ β) (hx2 : ∀ ξ, �
       rw [moment_sub, sub_eq_add_neg, ← norm_moment_expMeasure_sq (2 * c) hc2 ξ,
         ← norm_moment_expMeasure_sq c hc ξ,
         ← norm_neg (moment (expMeasure c hc) ξ)]
-      exact norm_add_sq_le _ _
-    refine (norm_add_sq_le _ _).trans ?_
+      exact norm_add_sq_le_two_mul _ _
+    refine (norm_add_sq_le_two_mul _ _).trans ?_
     rw [norm_mul, norm_mul, mul_pow, mul_pow, norm_fourier_expMeasure_sub_sq]
     calc 2 * (‖moment x ξ‖ ^ 2 *
             (c ^ 2 * (2 * Real.pi * ξ) ^ 2 * weight (2 * c) ξ * weight c ξ)) +
@@ -397,7 +395,7 @@ theorem integral_norm_snd_mul_high_pow_four_le (hα : 0 ≤ α) (hβ : 0 ≤ β)
     have a4 := weight_le hΛ ξ
     have w1 := (weight_pos one_pos ξ).le
     have wΛ := (weight_pos hΛ ξ).le
-    refine (norm_add_sq_le _ _).trans ?_
+    refine (norm_add_sq_le_two_mul _ _).trans ?_
     rw [norm_mul, norm_mul, mul_pow, mul_pow, norm_one_sub_fourier_expMeasure_sq, moment_sub,
       moment_one, zero_sub, norm_neg, norm_moment_expMeasure_sq]
     calc 2 * (‖moment x ξ‖ ^ 2 * ((2 * Real.pi * ξ) ^ 2 * weight Λ ξ)) +
@@ -438,7 +436,7 @@ theorem integral_norm_snd_sum_le {ι : Type*} (s : Finset ι) (y : ι → HalfLi
     exact (integral_norm_snd_add_le _ _).trans (add_le_add_right ih _)
 
 /-- `|σⁿ - aⁿ| ≤ n |σ - a|` for `|σ|, |a| ≤ 1`. -/
-theorem norm_pow_sub_pow_le_mul {σ a : ℂ} (hσ : ‖σ‖ ≤ 1) (ha : ‖a‖ ≤ 1) (n : ℕ) :
+private theorem norm_pow_sub_pow_le_mul {σ a : ℂ} (hσ : ‖σ‖ ≤ 1) (ha : ‖a‖ ≤ 1) (n : ℕ) :
     ‖σ ^ n - a ^ n‖ ≤ n * ‖σ - a‖ := by
   induction n with
   | zero => simp
@@ -456,6 +454,27 @@ theorem norm_pow_sub_pow_le_mul {σ a : ℂ} (hσ : ‖σ‖ ≤ 1) (ha : ‖a�
 theorem norm_fourier_resolvent_sq (ξ : ℝ) : ‖fourier ξ resolvent‖ ^ 2 = weight 1 ξ := by
   rw [fourier_resolvent, ← norm_inv_add_sq]
   simp
+
+/-- `ν̂' = -2πi ν̂²`. -/
+theorem hasDerivAt_fourier_resolvent (ξ : ℝ) :
+    HasDerivAt (fun ξ => fourier ξ resolvent)
+      (-2 * Real.pi * Complex.I * fourier ξ resolvent ^ 2) ξ := by
+  simpa [fourier_resolvent] using hasDerivAt_inv_add 1 ξ one_pos
+
+/-- `ν̂(ξ) = 1/(1 + 2πiξ)` lies on the circle `|s - 1/2| = 1/2`. -/
+theorem norm_fourier_resolvent_sub_half (ξ : ℝ) : ‖fourier ξ resolvent - 1 / 2‖ ≤ 1 / 2 := by
+  rw [fourier_resolvent]
+  have hne : (1 : ℂ) + 2 * Real.pi * ξ * Complex.I ≠ 0 := by
+    simpa using add_two_pi_mul_I_ne_zero one_pos ξ
+  have e : (1 + 2 * Real.pi * ξ * Complex.I)⁻¹ - 1 / 2 =
+      (starRingEnd ℂ) (1 + 2 * Real.pi * ξ * Complex.I) /
+        (2 * (1 + 2 * Real.pi * ξ * Complex.I)) := by
+    simp only [map_add, map_one, map_mul, Complex.conj_ofReal, Complex.conj_I, map_ofNat]
+    field_simp
+    ring
+  rw [e, norm_div, norm_mul, Complex.norm_conj, Complex.norm_two]
+  rw [div_le_iff₀ (by simpa using hne)]
+  linarith
 
 /-- The ratio `ρ = 2^{-1/4}` of the dyadic sum. -/
 def dyadicRatio : ℝ := √(√(1 / 2))
@@ -507,14 +526,11 @@ theorem powerConst_nonneg (C₁ C₂ : ℝ) : 0 ≤ powerConst C₁ C₂ := by
   unfold powerConst
   positivity
 
-theorem sqrt_sqrt_pow_four {K : ℝ} (hK : 0 ≤ K) : √(√K) ^ 4 = K := by
+private theorem sqrt_sqrt_pow_four {K : ℝ} (hK : 0 ≤ K) : √(√K) ^ 4 = K := by
   rw [show (4 : ℕ) = 2 * 2 from rfl, pow_mul, Real.sq_sqrt (Real.sqrt_nonneg _), Real.sq_sqrt hK]
 
-theorem sqrt_pow_four (n : ℕ) : √(n : ℝ) ^ 4 = (n : ℝ) ^ 2 := by
+private theorem sqrt_pow_four (n : ℕ) : √(n : ℝ) ^ 4 = (n : ℝ) ^ 2 := by
   rw [show (4 : ℕ) = 2 * 2 from rfl, pow_mul, Real.sq_sqrt (Nat.cast_nonneg _)]
-
-theorem le_of_pow_four_le {X Y : ℝ} (hX : 0 ≤ X) (hY : 0 ≤ Y) (h : X ^ 4 ≤ Y ^ 4) : X ≤ Y :=
-  (pow_le_pow_iff_left₀ hX hY (by norm_num)).1 h
 
 /-- **The power bound for measures with an atom of modulus at most one**: let
 `μ = a δ₀ + g` with `|μ̂| ≤ 1`, `|μ̂(ξ) - a| ≤ C₁ |ν̂(ξ)|` and `|μ̂'(ξ)| ≤ 2π C₂ |ν̂(ξ)|²`
@@ -576,7 +592,7 @@ theorem integral_norm_pow_snd_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourie
   have hlow : ∫ t, ‖(x * f 0).snd t‖ ≤ √(√(8 * Real.pi ^ 2 * (C₂ ^ 2 + 4))) * √n := by
     have h := integral_norm_snd_mul_low_pow_four_le hx hβ hx2 hxβ
     rw [show f 0 = expMeasure 1 one_pos from expMeasure_congr (pow_zero 2) _ _] at ⊢
-    refine le_of_pow_four_le (integral_nonneg fun _ => norm_nonneg _) (by positivity) ?_
+    refine le_of_pow_le_pow_left₀ four_ne_zero (by positivity) ?_
     rw [mul_pow, sqrt_sqrt_pow_four (by positivity), sqrt_pow_four]
     refine h.trans ?_
     nlinarith [sq_nonneg C₂, Real.pi_pos, sq_nonneg (n : ℝ)]
@@ -589,7 +605,7 @@ theorem integral_norm_pow_snd_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourie
       exact_mod_cast this.trans (Nat.pow_log_le_self 2 hn.ne')
     have h := integral_norm_snd_mul_mid_pow_four_le hx hβ hx2 hxβ hc
     rw [hf]
-    refine le_of_pow_four_le (integral_nonneg fun _ => norm_nonneg _) (by
+    refine le_of_pow_le_pow_left₀ four_ne_zero (by
       have := dyadicRatio_nonneg; positivity) ?_
     rw [mul_pow, mul_pow, sqrt_sqrt_pow_four (by positivity), sqrt_pow_four, ← pow_mul,
       mul_comm j 4, pow_mul, dyadicRatio_pow_four]
@@ -608,7 +624,7 @@ theorem integral_norm_pow_snd_le (μ : HalfLineAlgebra) (hσ : ∀ ξ, ‖fourie
     have hΛ : (0 : ℝ) < 2 ^ J := by positivity
     have hnΛ : (n : ℝ) ≤ 2 ^ J := by exact_mod_cast (Nat.lt_pow_succ_log_self one_lt_two n).le
     have h := integral_norm_snd_mul_high_pow_four_le hx hα hβ hxα hxβ hΛ
-    refine le_of_pow_four_le (integral_nonneg fun _ => norm_nonneg _) (by positivity) ?_
+    refine le_of_pow_le_pow_left₀ four_ne_zero (by positivity) ?_
     rw [mul_pow, sqrt_sqrt_pow_four (by positivity), sqrt_pow_four]
     refine h.trans ?_
     rw [div_le_iff₀ (by positivity)]

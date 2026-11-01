@@ -34,7 +34,8 @@ calculus (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt
 **Crank–Nicolson and the Gauss–Legendre method**, which have `|r(∞)| = 1` and are not strongly
 A-stable (`banach_implicitMidpoint`, `banach_gaussLegendre2`: `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and rates
 `τ^{3/2}`, `τ^{7/2}`, by
-`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable`). The
+`Feec.TimeStepping.RationalScheme.IsSymmetric.norm_resolventStep_pow_sub_S_le_sqrt`, for every
+symmetric scheme). The
 sources' smooth-data rate `τᵖ` without `√n` ([HershKato1979], for `x ∈ D(A^{p+2})`) is not
 formalized.
 
@@ -167,12 +168,8 @@ theorem banach_implicitMidpoint {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ →
         M * (1 + RationalScheme.implicitMidpoint.sqrtConst * √n) *
           (M * (RationalScheme.implicitMidpoint.remainder 2).hpMeasure.variation +
             M / (2 + 1).factorial) * M * (n * τ) * τ ^ 2 * ‖u (2 + 1)‖) :=
-  ⟨RationalScheme.isSymmetric_implicitMidpoint.not_isStronglyAStable,
-    RationalScheme.norm_resolventStep_pow_le_of_isAStable G hM
-      RationalScheme.isSymmetric_implicitMidpoint.isAStable hτ.le n,
-    RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM
-      RationalScheme.isSymmetric_implicitMidpoint.isAStable RationalScheme.hasOrder_implicitMidpoint
-      hτ n⟩
+  RationalScheme.isSymmetric_implicitMidpoint.norm_resolventStep_pow_sub_S_le_sqrt G hM
+    RationalScheme.hasOrder_implicitMidpoint hτ n
 
 /-- **The two-stage Gauss–Legendre method on every bounded semigroup of a complex Banach
 space** (order `4`): `|r(∞)| = 1`, not strongly A-stable, and `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and, for
@@ -188,12 +185,8 @@ theorem banach_gaussLegendre2 {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {u : ℕ → E
         M * (1 + RationalScheme.gaussLegendre2.sqrtConst * √n) *
           (M * (RationalScheme.gaussLegendre2.remainder 4).hpMeasure.variation +
             M / (4 + 1).factorial) * M * (n * τ) * τ ^ 4 * ‖u (4 + 1)‖) :=
-  ⟨RationalScheme.isSymmetric_gaussLegendre2.not_isStronglyAStable,
-    RationalScheme.norm_resolventStep_pow_le_of_isAStable G hM
-      RationalScheme.isSymmetric_gaussLegendre2.isAStable hτ.le n,
-    RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM
-      RationalScheme.isSymmetric_gaussLegendre2.isAStable RationalScheme.hasOrder_gaussLegendre2
-      hτ n⟩
+  RationalScheme.isSymmetric_gaussLegendre2.norm_resolventStep_pow_sub_S_le_sqrt G hM
+    RationalScheme.hasOrder_gaussLegendre2 hτ n
 
 end Banach
 

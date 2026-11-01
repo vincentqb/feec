@@ -6,6 +6,7 @@ public import Feec.TimeStepping.RationalQuasi
 public import Feec.TimeStepping.RationalHillePhillips
 public import Feec.TimeStepping.RationalAStable
 public import Feec.TimeStepping.RationalSharp
+public import Feec.TimeStepping.RationalHillePhillipsReal
 public import Feec.Evolution.WellPosed
 
 /-!

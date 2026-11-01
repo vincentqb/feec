@@ -32,11 +32,13 @@ for quasi-contractive `A`, from `Feec.TimeStepping.RationalScheme.exists_norm_st
 the semigroup `e^{ωt} S_{A-ω}(t)`; on Banach spaces, from
 `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le`, and for bounded semigroups
 and every A-stable `r` from
-`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_isAStable` and
-`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable` (the
-Hille–Phillips calculus, `Feec.C0Semigroup.laplaceResolvent`,
-`Feec.C0Semigroup.eq_laplaceResolvent`), and from `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (Brenner–Thomée's
-error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable` and
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable` (the
+Hille–Phillips calculus on the complexification, `Feec.C0Semigroup.map_eq_laplaceResolvent`,
+with `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_isAStable`; the resolvent from
+`Feec.C0Semigroup.isResolvent_resolvent_ofReal`), and from
+`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (Brenner–Thomée's error
+kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).
 
 On Banach spaces with the growth bound `‖S(t)‖ ≤ M e^{ωt}`: the Hille–Yosida estimates from
 `Feec.C0Semigroup.isResolvent_resolvent` and `Feec.C0Semigroup.norm_resolvent_pow_le`, backward
@@ -555,10 +557,10 @@ real rational function with `deg p ≤ deg q`, without poles in the closed left 
 A-stable (`|r(iy)| ≤ 1`; `|r(∞)| = 1` allowed, as for Crank–Nicolson and the Gauss methods), of
 order `m`. There
 are constants `C ≥ 0` and `K`, depending on `r` only, such that for every strongly continuous
-semigroup `S` of a complex Banach space, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with generator `A`
-(right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R` satisfies
-`R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible; `r(τA) = P(R) Q(R)⁻¹` (as in
-`VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
+semigroup `S` of a Banach space over `𝕜 = ℝ` or `ℂ`, bounded (`‖S t‖ ≤ M` for `t ≥ 0`), with
+generator `A` (right derivatives at `0`), and every `τ > 0`: exactly one bounded operator `R`
+satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`); `Q(R)` is invertible;
+`r(τA) = P(R) Q(R)⁻¹` (as in `VonNeumann.inequality_mdissipative`) satisfies `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`; and
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M³ (1 + C √n) nτ τᵐ ‖A^{m+1} x‖` for every `n` and `x ∈ D(A^{m+1})` (a
 chain `u 0 = x, …, u (m + 1) = A^{m+1} x` of right derivatives). The error bound is the
 stability bound times consistency: at fixed `T = nτ` it is of order `m - 1/2`, weaker by `√n`
@@ -568,17 +570,18 @@ theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
     (hq : ∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0)
     (hr : ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) {m : ℕ}
     (hm : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0] fun z => z ^ (m + 1)) :
-    ∃ C K : ℝ, 0 ≤ C ∧ ∀ {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
-      (S : ℝ → E →L[ℂ] E) (M : ℝ), S 0 = 1 →
+    ∃ C K : ℝ, 0 ≤ C ∧ ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+      [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+      (S : ℝ → E →L[𝕜] E) (M : ℝ), S 0 = 1 →
       (∀ s t : ℝ, 0 ≤ s → 0 ≤ t → S (s + t) = S s * S t) →
       (∀ x : E, ContinuousOn (fun t => S t x) (Set.Ici 0)) → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) →
-      ∀ τ : ℝ, 0 < τ → ∃ R : E →L[ℂ] E,
-        (∀ T : E →L[ℂ] E, (∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 →
-          T (x - (τ : ℂ) • y) = x) ↔ T = R) ∧
+      ∀ τ : ℝ, 0 < τ → ∃ R : E →L[𝕜] E,
+        (∀ T : E →L[𝕜] E, (∀ x y : E, HasDerivWithinAt (fun t => S t x) y (Set.Ici 0) 0 →
+          T (x - (τ : 𝕜) • y) = x) ↔ T = R) ∧
         let P := ∑ k ∈ Finset.range (q.natDegree + 1),
-          (p.coeff k : ℂ) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          (p.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
         let Q := ∑ k ∈ Finset.range (q.natDegree + 1),
-          (q.coeff k : ℂ) • ((R - 1) ^ k * R ^ (q.natDegree - k))
+          (q.coeff k : 𝕜) • ((R - 1) ^ k * R ^ (q.natDegree - k))
         IsUnit Q ∧ (∀ n : ℕ, ‖(P * Ring.inverse Q) ^ n‖ ≤ M * (1 + C * √n)) ∧
         ∀ (n : ℕ) (u : ℕ → E),
           (∀ j < m + 1, HasDerivWithinAt (fun t => S t (u j)) (u (j + 1)) (Set.Ici 0) 0) →
@@ -588,32 +591,34 @@ theorem error_bound_banach_sqrt (p q : ℝ[X]) (hpq : p.natDegree ≤ q.natDegre
   have hr' : r.IsAStable := hr
   refine ⟨r.sqrtConst, (r.remainder m).hpMeasure.variation + 1 / (m + 1).factorial,
     r.sqrtConst_nonneg, ?_⟩
-  intro E _ _ _ S M hS0 hSadd hSc hM τ hτ
-  set G : Feec.C0Semigroup ℂ E := ⟨S, hS0, hSadd, hSc⟩
+  intro 𝕜 E _ _ _ _ _ _ S M hS0 hSadd hSc hM τ hτ
+  set G : Feec.C0Semigroup 𝕜 E := ⟨S, hS0, hSadd, hSc⟩
   have hM' : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M := hM
-  set R := G.laplaceResolvent hM' τ hτ.le
-  refine ⟨R, fun T => ⟨fun hT => ?_, fun hT => ?_⟩, ?_⟩
-  · ext y
-    exact G.eq_laplaceResolvent hM' hτ (R := ⇑T)
-      (fun x y hxy => hT x y ((mem_graph_generator_iff G).1 hxy)) y
+  have hres := G.isResolvent_resolvent_ofReal (M := M) (ω := 0) (by simpa using hM')
+    (inv_pos.2 hτ)
+  rw [RCLike.ofReal_inv] at hres
+  set R := (τ : 𝕜)⁻¹ • Feec.Operator.resolvent G.generator (τ : 𝕜)⁻¹
+  have hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x :=
+    fun x y hxy => hres.inv_smul_apply_sub hτ.ne' hxy
+  refine ⟨R, fun T => ⟨fun hT => hres.eq_inv_smul_of_apply_sub hτ.ne'
+    fun x y hxy => hT x y ((mem_graph_generator_iff G).1 hxy), fun hT => ?_⟩, ?_⟩
   · subst hT
-    exact fun x y hxy => G.laplaceResolvent_apply_sub hM' hτ.le
-      ((mem_graph_generator_iff G).2 hxy)
+    exact fun x y hxy => hR x y ((mem_graph_generator_iff G).2 hxy)
   intro P Q
   have hP : r.resolventStep R = P * Ring.inverse Q := by
-    show resolventEval q.natDegree (p.map (algebraMap ℝ ℂ)) R *
-      Ring.inverse (resolventEval q.natDegree (q.map (algebraMap ℝ ℂ)) R) = _
+    show resolventEval q.natDegree (p.map (algebraMap ℝ 𝕜)) R *
+      Ring.inverse (resolventEval q.natDegree (q.map (algebraMap ℝ 𝕜)) R) = _
     rw [resolventEval_map, resolventEval_map]
-    rfl
   have hQ : IsUnit Q := by
-    have := r.isUnit_resolventEval_den_laplaceResolvent G hM' hτ.le
+    have := r.isUnit_resolventEval_den_of_resolvent G hM' hτ hR
     rwa [show r.den.natDegree = q.natDegree from rfl, show r.den = q from rfl,
       resolventEval_map] at this
   refine ⟨hQ, fun n => ?_, fun n u hu => ?_⟩
   · rw [← hP]
-    exact RationalScheme.norm_resolventStep_pow_le_of_isAStable G hM' hr' hτ.le n
-  · have h := RationalScheme.norm_resolventStep_pow_sub_S_le_sqrt_of_isAStable G hM' hr'
-      (r.hasOrder_of_isBigO hm) hτ n (u := u) fun j hj => (mem_graph_generator_iff G).2 (hu j hj)
+    exact RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable G hM' hr' hτ hR n
+  · have h := RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable G hM' hr'
+      (r.hasOrder_of_isBigO hm) hτ hR n (u := u)
+      fun j hj => (mem_graph_generator_iff G).2 (hu j hj)
     rw [hP] at h
     refine h.trans_eq ?_
     ring

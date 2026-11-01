@@ -62,8 +62,8 @@ project:
     R(x - tau A x) = x on D(A): Q(R) is invertible, ||rho(tau A)|| <= K_0, and
     ||r(tau A)^k|| <= M_s (k <= n) gives ||r(tau A)^n x - S(n tau) x|| <= M_s (K_0 +
     M e^(omega n tau)/(m+1)!) M e^(omega n tau) n tau tau^m ||A^(m+1) x||; (11) bounded
-    semigroups of complex Banach spaces: for a real rational r as in (10), A-stable (|r(infinity)|
-    = 1 allowed: Crank-Nicolson, Gauss methods), there are C >= 0
+    semigroups of real or complex Banach spaces: for a real rational r as in (10), A-stable
+    (|r(infinity)| = 1 allowed: Crank-Nicolson, Gauss methods), there are C >= 0
     and K, depending on r only, such that for every such S with ||S(t)|| <= M and every tau > 0
     the resolvent R exists and is unique, Q(R) is invertible, ||r(tau A)^n|| <= M (1 + C sqrt(n))
     and ||r(tau A)^n x - S(n tau) x|| <= K M^3 (1 + C sqrt(n)) n tau tau^m ||A^(m+1) x|| (the
@@ -85,6 +85,8 @@ project:
     Feec.Semigroup.Rescale, Feec.Semigroup.HilleYosida, Feec.Semigroup.Complexification,
     Feec.ForMathlib.Analysis.NormedComplexification, Feec.TimeStepping.RationalHilleYosida,
     Feec.Semigroup.HillePhillips, Feec.TimeStepping.RationalHillePhillips,
+    Feec.TimeStepping.RationalHillePhillipsReal, Feec.TimeStepping.RationalAStable,
+    Feec.ForMathlib.Analysis.HalfLinePowers,
     Feec.Semigroup.HillePhillipsTranslate, Feec.ForMathlib.Analysis.HalfLineTranslate,
     Feec.ForMathlib.Analysis.Fourier.GeomSumMultiplier, Feec.TimeStepping.RationalSharp).
   authors:
@@ -163,9 +165,10 @@ sources:
       rho(tau A) as hypotheses, and, for semigroups with ||S(t)|| <= M e^(omega t) and
       omega tau <= c, with the invertibility of Q(R) and the remainder bound derived from the
       Hille-Yosida resolvent estimates (stability still a hypothesis), and for backward Euler
-      with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of complex Banach
-      spaces and every A-stable r (|r(infinity)| = 1 included), through the Hille-Phillips
-      functional calculus, with Q(R) invertible, ||rho(tau A)|| bounded, the stability
+      with no stability hypothesis; and for bounded semigroups ||S(t)|| <= M of real or complex
+      Banach spaces (real ones through the complexification) and every A-stable r
+      (|r(infinity)| = 1 included), through the Hille-Phillips functional calculus, with Q(R)
+      invertible, ||rho(tau A)|| bounded, the stability
       ||r(tau A)^n|| <= M (1 + C sqrt(n)) (the paper's stability bound, ||r^n(hA)|| <= C n^(1/2)
       for t bounded and A-acceptable r, per its abstract, checked via Crossref) and an error bound
       that carries this sqrt(n) loss, all proved (VonNeumann.error_bound_banach_sqrt). That error
@@ -185,7 +188,7 @@ sources:
       domain of A^s with s < m + 1 (Gomilko-Tomilov Thm 1.1(ii): error t^s/n^(s m/(m+1)) for s in
       ((m+1)/2, m+1], t^s log(n+1)/n^(m/2) at s = (m+1)/2, t^s/n^(s-1/2) for s in
       (0, (m+1)/2); the case s = m + 1, t^(m+1)/n^m = n tau tau^m, is the one formalized), and
-      real Banach spaces. Paper itself not consulted beyond its abstract; the statement is as
+      this smooth-data estimate on real Banach spaces. Paper itself not consulted beyond its abstract; the statement is as
       quoted by Gomilko-Tomilov.
     author_endorsement: "not-contacted"
   - title: "High-Accuracy Stable Difference Schemes for Well-Posed Initial-Value Problems"
@@ -389,7 +392,7 @@ fidelity:
     VonNeumann.error_bound_banach_real_hille_yosida stability is a genuine hypothesis, and
     Brenner-Thomee's sufficient condition ||r(tau A)^n|| <= C sqrt(n) for bounded semigroups
     (through the Hille-Phillips functional calculus) is proved in
-    VonNeumann.error_bound_banach_sqrt (below) for complex spaces and every A-stable r.
+    VonNeumann.error_bound_banach_sqrt (below) for real or complex spaces and every A-stable r.
     Hille-Yosida
     (VonNeumann.resolvent_estimates_banach, complex spaces;
     VonNeumann.error_bound_backward_euler_banach and
@@ -408,9 +411,10 @@ fidelity:
     (Feec.TimeStepping.isUnit_resolventEval_of_generator,
     Feec.TimeStepping.RationalScheme.norm_resolventStep_le_of_generator), not compared. For
     backward Euler the stability follows from the Hille-Yosida estimates, so its error bound has
-    no stability hypothesis. Bounded semigroups of complex Banach spaces
-    (VonNeumann.error_bound_banach_sqrt): the three hypotheses are proved for every A-stable r,
-    |r(infinity)| = 1 included: the resolvent is the unique R with
+    no stability hypothesis. Bounded semigroups of Banach spaces over K = R or C
+    (VonNeumann.error_bound_banach_sqrt; generalized from complex to real or complex spaces and
+    to every A-stable r; neither form reviewed by the author): the three hypotheses are proved
+    for every A-stable r, |r(infinity)| = 1 included: the resolvent is the unique R with
     R(x - tau A x) = x on D(A) (existence and uniqueness stated), Q(R) is invertible,
     ||r(tau A)^n|| <= M (1 + C sqrt(n)) and the error is K M^3 (1 + C sqrt(n)) n tau tau^m
     ||A^(m+1) x||, with C, K depending on r only (per universe); the proof is the Hille-Phillips
@@ -418,7 +422,10 @@ fidelity:
     (Plancherel and Carlson's inequality, applied to the pieces of a dyadic decomposition of
     mu_r^n by the exponential measures c e^(-ct) dt, c = 2^j, so that |r(infinity)| = 1 is
     covered: Feec.HalfLineAlgebra.variation_pow_le, Feec.TimeStepping.RationalScheme.exists_decay;
-    whether this is the paper's proof was not checked). Real Banach spaces are not covered there.
+    whether this is the paper's proof was not checked), on real spaces applied to the
+    complexification E_C = E x E with the Taylor norm (||T_C|| = ||T||, R_C the resolvent of the
+    complexified semigroup, r(tau A)_C = r(tau A_C) since r has real coefficients;
+    Feec.TimeStepping.RationalHillePhillipsReal).
     This error bound keeps the sqrt(n) loss of the stability bound (order m - 1/2 at fixed n tau).
     Without that loss (VonNeumann.error_bound_banach_sharp): for every A-stable r of order m,
     |r(infinity)| = 1 included, the resolvent and Q(R) as above and ||r(tau A)^n x - S(n tau) x||
@@ -440,10 +447,11 @@ review:
     VonNeumann.resolvent_estimates_banach, VonNeumann.error_bound_backward_euler_banach,
     VonNeumann.error_bound_banach_real_hille_yosida, VonNeumann.error_bound_banach_sqrt and
     VonNeumann.error_bound_banach_sharp, added after that review and not yet reviewed by the
-    author (the hypothesis |r(infinity)| < 1 of VonNeumann.error_bound_banach_sqrt was later
-    dropped, also not yet reviewed). Every merge of the library was gated by a full build (zero
-    warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
-    review. No external mathematical review.
+    author (VonNeumann.error_bound_banach_sqrt was since generalized to every A-stable r, dropping
+    |r(infinity)| < 1, and from complex to real or complex Banach spaces, also not yet reviewed).
+    Every merge of the library was gated by a full build (zero warnings), an axiom audit
+    (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
+    mathematical review.
 
 alignment:
   namespace: "VonNeumann"
@@ -532,7 +540,7 @@ alignment:
       lean: "VonNeumann.error_bound_banach_sqrt"
       module: "Challenge"
       status: "proved"
-      note: "Complex Banach spaces, bounded semigroups, every A-stable r (|r(infinity)| = 1 included): resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), and an error bound with the factor sqrt(n) (order m - 1/2 at fixed n tau), weaker than the smooth-data rate of VonNeumann.error_bound_banach_sharp."
+      note: "Real or complex Banach spaces, bounded semigroups, every A-stable r (|r(infinity)| = 1 included): resolvent, Q(R) invertible, stability M (1 + C sqrt(n)), and an error bound with the factor sqrt(n) (order m - 1/2 at fixed n tau), weaker than the smooth-data rate of VonNeumann.error_bound_banach_sharp."
     - source: "[BrennerThomee1979] (the smooth-data estimate, as stated in Gomilko-Tomilov 2024, Thm 1.1(ii), s = m + 1)"
       lean: "VonNeumann.error_bound_banach_sharp"
       module: "Challenge"

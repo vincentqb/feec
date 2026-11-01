@@ -419,6 +419,7 @@ public import Feec.TimeStepping.Rational
 public import Feec.TimeStepping.RationalAStable
 public import Feec.TimeStepping.RationalBanach
 public import Feec.TimeStepping.RationalHillePhillips
+public import Feec.TimeStepping.RationalHillePhillipsReal
 public import Feec.TimeStepping.RationalHilleYosida
 public import Feec.TimeStepping.RationalQuasi
 public import Feec.TimeStepping.RationalSemigroup

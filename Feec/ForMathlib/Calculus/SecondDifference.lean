@@ -15,7 +15,7 @@ public import Mathlib.Analysis.Calculus.Deriv.Comp
 
 ## References
 
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/

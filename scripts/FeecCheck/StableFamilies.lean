@@ -81,6 +81,14 @@ abbrev discrete_old (h : κ) : C0Semigroup 𝕜 (B.X h) := (C0Group.ofBounded (B
 
 theorem discrete_old_eq (h : κ) : discrete_old B h = B.discrete h := rfl
 
+/-- The earlier `BanachFEEC.res`, unchanged: `Rₕ = τ⁻¹ (τ⁻¹ - Lₕ)⁻¹`. -/
+theorem res_old (τ : ℝ) (h : κ) :
+    B.res τ h = (τ : 𝕜)⁻¹ • Operator.resolvent (B.discrete h).generator (τ : 𝕜)⁻¹ := rfl
+
+/-- The earlier `BanachFEEC.step`, unchanged: `r(τLₕ)` through `Rₕ`. -/
+theorem step_old (r : RationalScheme) (τ : ℝ) (h : κ) :
+    B.step r τ h = r.resolventStep (B.res τ h) := rfl
+
 /-- The earlier `BanachFEEC.norm_discrete_S_le`. -/
 theorem norm_discrete_S_le_old (h : κ) (t : ℝ) (ht : 0 ≤ t) : ‖(B.discrete h).S t‖ ≤ B.M :=
   B.norm_discrete_S_le h t ht
@@ -106,6 +114,17 @@ def rationalScheme_old (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r
     (hMs : ∀ (T : ℝ) (h : κ) (n : ℕ), (n : ℝ) * τ h ≤ T → ‖B.step r (τ h) h ^ n‖ ≤ Ms T) :
     B.TimeScheme :=
   B.rationalScheme r hr hp hp0 τ hτ Ms hMs
+
+/-- The fields of the earlier `BanachFEEC.rationalScheme`, unchanged. -/
+theorem rationalScheme_old_fields (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) (hp0 : 0 < p) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (Ms : ℝ → ℝ)
+    (hMs : ∀ (T : ℝ) (h : κ) (n : ℕ), (n : ℝ) * τ h ≤ T → ‖B.step r (τ h) h ^ n‖ ≤ Ms T) :
+    (rationalScheme_old B r hr hp hp0 τ hτ Ms hMs).τ = τ ∧
+      (rationalScheme_old B r hr hp hp0 τ hτ Ms hMs).P = (fun h => B.step r (τ h) h) ∧
+      (rationalScheme_old B r hr hp hp0 τ hτ Ms hMs).M = Ms ∧
+      (rationalScheme_old B r hr hp hp0 τ hτ Ms hMs).p = p ∧
+      (rationalScheme_old B r hr hp hp0 τ hτ Ms hMs).K = r.sharpConst p * B.M :=
+  ⟨rfl, rfl, rfl, rfl, rfl⟩
 
 /-- The earlier `BanachFEEC.backwardEuler`, a time scheme of `B`. -/
 def backwardEuler_old (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : B.TimeScheme := B.backwardEuler τ hτ

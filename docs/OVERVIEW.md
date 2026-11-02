@@ -99,7 +99,7 @@ in norms in which the family is not Hilbert-contractive (e.g. the maximum norm),
 states none. The maximum-norm heat equation (`Feec.Models.Cube.MaxNormHeat.maxNormHeat`:
 lumped-mass `P₁` elements on the Freudenthal meshes of a cube, a `Feec.TimeStepping.StableFamily`
 with `M = 1` by the discrete maximum principle; its generators are also `ℓ²`-dissipative, but the
-Hilbert route reaches the maximum norm only with a factor `h^{-n/2}`) gives such estimates in the
+direct Hilbert route reaches the maximum norm with a factor `h^{-n/2}`) gives such estimates in the
 maximum norm at the nodes, with constants independent of `h`: `O(h²)`, `O(τ + h²)` for backward
 Euler and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, collected with a
 nonzero classical solution (the first eigenmode, `Feec.Models.Cube.MaxNormHeat.sineSolution`) in

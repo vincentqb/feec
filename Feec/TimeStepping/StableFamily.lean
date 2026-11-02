@@ -16,7 +16,7 @@ element or difference method, the interpolant of a given smooth solution), whose
 `‖U' - Lₕ U‖` measures the consistency of the space discretization. The family is the setting of
 estimates in norms in which the discretization is not Hilbert-contractive, e.g. the maximum norm
 at the nodes of the lumped-mass heat discretization (`Feec.Models.Cube.MaxNormHeat`; its
-generators are also `ℓ²`-dissipative, but the Hilbert route reaches the maximum norm only with a
+generators are also `ℓ²`-dissipative; the direct Hilbert route reaches the maximum norm with a
 factor `h^{-n/2}`).
 
 ## Main results

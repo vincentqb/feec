@@ -15,8 +15,8 @@ The heat equation `uₜ = Δu` on the cube `Q = b + (0, s)ⁿ` with homogeneous 
 discretized in space by lumped-mass `P₁` finite elements on the Freudenthal meshes of level
 `N + 1` (mesh size `h = s / (N + 1)`, `Feec.Mesh.freudenthalMesh`), is a **uniformly stable
 family in the maximum norm at the nodes** (`MaxNormHeat.family`, `M = 1`). `Lₕ` is the
-symmetric negative definite difference Laplacian, so `e^{tLₕ}` is also a contraction in `ℓ²`; the
-Hilbert route reaches the maximum norm only through the norm equivalence, with a factor
+symmetric negative definite difference Laplacian, so `e^{tLₕ}` is also a contraction in `ℓ²`;
+the direct Hilbert route reaches the maximum norm through the norm equivalence, with a factor
 `h^{-n/2}`. The Banach layer (`Feec.TimeStepping.stableFamily`, the discrete half of
 `Feec.TimeStepping.banachFEEC`) gives the maximum-norm theory with constants independent of `h`.
 
@@ -43,7 +43,7 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
 3. (**consistency**, `norm_interp_laplacian_sub_le`) for `u ∈ C⁴` vanishing on `∂Q` with
    `|∂ᵢ⁴ u| ≤ B` on `Q̄`, `‖Iₕ Δu - Lₕ Iₕ u‖_∞ ≤ n B h² / 12` (`Iₕ` the nodal interpolant);
 4. (**semidiscrete error**) for every classical solution `u` on `[0, T]` (`HeatSolution`:
-   `C⁴` in space with `|∂ᵢ⁴ u| ≤ B₄`, `uₜ = Δu`, `u = 0` on `∂Q`),
+   `C⁴` on all of `ℝⁿ` at each time with `|∂ᵢ⁴ u| ≤ B₄` on `Q̄`, `uₜ = Δu`, `u = 0` on `∂Q`),
    `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12`;
 5. (**backward Euler**) with `|uₜₜ| ≤ B₂`,
    `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B₂ + n B₄ h² / 12)`:
@@ -200,7 +200,6 @@ def laplacian (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
 
 /-- The closed cube `b + [0, s]ⁿ`. -/
 def closedCube (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Icc (b i) (b i + s)
-
 
 /-- The nodal interpolant `(Iₕ u)(p) = u(b + h p)` at the interior nodes. -/
 def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Space n N :=
@@ -681,14 +680,44 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   rational := @fun _ S _ hr _ hp N _ hτ _ hk v => norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
   banach := stableFamily _
 
+/-- The second time derivative of the first eigenmode: `uₜₜ = λ² u`, `λ = n (π/s)²`. -/
+theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) (x : Fin n → ℝ) :
+    HasDerivAt (fun t => (sineSolution b hs T).u₁ t x)
+      ((n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x) t := by
+  have := (((Real.hasDerivAt_exp _).comp t
+    ((hasDerivAt_id t).const_mul (-(n * sineFreq s ^ 2)))).mul_const
+    (∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))).const_mul (-(n * sineFreq s ^ 2))
+  exact this.congr_deriv (by simp [sineSolution]; ring)
+
+/-- `|uₜₜ| ≤ λ²` for the first eigenmode, `t ≥ 0`. -/
+theorem abs_sineSolution_u₂_le (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) {t : ℝ} (ht : 0 ≤ t)
+    (x : Fin n → ℝ) :
+    |(n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x| ≤ (n * sineFreq s ^ 2) ^ 2 := by
+  have h1 : Real.exp (-(n * sineFreq s ^ 2) * t) ≤ 1 :=
+    Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht))
+  have h2 : ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)| ≤ 1 :=
+    Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
+  simp only [sineSolution, abs_mul, abs_of_pos (Real.exp_pos _), Finset.abs_prod,
+    abs_of_nonneg (by positivity : (0 : ℝ) ≤ (n * sineFreq s ^ 2) ^ 2)]
+  calc (n * sineFreq s ^ 2) ^ 2 *
+        (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)|)
+      ≤ (n * sineFreq s ^ 2) ^ 2 * (1 * 1) := by gcongr
+    _ = _ := by ring
+
 /-- **The verdict is not vacuous**: the first eigenmode `sineSolution` is a classical solution
-on every `[0, T] × Q`, nonzero at `t = 0`, so the semidiscrete, backward Euler and rational
-clauses apply to it. -/
+on every `[0, T] × Q`, nonzero at `t = 0`, with `uₜₜ = λ² u`, `|uₜₜ| ≤ λ²`; so the semidiscrete,
+backward Euler (its extra hypotheses on `uₜₜ` hold) and rational clauses all apply to it. -/
 theorem maxNormHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
-    Verdict b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 :=
+    Verdict b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 ∧
+      ∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
+        (∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t) ∧
+        ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂ :=
   ⟨maxNormHeat b hs, sineSolution b hs T, fun h => by
     have := congrFun h (b + (s / 2) • fun _ => (1 : ℝ))
     rw [sineSolution_u_zero_center] at this
-    exact one_ne_zero this⟩
+    exact one_ne_zero this,
+    fun t x => (n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x, (n * sineFreq s ^ 2) ^ 2,
+    fun t _ x _ => sineSolution_hasDerivAt₁ b hs T t x,
+    fun t ht x _ => abs_sineSolution_u₂_le b hs T ht.1 x⟩
 
 end Feec.Models.Cube.MaxNormHeat

@@ -37,7 +37,7 @@ the companion `Feec.Instances.CrownNonVacuity`): lumped-mass `P₁` elements for
 on the Freudenthal meshes of a cube, in the maximum norm at the nodes, a uniformly stable family
 (`Feec.TimeStepping.StableFamily`, the discrete half of `Feec.TimeStepping.BanachFEEC`) with
 `M = 1` by the discrete maximum principle. Its generators are also `ℓ²`-dissipative (the
-symmetric difference Laplacian), but the Hilbert route reaches the maximum norm only with a factor
+symmetric difference Laplacian); the direct Hilbert route reaches the maximum norm with a factor
 `h^{-n/2}`; the Banach layer gives the maximum-norm errors `O(h²)` (semidiscrete), `O(τ + h²)`
 (backward Euler) and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every A-stable rational scheme, with the
 stability bound `1 + C'_r √n`) against every classical solution, with constants independent of

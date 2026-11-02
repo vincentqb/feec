@@ -42,11 +42,12 @@ of the closure of the core as `h, τ → 0`, and the constraint residuals.
 
 **From the Banach layer** (`Feec.HilbertComplex.banachFEEC` for `F.toBanachFEEC`, `M = 1`):
 
-* `DissipFEEC.toBanachFEEC_step`: `r(τLₕ)` by von Neumann's calculus is the Banach scheme
-  `P(Rₕ) Q(Rₕ)⁻¹`, `Rₕ = (1 - τLₕ)⁻¹`;
+* `DissipFEEC.toBanachFEEC_step`: `r(τLₕ) = n(τLₕ) d(τLₕ)⁻¹`
+  (`Feec.TimeStepping.RationalScheme.apply`) is the Banach scheme `P(Rₕ) Q(Rₕ)⁻¹`,
+  `Rₕ = (1 - τLₕ)⁻¹`;
 * `DissipFEEC.norm_sol_sub_rationalScheme_sol_le`: **the sharp temporal error**
-  `‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, uniformly in `h`, with
-  Brenner–Thomée's constant `C_r = sharpConst r p` of the smooth-data estimate;
+  `‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖` with Brenner–Thomée's
+  constant `C_r = sharpConst r p` of the smooth-data estimate, independent of `h`;
 * `DissipFEEC.norm_step_pow_sub_S_le_sharp`: the same constant for the exact problem,
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r nτ τᵖ ‖A^{p+1} x‖` on `D(A^{p+1})`.
 
@@ -193,7 +194,7 @@ section Banach
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
-/-- **The rational schemes are those of the Banach layer**: `r(τLₕ)` by von Neumann's calculus
+/-- **The rational schemes are those of the Banach layer**: `r(τLₕ) = n(τLₕ) d(τLₕ)⁻¹`
 (`Feec.TimeStepping.RationalScheme.apply`) is `r(τLₕ) = P(Rₕ) Q(Rₕ)⁻¹` through the resolvent
 `Rₕ = (1 - τLₕ)⁻¹` of `F.toBanachFEEC` (`BanachFEEC.step`), for `τ > 0`. -/
 theorem toBanachFEEC_step (r : RationalScheme) {τ : ℝ} (hτ : 0 < τ) (h : κ) :
@@ -203,15 +204,10 @@ theorem toBanachFEEC_step (r : RationalScheme) {τ : ℝ} (hτ : 0 < τ) (h : κ
   rw [BanachFEEC.step, BanachFEEC.res, hg, ← r.step_eq_resolventStep,
     r.step_toPMap (F.dissipative h) hτ]
 
-/-- `Pₕ = r(τₕLₕ)` of `rationalScheme` is the Banach scheme `F.toBanachFEEC.step r τₕ`. -/
-theorem rationalScheme_P_eq_step (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
-    (hp : r.HasOrder p) (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) :
-    (F.rationalScheme r hr hp hp0 τ hτ).P h = F.toBanachFEEC.step r (τ h) h :=
-  (F.toBanachFEEC_step r (hτ h) h).symm
-
 /-- **The sharp temporal error of every A-stable rational scheme** of order `p`:
-`‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, `C_r = sharpConst r p`, uniformly
-in `h` (Brenner–Thomée's smooth-data estimate on the Banach discretization `F.toBanachFEEC`,
+`‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, `C_r = sharpConst r p`
+independent of `h` (Brenner–Thomée's smooth-data estimate on the Banach discretization
+`F.toBanachFEEC`,
 field `temporal_rational` of `banachFEEC`, with `M = 1`). [BrennerThomee1979];
 [GomilkoTomilov2024], Thm 1.1(ii) -/
 theorem norm_sol_sub_rationalScheme_sol_le (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}

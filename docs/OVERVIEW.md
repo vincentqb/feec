@@ -86,11 +86,12 @@ by one `M`, uniformly bounded reading maps with uniformly bounded left inverses.
 scheme (`Feec.TimeStepping.TimeScheme`): stability, temporal error, the error as semidiscrete plus
 temporal error, and convergence wherever the semidiscrete solutions converge; backward Euler is
 stable by the Hille–Yosida estimates; every A-stable rational scheme satisfies Brenner–Thomée's
-stability bound `M (1 + C √n)` and the sharp smooth-data error `C M nτ τᵖ ‖·^{p+1}‖`, discrete
-(uniformly in `h`) and exact. Every `DissipFEEC` is a `BanachFEEC` with `M = 1`
+stability bound `M (1 + C' √n)` and the sharp smooth-data error `C M nτ τᵖ ‖·^{p+1}‖`, discrete
+(constants independent of `h`) and exact. Every `DissipFEEC` is a `BanachFEEC` with `M = 1`
 (`Feec.HilbertComplex.DissipFEEC.toBanachFEEC`), its time schemes are those of the Banach one, and
-the fully discrete theorem `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` derives its temporal
-errors, rates and convergence from `banachFEEC`; the crown carries the Banach verdicts of its
+the fully discrete theorem `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` derives its rates and
+convergence from `banachFEEC` and its temporal errors from the Banach-space bounds of
+`Feec.TimeStepping.TimeScheme`; the crown carries the Banach verdicts of its
 wave, heat, perturbed and crime discretizations.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of

@@ -15,8 +15,8 @@ public import Feec.Evolution.BoundaryLifting
 A semidiscrete FEEC discretization `F : DissipFEEC A κ` (discrete Hilbert spaces `Xₕ`, bounded
 dissipative generators `Lₕ`, reading maps `ιₕ`) is made fully discrete by a **time scheme**
 (`DissipFEEC.TimeScheme`, the time schemes `Feec.TimeStepping.TimeScheme` of the `Lₕ`): time steps
-`τₕ > 0` and one-step operators `Pₕ` on `Xₕ`, power bounded by `M` (`‖Pₕⁿ‖ ≤ M`) and consistent
-of order `p` with constant `K` with the discrete flows,
+`τₕ > 0` and one-step operators `Pₕ` on `Xₕ`, power bounded by `M(T)` (`‖Pₕⁿ‖ ≤ M(T)` for
+`n τₕ ≤ T`) and consistent of order `p` with constant `K` with the discrete flows,
 `‖Pₕ y - e^{τₕ Lₕ} y‖ ≤ K τₕ^{p+1} ‖Lₕ^{p+1} y‖` (`TimeStepping.IsConsistent`), with `M`, `K`, `p`
 independent of `h`. The fully discrete solution at `tₙ = n τₕ` is `ιₕ Pₕⁿ v` (`TimeScheme.sol`).
 The scheme is any operator family: implicit (A-stable, unconditionally stable) or explicit (stable
@@ -235,7 +235,7 @@ theorem norm_exp_sub_pow_le {T : ℝ} (h : κ) (v w : F.X h) {n : ℕ}
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) v - (Θ.P h ^ n) v‖ ≤
       (1 + Θ.M T) * ‖v - w‖ +
         Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) w‖ := by
-  simpa using TimeStepping.TimeScheme.norm_exp_sub_pow_le Θ F.norm_exp_le_one h v w hn
+  simpa using TimeStepping.TimeScheme.norm_exp_sub_pow_le Θ (F.norm_exp_le_one h) v w hn
 
 /-- **The temporal error of a slowly varying datum**: if `‖e^{sLₕ} u - u‖ ≤ η` for `s ∈ [0, δ]`,
 then `‖e^{tₙ Lₕ} u - Pₕⁿ u‖ ≤ (1 + M(T)) (p + 1) η + M(T) K tₙ τₕᵖ (2/δ)^{p+1} ‖u‖` for `tₙ ≤ T`:
@@ -249,7 +249,7 @@ theorem norm_exp_sub_pow_le_of_timeAvg {T δ η : ℝ} (h : κ) (u : F.X h) {n :
       (1 + Θ.M T) * ((Θ.p + 1) * η) +
         Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ((2 / δ) ^ (Θ.p + 1) * ‖u‖) := by
   simpa [one_add_one_eq_two] using
-    TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg Θ F.norm_exp_le_one h u hn hδ hη
+    TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg Θ (F.norm_exp_le_one h) u hn hδ hη
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
@@ -293,7 +293,7 @@ theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v
     (hv : F.Converges v x) (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T →
       ‖F.S (n * Θ.τ h) x - Θ.sol h (v h) n‖ < ε :=
-  (banachFEEC F.toBanachFEEC).converges_iterates Θ hv
+  (banachFEEC F.toBanachFEEC).converges_iterates Θ
     (fun T' => dissipFEEC_converges F Z T' hx hv) hτ T hε
 
 /-- **5. The constraint residual** of a kept `K` is at most the fully discrete error from any

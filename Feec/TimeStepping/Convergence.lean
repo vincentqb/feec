@@ -31,8 +31,8 @@ layers.
   `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀` (`isConsistent_of_eq`,
   `K = K₀ + 1/(p+1)!`);
   and **`norm_pow_apply_sub_exp_le`**: stability and consistency of order `p` give the global error
-  `‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖` (the Banach-space bound at `‖e^{tL}‖ ≤ 1`). All constants are independent of `L`: on finite
-  element spaces they are uniform in the mesh.
+  `‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖` (the Banach-space bound at `‖e^{tL}‖ ≤ 1`).
+  All constants are independent of `L`: on finite element spaces they are uniform in the mesh.
 
 ## θ-schemes for bounded generators
 

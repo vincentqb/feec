@@ -13,7 +13,7 @@ order `p ≥ 1` with constant `K` with the flows `e^{τₕ Lₕ}` (`Feec.TimeSte
 unconditionally stable) or explicit (stable under a CFL condition, which then enters through
 `τₕ`).
 
-When the flows are uniformly bounded, `‖e^{tLₕ}‖ ≤ M_L` for `t ≥ 0`:
+When the flows are bounded, `‖e^{tLₕ}‖ ≤ M_L` for `t ≥ 0`:
 
 * `TimeScheme.norm_exp_sub_pow_le`: the temporal error against every smoother datum `w`,
   `‖e^{tₙ Lₕ} v - Pₕⁿ v‖ ≤ (M_L + M(T)) ‖v - w‖ + M(T) K M_L tₙ τₕᵖ ‖Lₕ^{p+1} w‖`
@@ -21,7 +21,7 @@ When the flows are uniformly bounded, `‖e^{tLₕ}‖ ≤ M_L` for `t ≥ 0`:
 * `TimeScheme.norm_exp_sub_pow_le_of_timeAvg`: no power of `Lₕ` when `w` is the smoothed datum
   `A_δ^{p+1} u` (`Feec.TimeStepping.timeAvg`), for data that move slowly on `[0, δ]`.
 
-Both are uniform in `h`. The discretizations of `Feec.HilbertComplex.BanachFEEC` (Banach spaces,
+With `M_L` independent of `h`, so are all constants. The discretizations of `Feec.HilbertComplex.BanachFEEC` (Banach spaces,
 `M_L` the bound of the discrete semigroups) and `Feec.HilbertComplex.DissipFEEC` (Hilbert spaces,
 dissipative `Lₕ`, `M_L = 1`) use these schemes (`BanachFEEC.TimeScheme`, `DissipFEEC.TimeScheme`).
 
@@ -82,15 +82,16 @@ variable [∀ h, CompleteSpace (X h)] [∀ h, NormedSpace ℝ (X h)] [∀ h, IsS
 /-- **The temporal error against any smoother datum** `w`, for flows bounded by `M_L`:
 `‖e^{tₙ Lₕ} v - Pₕⁿ v‖ ≤ (M_L + M(T)) ‖v - w‖ + M(T) K M_L tₙ τₕᵖ ‖Lₕ^{p+1} w‖` for `tₙ ≤ T`.
 [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
-theorem norm_exp_sub_pow_le (hL : ∀ h (t : ℝ), 0 ≤ t → ‖exp ((t : 𝕜) • L h)‖ ≤ ML) {T : ℝ}
-    (h : κ) (v w : X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
+theorem norm_exp_sub_pow_le {T : ℝ} {h : κ}
+    (hL : ∀ t : ℝ, 0 ≤ t → ‖exp ((t : 𝕜) • L h)‖ ≤ ML) (v w : X h) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • L h) v - (Θ.P h ^ n) v‖ ≤
       (ML + Θ.M T) * ‖v - w‖ +
         Θ.M T * Θ.K * ML * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(L h ^ (Θ.p + 1)) w‖ := by
   have ht : 0 ≤ (n : ℝ) * Θ.τ h := mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le
   have h1 := ((exp (((n * Θ.τ h : ℝ) : 𝕜) • L h)).le_opNorm (v - w)).trans
-    (mul_le_mul_of_nonneg_right (hL h _ ht) (norm_nonneg _))
-  have h2 := norm_pow_apply_sub_exp_le_of_norm_exp_le (hL h) (Θ.stable_le h hn)
+    (mul_le_mul_of_nonneg_right (hL _ ht) (norm_nonneg _))
+  have h2 := norm_pow_apply_sub_exp_le_of_norm_exp_le hL (Θ.stable_le h hn)
     (Θ.τ_pos h).le Θ.K_nonneg (Θ.consistent h) w
   have h3 := ((Θ.P h ^ n).le_opNorm (v - w)).trans
     (mul_le_mul_of_nonneg_right (Θ.stable T h n hn) (norm_nonneg _))
@@ -110,25 +111,26 @@ theorem norm_exp_sub_pow_le (hL : ∀ h (t : ℝ), 0 ≤ t → ‖exp ((t : 𝕜
 `‖e^{tₙ Lₕ} u - Pₕⁿ u‖ ≤ (M_L + M(T)) (Σ_{j ≤ p} M_Lʲ) η`
 `+ M(T) K M_L tₙ τₕᵖ ((M_L + 1)/δ)^{p+1} ‖u‖`: `u` is compared with the smoothed
 `A_δ^{p+1} u` (`timeAvg`), so no power of `Lₕ` enters. [BrennerThomee1979] -/
-theorem norm_exp_sub_pow_le_of_timeAvg (hL : ∀ h (t : ℝ), 0 ≤ t → ‖exp ((t : 𝕜) • L h)‖ ≤ ML)
-    {T δ η : ℝ} (h : κ) (u : X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) (hδ : 0 < δ)
+theorem norm_exp_sub_pow_le_of_timeAvg {T δ η : ℝ} {h : κ}
+    (hL : ∀ t : ℝ, 0 ≤ t → ‖exp ((t : 𝕜) • L h)‖ ≤ ML) (u : X h) {n : ℕ}
+    (hn : (n : ℝ) * Θ.τ h ≤ T) (hδ : 0 < δ)
     (hη : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • L h) u - u‖ ≤ η) :
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • L h) u - (Θ.P h ^ n) u‖ ≤
       (ML + Θ.M T) * ((∑ j ∈ range (Θ.p + 1), ML ^ j) * η) +
         Θ.M T * Θ.K * ML * (n * Θ.τ h) * Θ.τ h ^ Θ.p *
           (((ML + 1) / δ) ^ (Θ.p + 1) * ‖u‖) := by
   have hM := Θ.M_nonneg ((mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le).trans hn) h
-  have hML : 0 ≤ ML := (norm_nonneg _).trans (hL h 0 le_rfl)
+  have hML : 0 ≤ ML := (norm_nonneg _).trans (hL 0 le_rfl)
   have := Θ.K_nonneg
   have := (Θ.τ_pos h).le
-  have hLδ : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • L h)‖ ≤ ML := fun s hs => hL h s hs.1
-  refine (Θ.norm_exp_sub_pow_le hL h u ((timeAvg (L h) δ)^[Θ.p + 1] u) hn).trans ?_
+  have hLδ : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • L h)‖ ≤ ML := fun s hs => hL s hs.1
+  refine (Θ.norm_exp_sub_pow_le hL u ((timeAvg (L h) δ)^[Θ.p + 1] u) hn).trans ?_
   gcongr
   · rw [norm_sub_rev]
     refine (norm_timeAvg_iterate_sub_le_of_norm_exp_le hLδ hδ _ u).trans ?_
     gcongr
     exact norm_timeAvg_sub_le hδ hη
-  · exact norm_pow_timeAvg_iterate_le_of_norm_exp_le (hL h δ hδ.le) hδ _ u
+  · exact norm_pow_timeAvg_iterate_le_of_norm_exp_le (hL δ hδ.le) hδ _ u
 
 end TimeScheme
 

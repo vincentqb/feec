@@ -22,20 +22,21 @@ conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
 * `heat_radauIIA2`: **the Hodge heat equation with the L-stable Radau IIA and SDIRK methods**
   (orders `3` and `2`; L-stability is `RationalScheme.isLStable_radauIIA2`, `isLStable_sdirk2`):
   the fully discrete verdicts;
-
 * `full_sharp`: **Gauss–Legendre, Radau IIA and SDIRK at the sharp temporal order**: on every
   window, the temporal error of the two-stage Gauss–Legendre iterates of the wave discretization,
   and of the Radau IIA and SDIRK iterates of the heat discretization, is at
-  most `‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖` (`p = 4`, `3`, `2`), uniformly in `h`, with Brenner–Thomée's
-  constant of the smooth-data estimate (fields `sharp_wave`, `sharp_heat` of the crown, from the
+  most `‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖` (`p = 4`, `3`, `2`) with Brenner–Thomée's constant of the
+  smooth-data estimate, independent of `h` (fields `sharp_wave`, `sharp_heat` of the crown, from the
   fully discrete FEEC theorem on Banach spaces, `Feec.HilbertComplex.banachFEEC`);
 
 and on the cube, at every polynomial order of the periodic table (`Cube.FEM.maxwell_gaussLegendre2`,
 `Cube.FEM.heat_radauIIA2`). Off Hilbert spaces, for every bounded semigroup of a real or complex
 Banach space and `R = (1 - τA)⁻¹` (the `_of_resolvent` forms, by complexification; each has a
-complex corollary with `R` the Laplace transform resolvent), the same Banach-space theorems that
-the crown consumes through `Feec.HilbertComplex.banachFEEC` (the fields `exact_stable_rational`
-and `exact_rational` of its verdict) give, for the exact semigroup alone:
+complex corollary with `R` the Laplace transform resolvent), for the exact semigroup alone: the
+`√n`-lossy error bounds (corollaries of the Banach-space theory that no crown field uses), and the
+sharp rate, by the smooth-data estimate that the crown consumes through
+`Feec.HilbertComplex.banachFEEC` (field `exact_rational` of its verdict; the stability bound of
+the first two items is its field `exact_stable_rational`):
 
 * **Radau IIA and SDIRK converge with the `√n` loss of the stability bound**,
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖` (`p = 3`, `2`), i.e. at fixed
@@ -136,7 +137,7 @@ every window with every closed constraint, the iterates of the two-stage Gauss�
 (order `4`) for the wave discretization satisfy
 `‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ C tₙ τₕ⁴ ‖Lₕ⁵ v‖`, and those of Radau IIA
 (order `3`) and SDIRK (order `2`) for the heat discretization the same with `τₕ³ ‖Lₕ⁴ v‖` and
-`τₕ² ‖Lₕ³ v‖`, uniformly in `h`, with Brenner–Thomée's constants `C = sharpConst r p` (fields
+`τₕ² ‖Lₕ³ v‖`, with Brenner–Thomée's constants `C = sharpConst r p`, independent of `h` (fields
 `sharp_wave`, `sharp_heat` of the crown, from `Feec.HilbertComplex.banachFEEC`).
 [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
 theorem full_sharp (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))

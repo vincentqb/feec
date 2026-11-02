@@ -19,7 +19,11 @@ dissipative perturbation `B` (damping, Ohmic loss), discretized by `Lₕ + Pₕ 
 discrete verdicts include forced iterates (the discrete Duhamel formula; stability against every
 comparison, no forced rate) and inhomogeneous boundary data by a lifting; the Crank–Nicolson runs
 of thesis Ch. 7 have the same structure (`Feec.Instances.Lifting`; their identification with a
-crown scheme is open). Each field is the verdict of the layer theorem below.
+crown scheme is open). The fully discrete verdicts are derived from the fully discrete FEEC theorem
+on Banach spaces (`Feec.HilbertComplex.banachFEEC`), which the crown also states for each of its
+discretizations: Hille–Yosida stability of backward Euler, Brenner–Thomée's `√n` stability bound
+and the sharp temporal error `C_r tₙ τᵖ ‖Lₕ^{p+1} v‖` of every A-stable rational scheme, uniformly
+in `h`. Each field is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate
@@ -73,17 +77,30 @@ inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the coc
 `Instances.Maxwell.vec_maxwellFEEC`), and the thesis corrections, by reference only
 (`Counterexamples.{ConstrainedEvolution, DiscreteBGG, MixedWave, Curvature, LinearizedGravity}`
 and `HilbertComplex.SecondOrder`, in `crownCorrections`).
-The Banach-space `√n` modules (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
-`TimeStepping.RationalAStable`, `TimeStepping.RationalHillePhillipsReal`,
-`ForMathlib.Analysis.{HalfLineAlgebra, HalfLinePowers, Carlson, Fourier.Plancherel}`) are tied
-only through `Instances.RungeKutta.banach_radauIIA2_of_resolvent` and through
-`banach_implicitMidpoint_of_resolvent` and `banach_gaussLegendre2_of_resolvent` (Crank–Nicolson
-and two-stage Gauss, `|r(∞)| = 1`), and the smooth-data modules (`Semigroup.HillePhillipsTranslate`,
-`TimeStepping.RationalSharp`, `ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`)
-only through `Instances.RungeKutta.banach_sharp_of_resolvent`, all on real or complex Banach
-spaces, each with a complex corollary (`banach_radauIIA2`, `banach_implicitMidpoint`,
-`banach_gaussLegendre2`, `banach_sharp`): corollaries off Hilbert spaces that no crown field
-consumes (the FEEC families are Hilbert complexes; the tie is documentary).
+The Banach-space modules lie upstream of the crown and are consumed by it: the fully discrete
+layer stands on the fully discrete FEEC theorem on Banach spaces
+(`Feec.HilbertComplex.banachFEEC`, `Approximation/BanachFEEC.lean`, for Banach FEEC
+discretizations `BanachFEEC G κ`: a bounded semigroup, Banach spaces `Xₕ` with bounded `Lₕ`,
+exact and discrete semigroups bounded by one `M`, uniformly bounded reading maps), and every
+dissipative FEEC discretization is one with `M = 1` (`DissipFEEC.toBanachFEEC`). Its verdict gives
+the time-scheme results of the Hilbert layer (temporal error, semidiscrete-plus-temporal error,
+Lax–Brenner–Thomée convergence, from which `dissipFEEC_fullyDiscrete` derives them), the
+Hille–Yosida stability of backward Euler (`Semigroup.HilleYosida`,
+`TimeStepping.RationalHilleYosida`), Brenner–Thomée's stability bound `M (1 + C √n)` for every
+A-stable scheme (`Semigroup.HillePhillips`, `TimeStepping.RationalHillePhillips`,
+`TimeStepping.RationalAStable`, `ForMathlib.Analysis.{HalfLineAlgebra, HalfLinePowers, Carlson,
+Fourier.Plancherel}`) and the sharp smooth-data error `C_r M nτ τᵖ ‖·^{p+1}‖`
+(`Semigroup.HillePhillipsTranslate`, `TimeStepping.RationalSharp`,
+`ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`), discrete and exact, on
+real or complex spaces by complexification (`TimeStepping.RationalHillePhillipsReal`,
+`Semigroup.Complexification`). The crown consumes it in the fields `banach_wave`, `banach_heat`
+(the Banach verdicts of the wave and heat discretizations), `sharp_wave`, `sharp_heat` (the sharp
+temporal error of every A-stable scheme, uniformly in `h`), `exact_sharp_wave`,
+`exact_sharp_heat` of `ConstrainedFEEC.FullVerdict`, and in `DissipFEEC.Perturbation.Verdict.banach`
+(perturbed discretizations) and `ApproxComplexCrime.Verdict.banach`; the instances
+`Instances.RungeKutta.full_sharp` (Gauss–Legendre, Radau IIA, SDIRK at the sharp order) read them.
+The `banach_*` corollaries of `Instances.RungeKutta` state the same Banach-space theorems for an
+arbitrary bounded semigroup (`√n`-lossy error bounds included, which no crown field uses).
 
 ## The approximating FEEC theorem
 

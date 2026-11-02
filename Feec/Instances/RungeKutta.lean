@@ -23,11 +23,19 @@ conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
   (orders `3` and `2`; L-stability is `RationalScheme.isLStable_radauIIA2`, `isLStable_sdirk2`):
   the fully discrete verdicts;
 
+* `full_sharp`: **Gauss–Legendre, Radau IIA and SDIRK at the sharp temporal order**: on every
+  window, the temporal error of the two-stage Gauss–Legendre iterates of the wave discretization,
+  and of the Radau IIA and SDIRK iterates of the heat discretization, is at
+  most `‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖` (`p = 4`, `3`, `2`), uniformly in `h`, with Brenner–Thomée's
+  constant of the smooth-data estimate (fields `sharp_wave`, `sharp_heat` of the crown, from the
+  fully discrete FEEC theorem on Banach spaces, `Feec.HilbertComplex.banachFEEC`);
+
 and on the cube, at every polynomial order of the periodic table (`Cube.FEM.maxwell_gaussLegendre2`,
 `Cube.FEM.heat_radauIIA2`). Off Hilbert spaces, for every bounded semigroup of a real or complex
 Banach space and `R = (1 - τA)⁻¹` (the `_of_resolvent` forms, by complexification; each has a
-complex corollary with `R` the Laplace transform resolvent; a corollary of the Banach-space
-theory alone: the FEEC families and their fully discrete verdicts do not use it):
+complex corollary with `R` the Laplace transform resolvent), the same Banach-space theorems that
+the crown consumes through `Feec.HilbertComplex.banachFEEC` (the fields `exact_stable_rational`
+and `exact_rational` of its verdict) give, for the exact semigroup alone:
 
 * **Radau IIA and SDIRK converge with the `√n` loss of the stability bound**,
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C M³ (1 + C' √n) nτ τᵖ ‖A^{p+1} x‖` (`p = 3`, `2`), i.e. at fixed
@@ -123,6 +131,33 @@ theorem heat_radauIIA2 (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fi
   ⟨(F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _,
     (F.feec.full a m K hK).heat hcr (F.isGraphBounded_windowFEEC a m K hK) _⟩
 
+/-- **Gauss–Legendre, Radau IIA and SDIRK at the sharp temporal order in the FEEC theorem**: on
+every window with every closed constraint, the iterates of the two-stage Gauss–Legendre method
+(order `4`) for the wave discretization satisfy
+`‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ C tₙ τₕ⁴ ‖Lₕ⁵ v‖`, and those of Radau IIA
+(order `3`) and SDIRK (order `2`) for the heat discretization the same with `τₕ³ ‖Lₕ⁴ v‖` and
+`τₕ² ‖Lₕ³ v‖`, uniformly in `h`, with Brenner–Thomée's constants `C = sharpConst r p` (fields
+`sharp_wave`, `sharp_heat` of the crown, from `Feec.HilbertComplex.banachFEEC`).
+[BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
+theorem full_sharp (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) {τ : κ → ℝ}
+    (hτ : ∀ h, 0 < τ h) :
+    (∀ h v (n : ℕ), ‖(F.windowFEEC a m K hK).toApprox.sol h v (n * τ h) -
+        ((F.windowFEEC a m K hK).toApprox.gaussLegendre2 τ hτ).sol h v n‖ ≤
+      ‖(F.windowFEEC a m K hK).toApprox.incl h‖ * (RationalScheme.gaussLegendre2.sharpConst 4 *
+        (n * τ h) * τ h ^ 4 * ‖((F.windowFEEC a m K hK).toApprox.L h ^ (4 + 1)) v‖)) ∧
+    (∀ h v (n : ℕ), ‖(F.windowFEEC a m K hK).toHeat.sol h v (n * τ h) -
+        ((F.windowFEEC a m K hK).toHeat.radauIIA2 τ hτ).sol h v n‖ ≤
+      ‖(F.windowFEEC a m K hK).toHeat.incl h‖ * (RationalScheme.radauIIA2.sharpConst 3 *
+        (n * τ h) * τ h ^ 3 * ‖((F.windowFEEC a m K hK).toHeat.L h ^ (3 + 1)) v‖)) ∧
+    (∀ h v (n : ℕ), ‖(F.windowFEEC a m K hK).toHeat.sol h v (n * τ h) -
+        ((F.windowFEEC a m K hK).toHeat.sdirk2 τ hτ).sol h v n‖ ≤
+      ‖(F.windowFEEC a m K hK).toHeat.incl h‖ * (RationalScheme.sdirk2.sharpConst 2 *
+        (n * τ h) * τ h ^ 2 * ‖((F.windowFEEC a m K hK).toHeat.L h ^ (2 + 1)) v‖)) :=
+  ⟨(F.feec.full a m K hK).sharp_wave _ _ _ _ hτ,
+    (F.feec.full a m K hK).sharp_heat _ _ _ _ hτ,
+    (F.feec.full a m K hK).sharp_heat _ _ _ _ hτ⟩
+
 end Family
 
 /-! ### Bounded semigroups on Banach spaces -/
@@ -139,8 +174,7 @@ Banach space over `𝕜 = ℝ` or `ℂ`, with `R` such that `R (x - τ A x) = x`
 `p = 3` (Radau IIA) and `p = 2` (SDIRK): both are L-stable, hence strongly A-stable
 (`RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent`, by complexification). The factor
 `√n` is the loss of Brenner–Thomée's stability bound (rates `τ^{5/2}`, `τ^{3/2}` at fixed `nτ`).
-A corollary of the Banach-space theory only: the FEEC families and their fully discrete verdicts
-are on Hilbert spaces and do not use it. [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
+[BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
 theorem banach_radauIIA2_of_resolvent {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F]
     [NormedSpace 𝕜 F] [CompleteSpace F] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     (G : C0Semigroup 𝕜 F) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M) {τ : ℝ} (hτ : 0 < τ)
@@ -262,8 +296,9 @@ or complex Banach space**: over `𝕜 = ℝ` or `ℂ`, for `τ > 0`, `R` with `R
 (SDIRK), by Brenner–Thomée's smooth-data estimate
 (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`, by
 complexification): order `p` at fixed `nτ`, without the `√n` of `banach_radauIIA2_of_resolvent`
-and `banach_gaussLegendre2_of_resolvent`. A corollary of the Banach-space theory only, like
-`banach_radauIIA2_of_resolvent`. [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
+and `banach_gaussLegendre2_of_resolvent`; on the FEEC discretizations the same estimate gives the
+crown fields `sharp_wave` and `sharp_heat` (`full_sharp`). [BrennerThomee1979];
+[HairerWanner1996], §IV.5, §IV.6 -/
 theorem banach_sharp_of_resolvent {𝕜 F : Type*} [RCLike 𝕜] [NormedAddCommGroup F]
     [NormedSpace 𝕜 F] [CompleteSpace F] [NormedSpace ℝ F] [IsScalarTower ℝ 𝕜 F]
     (G : C0Semigroup 𝕜 F) {M : ℝ} (hM : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M) {τ : ℝ} (hτ : 0 < τ)

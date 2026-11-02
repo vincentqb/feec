@@ -21,15 +21,17 @@ layers.
   Taylor's formula `‖S(t) x - Σ_{j<p} tʲ/j! Aʲ x‖ ≤ M tᵖ/p! ‖Aᵖ x‖` on `D(Aᵖ)` for `‖S‖ ≤ M`,
   and **`C0Semigroup.norm_pow_apply_sub_S_le`**, Lax–Richtmyer: `‖Pᵏ‖ ≤ Mₛ` and consistency of
   order `p` on `D(A^{p+1})` give `‖Pⁿ x - S(nτ) x‖ ≤ Mₛ K M nτ τᵖ ‖A^{p+1} x‖`). The bounded
-  case below is `S(t) = e^{tL}`.
+  case is `S(t) = e^{tL}`: a scheme `P` is **consistent of order `p` with constant `K`**
+  (`IsConsistent`) if `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`, and for `‖e^{tL}‖ ≤ M`,
+  `‖Pⁿ y - e^{nτL} y‖ ≤ Mₛ K M (n τ) τᵖ ‖L^{p+1} y‖`
+  (`norm_pow_apply_sub_exp_le_of_norm_exp_le`), on every Banach space.
 * **Bounded dissipative generators** (`re ⟪L x, x⟫ ≤ 0`, so `e^{tL}` is a contraction for `t ≥ 0`):
   the Taylor remainder `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`
-  (`norm_exp_sub_taylor_le`); a scheme `P` is **consistent of order `p` with constant `K`**
-  (`IsConsistent`) if `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`, which follows from an expansion
+  (`norm_exp_sub_taylor_le`); consistency of order `p` follows from an expansion
   `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀` (`isConsistent_of_eq`,
   `K = K₀ + 1/(p+1)!`);
   and **`norm_pow_apply_sub_exp_le`**: stability and consistency of order `p` give the global error
-  `‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`. All constants are independent of `L`: on finite
+  `‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖` (the Banach-space bound at `‖e^{tL}‖ ≤ 1`). All constants are independent of `L`: on finite
   element spaces they are uniform in the mesh.
 
 ## θ-schemes for bounded generators
@@ -55,10 +57,13 @@ constraint propagation, for instance for a discrete Gauss law).
 The constants come from bounding the two remainders separately and are not sharp: the leading
 error constant of Crank–Nicolson is `1/12` (`e^z - r_{1/2}(z) = -z³/12 + O(z⁴)`), not `5/12`.
 
-**Smoothing** (`timeAvg`, `norm_pow_timeAvg_iterate_le`, `norm_timeAvg_iterate_sub_le`): the time
-average `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds` satisfies `‖Lᵏ A_δᵏ y‖ ≤ (2/δ)ᵏ ‖y‖` and
-`‖A_δᵏ y - y‖ ≤ k sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L`; it turns the rate for smooth
-data into convergence for all data (`Feec.HilbertComplex.DissipFEEC.TimeScheme.converges`).
+**Smoothing** (`timeAvg`, `norm_pow_timeAvg_iterate_le_of_norm_exp_le`,
+`norm_timeAvg_iterate_sub_le_of_norm_exp_le`): on a Banach space with `‖e^{sL}‖ ≤ M`, the time
+average `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds` satisfies `‖Lᵏ A_δᵏ y‖ ≤ ((M + 1)/δ)ᵏ ‖y‖` and
+`‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L` (for dissipative `L`,
+`M = 1`: `(2/δ)ᵏ` and `k`, `norm_pow_timeAvg_iterate_le`, `norm_timeAvg_iterate_sub_le`); it
+turns the rate for smooth data into convergence for all data
+(`Feec.HilbertComplex.BanachFEEC.TimeScheme.converges`).
 
 ## References
 
@@ -257,82 +262,41 @@ end Feec.C0Semigroup
 
 namespace Feec.TimeStepping
 
-/-! ### Bounded dissipative generators: Taylor remainders and consistency -/
+/-! ### Consistency and smoothing on Banach spaces -/
 
-section Bounded
+section Normed
 
-variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
-  [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] {L : X →L[𝕜] X}
-
-local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
-/-- `‖e^{tL}‖ ≤ 1` for bounded dissipative `L` and `t ≥ 0`. -/
-theorem norm_exp_le_one (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {t : ℝ} (ht : 0 ≤ t) :
-    ‖(C0Group.ofBounded L).S t‖ ≤ 1 :=
-  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
-    simpa using LumerPhillips.norm_exp_smul_apply_le hL ht x
-
-/-- **The Taylor remainder of a contraction semigroup**: for bounded dissipative `L`, `t ≥ 0`,
-`‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`, Taylor's formula for the semigroup
-`e^{tL}` (`C0Semigroup.norm_S_sub_taylor_le`). -/
-theorem norm_exp_sub_taylor_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) (p : ℕ) {t : ℝ} (ht : 0 ≤ t)
-    (y : X) :
-    ‖exp ((t : 𝕜) • L) y - ∑ j ∈ range p, (t ^ j / j.factorial) • (L ^ j) y‖ ≤
-      t ^ p / p.factorial * ‖(L ^ p) y‖ := by
-  have h := (C0Group.ofBounded L).toC0Semigroup.norm_S_sub_taylor_le (T := t)
-    (fun s hs => norm_exp_le_one hL hs.1) p (u := fun j => (L ^ j) y)
-    (fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded L y j) ⟨ht, le_rfl⟩
-  simpa using h
+variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X] {L : X →L[𝕜] X}
 
 /-- A scheme `P` is **consistent of order `p` with constant `K`** with the flow `e^{τL}`:
 `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖` for every `y`. [Thomee2006], Ch. 7 -/
 def IsConsistent (L P : X →L[𝕜] X) (τ : ℝ) (p : ℕ) (K : ℝ) : Prop :=
   ∀ y, ‖P y - exp ((τ : 𝕜) • L) y‖ ≤ K * τ ^ (p + 1) * ‖(L ^ (p + 1)) y‖
 
-/-- **Consistency from an expansion**: `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀`
-is consistent of order `p` with constant `K₀ + 1/(p+1)!`. [Thomee2006], Ch. 7 -/
-theorem isConsistent_of_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P ρ : X →L[𝕜] X} {τ : ℝ}
-    (hτ : 0 ≤ τ) {p : ℕ} {K₀ : ℝ} (hρ : ‖ρ‖ ≤ K₀)
-    (hP : ∀ y, P y = ∑ j ∈ range (p + 1), (τ ^ j / j.factorial) • (L ^ j) y +
-      τ ^ (p + 1) • ρ ((L ^ (p + 1)) y)) :
-    IsConsistent L P τ p (K₀ + 1 / (p + 1).factorial) := by
-  intro y
-  have h1 := norm_exp_sub_taylor_le hL (p + 1) hτ y
-  have h2 : ‖τ ^ (p + 1) • ρ ((L ^ (p + 1)) y)‖ ≤ τ ^ (p + 1) * (K₀ * ‖(L ^ (p + 1)) y‖) := by
-    rw [norm_smul, Real.norm_of_nonneg (by positivity)]
-    gcongr
-    exact (ρ.le_opNorm _).trans (mul_le_mul_of_nonneg_right hρ (norm_nonneg _))
-  have e : P y - exp ((τ : 𝕜) • L) y = τ ^ (p + 1) • ρ ((L ^ (p + 1)) y) -
-      (exp ((τ : 𝕜) • L) y - ∑ j ∈ range (p + 1), (τ ^ j / j.factorial) • (L ^ j) y) := by
-    rw [hP]; abel
-  rw [e]
-  refine (norm_sub_le _ _).trans ?_
-  rw [norm_sub_rev] at h1
-  calc _ ≤ τ ^ (p + 1) * (K₀ * ‖(L ^ (p + 1)) y‖) +
-        τ ^ (p + 1) / (p + 1).factorial * ‖(L ^ (p + 1)) y‖ := add_le_add h2 (by
-          rwa [norm_sub_rev] at h1)
-    _ = _ := by ring
+variable [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X]
 
-/-- **Stability and consistency of order `p` give the rate `M K t τᵖ`**: if `‖Pᵏ‖ ≤ M` for
-`k ≤ n` and `P` is consistent of order `p` with constant `K`, then
-`‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`: the semigroup `e^{tL}` case of
-`C0Semigroup.norm_pow_apply_sub_S_le`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
-theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P : X →L[𝕜] X} {M : ℝ}
-    {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ M) {τ : ℝ} (hτ : 0 ≤ τ) {p : ℕ} {K : ℝ} (hK : 0 ≤ K)
+/-- **Stability and consistency of order `p` give the rate `Mₛ K M t τᵖ` on a Banach space**:
+if `‖e^{tL}‖ ≤ M` for `t ≥ 0`, `‖Pᵏ‖ ≤ Mₛ` for `k ≤ n` and `P` is consistent of order `p` with
+constant `K`, then `‖Pⁿ y - e^{nτL} y‖ ≤ Mₛ K M (n τ) τᵖ ‖L^{p+1} y‖`: the semigroup `e^{tL}`
+case of `C0Semigroup.norm_pow_apply_sub_S_le`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+theorem norm_pow_apply_sub_exp_le_of_norm_exp_le {M : ℝ}
+    (hL : ∀ t : ℝ, 0 ≤ t → ‖exp ((t : 𝕜) • L)‖ ≤ M) {P : X →L[𝕜] X} {Ms : ℝ} {n : ℕ}
+    (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ Ms) {τ : ℝ} (hτ : 0 ≤ τ) {p : ℕ} {K : ℝ} (hK : 0 ≤ K)
     (hc : IsConsistent L P τ p K) (y : X) :
-    ‖(P ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤ M * K * (n * τ) * τ ^ p * ‖(L ^ (p + 1)) y‖ := by
+    ‖(P ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤
+      Ms * K * M * (n * τ) * τ ^ p * ‖(L ^ (p + 1)) y‖ := by
   have h := (C0Group.ofBounded L).toC0Semigroup.norm_pow_apply_sub_S_le hτ hK hP
-    (fun t ht => norm_exp_le_one hL ht.1) (fun v hv => by
+    (fun t ht => hL t ht.1) (fun v hv => by
       rw [C0Group.eq_pow_apply_of_chain hv (p + 1) le_rfl]
       exact hc (v 0))
     (u := fun j => (L ^ j) y) (fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded L y j)
   simpa using h
 
-/-! ### Smoothing by time averages -/
+/-! #### Smoothing by time averages -/
 
-/-- The **time average** `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds`: for bounded dissipative `L` a contraction
-with `L A_δ = δ⁻¹ (e^{δL} - 1)`, so `‖L A_δ‖ ≤ 2/δ` (`norm_apply_timeAvg_le`); `A_δ` smooths
-discrete data uniformly in `L`. -/
+/-- The **time average** `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds`, with `L A_δ = δ⁻¹ (e^{δL} - 1)`
+(`apply_timeAvg_eq`): for `‖e^{sL}‖ ≤ M` on `[0, δ]`, `‖A_δ‖ ≤ M` and `‖L A_δ‖ ≤ (M + 1)/δ`
+(`norm_apply_timeAvg_le_of_norm_exp_le`), so `A_δ` smooths discrete data uniformly in `L`. -/
 def timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) : X :=
   δ⁻¹ • ∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y
 
@@ -370,19 +334,6 @@ theorem apply_timeAvg_eq (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
       ((L.continuous.comp (continuous_exp_apply L y)).intervalIntegrable _ _)]
   simp
 
-/-- `‖A_δ y‖ ≤ ‖y‖` for dissipative `L`, `δ > 0`. -/
-theorem norm_timeAvg_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ) (y : X) :
-    ‖timeAvg L δ y‖ ≤ ‖y‖ := by
-  unfold timeAvg
-  rw [norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
-  have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := δ)
-    (f := fun s : ℝ => exp ((s : 𝕜) • L) y) (C := ‖y‖) fun s hs => by
-      rw [Set.uIoc_of_le hδ.le] at hs
-      exact LumerPhillips.norm_exp_smul_apply_le hL hs.1.le y
-  rw [sub_zero, abs_of_pos hδ] at h
-  calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y‖ ≤ δ⁻¹ * (‖y‖ * δ) := by gcongr
-    _ = ‖y‖ := by field_simp
-
 omit [IsScalarTower ℝ 𝕜 X] in
 /-- `‖A_δ y - y‖ ≤ η` when `‖e^{sL} y - y‖ ≤ η` on `[0, δ]`. -/
 theorem norm_timeAvg_sub_le {δ η : ℝ} (hδ : 0 < δ) {y : X}
@@ -401,34 +352,64 @@ theorem norm_timeAvg_sub_le {δ η : ℝ} (hδ : 0 < δ) {y : X}
   calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, (exp ((s : 𝕜) • L) y - y)‖ ≤ δ⁻¹ * (η * δ) := by gcongr
     _ = η := by field_simp
 
-/-- **Smoothing**: `‖Lᵏ A_δᵏ y‖ ≤ (2/δ)ᵏ ‖y‖`, uniformly in the bounded dissipative `L`. -/
-theorem norm_pow_timeAvg_iterate_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
-    (k : ℕ) (y : X) : ‖(L ^ k) ((timeAvg L δ)^[k] y)‖ ≤ (2 / δ) ^ k * ‖y‖ := by
+omit [CompleteSpace X] [IsScalarTower ℝ 𝕜 X] in
+/-- `‖A_δ y‖ ≤ M ‖y‖` when `‖e^{sL}‖ ≤ M` on `[0, δ]`, `δ > 0`. -/
+theorem norm_timeAvg_le_of_norm_exp_le {M δ : ℝ}
+    (hL : ∀ s ∈ Set.Icc 0 δ, ‖exp ((s : 𝕜) • L)‖ ≤ M) (hδ : 0 < δ) (y : X) :
+    ‖timeAvg L δ y‖ ≤ M * ‖y‖ := by
+  unfold timeAvg
+  rw [norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
+  have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := δ)
+    (f := fun s : ℝ => exp ((s : 𝕜) • L) y) (C := M * ‖y‖) fun s hs => by
+      rw [Set.uIoc_of_le hδ.le] at hs
+      exact ((exp ((s : 𝕜) • L)).le_opNorm y).trans
+        (mul_le_mul_of_nonneg_right (hL s ⟨hs.1.le, hs.2⟩) (norm_nonneg _))
+  rw [sub_zero, abs_of_pos hδ] at h
+  calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y‖ ≤ δ⁻¹ * (M * ‖y‖ * δ) := by gcongr
+    _ = M * ‖y‖ := by field_simp
+
+/-- `‖L A_δ y‖ ≤ (M + 1)/δ ‖y‖` when `‖e^{δL}‖ ≤ M`, `δ > 0` (`L A_δ = δ⁻¹ (e^{δL} - 1)`). -/
+theorem norm_apply_timeAvg_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((δ : 𝕜) • L)‖ ≤ M)
+    (hδ : 0 < δ) (y : X) : ‖L (timeAvg L δ y)‖ ≤ (M + 1) / δ * ‖y‖ := by
+  rw [apply_timeAvg_eq, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
+  have h1 := norm_sub_le (exp ((δ : 𝕜) • L) y) y
+  have h2 := ((exp ((δ : 𝕜) • L)).le_opNorm y).trans
+    (mul_le_mul_of_nonneg_right hL (norm_nonneg y))
+  calc δ⁻¹ * ‖exp ((δ : 𝕜) • L) y - y‖ ≤ δ⁻¹ * ((M + 1) * ‖y‖) := by gcongr; linarith
+    _ = _ := by ring
+
+/-- **Smoothing on a Banach space**: `‖Lᵏ A_δᵏ y‖ ≤ ((M + 1)/δ)ᵏ ‖y‖` when `‖e^{δL}‖ ≤ M`,
+uniformly in the bounded `L`. -/
+theorem norm_pow_timeAvg_iterate_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((δ : 𝕜) • L)‖ ≤ M)
+    (hδ : 0 < δ) (k : ℕ) (y : X) :
+    ‖(L ^ k) ((timeAvg L δ)^[k] y)‖ ≤ ((M + 1) / δ) ^ k * ‖y‖ := by
   have hcomm : ∀ j (u : X), L ((timeAvg L δ)^[j] u) = (timeAvg L δ)^[j] (L u) := by
     intro j
     induction j with
     | zero => intro u; rfl
     | succ j ih => intro u; rw [Function.iterate_succ_apply, Function.iterate_succ_apply, ih,
         apply_timeAvg]
+  have hM : 0 ≤ (M + 1) / δ := by
+    have := (norm_nonneg _).trans hL
+    positivity
   induction k generalizing y with
   | zero => simp
   | succ k ih =>
     rw [Function.iterate_succ_apply]
-    change ‖(L ^ k) (L _)‖ ≤ (2 / δ) ^ (k + 1) * ‖y‖
-    rw [hcomm, pow_succ (2 / δ)]
+    change ‖(L ^ k) (L _)‖ ≤ ((M + 1) / δ) ^ (k + 1) * ‖y‖
+    rw [hcomm, pow_succ ((M + 1) / δ)]
     refine (ih _).trans ?_
-    have h1 : ‖L (timeAvg L δ y)‖ ≤ 2 / δ * ‖y‖ := by
-      rw [apply_timeAvg_eq, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
-      have := norm_sub_le (exp ((δ : 𝕜) • L) y) y
-      have := LumerPhillips.norm_exp_smul_apply_le hL hδ.le y
-      calc δ⁻¹ * ‖exp ((δ : 𝕜) • L) y - y‖ ≤ δ⁻¹ * (2 * ‖y‖) := by gcongr; linarith
-        _ = _ := by ring
-    calc (2 / δ) ^ k * ‖L (timeAvg L δ y)‖ ≤ (2 / δ) ^ k * (2 / δ * ‖y‖) := by gcongr
+    calc ((M + 1) / δ) ^ k * ‖L (timeAvg L δ y)‖ ≤ ((M + 1) / δ) ^ k * ((M + 1) / δ * ‖y‖) := by
+          gcongr; exact norm_apply_timeAvg_le_of_norm_exp_le hL hδ y
       _ = _ := by ring
 
-/-- `‖A_δᵏ y - y‖ ≤ k ‖A_δ y - y‖` (contraction and linearity). -/
-theorem norm_timeAvg_iterate_sub_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
-    (k : ℕ) (y : X) : ‖(timeAvg L δ)^[k] y - y‖ ≤ k * ‖timeAvg L δ y - y‖ := by
+omit [IsScalarTower ℝ 𝕜 X] in
+/-- `‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) ‖A_δ y - y‖` when `‖e^{sL}‖ ≤ M` on `[0, δ]` (`‖A_δ‖ ≤ M` and
+linearity). -/
+theorem norm_timeAvg_iterate_sub_le_of_norm_exp_le {M δ : ℝ}
+    (hL : ∀ s ∈ Set.Icc 0 δ, ‖exp ((s : 𝕜) • L)‖ ≤ M) (hδ : 0 < δ) (k : ℕ) (y : X) :
+    ‖(timeAvg L δ)^[k] y - y‖ ≤ (∑ j ∈ range k, M ^ j) * ‖timeAvg L δ y - y‖ := by
+  have hM : 0 ≤ M := (norm_nonneg _).trans (hL 0 ⟨le_rfl, hδ.le⟩)
   have hsub : ∀ j (a b : X), (timeAvg L δ)^[j] a - (timeAvg L δ)^[j] b =
       (timeAvg L δ)^[j] (a - b) := by
     intro j
@@ -436,12 +417,17 @@ theorem norm_timeAvg_iterate_sub_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {
     | zero => intro a b; rfl
     | succ j ih => intro a b; rw [Function.iterate_succ_apply, Function.iterate_succ_apply,
         Function.iterate_succ_apply, ih, timeAvg_sub]
-  have hnorm : ∀ j (a : X), ‖(timeAvg L δ)^[j] a‖ ≤ ‖a‖ := by
+  have hnorm : ∀ j (a : X), ‖(timeAvg L δ)^[j] a‖ ≤ M ^ j * ‖a‖ := by
     intro j
     induction j with
-    | zero => intro a; rfl
-    | succ j ih => intro a; rw [Function.iterate_succ_apply]
-                   exact (ih _).trans (norm_timeAvg_le hL hδ a)
+    | zero => intro a; simp
+    | succ j ih =>
+      intro a
+      rw [Function.iterate_succ_apply]
+      refine (ih _).trans ?_
+      calc M ^ j * ‖timeAvg L δ a‖ ≤ M ^ j * (M * ‖a‖) := by
+            gcongr; exact norm_timeAvg_le_of_norm_exp_le hL hδ a
+        _ = _ := by ring
   induction k with
   | zero => simp
   | succ k ih =>
@@ -449,10 +435,93 @@ theorem norm_timeAvg_iterate_sub_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {
     calc ‖(timeAvg L δ)^[k] (timeAvg L δ y) - y‖ ≤
         ‖(timeAvg L δ)^[k] (timeAvg L δ y) - (timeAvg L δ)^[k] y‖ +
           ‖(timeAvg L δ)^[k] y - y‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-      _ ≤ ‖timeAvg L δ y - y‖ + k * ‖timeAvg L δ y - y‖ := by
+      _ ≤ M ^ k * ‖timeAvg L δ y - y‖ + (∑ j ∈ range k, M ^ j) * ‖timeAvg L δ y - y‖ := by
         gcongr
-        · rw [hsub]; exact hnorm _ _
-      _ = _ := by push_cast; ring
+        rw [hsub]; exact hnorm _ _
+      _ = _ := by rw [sum_range_succ]; ring
+
+end Normed
+
+/-! ### Bounded dissipative generators: Taylor remainders and consistency -/
+
+section Bounded
+
+variable {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [InnerProductSpace 𝕜 X]
+  [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] {L : X →L[𝕜] X}
+
+local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
+
+/-- `‖e^{tL}‖ ≤ 1` for bounded dissipative `L` and `t ≥ 0`. -/
+theorem norm_exp_le_one (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {t : ℝ} (ht : 0 ≤ t) :
+    ‖(C0Group.ofBounded L).S t‖ ≤ 1 :=
+  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+    simpa using LumerPhillips.norm_exp_smul_apply_le hL ht x
+
+/-- **The Taylor remainder of a contraction semigroup**: for bounded dissipative `L`, `t ≥ 0`,
+`‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`, Taylor's formula for the semigroup
+`e^{tL}` (`C0Semigroup.norm_S_sub_taylor_le`). -/
+theorem norm_exp_sub_taylor_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) (p : ℕ) {t : ℝ} (ht : 0 ≤ t)
+    (y : X) :
+    ‖exp ((t : 𝕜) • L) y - ∑ j ∈ range p, (t ^ j / j.factorial) • (L ^ j) y‖ ≤
+      t ^ p / p.factorial * ‖(L ^ p) y‖ := by
+  have h := (C0Group.ofBounded L).toC0Semigroup.norm_S_sub_taylor_le (T := t)
+    (fun s hs => norm_exp_le_one hL hs.1) p (u := fun j => (L ^ j) y)
+    (fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded L y j) ⟨ht, le_rfl⟩
+  simpa using h
+
+/-- **Consistency from an expansion**: `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀`
+is consistent of order `p` with constant `K₀ + 1/(p+1)!`. [Thomee2006], Ch. 7 -/
+theorem isConsistent_of_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P ρ : X →L[𝕜] X} {τ : ℝ}
+    (hτ : 0 ≤ τ) {p : ℕ} {K₀ : ℝ} (hρ : ‖ρ‖ ≤ K₀)
+    (hP : ∀ y, P y = ∑ j ∈ range (p + 1), (τ ^ j / j.factorial) • (L ^ j) y +
+      τ ^ (p + 1) • ρ ((L ^ (p + 1)) y)) :
+    IsConsistent L P τ p (K₀ + 1 / (p + 1).factorial) := by
+  intro y
+  have h1 := norm_exp_sub_taylor_le hL (p + 1) hτ y
+  have h2 : ‖τ ^ (p + 1) • ρ ((L ^ (p + 1)) y)‖ ≤ τ ^ (p + 1) * (K₀ * ‖(L ^ (p + 1)) y‖) := by
+    rw [norm_smul, Real.norm_of_nonneg (by positivity)]
+    gcongr
+    exact (ρ.le_opNorm _).trans (mul_le_mul_of_nonneg_right hρ (norm_nonneg _))
+  have e : P y - exp ((τ : 𝕜) • L) y = τ ^ (p + 1) • ρ ((L ^ (p + 1)) y) -
+      (exp ((τ : 𝕜) • L) y - ∑ j ∈ range (p + 1), (τ ^ j / j.factorial) • (L ^ j) y) := by
+    rw [hP]; abel
+  rw [e]
+  refine (norm_sub_le _ _).trans ?_
+  rw [norm_sub_rev] at h1
+  calc _ ≤ τ ^ (p + 1) * (K₀ * ‖(L ^ (p + 1)) y‖) +
+        τ ^ (p + 1) / (p + 1).factorial * ‖(L ^ (p + 1)) y‖ := add_le_add h2 (by
+          rwa [norm_sub_rev] at h1)
+    _ = _ := by ring
+
+/-- **Stability and consistency of order `p` give the rate `M K t τᵖ`**: if `‖Pᵏ‖ ≤ M` for
+`k ≤ n` and `P` is consistent of order `p` with constant `K`, then
+`‖Pⁿ y - e^{nτL} y‖ ≤ M K (n τ) τᵖ ‖L^{p+1} y‖`: the contraction case `‖e^{tL}‖ ≤ 1` of
+`norm_pow_apply_sub_exp_le_of_norm_exp_le`. [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
+theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P : X →L[𝕜] X} {M : ℝ}
+    {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ ≤ M) {τ : ℝ} (hτ : 0 ≤ τ) {p : ℕ} {K : ℝ} (hK : 0 ≤ K)
+    (hc : IsConsistent L P τ p K) (y : X) :
+    ‖(P ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤ M * K * (n * τ) * τ ^ p * ‖(L ^ (p + 1)) y‖ := by
+  simpa using norm_pow_apply_sub_exp_le_of_norm_exp_le (fun t ht => norm_exp_le_one hL ht) hP hτ
+    hK hc y
+
+/-! ### Smoothing by time averages of dissipative generators -/
+
+/-- `‖A_δ y‖ ≤ ‖y‖` for dissipative `L`, `δ > 0`. -/
+theorem norm_timeAvg_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ) (y : X) :
+    ‖timeAvg L δ y‖ ≤ ‖y‖ := by
+  simpa using norm_timeAvg_le_of_norm_exp_le (fun s hs => norm_exp_le_one hL hs.1) hδ y
+
+/-- **Smoothing**: `‖Lᵏ A_δᵏ y‖ ≤ (2/δ)ᵏ ‖y‖`, uniformly in the bounded dissipative `L`. -/
+theorem norm_pow_timeAvg_iterate_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
+    (k : ℕ) (y : X) : ‖(L ^ k) ((timeAvg L δ)^[k] y)‖ ≤ (2 / δ) ^ k * ‖y‖ := by
+  simpa [one_add_one_eq_two] using
+    norm_pow_timeAvg_iterate_le_of_norm_exp_le (norm_exp_le_one hL hδ.le) hδ k y
+
+/-- `‖A_δᵏ y - y‖ ≤ k ‖A_δ y - y‖` (contraction and linearity). -/
+theorem norm_timeAvg_iterate_sub_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
+    (k : ℕ) (y : X) : ‖(timeAvg L δ)^[k] y - y‖ ≤ k * ‖timeAvg L δ y - y‖ := by
+  simpa using
+    norm_timeAvg_iterate_sub_le_of_norm_exp_le (fun s hs => norm_exp_le_one hL hs.1) hδ k y
 
 /-! ### θ-schemes of bounded dissipative operators -/
 

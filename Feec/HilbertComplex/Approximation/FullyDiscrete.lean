@@ -1,5 +1,6 @@
 module
 
+public import Feec.HilbertComplex.Approximation.BanachFEEC
 public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.TimeStepping.BlockMatrix
@@ -13,12 +14,24 @@ public import Feec.Evolution.BoundaryLifting
 
 A semidiscrete FEEC discretization `F : DissipFEEC A κ` (discrete Hilbert spaces `Xₕ`, bounded
 dissipative generators `Lₕ`, reading maps `ιₕ`) is made fully discrete by a **time scheme**
-(`DissipFEEC.TimeScheme`): time steps `τₕ > 0` and one-step operators `Pₕ` on `Xₕ`, power bounded
-by `M` (`‖Pₕⁿ‖ ≤ M`) and consistent of order `p` with constant `K` with the discrete flows,
+(`DissipFEEC.TimeScheme`, the time schemes `Feec.TimeStepping.TimeScheme` of the `Lₕ`): time steps
+`τₕ > 0` and one-step operators `Pₕ` on `Xₕ`, power bounded by `M` (`‖Pₕⁿ‖ ≤ M`) and consistent
+of order `p` with constant `K` with the discrete flows,
 `‖Pₕ y - e^{τₕ Lₕ} y‖ ≤ K τₕ^{p+1} ‖Lₕ^{p+1} y‖` (`TimeStepping.IsConsistent`), with `M`, `K`, `p`
 independent of `h`. The fully discrete solution at `tₙ = n τₕ` is `ιₕ Pₕⁿ v` (`TimeScheme.sol`).
 The scheme is any operator family: implicit (A-stable, unconditionally stable) or explicit (stable
 under a CFL condition `τₕ ‖Lₕ‖ ≤ c`, which then enters through `τₕ`).
+
+**The Banach layer is upstream.** Forgetting the inner products, `F` is a Banach FEEC
+discretization with `M = 1` (`DissipFEEC.toBanachFEEC`: the Lumer–Phillips semigroup and the
+flows of the dissipative `Lₕ` are contractions), and its time schemes are those of
+`F.toBanachFEEC`. The rate 3 (semidiscrete rate plus temporal error) and the convergence 4 are
+the fields `rate_iterates` and `converges_iterates` of the fully discrete FEEC theorem on Banach
+spaces (`Feec.HilbertComplex.banachFEEC`) for `F.toBanachFEEC`, and the temporal errors of 2 and 7
+are the Banach-space bounds `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le` and
+`Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg` at `‖e^{tLₕ}‖ ≤ 1`; the
+semidiscrete inputs (the rate classes, the cores, `dissipFEEC_rate`, `dissipFEEC_converges`) are
+Hilbert-space results.
 
 ## Main results
 
@@ -130,27 +143,37 @@ namespace DissipFEEC
 
 variable {A : E →ₗ.[𝕜] E} {κ : Type*} (F : DissipFEEC.{u} A κ)
 
-/-- A **time scheme** for the dissipative FEEC discretization `F`: time steps `τₕ > 0` and
-one-step operators `Pₕ` on the discrete spaces, power bounded on every horizon `[0, T]` by `M T`
+/-- A **time scheme** for the dissipative FEEC discretization `F`: a time scheme
+(`Feec.TimeStepping.TimeScheme`) of its discrete generators, i.e. time steps `τₕ > 0` and one-step
+operators `Pₕ` on the discrete spaces, power bounded on every horizon `[0, T]` by `M T`
 (`‖Pₕⁿ‖ ≤ M T` for `n τₕ ≤ T`, so quasi-contractive schemes, `M T = e^{ωT}`, are admitted) and
 consistent of order `p ≥ 1` with constant `K` with the discrete flows `e^{τₕ Lₕ}`, all uniformly in
-`h`. [Thomee2006], Ch. 7 -/
-structure TimeScheme where
-  /-- the time steps -/
-  τ : κ → ℝ
-  τ_pos : ∀ h, 0 < τ h
-  /-- the one-step operators -/
-  P : ∀ h, F.X h →L[𝕜] F.X h
-  /-- the stability constant on `[0, T]` -/
-  M : ℝ → ℝ
-  stable : ∀ (T : ℝ) (h : κ) (n : ℕ), (n : ℝ) * τ h ≤ T → ‖P h ^ n‖ ≤ M T
-  /-- the order -/
-  p : ℕ
-  p_pos : 0 < p
-  /-- the consistency constant -/
-  K : ℝ
-  K_nonneg : 0 ≤ K
-  consistent : ∀ h, TimeStepping.IsConsistent (F.L h) (P h) (τ h) p K
+`h`; the same schemes as those of the Banach FEEC discretization `F.toBanachFEEC`.
+[Thomee2006], Ch. 7 -/
+abbrev TimeScheme := TimeStepping.TimeScheme F.L
+
+/-- **A dissipative FEEC discretization is a Banach FEEC discretization**: forget the inner
+products; the exact flow (Lumer–Phillips) and the discrete flows `e^{tLₕ}` (dissipative `Lₕ`) are
+contractions, so `M = 1`. -/
+abbrev toBanachFEEC [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    BanachFEEC.{u} F.isMDissipative.semigroup κ where
+  l := F.l
+  X := F.X
+  L := F.L
+  incl := F.incl
+  proj := F.proj
+  proj_incl := F.proj_incl
+  bound := F.bound
+  M := 1
+  norm_S_le := F.isMDissipative.isContraction_semigroup
+  norm_exp_le h _ ht := TimeStepping.norm_exp_le_one (F.dissipative h) ht
+
+@[simp] theorem toBanachFEEC_M [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    F.toBanachFEEC.M = 1 := rfl
+
+/-- `‖e^{tLₕ}‖ ≤ 1` for `t ≥ 0` (dissipative `Lₕ`). -/
+theorem norm_exp_le_one (h : κ) (t : ℝ) (ht : 0 ≤ t) : ‖exp ((t : 𝕜) • F.L h)‖ ≤ 1 :=
+  TimeStepping.norm_exp_le_one (F.dissipative h) ht
 
 variable {F}
 
@@ -196,9 +219,6 @@ namespace TimeScheme
 
 variable (Θ : F.TimeScheme)
 
-theorem M_nonneg {T : ℝ} (hT : 0 ≤ T) (h : κ) : 0 ≤ Θ.M T :=
-  (norm_nonneg _).trans (Θ.stable T h 0 (by simpa using hT))
-
 /-- **1. Stability**: `‖ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) ‖v‖` for `n τₕ ≤ T`. -/
 theorem norm_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖Θ.sol h v n‖ ≤ ‖F.incl h‖ * Θ.M T * ‖v‖ := by
@@ -207,62 +227,36 @@ theorem norm_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * �
   exact ((Θ.P h ^ n).le_opNorm v).trans
     (mul_le_mul_of_nonneg_right (Θ.stable T h n hn) (norm_nonneg _))
 
-/-- The powers `Pₕᵏ`, `k ≤ n`, are bounded by `M(T)` when `n τₕ ≤ T`. -/
-theorem stable_le {T : ℝ} (h : κ) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
-    ∀ k ≤ n, ‖Θ.P h ^ k‖ ≤ Θ.M T := fun k hk =>
-  Θ.stable T h k ((mul_le_mul_of_nonneg_right (by exact_mod_cast hk) (Θ.τ_pos h).le).trans hn)
-
 /-- The temporal error in `Xₕ` against any smoother datum `w`:
-`‖e^{tₙ Lₕ} v - Pₕⁿ v‖ ≤ (1 + M(T)) ‖v - w‖ + M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} w‖`. -/
+`‖e^{tₙ Lₕ} v - Pₕⁿ v‖ ≤ (1 + M(T)) ‖v - w‖ + M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} w‖` (the contraction case,
+`M_L = 1`, of `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le`). -/
 theorem norm_exp_sub_pow_le {T : ℝ} (h : κ) (v w : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) v - (Θ.P h ^ n) v‖ ≤
       (1 + Θ.M T) * ‖v - w‖ +
         Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) w‖ := by
-  have ht : 0 ≤ (n : ℝ) * Θ.τ h := mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le
-  have h1 := LumerPhillips.norm_exp_smul_apply_le (F.dissipative h) ht (v - w)
-  have h2 := TimeStepping.norm_pow_apply_sub_exp_le (F.dissipative h) (Θ.stable_le h hn)
-    (Θ.τ_pos h).le Θ.K_nonneg (Θ.consistent h) w
-  have h3 := ((Θ.P h ^ n).le_opNorm (v - w)).trans
-    (mul_le_mul_of_nonneg_right (Θ.stable T h n hn) (norm_nonneg _))
-  have e : exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) v - (Θ.P h ^ n) v =
-      exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) (v - w) -
-        ((Θ.P h ^ n) w - exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) w) - (Θ.P h ^ n) (v - w) := by
-    simp only [_root_.map_sub]; abel
-  rw [e]
-  have h4 := norm_sub_le (exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) (v - w) -
-    ((Θ.P h ^ n) w - exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) w)) ((Θ.P h ^ n) (v - w))
-  have h5 := norm_sub_le (exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) (v - w))
-    ((Θ.P h ^ n) w - exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) w)
-  linarith
+  simpa using TimeStepping.TimeScheme.norm_exp_sub_pow_le Θ F.norm_exp_le_one h v w hn
 
 /-- **The temporal error of a slowly varying datum**: if `‖e^{sLₕ} u - u‖ ≤ η` for `s ∈ [0, δ]`,
 then `‖e^{tₙ Lₕ} u - Pₕⁿ u‖ ≤ (1 + M(T)) (p + 1) η + M(T) K tₙ τₕᵖ (2/δ)^{p+1} ‖u‖` for `tₙ ≤ T`:
 `u` is compared with the smoothed `A_δ^{p+1} u` (`TimeStepping.timeAvg`), so no power of `Lₕ`
-enters. [BrennerThomee1979] -/
+enters (the contraction case of `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg`).
+[BrennerThomee1979] -/
 theorem norm_exp_sub_pow_le_of_timeAvg {T δ η : ℝ} (h : κ) (u : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) (hδ : 0 < δ)
     (hη : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • F.L h) u - u‖ ≤ η) :
     ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) u - (Θ.P h ^ n) u‖ ≤
       (1 + Θ.M T) * ((Θ.p + 1) * η) +
         Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ((2 / δ) ^ (Θ.p + 1) * ‖u‖) := by
-  have hM := Θ.M_nonneg ((mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le).trans hn) h
-  have := Θ.K_nonneg
-  have := (Θ.τ_pos h).le
-  refine (Θ.norm_exp_sub_pow_le h u ((TimeStepping.timeAvg (F.L h) δ)^[Θ.p + 1] u) hn).trans ?_
-  gcongr
-  · rw [norm_sub_rev]
-    refine (TimeStepping.norm_timeAvg_iterate_sub_le (F.dissipative h) hδ _ u).trans ?_
-    push_cast
-    gcongr
-    exact TimeStepping.norm_timeAvg_sub_le hδ hη
-  · exact TimeStepping.norm_pow_timeAvg_iterate_le (F.dissipative h) hδ _ u
+  simpa [one_add_one_eq_two] using
+    TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg Θ F.norm_exp_le_one h u hn hδ hη
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- **2. The temporal error**: `‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`
-for `tₙ ≤ T`. [BrennerThomee1979] -/
+for `tₙ ≤ T` (the Banach-space bound `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le` at
+`‖e^{tLₕ}‖ ≤ 1`). [BrennerThomee1979] -/
 theorem norm_sol_sub_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖F.sol h v (n * Θ.τ h) - Θ.sol h v n‖ ≤
@@ -281,10 +275,9 @@ theorem norm_S_sub_sol_le {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Da
         ‖F.incl h‖ * ‖R.p x h 0 - v‖ +
         ‖F.incl h‖ * (Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) v‖) := by
   have h1 := dissipFEEC_rate F R hx h v hn
-  have h2 := Θ.norm_sol_sub_sol_le h v hn.2
-  calc _ ≤ ‖F.S (n * Θ.τ h) x - F.sol h v (n * Θ.τ h)‖ +
-        ‖F.sol h v (n * Θ.τ h) - Θ.sol h v n‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ ≤ _ := add_le_add h1 h2
+  have h2 := (banachFEEC F.toBanachFEEC).rate_iterates Θ (F.S (n * Θ.τ h) x) h v hn.2
+  rw [toBanachFEEC_M, mul_one] at h2
+  exact h2.trans (add_le_add h1 le_rfl)
 
 /-- **4. Fully discrete convergence for every datum** (the Lax equivalence theorem in the
 Brenner–Thomée form): on the closure of the core, for every family `ιₕ vₕ → x` and time steps
@@ -292,111 +285,16 @@ Brenner–Thomée form): on the closure of the core, for every family `ιₕ v�
 `tₙ = n τₕ ∈ [0, T]`. No discrete smoothness of `vₕ` is assumed: `vₕ` is compared with the
 smoothed `wₕ = A_δ^{p+1} vₕ` (`TimeStepping.timeAvg`), `‖Lₕ^{p+1} wₕ‖ ≤ (2/δ)^{p+1} ‖vₕ‖`, and
 `‖vₕ - wₕ‖` is small uniformly in `h` because the semidiscrete orbits are uniformly continuous at
-`0` (from the semidiscrete convergence and the stability `‖v‖ ≤ C ‖ιₕ v‖`).
+`0` (from the semidiscrete convergence and the stability `‖v‖ ≤ C ‖ιₕ v‖`): the Banach-space
+theorem (`BanachFEEC.TimeScheme.converges`, field `converges_iterates` of `banachFEEC`) for
+`F.toBanachFEEC`, with the semidiscrete convergence of `dissipFEEC_converges`.
 [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h}
     (hv : F.Converges v x) (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T →
-      ‖F.S (n * Θ.τ h) x - Θ.sol h (v h) n‖ < ε := by
-  set T' := max T 1
-  set C := F.boundConst
-  have hC := F.boundConst_nonneg
-  set M := max (Θ.M T) 0
-  have hM0 : 0 ≤ M := le_max_right _ _
-  set k := Θ.p + 1
-  set B := C * (1 + M) * k * C * 3
-  have hB : 0 ≤ B := by positivity
-  set β := ε / (4 * (B + 1))
-  have hβ : 0 < β := by positivity
-  have hS00 : F.S 0 x = x := by rw [S_def, C0Semigroup.S_zero_apply]
-  obtain ⟨δ₀, hδ₀, hcont⟩ := Metric.continuousWithinAt_iff.1
-    ((F.continuousOn_S x T') 0 ⟨le_rfl, zero_le_one.trans (le_max_right _ _)⟩) β hβ
-  set δ := min (δ₀ / 2) 1
-  have hδ : 0 < δ := by positivity
-  have hδ1 : δ ≤ 1 := min_le_right _ _
-  have hS0 : ∀ s ∈ Icc 0 δ, ‖F.S s x - x‖ < β := fun s hs => by
-    have h1 := hcont (x := s) ⟨hs.1, hs.2.trans (hδ1.trans (le_max_right _ _))⟩ (by
-      rw [Real.dist_eq, sub_zero, abs_of_nonneg hs.1]
-      linarith [min_le_left (δ₀ / 2) 1, hs.2])
-    rwa [dist_eq_norm, hS00] at h1
-  set G := (2 / δ) ^ k
-  have hG : 0 ≤ G := by positivity
-  set D := C * M * Θ.K * max T 0 * G * (C * (‖x‖ + 1))
-  have hD : 0 ≤ D := by have := Θ.K_nonneg; positivity
-  set γ := ε / (4 * (D + 1))
-  have hγ : 0 < γ := by positivity
-  have hc := Metric.tendstoUniformlyOn_iff.1 (dissipFEEC_converges F Z T' hx hv) (min (ε / 2) β)
-    (lt_min (half_pos hε) hβ)
-  have hp : Tendsto (fun h => Θ.τ h ^ Θ.p) F.l (𝓝 0) := by
-    simpa [zero_pow Θ.p_pos.ne'] using hτ.pow Θ.p
-  filter_upwards [hc, Metric.tendsto_nhds.1 hv β hβ, Metric.tendsto_nhds.1 hv 1 one_pos,
-    (tendsto_order.1 hp).2 γ hγ] with h h1 h2 h3 h4 n hn
-  have hT0 : 0 ≤ T := hn.1.trans hn.2
-  have hMT : Θ.M T ≤ M := le_max_left _ _
-  have hMT0 := Θ.M_nonneg hT0 h
-  have hsol : ∀ t, F.sol h (v h) t = F.incl h (exp ((t : 𝕜) • F.L h) (v h)) := fun t => rfl
-  -- the semidiscrete error
-  have e1 : ‖F.S (n * Θ.τ h) x - F.sol h (v h) (n * Θ.τ h)‖ < ε / 2 := by
-    have := h1 _ ⟨hn.1, hn.2.trans (le_max_left _ _)⟩
-    rw [dist_eq_norm] at this
-    exact this.trans_le (min_le_left _ _)
-  -- the size of the data
-  have hvb : ‖v h‖ ≤ C * (‖x‖ + 1) := by
-    refine (F.norm_le_norm_incl h _).trans (mul_le_mul_of_nonneg_left ?_ hC)
-    have := norm_le_norm_add_norm_sub' (F.incl h (v h)) x
-    rw [← dist_eq_norm] at this
-    linarith [h3]
-  -- the smoothed datum
-  have hcl : ∀ s ∈ Icc 0 δ, ‖exp ((s : 𝕜) • F.L h) (v h) - v h‖ ≤ C * (3 * β) := by
-    intro s hs
-    refine (F.norm_le_norm_incl h _).trans (mul_le_mul_of_nonneg_left ?_ hC)
-    rw [_root_.map_sub, ← hsol]
-    have a1 := h1 s ⟨hs.1, hs.2.trans (hδ1.trans (le_max_right _ _))⟩
-    rw [dist_eq_norm] at a1
-    have a2 := hS0 s hs
-    have a3 : ‖x - F.incl h (v h)‖ < β := by rw [norm_sub_rev, ← dist_eq_norm]; exact h2
-    have e : F.sol h (v h) s - F.incl h (v h) = -(F.S s x - F.sol h (v h) s) + (F.S s x - x) +
-        (x - F.incl h (v h)) := by abel
-    rw [e]
-    refine (norm_add₃_le).trans ?_
-    rw [norm_neg]
-    linarith [a1.trans_le (min_le_right _ _)]
-  -- the temporal error
-  have e2 : ‖F.sol h (v h) (n * Θ.τ h) - Θ.sol h (v h) n‖ < ε / 2 := by
-    rw [hsol, TimeScheme.sol, ← _root_.map_sub]
-    refine ((F.incl h).le_opNorm _).trans_lt ?_
-    have hX := Θ.norm_exp_sub_pow_le_of_timeAvg h (v h) hn.2 hδ hcl
-    have ht : (n : ℝ) * Θ.τ h ≤ max T 0 := hn.2.trans (le_max_left _ _)
-    have hτp : 0 ≤ Θ.τ h ^ Θ.p := pow_nonneg (Θ.τ_pos h).le _
-    have b1 : (1 + Θ.M T) * ((Θ.p + 1) * (C * (3 * β))) ≤ (1 + M) * (k * (C * (3 * β))) := by
-      push_cast [k]; gcongr
-    have b2 : Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * (G * ‖v h‖) ≤
-        M * Θ.K * max T 0 * γ * (G * (C * (‖x‖ + 1))) := by
-      have hK := Θ.K_nonneg
-      have c1 : Θ.M T * Θ.K ≤ M * Θ.K := mul_le_mul_of_nonneg_right hMT hK
-      have c2 : Θ.M T * Θ.K * (n * Θ.τ h) ≤ M * Θ.K * max T 0 :=
-        mul_le_mul c1 ht hn.1 (mul_nonneg hM0 hK)
-      have c3 : Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p ≤ M * Θ.K * max T 0 * γ :=
-        mul_le_mul c2 h4.le hτp (mul_nonneg (mul_nonneg hM0 hK) (le_max_right _ _))
-      exact mul_le_mul c3 (mul_le_mul_of_nonneg_left hvb hG) (by positivity)
-        (mul_nonneg (mul_nonneg (mul_nonneg hM0 hK) (le_max_right _ _)) hγ.le)
-    have hι := F.norm_incl_le h
-    calc ‖F.incl h‖ * ‖exp (((n * Θ.τ h : ℝ) : 𝕜) • F.L h) (v h) - (Θ.P h ^ n) (v h)‖
-        ≤ C * ((1 + M) * (k * (C * (3 * β))) +
-            M * Θ.K * max T 0 * γ * (G * (C * (‖x‖ + 1)))) :=
-          mul_le_mul hι (hX.trans (add_le_add b1 b2)) (norm_nonneg _) hC
-      _ = B * β + D * γ := by simp only [B, D]; ring
-      _ < ε / 4 + ε / 4 := by
-          apply add_lt_add
-          · calc B * β < (B + 1) * β := by nlinarith
-              _ = ε / 4 := by simp only [β]; field_simp
-          · calc D * γ < (D + 1) * γ := by nlinarith
-              _ = ε / 4 := by simp only [γ]; field_simp
-      _ = ε / 2 := by ring
-  calc _ ≤ ‖F.S (n * Θ.τ h) x - F.sol h (v h) (n * Θ.τ h)‖ +
-        ‖F.sol h (v h) (n * Θ.τ h) - Θ.sol h (v h) n‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ < ε / 2 + ε / 2 := add_lt_add e1 e2
-    _ = ε := add_halves ε
+      ‖F.S (n * Θ.τ h) x - Θ.sol h (v h) n‖ < ε :=
+  (banachFEEC F.toBanachFEEC).converges_iterates Θ hv
+    (fun T' => dissipFEEC_converges F Z T' hx hv) hτ T hε
 
 /-- **5. The constraint residual** of a kept `K` is at most the fully discrete error from any
 `x ∈ K`. -/

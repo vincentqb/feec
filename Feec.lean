@@ -170,6 +170,7 @@ public import Feec.HilbertComplex.Approximation.ApproxConforming
 public import Feec.HilbertComplex.Approximation.ApproxFEEC
 public import Feec.HilbertComplex.Approximation.ApproxFEECWitness
 public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
+public import Feec.HilbertComplex.Approximation.BanachFEEC
 public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.CochainProjectionExistence
 public import Feec.HilbertComplex.Approximation.ConformingFamily
@@ -426,6 +427,7 @@ public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RationalSharp
 public import Feec.TimeStepping.RungeKutta
 public import Feec.TimeStepping.Theta
+public import Feec.TimeStepping.TimeScheme
 public import Feec.TimeStepping.Trajectory
 public import Feec.Variational.BabuskaNecas
 public import Feec.Variational.Fortin

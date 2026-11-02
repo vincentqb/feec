@@ -40,10 +40,22 @@ of the closure of the core as `h, τ → 0`, and the constraint residuals.
   `c₀`, `K`, `κ` depending only on `r` (Brenner–Thomée for quasi-contractive semigroups,
   `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le`).
 
+**From the Banach layer** (`Feec.HilbertComplex.banachFEEC` for `F.toBanachFEEC`, `M = 1`):
+
+* `DissipFEEC.toBanachFEEC_step`: `r(τLₕ)` by von Neumann's calculus is the Banach scheme
+  `P(Rₕ) Q(Rₕ)⁻¹`, `Rₕ = (1 - τLₕ)⁻¹`;
+* `DissipFEEC.norm_sol_sub_rationalScheme_sol_le`: **the sharp temporal error**
+  `‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, uniformly in `h`, with
+  Brenner–Thomée's constant `C_r = sharpConst r p` of the smooth-data estimate;
+* `DissipFEEC.norm_step_pow_sub_S_le_sharp`: the same constant for the exact problem,
+  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r nτ τᵖ ‖A^{p+1} x‖` on `D(A^{p+1})`.
+
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
+* [A. Gomilko, Y. Tomilov, *Rational Approximation of Operator Semigroups via the B-Calculus*][GomilkoTomilov2024],
+  Thm 1.1
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
   §IV.3, §IV.5, §IV.6
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
@@ -174,6 +186,63 @@ theorem exists_norm_step_pow_sub_perturb_le [CompleteSpace E] [NormedSpace ℝ E
   exact h (norm_nonneg B) hB _
     (by rw [C0Semigroup.generator_perturb, F.isMDissipative.generator_semigroup])
     hτ hBτ n (mem_graph_of_mem_iterDomain hx)
+
+/-! ### The sharp estimates, from the Banach layer -/
+
+section Banach
+
+variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+
+/-- **The rational schemes are those of the Banach layer**: `r(τLₕ)` by von Neumann's calculus
+(`Feec.TimeStepping.RationalScheme.apply`) is `r(τLₕ) = P(Rₕ) Q(Rₕ)⁻¹` through the resolvent
+`Rₕ = (1 - τLₕ)⁻¹` of `F.toBanachFEEC` (`BanachFEEC.step`), for `τ > 0`. -/
+theorem toBanachFEEC_step (r : RationalScheme) {τ : ℝ} (hτ : 0 < τ) (h : κ) :
+    F.toBanachFEEC.step r τ h = r.apply ((τ : 𝕜) • F.L h) := by
+  have hg : (F.toBanachFEEC.discrete h).generator = ((F.L h : F.X h →ₗ[𝕜] F.X h).toPMap ⊤) :=
+    C0Group.generator_ofBounded (F.L h)
+  rw [BanachFEEC.step, BanachFEEC.res, hg, ← r.step_eq_resolventStep,
+    r.step_toPMap (F.dissipative h) hτ]
+
+/-- `Pₕ = r(τₕLₕ)` of `rationalScheme` is the Banach scheme `F.toBanachFEEC.step r τₕ`. -/
+theorem rationalScheme_P_eq_step (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) :
+    (F.rationalScheme r hr hp hp0 τ hτ).P h = F.toBanachFEEC.step r (τ h) h :=
+  (F.toBanachFEEC_step r (hτ h) h).symm
+
+/-- **The sharp temporal error of every A-stable rational scheme** of order `p`:
+`‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, `C_r = sharpConst r p`, uniformly
+in `h` (Brenner–Thomée's smooth-data estimate on the Banach discretization `F.toBanachFEEC`,
+field `temporal_rational` of `banachFEEC`, with `M = 1`). [BrennerThomee1979];
+[GomilkoTomilov2024], Thm 1.1(ii) -/
+theorem norm_sol_sub_rationalScheme_sol_le (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) (v : F.X h)
+    (n : ℕ) :
+    ‖F.sol h v (n * τ h) - (F.rationalScheme r hr hp hp0 τ hτ).sol h v n‖ ≤
+      ‖F.incl h‖ * (r.sharpConst p * (n * τ h) * τ h ^ p * ‖(F.L h ^ (p + 1)) v‖) := by
+  have H := (banachFEEC F.toBanachFEEC).temporal_rational r hr hp (hτ h) h v n
+  rw [toBanachFEEC_M, mul_one, F.toBanachFEEC_step r (hτ h)] at H
+  exact H
+
+/-- **The sharp time discretization of the exact problem**: for every A-stable rational scheme
+`r` of order `p`, `τ > 0`, `n` and `x ∈ D(A^{p+1})`,
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r nτ τᵖ ‖A^{p+1} x‖`, `C_r = sharpConst r p` (Brenner–Thomée's
+smooth-data estimate, field `exact_rational` of `banachFEEC` for `F.toBanachFEEC`, with
+`R = (1 - τA)⁻¹`). [BrennerThomee1979]; [GomilkoTomilov2024], Thm 1.1(ii) -/
+theorem norm_step_pow_sub_S_le_sharp (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {x : E} (hx : x ∈ iterDomain A (p + 1)) :
+    ‖(r.step A τ ^ n) x - F.S (n * τ) x‖ ≤
+      r.sharpConst p * (n * τ) * τ ^ p * ‖(genExt A)^[p + 1] x‖ := by
+  have hR := F.isMDissipative.isResolvent (inv_pos.2 hτ)
+  rw [RCLike.ofReal_inv] at hR
+  have hgen := F.isMDissipative.generator_semigroup
+  have H := (banachFEEC F.toBanachFEEC).exact_rational r hr hp hτ
+    (R := (τ : 𝕜)⁻¹ • Operator.resolvent A (τ : 𝕜)⁻¹)
+    (fun x y hxy => hR.inv_smul_apply_sub hτ.ne' (by rwa [hgen] at hxy)) n
+    (u := fun j => (genExt A)^[j] x) (by rw [hgen]; exact mem_graph_of_mem_iterDomain hx)
+  rw [toBanachFEEC_M, mul_one, ← r.step_eq_resolventStep] at H
+  exact H
+
+end Banach
 
 end DissipFEEC
 

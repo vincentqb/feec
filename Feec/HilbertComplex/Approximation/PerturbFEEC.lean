@@ -386,6 +386,11 @@ structure Verdict (Z : (F.perturb P).Core) : Prop where
   semidiscrete : (F.perturb P).Verdict Z
   /-- the fully discrete FEEC theorem for `A + B`, for every time scheme -/
   full (Θ : (F.perturb P).TimeScheme) : Θ.Verdict Z
+  /-- the fully discrete FEEC theorem on Banach spaces for `A + B`, read without the inner
+  products (`DissipFEEC.toBanachFEEC`, `banachFEEC`): the Hille–Yosida stability of backward
+  Euler, and Brenner–Thomée's stability bound and sharp error of every A-stable rational scheme,
+  discrete and for the Dyson–Phillips flow -/
+  banach : (F.perturb P).toBanachFEEC.Verdict
 
 end Perturbation
 
@@ -406,6 +411,7 @@ theorem _root_.Feec.HilbertComplex.perturbFEEC (Z : F.Core) (hZ : Z.Data.topolog
   dense := resData_closure (F.perturb P).isMDissipative
   semidiscrete := dissipFEEC (F.perturb P) (P.core Z hZ)
   full Θ := dissipFEEC_fullyDiscrete (P.core Z hZ) Θ
+  banach := banachFEEC _
 
 end DissipFEEC
 

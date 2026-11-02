@@ -125,6 +125,13 @@ theorem integral_norm_errorKernel_le {r : RationalScheme} (hr : r.IsAStable) {p 
   HalfLineAlgebra.integral_norm_errorKernel_le _ (norm_fourier_hpMeasure_le hr) _
     (r.symb_pow_mul_fourier_consistencyKernel hp) n
 
+/-- The constant of the smooth-data estimate is nonnegative (`‖k₁‖₁ ≤ C`). -/
+theorem sharpConst_nonneg {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
+    0 ≤ r.sharpConst p := by
+  have h := integral_norm_errorKernel_le hr hp 1
+  rw [Nat.cast_one, mul_one] at h
+  exact (integral_nonneg fun t => norm_nonneg _).trans h
+
 /-! ### Bounded semigroups on Banach spaces -/
 
 section Semigroup

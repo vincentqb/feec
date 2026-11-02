@@ -43,8 +43,9 @@ symmetric difference Laplacian); the direct Hilbert route reaches the maximum no
 stability bound `1 + C'_r √n`) against every classical solution, with constants independent of
 `h`. The scheme is the lumped-mass Galerkin method on the global `P₁` (Whitney `0`-form) space
 (`Feec.FiniteElement.P1Global`: stiffness `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the
-stencil theorem exactly the classical finite difference scheme. Limitations: the norm is the nodal
-one; Dirichlet data only; for rational schemes
+stencil theorem exactly the classical finite difference scheme. The errors also hold in `L^∞(Q)` for
+the finite element function, with the interpolation term `n² D₂ h² / 2` (`|∂ᵢ∂ₖ u| ≤ D₂`; a `P₁`
+function attains its extrema at the vertices). Limitations: Dirichlet data only; for rational schemes
 the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
 stability bound loses `√k`. Each field of the crown is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson

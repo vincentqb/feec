@@ -18,6 +18,7 @@ public import FeecCheck.PolyFields
 public import FeecCheck.BanachSchemes
 public import FeecCheck.TimeSchemes
 public import FeecCheck.StableFamilies
+public import FeecCheck.MaxNormHeat
 
 public section
 

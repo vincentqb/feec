@@ -55,14 +55,21 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
    `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B₄ h² / 12 + C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`
    (the sharp smooth-data estimate; the factor `‖Lₕ^{p+1} v‖_∞` is that of the discrete datum);
 7. the full verdict of the Banach layer for the family (`StableFamily.Verdict`);
-8. (**the Galerkin form**) `m(x) = ⟪φₓ, 1⟫_{L²(Q)}` and `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫`.
+8. (**the Galerkin form**) `m(x) = ⟪φₓ, 1⟫_{L²(Q)}` and `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫`;
+9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`) a `P₁` function attains
+   its extreme values at the vertices (`Feec.FiniteElement.abs_p1Interp_le`) and the `P₁`
+   interpolation error is `≤ n² D₂ h² / 2` for `|∂ᵢ∂ₖ u| ≤ D₂`
+   (`Feec.FiniteElement.abs_sub_p1Interp_le`), so at every point `x` of every simplex `K`,
+   `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D₂ h² / 2`; with 4–6 this bounds the semidiscrete,
+   backward Euler and rational errors in `L^∞(Q)` (`semidiscrete_fe`, `backwardEuler_fe`,
+   `rational_fe`).
 
 Among the fully discrete results only 5 is uniform in `h` with the constants of `u` alone; in 6
 the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
 stability bound loses `√k` (no `‖r(τLₕ)ᵏ‖_∞ ≤ C` uniform in `k` and `h` is proved). The
-estimates are in the maximum norm at the nodes. `sineSolution` is a nonzero classical solution
-(`exp(-λt) ∏ᵢ sin(π(xᵢ - bᵢ)/s)`), so the hypotheses of 4–6 are satisfied
-(`maxNormHeat_nonvacuous`).
+estimates 4–6 are in the maximum norm at the nodes, 9 in `L^∞(Q)` of the finite element function.
+`sineSolution` is a nonzero classical solution (`exp(-λt) ∏ᵢ sin(π(xᵢ - bᵢ)/s)`, with
+`|∂ᵢ∂ₖ u| ≤ (π/s)²`), so the hypotheses of 4–6 and 9 are satisfied (`maxNormHeat_nonvacuous`).
 
 ## References
 
@@ -713,6 +720,184 @@ theorem sineSolution_u_zero_center (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
   refine Finset.prod_eq_one fun j _ => ?_
   rw [show Real.pi / s * (s / 2) = Real.pi / 2 by field_simp, Real.sin_pi_div_two]
 
+/-! ### The maximum norm of the finite element function -/
+
+theorem closedInterior_subset_closedCube (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) : K.closedInterior ⊆ closedCube b s := by
+  refine ((freudenthalMesh b s hs (N + 1)).closedInterior_subset_closure hK).trans ?_
+  rw [freudenthalMesh_domain, closure_pi_set]
+  intro x hx i hi
+  have := hx i hi
+  simp only at this ⊢
+  rwa [closure_Ioo (by linarith : b i ≠ b i + s)] at this
+
+/-- The simplices of the level-`(N + 1)` mesh have diameter at most `h` (maximum norm). -/
+theorem dist_le_meshSize (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {y z : Fin n → ℝ}
+    (hy : y ∈ K.closedInterior) (hz : z ∈ K.closedInterior) : dist y z ≤ meshSize s N := by
+  rcases isEmpty_or_nonempty (Fin n) with hn | hn
+  · rw [Subsingleton.elim y z, dist_self]; exact (meshSize_pos hs N).le
+  · have : NeZero n := ⟨(Fin.pos hn.some).ne'⟩
+    obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hK
+    refine (Metric.dist_le_diam_of_mem (Affine.Simplex.isCompact_closedInterior _).isBounded hy
+      hz).trans (le_of_eq ?_)
+    exact diam_freudenthalMesh_simplex b (freudenthalScale_pos hs (N + 1)) (finLattice m) σ
+
+/-- The vertices of the level-`(N + 1)` mesh are lattice nodes `b + h q`, `q ∈ {0, …, N + 1}ⁿ`. -/
+theorem exists_node_eq_points (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) (j : Fin (n + 1)) :
+    ∃ q : Fin n → ℤ, (∀ i, 0 ≤ q i ∧ q i ≤ N + 1) ∧ K.points j = node b (meshSize s N) q := by
+  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hK
+  rw [mapEquiv_boxMap_freudenthalSimplex_points, freudenthalPoints_eq_node]
+  refine ⟨_, fun i => ?_, rfl⟩
+  have h1 := (m i).2
+  rcases kuhnLattice_mem σ j i with h | h <;>
+    simp only [Pi.add_apply, h, finLattice] <;> omega
+
+theorem ext_sub (U V : Space n N) (q : Fin n → ℤ) : ext (U - V) q = ext U q - ext V q := by
+  simp only [ext, Pi.sub_apply]; split_ifs <;> simp
+
+theorem abs_ext_le (U : Space n N) (q : Fin n → ℤ) : |ext U q| ≤ ‖U‖ := by
+  simp only [ext]
+  split_ifs with h
+  · exact (Real.norm_eq_abs _).symm.le.trans (norm_le_pi_norm U ⟨q, h⟩)
+  · simp
+
+/-- **The finite element function in the maximum norm on `Q̄`**: for `u ∈ C²` vanishing on `∂Q`
+with `|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and discrete values `U`, at every point `x` of every simplex `K` of the
+mesh, `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D h² / 2`, `U_h = Π_K U` the global `P₁` function
+(a `P₁` function attains its extrema at the vertices, plus the `P₁` interpolation error). -/
+theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
+    (hu : ContDiff ℝ 2 u) {D : ℝ}
+    (hD : ∀ x ∈ closedCube b s, ∀ i k, |partialDeriv k (partialDeriv i u) x| ≤ D)
+    (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → u x = 0) (U : Space n N)
+    {K : Affine.Simplex ℝ (Fin n → ℝ) n} (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices)
+    {x : Fin n → ℝ} (hx : x ∈ K.closedInterior) :
+    |u x - p1Interp K.points (nodal b s U) x| ≤
+      ‖interp b s N u - U‖ + n ^ 2 * D * meshSize s N ^ 2 / 2 := by
+  have h1 := abs_sub_p1Interp_le K hu (fun y hy => hD y (closedInterior_subset_closedCube hs hK hy))
+    (fun y hy z hz => dist_le_meshSize hs hK hy hz) hx
+  have h2 := abs_p1Interp_le K (u := u - nodal b s U) (B := ‖interp b s N u - U‖) (fun j => by
+    obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hK j
+    rw [e, Pi.sub_apply, nodal_node hs, ← ext_interp hs hbd hq, ← ext_sub]
+    exact abs_ext_le _ q) hx
+  rw [p1Interp_sub_values] at h2
+  calc |u x - p1Interp K.points (nodal b s U) x|
+      = |(u x - p1Interp K.points u x) +
+          (p1Interp K.points u x - p1Interp K.points (nodal b s U) x)| := by ring_nf
+    _ ≤ _ := (abs_add_le _ _).trans (by linarith)
+
+/-- The interpolation term `n² D₂ h² / 2`. -/
+def feDefect (D₂ : ℝ) (N : ℕ) : ℝ := n ^ 2 * D₂ * meshSize s N ^ 2 / 2
+
+/-- **The semidiscrete error of the finite element function on `Q̄`**. -/
+theorem abs_sub_p1Interp_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T)
+    (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u t x - p1Interp K.points (nodal b s (exp (t • lumpedLaplacian b hs N) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + t * S.defect N + feDefect (s := s) (n := n) D₂ N :=
+  (abs_sub_p1Interp_nodal_le hs N ((S.contDiff t ht).of_le (by norm_num)) (hD₂ t ht)
+    (S.boundary t ht) _ hK hx).trans (by
+      have := norm_interp_sub_exp_le hs S N ht v
+      simp only [feDefect]; linarith)
+
+/-- **Backward Euler: the error of the finite element function on `Q̄`**. -/
+theorem abs_sub_p1Interp_res_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
+    {u₂ : ℝ → (Fin n → ℝ) → ℝ} {B₂ : ℝ}
+    (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
+    (hB₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
+    {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).res τ N ^ k) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * (3 / 2 * τ * B₂ + S.defect N) +
+        feDefect (s := s) (n := n) D₂ N := by
+  have hkt : k * τ ∈ Icc 0 T := ⟨by positivity, hk⟩
+  refine (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt)
+    (S.boundary _ hkt) _ hK hx).trans ?_
+  have := norm_interp_sub_res_pow_le hs S hu₂ hB₂ N hτ hk v
+  simp only [feDefect]; linarith
+
+/-- **Every A-stable rational scheme: the error of the finite element function on `Q̄`**. -/
+theorem abs_sub_p1Interp_step_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
+    {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
+    (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).step r τ N ^ k) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
+        r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ +
+        feDefect (s := s) (n := n) D₂ N := by
+  have hkt : k * τ ∈ Icc 0 T := ⟨by positivity, hk⟩
+  refine (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt)
+    (S.boundary _ hkt) _ hK hx).trans ?_
+  have := norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
+  simp only [feDefect]; linarith
+
+theorem differentiable_sineDeriv_all (a c : ℝ) (k : ℕ) : Differentiable ℝ (sineDeriv a c k) := by
+  rcases k with _ | _ | _ | _ | k <;> simp only [sineDeriv] <;> fun_prop
+
+theorem abs_sineDeriv_le {a : ℝ} (ha : 0 ≤ a) (c : ℝ) {k : ℕ} (hk : k ≤ 4) (y : ℝ) :
+    |sineDeriv a c k y| ≤ a ^ k := by
+  have hs := Real.abs_sin_le_one (a * (y - c))
+  have hc := Real.abs_cos_le_one (a * (y - c))
+  interval_cases k <;> simp only [sineDeriv, abs_mul, abs_neg, abs_pow, abs_of_nonneg ha] <;>
+    first | simpa using hs | nlinarith [pow_nonneg ha 2, pow_nonneg ha 3, pow_nonneg ha 4]
+
+/-- `∂ₖ (c ∏ⱼ sin⁽ᵐʲ⁾(a(xⱼ - bⱼ))) = c ∏ⱼ sin⁽ᵐ'ʲ⁾`, `m' = m + eₖ` (for `mₖ ≤ 3`). -/
+theorem partialDeriv_sineProd (b : Fin n → ℝ) (a c : ℝ) (m : Fin n → ℕ) (k : Fin n)
+    (hk : m k ≤ 3) :
+    partialDeriv k (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) (m j) (x j)) =
+      fun x => c * ∏ j, sineDeriv a (b j) ((m + Pi.single k 1 : Fin n → ℕ) j) (x j) := by
+  rw [partialDeriv_const_mul_prod c (G := fun j => sineDeriv a (b j) (m j))
+    (fun j => differentiable_sineDeriv_all a _ _) (g := sineDeriv a (b k) (m k + 1))
+    (fun y => hasDerivAt_sineDeriv a (b k) (m k) hk y)]
+  funext x
+  congr 1
+  refine Finset.prod_congr rfl fun j _ => ?_
+  by_cases hj : j = k
+  · subst hj; simp
+  · simp [hj]
+
+theorem abs_const_mul_sineProd_le {a : ℝ} (ha : 0 ≤ a) (b : Fin n → ℝ) (c : ℝ) (m : Fin n → ℕ)
+    (hm : ∀ j, m j ≤ 4) (x : Fin n → ℝ) :
+    |c * ∏ j, sineDeriv a (b j) (m j) (x j)| ≤ |c| * a ^ ∑ j, m j := by
+  rw [abs_mul, Finset.abs_prod, ← Finset.prod_pow_eq_pow_sum]
+  exact mul_le_mul_of_nonneg_left (Finset.prod_le_prod₀ (fun _ _ => abs_nonneg _)
+    fun j _ => abs_sineDeriv_le ha _ (hm j) _) (abs_nonneg _)
+
+/-- The second derivatives of the first eigenmode: `|∂ᵢ∂ₖ u| ≤ (π/s)²` for `t ≥ 0`. -/
+theorem abs_partialDeriv_partialDeriv_sineSolution_le (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ)
+    {t : ℝ} (ht : 0 ≤ t) (x : Fin n → ℝ) (i k : Fin n) :
+    |partialDeriv k (partialDeriv i ((sineSolution b hs T).u t)) x| ≤ sineFreq s ^ 2 := by
+  have ha : 0 ≤ sineFreq s := div_nonneg Real.pi_pos.le hs.le
+  set c := Real.exp (-(n * sineFreq s ^ 2) * t)
+  have e0 : (sineSolution b hs T).u t =
+      fun x => c * ∏ j, sineDeriv (sineFreq s) (b j) ((0 : Fin n → ℕ) j) (x j) := rfl
+  have hsingle : ∀ (l : Fin n) (j : Fin n), (Pi.single l 1 : Fin n → ℕ) j ≤ 1 := fun l j => by
+    by_cases h : j = l
+    · subst h; simp
+    · simp [h]
+  rw [e0, partialDeriv_sineProd b _ c 0 i (by simp),
+    partialDeriv_sineProd b _ c _ k (by have := hsingle i k; simp; omega)]
+  refine (abs_const_mul_sineProd_le ha b c _ (fun j => by
+    have := hsingle i j; have := hsingle k j; simp; omega) x).trans ?_
+  have hc : |c| ≤ 1 := by
+    rw [abs_of_pos (Real.exp_pos _)]
+    exact Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht))
+  have hsum : ∑ j, ((0 : Fin n → ℕ) + Pi.single i 1 + Pi.single k 1 : Fin n → ℕ) j = 2 := by
+    simp [Finset.sum_add_distrib]
+  rw [hsum]
+  calc |c| * sineFreq s ^ 2 ≤ 1 * sineFreq s ^ 2 := by gcongr
+    _ = _ := one_mul _
+
 /-! ### The verdict -/
 
 /-- The conclusions of `maxNormHeat` for the cube `b + (0, s)ⁿ`: non-obtuse Freudenthal meshes,
@@ -771,6 +956,40 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V` -/
   galerkin (N : ℕ) (U W : Space n N) : lumpedLaplacian b hs N U = W ↔
     ∀ V : Space n N, lumpedInner b hs W V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ
+  /-- the semidiscrete error of the finite element function at every point of `Q̄` -/
+  semidiscrete_fe {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T)
+    (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u t x - p1Interp K.points (nodal b s (exp (t • lumpedLaplacian b hs N) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + t * S.defect N + feDefect (s := s) (n := n) D₂ N
+  /-- backward Euler: the error of the finite element function at every point of `Q̄` -/
+  backwardEuler_fe {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
+    {u₂ : ℝ → (Fin n → ℝ) → ℝ} {B₂ : ℝ}
+    (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
+    (hB₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
+    {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).res τ N ^ k) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * (3 / 2 * τ * B₂ + S.defect N) +
+        feDefect (s := s) (n := n) D₂ N
+  /-- every A-stable rational scheme: the error of the finite element function on `Q̄` -/
+  rational_fe {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
+    {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
+    (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).step r τ N ^ k) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
+        r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ +
+        feDefect (s := s) (n := n) D₂ N
 
 /-- **The heat equation in the maximum norm** (lumped-mass `P₁` elements on the Freudenthal
 meshes of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. [Thomee2006], Ch. 15;
@@ -789,6 +1008,11 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   lumpedMass_eq_inner N x := inner_glue_p1Global_nodalIndicator_one _
     (fun _ hT => interior_subset_freudenthalMesh_domain b hs (N + 1) hT) x
   galerkin _ U W := lumpedLaplacian_eq_iff b hs U W
+  semidiscrete_fe S _ hD₂ N _ ht v _ hK _ hx := abs_sub_p1Interp_exp_le hs S hD₂ N ht v hK hx
+  backwardEuler_fe S _ hD₂ _ _ hu₂ hB₂ N _ hτ _ hk v _ hK _ hx :=
+    abs_sub_p1Interp_res_pow_le hs S hD₂ hu₂ hB₂ N hτ hk v hK hx
+  rational_fe S _ hD₂ _ hr _ hp N _ hτ _ hk v _ hK _ hx :=
+    abs_sub_p1Interp_step_pow_le hs S hD₂ hr hp N hτ hk v hK hx
 
 /-- The second time derivative of the first eigenmode: `uₜₜ = λ² u`, `λ = n (π/s)²`. -/
 theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) (x : Fin n → ℝ) :
@@ -819,15 +1043,19 @@ on every `[0, T] × Q`, nonzero at `t = 0`, with `uₜₜ = λ² u`, `|uₜₜ| 
 backward Euler (its extra hypotheses on `uₜₜ` hold) and rational clauses all apply to it. -/
 theorem maxNormHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     Verdict b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 ∧
-      ∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
+      (∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
         (∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t) ∧
-        ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂ :=
+        ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂) ∧
+      ∃ D₂ : ℝ, ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+        |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂ :=
   ⟨maxNormHeat b hs, sineSolution b hs T, fun h => by
     have := congrFun h (b + (s / 2) • fun _ => (1 : ℝ))
     rw [sineSolution_u_zero_center] at this
     exact one_ne_zero this,
-    fun t x => (n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x, (n * sineFreq s ^ 2) ^ 2,
-    fun t _ x _ => sineSolution_hasDerivAt₁ b hs T t x,
-    fun t ht x _ => abs_sineSolution_u₂_le b hs T ht.1 x⟩
+    ⟨fun t x => (n * sineFreq s ^ 2) ^ 2 * (sineSolution b hs T).u t x, (n * sineFreq s ^ 2) ^ 2,
+      fun t _ x _ => sineSolution_hasDerivAt₁ b hs T t x,
+      fun t ht x _ => abs_sineSolution_u₂_le b hs T ht.1 x⟩,
+    sineFreq s ^ 2, fun t ht x _ i k =>
+      abs_partialDeriv_partialDeriv_sineSolution_le b hs T ht.1 x i k⟩
 
 end Feec.Models.Cube.MaxNormHeat

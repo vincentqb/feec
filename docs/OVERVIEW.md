@@ -105,7 +105,8 @@ Euler and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable ra
 nonzero classical solution (the first eigenmode, `Feec.Models.Cube.MaxNormHeat.sineSolution`) in
 the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). The scheme is the
 lumped-mass Galerkin method on the global `P₁` (Whitney `0`-form) space
-(`Feec.FiniteElement.P1Global`). Limitations: nodal norm; Dirichlet data; for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
+(`Feec.FiniteElement.P1Global`), and the errors hold in `L^∞(Q)` for the finite element function
+(plus `n² D₂ h² / 2`). Limitations: Dirichlet data; for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
 the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of

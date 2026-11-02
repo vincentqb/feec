@@ -44,8 +44,10 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   nodes: non-obtuse meshes, the difference stencil, the discrete maximum principle (`M = 1`),
   consistency `n B₄ h² / 12`, and the errors of the semidiscrete equation, of backward Euler and
   of every A-stable rational scheme against every classical solution, through
-  `Feec.TimeStepping.stableFamily`; the first eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a
-  solution, nonzero (`Feec.Models.Cube.MaxNormHeat.sineSolution`).
+  `Feec.TimeStepping.stableFamily`, also in `L^∞(Q)` for the finite element function (the
+  scheme is the lumped-mass Galerkin method on the global `P₁` space); the first eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a
+  solution, nonzero, with bounded second derivatives
+  (`Feec.Models.Cube.MaxNormHeat.sineSolution`).
 * **The explicit map of the BGG layer on smooth fields (algebraic layer)**
   (`Feec.Domain.smoothBGGVerdict`): the cochain map (30) of Theorem 7 of [ArnoldHu2021] is a
   quasi-isomorphism on the smooth Hessian, elasticity and div-div complexes, with the Koszul

@@ -4,6 +4,7 @@ public import Feec.FiniteElement.LumpedMass
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.MeshDivergence
 public import Feec.FiniteElement.ShapeRegularSmoothing
+public import Feec.ForMathlib.Calculus.SecondDifference
 
 /-!
 # The global `P₁` space: stiffness and lumped mass as integrals
@@ -20,7 +21,11 @@ form (`exists_p1Global_eq`). Then
   (`inner_maximal_p1Global`: `d` the exterior derivative of the `L²` de Rham complex);
 * **`inner_glue_p1Global_nodalIndicator_one`**: the lumped mass is the integral of the hat
   function, `m(x) = ⟪φₓ, 1⟫_{L²(Ω)} = ∫_Ω φₓ`, the row sum of the consistent mass matrix: the vertex
-  quadrature is exact for `P₁` hat functions (`integral_baryCoord`: `∫_T λⱼ = |T| / (n + 1)`).
+  quadrature is exact for `P₁` hat functions (`integral_baryCoord`: `∫_T λⱼ = |T| / (n + 1)`);
+* **in the maximum norm**: a `P₁` function attains its extreme values at the vertices,
+  `|Πₜu(x)| ≤ maxⱼ |u(pⱼ)|` on `T` (`abs_p1Interp_le`), and the `P₁` interpolation error of
+  `f ∈ C²` with `|∂ᵢ∂ₖ f| ≤ D` on `T` is `|f(x) - Πₜf(x)| ≤ n² D δ² / 2`, `δ` the diameter of `T`
+  in the maximum norm (`abs_sub_p1Interp_le`, Taylor's formula along the segments `x → pⱼ`).
 
 ## References
 
@@ -426,5 +431,135 @@ theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι)
   simp only [p1Stiffness_eq, hg, sum_dotProduct, smul_dotProduct, smul_eq_mul, mul_sum]
   rw [sum_comm]
   exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
+
+section MaxNorm
+
+open Set
+
+/-! ### The `P₁` interpolant in the maximum norm -/
+
+/-- **A `P₁` function attains its maximum modulus at a vertex**: on `T`,
+`|Πₜu(x)| ≤ maxⱼ |u(pⱼ)|`. -/
+theorem abs_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : (Fin n → ℝ) → ℝ} {B : ℝ}
+    (hB : ∀ j, |u (T.points j)| ≤ B) {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
+    |p1Interp T.points u x| ≤ B := by
+  rw [p1Interp]
+  refine (abs_sum_le_sum_abs _ _).trans ?_
+  calc ∑ j, |u (T.points j) * baryCoord T.points x j|
+      ≤ ∑ j, B * baryCoord T.points x j := sum_le_sum fun j _ => by
+        rw [abs_mul, abs_of_nonneg (baryCoord_mem_Icc T hx j).1]
+        exact mul_le_mul_of_nonneg_right (hB j) (baryCoord_mem_Icc T hx j).1
+    _ = B := by rw [← mul_sum, sum_baryCoord, mul_one]
+
+theorem p1Interp_sub_values (p : Fin (n + 1) → Fin n → ℝ) (u w : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
+    p1Interp p (u - w) x = p1Interp p u x - p1Interp p w x := by
+  simp [p1Interp, sub_mul, sum_sub_distrib]
+
+/-- `|g(1) - g(0) - g'(0)| ≤ M / 2` for `|g''| ≤ M` on `[0, 1]`. -/
+theorem abs_taylor_one_le {g g₁ g₂ : ℝ → ℝ} {M : ℝ}
+    (h₀ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt g (g₁ t) t)
+    (h₁ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt g₁ (g₂ t) t) (hM : ∀ t ∈ Icc (0 : ℝ) 1, |g₂ t| ≤ M) :
+    |g 1 - g 0 - g₁ 0| ≤ M / 2 := by
+  have c : ∀ {f f' : ℝ → ℝ}, (∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt f (f' t) t) →
+      ContinuousOn f (Icc 0 1) ∧ ∀ t ∈ Ico (0 : ℝ) 1, HasDerivWithinAt f (f' t) (Ici t) t :=
+    fun hf => ⟨fun t ht => (hf t ht).continuousAt.continuousWithinAt,
+      fun t ht => (hf t (Ico_subset_Icc_self ht)).hasDerivWithinAt⟩
+  have d₁ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt (fun t => g₁ t - g₁ 0) (g₂ t) t :=
+    fun t ht => (h₁ t ht).sub_const _
+  have d₀ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt (fun t => g t - g 0 - t * g₁ 0) (g₁ t - g₁ 0) t :=
+    fun t ht => (((h₀ t ht).sub_const _).sub ((hasDerivAt_id t).mul_const _)).congr_deriv
+      (by simp)
+  have A := norm_image_le_of_norm_deriv_le_pow (c := M) 0 (c d₁).1 (c d₁).2 (by simp)
+    fun t ht => by simpa using hM t (Ico_subset_Icc_self ht)
+  have B := norm_image_le_of_norm_deriv_le_pow (c := M) 1 (c d₀).1 (c d₀).2 (by simp)
+    fun t ht => (A t (Ico_subset_Icc_self ht)).trans (le_of_eq (by ring))
+  have := B 1 ⟨zero_le_one, le_rfl⟩
+  simp only [Real.norm_eq_abs, one_mul, sub_zero, one_pow, mul_one] at this
+  convert this using 2
+  norm_num
+
+/-- `t ↦ f(x + t v)` has derivative `Σᵢ vᵢ ∂ᵢ f(x + t v)`. -/
+theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ} {t : ℝ}
+    (hf : DifferentiableAt ℝ f (x + t • v)) :
+    HasDerivAt (fun t : ℝ => f (x + t • v)) (∑ i, v i * partialDeriv i f (x + t • v)) t := by
+  have hl : HasDerivAt (fun t : ℝ => x + t • v) v t := by
+    simpa using ((hasDerivAt_id t).smul_const v).const_add x
+  have := hf.hasFDerivAt.comp_hasDerivAt t hl
+  rwa [fderiv_apply_eq_sum_partialDeriv] at this
+
+/-- **The `P₁` interpolation error in the maximum norm**: for `f ∈ C²` with
+`|∂ᵢ∂ₖ f| ≤ D` on `T` and `|y - z|_∞ ≤ δ` on `T`, `|f(x) - Πₜf(x)| ≤ n² D δ² / 2` on `T`
+(Taylor's formula along the segments `x → pⱼ`; `Σⱼ λⱼ(x)(pⱼ - x) = 0`). -/
+theorem abs_sub_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {f : (Fin n → ℝ) → ℝ}
+    (hf : ContDiff ℝ 2 f) {D δ : ℝ}
+    (hD : ∀ y ∈ T.closedInterior, ∀ i k, |partialDeriv k (partialDeriv i f) y| ≤ D)
+    (hδ : ∀ y ∈ T.closedInterior, ∀ z ∈ T.closedInterior, dist y z ≤ δ)
+    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
+    |f x - p1Interp T.points f x| ≤ n ^ 2 * D * δ ^ 2 / 2 := by
+  have hT := isUnit_det_edgeMatrix T
+  have hconv := convex_closedInterior T
+  have hd1 : Differentiable ℝ f := hf.differentiable (by norm_num)
+  have hd2 : ∀ i, Differentiable ℝ (partialDeriv i f) := fun i =>
+    (hf.partialDeriv (m := 1) (by norm_num) i).differentiable (by norm_num)
+  have hp : ∀ j, T.points j ∈ T.closedInterior := fun j => by
+    rw [← Affine.Simplex.convexHull_eq_closedInterior]
+    exact subset_convexHull ℝ _ (Set.mem_range_self j)
+  set v : Fin (n + 1) → Fin n → ℝ := fun j => T.points j - x
+  have hseg : ∀ j, ∀ t ∈ Icc (0 : ℝ) 1, x + t • v j ∈ T.closedInterior := fun j t ht => by
+    have := hconv.add_smul_sub_mem hx (hp j) ht
+    simpa [v] using this
+  have hv : ∀ j i, |v j i| ≤ δ := fun j i =>
+    ((norm_le_pi_norm (v j) i).trans (by
+      rw [show v j = T.points j - x from rfl, ← dist_eq_norm]
+      exact hδ _ (hp j) _ hx))
+  have hR : ∀ j, |f (T.points j) - f x - ∑ i, v j i * partialDeriv i f x| ≤
+      n ^ 2 * D * δ ^ 2 / 2 := fun j => by
+    have e1 : x + v j = T.points j := by simp [v]
+    have := abs_taylor_one_le (g := fun t => f (x + t • v j))
+      (g₁ := fun t => ∑ i, v j i * partialDeriv i f (x + t • v j))
+      (g₂ := fun t => ∑ i, v j i * ∑ k, v j k * partialDeriv k (partialDeriv i f) (x + t • v j))
+      (M := n ^ 2 * D * δ ^ 2)
+      (fun t _ => hasDerivAt_comp_line (hd1 _))
+      (fun t _ => HasDerivAt.fun_sum fun i _ =>
+        (hasDerivAt_comp_line ((hd2 i) _)).const_mul (v j i))
+      (fun t ht => by
+        refine (abs_sum_le_sum_abs _ _).trans ?_
+        calc ∑ i, |v j i * ∑ k, v j k * partialDeriv k (partialDeriv i f) (x + t • v j)|
+            ≤ ∑ _i : Fin n, ∑ _k : Fin n, δ * (δ * D) := sum_le_sum fun i _ => by
+              rw [abs_mul]
+              refine (mul_le_mul_of_nonneg_left (abs_sum_le_sum_abs _ _) (abs_nonneg _)).trans ?_
+              rw [mul_sum]
+              refine sum_le_sum fun k _ => ?_
+              rw [abs_mul]
+              have h0 : 0 ≤ δ := (abs_nonneg _).trans (hv j i)
+              exact mul_le_mul (hv j i) (mul_le_mul (hv j k) (hD _ (hseg j t ht) i k)
+                (abs_nonneg _) h0) (by positivity) h0
+          _ = n ^ 2 * D * δ ^ 2 := by simp; ring)
+    simpa [e1] using this
+  have hsum : ∑ j, baryCoord T.points x j * ∑ i, v j i * partialDeriv i f x = 0 := by
+    simp_rw [mul_sum]
+    rw [sum_comm]
+    refine sum_eq_zero fun i _ => ?_
+    have h0 : ∑ j, baryCoord T.points x j * v j i = 0 := by
+      have := congrFun (sum_baryCoord_smul hT x) i
+      simp only [Finset.sum_apply, Pi.smul_apply, smul_eq_mul] at this
+      simp only [v, Pi.sub_apply, mul_sub, sum_sub_distrib, ← sum_mul, sum_baryCoord, this,
+        one_mul, sub_self]
+    simp_rw [← mul_assoc]
+    rw [← sum_mul, h0, zero_mul]
+  have e : f x - p1Interp T.points f x = -∑ j, baryCoord T.points x j *
+      (f (T.points j) - f x - ∑ i, v j i * partialDeriv i f x) := by
+    simp only [p1Interp, mul_sub, sum_sub_distrib, hsum, ← sum_mul, sum_baryCoord, one_mul]
+    simp_rw [mul_comm (baryCoord T.points x _)]
+    ring
+  rw [e, abs_neg]
+  refine (abs_sum_le_sum_abs _ _).trans ?_
+  calc ∑ j, |baryCoord T.points x j * (f (T.points j) - f x - ∑ i, v j i * partialDeriv i f x)|
+      ≤ ∑ j, baryCoord T.points x j * (n ^ 2 * D * δ ^ 2 / 2) := sum_le_sum fun j _ => by
+        rw [abs_mul, abs_of_nonneg (baryCoord_mem_Icc T hx j).1]
+        exact mul_le_mul_of_nonneg_left (hR j) (baryCoord_mem_Icc T hx j).1
+    _ = _ := by rw [← sum_mul, sum_baryCoord, one_mul]
+
+end MaxNorm
 
 end Feec.FiniteElement

@@ -103,9 +103,9 @@ direct Hilbert route reaches the maximum norm with a factor `h^{-n/2}`) gives su
 maximum norm at the nodes, with constants independent of `h`: `O(h²)`, `O(τ + h²)` for backward
 Euler and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, collected with a
 nonzero classical solution (the first eigenmode, `Feec.Models.Cube.MaxNormHeat.sineSolution`) in
-the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). Limitations: the stiffness form
-is the elementwise assembly, not identified with the global `P₁` (Whitney `0`-form) space; nodal
-norm; Dirichlet data; for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
+the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). The scheme is the
+lumped-mass Galerkin method on the global `P₁` (Whitney `0`-form) space
+(`Feec.FiniteElement.P1Global`). Limitations: nodal norm; Dirichlet data; for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
 the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of

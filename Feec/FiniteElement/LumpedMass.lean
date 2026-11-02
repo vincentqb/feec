@@ -11,10 +11,10 @@ values on `T` (`p1Interp`, gradient `p1Grad = Σⱼ u(pⱼ) ∇λⱼ`, `p1Interp
 mass** (`lumpedMass M x`) is the vertex quadrature `m(x) = Σ_{T ∋ x} |T| / (n + 1)` of `∫ φₓ`
 ([Thomee2006], Ch. 15). The **lumped-mass `P₁` Laplacian** is `-m⁻¹ a`.
 
-`p1Stiffness` is the elementwise assembly; it is not proved equal to `∫_Q ∇u_h · ∇w_h` for the
-global conforming `P₁` (Whitney `0`-form) functions of `Feec.FiniteElement.WhitneyComplex`. With
-`neg_p1Stiffness_div_lumpedMass` the lumped-mass scheme on the Freudenthal meshes is exactly the
-classical `(2n + 1)`-point finite difference scheme.
+`p1Stiffness` is defined by elementwise assembly; `Feec.FiniteElement.P1Global` identifies it with
+`∫_Ω ∇u_h · ∇w_h` for the global conforming `P₁` (Whitney `0`-form) functions, and the lumped
+mass with `∫_Ω φₓ`. With `neg_p1Stiffness_div_lumpedMass` the lumped-mass scheme on the
+Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference scheme.
 
 ## Main results
 
@@ -90,8 +90,9 @@ theorem p1Grad_smul (p : Fin (n + 1) → Fin n → ℝ) (c : ℝ) (u : (Fin n �
   simp [p1Grad, smul_sum, smul_smul]
 
 /-- **The `P₁` stiffness form** `a(u, w) = Σ_T ∫_T ∇Πₜu · ∇Πₜw` of the mesh `M`, on nodal
-values `u, w : ℝⁿ → ℝ` (only the values at the vertices enter): the elementwise assembly, not
-proved equal to the integral over the domain of the gradients of the global `P₁` functions. -/
+values `u, w : ℝⁿ → ℝ` (only the values at the vertices enter), assembled elementwise; it is
+`⟪d u_h, d w_h⟫_{L²Λ¹(Ω)}` for the global `P₁` functions
+(`Feec.FiniteElement.inner_glue_dPiecewise_p1Global`). -/
 def p1Stiffness (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, ∫ _ in T.closedInterior, p1Grad T.points u ⬝ᵥ p1Grad T.points w
 

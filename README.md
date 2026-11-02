@@ -41,9 +41,10 @@ symmetric difference Laplacian); the direct Hilbert route reaches the maximum no
 `h^{-n/2}`; the Banach layer gives the maximum-norm errors `O(h²)` (semidiscrete), `O(τ + h²)`
 (backward Euler) and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every A-stable rational scheme, with the
 stability bound `1 + C'_r √n`) against every classical solution, with constants independent of
-`h`. Limitations: the stiffness form is the elementwise assembly, not identified with the global
-`P₁` (Whitney `0`-form) space (with the stencil theorem the scheme is exactly the classical
-finite difference scheme); the norm is the nodal one; Dirichlet data only; for rational schemes
+`h`. The scheme is the lumped-mass Galerkin method on the global `P₁` (Whitney `0`-form) space
+(`Feec.FiniteElement.P1Global`: stiffness `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the
+stencil theorem exactly the classical finite difference scheme. Limitations: the norm is the nodal
+one; Dirichlet data only; for rational schemes
 the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
 stability bound loses `√k`. Each field of the crown is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson

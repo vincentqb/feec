@@ -94,6 +94,7 @@ public import Feec.FiniteElement.InvariantForm
 public import Feec.FiniteElement.LocalDof
 public import Feec.FiniteElement.LocalSpace
 public import Feec.FiniteElement.MeshDivergence
+public import Feec.FiniteElement.P1Global
 public import Feec.FiniteElement.PolyComplex
 public import Feec.FiniteElement.PolyElement
 public import Feec.FiniteElement.PolyElementMixed

@@ -1,6 +1,6 @@
 module
 
-public import Feec.FiniteElement.P1Global
+public import Feec.FiniteElement.LumpedLaplacian
 public import Feec.TimeStepping.StableFamily
 public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Calculus.Partial
@@ -20,10 +20,11 @@ the direct Hilbert route reaches the maximum norm through the norm equivalence, 
 `h^{-n/2}`. The Banach layer (`Feec.TimeStepping.stableFamily`, the discrete half of
 `Feec.TimeStepping.banachFEEC`) gives the maximum-norm theory with constants independent of `h`.
 
-The scheme is the lumped-mass Galerkin method on the global conforming `P₁` (Whitney `0`-form)
-space of `Feec.FiniteElement.WhitneyComplex`: for the global `P₁` functions `U_h` with nodal
-values `U` (`feFun`, vanishing boundary DOFs), `W = Lₕ U` iff `(W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}`
-for all `V` (`lumpedLaplacian_eq_iff`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
+The scheme is the lumped-mass Galerkin method on the conforming `P₁` (Whitney `0`-form)
+functions of `Feec.FiniteElement.WhitneyComplex` vanishing at the boundary nodes (contained in
+`P̊₁⁻Λ⁰`, `feFun_mem_globalSpace₀`; equality not proved): for the global `P₁` functions `U_h`
+with nodal values `U` (`feFun`), `W = Lₕ U` iff `(W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all
+`V` (`lumpedLaplacian_eq_iff`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
 `m(p) = ∫_Q φₚ` (`Feec.FiniteElement.P1Global`). With the stencil theorem it is exactly the
 classical finite difference scheme for the heat equation.
 
@@ -59,7 +60,8 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
 9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`) a `P₁` function attains
    its extreme values at the vertices (`Feec.FiniteElement.abs_p1Interp_le`) and the `P₁`
    interpolation error is `≤ n² D₂ h² / 2` for `|∂ᵢ∂ₖ u| ≤ D₂`
-   (`Feec.FiniteElement.abs_sub_p1Interp_le`), so at every point `x` of every simplex `K`,
+   (`Feec.FiniteElement.abs_sub_p1Interp_le`), so at every point `x` of every simplex `K`
+   (the simplices cover `Q̄`, `exists_simplex_mem`),
    `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D₂ h² / 2`; with 4–6 this bounds the semidiscrete,
    backward Euler and rational errors in `L^∞(Q)` (`semidiscrete_fe`, `backwardEuler_fe`,
    `rational_fe`).
@@ -112,12 +114,12 @@ def ext (U : Space n N) (q : Fin n → ℤ) : ℝ :=
 
 /-- The nodal function on `ℝⁿ` with values `U` at the interior nodes and `0` elsewhere. -/
 def nodal (b : Fin n → ℝ) (s : ℝ) (U : Space n N) : (Fin n → ℝ) → ℝ :=
-  fun x => ∑ q : Nodes n N, if node b (meshSize s N) q = x then U q else 0
+  nodalFun (fun q : Nodes n N => node b (meshSize s N) q) U
 
 theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Fin n → ℤ) :
     nodal b s U (node b (meshSize s N) q) = ext U q := by
   have hinj := node_injective b (meshSize_pos hs N).ne'
-  simp only [nodal, hinj.eq_iff, ext]
+  simp only [nodal, nodalFun, hinj.eq_iff, ext]
   split_ifs with hq
   · rw [Finset.sum_eq_single ⟨q, hq⟩]
     · simp
@@ -126,18 +128,23 @@ theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Fin n → ℤ) :
   · exact sum_eq_zero fun c _ => by
       rw [ite_eq_right]; rintro rfl; exact hq c.2
 
-/-- The **lumped-mass `P₁` Laplacian** `-M_L⁻¹ K` before linearity is proved. -/
-def lumpedLaplacianFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) : Space n N := fun p =>
-  -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
-    (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p)
+/-- **The lumped-mass `P₁` Laplacian** `Lₕ = -M_L⁻¹ K` on the level-`(N + 1)` Freudenthal mesh of
+`b + (0, s)ⁿ`, with homogeneous Dirichlet data: `(Lₕ U)(p) = -a(φₚ, U) / m(p)` at the interior
+nodes (`Feec.FiniteElement.lumpedLaplacianOn`). -/
+def lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
+  lumpedLaplacianOn (freudenthalMesh b s hs (N + 1)) fun q : Nodes n N => node b (meshSize s N) q
 
-/-- **The stencil**: the lumped-mass `P₁` Laplacian is the `(2n + 1)`-point difference
-Laplacian. -/
-theorem lumpedLaplacianFun_apply (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
-    lumpedLaplacianFun b hs U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
+theorem lumpedLaplacian_apply_eq (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
+    lumpedLaplacian b hs N U p =
+      -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
+        (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) :=
+  lumpedLaplacianOn_apply _ _ U p
+
+/-- **The stencil** (`Lₕ` is the difference Laplacian). [Thomee2006], Ch. 15 -/
+theorem lumpedLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
+    lumpedLaplacian b hs N U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
       ext U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 := by
-  rw [lumpedLaplacianFun, meshSize]
-  rw [neg_p1Stiffness_div_lumpedMass b hs (N + 1) p.2]
+  rw [lumpedLaplacian_apply_eq, meshSize, neg_p1Stiffness_div_lumpedMass b hs (N + 1) p.2]
   refine sum_congr rfl fun l _ => ?_
   have e := nodal_node (b := b) hs U
   simp only [meshSize] at e
@@ -145,63 +152,13 @@ theorem lumpedLaplacianFun_apply (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
   congr 2
   simp [ext, p.2]
 
-/-- **The lumped-mass `P₁` Laplacian** `Lₕ = -M_L⁻¹ K` on the level-`(N + 1)` Freudenthal mesh of
-`b + (0, s)ⁿ`, with homogeneous Dirichlet data: `(Lₕ U)(p) = -a(φₚ, U) / m(p)`. -/
-def lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
-  LinearMap.toContinuousLinearMap
-    { toFun := lumpedLaplacianFun b hs
-      map_add' := fun U V => by
-        funext p
-        simp only [lumpedLaplacianFun_apply, Pi.add_apply, ← sum_add_distrib]
-        refine sum_congr rfl fun l _ => ?_
-        simp only [ext, Pi.add_apply]; split_ifs <;> ring
-      map_smul' := fun c U => by
-        funext p
-        simp only [lumpedLaplacianFun_apply, Pi.smul_apply, smul_eq_mul, RingHom.id_apply,
-          mul_sum]
-        refine sum_congr rfl fun l _ => ?_
-        simp only [ext, Pi.smul_apply, smul_eq_mul]; split_ifs <;> ring }
-
-/-- **The stencil** (`Lₕ` is the difference Laplacian). [Thomee2006], Ch. 15 -/
-theorem lumpedLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
-    lumpedLaplacian b hs N U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
-      ext U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 :=
-  lumpedLaplacianFun_apply hs U p
-
-theorem lumpedLaplacian_apply_eq (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
-    lumpedLaplacian b hs N U p =
-      -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
-        (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) :=
-  rfl
-
-/-- **The discrete maximum principle**: `Lₕ` is a sub-Markov generator (`Lₕ + 2n/h²` is positive
-and `Lₕ 𝟙 ≤ 0`), so `e^{tLₕ}` is positive and contractive in the maximum norm.
-[CiarletRaviart1973]; [Thomee2006], Ch. 15 -/
+/-- **The discrete maximum principle**: the Freudenthal meshes are non-obtuse, so `Lₕ` is a
+sub-Markov generator (`Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn`) and `e^{tLₕ}`
+is positive and contractive in the maximum norm. [CiarletRaviart1973]; [Thomee2006], Ch. 15 -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
-    IsSubMarkovGenerator (lumpedLaplacian b hs N) where
-  exists_shift := by
-    refine ⟨2 * n / meshSize s N ^ 2, by positivity, fun U hU p => ?_⟩
-    have hext : ∀ q, 0 ≤ ext U q := fun q => by
-      simp only [ext]; split_ifs; exacts [hU _, le_rfl]
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, lumpedLaplacian_apply, Pi.zero_apply]
-    have e : ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
-          ext U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 +
-          2 * n / meshSize s N ^ 2 * U p =
-        ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) + ext U ((p : Fin n → ℤ) - Pi.single l 1)) /
-          meshSize s N ^ 2 := by
-      have : 2 * n / meshSize s N ^ 2 * U p = ∑ _l : Fin n, 2 * U p / meshSize s N ^ 2 := by
-        rw [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
-      rw [this, ← sum_add_distrib]
-      refine sum_congr rfl fun l _ => ?_
-      ring
-    rw [e]
-    exact sum_nonneg fun l _ => div_nonneg (add_nonneg (hext _) (hext _)) (sq_nonneg _)
-  apply_one_nonpos p := by
-    rw [lumpedLaplacian_apply]
-    refine sum_nonpos fun l _ => div_nonpos_of_nonpos_of_nonneg ?_ (sq_nonneg _)
-    have h1 : ∀ q : Fin n → ℤ, ext (fun _ => (1 : ℝ)) (N := N) q ≤ 1 := fun q => by
-      simp only [ext]; split_ifs <;> norm_num
-    linarith [h1 ((p : Fin n → ℤ) + Pi.single l 1), h1 ((p : Fin n → ℤ) - Pi.single l 1)]
+    IsSubMarkovGenerator (lumpedLaplacian b hs N) :=
+  isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
+    fun _ _ h => Subtype.ext (node_injective b (meshSize_pos hs N).ne' h)
 
 /-! ### Consistency -/
 
@@ -287,10 +244,8 @@ theorem ext_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
 theorem hasDerivAt_line {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f) (x : Fin n → ℝ)
     (l : Fin n) (t : ℝ) :
     HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
-      (partialDeriv l f (x + t • Pi.single l 1)) t := by
-  have hl : HasDerivAt (fun r : ℝ => x + r • (Pi.single l 1 : Fin n → ℝ)) (Pi.single l 1) t := by
-    simpa using ((hasDerivAt_id t).smul_const (Pi.single l (1 : ℝ) : Fin n → ℝ)).const_add x
-  exact (hf _).hasFDerivAt.comp_hasDerivAt t hl
+      (partialDeriv l f (x + t • Pi.single l 1)) t :=
+  hasDerivAt_comp_add_smul_single hf x l t
 
 /-- **Consistency in the maximum norm**: for `u ∈ C⁴` vanishing on `∂Q` with `|∂ᵢ⁴ u| ≤ B` on
 `Q̄`, `|(Iₕ Δu)(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12` at every interior node (the truncation error of
@@ -305,45 +260,18 @@ theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) 
   have hh := meshSize_pos hs N
   set x := node b h p
   have hp := mem_interiorNodes.1 p.2
-  have hd : ∀ (l : Fin n) (k : ℕ), k ≤ 3 → Differentiable ℝ ((partialDeriv l)^[k] u) := by
-    intro l k hk
-    have : ∀ k ≤ 4, ContDiff ℝ (4 - k : ℕ) ((partialDeriv l)^[k] u) := by
-      intro k hk
-      induction k with
-      | zero => simpa using hu
-      | succ k ih =>
-        rw [Function.iterate_succ_apply']
-        exact (ih (by omega)).partialDeriv (by norm_cast; omega) l
-    exact (this k (by omega)).differentiable (by norm_cast; omega)
   have hterm : ∀ l, |partialDeriv l (partialDeriv l u) x -
       (u (node b h ((p : Fin n → ℤ) + Pi.single l 1)) - 2 * u x +
         u (node b h ((p : Fin n → ℤ) - Pi.single l 1))) / h ^ 2| ≤ B * h ^ 2 / 12 := by
     intro l
-    set g : ℕ → ℝ → ℝ := fun k t => (partialDeriv l)^[k] u (x + t • Pi.single l 1)
-    have hg : ∀ k ≤ 3, ∀ t, HasDerivAt (g k) (g (k + 1) t) t := fun k hk t => by
-      have := hasDerivAt_line (hd l k hk) x l t
-      simpa [g, Function.iterate_succ_apply'] using this
-    have key := abs_secondDiff_sub_le (g := g 0) (g₁ := g 1) (g₂ := g 2) (g₃ := g 3)
-      (g₄ := g 4) (B := B) hh.le (fun t _ => hg 0 (by omega) t) (fun t _ => hg 1 (by omega) t)
-      (fun t _ => hg 2 (by omega) t) (fun t _ => hg 3 le_rfl t)
-      (fun t ht => hB _ (node_add_smul_mem_closedCube hs p l ht) l)
     have e1 : node b h ((p : Fin n → ℤ) + Pi.single l 1) = x + h • Pi.single l 1 := by
       rw [node_add_single, Int.cast_one, mul_one]
     have e2 : node b h ((p : Fin n → ℤ) - Pi.single l 1) = x + (-h) • Pi.single l 1 := by
       rw [sub_eq_add_neg, ← Pi.single_neg, node_add_single, Int.cast_neg, Int.cast_one, mul_neg,
         mul_one]
-    simp only [g, Function.iterate_zero, id, zero_smul, add_zero, Function.iterate_succ,
-      Function.comp] at key
     rw [e1, e2]
-    have hh2 : 0 < h ^ 2 := by positivity
-    have hh' : h ≠ 0 := hh.ne'
-    rw [show partialDeriv l (partialDeriv l u) x -
-        (u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1)) / h ^ 2 =
-        -(u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1) -
-          h ^ 2 * partialDeriv l (partialDeriv l u) x) / h ^ 2 by field_simp; ring,
-      abs_div, abs_neg, abs_of_pos hh2, div_le_iff₀ hh2]
-    calc _ ≤ B * h ^ 4 / 12 := key
-      _ = B * h ^ 2 / 12 * h ^ 2 := by ring
+    exact abs_partialDeriv_sub_secondDiff_le hu hh x l fun t ht =>
+      hB _ (node_add_smul_mem_closedCube hs p l ht) l
   have hplus : ∀ l, ext (interp b s N u) ((p : Fin n → ℤ) + Pi.single l 1) =
       u (node b h ((p : Fin n → ℤ) + Pi.single l 1)) := fun l =>
     ext_interp hs hbd fun j => by
@@ -385,7 +313,7 @@ theorem norm_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ)
   rw [Real.norm_eq_abs]
   exact abs_interp_laplacian_sub_le hs N hu hB hbd p
 
-/-! ### The lumped-mass Galerkin method on the global `P₁` space -/
+/-! ### The lumped-mass Galerkin method on the `P₁` functions vanishing at the boundary nodes -/
 
 /-- The **global `P₁` function** `U_h` of the discrete values `U` (`0` at the boundary nodes) on
 the level-`(N + 1)` Freudenthal mesh: an element of the global Whitney `0`-form (Lagrange `P₁`)
@@ -408,9 +336,8 @@ def lumpedInner (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) : ℝ :=
     U p * V p
 
 theorem nodal_eq_sum (U : Space n N) :
-    nodal b s U = ∑ q : Nodes n N, U q • nodalIndicator (node b (meshSize s N) q) := by
-  funext x
-  simp [nodal, nodalIndicator, Finset.sum_apply, eq_comm]
+    nodal b s U = ∑ q : Nodes n N, U q • nodalIndicator (node b (meshSize s N) q) :=
+  nodalFun_eq_sum _ U
 
 theorem lumpedMass_node_pos (b : Fin n → ℝ) (hs : 0 < s) (p : Nodes n N) :
     0 < lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) := by
@@ -428,7 +355,8 @@ theorem lumpedInner_lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (U V : Spac
   have := (lumpedMass_node_pos b hs p).ne'
   field_simp
 
-/-- **The scheme is the lumped-mass Galerkin method on the global `P₁` space**:
+/-- **The scheme is the lumped-mass Galerkin method on the `P₁` functions vanishing at the
+boundary nodes** (contained in `P̊₁⁻Λ⁰`, `feFun_mem_globalSpace₀`; equality not proved):
 `(Lₕ U, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)} = -∫_Q ∇U_h · ∇V_h` for all discrete values `U, V`. -/
 theorem lumpedInner_lumpedLaplacian_eq_neg_inner (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) :
     lumpedInner b hs (lumpedLaplacian b hs N U) V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ := by
@@ -480,12 +408,8 @@ theorem feFun_mem_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N
 /-- **The maximum-norm family**: the lumped-mass `P₁` Laplacians `Lₕ` of the levels `N + 1` on
 `ℝ^{interior nodes}` with the maximum norm, a uniformly stable family with `M = 1`
 (`isSubMarkovGenerator`). -/
-abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ where
-  X N := Space n N
-  L N := lumpedLaplacian b hs N
-  M := 1
-  M_nonneg := zero_le_one
-  norm_exp_le N t ht := by simpa using (isSubMarkovGenerator b hs N).norm_exp_smul_le_one ht
+abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
+  StableFamily.ofSubMarkov (fun N => Nodes n N) (lumpedLaplacian b hs) (isSubMarkovGenerator b hs)
 
 @[simp] theorem family_M (b : Fin n → ℝ) (hs : 0 < s) : (family b hs).M = 1 := rfl
 
@@ -657,6 +581,55 @@ theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ)
   congr 2
   exact Finset.prod_congr rfl fun j hj => by rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
 
+/-- The eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - cᵢ)/s)` has time derivative `-λ` times itself (any
+centre `c`, any `x`). -/
+theorem hasDerivAt_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
+    HasDerivAt (fun t => Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
+      (-(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))) t := by
+  have := ((Real.hasDerivAt_exp _).comp t
+    ((hasDerivAt_id t).const_mul (-(n * sineFreq s ^ 2)))).mul_const
+    (∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
+  exact this.congr_deriv (by simp; ring)
+
+/-- `Δ` of the eigenmode is `-λ` times itself, `λ = n (π/s)²` (any centre, any `x`). -/
+theorem laplacian_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
+    laplacian (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x =
+      -(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) := by
+  have e : ∀ i, partialDeriv i (partialDeriv i (fun x : Fin n → ℝ =>
+      Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))) x =
+      -sineFreq s ^ 2 * (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) :=
+    fun i => by
+      have := congrFun (iterate_partialDeriv_sine c (sineFreq s)
+        (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
+      simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
+      rw [this, sineFactors, show sineDeriv (sineFreq s) (c i) 2 =
+        fun y => -sineFreq s ^ 2 * sineDeriv (sineFreq s) (c i) 0 y from rfl,
+        prod_update_const_mul (fun j => sineDeriv (sineFreq s) (c j) 0)]
+      ring
+  simp only [laplacian, e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
+  ring
+
+/-- `|∂ᵢ⁴|` of the eigenmode is at most `(π/s)⁴` for `t ≥ 0` (any centre, any `x`). -/
+theorem abs_iterate_partialDeriv_sineMode_le (c : Fin n → ℝ) {t : ℝ} (ht : 0 ≤ t)
+    (x : Fin n → ℝ) (i : Fin n) :
+    |(partialDeriv i)^[4] (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x| ≤
+      sineFreq s ^ 4 := by
+  have := congrFun (iterate_partialDeriv_sine c (sineFreq s)
+    (Real.exp (-(n * sineFreq s ^ 2) * t)) i 4 le_rfl) x
+  rw [this, sineFactors, show sineDeriv (sineFreq s) (c i) 4 =
+    fun y => sineFreq s ^ 4 * sineDeriv (sineFreq s) (c i) 0 y from rfl,
+    prod_update_const_mul (fun j => sineDeriv (sineFreq s) (c j) 0), abs_mul, abs_mul,
+    abs_of_pos (Real.exp_pos _), Finset.abs_prod]
+  have h1 : Real.exp (-(n * sineFreq s ^ 2) * t) ≤ 1 :=
+    Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht))
+  have h2 : ∏ j, |sineDeriv (sineFreq s) (c j) 0 (x j)| ≤ 1 :=
+    Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
+  rw [abs_of_nonneg (by positivity)]
+  calc Real.exp (-(n * sineFreq s ^ 2) * t) *
+        (sineFreq s ^ 4 * ∏ j, |sineDeriv (sineFreq s) (c j) 0 (x j)|)
+      ≤ 1 * (sineFreq s ^ 4 * 1) := by gcongr
+    _ = sineFreq s ^ 4 := by ring
+
 /-- **The first eigenmode** `u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π² / s²`: a
 classical solution of the heat equation on every `[0, T] × Q` with `B₄ = (π/s)⁴`. -/
 def sineSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : HeatSolution b s T where
@@ -664,26 +637,8 @@ def sineSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : HeatSolution b s T
   u₁ t x := -(n * sineFreq s ^ 2) *
     (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))
   contDiff t _ := by simp only [sineDeriv]; fun_prop
-  hasDerivAt t _ x _ := by
-    have := ((Real.hasDerivAt_exp _).comp t
-      ((hasDerivAt_id t).const_mul (-(n * sineFreq s ^ 2)))).mul_const
-      (∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))
-    exact this.congr_deriv (by simp; ring)
-  heat t _ x _ := by
-    have e : ∀ i, partialDeriv i (partialDeriv i (fun x : Fin n → ℝ =>
-        Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))) x =
-        -sineFreq s ^ 2 *
-          (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j)) :=
-      fun i => by
-        have := congrFun (iterate_partialDeriv_sine b (sineFreq s)
-          (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
-        simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
-        rw [this, sineFactors, show sineDeriv (sineFreq s) (b i) 2 =
-          fun y => -sineFreq s ^ 2 * sineDeriv (sineFreq s) (b i) 0 y from rfl,
-          prod_update_const_mul (fun j => sineDeriv (sineFreq s) (b j) 0)]
-        ring
-    simp only [laplacian, e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
-    ring
+  hasDerivAt t _ x _ := hasDerivAt_sineMode b t x
+  heat t _ x _ := (laplacian_sineMode b t x).symm
   boundary t _ x hx hno := by
     obtain ⟨i, hi⟩ : ∃ i, x i = b i ∨ x i = b i + s := by
       by_contra! h
@@ -695,22 +650,7 @@ def sineSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : HeatSolution b s T
     · simp
     · rw [add_sub_cancel_left, div_mul_cancel₀ _ hs.ne', Real.sin_pi]
   B₄ := sineFreq s ^ 4
-  bound₄ t ht x _ i := by
-    have := congrFun (iterate_partialDeriv_sine b (sineFreq s)
-      (Real.exp (-(n * sineFreq s ^ 2) * t)) i 4 le_rfl) x
-    rw [this, sineFactors, show sineDeriv (sineFreq s) (b i) 4 =
-      fun y => sineFreq s ^ 4 * sineDeriv (sineFreq s) (b i) 0 y from rfl,
-      prod_update_const_mul (fun j => sineDeriv (sineFreq s) (b j) 0), abs_mul, abs_mul,
-      abs_of_pos (Real.exp_pos _), Finset.abs_prod]
-    have h1 : Real.exp (-(n * sineFreq s ^ 2) * t) ≤ 1 :=
-      Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht.1))
-    have h2 : ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)| ≤ 1 :=
-      Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
-    rw [abs_of_nonneg (by positivity)]
-    calc Real.exp (-(n * sineFreq s ^ 2) * t) *
-          (sineFreq s ^ 4 * ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)|)
-        ≤ 1 * (sineFreq s ^ 4 * 1) := by gcongr
-      _ = sineFreq s ^ 4 := by ring
+  bound₄ t ht x _ i := abs_iterate_partialDeriv_sineMode_le b ht.1 x i
 
 /-- The first eigenmode is nonzero at the centre of the cube at `t = 0`. -/
 theorem sineSolution_u_zero_center (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
@@ -762,6 +702,19 @@ theorem abs_ext_le (U : Space n N) (q : Fin n → ℤ) : |ext U q| ≤ ‖U‖ :
   split_ifs with h
   · exact (Real.norm_eq_abs _).symm.le.trans (norm_le_pi_norm U ⟨q, h⟩)
   · simp
+
+/-- **The simplices of the mesh cover `Q̄`** (`Feec.Mesh.SimplicialMesh.biUnion_closedInterior`,
+from `Feec.Mesh.iUnion_freudenthalSet`): the bounds below on every simplex hold on all of `Q̄`. -/
+theorem exists_simplex_mem (hs : 0 < s) {x : Fin n → ℝ} (hx : x ∈ closedCube b s) :
+    ∃ K ∈ (freudenthalMesh b s hs (N + 1)).simplices, x ∈ K.closedInterior := by
+  have h : x ∈ closure (freudenthalMesh b s hs (N + 1)).domain := by
+    rw [freudenthalMesh_domain, closure_pi_set]
+    intro i hi
+    have := hx i hi
+    simp only at this ⊢
+    rwa [closure_Ioo (by linarith : b i ≠ b i + s)]
+  rw [← (freudenthalMesh b s hs (N + 1)).biUnion_closedInterior] at h
+  simpa using h
 
 /-- **The finite element function in the maximum norm on `Q̄`**: for `u ∈ C²` vanishing on `∂Q`
 with `|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and discrete values `U`, at every point `x` of every simplex `K` of the
@@ -952,7 +905,8 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
         (p1Global (freudenthalMesh b s hs (N + 1)) (fun _ => 1) :
           (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0)⟫_ℝ =
       lumpedMass (freudenthalMesh b s hs (N + 1)) x
-  /-- the scheme is the lumped-mass Galerkin method on the global `P₁` space:
+  /-- the scheme is the lumped-mass Galerkin method on the `P₁` functions vanishing at the
+  boundary nodes (contained in `P̊₁⁻Λ⁰`; equality not proved):
   `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V` -/
   galerkin (N : ℕ) (U W : Space n N) : lumpedLaplacian b hs N U = W ↔
     ∀ V : Space n N, lumpedInner b hs W V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ

@@ -4,6 +4,9 @@ public import Mathlib.Analysis.Normed.Algebra.Exponential
 public import Mathlib.Analysis.SpecialFunctions.Exponential
 public import Mathlib.Analysis.Normed.Operator.Basic
 public import Mathlib.Topology.Algebra.InfiniteSum.Order
+public import Mathlib.Analysis.Calculus.Deriv.MeanValue
+public import Mathlib.Analysis.Calculus.Deriv.Prod
+public import Mathlib.Analysis.Calculus.Deriv.Comp
 
 /-!
 # Sub-Markov generators: positive contraction semigroups in the maximum norm
@@ -18,7 +21,11 @@ diagonally dominant M-matrix). Then `e^{tL}` is, for `t ≥ 0`,
 * a contraction in the maximum norm (`IsSubMarkovGenerator.norm_exp_smul_le_one`), and
 * satisfies the **discrete maximum principle** (`IsSubMarkovGenerator.exp_smul_apply_le`,
   `IsSubMarkovGenerator.le_exp_smul_apply`): `-a ≤ v ≤ a` with `a ≥ 0` gives
-  `-a ≤ e^{tL} v ≤ a`.
+  `-a ≤ e^{tL} v ≤ a`;
+* positive along the flow (`IsSubMarkovGenerator.nonneg_of_hasDerivAt`: `Z(0) ≥ 0` and
+  `Z' - L Z ≥ 0` give `Z(t) ≥ 0`), whence, for `L 𝟙 = 0`, the **barrier estimate**
+  `IsSubMarkovGenerator.abs_apply_le_of_barrier`: `|E' - L E| ≤ A - L ψ`, `ψ ≥ 0`, give
+  `|E(t)| ≤ ‖E(0)‖ + ψ + t A`.
 
 The proofs avoid matrix entries: a positive operator `P` has `|P v| ≤ P |v| ≤ ‖v‖ P 𝟙`, so
 `‖P‖ ≤ c` as soon as `P 𝟙 ≤ c` (`ContinuousLinearMap.norm_le_of_nonneg_of_apply_one_le`), and
@@ -34,7 +41,7 @@ The proofs avoid matrix entries: a positive operator `P` has `|P v| ≤ P |v| �
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open NormedSpace
+open NormedSpace Set
 
 @[expose] public noncomputable section
 
@@ -129,6 +136,20 @@ theorem _root_.ContinuousLinearMap.exp_smul_eq_smul_exp_smul_add (L : (ι → �
   rw [e, exp_add_of_commute (Algebra.commutes _ _).symm, ← algebraMap_exp_comm,
     ← Real.exp_eq_exp_ℝ, Algebra.algebraMap_eq_smul_one, mul_smul_comm, mul_one]
 
+/-- **The product rule along the flow**: `r ↦ e^{(t - r)L} Z(r)` has derivative
+`e^{(t - r)L} (Z' - L Z(r))`. -/
+theorem _root_.ContinuousLinearMap.hasDerivAt_exp_sub_smul_apply (L : (ι → ℝ) →L[ℝ] (ι → ℝ))
+    (t : ℝ) {Z : ℝ → ι → ℝ} {Z' : ι → ℝ} {r : ℝ} (hZ : HasDerivAt Z Z' r) :
+    HasDerivAt (fun r => exp ((t - r) • L) (Z r)) (exp ((t - r) • L) (Z' - L (Z r))) r := by
+  have hE := HasDerivAt.scomp r (hasDerivAt_exp_smul_const' (𝕂 := ℝ) L (t - r))
+    ((hasDerivAt_id r).const_sub t)
+  refine (hE.clm_apply hZ).congr_deriv ?_
+  have hc : L * exp ((t - r) • L) = exp ((t - r) • L) * L :=
+    ((Commute.refl L).smul_right (t - r)).exp_right.eq
+  simp only [neg_one_smul, neg_apply, hc, mul_apply_eq_comp,
+    map_sub]
+  abel
+
 variable {L : (ι → ℝ) →L[ℝ] (ι → ℝ)} (hL : IsSubMarkovGenerator L)
 include hL
 
@@ -179,5 +200,60 @@ theorem le_exp_smul_apply {t : ℝ} (ht : 0 ≤ t) {a : ℝ} (ha : 0 ≤ a) {v :
   have h := this i
   simp only [map_neg, Pi.neg_apply] at h
   exact neg_le.1 h
+
+/-- **Positivity along the flow**: for a sub-Markov generator `L`, a curve with `Z(0) ≥ 0` and
+`Z' - L Z ≥ 0` on `[0, t]` has `Z(t) ≥ 0` (`Z(t) = e^{tL} Z(0) + ∫ e^{(t-r)L} (Z' - L Z)`). -/
+theorem nonneg_of_hasDerivAt {Z Z' : ℝ → ι → ℝ} {t : ℝ} (ht : 0 ≤ t) (hZ : ∀ r ∈ Icc 0 t, HasDerivAt Z (Z' r) r)
+    (hZ' : ∀ r ∈ Icc 0 t, 0 ≤ Z' r - L (Z r)) (h0 : 0 ≤ Z 0) : 0 ≤ Z t := by
+  set f : ℝ → ι → ℝ := fun r => exp ((t - r) • L) (Z r)
+  have hf : ∀ r ∈ Icc 0 t, HasDerivAt f (exp ((t - r) • L) (Z' r - L (Z r))) r :=
+    fun r hr => L.hasDerivAt_exp_sub_smul_apply t (hZ r hr)
+  intro i
+  have hmono : MonotoneOn (fun r => f r i) (Icc 0 t) := by
+    refine monotoneOn_of_hasDerivWithinAt_nonneg (convex_Icc 0 t)
+      (fun r hr => ((hasDerivAt_pi.1 (hf r hr) i).continuousAt).continuousWithinAt)
+      (fun r hr => (hasDerivAt_pi.1 (hf r (interior_subset hr)) i).hasDerivWithinAt)
+      fun r hr => ?_
+    have hr' := interior_subset hr
+    exact hL.exp_smul_apply_nonneg (sub_nonneg.2 hr'.2) (hZ' r hr') i
+  have h := hmono ⟨le_rfl, ht⟩ ⟨ht, le_rfl⟩ ht
+  simp only [f, sub_self, zero_smul, exp_zero, one_apply_eq_self, sub_zero] at h
+  exact (hL.exp_smul_apply_nonneg ht h0 i).trans h
+
+/-- **The barrier estimate**: for a Markov generator `L` (`L 𝟙 = 0`) and a curve `E` whose defect
+`E' - L E` is bounded by `A - L ψ` for a barrier `ψ ≥ 0`, `|E(t)| ≤ ‖E(0)‖ + ψ + t A`. -/
+theorem abs_apply_le_of_barrier (h1 : L (fun _ => 1) = 0) {E E' : ℝ → ι → ℝ} {t A : ℝ} (ht : 0 ≤ t)
+    (hE : ∀ r ∈ Icc 0 t, HasDerivAt E (E' r) r) {ψ : ι → ℝ} (hψ : 0 ≤ ψ)
+    (hτ : ∀ r ∈ Icc 0 t, ∀ i, |(E' r - L (E r)) i| ≤ A - L ψ i) (i : ι) :
+    |E t i| ≤ ‖E 0‖ + ψ i + t * A := by
+  have key : ∀ ε : ℝ, (ε = 1 ∨ ε = -1) → ε * E t i ≤ ‖E 0‖ + ψ i + t * A := fun ε hε => by
+    set Z : ℝ → ι → ℝ := fun r => (‖E 0‖ + r * A) • (fun _ => (1 : ℝ)) + ψ - ε • E r
+    have hZ : ∀ r ∈ Icc 0 t, HasDerivAt Z (A • (fun _ => (1 : ℝ)) - ε • E' r) r := fun r hr => by
+      refine hasDerivAt_pi.2 fun j => ?_
+      have := ((((hasDerivAt_id r).mul_const A).const_add ‖E 0‖).add_const (ψ j)).sub
+        ((hasDerivAt_pi.1 (hE r hr) j).const_mul ε)
+      convert this using 1 <;> first | (funext x; simp [Z]) | simp
+    have hL1 : ∀ c : ℝ, L (c • fun _ => (1 : ℝ)) = 0 := fun c => by rw [map_smul, h1, smul_zero]
+    have h := hL.nonneg_of_hasDerivAt ht hZ (fun r hr j => by
+      have hb := hτ r hr j
+      simp only [Z, map_sub, map_add, hL1, zero_add, map_smul, Pi.sub_apply, Pi.smul_apply,
+        smul_eq_mul, Pi.zero_apply, mul_one]
+      rcases hε with rfl | rfl
+      · have := (abs_le.1 hb).2; simp only [Pi.sub_apply] at this; linarith
+      · have := (abs_le.1 hb).1; simp only [Pi.sub_apply] at this; linarith) (fun j => by
+      simp only [Z, Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul, zero_mul, add_zero,
+        mul_one, Pi.zero_apply]
+      have := norm_le_pi_norm (E 0) j
+      rw [Real.norm_eq_abs] at this
+      have hψj : 0 ≤ ψ j := hψ j
+      rcases hε with rfl | rfl
+      · linarith [le_abs_self (E 0 j)]
+      · linarith [neg_abs_le (E 0 j)]) i
+    simp only [Z, Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul, mul_one,
+      Pi.zero_apply] at h
+    linarith
+  rcases abs_cases (E t i) with ⟨h, -⟩ | ⟨h, -⟩
+  · rw [h]; simpa using key 1 (Or.inl rfl)
+  · rw [h]; simpa using key (-1) (Or.inr rfl)
 
 end IsSubMarkovGenerator

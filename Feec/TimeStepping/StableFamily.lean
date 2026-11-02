@@ -3,6 +3,7 @@ module
 public import Feec.TimeStepping.TimeScheme
 public import Feec.TimeStepping.Trajectory
 public import Feec.TimeStepping.RationalHillePhillipsReal
+public import Feec.ForMathlib.Analysis.SubMarkov
 
 /-!
 # Uniformly stable families of bounded generators
@@ -155,6 +156,17 @@ attribute [instance] StableFamily.normedAddCommGroup StableFamily.normedSpace
   StableFamily.completeSpace StableFamily.normedSpaceReal StableFamily.isScalarTower
 
 namespace StableFamily
+
+/-- **The family of sub-Markov generators** on `ℝ^{ι h}` with the maximum norm: `M = 1`
+(`IsSubMarkovGenerator.norm_exp_smul_le_one`). -/
+abbrev ofSubMarkov {κ : Type*} (ι : κ → Type) [∀ h, Fintype (ι h)]
+    (L : ∀ h, (ι h → ℝ) →L[ℝ] (ι h → ℝ)) (hL : ∀ h, IsSubMarkovGenerator (L h)) :
+    StableFamily ℝ κ where
+  X h := ι h → ℝ
+  L := L
+  M := 1
+  M_nonneg := zero_le_one
+  norm_exp_le h t ht := by simpa using (hL h).norm_exp_smul_le_one ht
 
 variable {κ : Type*} (F : StableFamily.{u} 𝕜 κ)
 

@@ -38,16 +38,16 @@ form and lumped mass of `Feec.FiniteElement.LumpedMass`.
    `|∂ᵢ⁴u| ≤ B₄` on `Q̄`),
    `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`,
    `G = n B₂ (1 + (n + 1)!)`: **first order** in the maximum norm at the nodes, by the comparison
-   principle `abs_apply_le_of_barrier` (positivity of `e^{tLₕ}` and the barrier `κ χ`,
+   principle `IsSubMarkovGenerator.abs_apply_le_of_barrier` (positivity of `e^{tLₕ}` and the barrier `κ χ`,
    `κ = 2 n! h G / s`);
 6. the verdict of the Banach layer for the family (`StableFamily.Verdict`, `M = 1`).
 
-The proved order is `O(h)`; `O(h²)` is not proved. The boundary consistency is only bounded,
-and this is not an artefact of the proof at the nodes with two or more coordinates on the
-boundary: there the edge weights `Σ_σ α±` are not those of the reflected interior stencil (the
-Freudenthal mesh is not reflection symmetric); for instance in the plane, at the corner `b`,
-`(Lₕ Iₕ u)(b) → (3/4) Δu(b)` for smooth `u` with `∂_ν u = 0` (a hand computation, not formalized),
-so no argument through nodal consistency gives more there. `cosSolution`
+The proved order is `O(h)`; `O(h²)` is not proved. The boundary consistency is only bounded:
+at nodes with two or more coordinates on the boundary the edge weights `Σ_σ α±` are not those of
+the reflected interior stencil (the Freudenthal mesh is not reflection symmetric), and the nodal
+consistency error does not tend to `0` there (in the plane, at the corner `b`,
+`(Lₕ Iₕ u)(b) → (3/4) Δu(b)` for smooth `u` with `∂_ν u = 0`: a hand computation, not
+formalized). `cosSolution`
 (`e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)`) is a nonzero classical solution (`maxNormNeumann_nonvacuous`).
 
 ## References
@@ -63,7 +63,10 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 namespace Feec.Models.Cube.MaxNormNeumann
 
-open Feec.Models.Cube.MaxNormHeat
+open Feec.Models.Cube.MaxNormHeat (meshSize meshSize_pos meshSize_mul closedCube
+  exists_node_eq_points mem_interiorNodes sineDeriv sineFreq iterate_partialDeriv_sine sineFactors
+  sineSolution hasDerivAt_sineMode laplacian_sineMode abs_iterate_partialDeriv_sineMode_le
+  abs_partialDeriv_partialDeriv_sineSolution_le)
 
 variable {n : ℕ} {b : Fin n → ℝ} {s : ℝ} {N : ℕ}
 
@@ -105,8 +108,9 @@ def upCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) 
 def downCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) : ℝ :=
   upCount N σ l (p - Pi.single l 1)
 
-/-- `C(p)`: the number of simplices of the mesh with vertex `p`, counted with the vertex
-position. -/
+/-- `C(p)`: the number of pairs (simplex `m + K_σ` of the mesh, vertex index `j`) with
+`m + v_j = p`, i.e. the simplices with vertex `p` (each once, `vₖ` being distinct); the lumped mass is
+`m(p) = hⁿ C(p) / (n + 1)!` (`lumpedMass_node_eq`). -/
 def vertexCount (N : ℕ) (p : Fin n → ℤ) : ℝ :=
   ∑ σ : Equiv.Perm (Fin n), ∑ j, ∑ m : Fin n → Fin (N + 1),
     if finLattice m + kuhnLattice σ j = p then 1 else 0
@@ -312,162 +316,43 @@ abbrev Space (n N : ℕ) := Nodes n N → ℝ
 
 /-- The nodal function on `ℝⁿ` with values `U` at the nodes and `0` elsewhere. -/
 def nodal (b : Fin n → ℝ) (s : ℝ) (U : Space n N) : (Fin n → ℝ) → ℝ :=
-  fun x => ∑ q : Nodes n N, if node b (meshSize s N) q = x then U q else 0
+  nodalFun (fun q : Nodes n N => node b (meshSize s N) q) U
+
+theorem node_injective_nodes (hs : 0 < s) :
+    Function.Injective fun q : Nodes n N => node b (meshSize s N) q :=
+  fun _ _ h => Subtype.ext (node_injective b (meshSize_pos hs N).ne' h)
 
 theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Nodes n N) :
-    nodal b s U (node b (meshSize s N) q) = U q := by
-  have hinj := node_injective b (meshSize_pos hs N).ne'
-  simp only [nodal, hinj.eq_iff]
-  rw [Finset.sum_eq_single q]
-  · simp
-  · intro c _ hc; rw [ite_eq_right]; intro e; exact hc (Subtype.ext e)
-  · simp
-
-theorem nodal_eq_sum (U : Space n N) :
-    nodal b s U = ∑ q : Nodes n N, U q • nodalIndicator (node b (meshSize s N) q) := by
-  funext x
-  simp [nodal, nodalIndicator, Finset.sum_apply, eq_comm]
-
-/-- The lumped-mass Neumann Laplacian `-M_L⁻¹ K` on all nodes, before linearity. -/
-def neumannLaplacianFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) : Space n N := fun p =>
-  -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
-    (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p)
-
-/-- The matrix form: `(Lₕ U)(p) = Σ_q (-a(φₚ, φ_q) / m(p)) U(q)`. -/
-theorem neumannLaplacianFun_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
-    neumannLaplacianFun b hs U p = ∑ q : Nodes n N,
-      -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
-        (nodalIndicator (node b (meshSize s N) q)) /
-        lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) * U q := by
-  rw [neumannLaplacianFun, nodal_eq_sum, p1Stiffness_comm, p1Stiffness_sum_smul, ← sum_neg_distrib,
-    sum_div]
-  refine sum_congr rfl fun q _ => ?_
-  rw [p1Stiffness_comm]
-  ring
+    nodal b s U (node b (meshSize s N) q) = U q :=
+  nodalFun_apply (node_injective_nodes hs) U q
 
 /-- **The lumped-mass `P₁` Laplacian with natural (Neumann) boundary conditions** on the
 level-`(N + 1)` Freudenthal mesh of `b + (0, s)ⁿ`: `(Lₕ U)(p) = -a(φₚ, U_h) / m(p)` at every node,
-boundary nodes included. -/
+boundary nodes included (`Feec.FiniteElement.lumpedLaplacianOn` on all nodes). -/
 def neumannLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
-  LinearMap.toContinuousLinearMap
-    { toFun := neumannLaplacianFun b hs
-      map_add' := fun U V => by
-        funext p
-        simp only [neumannLaplacianFun_apply, Pi.add_apply, mul_add, sum_add_distrib]
-      map_smul' := fun c U => by
-        funext p
-        simp only [neumannLaplacianFun_apply, Pi.smul_apply, smul_eq_mul, RingHom.id_apply, mul_sum]
-        exact sum_congr rfl fun q _ => by ring }
+  lumpedLaplacianOn (freudenthalMesh b s hs (N + 1)) fun q : Nodes n N => node b (meshSize s N) q
 
 theorem neumannLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
     neumannLaplacian b hs N U p =
       -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
         (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) :=
-  rfl
+  lumpedLaplacianOn_apply _ _ U p
 
-theorem lumpedMass_nonneg (M : SimplicialMesh n) (x : Fin n → ℝ) : 0 ≤ lumpedMass M x :=
-  sum_nonneg fun _ _ => mul_nonneg (div_nonneg measureReal_nonneg (by positivity))
-    (Nat.cast_nonneg _)
-
-/-- **Conservation**: `Lₕ 𝟙 = 0` (the constants are in the `P₁` space and `a(φₚ, 1) = 0`). -/
+/-- **Conservation**: `Lₕ 𝟙 = 0`, every vertex of the mesh being a node
+(`Feec.FiniteElement.lumpedLaplacianOn_apply_one`). -/
 theorem neumannLaplacian_apply_one (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
-    neumannLaplacian b hs N (fun _ => 1) = 0 := by
-  funext p
-  rw [neumannLaplacian_apply, p1Stiffness_congr_right _ _ (w' := fun _ => 1) fun T hT j => ?_,
-    p1Stiffness_const_right, neg_zero, zero_div, Pi.zero_apply]
-  obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
-  rw [e, nodal_node hs (q := ⟨q, mem_closedNodes.2 hq⟩)]
+    neumannLaplacian b hs N (fun _ => 1) = 0 :=
+  lumpedLaplacianOn_apply_one (node_injective_nodes hs) fun T hT j => by
+    obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
+    exact ⟨⟨q, mem_closedNodes.2 hq⟩, e.symm⟩
 
-/-- **The discrete maximum principle for the Neumann problem**: `Lₕ` is a sub-Markov (indeed
-Markov, `Lₕ 𝟙 = 0`) generator, so `e^{tLₕ}` is positive and contractive in the maximum norm.
-Only the non-obtuseness of the mesh enters (Ciarlet–Raviart). [CiarletRaviart1973] -/
+/-- **The discrete maximum principle for the Neumann problem**: the Freudenthal meshes are
+non-obtuse, so `Lₕ` is a sub-Markov (indeed Markov, `Lₕ 𝟙 = 0`) generator and `e^{tLₕ}` is
+positive and contractive in the maximum norm. [CiarletRaviart1973] -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
-    IsSubMarkovGenerator (neumannLaplacian b hs N) where
-  exists_shift := by
-    set a : Nodes n N → Nodes n N → ℝ := fun p q =>
-      -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
-        (nodalIndicator (node b (meshSize s N) q)) /
-        lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p)
-    have hoff : ∀ p q, p ≠ q → 0 ≤ a p q := fun p q hpq =>
-      div_nonneg (neg_nonneg.2 (p1Stiffness_freudenthalMesh_indicator_nonpos b hs (N + 1)
-        fun h => hpq (Subtype.ext (node_injective b (meshSize_pos hs N).ne' h))))
-        (lumpedMass_nonneg _ _)
-    refine ⟨∑ p, |a p p|, sum_nonneg fun _ _ => abs_nonneg _, fun U hU p => ?_⟩
-    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, Pi.zero_apply]
-    rw [show neumannLaplacian b hs N U p = ∑ q, a p q * U q from neumannLaplacianFun_apply b hs U p,
-      ← Finset.add_sum_erase _ _ (mem_univ p)]
-    have h1 : 0 ≤ ∑ q ∈ univ.erase p, a p q * U q :=
-      sum_nonneg fun q hq => mul_nonneg (hoff p q (Finset.ne_of_mem_erase hq).symm) (hU q)
-    have h2 : 0 ≤ a p p + ∑ p, |a p p| := by
-      have := single_le_sum (f := fun p => |a p p|) (fun _ _ => abs_nonneg _) (mem_univ p)
-      linarith [neg_abs_le (a p p)]
-    nlinarith [mul_nonneg h2 (hU p)]
-  apply_one_nonpos p := by rw [neumannLaplacian_apply_one]; exact le_rfl
-
-/-! ### A comparison principle -/
-
-section Comparison
-
-variable {ι : Type*} [Fintype ι]
-
-/-- **Positivity along the flow**: for a sub-Markov generator `L`, a curve with `Z(0) ≥ 0` and
-`Z' - L Z ≥ 0` on `[0, t]` has `Z(t) ≥ 0` (`Z(t) = e^{tL} Z(0) + ∫ e^{(t-r)L} (Z' - L Z)`). -/
-theorem nonneg_of_hasDerivAt {L : (ι → ℝ) →L[ℝ] (ι → ℝ)} (hL : IsSubMarkovGenerator L)
-    {Z Z' : ℝ → ι → ℝ} {t : ℝ} (ht : 0 ≤ t) (hZ : ∀ r ∈ Icc 0 t, HasDerivAt Z (Z' r) r)
-    (hZ' : ∀ r ∈ Icc 0 t, 0 ≤ Z' r - L (Z r)) (h0 : 0 ≤ Z 0) : 0 ≤ Z t := by
-  set f : ℝ → ι → ℝ := fun r => exp (((t - r : ℝ) : ℝ) • L) (Z r)
-  have hf : ∀ r ∈ Icc 0 t, HasDerivAt f (exp (((t - r : ℝ) : ℝ) • L) (Z' r - L (Z r))) r :=
-    fun r hr => hasDerivAt_exp_sub_smul_apply L t (hZ r hr)
-  intro i
-  have hmono : MonotoneOn (fun r => f r i) (Icc 0 t) := by
-    refine monotoneOn_of_hasDerivWithinAt_nonneg (convex_Icc 0 t)
-      (fun r hr => ((hasDerivAt_pi.1 (hf r hr) i).continuousAt).continuousWithinAt)
-      (fun r hr => (hasDerivAt_pi.1 (hf r (interior_subset hr)) i).hasDerivWithinAt)
-      fun r hr => ?_
-    have hr' := interior_subset hr
-    exact hL.exp_smul_apply_nonneg (sub_nonneg.2 hr'.2) (hZ' r hr') i
-  have h := hmono ⟨le_rfl, ht⟩ ⟨ht, le_rfl⟩ ht
-  simp only [f, sub_self, zero_smul, exp_zero, one_apply_eq_self, sub_zero] at h
-  exact (hL.exp_smul_apply_nonneg ht h0 i).trans h
-
-/-- **The barrier estimate**: for a Markov generator `L` (`L 𝟙 = 0`) and a curve `E` whose defect
-`E' - L E` is bounded by `A - L ψ` for a barrier `ψ ≥ 0`, `|E(t)| ≤ ‖E(0)‖ + ψ + t A`. -/
-theorem abs_apply_le_of_barrier {L : (ι → ℝ) →L[ℝ] (ι → ℝ)} (hL : IsSubMarkovGenerator L)
-    (h1 : L (fun _ => 1) = 0) {E E' : ℝ → ι → ℝ} {t A : ℝ} (ht : 0 ≤ t)
-    (hE : ∀ r ∈ Icc 0 t, HasDerivAt E (E' r) r) {ψ : ι → ℝ} (hψ : 0 ≤ ψ)
-    (hτ : ∀ r ∈ Icc 0 t, ∀ i, |(E' r - L (E r)) i| ≤ A - L ψ i) (i : ι) :
-    |E t i| ≤ ‖E 0‖ + ψ i + t * A := by
-  have key : ∀ ε : ℝ, (ε = 1 ∨ ε = -1) → ε * E t i ≤ ‖E 0‖ + ψ i + t * A := fun ε hε => by
-    set Z : ℝ → ι → ℝ := fun r => (‖E 0‖ + r * A) • (fun _ => (1 : ℝ)) + ψ - ε • E r
-    have hZ : ∀ r ∈ Icc 0 t, HasDerivAt Z (A • (fun _ => (1 : ℝ)) - ε • E' r) r := fun r hr => by
-      refine hasDerivAt_pi.2 fun j => ?_
-      have := ((((hasDerivAt_id r).mul_const A).const_add ‖E 0‖).add_const (ψ j)).sub
-        ((hasDerivAt_pi.1 (hE r hr) j).const_mul ε)
-      convert this using 1 <;> first | (funext x; simp [Z]) | simp
-    have hL1 : ∀ c : ℝ, L (c • fun _ => (1 : ℝ)) = 0 := fun c => by rw [map_smul, h1, smul_zero]
-    have h := nonneg_of_hasDerivAt hL ht hZ (fun r hr j => by
-      have hb := hτ r hr j
-      simp only [Z, map_sub, map_add, hL1, zero_add, map_smul, Pi.sub_apply, Pi.smul_apply,
-        smul_eq_mul, Pi.zero_apply, mul_one]
-      rcases hε with rfl | rfl
-      · have := (abs_le.1 hb).2; simp only [Pi.sub_apply] at this; linarith
-      · have := (abs_le.1 hb).1; simp only [Pi.sub_apply] at this; linarith) (fun j => by
-      simp only [Z, Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul, zero_mul, add_zero,
-        mul_one, Pi.zero_apply]
-      have := norm_le_pi_norm (E 0) j
-      rw [Real.norm_eq_abs] at this
-      have hψj : 0 ≤ ψ j := hψ j
-      rcases hε with rfl | rfl
-      · linarith [le_abs_self (E 0 j)]
-      · linarith [neg_abs_le (E 0 j)]) i
-    simp only [Z, Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul, mul_one,
-      Pi.zero_apply] at h
-    linarith
-  rcases abs_cases (E t i) with ⟨h, -⟩ | ⟨h, -⟩
-  · rw [h]; simpa using key 1 (Or.inl rfl)
-  · rw [h]; simpa using key (-1) (Or.inr rfl)
-
-end Comparison
+    IsSubMarkovGenerator (neumannLaplacian b hs N) :=
+  isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
+    (node_injective_nodes hs)
 
 /-! ### The stencil at every node -/
 
@@ -678,99 +563,6 @@ theorem neumannLaplacian_interp_chi_boundary (hs : 0 < s) (p : Nodes n N) {l₀ 
   nlinarith [mul_le_mul_of_nonneg_left hC2 (by linarith : (0 : ℝ) ≤ r / 2)]
 
 /-! ### Taylor's formula along the axes -/
-
-theorem sum_smul_single_mul (l : Fin n) (t : ℝ) (F : Fin n → ℝ) :
-    ∑ i, (t • Pi.single l 1 : Fin n → ℝ) i * F i = t * F l := by
-  rw [Finset.sum_eq_single l]
-  · simp
-  · intro i _ hi; simp [hi]
-  · simp
-
-/-- **Taylor along an axis**: `|f(x + t eₗ) - f(x) - t ∂ₗf(x)| ≤ B t² / 2` for `|∂ₗ²f| ≤ B` on
-the segment. -/
-theorem abs_axis_taylor_le {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) (x : Fin n → ℝ)
-    (l : Fin n) (t : ℝ) {B : ℝ}
-    (hB : ∀ τ ∈ uIcc 0 t, |partialDeriv l (partialDeriv l f) (x + τ • Pi.single l 1)| ≤ B) :
-    |f (x + t • Pi.single l 1) - f x - t * partialDeriv l f x| ≤ B * t ^ 2 / 2 := by
-  have hd1 : Differentiable ℝ f := hf.differentiable (by norm_num)
-  have hd2 : Differentiable ℝ (partialDeriv l f) :=
-    (hf.partialDeriv (m := 1) (by norm_num) l).differentiable (by norm_num)
-  set v : Fin n → ℝ := t • Pi.single l 1
-  have hseg : ∀ τ ∈ Icc (0 : ℝ) 1, x + τ • v = x + (τ * t) • Pi.single l 1 := fun τ _ => by
-    simp [v, smul_smul]
-  have hmem : ∀ τ ∈ Icc (0 : ℝ) 1, τ * t ∈ uIcc 0 t := fun τ hτ => by
-    rw [Set.mem_uIcc]
-    rcases le_total 0 t with ht | ht
-    · left; exact ⟨mul_nonneg hτ.1 ht, by nlinarith [hτ.2]⟩
-    · right; exact ⟨by nlinarith [hτ.2], mul_nonpos_of_nonneg_of_nonpos hτ.1 ht⟩
-  have := abs_taylor_one_le (g := fun τ => f (x + τ • v))
-    (g₁ := fun τ => t * partialDeriv l f (x + τ • v))
-    (g₂ := fun τ => t * (t * partialDeriv l (partialDeriv l f) (x + τ • v))) (M := B * t ^ 2)
-    (fun τ _ => by
-      have := hasDerivAt_comp_line (v := v) (hd1 (x + τ • v))
-      rwa [sum_smul_single_mul] at this)
-    (fun τ _ => by
-      have := hasDerivAt_comp_line (v := v) (hd2 (x + τ • v))
-      rw [sum_smul_single_mul] at this
-      exact this.const_mul t)
-    (fun τ hτ => by
-      have h := hB _ (hmem τ hτ)
-      rw [← hseg τ hτ] at h
-      rw [abs_mul, abs_mul, ← mul_assoc, abs_mul_abs_self]
-      nlinarith [sq_nonneg t])
-  simpa [v] using this
-
-/-- **The second difference**: `|f(x + h eₗ) - 2 f(x) + f(x - h eₗ)| ≤ B h²`. -/
-theorem abs_axis_secondDiff_le {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) (x : Fin n → ℝ)
-    (l : Fin n) {h B : ℝ}
-    (hB : ∀ τ ∈ Icc (-|h|) |h|, |partialDeriv l (partialDeriv l f) (x + τ • Pi.single l 1)| ≤ B) :
-    |f (x + h • Pi.single l 1) - 2 * f x + f (x + (-h) • Pi.single l 1)| ≤ B * h ^ 2 := by
-  have sub : ∀ t, |t| = |h| → uIcc 0 t ⊆ Icc (-|h|) |h| := fun t ht τ hτ => by
-    rw [← ht]
-    rcases Set.mem_uIcc.1 hτ with h1 | h1 <;> constructor <;>
-      cases abs_cases t <;> linarith [h1.1, h1.2]
-  have h1 := abs_axis_taylor_le hf x l h fun τ hτ => hB τ (sub h rfl hτ)
-  have h2 := abs_axis_taylor_le hf x l (-h) fun τ hτ => hB τ (sub (-h) (abs_neg h) hτ)
-  calc |f (x + h • Pi.single l 1) - 2 * f x + f (x + (-h) • Pi.single l 1)|
-      = |(f (x + h • Pi.single l 1) - f x - h * partialDeriv l f x) +
-          (f (x + (-h) • Pi.single l 1) - f x - -h * partialDeriv l f x)| := by ring_nf
-    _ ≤ _ := (abs_add_le _ _).trans (by nlinarith [neg_sq h])
-
-/-- **The truncation error of the second difference**: for `u ∈ C⁴` with `|∂ₗ⁴u| ≤ B` on
-`x + [-h, h] eₗ`, `|∂ₗ²u(x) - (u(x + h eₗ) - 2 u(x) + u(x - h eₗ)) / h²| ≤ B h² / 12`. -/
-theorem abs_partialDeriv_sub_secondDiff_le {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {h B : ℝ}
-    (hh : 0 < h) (x : Fin n → ℝ) (l : Fin n)
-    (hB : ∀ t ∈ Icc (-h) h, |(partialDeriv l)^[4] u (x + t • Pi.single l 1)| ≤ B) :
-    |partialDeriv l (partialDeriv l u) x -
-        (u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1)) / h ^ 2| ≤
-      B * h ^ 2 / 12 := by
-  have hd : ∀ k : ℕ, k ≤ 3 → Differentiable ℝ ((partialDeriv l)^[k] u) := by
-    intro k hk
-    have : ∀ k ≤ 4, ContDiff ℝ (4 - k : ℕ) ((partialDeriv l)^[k] u) := by
-      intro k hk
-      induction k with
-      | zero => simpa using hu
-      | succ k ih =>
-        rw [Function.iterate_succ_apply']
-        exact (ih (by omega)).partialDeriv (by norm_cast; omega) l
-    exact (this k (by omega)).differentiable (by norm_cast; omega)
-  set g : ℕ → ℝ → ℝ := fun k t => (partialDeriv l)^[k] u (x + t • Pi.single l 1)
-  have hg : ∀ k ≤ 3, ∀ t, HasDerivAt (g k) (g (k + 1) t) t := fun k hk t => by
-    have := hasDerivAt_line (hd k hk) x l t
-    simpa [g, Function.iterate_succ_apply'] using this
-  have key := abs_secondDiff_sub_le (g := g 0) (g₁ := g 1) (g₂ := g 2) (g₃ := g 3)
-    (g₄ := g 4) (B := B) hh.le (fun t _ => hg 0 (by omega) t) (fun t _ => hg 1 (by omega) t)
-    (fun t _ => hg 2 (by omega) t) (fun t _ => hg 3 le_rfl t) hB
-  simp only [g, Function.iterate_zero, id, zero_smul, add_zero, Function.iterate_succ,
-    Function.comp] at key
-  have hh2 : 0 < h ^ 2 := by positivity
-  rw [show partialDeriv l (partialDeriv l u) x -
-      (u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1)) / h ^ 2 =
-      -(u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1) -
-        h ^ 2 * partialDeriv l (partialDeriv l u) x) / h ^ 2 by field_simp; ring,
-    abs_div, abs_neg, abs_of_pos hh2, div_le_iff₀ hh2]
-  calc _ ≤ B * h ^ 4 / 12 := key
-    _ = B * h ^ 2 / 12 * h ^ 2 := by ring
 
 /-! ### Classical solutions of the Neumann problem -/
 
@@ -1084,7 +876,7 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T
     have hκ : 0 ≤ κ := by positivity
     set ψ : Space n N := κ • interp b s N (chi b s)
     have hψ : 0 ≤ ψ := fun q => mul_nonneg hκ (chi_nonneg b s _)
-    have hbar := abs_apply_le_of_barrier hL hL1 ht.1 hE (A := D + 2 * n * κ) hψ (fun r hr q => by
+    have hbar := hL.abs_apply_le_of_barrier hL1 ht.1 hE (A := D + 2 * n * κ) hψ (fun r hr q => by
       have hLψ : L ψ q = κ * L (interp b s N (chi b s)) q := by
         show L (κ • interp b s N (chi b s)) q = _
         rw [map_smul]; rfl
@@ -1123,7 +915,7 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T
             exact mul_le_mul_of_nonneg_right hn2 (mul_nonneg hGh (div_nonneg ht.1 hs.le))
           nlinarith
   · -- large mesh sizes: no barrier
-    have hbar := abs_apply_le_of_barrier hL hL1 ht.1 hE (A := D + G) le_rfl (fun r hr q => by
+    have hbar := hL.abs_apply_le_of_barrier hL1 ht.1 hE (A := D + G) le_rfl (fun r hr q => by
       simp only [map_zero, Pi.zero_apply, sub_zero]
       rcases interior_or_boundary q with hq | ⟨l, hl⟩
       · linarith [(hdef r hr q).1 hq]
@@ -1148,32 +940,14 @@ def cosCentre (b : Fin n → ℝ) (s : ℝ) : Fin n → ℝ := b - (s / 2) • f
 (written `∏ᵢ sin(π(xᵢ - bᵢ + s/2)/s)`): a classical solution of the Neumann problem on every
 `[0, T] × Q̄` with `B₂ = (π/s)²`, `B₄ = (π/s)⁴`. -/
 def cosSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : NeumannSolution b s T where
-  u t x := Real.exp (-(n * sineFreq s ^ 2) * t) *
-    ∏ j, sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)
-  u₁ t x := -(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) *
-    ∏ j, sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j))
-  contDiff t _ := by simp only [sineDeriv]; fun_prop
-  hasDerivAt t _ x _ := by
-    have := ((Real.hasDerivAt_exp _).comp t
-      ((hasDerivAt_id t).const_mul (-(n * sineFreq s ^ 2)))).mul_const
-      (∏ j, sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j))
-    exact this.congr_deriv (by simp; ring)
-  heat t _ x _ := by
-    have e : ∀ i, partialDeriv i (partialDeriv i (fun x : Fin n → ℝ =>
-        Real.exp (-(n * sineFreq s ^ 2) * t) *
-          ∏ j, sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j))) x =
-        -sineFreq s ^ 2 * (Real.exp (-(n * sineFreq s ^ 2) * t) *
-          ∏ j, sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)) := fun i => by
-      have := congrFun (iterate_partialDeriv_sine (cosCentre b s) (sineFreq s)
-        (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
-      simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
-      rw [this, sineFactors, show sineDeriv (sineFreq s) (cosCentre b s i) 2 =
-        fun y => -sineFreq s ^ 2 * sineDeriv (sineFreq s) (cosCentre b s i) 0 y from rfl,
-        prod_update_const_mul (fun j => sineDeriv (sineFreq s) (cosCentre b s j) 0)]
-      ring
-    simp only [MaxNormHeat.laplacian, e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
-    ring
+  u := (sineSolution (cosCentre b s) hs T).u
+  u₁ := (sineSolution (cosCentre b s) hs T).u₁
+  contDiff := (sineSolution (cosCentre b s) hs T).contDiff
+  hasDerivAt t _ x _ := hasDerivAt_sineMode (cosCentre b s) t x
+  heat t _ x _ := (laplacian_sineMode (cosCentre b s) t x).symm
   neumann t _ x _ i hi := by
+    show partialDeriv i (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) *
+      ∏ j, sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)) x = 0
     have := congrFun (iterate_partialDeriv_sine (cosCentre b s) (sineFreq s)
       (Real.exp (-(n * sineFreq s ^ 2) * t)) i 1 (by omega)) x
     simp only [Function.iterate_one] at this
@@ -1188,45 +962,14 @@ def cosSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : NeumannSolution b s
     · rw [show Real.pi / s * (b i + s - (b i - s / 2)) = Real.pi / 2 + Real.pi by
         field_simp; ring, Real.cos_add_pi, Real.cos_pi_div_two, neg_zero]
   B₂ := sineFreq s ^ 2
-  bound₂ t ht x _ i := by
-    have := congrFun (iterate_partialDeriv_sine (cosCentre b s) (sineFreq s)
-      (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
-    simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
-    rw [this, sineFactors, show sineDeriv (sineFreq s) (cosCentre b s i) 2 =
-      fun y => -sineFreq s ^ 2 * sineDeriv (sineFreq s) (cosCentre b s i) 0 y from rfl,
-      prod_update_const_mul (fun j => sineDeriv (sineFreq s) (cosCentre b s j) 0), abs_mul,
-      abs_mul, abs_of_pos (Real.exp_pos _), Finset.abs_prod, abs_neg]
-    have h1 : Real.exp (-(n * sineFreq s ^ 2) * t) ≤ 1 :=
-      Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht.1))
-    have h2 : ∏ j, |sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)| ≤ 1 :=
-      Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
-    rw [abs_of_nonneg (by positivity)]
-    calc Real.exp (-(n * sineFreq s ^ 2) * t) *
-          (sineFreq s ^ 2 * ∏ j, |sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)|)
-        ≤ 1 * (sineFreq s ^ 2 * 1) := by gcongr
-      _ = sineFreq s ^ 2 := by ring
+  bound₂ t ht x _ i := abs_partialDeriv_partialDeriv_sineSolution_le (cosCentre b s) hs T ht.1 x i i
   B₄ := sineFreq s ^ 4
-  bound₄ t ht x _ i := by
-    have := congrFun (iterate_partialDeriv_sine (cosCentre b s) (sineFreq s)
-      (Real.exp (-(n * sineFreq s ^ 2) * t)) i 4 le_rfl) x
-    rw [this, sineFactors, show sineDeriv (sineFreq s) (cosCentre b s i) 4 =
-      fun y => sineFreq s ^ 4 * sineDeriv (sineFreq s) (cosCentre b s i) 0 y from rfl,
-      prod_update_const_mul (fun j => sineDeriv (sineFreq s) (cosCentre b s j) 0), abs_mul,
-      abs_mul, abs_of_pos (Real.exp_pos _), Finset.abs_prod]
-    have h1 : Real.exp (-(n * sineFreq s ^ 2) * t) ≤ 1 :=
-      Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht.1))
-    have h2 : ∏ j, |sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)| ≤ 1 :=
-      Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
-    rw [abs_of_nonneg (by positivity)]
-    calc Real.exp (-(n * sineFreq s ^ 2) * t) *
-          (sineFreq s ^ 4 * ∏ j, |sineDeriv (sineFreq s) (cosCentre b s j) 0 (x j)|)
-        ≤ 1 * (sineFreq s ^ 4 * 1) := by gcongr
-      _ = sineFreq s ^ 4 := by ring
+  bound₄ t ht x _ i := abs_iterate_partialDeriv_sineMode_le (cosCentre b s) ht.1 x i
 
 /-- The first Neumann eigenmode is `1` at the corner `b` at `t = 0`. -/
 theorem cosSolution_u_zero_corner (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     (cosSolution b hs T).u 0 b = 1 := by
-  simp only [cosSolution, sineDeriv, sineFreq, cosCentre, mul_zero, Real.exp_zero, one_mul,
+  simp only [cosSolution, sineSolution, sineDeriv, sineFreq, cosCentre, mul_zero, Real.exp_zero, one_mul,
     Pi.sub_apply, Pi.smul_apply, smul_eq_mul, mul_one]
   refine Finset.prod_eq_one fun j _ => ?_
   rw [show Real.pi / s * (b j - (b j - s / 2)) = Real.pi / 2 by field_simp; ring,
@@ -1236,12 +979,8 @@ theorem cosSolution_u_zero_corner (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
 
 /-- **The maximum-norm Neumann family**: the lumped-mass Neumann Laplacians of the levels
 `N + 1`, a uniformly stable family with `M = 1` (`isSubMarkovGenerator`). -/
-abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ where
-  X N := Space n N
-  L N := neumannLaplacian b hs N
-  M := 1
-  M_nonneg := zero_le_one
-  norm_exp_le N t ht := by simpa using (isSubMarkovGenerator b hs N).norm_exp_smul_le_one ht
+abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
+  StableFamily.ofSubMarkov (fun N => Nodes n N) (neumannLaplacian b hs) (isSubMarkovGenerator b hs)
 
 /-- The conclusions of `maxNormNeumann` for the cube `b + (0, s)ⁿ`. -/
 structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where

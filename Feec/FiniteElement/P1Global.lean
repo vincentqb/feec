@@ -432,7 +432,6 @@ theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι)
   rw [sum_comm]
   exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
 
-
 theorem p1Stiffness_congr_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ)
     {w w' : (Fin n → ℝ) → ℝ} (h : ∀ T ∈ M.simplices, ∀ j, w (T.points j) = w' (T.points j)) :
     p1Stiffness M u w = p1Stiffness M u w' := by
@@ -471,38 +470,6 @@ theorem abs_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : (Fin n �
 theorem p1Interp_sub_values (p : Fin (n + 1) → Fin n → ℝ) (u w : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
     p1Interp p (u - w) x = p1Interp p u x - p1Interp p w x := by
   simp [p1Interp, sub_mul, sum_sub_distrib]
-
-/-- `|g(1) - g(0) - g'(0)| ≤ M / 2` for `|g''| ≤ M` on `[0, 1]`. -/
-theorem abs_taylor_one_le {g g₁ g₂ : ℝ → ℝ} {M : ℝ}
-    (h₀ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt g (g₁ t) t)
-    (h₁ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt g₁ (g₂ t) t) (hM : ∀ t ∈ Icc (0 : ℝ) 1, |g₂ t| ≤ M) :
-    |g 1 - g 0 - g₁ 0| ≤ M / 2 := by
-  have c : ∀ {f f' : ℝ → ℝ}, (∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt f (f' t) t) →
-      ContinuousOn f (Icc 0 1) ∧ ∀ t ∈ Ico (0 : ℝ) 1, HasDerivWithinAt f (f' t) (Ici t) t :=
-    fun hf => ⟨fun t ht => (hf t ht).continuousAt.continuousWithinAt,
-      fun t ht => (hf t (Ico_subset_Icc_self ht)).hasDerivWithinAt⟩
-  have d₁ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt (fun t => g₁ t - g₁ 0) (g₂ t) t :=
-    fun t ht => (h₁ t ht).sub_const _
-  have d₀ : ∀ t ∈ Icc (0 : ℝ) 1, HasDerivAt (fun t => g t - g 0 - t * g₁ 0) (g₁ t - g₁ 0) t :=
-    fun t ht => (((h₀ t ht).sub_const _).sub ((hasDerivAt_id t).mul_const _)).congr_deriv
-      (by simp)
-  have A := norm_image_le_of_norm_deriv_le_pow (c := M) 0 (c d₁).1 (c d₁).2 (by simp)
-    fun t ht => by simpa using hM t (Ico_subset_Icc_self ht)
-  have B := norm_image_le_of_norm_deriv_le_pow (c := M) 1 (c d₀).1 (c d₀).2 (by simp)
-    fun t ht => (A t (Ico_subset_Icc_self ht)).trans (le_of_eq (by ring))
-  have := B 1 ⟨zero_le_one, le_rfl⟩
-  simp only [Real.norm_eq_abs, one_mul, sub_zero, one_pow, mul_one] at this
-  convert this using 2
-  norm_num
-
-/-- `t ↦ f(x + t v)` has derivative `Σᵢ vᵢ ∂ᵢ f(x + t v)`. -/
-theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ} {t : ℝ}
-    (hf : DifferentiableAt ℝ f (x + t • v)) :
-    HasDerivAt (fun t : ℝ => f (x + t • v)) (∑ i, v i * partialDeriv i f (x + t • v)) t := by
-  have hl : HasDerivAt (fun t : ℝ => x + t • v) v t := by
-    simpa using ((hasDerivAt_id t).smul_const v).const_add x
-  have := hf.hasFDerivAt.comp_hasDerivAt t hl
-  rwa [fderiv_apply_eq_sum_partialDeriv] at this
 
 /-- **The `P₁` interpolation error in the maximum norm**: for `f ∈ C²` with
 `|∂ᵢ∂ₖ f| ≤ D` on `T` and `|y - z|_∞ ≤ δ` on `T`, `|f(x) - Πₜf(x)| ≤ n² D δ² / 2` on `T`

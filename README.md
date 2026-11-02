@@ -41,8 +41,10 @@ symmetric difference Laplacian); the direct Hilbert route reaches the maximum no
 `h^{-n/2}`; the Banach layer gives the maximum-norm errors `O(h²)` (semidiscrete), `O(τ + h²)`
 (backward Euler) and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every A-stable rational scheme, with the
 stability bound `1 + C'_r √n`) against every classical solution, with constants independent of
-`h`. The scheme is the lumped-mass Galerkin method on the global `P₁` (Whitney `0`-form) space
-(`Feec.FiniteElement.P1Global`: stiffness `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the
+`h`. The scheme is the lumped-mass Galerkin method on the `P₁` (Whitney `0`-form) functions
+vanishing at the boundary nodes (contained in `P̊₁⁻Λ⁰`,
+`Feec.Models.Cube.MaxNormHeat.feFun_mem_globalSpace₀`; equality not proved;
+`Feec.FiniteElement.P1Global`: stiffness `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the
 stencil theorem exactly the classical finite difference scheme. The errors also hold in `L^∞(Q)` for
 the finite element function, with the interpolation term `n² D₂ h² / 2` (`|∂ᵢ∂ₖ u| ≤ D₂`; a `P₁`
 function attains its extrema at the vertices). With natural boundary conditions
@@ -51,7 +53,8 @@ function attains its extrema at the vertices). With natural boundary conditions
 consistency in the interior, `O(1)` at the boundary nodes, absorbed by the barrier `|x - c|²`);
 `O(h²)` is not proved (at nodes with two or more coordinates on the boundary the nodal
 consistency error does not tend to `0`: a hand computation, not formalized).
-Limitations: for rational schemes
+Limitations: the Neumann result is semidiscrete and nodal only (no backward Euler, rational
+schemes or `L^∞(Q)` of the finite element function); for rational schemes
 the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
 stability bound loses `√k`. Each field of the crown is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson

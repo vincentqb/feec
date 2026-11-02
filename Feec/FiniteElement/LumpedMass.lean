@@ -108,6 +108,10 @@ def lumpedMass (M : SimplicialMesh n) (x : Fin n → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, volume.real T.closedInterior / (n + 1) *
     (#{j | T.points j = x} : ℝ)
 
+theorem lumpedMass_nonneg (M : SimplicialMesh n) (x : Fin n → ℝ) : 0 ≤ lumpedMass M x :=
+  sum_nonneg fun _ _ => mul_nonneg (div_nonneg measureReal_nonneg (by positivity))
+    (Nat.cast_nonneg _)
+
 /-- The nodal values of the hat function `φₓ`: `1` at `x`, `0` elsewhere. -/
 def nodalIndicator (x : Fin n → ℝ) : (Fin n → ℝ) → ℝ := fun y => if y = x then 1 else 0
 

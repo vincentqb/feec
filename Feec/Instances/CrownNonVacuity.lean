@@ -46,8 +46,9 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   consistency `n B₄ h² / 12`, and the errors of the semidiscrete equation, of backward Euler and
   of every A-stable rational scheme against every classical solution, through
   `Feec.TimeStepping.stableFamily`, also in `L^∞(Q)` for the finite element function (the
-  scheme is the lumped-mass Galerkin method on the global `P₁` space); the first eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a
-  solution, nonzero, with bounded second derivatives
+  scheme is the lumped-mass Galerkin method on the `P₁` functions vanishing at the boundary
+  nodes, contained in `P̊₁⁻Λ⁰`; equality not proved); the first eigenmode
+  `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a solution, nonzero, with bounded second derivatives
   (`Feec.Models.Cube.MaxNormHeat.sineSolution`).
 * **Natural boundary conditions in the maximum norm** (`neumann`,
   `Feec.Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous`): lumped-mass `P₁` elements on all

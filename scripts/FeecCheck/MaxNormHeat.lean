@@ -1,6 +1,7 @@
 module
 
 public import Feec.Models.Cube.MaxNormHeat
+public import Feec.Instances.CrownNonVacuity
 
 /-!
 # Regression test: the maximum-norm heat verdict before the finite element fields
@@ -8,8 +9,12 @@ public import Feec.Models.Cube.MaxNormHeat
 `Feec.Models.Cube.MaxNormHeat.Verdict` gained the fields `lumpedMass_eq_inner`, `galerkin`,
 `semidiscrete_fe`, `backwardEuler_fe` and `rational_fe` (at the end), and
 `Feec.Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous` a bound of the second derivatives of the
-witness. Below, the earlier verdict and the earlier non-vacuity statement are stated verbatim and
-derived from the new API.
+witness. `MaxNormHeat.lumpedLaplacian` is now the general lumped-mass Laplacian
+`Feec.FiniteElement.lumpedLaplacianOn` on the interior nodes, and `MaxNormHeat.lumpedLaplacianFun`
+(with `lumpedLaplacianFun_apply`) is gone; `Instances.CrownNonVacuity` gained a last field
+`neumann`, and its field `maxNorm` states the new non-vacuity. Below, the earlier verdict, the
+earlier non-vacuity statement, the earlier `lumpedLaplacianFun` with its stencil, and the earlier
+field `maxNorm` are stated verbatim and derived from the new API.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -78,6 +83,37 @@ theorem maxNormHeat_nonvacuous_old (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
         (∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t) ∧
         ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂ := by
   obtain ⟨-, S, h0, h2, -⟩ := maxNormHeat_nonvacuous b hs T
+  exact ⟨verdict_old b hs, S, h0, h2⟩
+
+variable {N : ℕ}
+
+/-- The earlier `MaxNormHeat.lumpedLaplacianFun`, verbatim. -/
+def lumpedLaplacianFun_old (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) : Space n N := fun p =>
+  -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p))
+    (nodal b s U) / lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p)
+
+/-- `MaxNormHeat.lumpedLaplacian` is the earlier `lumpedLaplacianFun`. -/
+theorem lumpedLaplacian_eq_old (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
+    lumpedLaplacian b hs N U = lumpedLaplacianFun_old b hs U :=
+  funext fun p => lumpedLaplacian_apply_eq b hs U p
+
+/-- The earlier `MaxNormHeat.lumpedLaplacianFun_apply`, verbatim (with `lumpedLaplacianFun_old`). -/
+theorem lumpedLaplacianFun_apply_old {b : Fin n → ℝ} (hs : 0 < s) (U : Space n N)
+    (p : Nodes n N) :
+    lumpedLaplacianFun_old b hs U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
+      ext U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 := by
+  rw [← lumpedLaplacian_eq_old]
+  exact lumpedLaplacian_apply b hs U p
+
+universe u in
+/-- The earlier field `maxNorm` of `Instances.CrownNonVacuity`, from the new one. -/
+theorem crownNonVacuity_maxNorm_old (h : Feec.Instances.CrownNonVacuity.{u})
+    (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
+    Verdict_old b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 ∧
+      ∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
+        (∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t) ∧
+        ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂ := by
+  obtain ⟨-, S, h0, h2, -⟩ := h.maxNorm b hs T
   exact ⟨verdict_old b hs, S, h0, h2⟩
 
 end FeecCheck.MaxNormHeat

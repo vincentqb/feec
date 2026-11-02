@@ -432,6 +432,23 @@ theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι)
   rw [sum_comm]
   exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
 
+
+theorem p1Stiffness_congr_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ)
+    {w w' : (Fin n → ℝ) → ℝ} (h : ∀ T ∈ M.simplices, ∀ j, w (T.points j) = w' (T.points j)) :
+    p1Stiffness M u w = p1Stiffness M u w' := by
+  rw [p1Stiffness_eq, p1Stiffness_eq]
+  refine sum_congr rfl fun T hT => ?_
+  congr 2
+  simp only [p1Grad, h T hT]
+
+theorem p1Stiffness_const_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) (c : ℝ) :
+    p1Stiffness M u (fun _ => c) = 0 := by
+  rw [p1Stiffness_eq]
+  refine sum_eq_zero fun T _ => ?_
+  have : p1Grad T.points (fun _ => c) = 0 := by
+    rw [p1Grad, ← smul_sum, sum_baryGrad, smul_zero]
+  rw [this, dotProduct_zero, mul_zero]
+
 section MaxNorm
 
 open Set

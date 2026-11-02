@@ -6,6 +6,7 @@ public import Feec.Counterexamples.Fredholm
 public import Feec.Examples.NonVacuity
 public import Feec.Domain.BGGKoszul
 public import Feec.Models.Cube.MaxNormHeat
+public import Feec.Models.Cube.MaxNormNeumann
 
 /-!
 # Non-vacuity of the crown
@@ -48,6 +49,13 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   scheme is the lumped-mass Galerkin method on the global `P₁` space); the first eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a
   solution, nonzero, with bounded second derivatives
   (`Feec.Models.Cube.MaxNormHeat.sineSolution`).
+* **Natural boundary conditions in the maximum norm** (`neumann`,
+  `Feec.Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous`): lumped-mass `P₁` elements on all
+  nodes of the Freudenthal meshes, the discrete maximum principle (`Lₕ 𝟙 = 0`), consistency
+  `O(h²)` at the interior and `O(1)` at the boundary nodes, and the semidiscrete error `O(h)` in
+  the maximum norm at the nodes (barrier `|x - c|²`); the first Neumann eigenmode
+  `e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)` is a nonzero classical solution
+  (`Feec.Models.Cube.MaxNormNeumann.cosSolution`).
 * **The explicit map of the BGG layer on smooth fields (algebraic layer)**
   (`Feec.Domain.smoothBGGVerdict`): the cochain map (30) of Theorem 7 of [ArnoldHu2021] is a
   quasi-isomorphism on the smooth Hessian, elasticity and div-div complexes, with the Koszul
@@ -195,6 +203,10 @@ structure CrownNonVacuity : Prop where
   /-- the Banach layer in the maximum norm at the nodes: the lumped-mass `P₁` heat equation on
   Freudenthal meshes, with a nonzero classical solution -/
   maxNorm : type_of% @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous
+  /-- the Banach layer in the maximum norm with natural boundary conditions: the lumped-mass
+  `P₁` heat equation on all nodes of the Freudenthal meshes, first order, with a nonzero
+  classical solution -/
+  neumann : type_of% @Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous
 
 /-- **The crown is not vacuous** (`CrownNonVacuity`). -/
 theorem crownNonVacuity : CrownNonVacuity.{u} :=
@@ -204,6 +216,7 @@ theorem crownNonVacuity : CrownNonVacuity.{u} :=
     ApproxComplex.scaled_nonvacuous, ApproxComplexCrime.shifted_nonvacuous,
     ApproxComplexCrime.mixed_nonvacuous, Examples.idComplex_nonvacuous,
     Examples.rotGen_standing_hypotheses, Domain.smoothBGGVerdict,
-    @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous⟩
+    @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous,
+    @Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous⟩
 
 end Feec.Instances

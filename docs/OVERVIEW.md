@@ -106,7 +106,9 @@ nonzero classical solution (the first eigenmode, `Feec.Models.Cube.MaxNormHeat.s
 the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). The scheme is the
 lumped-mass Galerkin method on the global `P₁` (Whitney `0`-form) space
 (`Feec.FiniteElement.P1Global`), and the errors hold in `L^∞(Q)` for the finite element function
-(plus `n² D₂ h² / 2`). Limitations: Dirichlet data; for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
+(plus `n² D₂ h² / 2`). With natural boundary conditions
+(`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum principle holds and the
+semidiscrete error is `O(h)` in the maximum norm at the nodes; `O(h²)` is not proved. Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
 the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of

@@ -19,11 +19,19 @@ dissipative perturbation `B` (damping, Ohmic loss), discretized by `Lₕ + Pₕ 
 discrete verdicts include forced iterates (the discrete Duhamel formula; stability against every
 comparison, no forced rate) and inhomogeneous boundary data by a lifting; the Crank–Nicolson runs
 of thesis Ch. 7 have the same structure (`Feec.Instances.Lifting`; their identification with a
-crown scheme is open). The rates and the convergence of the fully discrete verdicts are derived
-from the fully discrete FEEC theorem on Banach spaces (`Feec.HilbertComplex.banachFEEC`), which the
-crown also states for each of its discretizations: Hille–Yosida stability of backward Euler,
-Brenner–Thomée's `√n` stability bound and the sharp temporal error `C_r tₙ τᵖ ‖Lₕ^{p+1} v‖` of
-every A-stable rational scheme, with constants independent of `h`. Each field is the verdict of the layer theorem below.
+crown scheme is open). The fields `rate_iterates` and `converges_iterates` of the fully discrete
+verdicts are derived from the fully discrete FEEC theorem on Banach spaces
+(`Feec.TimeStepping.banachFEEC`), the temporal errors and `rate_uniform_iterates` from its
+Banach-space time-scheme bounds (`Feec.TimeStepping.TimeScheme`); the rates along smooth
+comparisons and the forced and lifted iterates are Hilbert-side. The crown also states the
+Banach theorem for each of its discretizations: Hille–Yosida stability of backward Euler,
+Brenner–Thomée's `√n` stability bound and the temporal error `C_r tₙ τᵖ ‖Lₕ^{p+1} v‖` of every
+A-stable rational scheme, with constants independent of `h`. On the crown's discretizations
+(dissipative, on Hilbert spaces) these are Banach-route constants, not new rates (von Neumann's
+inequality gives `‖r(τLₕ)ⁿ‖ ≤ 1`, and the same order `p` with the constant
+`sup_y |ρ(iy)| + 1/(p+1)!`); the Banach theorems give new content only for discretizations that
+are not contractive in a Hilbert norm, none of which the crown has yet. Each field is the verdict
+of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate
@@ -79,7 +87,7 @@ inf-sup condition `StaticVerdict.infSup`, by Fortin operators built from the coc
 and `HilbertComplex.SecondOrder`, in `crownCorrections`).
 The Banach-space modules lie upstream of the crown and are consumed by it: the fully discrete
 layer stands on the fully discrete FEEC theorem on Banach spaces
-(`Feec.HilbertComplex.banachFEEC`, `Approximation/BanachFEEC.lean`, for Banach FEEC
+(`Feec.TimeStepping.banachFEEC`, `TimeStepping/BanachFEEC.lean`, for Banach FEEC
 discretizations `BanachFEEC G κ`: a bounded semigroup, Banach spaces `Xₕ` with bounded `Lₕ`,
 exact and discrete semigroups bounded by one `M`, uniformly bounded reading maps), and every
 dissipative FEEC discretization of a Hilbert space is one with `M = 1`
@@ -96,11 +104,13 @@ Fourier.Plancherel}`) and the sharp smooth-data error `C_r M nτ τᵖ ‖·^{p+
 `ForMathlib.Analysis.{HalfLineTranslate, Fourier.GeomSumMultiplier}`), discrete and exact, on
 real or complex spaces by complexification (`TimeStepping.RationalHillePhillipsReal`,
 `Semigroup.Complexification`). The crown consumes it in the fields `banach_wave`, `banach_heat`
-(the Banach verdicts of the wave and heat discretizations), `sharp_wave`, `sharp_heat` (the sharp
-temporal error of every A-stable scheme, constants independent of `h`), `exact_sharp_wave`,
-`exact_sharp_heat` of `ConstrainedFEEC.FullVerdict`, and in `DissipFEEC.Perturbation.Verdict.banach`
-(perturbed discretizations) and `ApproxComplexCrime.Verdict.banach`; the instances
-`Instances.RungeKutta.full_sharp` (Gauss–Legendre, Radau IIA, SDIRK at the sharp order) read them.
+(the Banach verdicts of the wave and heat discretizations), `brennerThomee_wave`,
+`brennerThomee_heat` (the Brenner–Thomée temporal error of every A-stable scheme, constants
+independent of `h`), `exact_brennerThomee_wave`, `exact_brennerThomee_heat` of
+`ConstrainedFEEC.FullVerdict`, and in `DissipFEEC.Perturbation.Verdict.banach` (perturbed
+discretizations) and `ApproxComplexCrime.Verdict.banach`; the instances
+`Instances.RungeKutta.full_brennerThomee` (Gauss–Legendre, Radau IIA, SDIRK) read them. On these
+Hilbert discretizations they are Banach-route constants, not new rates (above).
 The `banach_*` corollaries of `Instances.RungeKutta` state the same Banach-space theorems for an
 arbitrary bounded semigroup (`√n`-lossy error bounds included, which no crown field uses).
 

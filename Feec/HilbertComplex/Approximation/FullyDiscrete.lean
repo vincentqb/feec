@@ -1,6 +1,6 @@
 module
 
-public import Feec.HilbertComplex.Approximation.BanachFEEC
+public import Feec.TimeStepping.BanachFEEC
 public import Feec.HilbertComplex.Approximation.Ritz
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.TimeStepping.BlockMatrix
@@ -27,7 +27,7 @@ discretization with `M = 1` (`DissipFEEC.toBanachFEEC`: the Lumer–Phillips sem
 flows of the dissipative `Lₕ` are contractions), and its time schemes are those of
 `F.toBanachFEEC`. The rate 3 (semidiscrete rate plus temporal error) and the convergence 4 are
 the fields `rate_iterates` and `converges_iterates` of the fully discrete FEEC theorem on Banach
-spaces (`Feec.HilbertComplex.banachFEEC`) for `F.toBanachFEEC`, and the temporal errors of 2 and 7
+spaces (`Feec.TimeStepping.banachFEEC`) for `F.toBanachFEEC`, and the temporal errors of 2 and 7
 are the Banach-space bounds `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le` and
 `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le_of_timeAvg` at `‖e^{tLₕ}‖ ≤ 1`; the
 semidiscrete inputs (the rate classes, the cores, `dissipFEEC_rate`, `dissipFEEC_converges`) are
@@ -156,7 +156,7 @@ abbrev TimeScheme := TimeStepping.TimeScheme F.L
 products; the exact flow (Lumer–Phillips) and the discrete flows `e^{tLₕ}` (dissipative `Lₕ`) are
 contractions, so `M = 1`. -/
 abbrev toBanachFEEC [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
-    BanachFEEC.{u} F.isMDissipative.semigroup κ where
+    TimeStepping.BanachFEEC.{u} F.isMDissipative.semigroup κ where
   l := F.l
   X := F.X
   L := F.L
@@ -219,7 +219,10 @@ namespace TimeScheme
 
 variable (Θ : F.TimeScheme)
 
-/-- **1. Stability**: `‖ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) ‖v‖` for `n τₕ ≤ T`. -/
+/-- **1. Stability**: `‖ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) ‖v‖` for `n τₕ ≤ T`. `Θ.sol` is definitionally the
+fully discrete solution `BanachFEEC.TimeScheme.sol` of `F.toBanachFEEC`, and this is its field
+`stable_iterates`; it is proved directly because it holds without completeness of `E`, which
+`F.toBanachFEEC` (the Lumer–Phillips semigroup) needs (likewise `norm_sol_sub_sol_le`). -/
 theorem norm_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ} (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖Θ.sol h v n‖ ≤ ‖F.incl h‖ * Θ.M T * ‖v‖ := by
   rw [mul_assoc]
@@ -256,7 +259,8 @@ variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- **2. The temporal error**: `‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) K tₙ τₕᵖ ‖Lₕ^{p+1} v‖`
 for `tₙ ≤ T` (the Banach-space bound `Feec.TimeStepping.TimeScheme.norm_exp_sub_pow_le` at
-`‖e^{tLₕ}‖ ≤ 1`). [BrennerThomee1979] -/
+`‖e^{tLₕ}‖ ≤ 1`; the field `temporal_iterates` of `banachFEEC F.toBanachFEEC` when `E` is
+complete, `F.sol` being definitionally `BanachFEEC.sol`). [BrennerThomee1979] -/
 theorem norm_sol_sub_sol_le {T : ℝ} (h : κ) (v : F.X h) {n : ℕ}
     (hn : (n : ℝ) * Θ.τ h ≤ T) :
     ‖F.sol h v (n * Θ.τ h) - Θ.sol h v n‖ ≤
@@ -275,7 +279,7 @@ theorem norm_S_sub_sol_le {T : ℝ} (R : F.RateClass T) {x : E} (hx : x ∈ R.Da
         ‖F.incl h‖ * ‖R.p x h 0 - v‖ +
         ‖F.incl h‖ * (Θ.M T * Θ.K * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(F.L h ^ (Θ.p + 1)) v‖) := by
   have h1 := dissipFEEC_rate F R hx h v hn
-  have h2 := (banachFEEC F.toBanachFEEC).rate_iterates Θ (F.S (n * Θ.τ h) x) h v hn.2
+  have h2 := (TimeStepping.banachFEEC F.toBanachFEEC).rate_iterates Θ (F.S (n * Θ.τ h) x) h v hn.2
   rw [toBanachFEEC_M, mul_one] at h2
   exact h2.trans (add_le_add h1 le_rfl)
 
@@ -285,15 +289,15 @@ Brenner–Thomée form): on the closure of the core, for every family `ιₕ v�
 `tₙ = n τₕ ∈ [0, T]`. No discrete smoothness of `vₕ` is assumed: `vₕ` is compared with the
 smoothed `wₕ = A_δ^{p+1} vₕ` (`TimeStepping.timeAvg`), `‖Lₕ^{p+1} wₕ‖ ≤ (2/δ)^{p+1} ‖vₕ‖`, and
 `‖vₕ - wₕ‖` is small uniformly in `h` because the semidiscrete orbits are uniformly continuous at
-`0` (from the semidiscrete convergence and the stability `‖v‖ ≤ C ‖ιₕ v‖`): the Banach-space
-theorem (`BanachFEEC.TimeScheme.converges`, field `converges_iterates` of `banachFEEC`) for
-`F.toBanachFEEC`, with the semidiscrete convergence of `dissipFEEC_converges`.
+`0` (from the semidiscrete convergence and the stability `‖v‖ ≤ C ‖ιₕ v‖`): the
+Banach-space theorem `BanachFEEC.TimeScheme.converges` (field `converges_iterates` of
+`banachFEEC`) for `F.toBanachFEEC`, with the semidiscrete convergence of `dissipFEEC_converges`.
 [BrennerThomee1979]; [Thomee2006], Ch. 7 -/
 theorem converges (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) {v : ∀ h, F.X h}
     (hv : F.Converges v x) (hτ : Tendsto Θ.τ F.l (𝓝 0)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in F.l, ∀ n : ℕ, (n : ℝ) * Θ.τ h ∈ Icc 0 T →
       ‖F.S (n * Θ.τ h) x - Θ.sol h (v h) n‖ < ε :=
-  (banachFEEC F.toBanachFEEC).converges_iterates Θ
+  (TimeStepping.banachFEEC F.toBanachFEEC).converges_iterates Θ
     (fun T' => dissipFEEC_converges F Z T' hx hv) hτ T hε
 
 /-- **5. The constraint residual** of a kept `K` is at most the fully discrete error from any

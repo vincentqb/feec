@@ -412,7 +412,7 @@ theorem _root_.Feec.HilbertComplex.perturbFEEC (Z : F.Core) (hZ : Z.Data.topolog
   dense := resData_closure (F.perturb P).isMDissipative
   semidiscrete := dissipFEEC (F.perturb P) (P.core Z hZ)
   full Θ := dissipFEEC_fullyDiscrete (P.core Z hZ) Θ
-  banach := banachFEEC _
+  banach := TimeStepping.banachFEEC _
 
 end DissipFEEC
 

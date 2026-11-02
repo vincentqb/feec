@@ -40,7 +40,7 @@ of the closure of the core as `h, τ → 0`, and the constraint residuals.
   `c₀`, `K`, `κ` depending only on `r` (Brenner–Thomée for quasi-contractive semigroups,
   `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le`).
 
-**From the Banach layer** (`Feec.HilbertComplex.banachFEEC` for `F.toBanachFEEC`, `M = 1`):
+**From the Banach layer** (`Feec.TimeStepping.banachFEEC` for `F.toBanachFEEC`, `M = 1`):
 
 * `DissipFEEC.toBanachFEEC_step`: `r(τLₕ) = n(τLₕ) d(τLₕ)⁻¹`
   (`Feec.TimeStepping.RationalScheme.apply`) is the Banach scheme `P(Rₕ) Q(Rₕ)⁻¹`,
@@ -48,7 +48,7 @@ of the closure of the core as `h, τ → 0`, and the constraint residuals.
 * `DissipFEEC.norm_sol_sub_rationalScheme_sol_le`: **the sharp temporal error**
   `‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖` with Brenner–Thomée's
   constant `C_r = sharpConst r p` of the smooth-data estimate, independent of `h`;
-* `DissipFEEC.norm_step_pow_sub_S_le_sharp`: the same constant for the exact problem,
+* `DissipFEEC.norm_step_pow_sub_S_le_brennerThomee`: the same constant for the exact problem,
   `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r nτ τᵖ ‖A^{p+1} x‖` on `D(A^{p+1})`.
 
 ## References
@@ -215,7 +215,7 @@ theorem norm_sol_sub_rationalScheme_sol_le (r : RationalScheme) (hr : r.IsAStabl
     (n : ℕ) :
     ‖F.sol h v (n * τ h) - (F.rationalScheme r hr hp hp0 τ hτ).sol h v n‖ ≤
       ‖F.incl h‖ * (r.sharpConst p * (n * τ h) * τ h ^ p * ‖(F.L h ^ (p + 1)) v‖) := by
-  have H := (banachFEEC F.toBanachFEEC).temporal_rational r hr hp (hτ h) h v n
+  have H := (TimeStepping.banachFEEC F.toBanachFEEC).temporal_rational r hr hp (hτ h) h v n
   rw [toBanachFEEC_M, mul_one, F.toBanachFEEC_step r (hτ h)] at H
   exact H
 
@@ -224,14 +224,14 @@ theorem norm_sol_sub_rationalScheme_sol_le (r : RationalScheme) (hr : r.IsAStabl
 `‖r(τA)ⁿ x - S(nτ) x‖ ≤ C_r nτ τᵖ ‖A^{p+1} x‖`, `C_r = sharpConst r p` (Brenner–Thomée's
 smooth-data estimate, field `exact_rational` of `banachFEEC` for `F.toBanachFEEC`, with
 `R = (1 - τA)⁻¹`). [BrennerThomee1979]; [GomilkoTomilov2024], Thm 1.1(ii) -/
-theorem norm_step_pow_sub_S_le_sharp (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
+theorem norm_step_pow_sub_S_le_brennerThomee (r : RationalScheme) (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {x : E} (hx : x ∈ iterDomain A (p + 1)) :
     ‖(r.step A τ ^ n) x - F.S (n * τ) x‖ ≤
       r.sharpConst p * (n * τ) * τ ^ p * ‖(genExt A)^[p + 1] x‖ := by
   have hR := F.isMDissipative.isResolvent (inv_pos.2 hτ)
   rw [RCLike.ofReal_inv] at hR
   have hgen := F.isMDissipative.generator_semigroup
-  have H := (banachFEEC F.toBanachFEEC).exact_rational r hr hp hτ
+  have H := (TimeStepping.banachFEEC F.toBanachFEEC).exact_rational r hr hp hτ
     (R := (τ : 𝕜)⁻¹ • Operator.resolvent A (τ : 𝕜)⁻¹)
     (fun x y hxy => hR.inv_smul_apply_sub hτ.ne' (by rwa [hgen] at hxy)) n
     (u := fun j => (genExt A)^[j] x) (by rw [hgen]; exact mem_graph_of_mem_iterDomain hx)

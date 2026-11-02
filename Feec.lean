@@ -170,7 +170,6 @@ public import Feec.HilbertComplex.Approximation.ApproxConforming
 public import Feec.HilbertComplex.Approximation.ApproxFEEC
 public import Feec.HilbertComplex.Approximation.ApproxFEECWitness
 public import Feec.HilbertComplex.Approximation.ApproxOrthogonal
-public import Feec.HilbertComplex.Approximation.BanachFEEC
 public import Feec.HilbertComplex.Approximation.CochainProjection
 public import Feec.HilbertComplex.Approximation.CochainProjectionExistence
 public import Feec.HilbertComplex.Approximation.ConformingFamily
@@ -411,6 +410,7 @@ public import Feec.Semigroup.Perturbation
 public import Feec.Semigroup.Rescale
 public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Stone
+public import Feec.TimeStepping.BanachFEEC
 public import Feec.TimeStepping.BlockMatrix
 public import Feec.TimeStepping.Cayley
 public import Feec.TimeStepping.Convergence

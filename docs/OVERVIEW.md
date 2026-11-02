@@ -78,9 +78,9 @@ each stated as a structure of named conclusions extending the one below and prov
    (`Feec.HilbertComplex.approxFEEC_unique_weak`) and, on graded complexes, reducing iff kept forward
    in time (`Feec.HilbertComplex.approxFEEC_isReducing_iff_keeps`).
 
-**Fully discrete, on Banach spaces first.** `Feec.HilbertComplex.banachFEEC`
-(`Feec.HilbertComplex.Approximation.BanachFEEC`, statement `Feec.HilbertComplex.BanachFEEC.Verdict`)
-for `Feec.HilbertComplex.BanachFEEC`: a strongly continuous semigroup on a real or complex Banach
+**Fully discrete, on Banach spaces first.** `Feec.TimeStepping.banachFEEC`
+(`Feec.TimeStepping.BanachFEEC`, statement `Feec.TimeStepping.BanachFEEC.Verdict`)
+for `Feec.TimeStepping.BanachFEEC`: a strongly continuous semigroup on a real or complex Banach
 space, Banach spaces `Xₕ` with bounded generators `Lₕ`, the exact and discrete semigroups bounded
 by one `M`, uniformly bounded reading maps with uniformly bounded left inverses. For every time
 scheme (`Feec.TimeStepping.TimeScheme`): stability, temporal error, the error as semidiscrete plus
@@ -89,10 +89,13 @@ stable by the Hille–Yosida estimates; every A-stable rational scheme satisfies
 stability bound `M (1 + C' √n)` and the sharp smooth-data error `C M nτ τᵖ ‖·^{p+1}‖`, discrete
 (constants independent of `h`) and exact. Every `DissipFEEC` is a `BanachFEEC` with `M = 1`
 (`Feec.HilbertComplex.DissipFEEC.toBanachFEEC`), its time schemes are those of the Banach one, and
-the fully discrete theorem `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` derives its rates and
-convergence from `banachFEEC` and its temporal errors from the Banach-space bounds of
-`Feec.TimeStepping.TimeScheme`; the crown carries the Banach verdicts of its
-wave, heat, perturbed and crime discretizations.
+the fully discrete theorem `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` derives `rate_iterates`
+and `converges_iterates` from `banachFEEC`, its temporal errors and `rate_uniform_iterates` from
+the Banach-space bounds of `Feec.TimeStepping.TimeScheme` (`rate_smooth_iterates`, the forced and
+lifted iterates are Hilbert-side); the crown carries the Banach verdicts of its wave, heat,
+perturbed and crime discretizations. On these (dissipative, Hilbert) discretizations they are
+Banach-route constants, not new rates; the Banach theorems give new content only for
+discretizations that are not contractive in a Hilbert norm (none in the crown yet).
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of
 `dissipFEEC` and `approxFEEC` (convergence on the core from the comparison initial values, the

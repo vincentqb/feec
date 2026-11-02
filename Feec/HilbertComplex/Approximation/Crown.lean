@@ -63,16 +63,23 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    `ConstrainedFEEC.FullVerdict.exact_perturbed_heat`); **on Banach spaces**
    (`banach_wave`, `banach_heat`: the wave and heat discretizations read without their inner
    products, `DissipFEEC.toBanachFEEC`, satisfy the fully discrete FEEC theorem on Banach spaces,
-   `banachFEEC`, from which the rate and the convergence of every time scheme above are derived)
-   backward Euler is stable by Hille–Yosida, every A-stable rational scheme satisfies
-   Brenner–Thomée's stability bound `‖r(τLₕ)ⁿ‖ ≤ 1 + C'_r √n`, and the temporal
-   error of every A-stable rational scheme of order `p` is at most
-   `‖ιₕ‖ C_r tₙ τᵖ ‖Lₕ^{p+1} v‖` with Brenner–Thomée's constant `C_r` of the smooth-data estimate
-   (`sharp_wave`, `sharp_heat`), as is the error `C_r nτ τᵖ ‖L^{p+1} x‖` of the exact equations
-   (`exact_sharp_wave`, `exact_sharp_heat`; [GomilkoTomilov2024], Thm 1.1(ii)); the field
-   carries **forcing and inhomogeneous boundary data**: the forced iterates `Wₙ₊₁ = Pₕ Wₙ + gₙ` have the
-   comparison error plus the summed consistency defects (the discrete Duhamel formula,
-   `DissipFEEC.TimeScheme.Verdict.forced_iterates`), and for an operator `L_max ≥ L` without
+   `banachFEEC`, from which `rate_iterates` and `converges_iterates` of every time scheme above
+   are derived) backward Euler is stable by Hille–Yosida, every A-stable rational scheme
+   satisfies Brenner–Thomée's stability bound `‖r(τLₕ)ⁿ‖ ≤ 1 + C'_r √n`, and the temporal error
+   of every A-stable rational scheme of order `p` is at most `‖ιₕ‖ C_r tₙ τᵖ ‖Lₕ^{p+1} v‖` with
+   Brenner–Thomée's constant `C_r` of the smooth-data estimate (`brennerThomee_wave`,
+   `brennerThomee_heat`), as is the error `C_r nτ τᵖ ‖L^{p+1} x‖` of the exact equations
+   (`exact_brennerThomee_wave`, `exact_brennerThomee_heat`; [GomilkoTomilov2024], Thm 1.1(ii)).
+   On the crown's discretizations (dissipative, on Hilbert spaces) these are the Banach-route
+   constants, not new rates: the `√n` stability bound is weaker than von Neumann's `‖r(τLₕ)ⁿ‖ ≤ 1`,
+   and the order-`p` errors are those of the fields `wave`/`heat` (with `DissipFEEC.rationalScheme`)
+   and `exact_wave`/`exact_heat`, with the constant `sharpConst r p` in place of `sup_y |ρ(iy)| +
+   1/(p+1)!` (neither is shown smaller); the Banach theorems give new content only for
+   discretizations that are not contractive in a Hilbert norm (none in the crown yet).
+   The field carries **forcing and inhomogeneous boundary data**: the forced iterates
+   `Wₙ₊₁ = Pₕ Wₙ + gₙ` have the comparison error plus the summed consistency defects (the
+   discrete Duhamel formula, `DissipFEEC.TimeScheme.Verdict.forced_iterates`), and for an operator
+   `L_max ≥ L` without
    boundary conditions and a lifting `G` of the boundary data the solution is `G` plus the mild
    solution with the forcing `f − G' + L_max G`, approximated by the lifted iterates
    `Gₕ,ₙ + ιₕ Wₙ` (`lifted_iterates`; the Crank–Nicolson runs of [QuennevilleBelair2015], Ch. 7,
@@ -122,19 +129,21 @@ Ritz projection), `ConstrainedFEEC.heatFEEC`, and `dissipFEEC_fullyDiscrete` wit
 (`constrainedFEEC_fullyDiscrete`), `constrainedFEEC_perturbed`, and `ApproxComplexCrime.feec` (from
 `approxFEEC_ofComplexCrime`, `dissipFEEC_fullyDiscrete` and `perturbFEEC`); each field is the layer
 verdict itself. The fully discrete layer stands on the Banach one: `dissipFEEC_fullyDiscrete`
-derives its rates and convergence from `banachFEEC`
-(`Feec.HilbertComplex.Approximation.BanachFEEC`, through `DissipFEEC.toBanachFEEC`) and its
-temporal errors from the Banach-space bounds of `Feec.TimeStepping.TimeScheme`; `banachFEEC`
+derives `rate_iterates` and `converges_iterates` from `banachFEEC` (`Feec.TimeStepping.BanachFEEC`,
+through `DissipFEEC.toBanachFEEC`) and its temporal errors and `rate_uniform_iterates` from the
+Banach-space bounds of `Feec.TimeStepping.TimeScheme` (`rate_smooth_iterates`, `forced_iterates`,
+`lifted_iterates` are Hilbert-side); `banachFEEC`
 consumes the Hille–Yosida estimates (`Feec.Semigroup.HilleYosida`,
 `Feec.TimeStepping.RationalHilleYosida`), Brenner–Thomée's stability bound
 (`Feec.TimeStepping.RationalAStable`, `Feec.TimeStepping.RationalHillePhillips`) and smooth-data
 estimate (`Feec.TimeStepping.RationalSharp`), both by complexification
 (`Feec.TimeStepping.RationalHillePhillipsReal`, `Feec.Semigroup.Complexification`); the fields
-`banach_wave`, `banach_heat`, `sharp_wave`, `sharp_heat`, `exact_sharp_wave`, `exact_sharp_heat`,
-`DissipFEEC.Perturbation.Verdict.banach` and `ApproxComplexCrime.Verdict.banach` state them on the
-crown's discretizations. Every finite element family with bounded smoothed projections is a
-conforming family
-(`Feec.Models.ConformingFamilies`: Whitney forms and every admissible sequence `P_rΛ`, `P_r⁻Λ` on
+`banach_wave`, `banach_heat`, `brennerThomee_wave`, `brennerThomee_heat`,
+`exact_brennerThomee_wave`, `exact_brennerThomee_heat`, `DissipFEEC.Perturbation.Verdict.banach`
+and `ApproxComplexCrime.Verdict.banach` state them on the crown's discretizations (Banach-route
+constants there, not new rates, see 4). Every finite element family with bounded smoothed
+projections is a conforming family (`Feec.Models.ConformingFamilies`: Whitney forms and every
+admissible sequence `P_rΛ`, `P_r⁻Λ` on
 the cube, parallelepipeds and star-shaped domains, and the cubical `Q_b⁻Λ` on the cube,
 `FEM.qMinusFamily`), so the crown holds for each. It also holds for every discrete BGG complex of
 stacked conforming families (`S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ`): the discrete derived complexes are a
@@ -262,9 +271,10 @@ the core of the wave Ritz projection) and of the heat discretization (with the h
 the error of explicit leapfrog for the wave discretization under the CFL condition, the
 Hermitian signed linear systems of its Crank–Nicolson steps, and the Brenner–Thomée error of
 every A-stable rational scheme for the exact wave and heat equations (unbounded generators),
-also with every bounded perturbation (quasi-contractive semigroups); and the fully discrete FEEC
-theorem on Banach spaces (`banachFEEC`) for the wave and heat discretizations, with the sharp
-temporal errors of A-stable rational schemes it gives, discrete and exact. -/
+also with every bounded perturbation (quasi-contractive semigroups); and the fully discrete
+FEEC theorem on Banach spaces (`banachFEEC`) for the wave and heat discretizations, with the
+Brenner–Thomée errors of A-stable rational schemes it gives, discrete and exact (Banach-route
+constants on these Hilbert discretizations, not new rates). -/
 structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
   /-- the fully discrete wave equation, for every time scheme -/
   wave (Θ : G.toApprox.TimeScheme) : Θ.Verdict G.toCore
@@ -345,29 +355,34 @@ structure ConstrainedFEEC.FullVerdict (G : ConstrainedFEEC H κ) : Prop where
   banach_wave : G.toApprox.toBanachFEEC.Verdict
   /-- the same for the heat discretization -/
   banach_heat : G.toHeat.toBanachFEEC.Verdict
-  /-- the sharp temporal error of every A-stable rational scheme `r` of order `p` for the wave
-  discretization: `‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖`, with
-  Brenner–Thomée's constant `C_r = sharpConst r p` of the smooth-data estimate (independent of `h`)
-  (`DissipFEEC.norm_sol_sub_rationalScheme_sol_le`, from `banach_wave`) -/
-  sharp_wave (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
-    (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) (v : G.toApprox.X h) (n : ℕ) :
+  /-- the Brenner–Thomée temporal error of every A-stable rational scheme `r` of order `p` for the
+  wave discretization: `‖ιₕ e^{tₙ Lₕ} v - ιₕ r(τₕLₕ)ⁿ v‖ ≤ ‖ιₕ‖ C_r tₙ τₕᵖ ‖Lₕ^{p+1} v‖` with the
+  constant `C_r = sharpConst r p` of the smooth-data estimate (independent of `h`;
+  `DissipFEEC.norm_sol_sub_rationalScheme_sol_le`, from `banach_wave`). A Banach-route constant,
+  not a new rate: `wave` with `DissipFEEC.rationalScheme` gives the same order with
+  `sup_y |ρ(iy)| + 1/(p+1)!` -/
+  brennerThomee_wave (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) (v : G.toApprox.X h)
+    (n : ℕ) :
     ‖G.toApprox.sol h v (n * τ h) - (G.toApprox.rationalScheme r hr hp hp0 τ hτ).sol h v n‖ ≤
       ‖G.toApprox.incl h‖ * (r.sharpConst p * (n * τ h) * τ h ^ p * ‖(G.toApprox.L h ^ (p + 1)) v‖)
   /-- the same for the heat discretization -/
-  sharp_heat (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
-    (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) (v : G.toHeat.X h) (n : ℕ) :
+  brennerThomee_heat (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) (hp0 : 0 < p) {τ : κ → ℝ} (hτ : ∀ h, 0 < τ h) (h : κ) (v : G.toHeat.X h) (n
+    : ℕ) :
     ‖G.toHeat.sol h v (n * τ h) - (G.toHeat.rationalScheme r hr hp hp0 τ hτ).sol h v n‖ ≤
       ‖G.toHeat.incl h‖ * (r.sharpConst p * (n * τ h) * τ h ^ p * ‖(G.toHeat.L h ^ (p + 1)) v‖)
   /-- the time discretization of the exact wave equation by every A-stable rational scheme `r`
   of order `p` with Brenner–Thomée's constant: `‖r(τL)ⁿ x - S(nτ) x‖ ≤ C_r nτ τᵖ ‖L^{p+1} x‖` on
-  `D(L^{p+1})` (`DissipFEEC.norm_step_pow_sub_S_le_sharp`, from `banach_wave`) -/
-  exact_sharp_wave (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
+  `D(L^{p+1})` (`DissipFEEC.norm_step_pow_sub_S_le_brennerThomee`, from `banach_wave`); the
+  bound of `exact_wave` with the Banach-route constant `C_r = sharpConst r p` -/
+  exact_brennerThomee_wave (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {x : PiLp 2 W}
     (hx : x ∈ DissipFEEC.iterDomain H.wave (p + 1)) :
     ‖(r.step H.wave τ ^ n) x - G.toApprox.S (n * τ) x‖ ≤
       r.sharpConst p * (n * τ) * τ ^ p * ‖(DissipFEEC.genExt H.wave)^[p + 1] x‖
   /-- the same for the exact heat equation, generator `-Δ` -/
-  exact_sharp_heat (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
+  exact_brennerThomee_heat (r : TimeStepping.RationalScheme) (hr : r.IsAStable) {p : ℕ}
     (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) {x : PiLp 2 W}
     (hx : x ∈ DissipFEEC.iterDomain (-H.hodgeLaplacian) (p + 1)) :
     ‖(r.step (-H.hodgeLaplacian) τ ^ n) x - G.toHeat.S (n * τ) x‖ ≤
@@ -386,13 +401,13 @@ theorem constrainedFEEC_fullyDiscrete (G : ConstrainedFEEC H κ) : G.FullVerdict
     fun r hr _ hp _ hτ n _ hx => G.toHeat.norm_step_pow_sub_S_le r hr hp hτ n hx,
     fun r hr _ hp => G.toApprox.exists_norm_step_pow_sub_perturb_le r hr hp,
     fun r hr _ hp => G.toHeat.exists_norm_step_pow_sub_perturb_le r hr hp,
-    banachFEEC _, banachFEEC _,
+    TimeStepping.banachFEEC _, TimeStepping.banachFEEC _,
     fun r hr _ hp hp0 _ hτ h v n =>
       G.toApprox.norm_sol_sub_rationalScheme_sol_le r hr hp hp0 hτ h v n,
     fun r hr _ hp hp0 _ hτ h v n =>
       G.toHeat.norm_sol_sub_rationalScheme_sol_le r hr hp hp0 hτ h v n,
-    fun r hr _ hp _ hτ n _ hx => G.toApprox.norm_step_pow_sub_S_le_sharp r hr hp hτ n hx,
-    fun r hr _ hp _ hτ n _ hx => G.toHeat.norm_step_pow_sub_S_le_sharp r hr hp hτ n hx⟩
+    fun r hr _ hp _ hτ n _ hx => G.toApprox.norm_step_pow_sub_S_le_brennerThomee r hr hp hτ n hx,
+    fun r hr _ hp _ hτ n _ hx => G.toHeat.norm_step_pow_sub_S_le_brennerThomee r hr hp hτ n hx⟩
 
 variable {ρ : Type*}
 
@@ -593,7 +608,8 @@ need not be cochain maps): the approximating FEEC theorem on the core, the discr
 `𝐝ₕ - 𝐝ₕ*`, the fully discrete theorems for every time scheme and for leapfrog under the CFL
 condition, the perturbed theorems for every bounded perturbation (dense core), exact preservation of
 discrete constraints, the Strang, residual and defect estimates with their limits, and the fully
-discrete FEEC theorem on Banach spaces (`banachFEEC`). The conforming windows give the zero-defect instance (`ConstrainedFEEC.toCrime`,
+discrete FEEC theorem on Banach spaces (`banachFEEC`). The conforming windows give the zero-defect
+instance (`ConstrainedFEEC.toCrime`,
 `ConformingFamily.Verdict.crime`); scheme (6.5) is an instance
 (`Feec.Instances.EinsteinBianchiFEMCrown`). [HolstStern2012], §3; [BrennerThomee1979]; [Pazy1983],
 §3.4 -/
@@ -609,7 +625,7 @@ theorem feec (F : ApproxComplexCrime H κ) : F.Verdict :=
     (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.1,
     fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.1 _ hy,
     fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.2 _ hy,
-    (approxFEEC_ofComplexCrime F).2.1, banachFEEC _⟩
+    (approxFEEC_ofComplexCrime F).2.1, TimeStepping.banachFEEC _⟩
 
 end ApproxComplexCrime
 

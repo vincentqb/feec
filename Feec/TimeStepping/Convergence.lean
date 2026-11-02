@@ -62,8 +62,9 @@ error constant of Crank–Nicolson is `1/12` (`e^z - r_{1/2}(z) = -z³/12 + O(z�
 average `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds` satisfies `‖Lᵏ A_δᵏ y‖ ≤ ((M + 1)/δ)ᵏ ‖y‖` and
 `‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L` (for dissipative `L`,
 `M = 1`: `(2/δ)ᵏ` and `k`, `norm_pow_timeAvg_iterate_le`, `norm_timeAvg_iterate_sub_le`); it
-turns the rate for smooth data into convergence for all data
-(`Feec.HilbertComplex.BanachFEEC.TimeScheme.converges`).
+turns the rate for smooth data into convergence for all data (downstream:
+`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, and through it
+`Feec.HilbertComplex.DissipFEEC.TimeScheme.converges`).
 
 ## References
 

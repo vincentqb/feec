@@ -6,7 +6,7 @@ public import Feec.TimeStepping.RationalHillePhillipsReal
 /-!
 # The fully discrete FEEC theorem on Banach spaces
 
-A **Banach FEEC discretization** (`Feec.HilbertComplex.BanachFEEC G κ`) of a strongly continuous
+A **Banach FEEC discretization** (`Feec.TimeStepping.BanachFEEC G κ`) of a strongly continuous
 semigroup `S(t)` on a Banach space `E` over `𝕜 = ℝ` or `ℂ` (generator `A`): Banach spaces `Xₕ`,
 bounded generators `Lₕ`, uniformly bounded reading maps `ιₕ : Xₕ → E` with uniformly bounded left
 inverses `πₕ`, and one constant `M` bounding the exact and the discrete semigroups,
@@ -14,9 +14,17 @@ inverses `πₕ`, and one constant `M` bounding the exact and the discrete semig
 compatibility of `ιₕ` with anything is assumed; the semidiscrete solution is `ιₕ e^{tLₕ} v`
 (`BanachFEEC.sol`). Every dissipative FEEC discretization of a Hilbert space is one, with `M = 1`
 (`Feec.HilbertComplex.DissipFEEC.toBanachFEEC`): the fully discrete FEEC theorem
-(`Feec.HilbertComplex.dissipFEEC_fullyDiscrete`) takes its rates and its convergence from this one
-(its temporal errors from the Banach-space bounds of `Feec.TimeStepping.TimeScheme`), and the
-crown (`Feec.HilbertComplex.ConformingFamily.feec`) states it for its discretizations.
+(`Feec.HilbertComplex.dissipFEEC_fullyDiscrete`) takes its fields `rate_iterates` and
+`converges_iterates` from this one, its temporal errors and `rate_uniform_iterates` from the
+Banach-space bounds of `Feec.TimeStepping.TimeScheme`; its rates along smooth comparisons and
+its forced and lifted iterates are Hilbert-side. The crown
+(`Feec.HilbertComplex.ConformingFamily.feec`) states this theorem for its discretizations; there,
+dissipative on Hilbert spaces, it gives Banach-route constants, not new rates (von Neumann's
+inequality gives the stronger `‖r(τLₕ)ⁿ‖ ≤ 1`). Its new content is for discretizations that are
+not contractive in a Hilbert norm.
+
+The module lives in `Feec.TimeStepping` (it needs only semigroups and time schemes, no Hilbert
+structure); the Hilbert layer imports it.
 
 ## Main results
 
@@ -50,8 +58,9 @@ crown (`Feec.HilbertComplex.ConformingFamily.feec`) states it for its discretiza
 All constants depend on `r`, `p` and `M` only, so they are independent of `h` (the bounds
 contain `‖Lₕ^{p+1} v‖`, which need not be bounded in `h`). A rational scheme is a time scheme
 when its powers are bounded uniformly (`BanachFEEC.rationalScheme`, consistent of order `p` with
-constant `C_r M`): `M(T) = M` for backward Euler, `M(T) = 1` for every A-stable `r` and
-dissipative `Lₕ` on Hilbert spaces (von Neumann's inequality). For an A-stable `r` without such
+constant `C_r M`): `M(T) = M` for backward Euler; for every A-stable `r` and dissipative `Lₕ` on
+Hilbert spaces `M(T) = 1` by von Neumann's inequality, which is the scheme
+`Feec.HilbertComplex.DissipFEEC.rationalScheme`. For an A-stable `r` without such
 a bound, `√n` grows as `τ → 0` at fixed `T = nτ` and 1 does not apply; the convergence for all
 data is then not claimed (on Banach spaces it fails in general, [BrennerThomee1979]).
 
@@ -64,7 +73,7 @@ data is then not claimed (on Banach spaces it fails in general, [BrennerThomee19
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.5 (the Hille–Yosida estimates), §3.4 (approximation of semigroups)
 
-Bibliography: [references.bib](../../../docs/references.bib)
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open Set Filter Topology Metric NormedSpace Finset
@@ -73,9 +82,7 @@ open Set Filter Topology Metric NormedSpace Finset
 
 universe u
 
-namespace Feec.HilbertComplex
-
-open TimeStepping
+namespace Feec.TimeStepping
 
 variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
@@ -501,4 +508,4 @@ theorem banachFEEC [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜
   exact_stable_rational _ hr _ hτ _ hR n := B.norm_resolventStep_pow_le hr hτ hR n
   exact_rational _ hr _ hp _ hτ _ hR n _ hu := B.norm_resolventStep_pow_sub_S_le hr hp hτ hR n hu
 
-end Feec.HilbertComplex
+end Feec.TimeStepping

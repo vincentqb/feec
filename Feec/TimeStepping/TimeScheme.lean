@@ -21,9 +21,10 @@ When the flows are bounded, `‖e^{tLₕ}‖ ≤ M_L` for `t ≥ 0`:
 * `TimeScheme.norm_exp_sub_pow_le_of_timeAvg`: no power of `Lₕ` when `w` is the smoothed datum
   `A_δ^{p+1} u` (`Feec.TimeStepping.timeAvg`), for data that move slowly on `[0, δ]`.
 
-With `M_L` independent of `h`, so are all constants. The discretizations of `Feec.HilbertComplex.BanachFEEC` (Banach spaces,
-`M_L` the bound of the discrete semigroups) and `Feec.HilbertComplex.DissipFEEC` (Hilbert spaces,
-dissipative `Lₕ`, `M_L = 1`) use these schemes (`BanachFEEC.TimeScheme`, `DissipFEEC.TimeScheme`).
+With `M_L` independent of `h`, so are all constants. The downstream discretizations
+`Feec.TimeStepping.BanachFEEC` (Banach spaces, `M_L` the bound of the discrete semigroups) and
+`Feec.HilbertComplex.DissipFEEC` (Hilbert spaces, dissipative `Lₕ`, `M_L = 1`) use these schemes
+(`Feec.TimeStepping.BanachFEEC.TimeScheme`, `Feec.HilbertComplex.DissipFEEC.TimeScheme`).
 
 ## References
 

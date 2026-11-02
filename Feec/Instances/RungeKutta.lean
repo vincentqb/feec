@@ -143,7 +143,8 @@ every window with every closed constraint, the iterates of the two-stage Gauss�
 `brennerThomee_wave`, `brennerThomee_heat` of the crown, from `Feec.TimeStepping.banachFEEC`).
 On these Hilbert discretizations these are the Banach-route constants, not new rates: the
 verdicts of `full_rationalScheme` give the same orders with `sup_y |ρ(iy)| + 1/(p+1)!`; the Banach
-theorems give new content only for discretizations that are not contractive in a Hilbert norm.
+theorems give new content only for discretizations that are not contractive in a Hilbert norm
+(the maximum-norm heat equation, `Feec.Models.Cube.MaxNormHeat.maxNormHeat`).
 [BrennerThomee1979]; [HairerWanner1996], §IV.5, §IV.6 -/
 theorem full_brennerThomee (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) {τ : κ → ℝ}

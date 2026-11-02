@@ -95,7 +95,12 @@ the Banach-space bounds of `Feec.TimeStepping.TimeScheme` (`rate_smooth_iterates
 lifted iterates are Hilbert-side); the crown carries the Banach verdicts of its wave, heat,
 perturbed and crime discretizations. On these (dissipative, Hilbert) discretizations they are
 Banach-route constants, not new rates; the Banach theorems give new content only for
-discretizations that are not contractive in a Hilbert norm (none in the crown yet).
+discretizations that are not contractive in a Hilbert norm. The crown has none; the maximum-norm
+heat equation (`Feec.Models.Cube.MaxNormHeat.maxNormHeat`: lumped-mass `P₁` elements on the
+Freudenthal meshes of a cube, a `Feec.TimeStepping.StableFamily` with `M = 1` by the discrete
+maximum principle) is one, with maximum-norm errors `O(h²)`, `O(τ + h²)` for backward Euler and
+`O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, collected in the companion
+`Feec.Instances.CrownNonVacuity` (field `maxNorm`).
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of
 `dissipFEEC` and `approxFEEC` (convergence on the core from the comparison initial values, the

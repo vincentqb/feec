@@ -53,7 +53,7 @@ section Quadrature
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
 
 /-- `‖g(t)‖ ≤ c (t - a)ᵐ⁺¹ / (m + 1)` on `[a, b]` from `g(a) = 0` and `‖g'(t)‖ ≤ c (t - a)ᵐ`. -/
-private theorem norm_le_of_deriv_le_pow {g g' : ℝ → X} {a b c : ℝ} (m : ℕ)
+theorem norm_le_of_deriv_le_pow {g g' : ℝ → X} {a b c : ℝ} (m : ℕ)
     (hg : ContinuousOn g (Icc a b)) (hg' : ∀ t ∈ Ico a b, HasDerivWithinAt g (g' t) (Ici t) t)
     (ha : g a = 0) (hb : ∀ t ∈ Ico a b, ‖g' t‖ ≤ c * (t - a) ^ m) :
     ∀ t ∈ Icc a b, ‖g t‖ ≤ c * (t - a) ^ (m + 1) / (m + 1) := by

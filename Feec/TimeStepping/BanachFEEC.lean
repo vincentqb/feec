@@ -1,16 +1,15 @@
 module
 
-public import Feec.TimeStepping.TimeScheme
-public import Feec.TimeStepping.RationalHillePhillipsReal
+public import Feec.TimeStepping.StableFamily
 
 /-!
 # The fully discrete FEEC theorem on Banach spaces
 
 A **Banach FEEC discretization** (`Feec.TimeStepping.BanachFEEC G κ`) of a strongly continuous
-semigroup `S(t)` on a Banach space `E` over `𝕜 = ℝ` or `ℂ` (generator `A`): Banach spaces `Xₕ`,
-bounded generators `Lₕ`, uniformly bounded reading maps `ιₕ : Xₕ → E` with uniformly bounded left
-inverses `πₕ`, and one constant `M` bounding the exact and the discrete semigroups,
-`‖S(t)‖ ≤ M`, `‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in `h`. No inner product, dissipativity or
+semigroup `S(t)` on a Banach space `E` over `𝕜 = ℝ` or `ℂ` (generator `A`): a uniformly stable
+family (`Feec.TimeStepping.StableFamily`: Banach spaces `Xₕ`, bounded generators `Lₕ`,
+`‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in `h`), uniformly bounded reading maps `ιₕ : Xₕ → E`
+with uniformly bounded left inverses `πₕ`, and `‖S(t)‖ ≤ M` with the same `M`. No inner product, dissipativity or
 compatibility of `ιₕ` with anything is assumed; the semidiscrete solution is `ιₕ e^{tLₕ} v`
 (`BanachFEEC.sol`). Every dissipative FEEC discretization of a Hilbert space is one, with `M = 1`
 (`Feec.HilbertComplex.DissipFEEC.toBanachFEEC`): the fully discrete FEEC theorem
@@ -24,7 +23,10 @@ inequality gives the stronger `‖r(τLₕ)ⁿ‖ ≤ 1`). Its new content is fo
 not contractive in a Hilbert norm.
 
 The module lives in `Feec.TimeStepping` (it needs only semigroups and time schemes, no Hilbert
-structure); the Hilbert layer imports it.
+structure); the Hilbert layer imports it. The results on the discrete spaces alone (backward
+Euler, the rational schemes through the resolvent, the errors along trajectories) are those of the
+underlying stable family (`Feec.TimeStepping.stableFamily`), whose maximum-norm instance is the
+lumped-mass heat equation on the cube (`Feec.Models.Cube.MaxNormHeat`).
 
 ## Main results
 
@@ -39,11 +41,11 @@ structure); the Hilbert layer imports it.
    the fully discrete ones converge to `S(tₙ) x` as `τₕ → 0`, uniformly over the
    time levels `tₙ ∈ [0, T]`, with no smoothness of `vₕ` (the data are smoothed by time averages,
    `Feec.TimeStepping.timeAvg`);
-2. (**backward Euler**) the discrete resolvents `Rₕ = (1 - τLₕ)⁻¹` (`BanachFEEC.res`) satisfy
+2. (**backward Euler**) the discrete resolvents `Rₕ = (1 - τLₕ)⁻¹` (`StableFamily.res`) satisfy
    `‖Rₕⁿ‖ ≤ M` for every `τ > 0`, `n` and `h`, by the Hille–Yosida estimates
    (`Feec.TimeStepping.norm_pow_le_of_generator`): backward Euler is a time scheme of every Banach
-   FEEC discretization (`BanachFEEC.backwardEuler`), so 1 gives it convergence for every datum;
-3. (**every A-stable rational scheme** `r`, `r(τLₕ)` through `Rₕ`, `BanachFEEC.step`)
+   FEEC discretization (`StableFamily.backwardEuler`), so 1 gives it convergence for every datum;
+3. (**every A-stable rational scheme** `r`, `r(τLₕ)` through `Rₕ`, `StableFamily.step`)
    Brenner–Thomée's stability bound `‖r(τLₕ)ⁿ‖ ≤ M (1 + C'_r √n)`, `C'_r = sqrtConst r`
    (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`,
    `|r(∞)| = 1` included) and, for `r` of order `p`, the **sharp temporal error**
@@ -57,7 +59,7 @@ structure); the Hilbert layer imports it.
 
 All constants depend on `r`, `p` and `M` only, so they are independent of `h` (the bounds
 contain `‖Lₕ^{p+1} v‖`, which need not be bounded in `h`). A rational scheme is a time scheme
-when its powers are bounded uniformly (`BanachFEEC.rationalScheme`, consistent of order `p` with
+when its powers are bounded uniformly (`StableFamily.rationalScheme`, consistent of order `p` with
 constant `C_r M`): `M(T) = M` for backward Euler; for every A-stable `r` and dissipative `Lₕ` on
 Hilbert spaces `M(T) = 1` by von Neumann's inequality, which is the scheme
 `Feec.HilbertComplex.DissipFEEC.rationalScheme`. For an A-stable `r` without such
@@ -86,41 +88,26 @@ namespace Feec.TimeStepping
 
 variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
-/-- A **Banach FEEC discretization** of a strongly continuous semigroup `G` on `E`: Banach spaces
-`Xₕ` with bounded generators `Lₕ`, uniformly bounded `ιₕ : Xₕ → E` and `πₕ : E → Xₕ` with
-`πₕ ιₕ = 1`, and a constant `M` with `‖S(t)‖ ≤ M` and `‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in
-`h` (uniform stability of the semidiscrete flows). [Pazy1983], §3.4 -/
-structure BanachFEEC (G : C0Semigroup 𝕜 E) (κ : Type*) where
+/-- A **Banach FEEC discretization** of a strongly continuous semigroup `G` on `E`: a uniformly
+stable family (`Feec.TimeStepping.StableFamily`: Banach spaces `Xₕ` with bounded generators `Lₕ`,
+`‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in `h`), uniformly bounded `ιₕ : Xₕ → E` and
+`πₕ : E → Xₕ` with `πₕ ιₕ = 1`, and `‖S(t)‖ ≤ M` for `t ≥ 0` (the same `M`).
+[Pazy1983], §3.4 -/
+structure BanachFEEC (G : C0Semigroup 𝕜 E) (κ : Type*) extends StableFamily.{u} 𝕜 κ where
   /-- the filter along which the discretization is refined -/
   l : Filter κ
-  /-- the discrete spaces -/
-  X : κ → Type u
-  [normedAddCommGroup : ∀ h, NormedAddCommGroup (X h)]
-  [normedSpace : ∀ h, NormedSpace 𝕜 (X h)]
-  [completeSpace : ∀ h, CompleteSpace (X h)]
-  [normedSpaceReal : ∀ h, NormedSpace ℝ (X h)]
-  [isScalarTower : ∀ h, IsScalarTower ℝ 𝕜 (X h)]
-  /-- the discrete generators -/
-  L : ∀ h, X h →L[𝕜] X h
   /-- the maps reading discrete states in `E` -/
   incl : ∀ h, X h →L[𝕜] E
   /-- their left inverses -/
   proj : ∀ h, E →L[𝕜] X h
   proj_incl : ∀ h x, proj h (incl h x) = x
   bound : ∃ C, ∀ h, ‖incl h‖ ≤ C ∧ ‖proj h‖ ≤ C
-  /-- the bound of the exact and the discrete semigroups -/
-  M : ℝ
   norm_S_le : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M
-  norm_exp_le : ∀ h (t : ℝ), 0 ≤ t → ‖exp ((t : 𝕜) • L h)‖ ≤ M
-
-attribute [instance] BanachFEEC.normedAddCommGroup BanachFEEC.normedSpace BanachFEEC.completeSpace
-  BanachFEEC.normedSpaceReal BanachFEEC.isScalarTower
+  M_nonneg := (norm_nonneg _).trans (norm_S_le 0 le_rfl)
 
 namespace BanachFEEC
 
 variable {G : C0Semigroup 𝕜 E} {κ : Type*} (B : BanachFEEC.{u} G κ)
-
-theorem M_nonneg : 0 ≤ B.M := (norm_nonneg _).trans (B.norm_S_le 0 le_rfl)
 
 /-- A nonnegative uniform bound of `‖ιₕ‖`, `‖πₕ‖`. -/
 def boundConst : ℝ := max B.bound.choose 0
@@ -309,64 +296,6 @@ end TimeScheme
 
 variable (B)
 
-/-- The discrete semigroups `e^{tLₕ}`. -/
-abbrev discrete (h : κ) : C0Semigroup 𝕜 (B.X h) := (C0Group.ofBounded (B.L h)).toC0Semigroup
-
-theorem norm_discrete_S_le (h : κ) (t : ℝ) (ht : 0 ≤ t) : ‖(B.discrete h).S t‖ ≤ B.M :=
-  B.norm_exp_le h t ht
-
-theorem norm_discrete_S_le_exp (h : κ) (t : ℝ) (ht : 0 ≤ t) :
-    ‖(B.discrete h).S t‖ ≤ B.M * Real.exp (0 * t) := by
-  simpa using B.norm_discrete_S_le h t ht
-
-/-- **The discrete resolvent** `Rₕ = (1 - τLₕ)⁻¹ = τ⁻¹ (τ⁻¹ - Lₕ)⁻¹`. -/
-def res (τ : ℝ) (h : κ) : B.X h →L[𝕜] B.X h :=
-  (τ : 𝕜)⁻¹ • Operator.resolvent (B.discrete h).generator (τ : 𝕜)⁻¹
-
-/-- `Rₕ (x - τ Lₕ x) = x`, for `τ > 0` (`τ⁻¹` is in the resolvent set, Hille–Yosida). -/
-theorem res_apply_sub {τ : ℝ} (hτ : 0 < τ) (h : κ) :
-    ∀ x y, (x, y) ∈ (B.discrete h).generator.graph → B.res τ h (x - (τ : 𝕜) • y) = x := by
-  intro x y hxy
-  have hR := (B.discrete h).isResolvent_resolvent_ofReal (B.norm_discrete_S_le_exp h)
-    (inv_pos.2 hτ)
-  rw [RCLike.ofReal_inv] at hR
-  exact hR.inv_smul_apply_sub hτ.ne' hxy
-
-/-- **Backward Euler is stable on every Banach FEEC discretization**: `‖Rₕⁿ‖ ≤ M`, by the
-Hille–Yosida estimates. [Pazy1983], §1.5 -/
-theorem norm_res_pow_le {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) : ‖B.res τ h ^ n‖ ≤ B.M := by
-  simpa using TimeStepping.norm_pow_le_of_generator (B.discrete h) (B.norm_discrete_S_le_exp h)
-    hτ (by simp) (B.res_apply_sub hτ h) n
-
-/-- **The rational scheme** `r(τLₕ) = P(Rₕ) Q(Rₕ)⁻¹` through the discrete resolvent. -/
-def step (r : RationalScheme) (τ : ℝ) (h : κ) : B.X h →L[𝕜] B.X h :=
-  r.resolventStep (B.res τ h)
-
-/-- Backward Euler `r = 1/(1 - z)` is the discrete resolvent. -/
-theorem step_theta_one (τ : ℝ) (h : κ) : B.step (RationalScheme.theta 1 one_pos) τ h = B.res τ h :=
-  RationalScheme.resolventStep_theta_one _
-
-/-- **Brenner–Thomée's stability bound on every Banach FEEC discretization**: for every A-stable
-`r`, `|r(∞)| = 1` included, `‖r(τLₕ)ⁿ‖ ≤ M (1 + C'_r √n)`, `C'_r = sqrtConst r`, uniformly in
-`h`. [BrennerThomee1979] -/
-theorem norm_step_pow_le {r : RationalScheme} (hr : r.IsAStable) {τ : ℝ} (hτ : 0 < τ) (h : κ)
-    (n : ℕ) : ‖B.step r τ h ^ n‖ ≤ B.M * (1 + r.sqrtConst * √n) :=
-  RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable (B.discrete h)
-    (B.norm_discrete_S_le h) hr hτ (B.res_apply_sub hτ h) n
-
-/-- **The sharp temporal error on every Banach FEEC discretization**: for every A-stable `r` of
-order `p`, `‖r(τLₕ)ⁿ v - e^{nτLₕ} v‖ ≤ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`, `C_r = sharpConst r p`
-independent of `h`, without the `√n` of the stability bound (Brenner–Thomée's smooth-data
-estimate). [BrennerThomee1979]; [GomilkoTomilov2024], Thm 1.1(ii) -/
-theorem norm_step_pow_sub_exp_le {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
-    (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) (v : B.X h) :
-    ‖(B.step r τ h ^ n) v - exp (((n * τ : ℝ) : 𝕜) • B.L h) v‖ ≤
-      r.sharpConst p * B.M * (n * τ) * τ ^ p * ‖(B.L h ^ (p + 1)) v‖ := by
-  rw [step]
-  simpa using RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent (B.discrete h)
-    (B.norm_discrete_S_le h) hr hp hτ (B.res_apply_sub hτ h) n (u := fun j => (B.L h ^ j) v)
-    fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded (B.L h) v j
-
 /-- The sharp temporal error of `ιₕ r(τLₕ)ⁿ v`, read through `ιₕ`. -/
 theorem norm_sol_sub_step_le {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
     {τ : ℝ} (hτ : 0 < τ) (h : κ) (v : B.X h) (n : ℕ) :
@@ -376,36 +305,6 @@ theorem norm_sol_sub_step_le {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (
   refine ((B.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left ?_ (norm_nonneg _))
   rw [norm_sub_rev]
   exact B.norm_step_pow_sub_exp_le hr hp hτ h n v
-
-/-- **A rational scheme with uniformly bounded powers is a time scheme**: for an A-stable `r` of
-order `p ≥ 1`, time steps `τₕ > 0` and `‖r(τₕLₕ)ⁿ‖ ≤ Mₛ(T)` for `nτₕ ≤ T`, the scheme
-`Pₕ = r(τₕLₕ)`, consistent of order `p` with constant `C_r M` (the sharp estimate at `n = 1`). -/
-def rationalScheme (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
-    (hp0 : 0 < p) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (Ms : ℝ → ℝ)
-    (hMs : ∀ (T : ℝ) (h : κ) (n : ℕ), (n : ℝ) * τ h ≤ T → ‖B.step r (τ h) h ^ n‖ ≤ Ms T) :
-    B.TimeScheme where
-  τ := τ
-  τ_pos := hτ
-  P h := B.step r (τ h) h
-  M := Ms
-  stable := hMs
-  p := p
-  p_pos := hp0
-  K := r.sharpConst p * B.M
-  K_nonneg := mul_nonneg (RationalScheme.sharpConst_nonneg hr hp) B.M_nonneg
-  consistent h y := by
-    have := B.norm_step_pow_sub_exp_le hr hp (hτ h) h 1 y
-    rw [pow_one, Nat.cast_one, one_mul] at this
-    calc _ ≤ _ := this
-      _ = _ := by ring
-
-/-- **Backward Euler as a time scheme of every Banach FEEC discretization**: `Pₕ = (1 - τₕLₕ)⁻¹`,
-stable with `M(T) = M` (Hille–Yosida), order `1`. -/
-def backwardEuler (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : B.TimeScheme :=
-  B.rationalScheme (RationalScheme.theta 1 one_pos)
-    (RationalScheme.isAStable_theta (by norm_num)) (RationalScheme.hasOrder_theta one_pos)
-    one_pos τ hτ (fun _ => B.M) fun _ h n _ => by
-      rw [step_theta_one]; exact B.norm_res_pow_le (hτ h) h n
 
 variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 

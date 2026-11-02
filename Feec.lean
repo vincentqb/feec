@@ -89,6 +89,7 @@ public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.InterpolationError
 public import Feec.FiniteElement.InverseEstimate
+public import Feec.FiniteElement.LumpedMass
 public import Feec.FiniteElement.InvariantForm
 public import Feec.FiniteElement.LocalDof
 public import Feec.FiniteElement.LocalSpace
@@ -121,6 +122,7 @@ public import Feec.ForMathlib.Analysis.HalfLineTranslate
 public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Analysis.NormedComplexification
 public import Feec.ForMathlib.Analysis.Polynomial
+public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
@@ -312,6 +314,7 @@ public import Feec.Models.Cube.FiniteElementMethod
 public import Feec.Models.Cube.HeatFEM
 public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Inhomogeneous
+public import Feec.Models.Cube.MaxNormHeat
 public import Feec.Models.Cube.InhomogeneousError
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
@@ -426,6 +429,7 @@ public import Feec.TimeStepping.RationalQuasi
 public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RationalSharp
 public import Feec.TimeStepping.RungeKutta
+public import Feec.TimeStepping.StableFamily
 public import Feec.TimeStepping.Theta
 public import Feec.TimeStepping.TimeScheme
 public import Feec.TimeStepping.Trajectory

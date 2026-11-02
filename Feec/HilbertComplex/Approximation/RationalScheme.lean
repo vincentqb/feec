@@ -196,12 +196,12 @@ variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 
 /-- **The rational schemes are those of the Banach layer**: `r(τLₕ) = n(τLₕ) d(τLₕ)⁻¹`
 (`Feec.TimeStepping.RationalScheme.apply`) is `r(τLₕ) = P(Rₕ) Q(Rₕ)⁻¹` through the resolvent
-`Rₕ = (1 - τLₕ)⁻¹` of `F.toBanachFEEC` (`BanachFEEC.step`), for `τ > 0`. -/
+`Rₕ = (1 - τLₕ)⁻¹` of `F.toBanachFEEC` (`StableFamily.step`), for `τ > 0`. -/
 theorem toBanachFEEC_step (r : RationalScheme) {τ : ℝ} (hτ : 0 < τ) (h : κ) :
     F.toBanachFEEC.step r τ h = r.apply ((τ : 𝕜) • F.L h) := by
   have hg : (F.toBanachFEEC.discrete h).generator = ((F.L h : F.X h →ₗ[𝕜] F.X h).toPMap ⊤) :=
     C0Group.generator_ofBounded (F.L h)
-  rw [BanachFEEC.step, BanachFEEC.res, hg, ← r.step_eq_resolventStep,
+  rw [StableFamily.step, StableFamily.res, hg, ← r.step_eq_resolventStep,
     r.step_toPMap (F.dissipative h) hτ]
 
 /-- **The sharp temporal error of every A-stable rational scheme** of order `p`:

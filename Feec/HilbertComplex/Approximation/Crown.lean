@@ -75,7 +75,11 @@ of `H` along a filter `h → 0`: finite-dimensional subcomplexes with commuting 
    and the order-`p` errors are those of the fields `wave`/`heat` (with `DissipFEEC.rationalScheme`)
    and `exact_wave`/`exact_heat`, with the constant `sharpConst r p` in place of `sup_y |ρ(iy)| +
    1/(p+1)!` (neither is shown smaller); the Banach theorems give new content only for
-   discretizations that are not contractive in a Hilbert norm (none in the crown yet).
+   discretizations that are not contractive in a Hilbert norm (none in the crown, which
+   discretizes Hilbert complexes; the maximum-norm heat discretization
+   `Feec.Models.Cube.MaxNormHeat`, lumped-mass `P₁` elements on Freudenthal meshes, is one, a
+   uniformly stable family `Feec.TimeStepping.StableFamily` collected in the companion
+   `Feec.Instances.CrownNonVacuity`).
    The field carries **forcing and inhomogeneous boundary data**: the forced iterates
    `Wₙ₊₁ = Pₕ Wₙ + gₙ` have the comparison error plus the summed consistency defects (the
    discrete Duhamel formula, `DissipFEEC.TimeScheme.Verdict.forced_iterates`), and for an operator

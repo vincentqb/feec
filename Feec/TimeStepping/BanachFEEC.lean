@@ -19,8 +19,8 @@ Banach-space bounds of `Feec.TimeStepping.TimeScheme`; its rates along smooth co
 its forced and lifted iterates are Hilbert-side. The crown
 (`Feec.HilbertComplex.ConformingFamily.feec`) states this theorem for its discretizations; there,
 dissipative on Hilbert spaces, it gives Banach-route constants, not new rates (von Neumann's
-inequality gives the stronger `‖r(τLₕ)ⁿ‖ ≤ 1`). Its new content is for discretizations that are
-not contractive in a Hilbert norm.
+inequality gives the stronger `‖r(τLₕ)ⁿ‖ ≤ 1`). Its new content is only for estimates in norms in
+which the family is not Hilbert-contractive (e.g. the maximum norm).
 
 The module lives in `Feec.TimeStepping` (it needs only semigroups and time schemes, no Hilbert
 structure); the Hilbert layer imports it. The results on the discrete spaces alone (backward

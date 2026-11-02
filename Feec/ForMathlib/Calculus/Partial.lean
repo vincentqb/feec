@@ -223,3 +223,35 @@ theorem integral_partialDeriv_mul_eq_neg {f g : (ι → ℝ) → ℝ} (hf : Cont
     (fun x _ => (hf.differentiable one_ne_zero) x) (fun x _ => (hg.differentiable one_ne_zero) x)
   simp only [partialDeriv]
   rw [this, neg_neg]
+
+/-! ### Separated products -/
+
+/-- **Partial derivatives of separated products**: for differentiable `Gⱼ : 𝕜 → 𝕜` and `Gᵢ' = gᵢ`,
+`∂ᵢ (c ∏ⱼ Gⱼ(xⱼ)) = c ∏ⱼ G̃ⱼ(xⱼ)` with `G̃ = G` except `G̃ᵢ = gᵢ`. -/
+theorem partialDeriv_const_mul_prod (c : 𝕜) {G : ι → 𝕜 → 𝕜} (hG : ∀ j, Differentiable 𝕜 (G j))
+    {i : ι} {g : 𝕜 → 𝕜} (hi : ∀ y, HasDerivAt (G i) (g y) y) :
+    partialDeriv i (fun y : ι → 𝕜 => c * ∏ j, G j (y j)) =
+      fun y => c * ∏ j, Function.update G i g j (y j) := by
+  funext x
+  have hd : DifferentiableAt 𝕜 (fun y : ι → 𝕜 => c * ∏ j, G j (y j)) x :=
+    by fun_prop
+  refine ((hd.hasDerivAt_partialDeriv i).unique ?_)
+  set C := ∏ j ∈ Finset.univ.erase i, G j (x j)
+  have e : (fun s : 𝕜 => c * ∏ j, G j ((x + s • (Pi.single i 1 : ι → 𝕜)) j)) =
+      fun s => c * (G i (x i + s) * C) := by
+    funext s
+    rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i)]
+    congr 2
+    · simp
+    · refine Finset.prod_congr rfl fun j hj => ?_
+      simp [Finset.ne_of_mem_erase hj]
+  have e2 : c * ∏ j, Function.update G i g j (x j) = c * (g (x i) * C) := by
+    rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i)]
+    congr 2
+    · simp
+    · refine Finset.prod_congr rfl fun j hj => ?_
+      rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
+  rw [e, e2]
+  have h1 : HasDerivAt (fun s => G i (x i + s)) (g (x i)) 0 :=
+    HasDerivAt.comp_const_add (x i) 0 (by simpa using hi (x i))
+  exact (h1.mul_const C).const_mul c

@@ -29,16 +29,23 @@ Brenner–Thomée's `√n` stability bound and the temporal error `C_r tₙ τ�
 A-stable rational scheme, with constants independent of `h`. On the crown's discretizations
 (dissipative, on Hilbert spaces) these are Banach-route constants, not new rates (von Neumann's
 inequality gives `‖r(τLₕ)ⁿ‖ ≤ 1`, and the same order `p` with the constant
-`sup_y |ρ(iy)| + 1/(p+1)!`); the Banach theorems give new content only for discretizations that
-are not contractive in a Hilbert norm. The crown has none: it discretizes Hilbert complexes. One
-is built next to it (`Feec.Models.Cube.MaxNormHeat.maxNormHeat`, field `maxNorm` of the companion
-`Feec.Instances.CrownNonVacuity`): lumped-mass `P₁` elements for the heat equation on the
-Freudenthal meshes of a cube, in the maximum norm, a uniformly stable family
+`sup_y |ρ(iy)| + 1/(p+1)!`); the Banach theorems give new content only for estimates in norms in
+which the family is not Hilbert-contractive (e.g. the maximum norm), and the crown states none.
+Such estimates are proved next to it (`Feec.Models.Cube.MaxNormHeat.maxNormHeat`, with a nonzero
+classical solution in `Feec.Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous`, field `maxNorm` of
+the companion `Feec.Instances.CrownNonVacuity`): lumped-mass `P₁` elements for the heat equation
+on the Freudenthal meshes of a cube, in the maximum norm at the nodes, a uniformly stable family
 (`Feec.TimeStepping.StableFamily`, the discrete half of `Feec.TimeStepping.BanachFEEC`) with
-`M = 1` by the discrete maximum principle; there the Banach layer gives the maximum-norm errors
-`O(h²)` (semidiscrete), `O(τ + h²)` (backward Euler) and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every
-A-stable rational scheme, with the stability bound `1 + C'_r √n`) against every classical
-solution. Each field is the verdict of the layer theorem below.
+`M = 1` by the discrete maximum principle. Its generators are also `ℓ²`-dissipative (the
+symmetric difference Laplacian), but the Hilbert route reaches the maximum norm only with a factor
+`h^{-n/2}`; the Banach layer gives the maximum-norm errors `O(h²)` (semidiscrete), `O(τ + h²)`
+(backward Euler) and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every A-stable rational scheme, with the
+stability bound `1 + C'_r √n`) against every classical solution, with constants independent of
+`h`. Limitations: the stiffness form is the elementwise assembly, not identified with the global
+`P₁` (Whitney `0`-form) space (with the stencil theorem the scheme is exactly the classical
+finite difference scheme); the norm is the nodal one; Dirichlet data only; for rational schemes
+the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
+stability bound loses `√k`. Each field of the crown is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate
@@ -118,9 +125,9 @@ independent of `h`), `exact_brennerThomee_wave`, `exact_brennerThomee_heat` of
 discretizations) and `ApproxComplexCrime.Verdict.banach`; the instances
 `Instances.RungeKutta.full_brennerThomee` (Gauss–Legendre, Radau IIA, SDIRK) read them. On these
 Hilbert discretizations they are Banach-route constants, not new rates (above); the
-maximum-norm heat discretization `Feec.Models.Cube.MaxNormHeat` (lumped-mass `P₁` on Freudenthal
-meshes, `Feec.FiniteElement.LumpedMass`, the discrete maximum principle
-`Feec.ForMathlib.Analysis.SubMarkov`) is where they give new rates, through
+maximum-norm estimates of the heat discretization `Feec.Models.Cube.MaxNormHeat` (lumped-mass `P₁`
+on Freudenthal meshes, `Feec.FiniteElement.LumpedMass`, the discrete maximum principle
+`Feec.ForMathlib.Analysis.SubMarkov`) are where they give new bounds, through
 `Feec.TimeStepping.stableFamily` (`TimeStepping/StableFamily.lean`), the discrete half of the Banach
 layer, which also gives the errors along trajectories (Duhamel; backward Euler along `C²`
 trajectories, first order with no power of `Lₕ`).

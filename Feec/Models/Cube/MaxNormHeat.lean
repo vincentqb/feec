@@ -4,6 +4,8 @@ public import Feec.FiniteElement.LumpedMass
 public import Feec.TimeStepping.StableFamily
 public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Calculus.Partial
+public import Feec.ForMathlib.Calculus.SecondDifference
+public import Feec.Models.Cube.Basic
 public import Mathlib.Analysis.Calculus.Deriv.Prod
 
 /-!
@@ -12,9 +14,16 @@ public import Mathlib.Analysis.Calculus.Deriv.Prod
 The heat equation `uₜ = Δu` on the cube `Q = b + (0, s)ⁿ` with homogeneous Dirichlet data,
 discretized in space by lumped-mass `P₁` finite elements on the Freudenthal meshes of level
 `N + 1` (mesh size `h = s / (N + 1)`, `Feec.Mesh.freudenthalMesh`), is a **uniformly stable
-family in the maximum norm** (`MaxNormHeat.family`, `M = 1`), contractive in no Hilbert norm of
-the nodal values; the Banach layer (`Feec.TimeStepping.stableFamily`, the discrete half of
-`Feec.TimeStepping.banachFEEC`) gives its fully discrete maximum-norm theory.
+family in the maximum norm at the nodes** (`MaxNormHeat.family`, `M = 1`). `Lₕ` is the
+symmetric negative definite difference Laplacian, so `e^{tLₕ}` is also a contraction in `ℓ²`; the
+Hilbert route reaches the maximum norm only through the norm equivalence, with a factor
+`h^{-n/2}`. The Banach layer (`Feec.TimeStepping.stableFamily`, the discrete half of
+`Feec.TimeStepping.banachFEEC`) gives the maximum-norm theory with constants independent of `h`.
+
+With the stencil theorem the scheme is exactly the classical finite difference scheme for the
+heat equation; the stiffness form `Feec.FiniteElement.p1Stiffness` is the elementwise assembly
+of `∫_T ∇Πₜu · ∇Πₜw`, and is not proved equal to `∫_Q ∇u_h · ∇w_h` for the global conforming
+`P₁` (Whitney `0`-form) functions of `Feec.FiniteElement.WhitneyComplex`.
 
 The discrete space is `ℝ^{interior nodes}` with the maximum norm (`MaxNormHeat.Space N`). The
 discrete Laplacian `Lₕ = -M_L⁻¹ K` (`MaxNormHeat.lumpedLaplacian`) is defined from the `P₁`
@@ -45,8 +54,12 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
    (the sharp smooth-data estimate; the factor `‖Lₕ^{p+1} v‖_∞` is that of the discrete datum);
 7. the full verdict of the Banach layer for the family (`StableFamily.Verdict`).
 
-Only 5 is uniform in `h` with the constants of `u` alone; in 6 the uniform route through
-the stability bound loses `√k` (no `‖r(τLₕ)ᵏ‖_∞ ≤ C` uniform in `k` and `h` is proved).
+Among the fully discrete results only 5 is uniform in `h` with the constants of `u` alone; in 6
+the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
+stability bound loses `√k` (no `‖r(τLₕ)ᵏ‖_∞ ≤ C` uniform in `k` and `h` is proved). The
+estimates are in the maximum norm at the nodes. `sineSolution` is a nonzero classical solution
+(`exp(-λt) ∏ᵢ sin(π(xᵢ - bᵢ)/s)`), so the hypotheses of 4–6 are satisfied
+(`maxNormHeat_nonvacuous`).
 
 ## References
 
@@ -59,6 +72,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set Finset NormedSpace Feec.Mesh Feec.FiniteElement Feec.TimeStepping
+open Feec.Models.Cube.Geometry (openCube)
 
 @[expose] public noncomputable section
 
@@ -180,57 +194,6 @@ theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
 
 /-! ### Consistency -/
 
-/-- **The second difference**: for `g` with derivatives `g₁, …, g₄` on `[-h, h]` and
-`|g₄| ≤ B`, `|g(h) - 2 g(0) + g(-h) - h² g₂(0)| ≤ B h⁴ / 12`. -/
-theorem abs_secondDiff_sub_le {g g₁ g₂ g₃ g₄ : ℝ → ℝ} {h B : ℝ} (hh : 0 ≤ h)
-    (h₀ : ∀ t ∈ Icc (-h) h, HasDerivAt g (g₁ t) t) (h₁ : ∀ t ∈ Icc (-h) h, HasDerivAt g₁ (g₂ t) t)
-    (h₂ : ∀ t ∈ Icc (-h) h, HasDerivAt g₂ (g₃ t) t) (h₃ : ∀ t ∈ Icc (-h) h, HasDerivAt g₃ (g₄ t) t)
-    (hB : ∀ t ∈ Icc (-h) h, |g₄ t| ≤ B) :
-    |g h - 2 * g 0 + g (-h) - h ^ 2 * g₂ 0| ≤ B * h ^ 4 / 12 := by
-  have hI : ∀ t ∈ Icc 0 h, t ∈ Icc (-h) h ∧ -t ∈ Icc (-h) h := fun t ht =>
-    ⟨⟨by linarith [ht.1], ht.2⟩, ⟨by linarith [ht.2], by linarith [ht.1]⟩⟩
-  have hneg : ∀ t, HasDerivAt (fun x : ℝ => -x) (-1) t := fun t => (hasDerivAt_id' t).neg
-  -- the even and odd parts and their derivatives
-  set φ₀ : ℝ → ℝ := fun t => g t + g (-t) - 2 * g 0 - t ^ 2 * g₂ 0
-  set φ₁ : ℝ → ℝ := fun t => g₁ t - g₁ (-t) - 2 * t * g₂ 0
-  set φ₂ : ℝ → ℝ := fun t => g₂ t + g₂ (-t) - 2 * g₂ 0
-  set φ₃ : ℝ → ℝ := fun t => g₃ t - g₃ (-t)
-  set φ₄ : ℝ → ℝ := fun t => g₄ t + g₄ (-t)
-  have d₀ : ∀ t ∈ Icc 0 h, HasDerivAt φ₀ (φ₁ t) t := fun t ht => by
-    have := (((h₀ t (hI t ht).1).add ((h₀ (-t) (hI t ht).2).comp t (hneg t))).sub_const
-      (2 * g 0)).sub ((hasDerivAt_pow 2 t).mul_const (g₂ 0))
-    exact this.congr_deriv (by simp only [φ₁]; ring)
-  have d₁ : ∀ t ∈ Icc 0 h, HasDerivAt φ₁ (φ₂ t) t := fun t ht => by
-    have := (((h₁ t (hI t ht).1).sub ((h₁ (-t) (hI t ht).2).comp t (hneg t))).sub
-      (((hasDerivAt_id t).const_mul 2).mul_const (g₂ 0)))
-    exact this.congr_deriv (by simp only [φ₂]; ring)
-  have d₂ : ∀ t ∈ Icc 0 h, HasDerivAt φ₂ (φ₃ t) t := fun t ht => by
-    have := ((h₂ t (hI t ht).1).add ((h₂ (-t) (hI t ht).2).comp t (hneg t))).sub_const (2 * g₂ 0)
-    exact this.congr_deriv (by simp only [φ₃]; ring)
-  have d₃ : ∀ t ∈ Icc 0 h, HasDerivAt φ₃ (φ₄ t) t := fun t ht => by
-    have := (h₃ t (hI t ht).1).sub ((h₃ (-t) (hI t ht).2).comp t (hneg t))
-    exact this.congr_deriv (by simp only [φ₄]; ring)
-  have c : ∀ {f f' : ℝ → ℝ}, (∀ t ∈ Icc 0 h, HasDerivAt f (f' t) t) → ContinuousOn f (Icc 0 h) ∧
-      ∀ t ∈ Ico 0 h, HasDerivWithinAt f (f' t) (Ici t) t := fun hf =>
-    ⟨fun t ht => (hf t ht).continuousAt.continuousWithinAt,
-      fun t ht => (hf t (Ico_subset_Icc_self ht)).hasDerivWithinAt⟩
-  have A := norm_le_of_deriv_le_pow (c := 2 * B) 0 (c d₃).1 (c d₃).2 (by simp [φ₃])
-    fun t ht => by
-      have := hI t (Ico_subset_Icc_self ht)
-      simp only [pow_zero, mul_one, Real.norm_eq_abs, φ₄]
-      exact (abs_add_le _ _).trans (by linarith [hB t this.1, hB (-t) this.2])
-  have B₂ := norm_le_of_deriv_le_pow (c := 2 * B) 1 (c d₂).1 (c d₂).2 (by simp [φ₂]; ring)
-    fun t ht => (A t (Ico_subset_Icc_self ht)).trans (le_of_eq (by push_cast; ring))
-  have C := norm_le_of_deriv_le_pow (c := B) 2 (c d₁).1 (c d₁).2 (by simp [φ₁])
-    fun t ht => (B₂ t (Ico_subset_Icc_self ht)).trans (le_of_eq (by push_cast; ring))
-  have D := norm_le_of_deriv_le_pow (c := B / 3) 3 (c d₀).1 (c d₀).2 (by simp [φ₀]; ring)
-    fun t ht => (C t (Ico_subset_Icc_self ht)).trans (le_of_eq (by push_cast; ring))
-  have := D h ⟨hh, le_rfl⟩
-  rw [Real.norm_eq_abs] at this
-  calc |g h - 2 * g 0 + g (-h) - h ^ 2 * g₂ 0| = |φ₀ h| := by congr 1; simp only [φ₀]; ring
-    _ ≤ _ := this
-    _ = B * h ^ 4 / 12 := by push_cast; ring
-
 /-- The Laplacian `Δu = Σᵢ ∂ᵢ∂ᵢ u`. -/
 def laplacian (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   ∑ i, partialDeriv i (partialDeriv i u) x
@@ -238,8 +201,6 @@ def laplacian (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
 /-- The closed cube `b + [0, s]ⁿ`. -/
 def closedCube (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Icc (b i) (b i + s)
 
-/-- The open cube `b + (0, s)ⁿ`. -/
-def openCube (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
 
 /-- The nodal interpolant `(Iₕ u)(p) = u(b + h p)` at the interior nodes. -/
 def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Space n N :=
@@ -323,7 +284,7 @@ theorem hasDerivAt_line {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f
 
 /-- **Consistency in the maximum norm**: for `u ∈ C⁴` vanishing on `∂Q` with `|∂ᵢ⁴ u| ≤ B` on
 `Q̄`, `|(Iₕ Δu)(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12` at every interior node (the truncation error of
-the difference Laplacian, by Taylor's formula along the axes). [Thomee2006], Ch. 15 -/
+the difference Laplacian, by Taylor's formula along the axes, `abs_secondDiff_sub_le`). -/
 theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B)
@@ -397,8 +358,7 @@ theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) 
         rw [hplus, hminus]; exact hterm l
     _ = n * B * h ^ 2 / 12 := by rw [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
-/-- **Consistency in the maximum norm**: `‖Iₕ Δu - Lₕ Iₕ u‖_∞ ≤ n B h² / 12`.
-[Thomee2006], Ch. 15 -/
+/-- **Consistency in the maximum norm**: `‖Iₕ Δu - Lₕ Iₕ u‖_∞ ≤ n B h² / 12`. -/
 theorem norm_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
     (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B)
@@ -433,7 +393,8 @@ abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ where
     (family b hs).L N = lumpedLaplacian b hs N := rfl
 
 /-- A **classical solution of the heat equation** `uₜ = Δu` on `[0, T] × Q`, `u = 0` on `∂Q`:
-`C⁴` in space with `|∂ᵢ⁴ u| ≤ B₄` on `Q̄`, with time derivative `u₁ = uₜ = Δu` in `Q`. -/
+`C⁴` on all of `ℝⁿ` at each time with `|∂ᵢ⁴ u| ≤ B₄` on `Q̄`, with time derivative
+`u₁ = uₜ = Δu` in `Q`. -/
 structure HeatSolution (b : Fin n → ℝ) (s T : ℝ) where
   /-- the solution -/
   u : ℝ → (Fin n → ℝ) → ℝ
@@ -469,7 +430,7 @@ theorem norm_defect_le (hs : 0 < s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
 end HeatSolution
 
 /-- **The semidiscrete error in the maximum norm**: `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞`
-`+ t n B₄ h² / 12` for `t ∈ [0, T]`, every discrete datum `v`. [Thomee2006], Ch. 15 -/
+`+ t n B₄ h² / 12` for `t ∈ [0, T]`, every discrete datum `v`. -/
 theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) (v : Space n N) :
     ‖interp b s N (S.u t) - exp (t • lumpedLaplacian b hs N) v‖ ≤
@@ -483,7 +444,7 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) (
 /-- **Backward Euler in the maximum norm**: if moreover `uₜ` has time derivative `u₂` with
 `|u₂| ≤ B₂` in `Q`, then for `kτ ≤ T`
 `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B₂ + n B₄ h² / 12)`:
-`O(τ + h²)`, unconditionally stable (Hille–Yosida, `M = 1`). [Thomee2006], Ch. 15 -/
+`O(τ + h²)`, unconditionally stable (Hille–Yosida, `M = 1`). -/
 theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T)
     {u₂ : ℝ → (Fin n → ℝ) → ℝ} {B₂ : ℝ}
     (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
@@ -528,6 +489,136 @@ every A-stable `r` (Crank–Nicolson included), uniformly in `h`. [BrennerThomee
 theorem norm_step_pow_le (hs : 0 < s) {r : RationalScheme} (hr : r.IsAStable) (N : ℕ) {τ : ℝ}
     (hτ : 0 < τ) (k : ℕ) : ‖(family b hs).step r τ N ^ k‖ ≤ 1 + r.sqrtConst * √k := by
   simpa using (family b hs).norm_step_pow_le hr hτ N k
+
+/-! ### A classical solution: the first eigenmode -/
+
+/-- The frequency `a = π / s` of the first Dirichlet eigenmode of the cube. -/
+def sineFreq (s : ℝ) : ℝ := Real.pi / s
+
+/-- The factor `y ↦ sin(a (y - c))` and its derivatives `aᵏ sin⁽ᵏ⁾(a (y - c))`. -/
+def sineDeriv (a c : ℝ) : ℕ → ℝ → ℝ
+  | 0 => fun y => Real.sin (a * (y - c))
+  | 1 => fun y => a * Real.cos (a * (y - c))
+  | 2 => fun y => -a ^ 2 * Real.sin (a * (y - c))
+  | 3 => fun y => -a ^ 3 * Real.cos (a * (y - c))
+  | _ => fun y => a ^ 4 * Real.sin (a * (y - c))
+
+theorem hasDerivAt_sineDeriv (a c : ℝ) (k : ℕ) (hk : k ≤ 3) (y : ℝ) :
+    HasDerivAt (sineDeriv a c k) (sineDeriv a c (k + 1) y) y := by
+  have hl : HasDerivAt (fun y => a * (y - c)) a y := by
+    simpa using ((hasDerivAt_id y).sub_const c).const_mul a
+  have hs := (Real.hasDerivAt_sin _).comp y hl
+  have hc := (Real.hasDerivAt_cos _).comp y hl
+  interval_cases k
+  · exact hs.congr_deriv (by simp [sineDeriv]; ring)
+  · exact (hc.const_mul a).congr_deriv (by simp [sineDeriv]; ring)
+  · exact (hs.const_mul (-a ^ 2)).congr_deriv (by simp [sineDeriv]; ring)
+  · exact (hc.const_mul (-a ^ 3)).congr_deriv (by simp [sineDeriv]; ring)
+
+theorem differentiable_sineDeriv (a c : ℝ) (k : ℕ) (hk : k ≤ 3) :
+    Differentiable ℝ (sineDeriv a c k) := fun y => (hasDerivAt_sineDeriv a c k hk y).differentiableAt
+
+theorem differentiable_sineDeriv_four (a c : ℝ) : Differentiable ℝ (sineDeriv a c 4) := by
+  simp only [sineDeriv]; fun_prop
+
+/-- The factors of the eigenmode, the `i`-th differentiated `k` times. -/
+def sineFactors (b : Fin n → ℝ) (a : ℝ) (i : Fin n) (k : ℕ) : Fin n → ℝ → ℝ :=
+  Function.update (fun j => sineDeriv a (b j) 0) i (sineDeriv a (b i) k)
+
+theorem sineFactors_zero (b : Fin n → ℝ) (a : ℝ) (i : Fin n) :
+    sineFactors b a i 0 = fun j => sineDeriv a (b j) 0 := by
+  funext j; by_cases hj : j = i
+  · subst hj; simp [sineFactors]
+  · simp [sineFactors, Function.update_of_ne hj]
+
+/-- `∂ᵢᵏ (c ∏ⱼ sin(a (xⱼ - bⱼ))) = c ∏ⱼ (factor `i` differentiated `k` times)`, `k ≤ 4`. -/
+theorem iterate_partialDeriv_sine (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) (k : ℕ) (hk : k ≤ 4) :
+    (partialDeriv i)^[k] (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) 0 (x j)) =
+      fun x => c * ∏ j, sineFactors b a i k j (x j) := by
+  induction k with
+  | zero => rw [sineFactors_zero]; rfl
+  | succ k ih =>
+    rw [Function.iterate_succ_apply', ih (by omega)]
+    have hG : ∀ j, Differentiable ℝ (sineFactors b a i k j) := fun j => by
+      by_cases hj : j = i
+      · subst hj; simp only [sineFactors, Function.update_self]
+        exact differentiable_sineDeriv a _ k (by omega)
+      · simp only [sineFactors, Function.update_of_ne hj]
+        exact differentiable_sineDeriv a _ 0 (by omega)
+    rw [partialDeriv_const_mul_prod c hG (g := sineDeriv a (b i) (k + 1)) (fun y => by
+      simpa [sineFactors] using hasDerivAt_sineDeriv a (b i) k (by omega) y)]
+    simp only [sineFactors, Function.update_idem]
+
+/-- `∏ⱼ G̃ⱼ(xⱼ) = κ ∏ⱼ Gⱼ(xⱼ)` when the `i`-th factor is replaced by `κ Gᵢ`. -/
+theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ) (x : Fin n → ℝ) :
+    ∏ j, Function.update G i (fun y => κ * G i y) j (x j) = κ * ∏ j, G j (x j) := by
+  rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i), ← Finset.mul_prod_erase _ _ (Finset.mem_univ i),
+    Function.update_self, mul_assoc]
+  congr 2
+  exact Finset.prod_congr rfl fun j hj => by rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
+
+/-- **The first eigenmode** `u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π² / s²`: a
+classical solution of the heat equation on every `[0, T] × Q` with `B₄ = (π/s)⁴`. -/
+def sineSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : HeatSolution b s T where
+  u t x := Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j)
+  u₁ t x := -(n * sineFreq s ^ 2) *
+    (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))
+  contDiff t _ := by simp only [sineDeriv]; fun_prop
+  hasDerivAt t _ x _ := by
+    have := ((Real.hasDerivAt_exp _).comp t
+      ((hasDerivAt_id t).const_mul (-(n * sineFreq s ^ 2)))).mul_const
+      (∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))
+    exact this.congr_deriv (by simp; ring)
+  heat t _ x _ := by
+    have e : ∀ i, partialDeriv i (partialDeriv i (fun x : Fin n → ℝ =>
+        Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j))) x =
+        -sineFreq s ^ 2 *
+          (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j)) :=
+      fun i => by
+        have := congrFun (iterate_partialDeriv_sine b (sineFreq s)
+          (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
+        simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
+        rw [this, sineFactors, show sineDeriv (sineFreq s) (b i) 2 =
+          fun y => -sineFreq s ^ 2 * sineDeriv (sineFreq s) (b i) 0 y from rfl,
+          prod_update_const_mul (fun j => sineDeriv (sineFreq s) (b j) 0)]
+        ring
+    simp only [laplacian, e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
+    ring
+  boundary t _ x hx hno := by
+    obtain ⟨i, hi⟩ : ∃ i, x i = b i ∨ x i = b i + s := by
+      by_contra! h
+      exact hno fun i _ => ⟨lt_of_le_of_ne (hx i (mem_univ i)).1 (Ne.symm (h i).1),
+        lt_of_le_of_ne (hx i (mem_univ i)).2 (h i).2⟩
+    refine mul_eq_zero_of_right _ (Finset.prod_eq_zero (Finset.mem_univ i) ?_)
+    simp only [sineDeriv, sineFreq]
+    rcases hi with h | h <;> rw [h]
+    · simp
+    · rw [add_sub_cancel_left, div_mul_cancel₀ _ hs.ne', Real.sin_pi]
+  B₄ := sineFreq s ^ 4
+  bound₄ t ht x _ i := by
+    have := congrFun (iterate_partialDeriv_sine b (sineFreq s)
+      (Real.exp (-(n * sineFreq s ^ 2) * t)) i 4 le_rfl) x
+    rw [this, sineFactors, show sineDeriv (sineFreq s) (b i) 4 =
+      fun y => sineFreq s ^ 4 * sineDeriv (sineFreq s) (b i) 0 y from rfl,
+      prod_update_const_mul (fun j => sineDeriv (sineFreq s) (b j) 0), abs_mul, abs_mul,
+      abs_of_pos (Real.exp_pos _), Finset.abs_prod]
+    have h1 : Real.exp (-(n * sineFreq s ^ 2) * t) ≤ 1 :=
+      Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht.1))
+    have h2 : ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)| ≤ 1 :=
+      Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
+    rw [abs_of_nonneg (by positivity)]
+    calc Real.exp (-(n * sineFreq s ^ 2) * t) *
+          (sineFreq s ^ 4 * ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)|)
+        ≤ 1 * (sineFreq s ^ 4 * 1) := by gcongr
+      _ = sineFreq s ^ 4 := by ring
+
+/-- The first eigenmode is nonzero at the centre of the cube at `t = 0`. -/
+theorem sineSolution_u_zero_center (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
+    (sineSolution b hs T).u 0 (b + (s / 2) • fun _ => (1 : ℝ)) = 1 := by
+  simp only [sineSolution, sineDeriv, sineFreq, mul_zero, Real.exp_zero, one_mul, Pi.add_apply,
+    Pi.smul_apply, smul_eq_mul, mul_one, add_sub_cancel_left]
+  refine Finset.prod_eq_one fun j _ => ?_
+  rw [show Real.pi / s * (s / 2) = Real.pi / 2 by field_simp, Real.sin_pi_div_two]
 
 /-! ### The verdict -/
 
@@ -589,5 +680,15 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   stable_rational := @fun _ hr N _ hτ k => norm_step_pow_le hs hr N hτ k
   rational := @fun _ S _ hr _ hp N _ hτ _ hk v => norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
   banach := stableFamily _
+
+/-- **The verdict is not vacuous**: the first eigenmode `sineSolution` is a classical solution
+on every `[0, T] × Q`, nonzero at `t = 0`, so the semidiscrete, backward Euler and rational
+clauses apply to it. -/
+theorem maxNormHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
+    Verdict b hs ∧ ∃ S : HeatSolution b s T, S.u 0 ≠ 0 :=
+  ⟨maxNormHeat b hs, sineSolution b hs T, fun h => by
+    have := congrFun h (b + (s / 2) • fun _ => (1 : ℝ))
+    rw [sineSolution_u_zero_center] at this
+    exact one_ne_zero this⟩
 
 end Feec.Models.Cube.MaxNormHeat

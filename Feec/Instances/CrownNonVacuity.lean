@@ -38,12 +38,14 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   `ApproxComplexCrime.shifted_nonvacuous`, `ApproxComplexCrime.mixed_nonvacuous`); a Hodge wave
   equation with `L ≠ 0` (`Feec.Examples.idComplex_nonvacuous`) and a nonzero skew generator
   (`Feec.Examples.rotGen_standing_hypotheses`).
-* **The Banach layer beyond Hilbert-contractive discretizations** (`maxNorm`,
-  `Feec.Models.Cube.MaxNormHeat.maxNormHeat`): lumped-mass `P₁` elements for the heat equation on
-  the Freudenthal meshes of every cube, Dirichlet data, in the maximum norm: non-obtuse meshes,
-  the difference stencil, the discrete maximum principle (`M = 1`), consistency `n B₄ h² / 12`,
-  and the errors of the semidiscrete equation, of backward Euler and of every A-stable rational
-  scheme against every classical solution, through `Feec.TimeStepping.stableFamily`.
+* **The Banach layer in a norm that is not Hilbert-contractive** (`maxNorm`,
+  `Feec.Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous`): lumped-mass `P₁` elements for the heat
+  equation on the Freudenthal meshes of every cube, Dirichlet data, in the maximum norm at the
+  nodes: non-obtuse meshes, the difference stencil, the discrete maximum principle (`M = 1`),
+  consistency `n B₄ h² / 12`, and the errors of the semidiscrete equation, of backward Euler and
+  of every A-stable rational scheme against every classical solution, through
+  `Feec.TimeStepping.stableFamily`; the first eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - bᵢ)/s)` is such a
+  solution, nonzero (`Feec.Models.Cube.MaxNormHeat.sineSolution`).
 * **The explicit map of the BGG layer on smooth fields (algebraic layer)**
   (`Feec.Domain.smoothBGGVerdict`): the cochain map (30) of Theorem 7 of [ArnoldHu2021] is a
   quasi-isomorphism on the smooth Hessian, elasticity and div-div complexes, with the Koszul
@@ -188,9 +190,9 @@ structure CrownNonVacuity : Prop where
   smooth fields (algebraic layer) of the Hessian, elasticity and div-div complexes; the `L²`
   explicit-map fields remain vacuous for these complexes -/
   bgg : type_of% @Domain.smoothBGGVerdict.{u}
-  /-- the Banach layer on a discretization contractive in no Hilbert norm: the heat equation in
-  the maximum norm (lumped-mass `P₁` on Freudenthal meshes) -/
-  maxNorm : type_of% @Models.Cube.MaxNormHeat.maxNormHeat
+  /-- the Banach layer in the maximum norm at the nodes: the lumped-mass `P₁` heat equation on
+  Freudenthal meshes, with a nonzero classical solution -/
+  maxNorm : type_of% @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous
 
 /-- **The crown is not vacuous** (`CrownNonVacuity`). -/
 theorem crownNonVacuity : CrownNonVacuity.{u} :=
@@ -200,6 +202,6 @@ theorem crownNonVacuity : CrownNonVacuity.{u} :=
     ApproxComplex.scaled_nonvacuous, ApproxComplexCrime.shifted_nonvacuous,
     ApproxComplexCrime.mixed_nonvacuous, Examples.idComplex_nonvacuous,
     Examples.rotGen_standing_hypotheses, Domain.smoothBGGVerdict,
-    @Models.Cube.MaxNormHeat.maxNormHeat⟩
+    @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous⟩
 
 end Feec.Instances

@@ -126,6 +126,7 @@ public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
+public import Feec.ForMathlib.Calculus.SecondDifference
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Homology.Subcomplex
 public import Feec.ForMathlib.InnerProductSpace.Complexification

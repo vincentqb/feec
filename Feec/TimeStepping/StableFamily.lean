@@ -14,8 +14,10 @@ or `ℂ` with bounded generators `Lₕ` whose flows are bounded by one constant,
 is involved: the exact solution enters through a **trajectory** `U : [0, T] → Xₕ` (for a finite
 element or difference method, the interpolant of a given smooth solution), whose **defect**
 `‖U' - Lₕ U‖` measures the consistency of the space discretization. The family is the setting of
-the maximum-norm discretizations, which are contractive in no Hilbert norm
-(`Feec.Models.Cube.MaxNormHeat`).
+estimates in norms in which the discretization is not Hilbert-contractive, e.g. the maximum norm
+at the nodes of the lumped-mass heat discretization (`Feec.Models.Cube.MaxNormHeat`; its
+generators are also `ℓ²`-dissipative, but the Hilbert route reaches the maximum norm only with a
+factor `h^{-n/2}`).
 
 ## Main results
 

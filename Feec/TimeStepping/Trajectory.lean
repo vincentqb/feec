@@ -1,6 +1,7 @@
 module
 
 public import Feec.TimeStepping.Convergence
+public import Feec.ForMathlib.Calculus.SecondDifference
 
 /-!
 # Consistency of one-step schemes along trajectories
@@ -52,19 +53,6 @@ section Quadrature
 
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
 
-/-- `‖g(t)‖ ≤ c (t - a)ᵐ⁺¹ / (m + 1)` on `[a, b]` from `g(a) = 0` and `‖g'(t)‖ ≤ c (t - a)ᵐ`. -/
-theorem norm_le_of_deriv_le_pow {g g' : ℝ → X} {a b c : ℝ} (m : ℕ)
-    (hg : ContinuousOn g (Icc a b)) (hg' : ∀ t ∈ Ico a b, HasDerivWithinAt g (g' t) (Ici t) t)
-    (ha : g a = 0) (hb : ∀ t ∈ Ico a b, ‖g' t‖ ≤ c * (t - a) ^ m) :
-    ∀ t ∈ Icc a b, ‖g t‖ ≤ c * (t - a) ^ (m + 1) / (m + 1) := by
-  refine fun t ht => image_norm_le_of_norm_deriv_right_le_deriv_boundary hg hg'
-    (B := fun s => c * (s - a) ^ (m + 1) / (m + 1)) (by simp [ha]) (fun s => ?_) hb ht
-  refine ((((hasDerivAt_id' s).sub_const a).pow (m + 1)).const_mul c |>.div_const
-    ((m : ℝ) + 1)).congr_deriv ?_
-  rw [Nat.add_sub_cancel]
-  push_cast
-  field_simp
-
 /-- **The θ-rule remainder** (`θ ≥ 0`): for `f` with right derivatives `f₁`, `f₂` on `[a, b)`
 and `‖f₂‖ ≤ B`, `‖f(b) - f(a) - (b - a) (θ f₁(b) + (1 - θ) f₁(a))‖ ≤ (θ + 1/2) (b - a)² B`. -/
 theorem norm_thetaRule_le {f f₁ f₂ : ℝ → X} {a b θ B : ℝ} (hab : a ≤ b) (hθ : 0 ≤ θ)
@@ -75,7 +63,7 @@ theorem norm_thetaRule_le {f f₁ f₂ : ℝ → X} {a b θ B : ℝ} (hab : a �
     ‖f b - f a - (b - a) • (θ • f₁ b + (1 - θ) • f₁ a)‖ ≤ (θ + 1 / 2) * (b - a) ^ 2 * B := by
   have hd : ∀ t ∈ Icc a b, ‖f₁ t - f₁ a‖ ≤ B * (t - a) :=
     norm_image_sub_le_of_norm_deriv_right_le_segment hf₁ h2 hB
-  have hg := norm_le_of_deriv_le_pow (g := fun t => f t - f a - (t - a) • f₁ a)
+  have hg := norm_image_le_of_norm_deriv_le_pow (g := fun t => f t - f a - (t - a) • f₁ a)
     (g' := fun t => f₁ t - f₁ a) (c := B) 1
     ((hf.sub continuousOn_const).sub ((continuousOn_id.sub continuousOn_const).smul
       continuousOn_const))
@@ -113,7 +101,7 @@ theorem norm_trapezoid_le {f f₁ f₂ f₃ : ℝ → X} {a b B : ℝ} (hab : a 
   have hcc : ContinuousOn (fun t : ℝ => (t - a) / 2) (Icc a b) :=
     (continuousOn_id.sub continuousOn_const).div_const 2
   -- `k = g'`, with `k' = -((t - a)/2) f₃`
-  have hk := norm_le_of_deriv_le_pow
+  have hk := norm_image_le_of_norm_deriv_le_pow
     (g := fun t => (1 / 2 : ℝ) • (f₁ t - f₁ a) - ((t - a) / 2) • f₂ t)
     (g' := fun t => -(((t - a) / 2) • f₃ t)) (c := B / 2) 1
     (((hf₁.sub continuousOn_const).const_smul _).sub (hcc.smul hf₂))
@@ -127,7 +115,7 @@ theorem norm_trapezoid_le {f f₁ f₂ f₃ : ℝ → X} {a b B : ℝ} (hab : a 
       have := hB t ht
       have : 0 ≤ (t - a) / 2 := by linarith [ht.1]
       nlinarith)
-  have hg := norm_le_of_deriv_le_pow
+  have hg := norm_image_le_of_norm_deriv_le_pow
     (g := fun t => f t - f a - ((t - a) / 2) • (f₁ t + f₁ a))
     (g' := fun t => (1 / 2 : ℝ) • (f₁ t - f₁ a) - ((t - a) / 2) • f₂ t) (c := B / 4) 2
     ((hf.sub continuousOn_const).sub (hcc.smul (hf₁.add continuousOn_const)))

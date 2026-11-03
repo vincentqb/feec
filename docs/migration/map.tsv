@@ -3131,7 +3131,7 @@ Feec.BoundedDomain.pd0L_hessExp	Feec.Models.BoundedDomain.pd0L_hessExp	rename
 Feec.BoundedDomain.pd0L_mem_ker	Feec.Models.BoundedDomain.pd0L_mem_ker	rename
 Feec.BoundedDomain.pd0_expCos	Feec.Models.BoundedDomain.pd0_expCos	rename
 Feec.BoundedDomain.pd0_hessField	Feec.Models.BoundedDomain.pd0_hessField	rename
-Feec.BoundedDomain.pd_const_mul_fun	Feec.Models.BoundedDomain.pd_const_mul_fun	rename
+Feec.BoundedDomain.pd_const_mul_fun	partialDeriv_const_mul'	generalize
 Feec.BoundedDomain.pd_expCos	Feec.Models.BoundedDomain.pd_expCos	rename
 Feec.BoundedDomain.pd_expCos_fun	Feec.Models.BoundedDomain.pd_expCos_fun	rename
 Feec.BoundedDomain.pd_expSin	Feec.Models.BoundedDomain.pd_expSin	rename

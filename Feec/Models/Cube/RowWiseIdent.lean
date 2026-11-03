@@ -1315,7 +1315,8 @@ theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
           mul_le_mul_of_nonneg_left (abs_deriv_eta_mul_le hM₀b n (Geometry.mem_Q.1 hy c)) hL0
       _ = 4 * M₀ * L := by ring
   have hcurlΦ : ∀ n a b y, curlM (Φ n) (a, b) y = chi n y * curlM ψ (a, b) y +
-      (partialDeriv (b + 1) (chi n) y * ψ (a, b + 2) y - partialDeriv (b + 2) (chi n) y * ψ (a, b + 1) y) := by
+      (partialDeriv (b + 1) (chi n) y * ψ (a, b + 2) y - partialDeriv (b + 2) (chi n) y *
+        ψ (a, b + 1) y) := by
     intro n a b y
     simp only [curlM, Φ, partialDeriv_mul (hchid n y) (hdiff _ y)]
     ring
@@ -1353,7 +1354,8 @@ theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
       have h2 := hcross n a (b + 1) (b + 2) (by fin_cases b <;> decide) y hy
       have h3 := hcross n a (b + 2) (b + 1) (by fin_cases b <;> decide) y hy
       calc _ ≤ |chi n y * curlM ψ (a, b) y| +
-            |partialDeriv (b + 1) (chi n) y * ψ (a, b + 2) y - partialDeriv (b + 2) (chi n) y * ψ (a, b + 1) y| :=
+            |partialDeriv (b + 1) (chi n) y * ψ (a, b + 2) y - partialDeriv (b + 2) (chi n) y *
+              ψ (a, b + 1) y| :=
             abs_add_le _ _
         _ ≤ M + (4 * M₀ * L + 4 * M₀ * L) := add_le_add h1 ((abs_sub _ _).trans (add_le_add h2 h3))
         _ = M + 2 * (4 * M₀ * L) := by ring
@@ -1371,7 +1373,7 @@ theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
     (hV : ∀ a c, ∀ y : R3, (y c = 0 ∨ y c = 1 / 2) → σ a y = 0) :
     (smoothField Geometry.isOpen_Q isBounded_Q σ fun a => (hσ a).continuous,
       smoothField Geometry.isOpen_Q isBounded_Q (gradM σ)
-        fun p => ContDiff.continuous_partialDeriv ((hσ p.1).of_le (by simp)) p.2) ∈
+        fun p => ((hσ p.1).of_le (by simp)).continuous_partialDeriv p.2) ∈
       closure ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).testGraph (Q (Fin 3)) :
         Set (Domain.L2F ℝ (Q (Fin 3)) (Fin 3) × Domain.L2F ℝ (Q (Fin 3)) Ix)) := by
   obtain ⟨M₀, hM₀, hM₀b⟩ := exists_bound_deriv_smoothTransition
@@ -1419,7 +1421,7 @@ theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
     refine tendsto_toLp_of_bdd (fun n => ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix
         ).isTestField_apply (hφ n) (a, b)).memLp)
       (Domain.memLp_of_continuous Geometry.measurableSet_Q isBounded_Q
-        (ContDiff.continuous_partialDeriv ((hσ a).of_le (by simp)) b))
+        (((hσ a).of_le (by simp)).continuous_partialDeriv b))
       (K := 4 * M₀ * L + L) (fun n y hy => ?_) fun y hy => ?_
     · rw [happ]
       simp only [φ, partialDeriv_mul (hchid n y) (hdiff _ y)]
@@ -1667,7 +1669,8 @@ theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
     have h2 := hL (p.1, p.2 + 1) (p.2 + 2) y
     have h3 : 0 ≤ ∑ p, ‖Pp p‖ := Finset.sum_nonneg fun _ _ => norm_nonneg _
     calc |curlM ψ p y|
-        ≤ |partialDeriv (p.2 + 1) (ψ (p.1, p.2 + 2)) y| + |partialDeriv (p.2 + 2) (ψ (p.1, p.2 + 1)) y| :=
+        ≤ |partialDeriv (p.2 + 1) (ψ (p.1, p.2 + 2)) y| +
+          |partialDeriv (p.2 + 2) (ψ (p.1, p.2 + 1)) y| :=
           abs_sub _ _
       _ ≤ M := by linarith
   have hpar := fixed_one_iff.1 (Parity.mem_realFixed_iff.1 hz).2
@@ -1739,7 +1742,7 @@ theorem trig_closure_grad {z : Space 0} (hz : z ∈ Parity.realAction.fixed 0)
   subst hyz
   have hdz : Jinv (P := Ix) (RealTorus.gradCurl.d 0 1 ⟨z, hd⟩) = smoothField Geometry.isOpen_Q
       isBounded_Q (gradM ψ)
-        fun p => ContDiff.continuous_partialDeriv ((hψ p.1).of_le (by simp)) p.2 := by
+        fun p => ((hψ p.1).of_le (by simp)).continuous_partialDeriv p.2 := by
     rw [hy2]; exact Jr_J 1 _
   rw [hdz, heq]
   exact hcl

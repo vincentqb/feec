@@ -175,7 +175,8 @@ theorem continuous_toField : Continuous toField := by
 
 theorem fderiv_rowCurlDir {f : R3 → ℝ} (x : R3) (k m : Fin 3) :
     fderiv ℝ f x (rowCurlDir k m) =
-      if m = k + 2 then -partialDeriv (k + 1) f x else if m = k + 1 then partialDeriv (k + 2) f x else 0 := by
+      if m = k + 2 then -partialDeriv (k + 1) f x
+      else if m = k + 1 then partialDeriv (k + 2) f x else 0 := by
   unfold rowCurlDir
   split_ifs <;> simp [partialDeriv]
 

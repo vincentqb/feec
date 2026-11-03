@@ -116,8 +116,10 @@ theorem sum_pd_curlFlux {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, Differentiabl
     (hΨ : ∀ ij, Differentiable ℝ (Ψ ij)) (x : R3) :
     ∑ m, partialDeriv m (curlFlux Φ Ψ m) x =
       ∑ ij : Ix, (curlM Φ ij x * Ψ ij x - Φ ij x * curlM Ψ ij x) := by
-  have h1 : ∀ m, partialDeriv m (curlFlux Φ Ψ m) x = ∑ i, ((partialDeriv m (Φ (i, m + 1)) x * Ψ (i, m + 2) x +
-      Φ (i, m + 1) x * partialDeriv m (Ψ (i, m + 2)) x) - (partialDeriv m (Φ (i, m + 2)) x * Ψ (i, m + 1) x +
+  have h1 : ∀ m, partialDeriv m (curlFlux Φ Ψ m) x =
+    ∑ i, ((partialDeriv m (Φ (i, m + 1)) x * Ψ (i, m + 2) x +
+      Φ (i, m + 1) x * partialDeriv m (Ψ (i, m + 2)) x) -
+        (partialDeriv m (Φ (i, m + 2)) x * Ψ (i, m + 1) x +
       Φ (i, m + 2) x * partialDeriv m (Ψ (i, m + 1)) x)) := fun m => by
     unfold curlFlux
     rw [partialDeriv_sum Finset.univ (f := fun i y => Φ (i, m + 1) y * Ψ (i, m + 2) y -
@@ -242,7 +244,7 @@ theorem integrableOn_Q {n : ℕ} {f : (Fin n → ℝ) → ℝ} (hf : Continuous 
 
 theorem continuous_curlM {Φ : Ix → R3 → ℝ} (hΦ : ∀ ij, ContDiff ℝ 1 (Φ ij)) (ij : Ix) :
     Continuous (curlM Φ ij) :=
-  (ContDiff.continuous_partialDeriv (hΦ _) _).sub (ContDiff.continuous_partialDeriv (hΦ _) _)
+  ((hΦ _).continuous_partialDeriv _).sub ((hΦ _).continuous_partialDeriv _)
 
 theorem inner_tanTrace_fluxTrace {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, Continuous (Φ ij))
     (hΨ : ∀ ij, Continuous (Ψ ij)) :

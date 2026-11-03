@@ -87,10 +87,6 @@ section Pohozaev
 
 variable {f g : R3 → ℝ}
 
-theorem hasCompactSupport_pd (hf : HasCompactSupport f) (k : Fin 3) :
-    HasCompactSupport (partialDeriv k f) :=
-  hf.fderiv_apply (𝕜 := ℝ) _
-
 /-- Integration by parts on `ℝ³`: `∫ ∂_k g · h = -∫ g ∂_k h` for `g ∈ C_c^∞`, `h ∈ C¹`. -/
 theorem integral_pd_mul_univ (hg : ContDiff ℝ ∞ g) (hgc : HasCompactSupport g)
     {h : R3 → ℝ} (hh : ContDiff ℝ 1 h) (k : Fin 3) :
@@ -103,7 +99,8 @@ theorem contDiff_coord_mul (hg : ContDiff ℝ ∞ g) (k : Fin 3) :
   fun_prop
 
 theorem pd_coord_mul (hg : Differentiable ℝ g) (k j : Fin 3) (x : R3) :
-    partialDeriv j (fun y : R3 => y k * g y) x = x k * partialDeriv j g x + (if j = k then g x else 0) := by
+    partialDeriv j (fun y : R3 => y k * g y) x = x k * partialDeriv j g x +
+      (if j = k then g x else 0) := by
   rw [partialDeriv_mul (differentiable_apply k x) (hg x), partialDeriv_apply_coord]
   split_ifs <;> ring
 
@@ -112,7 +109,7 @@ theorem integral_mul_coord_mul_pd (hg : ContDiff ℝ ∞ g) (hgc : HasCompactSup
     (k : Fin 3) :
     ∫ x, g x * (x k * partialDeriv k g x) = -(1 / 2) * ∫ x, g x * g x := by
   have hd : Differentiable ℝ g := hg.differentiable (by simp)
-  have hpd := ContDiff.partialDeriv_infty hg k
+  have hpd := hg.partialDeriv_infty k
   have h1 := integral_pd_mul_univ hg hgc ((contDiff_coord_mul hg k).of_le (by simp)) k
   have e1 : ∫ x, partialDeriv k g x * (x k * g x) = ∫ x, g x * (x k * partialDeriv k g x) :=
     integral_congr_ae (Eventually.of_forall fun x => by simp only; ring)
@@ -132,8 +129,9 @@ theorem integral_mul_coord_mul_pd (hg : ContDiff ℝ ∞ g) (hgc : HasCompactSup
 
 /-- `∫ g Δg`-type identity: `∫ ∂_j ∂_j f · f = -∫ (∂_j f)²`. -/
 theorem integral_pd_pd_mul (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupport f) (j : Fin 3) :
-    ∫ x, partialDeriv j (partialDeriv j f) x * f x = -∫ x, partialDeriv j f x * partialDeriv j f x :=
-  integral_pd_mul_univ (ContDiff.partialDeriv_infty hf j) (hasCompactSupport_pd hfc j)
+    ∫ x, partialDeriv j (partialDeriv j f) x * f x =
+      -∫ x, partialDeriv j f x * partialDeriv j f x :=
+  integral_pd_mul_univ (hf.partialDeriv_infty j) (hfc.partialDeriv j)
     (hf.of_le (by simp)) j
 
 /-- `∫ ∂_j ∂_j f · (x_k ∂_k f) = ½ ∫ (∂_j f)² - δ_{jk} ∫ (∂_j f)²`. -/
@@ -142,15 +140,17 @@ theorem integral_pd_pd_mul_coord (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupp
     ∫ x, partialDeriv j (partialDeriv j f) x * (x k * partialDeriv k f x) =
       (1 / 2) * (∫ x, partialDeriv j f x * partialDeriv j f x) -
         (if j = k then ∫ x, partialDeriv j f x * partialDeriv j f x else 0) := by
-  have hj := ContDiff.partialDeriv_infty hf j
-  have hk := ContDiff.partialDeriv_infty hf k
-  have hjc := hasCompactSupport_pd hfc j
+  have hj := hf.partialDeriv_infty j
+  have hk := hf.partialDeriv_infty k
+  have hjc := hfc.partialDeriv j
   have hkd : Differentiable ℝ (partialDeriv k f) := hk.differentiable (by simp)
   have h1 := integral_pd_mul_univ hj hjc ((contDiff_coord_mul hk k).of_le (by simp)) j
-  have hcomm : ∀ x, partialDeriv j (partialDeriv k f) x = partialDeriv k (partialDeriv j f) x := fun x =>
+  have hcomm : ∀ x, partialDeriv j (partialDeriv k f) x =
+    partialDeriv k (partialDeriv j f) x := fun x =>
     partialDeriv_comm (hf.of_le (by simp)) j k x
-  have hcont1 : Continuous fun x => partialDeriv j f x * (x k * partialDeriv k (partialDeriv j f) x) :=
-    hj.continuous.mul ((continuous_apply k).mul (ContDiff.partialDeriv_infty hj k).continuous)
+  have hcont1 : Continuous fun x => partialDeriv j f x *
+    (x k * partialDeriv k (partialDeriv j f) x) :=
+    hj.continuous.mul ((continuous_apply k).mul (hj.partialDeriv_infty k).continuous)
   have hI1 : Integrable fun x => partialDeriv j f x * (x k * partialDeriv k (partialDeriv j f) x) :=
     hcont1.integrable_of_hasCompactSupport hjc.mul_right
   have hI2 : Integrable fun x => partialDeriv j f x * partialDeriv j f x :=
@@ -176,24 +176,29 @@ theorem integral_pd_pd_mul_coord (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupp
 `‖∇f‖² = c ‖f‖²`, against the dilation field `x · ∇f` gives `½ ‖∇f‖² = (3/2) c ‖f‖²`. -/
 theorem eq_zero_of_laplacian_eq (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupport f) {c : ℝ}
     (hc : c ≠ 0) (h : ∀ x, ∑ j, partialDeriv j (partialDeriv j f) x = -c * f x) : f = 0 := by
-  have hint2 : ∀ j k, Integrable fun x => partialDeriv j (partialDeriv j f) x * (x k * partialDeriv k f x) := fun j k =>
-    ((ContDiff.partialDeriv_infty (ContDiff.partialDeriv_infty hf j) j).continuous.mul
-      ((continuous_apply k).mul (ContDiff.partialDeriv_infty hf k).continuous)).integrable_of_hasCompactSupport
-      ((hasCompactSupport_pd hfc k).mul_left.mul_left)
+  have hint2 : ∀ j k, Integrable fun x => partialDeriv j (partialDeriv j f) x *
+    (x k * partialDeriv k f x) := fun j k =>
+    (((hf.partialDeriv_infty j).partialDeriv_infty j).continuous.mul
+      ((continuous_apply k).mul
+        (hf.partialDeriv_infty k).continuous)).integrable_of_hasCompactSupport
+      ((hfc.partialDeriv k).mul_left.mul_left)
   have hint1 : ∀ j, Integrable fun x => partialDeriv j (partialDeriv j f) x * f x := fun j =>
-    ((ContDiff.partialDeriv_infty (ContDiff.partialDeriv_infty hf j) j).continuous.mul hf.continuous).integrable_of_hasCompactSupport
+    (((hf.partialDeriv_infty j).partialDeriv_infty j).continuous.mul
+      hf.continuous).integrable_of_hasCompactSupport
       hfc.mul_left
   set F := ∫ x, f x * f x
   set G := ∑ j, ∫ x, partialDeriv j f x * partialDeriv j f x with hG
   -- testing against `f`
   have hA : -c * F = -G := by
-    have e : ∫ x, (∑ j, partialDeriv j (partialDeriv j f) x) * f x = ∑ j, ∫ x, partialDeriv j (partialDeriv j f) x * f x := by
+    have e : ∫ x, (∑ j, partialDeriv j (partialDeriv j f) x) * f x =
+      ∑ j, ∫ x, partialDeriv j (partialDeriv j f) x * f x := by
       rw [← integral_finsetSum _ fun j _ => hint1 j]
       exact integral_congr_ae (Eventually.of_forall fun x => by simp only [Finset.sum_mul])
     simp only [h] at e
     rw [show (fun x => -c * f x * f x) = fun x => -c * (f x * f x) from
       funext fun x => by ring, integral_const_mul] at e
-    rw [e, show -G = ∑ j, -∫ x, partialDeriv j f x * partialDeriv j f x by simp [G, Finset.sum_neg_distrib]]
+    rw [e, show -G = ∑ j, -∫ x, partialDeriv j f x *
+      partialDeriv j f x by simp [G, Finset.sum_neg_distrib]]
     exact Finset.sum_congr rfl fun j _ => integral_pd_pd_mul hf hfc j
   -- testing against `x · ∇f`
   have hC : (3 / 2) * c * F = (1 / 2) * G := by
@@ -202,16 +207,20 @@ theorem eq_zero_of_laplacian_eq (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSuppo
       refine Finset.sum_congr rfl fun k _ => ?_
       rw [← integral_finsetSum _ fun j _ => hint2 j k]
       exact integral_congr_ae (Eventually.of_forall fun x => by simp only [Finset.sum_mul])
-    have e2 : ∑ k, ∫ x, (∑ j, partialDeriv j (partialDeriv j f) x) * (x k * partialDeriv k f x) = (3 / 2) * c * F := by
+    have e2 : ∑ k, ∫ x, (∑ j, partialDeriv j (partialDeriv j f) x) * (x k * partialDeriv k f x) =
+      (3 / 2) * c * F := by
       simp only [h]
-      have : ∀ k : Fin 3, ∫ x, -c * f x * (x k * partialDeriv k f x) = (1 / 2) * c * F := fun k => by
-        rw [show (fun x => -c * f x * (x k * partialDeriv k f x)) = fun x => -c * (f x * (x k * partialDeriv k f x))
+      have : ∀ k : Fin 3, ∫ x, -c * f x * (x k * partialDeriv k f x) =
+        (1 / 2) * c * F := fun k => by
+        rw [show (fun x => -c * f x * (x k * partialDeriv k f x)) =
+          fun x => -c * (f x * (x k * partialDeriv k f x))
           from funext fun x => by ring, integral_const_mul, integral_mul_coord_mul_pd hf hfc k]
         ring
       simp only [this, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
       push_cast
       ring
-    have e3 : ∑ k, ∑ j, ∫ x, partialDeriv j (partialDeriv j f) x * (x k * partialDeriv k f x) = (1 / 2) * G := by
+    have e3 : ∑ k, ∑ j, ∫ x, partialDeriv j (partialDeriv j f) x * (x k * partialDeriv k f x) =
+      (1 / 2) * G := by
       simp only [integral_pd_pd_mul_coord hf hfc]
       rw [Finset.sum_comm, hG, Finset.mul_sum]
       refine Finset.sum_congr rfl fun j _ => ?_
@@ -249,11 +258,13 @@ variable {V : Ix → R3 → ℝ}
 theorem sum_pd_curlM (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i : Fin 3) (x : R3) :
     ∑ k, partialDeriv k (curlM V (i, k)) x = 0 := by
   have hd : ∀ ij a, Differentiable ℝ (partialDeriv a (V ij)) := fun ij a =>
-    (ContDiff.partialDeriv_infty (hV ij) a).differentiable (by simp)
-  have hc : ∀ ij a b, partialDeriv a (partialDeriv b (V ij)) x = partialDeriv b (partialDeriv a (V ij)) x := fun ij a b =>
+    ((hV ij).partialDeriv_infty a).differentiable (by simp)
+  have hc : ∀ ij a b, partialDeriv a (partialDeriv b (V ij)) x =
+    partialDeriv b (partialDeriv a (V ij)) x := fun ij a b =>
     partialDeriv_comm ((hV ij).of_le (by simp)) a b x
   have e : ∀ k : Fin 3, partialDeriv k (curlM V (i, k)) x =
-      partialDeriv k (partialDeriv (k + 1) (V (i, k + 2))) x - partialDeriv k (partialDeriv (k + 2) (V (i, k + 1))) x := fun k =>
+      partialDeriv k (partialDeriv (k + 1) (V (i, k + 2))) x -
+        partialDeriv k (partialDeriv (k + 2) (V (i, k + 1))) x := fun k =>
     partialDeriv_sub (hd _ _ x) (hd _ _ x) k
   simp only [e, Fin.sum_univ_three]
   simp only [show (0 : Fin 3) + 1 = 1 from rfl, show (0 : Fin 3) + 2 = 2 from rfl,
@@ -264,20 +275,25 @@ theorem sum_pd_curlM (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i : Fin 3) (x : R3)
 /-- `curl curl V = ∇ div V - ΔV` row-wise, for `C²` matrix fields. -/
 theorem curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ 2 (V ij)) (i k : Fin 3) (x : R3) :
     curlM (curlM V) (i, k) x =
-      partialDeriv k (fun y => ∑ l, partialDeriv l (V (i, l)) y) x - ∑ j, partialDeriv j (partialDeriv j (V (i, k))) x := by
+      partialDeriv k (fun y => ∑ l, partialDeriv l (V (i, l)) y) x - ∑ j,
+        partialDeriv j (partialDeriv j (V (i, k))) x := by
   have hd : ∀ ij a, Differentiable ℝ (partialDeriv a (V ij)) := fun ij a =>
     ((hV ij).partialDeriv (m := 1) (by norm_num) a).differentiable one_ne_zero
-  have hc : ∀ ij a b, partialDeriv a (partialDeriv b (V ij)) x = partialDeriv b (partialDeriv a (V ij)) x := fun ij a b =>
+  have hc : ∀ ij a b, partialDeriv a (partialDeriv b (V ij)) x =
+    partialDeriv b (partialDeriv a (V ij)) x := fun ij a b =>
     partialDeriv_comm (hV ij) a b x
   rw [partialDeriv_sum Finset.univ (fun l _ => hd _ _ x) k, sum_fin3_rot k, sum_fin3_rot k]
-  have e1 : curlM V (i, k + 2) = fun y => partialDeriv k (V (i, k + 1)) y - partialDeriv (k + 1) (V (i, k)) y := by
+  have e1 : curlM V (i, k + 2) = fun y => partialDeriv k (V (i, k + 1)) y -
+    partialDeriv (k + 1) (V (i, k)) y := by
     funext y
     simp only [curlM, fin3_add_two_add_one, fin3_add_two_add_two]
-  have e2 : curlM V (i, k + 1) = fun y => partialDeriv (k + 2) (V (i, k)) y - partialDeriv k (V (i, k + 2)) y := by
+  have e2 : curlM V (i, k + 1) = fun y => partialDeriv (k + 2) (V (i, k)) y -
+    partialDeriv k (V (i, k + 2)) y := by
     funext y
     simp only [curlM, fin3_add_one_add_one, fin3_add_one_add_two]
   have e3 : curlM (curlM V) (i, k) x =
-      partialDeriv (k + 1) (curlM V (i, k + 2)) x - partialDeriv (k + 2) (curlM V (i, k + 1)) x := rfl
+      partialDeriv (k + 1) (curlM V (i, k + 2)) x -
+        partialDeriv (k + 2) (curlM V (i, k + 1)) x := rfl
   rw [e3, e1, e2, partialDeriv_sub (hd _ _ _) (hd _ _ _), partialDeriv_sub (hd _ _ _) (hd _ _ _)]
   linarith [hc (i, k + 1) (k + 1) k, hc (i, k + 2) (k + 2) k]
 
@@ -287,12 +303,13 @@ theorem eq_zero_of_curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij))
     (hVc : ∀ ij, HasCompactSupport (V ij)) {c : ℝ} (hc : c ≠ 0)
     (h : ∀ ij x, curlM (curlM V) ij x = c * V ij x) : V = 0 := by
   have hW : ∀ ij, ContDiff ℝ ∞ (curlM V ij) := fun ij =>
-    (ContDiff.partialDeriv_infty (hV _) _).sub (ContDiff.partialDeriv_infty (hV _) _)
+    ((hV _).partialDeriv_infty _).sub ((hV _).partialDeriv_infty _)
   have hdiv : ∀ i, (fun y => ∑ l, partialDeriv l (V (i, l)) y) = 0 := by
     intro i
     funext y
     have e := sum_pd_curlM hW i y
-    have e' : ∀ k, partialDeriv k (curlM (curlM V) (i, k)) y = c * partialDeriv k (V (i, k)) y := fun k => by
+    have e' : ∀ k, partialDeriv k (curlM (curlM V) (i, k)) y =
+      c * partialDeriv k (V (i, k)) y := fun k => by
       rw [show curlM (curlM V) (i, k) = fun z => c * V (i, k) z from funext (h (i, k)),
         partialDeriv_const_mul ((hV _).differentiable (by simp) _)]
     simp only [e', ← Finset.mul_sum] at e

@@ -1688,15 +1688,16 @@ theorem extDeriv_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
   funext y s
   simp only [extDeriv_apply, oneForm, twoForm, curlV]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, partialDeriv] <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv] <;>
     ring_nf
 
 theorem extDeriv_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
-    extDeriv (twoForm v) = fun y s => if s = Finset.univ then ∑ j, partialDeriv j (v j) y else 0 := by
+    extDeriv (twoForm v) = fun y s => if s = Finset.univ then ∑ j,
+      partialDeriv j (v j) y else 0 := by
   funext y s
   simp only [extDeriv_apply, twoForm]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, partialDeriv]
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv]
   ring_nf
 
 theorem formalAdjD_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
@@ -1704,7 +1705,8 @@ theorem formalAdjD_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
   funext y s
   simp only [formalAdjD, extDAdj, oneForm, twoForm, curlV]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, compl_fin3] <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv,
+      compl_fin3] <;>
     ring_nf
 
 theorem formalAdjD_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :

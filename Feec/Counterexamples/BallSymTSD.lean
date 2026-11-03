@@ -371,7 +371,7 @@ theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) 
       partialDeriv i (partialDeriv j (chi n)) x * linF c x +
         partialDeriv j (chi n) x * c i + partialDeriv i (chi n) x * c j := by
   have hdj : Differentiable ℝ (partialDeriv j (chi n)) :=
-    (ContDiff.partialDeriv_infty (contDiff_chi n) j).differentiable (by simp)
+    ((contDiff_chi n).partialDeriv_infty j).differentiable (by simp)
   have e : partialDeriv j (fun y => chi n y * linF c y) =
       (fun y => partialDeriv j (chi n) y * linF c y) + (fun y => chi n y * c j) :=
     funext fun y => by
@@ -381,7 +381,8 @@ theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) 
       (g := fun y => chi n y * c j) (fun y => (hdj y).mul (differentiable_linF c y))
       (fun y => (differentiable_chi n y).mul (differentiableAt_const _)), Pi.add_apply,
     partialDeriv_mul (hdj x) (differentiable_linF c x),
-    partialDeriv_mul (differentiable_chi n x) (differentiableAt_const _), pd_linF, partialDeriv_const]
+    partialDeriv_mul (differentiable_chi n x) (differentiableAt_const _), pd_linF,
+      partialDeriv_const]
   ring
 
 /-- **`div div (χ_n E₀) = 0`**: `div E₀ = 0`, and `E₀ : ∇²χ_n = 0` because `E₀` is trace-free and
@@ -554,7 +555,7 @@ theorem gExp_eq_pd (ij : Ix) : gExp ij = partialDeriv ij.2 (vF ij.1) :=
   funext fun x => (pd_vF ij.1 ij.2 x).symm
 
 theorem contDiff_gExp (ij : Ix) : ContDiff ℝ ∞ (gExp ij) := by
-  rw [gExp_eq_pd]; exact ContDiff.partialDeriv_infty (contDiff_vF _) _
+  rw [gExp_eq_pd]; exact (contDiff_vF _).partialDeriv_infty _
 
 theorem contDiff_qExp (ij : Ix) : ContDiff ℝ ∞ (qExp ij) := by
   rw [qExp_eq_symF]
@@ -621,7 +622,8 @@ theorem exists_bound_ball3 {g : R3 → ℝ} (hg : Continuous g) : ∃ C, ∀ x �
 `2 η_n'(|x|²) (1 - |x|²) x_j p_i` stays bounded. -/
 theorem tendsto_pd_chi_vF (i j : Fin 3) :
     Tendsto (fun n => (memLp_of_continuous isOpen_ball3.measurableSet isBounded_ball3
-      (ContDiff.continuous_partialDeriv ((isTest_chi_mul n (contDiff_vF i)).contDiff.of_le (by simp)) j)).toLp
+      (((isTest_chi_mul n (contDiff_vF i)).contDiff.of_le
+        (by simp)).continuous_partialDeriv j)).toLp
         (partialDeriv j (fun y => chi n y * vF i y))) atTop
       (𝓝 ((memLp_of_continuous isOpen_ball3.measurableSet isBounded_ball3 (contDiff_gExp (i,
           j)).continuous).toLp

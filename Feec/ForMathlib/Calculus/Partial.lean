@@ -14,8 +14,8 @@ at `x` along the `i`-th coordinate vector `eᵢ = Pi.single i 1` (junk `0` where
 differentiable). It is the common definition behind the partial derivatives `∂ₖ` used for fields
 on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
 
-* Algebra: `partialDeriv_add`, `_sub` (pointwise; `partialDeriv_add'`, `_sub'` as functions),
-  `_neg`, `_const_smul`, `_const_mul`, `_mul`, `_sum`, `_const`, `_zero`,
+* Algebra: `partialDeriv_add`, `_sub`, `_const_mul` (pointwise; primed: as functions),
+  `_neg`, `_const_smul`, `_mul`, `_sum`, `_const`, `_zero`,
   `partialDeriv_apply_coord` (`∂ₖ xₐ = δₖₐ`), composition with continuous linear maps
   (`ContinuousLinearMap.partialDeriv_comp`);
 * Fréchet and one-variable derivatives: `HasFDerivAt.partialDeriv_eq`,
@@ -86,12 +86,12 @@ theorem DifferentiableAt.hasDerivAt_comp_add_single {f : (ι → 𝕜) → F} {x
   simpa only [← e] using
     (show DifferentiableAt 𝕜 f (x + t • Pi.single i 1) by rwa [← e]).hasDerivAt_comp_add_smul_single
 
-/-- `∂ᵢ f x` is the derivative of `s ↦ f (x + s eᵢ)` at `s = 0`. -/
+/-- `∂ᵢ f x` is the derivative of `s ↦ f (x + s eᵢ)` at `s = 0`: the line derivative of `f` at
+`x` along `eᵢ` (`HasFDerivAt.hasLineDerivAt`). -/
 theorem DifferentiableAt.hasDerivAt_partialDeriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
     (hf : DifferentiableAt 𝕜 f x) (i : ι) :
-    HasDerivAt (fun s : 𝕜 => f (x + s • Pi.single i 1)) (partialDeriv i f x) 0 := by
-  simpa using (show DifferentiableAt 𝕜 f (x + (0 : 𝕜) • Pi.single i 1) by simpa using hf
-    ).hasDerivAt_comp_add_smul_single
+    HasDerivAt (fun s : 𝕜 => f (x + s • Pi.single i 1)) (partialDeriv i f x) 0 :=
+  hf.hasFDerivAt.hasLineDerivAt (Pi.single i 1)
 
 omit [Fintype ι] in
 /-- Partial derivatives only depend on the germ of `f`. -/
@@ -154,6 +154,11 @@ theorem partialDeriv_const_smul {f : (ι → 𝕜) → F} {x : ι → 𝕜} (hf 
 theorem partialDeriv_const_mul {f : (ι → 𝕜) → 𝕜} {x : ι → 𝕜} (hf : DifferentiableAt 𝕜 f x)
     (c : 𝕜) (i : ι) : partialDeriv i (fun y => c * f y) x = c * partialDeriv i f x :=
   partialDeriv_const_smul hf c i
+
+/-- `∂ᵢ (c f) = c ∂ᵢ f` as functions. -/
+theorem partialDeriv_const_mul' {f : (ι → 𝕜) → 𝕜} (hf : Differentiable 𝕜 f) (c : 𝕜) (i : ι) :
+    partialDeriv i (fun y => c * f y) = fun y => c * partialDeriv i f y :=
+  funext fun _ => partialDeriv_const_mul (hf _) c i
 
 theorem partialDeriv_sum {α : Type*} (s : Finset α) {f : α → (ι → 𝕜) → F} {x : ι → 𝕜}
     (hf : ∀ a ∈ s, DifferentiableAt 𝕜 (f a) x) (i : ι) :

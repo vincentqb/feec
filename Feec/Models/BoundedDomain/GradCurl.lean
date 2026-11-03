@@ -205,7 +205,8 @@ theorem inner_toL2F_eq {ι : Type*} [Fintype ι] (B : L2F ℝ Ω ι) {Ψ : ι �
 
 /-- Integration by parts against a test function, no boundary condition on `g ∈ C¹`. -/
 theorem integral_pd_mul {f g : R3 → ℝ} (hf : IsTest Ω f) (hg : ContDiff ℝ 1 g) (k : Fin 3) :
-    ∫ x, partialDeriv k f x * g x ∂volume.restrict Ω = -∫ x, f x * partialDeriv k g x ∂volume.restrict Ω := by
+    ∫ x, partialDeriv k f x * g x ∂volume.restrict Ω =
+      -∫ x, f x * partialDeriv k g x ∂volume.restrict Ω := by
   have h0 : ∀ x, x ∉ Ω → partialDeriv k f x * g x = 0 := fun x hx => by
     have := (hf.fderiv_apply (Pi.single k 1)).eq_zero_of_notMem hx
     rw [partialDeriv, this, zero_mul]
@@ -597,7 +598,8 @@ theorem smoothField_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) 
 lies in `L²(TSD)` (weak divergence by integration by parts against `C_c^∞(Ω)`). -/
 theorem smoothField_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ : Ix → R3 → ℝ}
     (hΨ : ∀ ij, ContDiff ℝ 1 (Ψ ij)) (hsym : ∀ i j, ∀ x ∈ Ω, Ψ (i, j) x = Ψ (j, i) x)
-    (htr : ∀ x ∈ Ω, ∑ i, Ψ (i, i) x = 0) (hdiv : ∀ j, ∀ x ∈ Ω, ∑ k, partialDeriv k (Ψ (j, k)) x = 0) :
+    (htr : ∀ x ∈ Ω, ∑ i, Ψ (i, i) x = 0)
+    (hdiv : ∀ j, ∀ x ∈ Ω, ∑ k, partialDeriv k (Ψ (j, k)) x = 0) :
     smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous) ∈ tsd Ω := by
   set K := smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)
   have hKc := coeFn_smoothField hΩ hb Ψ (fun ij => (hΨ ij).continuous)
@@ -622,7 +624,7 @@ theorem smoothField_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {Ψ 
     simp only [h1, Fintype.sum_prod_type, Finset.sum_neg_distrib, neg_eq_zero]
     refine Finset.sum_eq_zero fun i _ => ?_
     rw [← integral_finsetSum (f := fun j x => φ i x * partialDeriv j (Ψ (i, j)) x) _ fun j _ =>
-      (((hφ i).continuous.mul (ContDiff.continuous_partialDeriv (hΨ _) _)).integrable_of_hasCompactSupport
+      (((hφ i).continuous.mul ((hΨ _).continuous_partialDeriv _)).integrable_of_hasCompactSupport
         (hφ i).hasCompactSupport.mul_right).restrict]
     refine (integral_congr_ae (Eventually.of_forall fun x => ?_)).trans (integral_zero _ _)
     simp only [← Finset.mul_sum]

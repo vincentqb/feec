@@ -461,7 +461,8 @@ theorem sum_tdiv_stN_eq_zero (hV : IsSphereTT V) (x y : ℝ) (i : Fin 3) :
   have hq := stQ_ne_zero x y
   have e : ∑ j, ∑ k, (stQ x y ^ 2 * (if j = k then 1 else 0) - stN x y j * stN x y k) *
       partialDeriv k (V (i, j)) (stSig x y) = stQ x y ^ 2 * ∑ j, ∑ k,
-        ((if j = k then 1 else 0) - stSig x y j * stSig x y k) * partialDeriv k (V (i, j)) (stSig x y) := by
+        ((if j = k then 1 else 0) - stSig x y j * stSig x y k) *
+          partialDeriv k (V (i, j)) (stSig x y) := by
     simp only [Finset.mul_sum, stSig]
     refine Finset.sum_congr rfl fun j _ => Finset.sum_congr rfl fun k _ => ?_
     field_simp
@@ -560,7 +561,8 @@ theorem hasDerivAt_ttA_x (hV' : ∀ ij, Differentiable ℝ (V ij)) (x y : ℝ) :
       (∑ k, stSx x y k * partialDeriv k (V ij) (stSig x y)) x := fun ij =>
     hasDerivAt_comp_stSig_x (hV' ij) x y
   have h := hasDerivAt_quad (a := fun t => stSx t y) (b := fun t => stSx t y)
-    (M := fun ij t => V ij (stSig t y)) (M' := fun ij => ∑ k, stSx x y k * partialDeriv k (V ij) (stSig x y))
+    (M := fun ij t => V ij (stSig t y)) (M' := fun ij => ∑ k,
+      stSx x y k * partialDeriv k (V ij) (stSig x y))
     (t := x) (fun i => hasDerivAt_stSx_x x y i) (fun j => hasDerivAt_stSx_x x y j) hM
   exact h
 
@@ -570,7 +572,8 @@ theorem hasDerivAt_ttB_y (hV' : ∀ ij, Differentiable ℝ (V ij)) (x y : ℝ) :
       (∑ k, stSy x y k * partialDeriv k (V ij) (stSig x y)) y := fun ij =>
     hasDerivAt_comp_stSig_y (hV' ij) x y
   have h := hasDerivAt_quad (a := fun t => stSx x t) (b := fun t => stSy x t)
-    (M := fun ij t => V ij (stSig x t)) (M' := fun ij => ∑ k, stSy x y k * partialDeriv k (V ij) (stSig x y))
+    (M := fun ij t => V ij (stSig x t)) (M' := fun ij => ∑ k,
+      stSy x y k * partialDeriv k (V ij) (stSig x y))
     (t := y) (fun i => hasDerivAt_stSx_y x y i) (fun j => hasDerivAt_stSy_y x y j) hM
   exact h
 
@@ -582,7 +585,8 @@ theorem hasDerivAt_ttA_y (hV : IsSphereTT V) (hV' : ∀ ij, Differentiable ℝ (
       (∑ k, stSy x y k * partialDeriv k (V ij) (stSig x y)) y := fun ij =>
     hasDerivAt_comp_stSig_y (hV' ij) x y
   have h := hasDerivAt_quad (a := fun t => stSy x t) (b := fun t => stSy x t)
-    (M := fun ij t => V ij (stSig x t)) (M' := fun ij => ∑ k, stSy x y k * partialDeriv k (V ij) (stSig x y))
+    (M := fun ij t => V ij (stSig x t)) (M' := fun ij => ∑ k,
+      stSy x y k * partialDeriv k (V ij) (stSig x y))
     (t := y) (fun i => hasDerivAt_stSy_y x y i) (fun j => hasDerivAt_stSy_y x y j) hM
   exact h.neg
 
@@ -594,7 +598,8 @@ theorem hasDerivAt_ttB_x (hV : IsSphereTT V) (hV' : ∀ ij, Differentiable ℝ (
       (∑ k, stSx x y k * partialDeriv k (V ij) (stSig x y)) x := fun ij =>
     hasDerivAt_comp_stSig_x (hV' ij) x y
   have h := hasDerivAt_quad (a := fun t => stSy t y) (b := fun t => stSx t y)
-    (M := fun ij t => V ij (stSig t y)) (M' := fun ij => ∑ k, stSx x y k * partialDeriv k (V ij) (stSig x y))
+    (M := fun ij t => V ij (stSig t y)) (M' := fun ij => ∑ k,
+      stSx x y k * partialDeriv k (V ij) (stSig x y))
     (t := x) (fun i => hasDerivAt_stSy_x x y i) (fun j => hasDerivAt_stSx_x x y j) hM
   exact h
 
@@ -961,7 +966,8 @@ theorem hasDerivAt_comp_curve {f : R3 → ℝ} (hf : Differentiable ℝ f) {γ :
 theorem tangential_derivs {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (hf0 : ∀ y, rho y = 1 → f y = 0)
     {x t : R3} (hx : rho x = 1) (ht : ∑ k, t k * x k = 0) :
     ∑ k, t k * partialDeriv k f x = 0 ∧
-      ∑ k, ∑ m, t k * t m * partialDeriv m (partialDeriv k f) x = (∑ k, t k * t k) * ∑ k, x k * partialDeriv k f x := by
+      ∑ k, ∑ m, t k * t m * partialDeriv m (partialDeriv k f) x =
+        (∑ k, t k * t k) * ∑ k, x k * partialDeriv k f x := by
   have hd : Differentiable ℝ f := hf.differentiable (by norm_num)
   have hdk : ∀ k, Differentiable ℝ (partialDeriv k f) := fun k =>
     (hf.partialDeriv (m := 1) (by norm_num) k).differentiable one_ne_zero
@@ -1013,7 +1019,8 @@ theorem tangential_derivs {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (hf0 : ∀ y,
     exact h1.unique (hasDerivAt_const s 0)
   refine ⟨by simpa [hγ0, hγ10] using hG 0, ?_⟩
   have hG' : HasDerivAt (fun s => ∑ k, γ1 s k * partialDeriv k f (γ s))
-      (∑ k, (γ2 0 k * partialDeriv k f (γ 0) + γ1 0 k * ∑ m, γ1 0 m * partialDeriv m (partialDeriv k f) (γ 0))) 0 :=
+      (∑ k, (γ2 0 k * partialDeriv k f (γ 0) + γ1 0 k * ∑ m,
+        γ1 0 m * partialDeriv m (partialDeriv k f) (γ 0))) 0 :=
     HasDerivAt.fun_sum fun k _ => (hγ1 0 k).mul (hasDerivAt_comp_curve (hdk k) (hγ 0))
   have e : (fun s => ∑ k, γ1 s k * partialDeriv k f (γ s)) = fun _ => 0 := funext hG
   rw [e] at hG'
@@ -1021,17 +1028,21 @@ theorem tangential_derivs {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (hf0 : ∀ y,
   simp only [hγ0, hγ10, γ2, mul_zero, Real.cos_zero, Real.sin_zero, mul_one, zero_mul,
     sub_zero] at h0
   rw [← hl2]
-  have e2 : ∑ k, ∑ m, t k * t m * partialDeriv m (partialDeriv k f) x = ∑ k, t k * ∑ m, t m * partialDeriv m (partialDeriv k f) x := by
+  have e2 : ∑ k, ∑ m, t k * t m * partialDeriv m (partialDeriv k f) x =
+    ∑ k, t k * ∑ m, t m * partialDeriv m (partialDeriv k f) x := by
     refine Finset.sum_congr rfl fun k _ => ?_
     rw [Finset.mul_sum]
     exact Finset.sum_congr rfl fun m _ => by ring
   rw [e2]
-  have e3 : ∑ k, (-l ^ 2 * x k * partialDeriv k f x + t k * ∑ m, t m * partialDeriv m (partialDeriv k f) x) =
-      -l ^ 2 * ∑ k, x k * partialDeriv k f x + ∑ k, t k * ∑ m, t m * partialDeriv m (partialDeriv k f) x := by
+  have e3 : ∑ k, (-l ^ 2 * x k * partialDeriv k f x + t k * ∑ m,
+    t m * partialDeriv m (partialDeriv k f) x) =
+      -l ^ 2 * ∑ k, x k * partialDeriv k f x + ∑ k, t k * ∑ m,
+        t m * partialDeriv m (partialDeriv k f) x := by
     rw [Finset.sum_add_distrib, Finset.mul_sum]
     congr 1
     exact Finset.sum_congr rfl fun k _ => by ring
-  have : ∑ k, (-l ^ 2 * x k * partialDeriv k f x + t k * ∑ m, t m * partialDeriv m (partialDeriv k f) x) = 0 := by
+  have : ∑ k, (-l ^ 2 * x k * partialDeriv k f x + t k * ∑ m,
+    t m * partialDeriv m (partialDeriv k f) x) = 0 := by
     rw [← h0]
   linarith [e3]
 
@@ -1113,13 +1124,15 @@ theorem contDiff_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2 (
 
 /-- `∂ₖ (x · ∇ f) = ∂ₖ f + Σₘ xₘ ∂ₖ∂ₘ f`. -/
 theorem pd_radDeriv {f : R3 → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) (x : R3) :
-    partialDeriv k (fun y => ∑ m, y m * partialDeriv m f y) x = partialDeriv k f x + ∑ m, x m * partialDeriv k (partialDeriv m f) x := by
+    partialDeriv k (fun y => ∑ m, y m * partialDeriv m f y) x =
+      partialDeriv k f x + ∑ m, x m * partialDeriv k (partialDeriv m f) x := by
   have hdm : ∀ m, Differentiable ℝ (partialDeriv m f) := fun m =>
     (hf.partialDeriv (m := 1) (by norm_num) m).differentiable one_ne_zero
   rw [partialDeriv_sum (f := fun m y => y m * partialDeriv m f y) Finset.univ
     (fun m _ => ((differentiable_apply m).mul (hdm m)) x) k]
   have e : ∀ m, partialDeriv k (fun y => y m * partialDeriv m f y) x =
-      (if k = m then partialDeriv m f x else 0) + x m * partialDeriv k (partialDeriv m f) x := fun m => by
+      (if k = m then partialDeriv m f x else 0) + x m *
+        partialDeriv k (partialDeriv m f) x := fun m => by
     rw [partialDeriv_mul (differentiable_apply m x) ((hdm m) x), partialDeriv_apply_coord]
     split_ifs <;> ring
   simp only [e, Finset.sum_add_distrib]
@@ -1157,11 +1170,12 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     continuous_finsetSum _ fun j _ => (hc1 _ _).continuous
   have hdivS : ∀ x, rho x = 1 → ∀ i, ∑ j, partialDeriv j (U (i, j)) x = 0 := fun x hx i =>
     eq_zero_of_ball3 (hdivC i) (fun y hy => hdiv y hy i) hx.le
-  have hdiv1 : ∀ x, rho x = 1 → ∀ i m, partialDeriv m (fun y => ∑ j, partialDeriv j (U (i, j)) y) x = 0 := by
+  have hdiv1 : ∀ x, rho x = 1 → ∀ i m, partialDeriv m (fun y => ∑ j,
+    partialDeriv j (U (i, j)) y) x = 0 := by
     intro x hx i m
     have hC : ContDiff ℝ 1 (fun y => ∑ j, partialDeriv j (U (i, j)) y) :=
       ContDiff.sum fun j _ => hc1 _ _
-    exact eq_zero_of_ball3 (ContDiff.continuous_partialDeriv hC m)
+    exact eq_zero_of_ball3 (hC.continuous_partialDeriv m)
       (fun y hy => pd_eq_zero_of_ball3 (fun z hz => hdiv z hz i) hy m) hx.le
   -- tangency: `V x = div U = 0`
   have hVx : ∀ x, rho x = 1 → ∀ i, ∑ j, radDeriv U (i, j) x * x j = 0 := fun x hx i => by
@@ -1173,7 +1187,7 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     refine Finset.sum_congr rfl fun k _ => ?_
     have hC : ContDiff ℝ 1 (fun y => U (i, j) y - U (j, i) y) := (hU _).of_le (by norm_num) |>.sub
       ((hU _).of_le (by norm_num))
-    have h0 := eq_zero_of_ball3 (ContDiff.continuous_partialDeriv hC k)
+    have h0 := eq_zero_of_ball3 (hC.continuous_partialDeriv k)
       (fun y hy => pd_eq_zero_of_ball3 (fun z hz => by rw [hsym z hz i j, sub_self]) hy k) hx.le
     rw [partialDeriv_sub (hd _ _) (hd _ _)] at h0
     rw [sub_eq_zero.1 h0]
@@ -1181,7 +1195,7 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     have hC : ContDiff ℝ 1 (fun y => ∑ i, U (i, i) y) :=
       ContDiff.sum fun i _ => (hU _).of_le (by norm_num)
     have h0 : ∀ k, partialDeriv k (fun y => ∑ i, U (i, i) y) x = 0 := fun k =>
-      eq_zero_of_ball3 (ContDiff.continuous_partialDeriv hC k)
+      eq_zero_of_ball3 (hC.continuous_partialDeriv k)
         (fun y hy => pd_eq_zero_of_ball3 (fun z hz => htr z hz) hy k) hx.le
     simp only [radDeriv]
     rw [Finset.sum_comm]
@@ -1189,29 +1203,35 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     rw [← Finset.mul_sum, ← partialDeriv_sum Finset.univ (fun i _ => hd _ x) k, h0 k, mul_zero]
   · -- tangential divergence
     have hV : ∀ j k, partialDeriv k (radDeriv U (i, j)) x =
-        partialDeriv k (U (i, j)) x + ∑ m, x m * partialDeriv k (partialDeriv m (U (i, j))) x := fun j k =>
+        partialDeriv k (U (i, j)) x + ∑ m, x m * partialDeriv k
+          (partialDeriv m (U (i, j))) x := fun j k =>
       pd_radDeriv (hU _) k x
     simp only [hV]
     -- the Hessian identity `H[x, x] = -2 V`
-    have hH : ∀ j, ∑ k, ∑ m, x k * x m * partialDeriv m (partialDeriv k (U (i, j))) x = -2 * radDeriv U (i, j) x := by
+    have hH : ∀ j, ∑ k, ∑ m, x k * x m * partialDeriv m (partialDeriv k (U (i, j))) x =
+      -2 * radDeriv U (i, j) x := by
       intro j
-      refine hess_eq_of_tangential x hx (fun a b => partialDeriv a (partialDeriv b (U (i, j))) x) _ (fun k => ?_)
+      refine hess_eq_of_tangential x hx (fun a b => partialDeriv a (partialDeriv b (U (i, j))) x)
+        _ (fun k => ?_)
         (hlap x hx (i, j))
       have h := (tangential_derivs (hU (i, j)) (fun y hy => hU0 y hy (i, j)) hx
         (sum_tanProj_mul x hx k)).2
       rw [h]
       rfl
-    have hcomm : ∀ j k m, partialDeriv k (partialDeriv m (U (i, j))) x = partialDeriv m (partialDeriv k (U (i, j))) x := fun j k m =>
+    have hcomm : ∀ j k m, partialDeriv k (partialDeriv m (U (i, j))) x =
+      partialDeriv m (partialDeriv k (U (i, j))) x := fun j k m =>
       partialDeriv_comm (hU _) k m x
     -- expand
     have e1 : ∑ j, ∑ k, ((if j = k then 1 else 0) - x j * x k) *
         (partialDeriv k (U (i, j)) x + ∑ m, x m * partialDeriv k (partialDeriv m (U (i, j))) x) =
-        (∑ j, partialDeriv j (U (i, j)) x + ∑ m, x m * partialDeriv m (fun y => ∑ j, partialDeriv j (U (i, j)) y) x) -
+        (∑ j, partialDeriv j (U (i, j)) x + ∑ m, x m *
+          partialDeriv m (fun y => ∑ j, partialDeriv j (U (i, j)) y) x) -
           ∑ j, x j * (∑ k, x k * partialDeriv k (U (i, j)) x +
             ∑ k, ∑ m, x k * x m * partialDeriv m (partialDeriv k (U (i, j))) x) := by
       rw [show (∑ m, x m * partialDeriv m (fun y => ∑ j, partialDeriv j (U (i, j)) y) x) =
           ∑ m, x m * ∑ j, partialDeriv m (partialDeriv j (U (i, j))) x from
-        Finset.sum_congr rfl fun m _ => by rw [partialDeriv_sum Finset.univ (fun j _ => hdk _ _ x) m]]
+        Finset.sum_congr rfl fun m _ => by rw [partialDeriv_sum Finset.univ
+          (fun j _ => hdk _ _ x) m]]
       simp only [Fin.sum_univ_three, Fin.isValue]
       norm_num
       simp only [hcomm _ _ _]
@@ -1255,7 +1275,7 @@ theorem exists_abs_le_mul_one_sub_rho {w : R3 → ℝ} (hw : ContDiff ℝ 1 w)
     (hw0 : ∀ x, rho x = 1 → w x = 0) : ∃ L, 0 ≤ L ∧ ∀ x ∈ ball3, |w x| ≤ L * (1 - rho x) := by
   obtain ⟨M0, hM0, hM0b⟩ := exists_bound_closedBall3 hw.continuous
   obtain ⟨M, hM, hMb⟩ := exists_bound_closedBall3 (g := fun y => ∑ k, |partialDeriv k w y|)
-    (continuous_finsetSum _ fun k _ => (ContDiff.continuous_partialDeriv hw k).abs)
+    (continuous_finsetSum _ fun k _ => (hw.continuous_partialDeriv k).abs)
   have hpd : ∀ y, rho y ≤ 1 → ∀ k, |partialDeriv k w y| ≤ M := fun y hy k => by
     have h := hMb y hy
     rw [abs_of_nonneg (Finset.sum_nonneg fun _ _ => abs_nonneg _)] at h
@@ -1284,8 +1304,8 @@ theorem exists_abs_le_mul_one_sub_rho {w : R3 → ℝ} (hw : ContDiff ℝ 1 w)
     rw [← hr2, ← mul_pow, inv_mul_cancel₀ hr.ne', one_pow]
   have hg0 : w (s₀ • x) = 0 := hw0 _ (by rw [hsx, hs₀r])
   -- mean value theorem for `g(s) = w(s x)` on `[1, s₀]`
-  have hgd : ∀ s, HasDerivAt (fun s => w (s • x)) (∑ k, x k * partialDeriv k w (s • x)) s := fun s =>
-    hasDerivAt_comp_curve hd (γ := fun s => s • x) fun k => by
+  have hgd : ∀ s, HasDerivAt (fun s => w (s • x)) (∑ k, x k * partialDeriv k w (s • x)) s :=
+    fun s => hasDerivAt_comp_curve hd (γ := fun s => s • x) fun k => by
       simpa using (hasDerivAt_id s).mul_const (x k)
   obtain ⟨c, hc, hcs⟩ := exists_hasDerivAt_eq_slope (fun s => w (s • x))
     (fun s => ∑ k, x k * partialDeriv k w (s • x)) hs₀
@@ -1751,8 +1771,10 @@ theorem sum_pd_fluxG (hU : ∀ ij, Differentiable ℝ (U ij)) (hψ : ∀ ij, Dif
     (x : R3) : ∑ m, partialDeriv m (fluxG U ψ m) x =
       ∑ ij, (curlM U ij x * ψ ij x - U ij x * curlM ψ ij x) := by
   have hprod : ∀ a b, Differentiable ℝ (fun y => U a y * ψ b y) := fun a b => (hU a).mul (hψ b)
-  have e : ∀ m, partialDeriv m (fluxG U ψ m) x = ∑ i, ((U (i, m + 1) x * partialDeriv m (ψ (i, m + 2)) x +
-      ψ (i, m + 2) x * partialDeriv m (U (i, m + 1)) x) - (U (i, m + 2) x * partialDeriv m (ψ (i, m + 1)) x +
+  have e : ∀ m, partialDeriv m (fluxG U ψ m) x = ∑ i,
+    ((U (i, m + 1) x * partialDeriv m (ψ (i, m + 2)) x +
+      ψ (i, m + 2) x * partialDeriv m (U (i, m + 1)) x) -
+        (U (i, m + 2) x * partialDeriv m (ψ (i, m + 1)) x +
       ψ (i, m + 1) x * partialDeriv m (U (i, m + 2)) x)) := fun m => by
     unfold fluxG
     rw [partialDeriv_sum
@@ -1784,7 +1806,7 @@ theorem integral_sphere_eq_zero_of_integral_div {G : Fin 3 → R3 → ℝ}
     ∫ u : Metric.sphere (0 : E3) 1, ∑ m, (WithLp.ofLp u.1) m * G m (WithLp.ofLp u.1)
       ∂(volume : Measure E3).toSphere = 0 := by
   set D : R3 → ℝ := fun x => ∑ m, partialDeriv m (G m) x
-  have hD : Continuous D := continuous_finsetSum _ fun m _ => ContDiff.continuous_partialDeriv (hG m) m
+  have hD : Continuous D := continuous_finsetSum _ fun m _ => (hG m).continuous_partialDeriv m
   set H : R3 → ℝ := fun x => ∑ m, x m * G m x
   have hH : Continuous H := continuous_finsetSum _ fun m _ =>
     (continuous_apply m).mul (hG m).continuous
@@ -1805,10 +1827,12 @@ theorem integral_sphere_eq_zero_of_integral_div {G : Fin 3 → R3 → ℝ}
   have e : ∀ n, ∫ x in ball3, chi n x * D x = ∫ x, -2 * deriv (eta n) (rho x) * H x := by
     intro n
     have hT := isTest_chi n
-    have hint : ∀ m, Integrable (fun x => chi n x * partialDeriv m (G m) x) (volume.restrict ball3) :=
-      fun m => integrable_ball3 (hT.continuous.mul (ContDiff.continuous_partialDeriv (hG m) m))
-    have hint' : ∀ m, Integrable (fun x => partialDeriv m (chi n) x * G m x) (volume.restrict ball3) :=
-      fun m => integrable_ball3 ((ContDiff.continuous_partialDeriv (hT.contDiff.of_le (by simp)) m).mul
+    have hint : ∀ m, Integrable (fun x => chi n x * partialDeriv m (G m) x)
+      (volume.restrict ball3) :=
+      fun m => integrable_ball3 (hT.continuous.mul ((hG m).continuous_partialDeriv m))
+    have hint' : ∀ m, Integrable (fun x => partialDeriv m (chi n) x * G m x)
+      (volume.restrict ball3) :=
+      fun m => integrable_ball3 (((hT.contDiff.of_le (by simp)).continuous_partialDeriv m).mul
         (hG m).continuous)
     calc ∫ x in ball3, chi n x * D x = ∑ m, ∫ x in ball3, chi n x * partialDeriv m (G m) x := by
           rw [← integral_finsetSum _ fun m _ => hint m]
@@ -1956,7 +1980,8 @@ theorem pointwise_of_mem_tsd (hU : ∀ ij, ContDiff ℝ 1 (U ij))
       with y h1 h2 h3 h4 h5 h6
     rw [← h1, ← h2, ← h3, ← Pi.add_apply, ← h5, ← Pi.add_apply, ← h4, htr, h6]
     rfl
-  · refine eqOn_zero_of_integral_mul (continuous_finsetSum _ fun j _ => ContDiff.continuous_partialDeriv (hU _) j)
+  · refine eqOn_zero_of_integral_mul (continuous_finsetSum _ fun j _ =>
+      (hU _).continuous_partialDeriv j)
       (fun g hg => ?_) x hx
     set φ : Fin 3 → R3 → ℝ := fun i' => if i' = i then g else 0
     have hφ : IsTestField ball3 φ := fun i' => by
@@ -1976,7 +2001,7 @@ theorem pointwise_of_mem_tsd (hU : ∀ ij, ContDiff ℝ 1 (U ij))
       rw [Finset.sum_eq_single i (fun b _ hb => by simp [φ, hb]) (by simp)]
       simp [φ]
     rw [h2, ← integral_finsetSum (f := fun j y => g y * partialDeriv j (U (i, j)) y) _
-      fun j _ => integrable_ball3 (hg.continuous.mul (ContDiff.continuous_partialDeriv (hU _) j))] at h0
+      fun j _ => integrable_ball3 (hg.continuous.mul ((hU _).continuous_partialDeriv j))] at h0
     rw [← h0]
     refine integral_congr_ae (Eventually.of_forall fun y => ?_)
     simp only [Finset.sum_mul]
@@ -2092,7 +2117,7 @@ theorem eq_zero_of_isEigenfield_of_contDiff_two {ξ : ℝ} (hξ : ξ ≠ 0)
     have hdivC : ContDiff ℝ 1 (fun y => ∑ l, partialDeriv l (U (i, l)) y) :=
       ContDiff.sum fun l _ => (hU _).partialDeriv (m := 1) (by norm_num) l
     have h1 : partialDeriv k (fun y => ∑ l, partialDeriv l (U (i, l)) y) x = 0 :=
-      eq_zero_of_ball3 (ContDiff.continuous_partialDeriv hdivC k)
+      eq_zero_of_ball3 (hdivC.continuous_partialDeriv k)
         (fun y hy => pd_eq_zero_of_ball3 (fun z hz => hdiv z hz i) hy k) hx.le
     have h2 : curlM (curlM U) (i, k) x = 0 := by
       have := eq_zero_of_ball3 ((continuous_curlM (contDiff_curlM hU) (i, k)).sub
@@ -2459,7 +2484,8 @@ private theorem pd_cos (ξ : ℝ) (k : Fin 3) (x : R3) :
   · simp [Ne.symm hk, hk]
 
 private theorem pd_sin (ξ : ℝ) (k : Fin 3) (x : R3) :
-    partialDeriv k (fun y : R3 => Real.sin (ξ * y 0)) x = if k = 0 then ξ * Real.cos (ξ * x 0) else 0 := by
+    partialDeriv k (fun y : R3 => Real.sin (ξ * y 0)) x =
+      if k = 0 then ξ * Real.cos (ξ * x 0) else 0 := by
   have h : HasFDerivAt (fun y : R3 => Real.sin (ξ * y 0)) _ x :=
     ((hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) 0 x).const_mul ξ).sin
   rw [HasFDerivAt.partialDeriv_eq h]
@@ -2468,7 +2494,8 @@ private theorem pd_sin (ξ : ℝ) (k : Fin 3) (x : R3) :
   · simp [Ne.symm hk, hk]
 
 theorem pd_shearWave (ξ : ℝ) (ij : Ix) (k : Fin 3) (x : R3) :
-    partialDeriv k (shearWave ξ ij) x = shearMat ij * (if k = 0 then -(ξ * Real.sin (ξ * x 0)) else 0) := by
+    partialDeriv k (shearWave ξ ij) x = shearMat ij *
+      (if k = 0 then -(ξ * Real.sin (ξ * x 0)) else 0) := by
   rw [show shearWave ξ ij = fun y => shearMat ij * Real.cos (ξ * y 0) from rfl,
     partialDeriv_const_mul (by fun_prop), pd_cos]
 
@@ -2490,7 +2517,8 @@ theorem shearWave_symm (ξ : ℝ) (i j : Fin 3) (x : R3) :
 theorem shearWave_trace (ξ : ℝ) (x : R3) : ∑ i, shearWave ξ (i, i) x = 0 := by
   simp [shearWave, shearMat, Fin.sum_univ_three]
 
-theorem shearWave_div (ξ : ℝ) (i : Fin 3) (x : R3) : ∑ j, partialDeriv j (shearWave ξ (i, j)) x = 0 := by
+theorem shearWave_div (ξ : ℝ) (i : Fin 3) (x : R3) :
+    ∑ j, partialDeriv j (shearWave ξ (i, j)) x = 0 := by
   simp only [pd_shearWave, Fin.sum_univ_three, shearMat]
   fin_cases i <;> simp
 

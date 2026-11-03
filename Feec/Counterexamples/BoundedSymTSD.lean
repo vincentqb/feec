@@ -448,7 +448,7 @@ theorem hessL2_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
     (fun ij => (contDiff_hessField hh ij).of_le (by simp)) hΔ
     (fun ij x => by
       rw [hessField_eq_gradM]
-      exact curlM_gradM (fun i => (ContDiff.partialDeriv_infty hh i).of_le (by simp)) ij x)
+      exact curlM_gradM (fun i => (hh.partialDeriv_infty i).of_le (by simp)) ij x)
     (hessL2_mem_tsd hΩ hb hh fun x _ => hΔ x)
 
 /-- **The stationary part of `S₂*` is infinite-dimensional** for (4.16) on a nonempty bounded
@@ -538,7 +538,7 @@ theorem not_finiteDimensional_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBo
     rw [Submodule.coe_inner]
     have ho := gradL2_mem_orthogonal_tsd₀ hΩ hb
       (φ := fun i => partialDeriv i (expCos ((n : ℝ) + 1)))
-      (fun i => (ContDiff.partialDeriv_infty (contDiff_expCos _) i).of_le (by simp))
+      (fun i => ((contDiff_expCos _).partialDeriv_infty i).of_le (by simp))
     exact (Submodule.mem_orthogonal' _ _).1 ho _ hu
   have hle : (tsdS Ω ⊓ ((tsd₀ Ω hΩ hb).comap (symSub ℝ Ω).subtype)ᗮ : Submodule ℝ (symSub ℝ Ω)) ≤
       tsdS Ω ⊓ (Submodule.span ℝ
@@ -571,8 +571,8 @@ theorem differentiable_coord (a : Fin 3) : Differentiable ℝ fun y : R3 => y a 
   differentiable_apply (𝕜 := ℝ) a
 
 theorem pd_quadF (a b k : Fin 3) :
-    partialDeriv k (quadF a b) = fun y => (if k = a then 1 else 0) * y b + (if k = b then 1 else 0) * y
-        a := by
+    partialDeriv k (quadF a b) =
+      fun y => (if k = a then 1 else 0) * y b + (if k = b then 1 else 0) * y a := by
   funext y
   change partialDeriv k (fun y => y a * y b) y = _
   rw [partialDeriv_mul (differentiable_coord a y) (differentiable_coord b y),
@@ -587,7 +587,8 @@ theorem hessField_quadF (a b : Fin 3) (ij : Ix) (x : R3) :
   simp only [hessField, pd_quadF]
   change partialDeriv j ((fun y => (if i = a then (1 : ℝ) else 0) * y b) +
     (fun y => (if i = b then (1 : ℝ) else 0) * y a)) x = _
-  rw [partialDeriv_add' ((differentiable_coord b).const_mul _) ((differentiable_coord a).const_mul _),
+  rw [partialDeriv_add' ((differentiable_coord b).const_mul _)
+    ((differentiable_coord a).const_mul _),
     Pi.add_apply, partialDeriv_const_mul (differentiable_coord b _),
     partialDeriv_const_mul (differentiable_coord a _), partialDeriv_apply_coord,
     partialDeriv_apply_coord]
@@ -727,7 +728,8 @@ theorem constS_mem_hessCurlMax_d₁ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   obtain ⟨h, e⟩ := smoothField_mem_hessCurlMax_d₁ (Ψ := fun ij _ => BoundedDomainTSD.diagA ij.1
       ij.2)
     hΩ hb (fun _ => contDiff_const) fun i j => by rw [diagA_symm i j]
-  exact ⟨h, Subtype.ext (e.trans (smoothField_eq_zero hΩ hb _ fun ij x _ => by simp [curlM, partialDeriv]))⟩
+  exact ⟨h, Subtype.ext (e.trans (smoothField_eq_zero hΩ hb _ fun ij x _ => by simp [curlM,
+    partialDeriv]))⟩
 
 /-- **The obstruction behind the refutation for (4.16) does not apply to the printed
 placement**: `⟪sym curl B, diag(1, -1, 0)⟫ = 0` for every `B ∈ H̊(sym curl, T)`. -/

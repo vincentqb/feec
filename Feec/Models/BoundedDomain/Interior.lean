@@ -486,11 +486,13 @@ def violDeriv (E B : L2F ℝ Ω Ix) (ψ : VIdx → R3 → ℝ) : VIdx → ℝ
   | Sum.inl (Sum.inl k) => ∫ x, trV B x * partialDeriv k (ψ (.inl (.inl k))) x ∂volume.restrict Ω -
       ∫ x, axV B (k + 1) x * partialDeriv (k + 2) (ψ (.inl (.inl k))) x ∂volume.restrict Ω +
       ∫ x, axV B (k + 2) x * partialDeriv (k + 1) (ψ (.inl (.inl k))) x ∂volume.restrict Ω
-  | Sum.inl (Sum.inr u) => -∑ c, ∫ x, axV B c x * partialDeriv c (ψ (.inl (.inr u))) x ∂volume.restrict Ω
+  | Sum.inl (Sum.inr u) => -∑ c, ∫ x, axV B c x * partialDeriv c
+    (ψ (.inl (.inr u))) x ∂volume.restrict Ω
   | Sum.inr (Sum.inl k) => -∫ x, trV E x * partialDeriv k (ψ (.inr (.inl k))) x ∂volume.restrict Ω +
       ∫ x, axV E (k + 1) x * partialDeriv (k + 2) (ψ (.inr (.inl k))) x ∂volume.restrict Ω -
       ∫ x, axV E (k + 2) x * partialDeriv (k + 1) (ψ (.inr (.inl k))) x ∂volume.restrict Ω
-  | Sum.inr (Sum.inr u) => ∑ c, ∫ x, axV E c x * partialDeriv c (ψ (.inr (.inr u))) x ∂volume.restrict Ω
+  | Sum.inr (Sum.inr u) => ∑ c, ∫ x, axV E c x * partialDeriv c
+    (ψ (.inr (.inr u))) x ∂volume.restrict Ω
 
 /-- **The violation solves the violation system weakly** (any open `Ω`, no boundary
 condition). -/
@@ -513,7 +515,8 @@ theorem WeakEB.isWeakSolution_viol {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : 
     FiniteSpeed.hypOp_formalAdj_apply _ _ _ _
   have hsplit : ∀ i, ∫ x, viol (E t) (B t) i x *
       (FiniteSpeed.hypOp violDir).formalAdj.apply ψ i x ∂volume.restrict Ω =
-      -∑ j, ∑ c, violDir j i c * ∫ x, viol (E t) (B t) i x * partialDeriv c (ψ j) x ∂volume.restrict Ω := by
+      -∑ j, ∑ c, violDir j i c * ∫ x, viol (E t) (B t) i x *
+        partialDeriv c (ψ j) x ∂volume.restrict Ω := by
     intro i
     simp only [hP, mul_neg, integral_neg, Finset.mul_sum]
     rw [integral_finsetSum _ fun j _ => integrable_mul _ ((hψ j).fderiv_apply _).memLp]
@@ -622,7 +625,8 @@ theorem ae_symTF_of_viol (X : L2F ℝ Ω Ix) {S : Set R3} (hSΩ : S ⊆ Ω)
 /-- A.e. symmetric and trace-free on `Ω` plus weakly divergence-free gives `L²(TSD)`. -/
 theorem mem_tsd_of_ae_symTF {X : L2F ℝ Ω Ix} (hX : ∀ᵐ y ∂volume.restrict Ω, SymTF X y)
     (hd : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) : X ∈ tsd Ω := by
+      ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) :
+    X ∈ tsd Ω := by
   refine ⟨fun i j => Lp.ext ?_, ?_, fun φ hφ => by rw [inner_grad_testField _ hφ]; exact hd φ hφ⟩
   · filter_upwards [hX] with y hy using hy.1 i j
   · have e : ∑ i, X (i, i) = X (0, 0) + X (1, 1) + X (2, 2) := by simp [Fin.sum_univ_three]

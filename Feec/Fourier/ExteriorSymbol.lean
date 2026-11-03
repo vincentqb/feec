@@ -12,7 +12,10 @@ Differential `k`-forms on `ℝᵈ` or `𝕋ᵈ` with constant coefficients are, 
 of `Λᵏ = 𝕜^{#k-subsets of d}` (coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`). The
 exterior derivative has symbol `i ξ ∧ ·`, built from the **Koszul differential**
 `(κ_ξ ω)_s = Σ_{j ∈ s} ε(j, s) ξ_j ω_{s ∖ j}` with the sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}`,
-and its adjoint is the contraction `(ι_ξ ω)_s = Σ_{j ∉ s} ε(j, s) ξ_j ω_{s ∪ j}`.
+and its adjoint is the contraction `(ι_ξ ω)_s = Σ_{j ∉ s} ε(j, s) ξ_j ω_{s ∪ j}`. Both are the
+exterior and interior multiplications by the real covector `ξ` of `Feec.Algebra.ExteriorFibre`
+(`ExteriorFibre.wedge`, `ExteriorFibre.interior`, with its sign `ExteriorFibre.sgn`), from which
+the two algebraic identities below follow.
 
 ## Main results
 
@@ -103,7 +106,8 @@ theorem koszul_koszul (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) : koszul ξ 
   ext s
   exact congrFun (ExteriorFibre.wedge_wedge_self _ _) s
 
-/-- **The Cartan identity** `κ_ξ ι_ξ + ι_ξ κ_ξ = |ξ|²` (`ExteriorFibre.wedge_interior_add_interior_wedge`). -/
+/-- **The Cartan identity** `κ_ξ ι_ξ + ι_ξ κ_ξ = |ξ|²`
+(`ExteriorFibre.wedge_interior_add_interior_wedge`). -/
 theorem koszul_contr_add_contr_koszul (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) :
     koszul ξ (contr ξ ω) + contr ξ (koszul ξ ω) = ((∑ j, ξ j ^ 2 : ℝ) : 𝕜) • ω := by
   ext s

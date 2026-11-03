@@ -27,7 +27,9 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
   `(d w)_{ijl} = ∂_i w_{jl} - ∂_j w_{il} + ∂_l w_{ij}` for `i < j < l`
   (`extDerivOp_two_apply_triple`);
 * **a `1`-form that is not closed** on every nonempty bounded open `Ω ⊆ ℝⁿ`, `n ≥ 2`:
-  `d (x₀ dx₁) = dx₀ ∧ dx₁` (`maximalComplex_cycles_one_ne_top`).
+  `d (x₀ dx₁) = dx₀ ∧ dx₁` (`maximalComplex_cycles_one_ne_top`);
+* sums over all subsets of `Fin n` of terms vanishing off degree `k` are sums over
+  `formIdx n k` (`sum_eq_sum_formIdx`).
 
 ## Implementation notes
 

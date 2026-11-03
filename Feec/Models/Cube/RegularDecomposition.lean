@@ -144,7 +144,8 @@ theorem contDiff_lin (c : Fin 3 → ℝ) : ContDiff ℝ (⊤ : ℕ∞) (lin c) :
   unfold lin; fun_prop
 
 theorem pd_lin (c : Fin 3 → ℝ) (j : Fin 3) (y : Fin 3 → ℝ) : partialDeriv j (lin c) y = c j := by
-  have hl := ((contDiff_lin c).differentiable (by simp) (y + Pi.single j 0)).hasDerivAt_comp_add_single
+  have hl := ((contDiff_lin c).differentiable (by simp)
+    (y + Pi.single j 0)).hasDerivAt_comp_add_single
   rw [Pi.single_zero, add_zero] at hl
   refine hl.unique ?_
   have : (fun s : ℝ => lin c (y + Pi.single j s)) = fun s => lin c y + c j * s := by
@@ -242,7 +243,8 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
   have hsh1 : ∀ j, ∀ y ∈ shell, partialDeriv j q y = -w j y := fun j y hy => by
     rw [hweq j y (shell_subset_cell hy), (hu j).eq_zero_of_notMem (notMem_Q_of_shell hy), hpdq]
     ring
-  have hsh2 : ∀ j k, ∀ y ∈ shell, partialDeriv k (partialDeriv j q) y = -partialDeriv k (w j) y := fun j k y hy => by
+  have hsh2 : ∀ j k, ∀ y ∈ shell, partialDeriv k (partialDeriv j q) y = -partialDeriv k (w j) y :=
+    fun j k y hy => by
     have hev : partialDeriv j q =ᶠ[𝓝 y] fun z => -w j z :=
       Filter.eventually_of_mem (isOpen_shell.mem_nhds hy) fun z hz => hsh1 j z hz
     rw [hev.partialDeriv_eq, partialDeriv]
@@ -271,7 +273,8 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
       change eLpNorm (-w j) 2 _ ≤ R
       rw [eLpNorm_neg]
       exact hwsh j
-    have h2 : ∀ j k, eLpNorm (partialDeriv k (partialDeriv j q)) 2 (volume.restrict shell) ≤ R := fun j k => by
+    have h2 : ∀ j k, eLpNorm (partialDeriv k (partialDeriv j q)) 2 (volume.restrict shell) ≤
+      R := fun j k => by
       rw [eLpNorm_congr_on isOpen_shell.measurableSet (hsh2 j k)]
       rw [show (fun y => -partialDeriv k (w j) y) = -partialDeriv k (w j) from rfl, eLpNorm_neg]
       exact hdwsh k j
@@ -288,7 +291,8 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
   -- the fields
   set Φ : Fin 3 → (Fin 3 → ℝ) → ℝ := fun a y => bump y * (u a y - partialDeriv a (rem q) y)
   have hrem : ContDiff ℝ (⊤ : ℕ∞) (rem q) := contDiff_rem hq
-  have hpdlift : ∀ a, partialDeriv a (lift q) = partialDeriv a q - partialDeriv a (rem q) := fun a =>
+  have hpdlift : ∀ a, partialDeriv a (lift q) = partialDeriv a q -
+    partialDeriv a (rem q) := fun a =>
     partialDeriv_sub' (d1 hq) (d1 hrem) a
   have hloc : ∀ a, ∀ y ∈ Metric.ball ctr (3 / 8), Φ a y = w a y + partialDeriv a (lift q) y := by
     intro a y hy
@@ -302,7 +306,7 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
     fun a y hy => Filter.eventually_of_mem (Metric.isOpen_ball.mem_nhds (Q_subset_ball hy))
       fun z hz => by simp only [Φ, bump_eq_one hz, one_mul]
   have hΦs : ∀ a, ContDiff ℝ (⊤ : ℕ∞) (Φ a) := fun a =>
-    bump.contDiff.mul ((hu a).contDiff.sub (ContDiff.partialDeriv_infty hrem a))
+    bump.contDiff.mul ((hu a).contDiff.sub (hrem.partialDeriv_infty a))
   have hlift' : ContDiff ℝ (⊤ : ℕ∞) (lift q) := contDiff_lift hq
   refine ⟨Φ, hΦs, fun a => ?_, fun a y hy => ?_, ?_, fun a => ?_, fun j a => ?_⟩
   · exact bump.hasCompactSupport.mul_right
@@ -320,16 +324,20 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
               (Q_subset_ball hy)))).trans ((hwb a).trans hR1)
           · exact (eLpNorm_pd_le_n2 _ _ a).trans hlift
       _ = (1 + 16 * C : ℝ≥0) * R := by push_cast; ring
-  · have hpdΦ : ∀ y ∈ Q (Fin 3), partialDeriv j (Φ a) y = partialDeriv j (w a) y + partialDeriv j (partialDeriv a (lift q)) y :=
+  · have hpdΦ : ∀ y ∈ Q (Fin 3), partialDeriv j (Φ a) y =
+      partialDeriv j (w a) y + partialDeriv j (partialDeriv a (lift q)) y :=
       fun y hy => by
         rw [(hlocW a y hy).partialDeriv_eq,
-          show (fun z => w a z + partialDeriv a (lift q) z) = w a + partialDeriv a (lift q) from rfl,
-          partialDeriv_add' (d1 (hw a)) (d1 (ContDiff.partialDeriv_infty hlift' a)), Pi.add_apply]
+          show (fun z => w a z + partialDeriv a (lift q) z) =
+            w a + partialDeriv a (lift q) from rfl,
+          partialDeriv_add' (d1 (hw a)) (d1 (hlift'.partialDeriv_infty a)), Pi.add_apply]
     rw [eLpNorm_congr_on measurableSet_Q hpdΦ]
-    calc eLpNorm (fun y => partialDeriv j (w a) y + partialDeriv j (partialDeriv a (lift q)) y) 2 (volume.restrict (Q (Fin 3)))
+    calc eLpNorm (fun y => partialDeriv j (w a) y + partialDeriv j (partialDeriv a (lift q)) y) 2
+           (volume.restrict (Q (Fin 3)))
         ≤ eLpNorm (partialDeriv j (w a)) 2 (volume.restrict (Q (Fin 3))) +
             eLpNorm (partialDeriv j (partialDeriv a (lift q))) 2 (volume.restrict (Q (Fin 3))) :=
-          eLpNorm_add_le (f := partialDeriv j (w a)) (g := partialDeriv j (partialDeriv a (lift q))) one_le_two
+          eLpNorm_add_le (f := partialDeriv j (w a))
+            (g := partialDeriv j (partialDeriv a (lift q))) one_le_two
       _ ≤ R + C * (16 * R) := by
           gcongr
           · exact (eLpNorm_restrict_mono (fun y hy => (ball_subset_cell (by norm_num)
@@ -535,7 +543,8 @@ theorem exists_potential_test : ∃ C : ℝ, 0 ≤ C ∧ ∀ (φ : formIdx 3 1 �
   -- the bound
   have hb0 : ∀ a, ‖(memLp_cube (hΦs a).continuous).toLp (Φ a)‖ ≤ K * Real.sqrt S := fun a => by
     rw [norm_toLp_cube]; exact toReal_le_of_eLpNorm_le (hΦb a)
-  have hb1 : ∀ j a, ‖(memLp_cube ((ContDiff.partialDeriv_infty (hΦs a) j).continuous)).toLp (partialDeriv j (Φ a))‖ ≤
+  have hb1 : ∀ j a, ‖(memLp_cube (((hΦs a).partialDeriv_infty j).continuous)).toLp
+    (partialDeriv j (Φ a))‖ ≤
       K * Real.sqrt S := fun j a => by
     rw [norm_toLp_cube]; exact toReal_le_of_eLpNorm_le (hdΦb j a)
   have hKS : 0 ≤ K * Real.sqrt S := by positivity
@@ -548,10 +557,11 @@ theorem exists_potential_test : ∃ C : ℝ, 0 ≤ C ∧ ∀ (φ : formIdx 3 1 �
     rw [Fin.sum_univ_three]
     have e : ∀ j, ‖(toL2F (fun t => memLp_cube ((ConstCoeffOp.contDiff_apply (extDerivOp ℝ 3 0)
         (fun _ => hΦs a) t).continuous)) : L2F ℝ (cubeDomain 3) (formIdx 3 1)) (sg j)‖ =
-        ‖(memLp_cube ((ContDiff.partialDeriv_infty (hΦs a) j).continuous)).toLp (partialDeriv j (Φ a))‖ := fun j =>
+        ‖(memLp_cube (((hΦs a).partialDeriv_infty j).continuous)).toLp
+          (partialDeriv j (Φ a))‖ := fun j =>
       congrArg norm (MemLp.toLp_congr (memLp_cube ((ConstCoeffOp.contDiff_apply
         (extDerivOp ℝ 3 0) (fun _ => hΦs a) (sg j)).continuous))
-        (memLp_cube ((ContDiff.partialDeriv_infty (hΦs a) j).continuous))
+        (memLp_cube (((hΦs a).partialDeriv_infty j).continuous))
         (Eventually.of_forall fun y => extDerivOp_zero_const (Φ a) j y))
     rw [e, e, e]
     change ‖(memLp_cube (hΦs a).continuous).toLp (Φ a)‖ ^ 2 + _ ≤ _

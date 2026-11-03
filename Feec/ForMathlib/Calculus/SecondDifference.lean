@@ -139,7 +139,8 @@ theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ}
   rwa [fderiv_apply_eq_sum_partialDeriv] at this
 
 /-- `r ↦ f(x + r eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t` (for differentiable `f`; the general
-statement is `DifferentiableAt.hasDerivAt_comp_add_smul_single`). -/
+statement is `DifferentiableAt.hasDerivAt_comp_add_smul_single`, used in this library; this form
+is kept as the target of the deprecated `MaxNormHeat.hasDerivAt_line`). -/
 theorem hasDerivAt_comp_add_smul_single {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f)
     (x : Fin n → ℝ) (l : Fin n) (t : ℝ) :
     HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
@@ -223,7 +224,7 @@ theorem abs_partialDeriv_sub_secondDiff_le {u : (Fin n → ℝ) → ℝ} (hu : C
     exact (this k (by omega)).differentiable (by norm_cast; omega)
   set g : ℕ → ℝ → ℝ := fun k t => (partialDeriv l)^[k] u (x + t • Pi.single l 1)
   have hg : ∀ k ≤ 3, ∀ t, HasDerivAt (g k) (g (k + 1) t) t := fun k hk t => by
-    have := hasDerivAt_comp_add_smul_single (hd k hk) x l t
+    have := (hd k hk (x + t • Pi.single l 1)).hasDerivAt_comp_add_smul_single
     simpa [g, Function.iterate_succ_apply'] using this
   have key := abs_secondDiff_sub_le (g := g 0) (g₁ := g 1) (g₂ := g 2) (g₃ := g 3)
     (g₄ := g 4) (B := B) hh.le (fun t _ => hg 0 (by omega) t) (fun t _ => hg 1 (by omega) t)

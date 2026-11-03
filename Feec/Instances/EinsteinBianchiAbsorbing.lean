@@ -76,7 +76,8 @@ structure AbsorbingVerdict : Prop extends absorbingGalerkin.Verdict absorbingGal
     (hφ : IsTestField (Q (Fin 3)) φ) :
     (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x *
       partialDeriv ij.2 (φ ij.1) x = 0) ∧
-    ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x * partialDeriv ij.2 (φ ij.1) x = 0
+    ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x *
+      partialDeriv ij.2 (φ ij.1) x = 0
   /-- TSD holds on the domain of dependence of TSD data -/
   symTF_depDomain (u₀ : State) (hu₀ : u₀ ∈ tsdPair) (t : ℝ) (ht : 0 ≤ t) :
     ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),

@@ -667,7 +667,8 @@ theorem curlM_diagOf (g : R3 → ℝ) (ij : Ix) (x : R3) :
 
 /-- `∂_k ((f + g)/2) = (∂_k f + ∂_k g)/2`. -/
 theorem pd_avg {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
-    (x : R3) : partialDeriv k (fun y => (f y + g y) / 2) x = (partialDeriv k f x + partialDeriv k g x) / 2 := by
+    (x : R3) : partialDeriv k (fun y => (f y + g y) / 2) x =
+      (partialDeriv k f x + partialDeriv k g x) / 2 := by
   have : (fun y => (f y + g y) / 2) = fun y => (1 / 2 : ℝ) * (f + g) y := by
     funext y
     simp only [Pi.add_apply]
@@ -678,12 +679,14 @@ theorem pd_avg {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiab
 /-- `curl sym ∇ψ = ½ (∇ curl ψ)ᵀ` (rows `½ ∂_a curl ψ`). -/
 theorem curlM_symF_gradM {ψ : Fin 3 → R3 → ℝ} (hψ : ∀ i, ContDiff ℝ ∞ (ψ i)) (ab : Ix)
     (x : R3) : curlM (symF (gradM ψ)) ab x = (partialDeriv ab.1 (fun y =>
-      partialDeriv (ab.2 + 1) (ψ (ab.2 + 2)) y - partialDeriv (ab.2 + 2) (ψ (ab.2 + 1)) y) x) / 2 := by
+      partialDeriv (ab.2 + 1) (ψ (ab.2 + 2)) y - partialDeriv (ab.2 + 2)
+        (ψ (ab.2 + 1)) y) x) / 2 := by
   obtain ⟨a, b⟩ := ab
   have hd : ∀ c i, Differentiable ℝ (partialDeriv c (ψ i)) := fun c i =>
-    (ContDiff.partialDeriv_infty (hψ i) c).differentiable (by simp)
+    ((hψ i).partialDeriv_infty c).differentiable (by simp)
   have h2 : ∀ i, ContDiff ℝ 2 (ψ i) := fun i => (hψ i).of_le (by simp)
-  have hS : ∀ c, symF (gradM ψ) (a, c) = fun y => (partialDeriv c (ψ a) y + partialDeriv a (ψ c) y) / 2 :=
+  have hS : ∀ c, symF (gradM ψ) (a, c) = fun y => (partialDeriv c (ψ a) y +
+    partialDeriv a (ψ c) y) / 2 :=
     fun c => rfl
   simp only [curlM]
   rw [hS, hS, pd_avg (hd _ _) (hd _ _), pd_avg (hd _ _) (hd _ _)]
@@ -1069,7 +1072,8 @@ theorem adjoint_hessCurl_d₁_mem_tsdS (hΩ : IsOpen Ω) (ρ : (hessCurl ℝ hΩ
         testField hG :=
       testField_congr _ _ (funext fun ij => funext fun x => by rw [gradOp_apply]; rfl)
     have hψ' : ∀ i, ContDiff ℝ ∞ (ψ i) := fun i => (hψ i).contDiff
-    set w : Fin 3 → R3 → ℝ := fun b y => partialDeriv (b + 1) (ψ (b + 2)) y - partialDeriv (b + 2) (ψ (b + 1)) y
+    set w : Fin 3 → R3 → ℝ := fun b y => partialDeriv (b + 1) (ψ (b + 2)) y -
+      partialDeriv (b + 2) (ψ (b + 1)) y
     have hw : IsTestField Ω w := fun b => ((hψ _).fderiv_apply _).sub ((hψ _).fderiv_apply _)
     have hdiv := hρt.2.2 w hw
     rw [inner_grad_testField _ hw] at hdiv

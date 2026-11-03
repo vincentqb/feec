@@ -115,6 +115,7 @@ public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.WhitneyInterpolation
 public import Feec.ForMathlib.Algebra.GeomSum
 public import Feec.ForMathlib.Analysis.Carlson
+public import Feec.ForMathlib.Analysis.ExpFlow
 public import Feec.ForMathlib.Analysis.Fourier.GeomSumMultiplier
 public import Feec.ForMathlib.Analysis.Fourier.Plancherel
 public import Feec.ForMathlib.Analysis.Gronwall

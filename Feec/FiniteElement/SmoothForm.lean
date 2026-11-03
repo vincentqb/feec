@@ -528,16 +528,6 @@ theorem differentiableAt_partialDeriv_of_contDiffAt {f : (Fin n → ℝ) → ℝ
   rw [partialDeriv_fun]
   exact hd.clm_apply (differentiableAt_const _)
 
-/-- The derivative in any direction is the combination of the partial derivatives. -/
-theorem fderiv_apply_eq_sum_partialDeriv (f : (Fin n → ℝ) → ℝ) (x v : Fin n → ℝ) :
-    fderiv ℝ f x v = ∑ j, v j * partialDeriv j f x := by
-  conv_lhs => rw [pi_eq_sum_univ v]
-  simp only [map_sum, map_smul, smul_eq_mul, partialDeriv]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  congr 2
-  funext i
-  simp [Pi.single_apply, eq_comm]
-
 /-- The gradient covector `df = Σⱼ ∂ⱼ f dxⱼ` of a function at a point. -/
 def grad (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : Fin n → ℝ := fun j => partialDeriv j f x
 

@@ -14,7 +14,9 @@ witness. `MaxNormHeat.lumpedLaplacian` is now the general lumped-mass Laplacian
 (with `lumpedLaplacianFun_apply`) is gone; `Instances.CrownNonVacuity` gained a last field
 `neumann`, and its field `maxNorm` states the new non-vacuity. Below, the earlier verdict, the
 earlier non-vacuity statement, the earlier `lumpedLaplacianFun` with its stencil, and the earlier
-field `maxNorm` are stated verbatim and derived from the new API.
+field `maxNorm` are stated verbatim and derived from the new API, and so are
+`Feec.FiniteElement.p1Stiffness_indicator_nonpos` (now with the hypothesis `IsNonobtuse M`) and
+the removed `Feec.FiniteElement.fderiv_apply_eq_sum_partialDeriv` (now at the root, general).
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -115,5 +117,18 @@ theorem crownNonVacuity_maxNorm_old (h : Feec.Instances.CrownNonVacuity.{u})
         ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂ := by
   obtain ⟨-, S, h0, h2, -⟩ := h.maxNorm b hs T
   exact ⟨verdict_old b hs, S, h0, h2⟩
+
+/-- The earlier `FiniteElement.p1Stiffness_indicator_nonpos`, verbatim. -/
+theorem p1Stiffness_indicator_nonpos_old (M : SimplicialMesh n)
+    (hM : ∀ T ∈ M.simplices, ∀ j k, j ≠ k →
+      baryGrad T.points j ⬝ᵥ baryGrad T.points k ≤ 0)
+    {x y : Fin n → ℝ} (hxy : x ≠ y) :
+    p1Stiffness M (nodalIndicator x) (nodalIndicator y) ≤ 0 :=
+  p1Stiffness_indicator_nonpos M hM hxy
+
+/-- The earlier `FiniteElement.fderiv_apply_eq_sum_partialDeriv`, verbatim. -/
+theorem fderiv_apply_eq_sum_partialDeriv_old (f : (Fin n → ℝ) → ℝ) (x v : Fin n → ℝ) :
+    fderiv ℝ f x v = ∑ j, v j * partialDeriv j f x :=
+  _root_.fderiv_apply_eq_sum_partialDeriv f x v
 
 end FeecCheck.MaxNormHeat

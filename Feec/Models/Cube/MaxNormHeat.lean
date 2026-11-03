@@ -1,6 +1,7 @@
 module
 
 public import Feec.FiniteElement.LumpedLaplacian
+public import Feec.FiniteElement.P1Global
 public import Feec.TimeStepping.StableFamily
 public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Calculus.Partial
@@ -118,15 +119,14 @@ def nodal (b : Fin n → ℝ) (s : ℝ) (U : Space n N) : (Fin n → ℝ) → �
 
 theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Fin n → ℤ) :
     nodal b s U (node b (meshSize s N) q) = ext U q := by
-  have hinj := node_injective b (meshSize_pos hs N).ne'
-  simp only [nodal, nodalFun, hinj.eq_iff, ext]
-  split_ifs with hq
-  · rw [Finset.sum_eq_single ⟨q, hq⟩]
-    · simp
-    · intro c _ hc; rw [ite_eq_right]; intro e; exact hc (Subtype.ext e)
-    · simp
-  · exact sum_eq_zero fun c _ => by
-      rw [ite_eq_right]; rintro rfl; exact hq c.2
+  by_cases hq : q ∈ interiorNodes n (N + 1)
+  · simp only [ext, hq, ↓reduceDIte]
+    exact nodalFun_apply (node_injective_subtype b (meshSize_pos hs N).ne' _) U ⟨q, hq⟩
+  · simp only [ext, hq, ↓reduceDIte]
+    refine sum_eq_zero fun c _ => ?_
+    rw [ite_eq_right_iff]
+    intro e
+    exact absurd (node_injective b (meshSize_pos hs N).ne' e ▸ c.2) hq
 
 /-- **The lumped-mass `P₁` Laplacian** `Lₕ = -M_L⁻¹ K` on the level-`(N + 1)` Freudenthal mesh of
 `b + (0, s)ⁿ`, with homogeneous Dirichlet data: `(Lₕ U)(p) = -a(φₚ, U) / m(p)` at the interior
@@ -158,7 +158,7 @@ is positive and contractive in the maximum norm. [CiarletRaviart1973]; [Thomee20
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsSubMarkovGenerator (lumpedLaplacian b hs N) :=
   isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
-    fun _ _ h => Subtype.ext (node_injective b (meshSize_pos hs N).ne' h)
+    (node_injective_subtype b (meshSize_pos hs N).ne' _)
 
 /-! ### Consistency -/
 
@@ -241,6 +241,7 @@ theorem ext_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     omega
 
 /-- `s ↦ f(x + s eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t`. -/
+@[deprecated Feec.hasDerivAt_comp_add_smul_single (since := "2026-11-02")]
 theorem hasDerivAt_line {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f) (x : Fin n → ℝ)
     (l : Fin n) (t : ℝ) :
     HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
@@ -325,7 +326,8 @@ def feFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
 /-- `d U_h ∈ L²Λ¹(Q)` (elementwise `d`, the `L²` exterior derivative by
 `Feec.FiniteElement.inner_maximal_p1Global`). -/
 def dFeFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
-    Feec.Domain.L2F ℝ (freudenthalMesh b s hs (N + 1)).domain (Feec.Domain.formIdx n (((0 : ℕ) : ℤ) + 1)) :=
+    Feec.Domain.L2F ℝ (freudenthalMesh b s hs (N + 1)).domain
+      (Feec.Domain.formIdx n (((0 : ℕ) : ℤ) + 1)) :=
   (whitneyElement n).glue _ (((0 : ℕ) : ℤ) + 1) ((whitneyElement n).dPiecewise _ 0
     (feFun b hs U : (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0))
 
@@ -334,10 +336,6 @@ def dFeFun (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
 def lumpedInner (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) : ℝ :=
   ∑ p : Nodes n N, lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) *
     U p * V p
-
-theorem nodal_eq_sum (U : Space n N) :
-    nodal b s U = ∑ q : Nodes n N, U q • nodalIndicator (node b (meshSize s N) q) :=
-  nodalFun_eq_sum _ U
 
 theorem lumpedMass_node_pos (b : Fin n → ℝ) (hs : 0 < s) (p : Nodes n N) :
     0 < lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) := by
@@ -349,7 +347,8 @@ theorem lumpedMass_node_pos (b : Fin n → ℝ) (hs : 0 < s) (p : Nodes n N) :
 theorem lumpedInner_lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) :
     lumpedInner b hs (lumpedLaplacian b hs N U) V =
       -p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodal b s U) (nodal b s V) := by
-  rw [p1Stiffness_comm, nodal_eq_sum V, p1Stiffness_sum_smul, lumpedInner, ← sum_neg_distrib]
+  rw [p1Stiffness_comm, nodal, nodalFun_eq_sum _ V, p1Stiffness_sum_smul, lumpedInner,
+    ← sum_neg_distrib]
   refine sum_congr rfl fun p _ => ?_
   rw [lumpedLaplacian_apply_eq]
   have := (lumpedMass_node_pos b hs p).ne'
@@ -584,8 +583,10 @@ theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ)
 /-- The eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - cᵢ)/s)` has time derivative `-λ` times itself (any
 centre `c`, any `x`). -/
 theorem hasDerivAt_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
-    HasDerivAt (fun t => Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
-      (-(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))) t := by
+    HasDerivAt (fun t => Real.exp (-(n * sineFreq s ^ 2) * t) *
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
+      (-(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) *
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))) t := by
   have := ((Real.hasDerivAt_exp _).comp t
     ((hasDerivAt_id t).const_mul (-(n * sineFreq s ^ 2)))).mul_const
     (∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))
@@ -593,11 +594,14 @@ theorem hasDerivAt_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
 
 /-- `Δ` of the eigenmode is `-λ` times itself, `λ = n (π/s)²` (any centre, any `x`). -/
 theorem laplacian_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
-    laplacian (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x =
-      -(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) := by
+    laplacian (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) *
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x =
+      -(n * sineFreq s ^ 2) * (Real.exp (-(n * sineFreq s ^ 2) * t) *
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) := by
   have e : ∀ i, partialDeriv i (partialDeriv i (fun x : Fin n → ℝ =>
       Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))) x =
-      -sineFreq s ^ 2 * (Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) :=
+      -sineFreq s ^ 2 * (Real.exp (-(n * sineFreq s ^ 2) * t) *
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) :=
     fun i => by
       have := congrFun (iterate_partialDeriv_sine c (sineFreq s)
         (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
@@ -612,7 +616,8 @@ theorem laplacian_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
 /-- `|∂ᵢ⁴|` of the eigenmode is at most `(π/s)⁴` for `t ≥ 0` (any centre, any `x`). -/
 theorem abs_iterate_partialDeriv_sineMode_le (c : Fin n → ℝ) {t : ℝ} (ht : 0 ≤ t)
     (x : Fin n → ℝ) (i : Fin n) :
-    |(partialDeriv i)^[4] (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x| ≤
+    |(partialDeriv i)^[4] (fun x : Fin n → ℝ => Real.exp (-(n * sineFreq s ^ 2) * t) *
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) x| ≤
       sineFreq s ^ 4 := by
   have := congrFun (iterate_partialDeriv_sine c (sineFreq s)
     (Real.exp (-(n * sineFreq s ^ 2) * t)) i 4 le_rfl) x
@@ -844,7 +849,8 @@ theorem abs_partialDeriv_partialDeriv_sineSolution_le (b : Fin n → ℝ) (hs : 
     have := hsingle i j; have := hsingle k j; simp; omega) x).trans ?_
   have hc : |c| ≤ 1 := by
     rw [abs_of_pos (Real.exp_pos _)]
-    exact Real.exp_le_one_iff.2 (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht))
+    exact Real.exp_le_one_iff.2
+      (by rw [neg_mul]; exact neg_nonpos.2 (mul_nonneg (by positivity) ht))
   have hsum : ∑ j, ((0 : Fin n → ℕ) + Pi.single i 1 + Pi.single k 1 : Fin n → ℕ) j = 2 := by
     simp [Finset.sum_add_distrib]
   rw [hsum]
@@ -944,6 +950,10 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
       ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
         r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ +
         feDefect (s := s) (n := n) D₂ N
+  /-- the simplices of the mesh cover `Q̄`, so the bounds of the finite element function on every
+  simplex hold on all of `Q̄` -/
+  covers (N : ℕ) {x : Fin n → ℝ} (hx : x ∈ closedCube b s) :
+    ∃ K ∈ (freudenthalMesh b s hs (N + 1)).simplices, x ∈ K.closedInterior
 
 /-- **The heat equation in the maximum norm** (lumped-mass `P₁` elements on the Freudenthal
 meshes of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. [Thomee2006], Ch. 15;
@@ -967,6 +977,7 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
     abs_sub_p1Interp_res_pow_le hs S hD₂ hu₂ hB₂ N hτ hk v hK hx
   rational_fe S _ hD₂ _ hr _ hp N _ hτ _ hk v _ hK _ hx :=
     abs_sub_p1Interp_step_pow_le hs S hD₂ hr hp N hτ hk v hK hx
+  covers _ _ hx := exists_simplex_mem hs hx
 
 /-- The second time derivative of the first eigenmode: `uₜₜ = λ² u`, `λ = n (π/s)²`. -/
 theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) (x : Fin n → ℝ) :

@@ -1,6 +1,6 @@
 module
 
-public import Feec.FiniteElement.P1Global
+public import Feec.FiniteElement.LumpedMass
 public import Feec.ForMathlib.Analysis.SubMarkov
 
 /-!
@@ -11,7 +11,8 @@ On a simplicial mesh `M` with nodes `x : ι → ℝⁿ` (injective, `ι` finite)
 **lumped-mass `P₁` Laplacian** `(Lₕ U)(p) = -a(φ_{x p}, U) / m(x p)` (`lumpedLaplacianOn M x`),
 with the stiffness form and the lumped mass of `Feec.FiniteElement.LumpedMass`. Mesh vertices that
 are not nodes carry the value `0` (homogeneous Dirichlet data there); when every vertex is a node
-the boundary condition is the natural one.
+the boundary condition is the natural one. A node that is not a vertex of the mesh has
+`a(φ, ·) = 0` and `m = 0`, hence a zero row.
 
 ## Main results
 
@@ -56,16 +57,6 @@ theorem nodalFun_eq_sum (x : ι → Fin n → ℝ) (U : ι → ℝ) :
   funext y
   simp [nodalFun, nodalIndicator, Finset.sum_apply, eq_comm]
 
-theorem p1Stiffness_sum_smul_right (M : SimplicialMesh n) {κ : Type*} (s : Finset κ) (c : κ → ℝ)
-    (u : (Fin n → ℝ) → ℝ) (w : κ → (Fin n → ℝ) → ℝ) :
-    p1Stiffness M u (∑ i ∈ s, c i • w i) = ∑ i ∈ s, c i * p1Stiffness M u (w i) := by
-  rw [p1Stiffness_comm, p1Stiffness_sum_smul]
-  simp_rw [p1Stiffness_comm M u]
-
-theorem p1Stiffness_add_right (M : SimplicialMesh n) (u w w' : (Fin n → ℝ) → ℝ) :
-    p1Stiffness M u (w + w') = p1Stiffness M u w + p1Stiffness M u w' := by
-  simp only [p1Stiffness_eq, p1Grad_add, dotProduct_add, mul_add, sum_add_distrib]
-
 variable (M : SimplicialMesh n) (x : ι → Fin n → ℝ)
 
 /-- The entries `-a(φ_{x p}, φ_{x q}) / m(x p)` of the lumped-mass Laplacian. -/
@@ -94,10 +85,6 @@ theorem lumpedLaplacianOn_apply (U : ι → ℝ) (p : ι) :
   rw [lumpedLaplacianOn_apply_eq_sum, nodalFun_eq_sum, p1Stiffness_sum_smul_right,
     ← sum_neg_distrib, sum_div]
   exact sum_congr rfl fun q _ => by rw [lumpedEntry]; ring
-
-/-- The non-obtuseness of a mesh: `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k` on every simplex. -/
-def IsNonobtuse : Prop :=
-  ∀ T ∈ M.simplices, ∀ j k, j ≠ k → baryGrad T.points j ⬝ᵥ baryGrad T.points k ≤ 0
 
 variable {M x}
 
@@ -170,12 +157,5 @@ theorem lumpedLaplacianOn_apply_one (hx : Function.Injective x)
   obtain ⟨T, hT, hzT⟩ := mem_biUnion.1 hz
   obtain ⟨j, rfl⟩ := mem_vertexSet.1 hzT
   exact not_not.2 (hV T hT j)
-
-/-- **The Freudenthal meshes are non-obtuse** (`baryGrad_dotProduct_freudenthalPoints_nonpos`). -/
-theorem isNonobtuse_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N] :
-    IsNonobtuse (freudenthalMesh b s hs N) := fun T hT j k hjk => by
-  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
-  rw [mapEquiv_boxMap_freudenthalSimplex_points]
-  exact baryGrad_dotProduct_freudenthalPoints_nonpos b (freudenthalScale_ne_zero hs N) _ _ hjk
 
 end Feec.FiniteElement

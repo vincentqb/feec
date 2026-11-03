@@ -7,6 +7,7 @@ public import Mathlib.Topology.Algebra.InfiniteSum.Order
 public import Mathlib.Analysis.Calculus.Deriv.MeanValue
 public import Mathlib.Analysis.Calculus.Deriv.Prod
 public import Mathlib.Analysis.Calculus.Deriv.Comp
+public import Feec.ForMathlib.Analysis.ExpFlow
 
 /-!
 # Sub-Markov generators: positive contraction semigroups in the maximum norm
@@ -136,20 +137,6 @@ theorem _root_.ContinuousLinearMap.exp_smul_eq_smul_exp_smul_add (L : (ι → �
   rw [e, exp_add_of_commute (Algebra.commutes _ _).symm, ← algebraMap_exp_comm,
     ← Real.exp_eq_exp_ℝ, Algebra.algebraMap_eq_smul_one, mul_smul_comm, mul_one]
 
-/-- **The product rule along the flow**: `r ↦ e^{(t - r)L} Z(r)` has derivative
-`e^{(t - r)L} (Z' - L Z(r))`. -/
-theorem _root_.ContinuousLinearMap.hasDerivAt_exp_sub_smul_apply (L : (ι → ℝ) →L[ℝ] (ι → ℝ))
-    (t : ℝ) {Z : ℝ → ι → ℝ} {Z' : ι → ℝ} {r : ℝ} (hZ : HasDerivAt Z Z' r) :
-    HasDerivAt (fun r => exp ((t - r) • L) (Z r)) (exp ((t - r) • L) (Z' - L (Z r))) r := by
-  have hE := HasDerivAt.scomp r (hasDerivAt_exp_smul_const' (𝕂 := ℝ) L (t - r))
-    ((hasDerivAt_id r).const_sub t)
-  refine (hE.clm_apply hZ).congr_deriv ?_
-  have hc : L * exp ((t - r) • L) = exp ((t - r) • L) * L :=
-    ((Commute.refl L).smul_right (t - r)).exp_right.eq
-  simp only [neg_one_smul, neg_apply, hc, mul_apply_eq_comp,
-    map_sub]
-  abel
-
 variable {L : (ι → ℝ) →L[ℝ] (ι → ℝ)} (hL : IsSubMarkovGenerator L)
 include hL
 
@@ -203,11 +190,13 @@ theorem le_exp_smul_apply {t : ℝ} (ht : 0 ≤ t) {a : ℝ} (ha : 0 ≤ a) {v :
 
 /-- **Positivity along the flow**: for a sub-Markov generator `L`, a curve with `Z(0) ≥ 0` and
 `Z' - L Z ≥ 0` on `[0, t]` has `Z(t) ≥ 0` (`Z(t) = e^{tL} Z(0) + ∫ e^{(t-r)L} (Z' - L Z)`). -/
-theorem nonneg_of_hasDerivAt {Z Z' : ℝ → ι → ℝ} {t : ℝ} (ht : 0 ≤ t) (hZ : ∀ r ∈ Icc 0 t, HasDerivAt Z (Z' r) r)
+theorem nonneg_of_hasDerivAt {Z Z' : ℝ → ι → ℝ} {t : ℝ} (ht : 0 ≤ t)
+    (hZ : ∀ r ∈ Icc 0 t, HasDerivAt Z (Z' r) r)
     (hZ' : ∀ r ∈ Icc 0 t, 0 ≤ Z' r - L (Z r)) (h0 : 0 ≤ Z 0) : 0 ≤ Z t := by
   set f : ℝ → ι → ℝ := fun r => exp ((t - r) • L) (Z r)
   have hf : ∀ r ∈ Icc 0 t, HasDerivAt f (exp ((t - r) • L) (Z' r - L (Z r))) r :=
-    fun r hr => L.hasDerivAt_exp_sub_smul_apply t (hZ r hr)
+    fun r hr => by
+      simpa using L.hasDerivAt_exp_sub_smul_apply (𝕜 := ℝ) t (hZ r hr)
   intro i
   have hmono : MonotoneOn (fun r => f r i) (Icc 0 t) := by
     refine monotoneOn_of_hasDerivWithinAt_nonneg (convex_Icc 0 t)

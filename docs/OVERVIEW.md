@@ -105,12 +105,12 @@ Euler and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable ra
 nonzero classical solution (the first eigenmode, `Feec.Models.Cube.MaxNormHeat.sineSolution`) in
 the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). The scheme is the
 lumped-mass Galerkin method on the `P₁` (Whitney `0`-form) functions vanishing at the boundary
-nodes (contained in `P̊₁⁻Λ⁰`; equality not proved; `Feec.FiniteElement.P1Global`), and the errors hold in `L^∞(Q)` for the finite element function
-(plus `n² D₂ h² / 2`). With natural boundary conditions
-(`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum principle holds and the
-semidiscrete error is `O(h)` in the maximum norm at the nodes (semidiscrete only); `O(h²)` is not
-proved. Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and
-the uniform route loses `√k`.
+nodes (contained in `P̊₁⁻Λ⁰`; equality not proved; `Feec.FiniteElement.P1Global`), and the errors
+hold in `L^∞(Q)` for the finite element function (plus `n² D₂ h² / 2`). With natural boundary
+conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum principle holds and the
+semidiscrete error is `O(h)` in the maximum norm at the nodes; `O(h²)`, time stepping and
+`L^∞(Q)` are not covered for Neumann. Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not
+bounded uniformly in `h`, and the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of
 `dissipFEEC` and `approxFEEC` (convergence on the core from the comparison initial values, the

@@ -77,6 +77,18 @@ theorem Filter.EventuallyEq.partialDeriv_eq {f g : (ι → 𝕜) → F} {x : ι 
     (h : f =ᶠ[𝓝 x] g) (i : ι) : partialDeriv i f x = partialDeriv i g x := by
   rw [partialDeriv, partialDeriv, h.fderiv_eq]
 
+omit [DecidableEq ι] in
+/-- The derivative in any direction is the combination of the partial derivatives:
+`f'(x) v = Σⱼ vⱼ ∂ⱼ f(x)`. -/
+theorem fderiv_apply_eq_sum_partialDeriv [DecidableEq ι] (f : (ι → 𝕜) → 𝕜) (x v : ι → 𝕜) :
+    fderiv 𝕜 f x v = ∑ j, v j * partialDeriv j f x := by
+  conv_lhs => rw [pi_eq_sum_univ v]
+  simp only [map_sum, map_smul, smul_eq_mul, partialDeriv]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  congr 2
+  funext i
+  simp [Pi.single_apply, eq_comm]
+
 /-! ### Algebra -/
 
 omit [Fintype ι] in

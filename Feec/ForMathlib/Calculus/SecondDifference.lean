@@ -102,7 +102,7 @@ theorem abs_secondDiff_sub_le {g g₁ g₂ g₃ g₄ : ℝ → ℝ} {h B : ℝ} 
 
 /-! ### Taylor's formula along the lines of `ℝⁿ` -/
 
-section Lines
+namespace Feec
 
 variable {n : ℕ}
 
@@ -129,16 +129,6 @@ theorem abs_taylor_one_le {g g₁ g₂ : ℝ → ℝ} {M : ℝ}
   convert this using 2
   norm_num
 
-/-- `f'(x) v = Σⱼ vⱼ ∂ⱼ f(x)`. -/
-theorem fderiv_apply_eq_sum_mul_partialDeriv (f : (Fin n → ℝ) → ℝ) (x v : Fin n → ℝ) :
-    fderiv ℝ f x v = ∑ j, v j * partialDeriv j f x := by
-  conv_lhs => rw [pi_eq_sum_univ v]
-  simp only [map_sum, map_smul, smul_eq_mul, partialDeriv]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  congr 2
-  funext i
-  simp [Pi.single_apply, eq_comm]
-
 /-- `t ↦ f(x + t v)` has derivative `Σᵢ vᵢ ∂ᵢ f(x + t v)`. -/
 theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ} {t : ℝ}
     (hf : DifferentiableAt ℝ f (x + t • v)) :
@@ -146,10 +136,11 @@ theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ}
   have hl : HasDerivAt (fun t : ℝ => x + t • v) v t := by
     simpa using ((hasDerivAt_id t).smul_const v).const_add x
   have := hf.hasFDerivAt.comp_hasDerivAt t hl
-  rwa [fderiv_apply_eq_sum_mul_partialDeriv] at this
+  rwa [fderiv_apply_eq_sum_partialDeriv] at this
 
 /-- `r ↦ f(x + r eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t`. -/
-theorem hasDerivAt_comp_add_smul_single {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f) (x : Fin n → ℝ)
+theorem hasDerivAt_comp_add_smul_single {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f)
+    (x : Fin n → ℝ)
     (l : Fin n) (t : ℝ) :
     HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
       (partialDeriv l f (x + t • Pi.single l 1)) t := by
@@ -250,4 +241,4 @@ theorem abs_partialDeriv_sub_secondDiff_le {u : (Fin n → ℝ) → ℝ} (hu : C
   calc _ ≤ B * h ^ 4 / 12 := key
     _ = B * h ^ 2 / 12 * h ^ 2 := by ring
 
-end Lines
+end Feec

@@ -38,7 +38,8 @@ form and lumped mass of `Feec.FiniteElement.LumpedMass`.
    `|∂ᵢ⁴u| ≤ B₄` on `Q̄`),
    `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`,
    `G = n B₂ (1 + (n + 1)!)`: **first order** in the maximum norm at the nodes, by the comparison
-   principle `IsSubMarkovGenerator.abs_apply_le_of_barrier` (positivity of `e^{tLₕ}` and the barrier `κ χ`,
+   principle `IsSubMarkovGenerator.abs_apply_le_of_barrier` (positivity of `e^{tLₕ}` and the
+   barrier `κ χ`,
    `κ = 2 n! h G / s`);
 6. the verdict of the Banach layer for the family (`StableFamily.Verdict`, `M = 1`).
 
@@ -109,7 +110,8 @@ def downCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ
   upCount N σ l (p - Pi.single l 1)
 
 /-- `C(p)`: the number of pairs (simplex `m + K_σ` of the mesh, vertex index `j`) with
-`m + v_j = p`, i.e. the simplices with vertex `p` (each once, `vₖ` being distinct); the lumped mass is
+`m + v_j = p`, i.e. the simplices with vertex `p` (each once, `vₖ` being distinct); the lumped
+mass is
 `m(p) = hⁿ C(p) / (n + 1)!` (`lumpedMass_node_eq`). -/
 def vertexCount (N : ℕ) (p : Fin n → ℤ) : ℝ :=
   ∑ σ : Equiv.Perm (Fin n), ∑ j, ∑ m : Fin n → Fin (N + 1),
@@ -318,13 +320,9 @@ abbrev Space (n N : ℕ) := Nodes n N → ℝ
 def nodal (b : Fin n → ℝ) (s : ℝ) (U : Space n N) : (Fin n → ℝ) → ℝ :=
   nodalFun (fun q : Nodes n N => node b (meshSize s N) q) U
 
-theorem node_injective_nodes (hs : 0 < s) :
-    Function.Injective fun q : Nodes n N => node b (meshSize s N) q :=
-  fun _ _ h => Subtype.ext (node_injective b (meshSize_pos hs N).ne' h)
-
 theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Nodes n N) :
     nodal b s U (node b (meshSize s N) q) = U q :=
-  nodalFun_apply (node_injective_nodes hs) U q
+  nodalFun_apply (node_injective_subtype b (meshSize_pos hs N).ne' _) U q
 
 /-- **The lumped-mass `P₁` Laplacian with natural (Neumann) boundary conditions** on the
 level-`(N + 1)` Freudenthal mesh of `b + (0, s)ⁿ`: `(Lₕ U)(p) = -a(φₚ, U_h) / m(p)` at every node,
@@ -342,7 +340,7 @@ theorem neumannLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) 
 (`Feec.FiniteElement.lumpedLaplacianOn_apply_one`). -/
 theorem neumannLaplacian_apply_one (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     neumannLaplacian b hs N (fun _ => 1) = 0 :=
-  lumpedLaplacianOn_apply_one (node_injective_nodes hs) fun T hT j => by
+  lumpedLaplacianOn_apply_one (node_injective_subtype b (meshSize_pos hs N).ne' _) fun T hT j => by
     obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
     exact ⟨⟨q, mem_closedNodes.2 hq⟩, e.symm⟩
 
@@ -352,7 +350,7 @@ positive and contractive in the maximum norm. [CiarletRaviart1973] -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsSubMarkovGenerator (neumannLaplacian b hs N) :=
   isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
-    (node_injective_nodes hs)
+    (node_injective_subtype b (meshSize_pos hs N).ne' _)
 
 /-! ### The stencil at every node -/
 
@@ -378,7 +376,8 @@ theorem neumannLaplacian_interp (hs : 0 < s) (u : (Fin n → ℝ) → ℝ) (p : 
         (downCount N σ l p * edgeQuot b (meshSize s N) u l ((p : Fin n → ℤ) - Pi.single l 1) -
           upCount N σ l p * edgeQuot b (meshSize s N) u l p) := by
       rw [stencilSum, ← sum_neg_distrib]
-      exact sum_congr rfl fun σ _ => by rw [← sum_neg_distrib]; exact sum_congr rfl fun l _ => by ring
+      exact sum_congr rfl fun σ _ => by
+        rw [← sum_neg_distrib]; exact sum_congr rfl fun l _ => by ring
     rw [e]
     have hh := (meshSize_pos hs N).ne'
     rcases eq_or_ne (vertexCount N (p : Fin n → ℤ)) 0 with hC | hC
@@ -431,7 +430,8 @@ theorem stencilTerm_chi (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : 
       upCount N σ l p * (2 * (meshSize s N * p l - s / 2) / meshSize s N + 1) -
         downCount N σ l p * (2 * (meshSize s N * p l - s / 2) / meshSize s N - 1) := by
   have hh := (meshSize_pos hs N).ne'
-  have d1 : chi b s (node b (meshSize s N) (p + Pi.single l 1)) - chi b s (node b (meshSize s N) p) =
+  have d1 : chi b s (node b (meshSize s N) (p + Pi.single l 1)) -
+      chi b s (node b (meshSize s N) p) =
       2 * meshSize s N * (meshSize s N * p l - s / 2) + meshSize s N ^ 2 := by
     rw [node_add_single_one, chi_add_single, node_coord]; ring
   have d2 : chi b s (node b (meshSize s N) (p - Pi.single l 1 + Pi.single l 1)) -
@@ -557,7 +557,8 @@ theorem neumannLaplacian_interp_chi_boundary (hs : 0 < s) (p : Nodes n N) {l₀ 
           linarith
   have hC1 := one_le_vertexCount_of_boundary hp hl₀
   have hC2 := vertexCount_le (N := N) (p : Fin n → ℤ)
-  have hfac : (1 : ℝ) ≤ n.factorial := by exact_mod_cast Nat.one_le_iff_ne_zero.2 (Nat.factorial_ne_zero n)
+  have hfac : (1 : ℝ) ≤ n.factorial := by
+    exact_mod_cast Nat.one_le_iff_ne_zero.2 (Nat.factorial_ne_zero n)
   have hK' : 2 * (1 + 2 * n * n.factorial) ≤ r := hK
   rw [neumannLaplacian_interp, div_le_div_iff₀ (by linarith) (by positivity)]
   nlinarith [mul_le_mul_of_nonneg_left hC2 (by linarith : (0 : ℝ) ≤ r / 2)]
@@ -640,7 +641,8 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
   · -- the lower face
     have hl : p l = 0 := h0.symm
     rw [downCount_eq_zero σ hl, zero_mul, sub_zero]
-    have hT := abs_axis_taylor_le hu x l h (B := B) fun τ hτ => hB _ (node_add_mem_closedCube hs hp l
+    have hT := abs_axis_taylor_le hu x l h (B := B) fun τ hτ =>
+      hB _ (node_add_mem_closedCube hs hp l
       (by rw [Set.uIcc_of_le hh.le] at hτ; simp [hl]; exact hτ.1)
       (by rw [Set.uIcc_of_le hh.le] at hτ; simp [hl]; linarith [hτ.2])) l
     rw [hneu x hx l (Or.inl (by simp [x, node_coord, hl])), mul_zero, sub_zero] at hT
@@ -655,7 +657,8 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
   rcases (hp l).2.eq_or_lt with hN | hN
   · -- the upper face
     rw [upCount_eq_zero σ hN, zero_mul, zero_sub, abs_neg]
-    have hT := abs_axis_taylor_le hu x l (-h) (B := B) fun τ hτ => hB _ (node_add_mem_closedCube hs hp l
+    have hT := abs_axis_taylor_le hu x l (-h) (B := B) fun τ hτ =>
+      hB _ (node_add_mem_closedCube hs hp l
       (by rw [Set.uIcc_of_ge (by linarith)] at hτ; rw [hN]; push_cast; nlinarith [hτ.1])
       (by rw [Set.uIcc_of_ge (by linarith)] at hτ; rw [hN]; push_cast; nlinarith [hτ.2])) l
     rw [hneu x hx l (Or.inr (by simp [x, node_coord, hN]; linarith)), mul_zero, sub_zero] at hT
@@ -676,7 +679,8 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
       (node_add_mem_closedCube hs hp l (by rw [abs_of_pos hh] at hτ; nlinarith [hτ.1])
         (by rw [abs_of_pos hh] at hτ; nlinarith [hτ.2])) l
     rw [← mul_sub, abs_mul, abs_of_nonneg hu0]
-    have e : (u (x + h • Pi.single l 1) - u x) / h / h - (u x - u (x + (-h) • Pi.single l 1)) / h / h =
+    have e : (u (x + h • Pi.single l 1) - u x) / h / h -
+        (u x - u (x + (-h) • Pi.single l 1)) / h / h =
         (u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1)) / h ^ 2 := by
       field_simp; ring
     rw [e, abs_div, abs_of_pos hh2]
@@ -866,7 +870,8 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T
     have h1 := norm_nonneg (interp b s N (S.u 0) - v)
     have h2 : 0 ≤ t * D := mul_nonneg ht.1 hD0
     have h3 : 0 ≤ layerConst n * G * h * (t / s + s) :=
-      mul_nonneg (mul_nonneg (mul_nonneg hK0.le hG0) hh.le) (add_nonneg (div_nonneg ht.1 hs.le) hs.le)
+      mul_nonneg (mul_nonneg (mul_nonneg hK0.le hG0) hh.le)
+        (add_nonneg (div_nonneg ht.1 hs.le) hs.le)
     linarith
   refine (pi_norm_le_iff_of_nonneg hbd0).2 fun p => ?_
   rw [Real.norm_eq_abs]
@@ -969,7 +974,8 @@ def cosSolution (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) : NeumannSolution b s
 /-- The first Neumann eigenmode is `1` at the corner `b` at `t = 0`. -/
 theorem cosSolution_u_zero_corner (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
     (cosSolution b hs T).u 0 b = 1 := by
-  simp only [cosSolution, sineSolution, sineDeriv, sineFreq, cosCentre, mul_zero, Real.exp_zero, one_mul,
+  simp only [cosSolution, sineSolution, sineDeriv, sineFreq, cosCentre, mul_zero, Real.exp_zero,
+    one_mul,
     Pi.sub_apply, Pi.smul_apply, smul_eq_mul, mul_one]
   refine Finset.prod_eq_one fun j _ => ?_
   rw [show Real.pi / s * (b j - (b j - s / 2)) = Real.pi / 2 by field_simp; ring,

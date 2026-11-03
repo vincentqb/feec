@@ -78,29 +78,8 @@ at `s`, `r ↦ e^{(t - r)L} U(r)` has derivative `e^{(t - s)L} (U' - L U(s))` at
 theorem hasDerivAt_exp_sub_smul_apply (L : X →L[𝕜] X) (t : ℝ) {U : ℝ → X} {U' : X} {s : ℝ}
     (hU : HasDerivAt U U' s) :
     HasDerivAt (fun r => exp (((t - r : ℝ) : 𝕜) • L) (U r))
-      (exp (((t - s : ℝ) : 𝕜) • L) (U' - L (U s))) s := by
-  set E : ℝ → X →L[𝕜] X := fun r => exp (((t - r : ℝ) : 𝕜) • L)
-  have hE : Continuous E := exp_continuous.comp (by fun_prop)
-  -- the part along the curve
-  have h1 : HasDerivAt (fun r => E r (U r - U s)) (E s U') s := by
-    rw [hasDerivAt_iff_tendsto_slope]
-    have hp : Tendsto (fun r => (E r, slope U s r)) (𝓝[≠] s) (𝓝 (E s, U')) :=
-      ((hE.tendsto s).mono_left nhdsWithin_le_nhds).prodMk_nhds (hasDerivAt_iff_tendsto_slope.1 hU)
-    refine ((isBoundedBilinearMap_apply.continuous.tendsto (E s, U')).comp hp).congr fun r => ?_
-    simp only [Function.comp_apply, slope_def_module, sub_self, _root_.map_zero, sub_zero,
-      ContinuousLinearMap.map_smul_of_tower]
-  -- the part along the flow
-  have h2 : HasDerivAt (fun r => E r (U s)) (-(E s (L (U s)))) s := by
-    have hh : HasDerivAt (fun r : ℝ => t - r) (-1) s := by
-      simpa using (hasDerivAt_id s).const_sub t
-    have h := (C0Group.hasDerivAt_exp_ofReal_smul_apply L (U s) (t - s)).scomp s hh
-    have hc : L (E s (U s)) = E s (L (U s)) :=
-      congrArg (fun T : X →L[𝕜] X => T (U s)) (C0Group.commute_exp_ofReal_smul L (t - s)).eq
-    exact h.congr_deriv (by rw [hc, neg_one_smul])
-  refine ((h1.add h2).congr_of_eventuallyEq (Eventually.of_forall fun r => ?_)).congr_deriv ?_
-  · simp only [Pi.add_apply]
-    rw [← _root_.map_add, sub_add_cancel]
-  · rw [_root_.map_sub, sub_eq_add_neg]
+      (exp (((t - s : ℝ) : 𝕜) • L) (U' - L (U s))) s :=
+  L.hasDerivAt_exp_sub_smul_apply t hU
 
 /-- **Duhamel's estimate along a trajectory**: for a bounded `L` with `‖e^{sL}‖ ≤ M` (`s ≥ 0`)
 and a curve `U` with derivatives `U'` on `[0, t]` and defect `‖U' - L U‖ ≤ D`,

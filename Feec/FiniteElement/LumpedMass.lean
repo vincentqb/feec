@@ -102,6 +102,50 @@ theorem p1Stiffness_eq (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
       ∑ T ∈ M.simplices, volume.real T.closedInterior * (p1Grad T.points u ⬝ᵥ p1Grad T.points w) := by
   simp [p1Stiffness, smul_eq_mul]
 
+theorem p1Stiffness_comm (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
+    p1Stiffness M u w = p1Stiffness M w u := by
+  simp only [p1Stiffness, dotProduct_comm]
+
+/-- `a(Σᵢ cᵢ uᵢ, w) = Σᵢ cᵢ a(uᵢ, w)`. -/
+theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι) (c : ι → ℝ)
+    (u : ι → (Fin n → ℝ) → ℝ) (w : (Fin n → ℝ) → ℝ) :
+    p1Stiffness M (∑ i ∈ s, c i • u i) w = ∑ i ∈ s, c i * p1Stiffness M (u i) w := by
+  classical
+  have hg : ∀ p : Fin (n + 1) → Fin n → ℝ,
+      p1Grad p (∑ i ∈ s, c i • u i) = ∑ i ∈ s, c i • p1Grad p (u i) := fun p => by
+    induction s using Finset.induction_on with
+    | empty => simp [p1Grad]
+    | insert a s ha ih => rw [sum_insert ha, sum_insert ha, p1Grad_add, p1Grad_smul, ih]
+  simp only [p1Stiffness_eq, hg, sum_dotProduct, smul_dotProduct, smul_eq_mul, mul_sum]
+  rw [sum_comm]
+  exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
+
+theorem p1Stiffness_sum_smul_right (M : SimplicialMesh n) {κ : Type*} (s : Finset κ) (c : κ → ℝ)
+    (u : (Fin n → ℝ) → ℝ) (w : κ → (Fin n → ℝ) → ℝ) :
+    p1Stiffness M u (∑ i ∈ s, c i • w i) = ∑ i ∈ s, c i * p1Stiffness M u (w i) := by
+  rw [p1Stiffness_comm, p1Stiffness_sum_smul]
+  simp_rw [p1Stiffness_comm M u]
+
+theorem p1Stiffness_add_right (M : SimplicialMesh n) (u w w' : (Fin n → ℝ) → ℝ) :
+    p1Stiffness M u (w + w') = p1Stiffness M u w + p1Stiffness M u w' := by
+  simp only [p1Stiffness_eq, p1Grad_add, dotProduct_add, mul_add, sum_add_distrib]
+
+theorem p1Stiffness_congr_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ)
+    {w w' : (Fin n → ℝ) → ℝ} (h : ∀ T ∈ M.simplices, ∀ j, w (T.points j) = w' (T.points j)) :
+    p1Stiffness M u w = p1Stiffness M u w' := by
+  rw [p1Stiffness_eq, p1Stiffness_eq]
+  refine sum_congr rfl fun T hT => ?_
+  congr 2
+  simp only [p1Grad, h T hT]
+
+theorem p1Stiffness_const_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) (c : ℝ) :
+    p1Stiffness M u (fun _ => c) = 0 := by
+  rw [p1Stiffness_eq]
+  refine sum_eq_zero fun T _ => ?_
+  have : p1Grad T.points (fun _ => c) = 0 := by
+    rw [p1Grad, ← smul_sum, sum_baryGrad, smul_zero]
+  rw [this, dotProduct_zero, mul_zero]
+
 /-- **The lumped mass** at `x`: the vertex quadrature `Σ_T |T| / (n + 1) · #{j | pⱼ = x}` of
 `∫ φₓ`. -/
 def lumpedMass (M : SimplicialMesh n) (x : Fin n → ℝ) : ℝ :=
@@ -115,12 +159,14 @@ theorem lumpedMass_nonneg (M : SimplicialMesh n) (x : Fin n → ℝ) : 0 ≤ lum
 /-- The nodal values of the hat function `φₓ`: `1` at `x`, `0` elsewhere. -/
 def nodalIndicator (x : Fin n → ℝ) : (Fin n → ℝ) → ℝ := fun y => if y = x then 1 else 0
 
+/-- The non-obtuseness of a mesh: `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k` on every simplex. -/
+def IsNonobtuse (M : SimplicialMesh n) : Prop :=
+  ∀ T ∈ M.simplices, ∀ j k, j ≠ k → baryGrad T.points j ⬝ᵥ baryGrad T.points k ≤ 0
+
 /-- **Non-obtuse meshes have nonpositive off-diagonal stiffness** (Ciarlet–Raviart): if
 `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k` on every simplex, then `a(φₓ, φ_y) ≤ 0` for `x ≠ y`.
 [CiarletRaviart1973] -/
-theorem p1Stiffness_indicator_nonpos (M : SimplicialMesh n)
-    (hM : ∀ T ∈ M.simplices, ∀ j k, j ≠ k →
-      baryGrad T.points j ⬝ᵥ baryGrad T.points k ≤ 0)
+theorem p1Stiffness_indicator_nonpos (M : SimplicialMesh n) (hM : IsNonobtuse M)
     {x y : Fin n → ℝ} (hxy : x ≠ y) :
     p1Stiffness M (nodalIndicator x) (nodalIndicator y) ≤ 0 := by
   rw [p1Stiffness_eq]
@@ -261,15 +307,19 @@ theorem baryGrad_dotProduct_freudenthalPoints_nonpos (b : Fin n → ℝ) {h : �
   simp only [Pi.sub_apply, kuhnStep]
   split_ifs <;> first | (exfalso; omega) | norm_num
 
+/-- **The Freudenthal meshes are non-obtuse** (`baryGrad_dotProduct_freudenthalPoints_nonpos`). -/
+theorem isNonobtuse_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N] :
+    IsNonobtuse (freudenthalMesh b s hs N) := fun T hT j k hjk => by
+  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
+  rw [mapEquiv_boxMap_freudenthalSimplex_points]
+  exact baryGrad_dotProduct_freudenthalPoints_nonpos b (freudenthalScale_ne_zero hs N) _ _ hjk
+
 /-- **The Freudenthal meshes are non-obtuse**, so their stiffness matrices have nonpositive
 off-diagonal entries (Ciarlet–Raviart). [CiarletRaviart1973] -/
 theorem p1Stiffness_freudenthalMesh_indicator_nonpos (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
     (N : ℕ) [NeZero N] {x y : Fin n → ℝ} (hxy : x ≠ y) :
     p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator x) (nodalIndicator y) ≤ 0 :=
-  p1Stiffness_indicator_nonpos _ (fun T hT j k hjk => by
-    obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
-    rw [mapEquiv_boxMap_freudenthalSimplex_points]
-    exact baryGrad_dotProduct_freudenthalPoints_nonpos b (freudenthalScale_ne_zero hs N) _ _ hjk) hxy
+  p1Stiffness_indicator_nonpos _ (isNonobtuse_freudenthalMesh b hs N) hxy
 
 /-! ### Lattice nodes, edges and the boundary -/
 
@@ -283,6 +333,11 @@ theorem node_injective (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) : Function.I
   simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul, add_right_inj,
     mul_eq_mul_left_iff, hh, or_false, Int.cast_inj] at this
   exact this
+
+/-- The nodes of a finite set of lattice points are distinct. -/
+theorem node_injective_subtype (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (S : Finset (Fin n → ℤ)) :
+    Function.Injective fun q : S => node b h q :=
+  fun _ _ e => Subtype.ext (node_injective b hh e)
 
 theorem node_add_single (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) (l : Fin n) (c : ℤ) :
     node b h (q + Pi.single l c) = node b h q + (h * c) • Pi.single l 1 := by

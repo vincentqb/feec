@@ -320,7 +320,8 @@ theorem inner_glue_p1Global (M : SimplicialMesh n)
     (hM : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) (u w : (Fin n → ℝ) → ℝ) :
     ⟪(whitneyElement n).glue M (0 : ℕ) (p1Global M u : (whitneyElement n).Piecewise M 0),
       (whitneyElement n).glue M (0 : ℕ) (p1Global M w : (whitneyElement n).Piecewise M 0)⟫_ℝ =
-      ∑ T ∈ M.simplices, ∫ x in T.closedInterior, p1Interp T.points u x * p1Interp T.points w x := by
+      ∑ T ∈ M.simplices,
+        ∫ x in T.closedInterior, p1Interp T.points u x * p1Interp T.points w x := by
   rw [LocalElement.glue_apply, LocalElement.glue_apply, inner_pieceL2 M hM]
   refine Finset.sum_congr rfl fun T hT => ?_
   rw [← integral_finsetSum _ fun s _ => ?_]
@@ -413,40 +414,6 @@ theorem interior_subset_freudenthalMesh_domain (b : Fin n → ℝ) {s : ℝ} (hs
   rwa [closure_Ioo (by linarith : b i ≠ b i + s), interior_Icc] at this
 
 /-! ### Linearity of the stiffness form -/
-
-theorem p1Stiffness_comm (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
-    p1Stiffness M u w = p1Stiffness M w u := by
-  simp only [p1Stiffness, dotProduct_comm]
-
-/-- `a(Σᵢ cᵢ uᵢ, w) = Σᵢ cᵢ a(uᵢ, w)`. -/
-theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι) (c : ι → ℝ)
-    (u : ι → (Fin n → ℝ) → ℝ) (w : (Fin n → ℝ) → ℝ) :
-    p1Stiffness M (∑ i ∈ s, c i • u i) w = ∑ i ∈ s, c i * p1Stiffness M (u i) w := by
-  classical
-  have hg : ∀ p : Fin (n + 1) → Fin n → ℝ,
-      p1Grad p (∑ i ∈ s, c i • u i) = ∑ i ∈ s, c i • p1Grad p (u i) := fun p => by
-    induction s using Finset.induction_on with
-    | empty => simp [p1Grad]
-    | insert a s ha ih => rw [sum_insert ha, sum_insert ha, p1Grad_add, p1Grad_smul, ih]
-  simp only [p1Stiffness_eq, hg, sum_dotProduct, smul_dotProduct, smul_eq_mul, mul_sum]
-  rw [sum_comm]
-  exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
-
-theorem p1Stiffness_congr_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ)
-    {w w' : (Fin n → ℝ) → ℝ} (h : ∀ T ∈ M.simplices, ∀ j, w (T.points j) = w' (T.points j)) :
-    p1Stiffness M u w = p1Stiffness M u w' := by
-  rw [p1Stiffness_eq, p1Stiffness_eq]
-  refine sum_congr rfl fun T hT => ?_
-  congr 2
-  simp only [p1Grad, h T hT]
-
-theorem p1Stiffness_const_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) (c : ℝ) :
-    p1Stiffness M u (fun _ => c) = 0 := by
-  rw [p1Stiffness_eq]
-  refine sum_eq_zero fun T _ => ?_
-  have : p1Grad T.points (fun _ => c) = 0 := by
-    rw [p1Grad, ← smul_sum, sum_baryGrad, smul_zero]
-  rw [this, dotProduct_zero, mul_zero]
 
 section MaxNorm
 

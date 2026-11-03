@@ -26,13 +26,18 @@ Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference s
   `k = σ⁻¹ l`; the element stiffness matrix is `hⁿ⁻² / n!` times the Laplacian of the path
   `v₀ - v₁ - ⋯ - vₙ` (`baryGrad_dotProduct_freudenthalPoints_nonpos`: **Freudenthal simplices are
   non-obtuse**, `isNonobtuse_freudenthalMesh`);
-* **`p1Stiffness_nodalIndicator_eq`**, `lumpedMass_node_eq`: on the level-`N` Freudenthal mesh
-  of a box (`h = s / N`), at every lattice node `p`, boundary nodes included,
-  `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻ Dₗw(p - eₗ) - α⁺ Dₗw(p)) / h` with the difference quotients
-  `Dₗw(q) = (w(q + eₗ) - w(q)) / h` and `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge
-  `p → p ± eₗ` of the Kuhn simplex `σ` lies in the mesh (`upCount`, `downCount`), and
-  `m(p) = hⁿ C(p) / (n + 1)!`, `C(p)` the number of simplices at `p` (`vertexCount`): each
-  simplex has volume `hⁿ / n!` and couples only the vertices of its path edges;
+* **`p1Stiffness_freudenthalMesh_eq`**: on the level-`N` Freudenthal mesh of a box (`h = s / N`),
+  `a(u, w) = hⁿ / n! Σ_σ Σₗ Σ_m Dₗu Dₗw` over the path edges `q → q + eₗ` of the simplices
+  `b + h (m + K_σ)`, with the difference quotients `Dₗu(q) = (u(q + eₗ) - u(q)) / h`: each
+  simplex has volume `hⁿ / n!` and couples only the vertices of its path edges; so
+  (**`p1Stiffness_freudenthalMesh`**) for `u` vanishing on the boundary,
+  `a(u, w) = hⁿ Σₗ Σ_{edges q → q + eₗ} Dₗu(q) Dₗw(q)`, every axis edge with an interior endpoint
+  being a path edge of exactly one simplex for each `σ`;
+* **`p1Stiffness_nodalIndicator_eq`**, `lumpedMass_node_eq`: at every lattice node `p`, boundary
+  nodes included, `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻ Dₗw(p - eₗ) - α⁺ Dₗw(p)) / h` with
+  `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge `p → p ± eₗ` of the Kuhn simplex `σ`
+  lies in the mesh (`upCount`, `downCount`), and `m(p) = hⁿ C(p) / (n + 1)!`, `C(p)` the number
+  of simplices at `p` (`vertexCount`);
 * `lumpedMass_freudenthalMesh`: `m(x) = hⁿ` at every interior node (`C = (n + 1)!`,
   `vertexCount_of_mem_interiorNodes`);
 * **`neg_p1Stiffness_div_lumpedMass`**: the lumped-mass `P₁` Laplacian at an interior node `p`
@@ -639,6 +644,98 @@ theorem downCount_le_vertexCount (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin 
 
 end counting
 
+/-! ### The stiffness form as a sum over the axis edges -/
+
+/-- **The `P₁` stiffness form on the Freudenthal mesh as a sum over the path edges**: for any
+nodal values on the level-`N` mesh (`h = s / N`), `a(u, w) = hⁿ / n! Σ_σ Σₗ Σ_m Dₗu(q) Dₗw(q)`
+over the path edges `q → q + eₗ`, `q = m + κ_{σ,l}`, of the simplices `b + h (m + K_σ)`
+(`p1Grad_dotProduct_freudenthalPoints`; `|T| = hⁿ / n!`). -/
+theorem p1Stiffness_freudenthalMesh_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
+    (u w : (Fin n → ℝ) → ℝ) :
+    p1Stiffness (freudenthalMesh b s hs N) u w =
+      (s / N) ^ n / n.factorial * ∑ σ : Equiv.Perm (Fin n), ∑ l, ∑ m : Fin n → Fin N,
+        edgeTerm b (s / N) u w l (finLattice m + edgeShift σ l) := by
+  have hh := freudenthalScale_pos hs N
+  rw [p1Stiffness_eq, sum_freudenthalMesh_simplices]
+  simp_rw [volume_real_freudenthalMesh_simplex b hh, mapEquiv_boxMap_freudenthalSimplex_points,
+    p1Grad_dotProduct_freudenthalPoints b hh.ne', mul_sum]
+  rw [sum_comm]
+  simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin N))) (t := (univ : Finset (Fin n)))]
+  rfl
+
+/-- The base points `q` of the axis edges `q → q + eₗ` with an interior endpoint:
+`qₗ ∈ {0, …, N - 1}`, `qⱼ ∈ {1, …, N - 1}` for `j ≠ l`. -/
+def edgeBases (n N : ℕ) (l : Fin n) : Finset (Fin n → ℤ) :=
+  Fintype.piFinset fun j => if j = l then Ico 0 (N : ℤ) else Ioo 0 (N : ℤ)
+
+/-- The nodal values `u` vanish at the boundary nodes of the level-`N` lattice of `b + h ℤⁿ`. -/
+def VanishesOnBoundary (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Prop :=
+  ∀ q : Fin n → ℤ, (∀ j, 0 ≤ q j ∧ q j ≤ (N : ℤ)) → (∃ j, q j = 0 ∨ q j = (N : ℤ)) →
+    u (node b h q) = 0
+
+/-- **Each Kuhn simplex reaches every edge with an interior endpoint once**: for `u` vanishing on
+the boundary, the sum over the path edges `m + κ_{σ,l} → m + κ_{σ,l} + eₗ` of the cells is the
+sum over the axis edges `q → q + eₗ` with an interior endpoint; the other path edges lie in a
+boundary face, where `Dₗu = 0`. -/
+theorem sum_edgeTerm_edgeShift (b : Fin n → ℝ) (h : ℝ) {N : ℕ} {u : (Fin n → ℝ) → ℝ}
+    (hu : VanishesOnBoundary b h N u) (w : (Fin n → ℝ) → ℝ) (σ : Equiv.Perm (Fin n))
+    (l : Fin n) :
+    ∑ m : Fin n → Fin N, edgeTerm b h u w l (finLattice m + edgeShift σ l) =
+      ∑ q ∈ edgeBases n N l, edgeTerm b h u w l q := by
+  set a := edgeShift σ l
+  have ha : ∀ i, a i = 0 ∨ a i = 1 := kuhnLattice_mem σ _
+  have hal : a l = 0 := edgeShift_self σ l
+  have hE : ∀ q ∈ edgeBases n N l,
+      ∑ m : Fin n → Fin N, (if finLattice m + a = q then 1 else 0 : ℝ) = 1 := fun q hq => by
+    rw [sum_finLattice_add_ite, ite_eq_left]
+    intro i
+    have := Fintype.mem_piFinset.1 hq i
+    by_cases hi : i = l
+    · subst hi; rw [ite_eq_left rfl, mem_Ico] at this; omega
+    · rw [ite_eq_right hi, mem_Ioo] at this; rcases ha i with h | h <;> rw [h] <;> omega
+  have hG : ∀ m : Fin n → Fin N, finLattice m + a ∉ edgeBases n N l →
+      edgeTerm b h u w l (finLattice m + a) = 0 := fun m hm => by
+    set q := finLattice m + a
+    have hb : ∀ i, 0 ≤ q i ∧ q i ≤ N := fun i => by
+      have := (m i).2; simp only [q, Pi.add_apply, finLattice]; rcases ha i with h | h <;> omega
+    have hql : q l < N := by
+      have := (m l).2; simp only [q, Pi.add_apply, finLattice, hal]; omega
+    obtain ⟨j, hj⟩ := not_forall.1 (mt Fintype.mem_piFinset.2 hm)
+    have hjl : j ≠ l := fun e => by
+      subst e; rw [ite_eq_left rfl, mem_Ico] at hj; exact hj ⟨(hb j).1, hql⟩
+    rw [ite_eq_right hjl, mem_Ioo] at hj
+    have h0 := hu q hb ⟨j, by have := hb j; omega⟩
+    have h1 := hu (q + Pi.single l 1) (fun i => by
+      by_cases hi : i = l
+      · subst hi; simp; have := hb i; omega
+      · simp [Pi.single_eq_of_ne hi, hb i])
+      ⟨j, by simp [Pi.single_eq_of_ne hjl]; have := hb j; omega⟩
+    simp [edgeTerm, h0, h1]
+  calc ∑ m : Fin n → Fin N, edgeTerm b h u w l (finLattice m + a)
+      = ∑ m : Fin n → Fin N, ∑ q ∈ edgeBases n N l,
+          (if finLattice m + a = q then 1 else 0 : ℝ) * edgeTerm b h u w l q :=
+        sum_congr rfl fun m _ => by
+          simp_rw [boole_mul, sum_ite_eq]
+          split_ifs with hm
+          · rfl
+          · exact hG m hm
+    _ = _ := by
+        rw [sum_comm]
+        exact sum_congr rfl fun q hq => by rw [← sum_mul, hE q hq, one_mul]
+
+/-- **The `P₁` stiffness form on the Freudenthal mesh** of the box `b + (0, s)ⁿ` at level `N`
+(`h = s / N`): for nodal values `u` vanishing on the boundary,
+`a(u, w) = hⁿ Σₗ Σ_{q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges with an interior endpoint.
+Every such edge is the path edge of exactly one simplex `b + h (m + K_σ)` for each `σ`
+(`p1Stiffness_freudenthalMesh_eq`, `sum_edgeTerm_edgeShift`). -/
+theorem p1Stiffness_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
+    {u : (Fin n → ℝ) → ℝ} (hu : VanishesOnBoundary b (s / N) N u) (w : (Fin n → ℝ) → ℝ) :
+    p1Stiffness (freudenthalMesh b s hs N) u w =
+      (s / N) ^ n * ∑ l, ∑ q ∈ edgeBases n N l, edgeTerm b (s / N) u w l q := by
+  simp_rw [p1Stiffness_freudenthalMesh_eq, sum_edgeTerm_edgeShift b _ hu, sum_const, card_univ,
+    Fintype.card_perm, Fintype.card_fin, nsmul_eq_mul]
+  rw [← mul_assoc, div_mul_cancel₀ _ (by positivity)]
+
 /-! ### The stiffness rows and the lumped masses -/
 
 /-- The difference quotient `(w(q + eₗ) - w(q)) / h²` along the edge `q → q + eₗ`. -/
@@ -646,22 +743,17 @@ def edgeQuot (b : Fin n → ℝ) (h : ℝ) (w : (Fin n → ℝ) → ℝ) (l : Fi
   (w (node b h (q + Pi.single l 1)) - w (node b h q)) / h / h
 
 /-- **The stiffness row of any node** `p` (boundary nodes included) of the level-`N` Freudenthal
-mesh: `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻_{σ,l}(p) Dₗw(p - eₗ) - α⁺_{σ,l}(p) Dₗw(p)) / h`. Every
-simplex `b + h (m + K_σ)` couples only the `n` vertices of its path edges
-(`p1Grad_dotProduct_freudenthalPoints`), and `|T| = hⁿ / n!`. -/
+mesh: `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻_{σ,l}(p) Dₗw(p - eₗ) - α⁺_{σ,l}(p) Dₗw(p)) / h`, the path
+edges at `p` of `p1Stiffness_freudenthalMesh_eq`. -/
 theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     (p : Fin n → ℤ) (w : (Fin n → ℝ) → ℝ) :
     p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator (node b (s / N) p)) w =
       (s / N) ^ n / n.factorial * ∑ σ : Equiv.Perm (Fin n), ∑ l,
         (downCount N σ l p * edgeQuot b (s / N) w l (p - Pi.single l 1) -
           upCount N σ l p * edgeQuot b (s / N) w l p) := by
-  have hh := freudenthalScale_pos hs N
-  have hh' := hh.ne'
-  rw [p1Stiffness_eq, sum_freudenthalMesh_simplices]
-  simp_rw [volume_real_freudenthalMesh_simplex b hh, mapEquiv_boxMap_freudenthalSimplex_points,
-    p1Grad_dotProduct_freudenthalPoints b hh', mul_sum]
-  rw [sum_comm]
-  simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin N))) (t := (univ : Finset (Fin n)))]
+  have hh' := (freudenthalScale_pos hs N).ne'
+  rw [p1Stiffness_freudenthalMesh_eq]
+  congr 1
   refine sum_congr rfl fun σ _ => sum_congr rfl fun l _ => ?_
   have e : ∀ q, edgeTerm b (s / N) (nodalIndicator (node b (s / N) p)) w l q =
       (if q = p - Pi.single l 1 then 1 else 0) * edgeQuot b (s / N) w l (p - Pi.single l 1) -
@@ -673,8 +765,6 @@ theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
     · by_cases h2 : q = p
       · subst h2; simp [h1]; field_simp
       · simp [h1, h2]
-  rw [← mul_sum]
-  congr 1
   simp_rw [e, sum_sub_distrib, ← sum_mul]
   rfl
 

@@ -21,8 +21,9 @@ with `σ ≤ s₀ / (8 R)` for the minimal family (`sigmaOf`).
   mollifier (`FEM.abs_smoothForm_le`) and bounded overlap by volume (`sum_locMass_le`).
 * **Closeness on `Vₕ`** (`exists_gamma`, for every `γ ≤ γ₀` with the threshold `θ = K₀ γ`): at
   points of a face `g` with barycentric weights `≥ θ` every simplex sampled by the smoother
-  contains `g` (`GeomOK`, from the geometric lemma `StarGeom.subset_vertexSet_of_segments` along
-  the paths of `path_of_isMaximal`, `path_of_isMinimal`), the traces agree there, and the error
+  contains `g` (`GeomOK`; `subset_vertexSet_of_isMaximal`, `subset_vertexSet_of_isMinimal`, from
+  the geometric lemma `StarGeom.subset_vertexSet_of_segments` along the paths of
+  `path_of_isMaximal`, `path_of_isMinimal`), the traces agree there, and the error
   is the dilation defect and the displacement `O(γ h)` against the shape-regular inverse
   estimates (`InvBoundM`, `sqrt_mul_abs_integrand_le`, `sqrt_mul_abs_dof_err_le`,
   `norm_sq_sub_smoothedInterp_le`). Samples outside `Ω` (`SampleOK`) do not occur for the maximal
@@ -306,8 +307,9 @@ theorem path_of_isMaximal (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) (hp
   refine ((convex_closedBall _ _).segment_subset (Metric.mem_closedBall_self
     p.bump.rOut_pos.le) (Metric.mem_closedBall.2 ht.le)).trans (hball.trans subset_closure)
 
-/-- **Minimal family**: a sample `t ∈ Ω` of the smoother at `x ∈ cl Ω` is joined to `x` in `cl Ω`
-by the segments `[x, tt]`, `[tt, t]`, `tt = x₀ + c⁻¹ (t - x₀)`, with `‖tt - x‖ ≤ rOut`. -/
+/-- **Minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`): a sample `t ∈ Ω` of the smoother at
+`x ∈ cl Ω` is joined to `x` in `cl Ω` by the segments `[x, tt]`, `[tt, t]`,
+`tt = x₀ + c⁻¹ (t - x₀)`, with `‖tt - x‖ ≤ rOut`. -/
 theorem path_of_isMinimal (hstar : StarBall Ω x₀ s₀) (hs₀ : 0 < s₀) (hR : 0 < R)
     (hp : p.IsMinimal x₀ s₀) (hpA : IsAdm x₀ R σ γ h p) (hγh : γ * h / R < 1)
     (hσ : σ ≤ s₀ / (8 * R)) {x : Fin n → ℝ} {t : Fin n → ℝ} (htΩ : t ∈ Ω)
@@ -958,18 +960,22 @@ theorem coord_near {M : SimplicialMesh n} {C q : ℝ} (hq : 0 < q) (hC : 0 ≤ C
   refine lt_of_le_of_lt (mul_le_mul_of_nonneg_left hy (by positivity)) (lt_of_eq_of_lt ?_ hθ)
   field_simp
 
-/-- **The geometric condition for the maximal family.** -/
-theorem geomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
-    (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀) (hs₀ : 0 < s₀)
-    {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀)
+/-- **Faces through the samples of the maximal family**: if `x ∈ T` is a point of a face `g` of
+`T` with barycentric weights `≥ θ`, every simplex whose interior contains a sample of the smoother
+at `x` contains `g`. -/
+theorem subset_vertexSet_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
+    (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
+    (hs₀ : 0 < s₀) {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀)
     (hpA : IsAdm x₀ R σ γ M.meshSize p) (hR : 0 < R)
     (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hγ : 0 < γ) {θ : ℝ}
-    (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) (k : ℕ) : GeomOK M p θ k := by
-  intro T g hgT hg ξ hξ hξb t ht T' htT'
+    (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) {T T' : M.simplices} {g : Finset (Fin n → ℝ)}
+    (hgT : g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n)) {x : Fin n → ℝ}
+    (hx : StarGeom.IsFacePoint M g θ x)
+    (hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior) {t : Fin n → ℝ}
+    (ht : dist t (p.center + p.factor • (x - p.center)) < p.bump.rOut)
+    (htT' : t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior) :
+    g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) := by
   have hh := hM.meshSize_pos
-  set x := simplexMap (faceEnum g (k + 1)) ξ
-  have hx := isFacePoint_of_notMem_nearBdry (M := M) hg hξb
-  have hxT := simplexMap_faceEnum_mem hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   obtain ⟨h1, h2⟩ := path_of_isMaximal hstar hs₀ hp hxc ht
   have hgh := hpA.gh_nonneg hR
@@ -983,23 +989,26 @@ theorem geomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM 
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hxx hŷ hy)) h2
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hŷ ht' hy)) T'.2 htT'
 
-/-- **The geometric condition for the minimal family.** -/
-theorem geomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
-    (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀) (hs₀ : 0 < s₀)
-    (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
+/-- **Faces through the samples of the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`): if
+`x ∈ T` is a point of a face `g` of `T` with barycentric weights `≥ θ`, every simplex whose
+interior contains a sample of the smoother at `x` contains `g`. -/
+theorem subset_vertexSet_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
+    (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
+    (hs₀ : 0 < s₀) (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
     {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMinimal x₀ s₀)
     (hpA : IsAdm x₀ R σ γ M.meshSize p) (hR : 0 < R)
     (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hσ : σ ≤ s₀ / (8 * R))
     (hγ : 0 < γ) (hγh : γ * M.meshSize / R < 1) {θ : ℝ}
-    (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) (k : ℕ) : GeomOK M p θ k := by
-  intro T g hgT hg ξ hξ hξb t ht T' htT'
+    (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) {T T' : M.simplices} {g : Finset (Fin n → ℝ)}
+    (hgT : g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n)) {x : Fin n → ℝ}
+    (hx : StarGeom.IsFacePoint M g θ x)
+    (hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior) {t : Fin n → ℝ}
+    (ht : dist t (p.center + p.factor • (x - p.center)) < p.bump.rOut)
+    (htT' : t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior) :
+    g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) := by
   have hh := hM.meshSize_pos
-  set x := simplexMap (faceEnum g (k + 1)) ξ
-  have hx := isFacePoint_of_notMem_nearBdry (M := M) hg hξb
-  have hxT := simplexMap_faceEnum_mem hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
-  have htΩ := hint T' T'.2 htT'
-  obtain ⟨h1, h2, h3⟩ := path_of_isMinimal hstar hs₀ hR hp hpA hγh hσ htΩ ht
+  obtain ⟨h1, h2, h3⟩ := path_of_isMinimal hstar hs₀ hR hp hpA hγh hσ (hint T' T'.2 htT') ht
   have hgh := hpA.gh_nonneg hR
   have htt : ‖x₀ + p.factor⁻¹ • (t - x₀) - x‖ ≤ 2 * (γ * M.meshSize) := by
     refine h3.trans ?_
@@ -1011,6 +1020,30 @@ theorem geomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM 
     (StarGeom.mem_starSet.2 ⟨T, T.2, hgT, hxT⟩) h1
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hxx htt hy)) h2
     (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment htt ht' hy)) T'.2 htT'
+
+/-- **The geometric condition for the maximal family.** -/
+theorem geomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
+    (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀) (hs₀ : 0 < s₀)
+    {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMaximal x₀ s₀)
+    (hpA : IsAdm x₀ R σ γ M.meshSize p) (hR : 0 < R)
+    (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hγ : 0 < γ) {θ : ℝ}
+    (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) (k : ℕ) : GeomOK M p θ k := by
+  intro T g hgT hg ξ hξ hξb _ ht _ htT'
+  exact subset_vertexSet_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx hσ1 hγ hθ hgT
+    (isFacePoint_of_notMem_nearBdry hg hξb) (simplexMap_faceEnum_mem hgT hg hξ) ht htT'
+
+/-- **The geometric condition for the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`). -/
+theorem geomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
+    (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀) (hs₀ : 0 < s₀)
+    (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
+    {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMinimal x₀ s₀)
+    (hpA : IsAdm x₀ R σ γ M.meshSize p) (hR : 0 < R)
+    (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hσ : σ ≤ s₀ / (8 * R))
+    (hγ : 0 < γ) (hγh : γ * M.meshSize / R < 1) {θ : ℝ}
+    (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) (k : ℕ) : GeomOK M p θ k := by
+  intro T g hgT hg ξ hξ hξb _ ht _ htT'
+  exact subset_vertexSet_of_isMinimal hM hq hC hstar hs₀ hint hp hpA hR hRx hσ1 hσ hγ hγh hθ hgT
+    (isFacePoint_of_notMem_nearBdry hg hξb) (simplexMap_faceEnum_mem hgT hg hξ) ht htT'
 
 /-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
 field. -/
@@ -1201,10 +1234,7 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
     rw [hQ]
     rcases i with k | k
     · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
-    · have h0 : ∀ y : L2F ℝ M.domain (formIdx n (Int.negSucc k)), ‖y‖ = 0 := fun y => by
-        have := LocalElement.subsingleton_L2F_negSucc M.domain (n := n) k
-        rw [Subsingleton.elim y 0, norm_zero]
-      exact (h0 _).le.trans (by positivity)
+    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((whitneyElement n).subcomplex M hΩo).V i,
       ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖ := by
     intro i v hv
@@ -1214,10 +1244,7 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
       exact hclose M hM hΩo.measurableSet hint hR hRx hhR (sigmaOf_le_one s₀ R) p hpA k
         (geomOK_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ k)
         u.1 u.2 (sampleOK_of_isMaximal hstar hp u.1)
-    · have h0 : ∀ y : L2F ℝ M.domain (formIdx n (Int.negSucc k)), ‖y‖ = 0 := fun y => by
-        have := LocalElement.subsingleton_L2F_negSucc M.domain (n := n) k
-        rw [Subsingleton.elim y 0, norm_zero]
-      exact (h0 _).le.trans (by positivity)
+    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
       max 1 (2 * K') * ‖x‖ := fun i x =>
     (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans
@@ -1263,10 +1290,7 @@ theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤
     rw [hQ]
     rcases i with k | k
     · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
-    · have h0 : ∀ y : L2F ℝ M.domain (formIdx n (Int.negSucc k)), ‖y‖ = 0 := fun y => by
-        have := LocalElement.subsingleton_L2F_negSucc M.domain (n := n) k
-        rw [Subsingleton.elim y 0, norm_zero]
-      exact (h0 _).le.trans (by positivity)
+    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((whitneyElement n).subcomplexMin M hΩo x₀
       (fun _ hx _ ht0 ht1 => hstar.strict hs₀ hx ht0 ht1)).V i,
       ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖ := by
@@ -1279,10 +1303,7 @@ theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤
           (sigmaOf_le s₀ R) hγ (by linarith) hθ k)
         u.1 ((whitneyElement n).globalSpace₀_le M k u.2)
         (sampleOK_of_isMinimal hM hq hC hstar hs₀ hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ u.2)
-    · have h0 : ∀ y : L2F ℝ M.domain (formIdx n (Int.negSucc k)), ‖y‖ = 0 := fun y => by
-        have := LocalElement.subsingleton_L2F_negSucc M.domain (n := n) k
-        rw [Subsingleton.elim y 0, norm_zero]
-      exact (h0 _).le.trans (by positivity)
+    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
       max 1 (2 * K') * ‖x‖ := fun i x =>
     (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans

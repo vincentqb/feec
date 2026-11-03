@@ -168,8 +168,9 @@ theorem abs_le_of_abs_dof_le {k : ℕ} {B : ℝ} (hB : DofBound S n k B) (hB0 : 
         h1.trans (mul_le_mul_of_nonneg_left h2 hB0)
     _ = hN N ^ k * (B * Module.finrank ℝ (S.space n k) * D') := by ring
 
-/-- **Faces through nearby points** (`subset_vertexSet_of_near`, for the lexicographic
-parametrization of the face). -/
+/-- **Faces through nearby points** of the cube meshes: a point of a face `g` of `T` with
+barycentric weights `≥ θ` (lexicographic parametrization) within `θ h_N / 2` of a point of `T'`
+has `g ⊆ T'`. -/
 theorem subset_vertexSet_of_near_lex {N : ℕ} {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) (hT' : T' ∈ (mesh n N).simplices) {m : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : #g = m + 1) {θ : ℝ}

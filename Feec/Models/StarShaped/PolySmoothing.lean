@@ -808,25 +808,12 @@ theorem polyGeomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hpA : IsAdm x₀ R σ γ M.meshSize p) (hR : 0 < R)
     (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hγ : 0 < γ) {θ : ℝ}
     (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) : PolyGeomOK M p θ := by
-  intro T g hgT m hg ξ hξ hξb t ht T' htT'
-  have hh := hM.meshSize_pos
-  set x := simplexMap (lexEnum g m) ξ
-  have hx := isFacePoint_lexEnum (M := M) hg hξb
-  have hxT := FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ
-  have hxc := M.closedInterior_subset_closure T.2 hxT
-  obtain ⟨h1, h2⟩ := path_of_isMaximal hstar hs₀ hp hxc ht
-  have hgh := hpA.gh_nonneg hR
-  have hŷ : ‖(p.center + p.factor • (x - p.center)) - x‖ ≤ 2 * (γ * M.meshSize) :=
-    (hpA.norm_dil_sub_le hR (hRx x hxc)).trans (by linarith)
-  have ht' : ‖t - x‖ ≤ 2 * (γ * M.meshSize) :=
-    hpA.norm_sub_le_of_dist_le hR hσ1 (hRx x hxc) ht.le
-  have hxx : ‖x - x‖ ≤ 2 * (γ * M.meshSize) := by rw [sub_self, norm_zero]; positivity
-  exact StarGeom.subset_vertexSet_of_segments (coordLip_of hM hq hC) hx
-    (StarGeom.mem_starSet.2 ⟨T, T.2, hgT, hxT⟩) h1
-    (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hxx hŷ hy)) h2
-    (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hŷ ht' hy)) T'.2 htT'
+  intro T g hgT _ hg ξ hξ hξb _ ht _ htT'
+  exact subset_vertexSet_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx hσ1 hγ hθ hgT
+    (isFacePoint_lexEnum hg hξb) (FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ) ht htT'
 
-/-- **The geometric condition for the minimal family**, for the faces of all dimensions. -/
+/-- **The geometric condition for the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`), for
+the faces of all dimensions. -/
 theorem polyGeomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hM : MeshData M C c q) (hq : 0 < q) (hC : 0 ≤ C) (hstar : StarBall M.domain x₀ s₀)
     (hs₀ : 0 < s₀) (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
@@ -835,25 +822,9 @@ theorem polyGeomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hσ : σ ≤ s₀ / (8 * R))
     (hγ : 0 < γ) (hγh : γ * M.meshSize / R < 1) {θ : ℝ}
     (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) : PolyGeomOK M p θ := by
-  intro T g hgT m hg ξ hξ hξb t ht T' htT'
-  have hh := hM.meshSize_pos
-  set x := simplexMap (lexEnum g m) ξ
-  have hx := isFacePoint_lexEnum (M := M) hg hξb
-  have hxT := FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ
-  have hxc := M.closedInterior_subset_closure T.2 hxT
-  have htΩ := hint T' T'.2 htT'
-  obtain ⟨h1, h2, h3⟩ := path_of_isMinimal hstar hs₀ hR hp hpA hγh hσ htΩ ht
-  have hgh := hpA.gh_nonneg hR
-  have htt : ‖x₀ + p.factor⁻¹ • (t - x₀) - x‖ ≤ 2 * (γ * M.meshSize) := by
-    refine h3.trans ?_
-    rw [hpA.rOut_eq]; nlinarith
-  have ht' : ‖t - x‖ ≤ 2 * (γ * M.meshSize) :=
-    hpA.norm_sub_le_of_dist_le hR hσ1 (hRx x hxc) ht.le
-  have hxx : ‖x - x‖ ≤ 2 * (γ * M.meshSize) := by rw [sub_self, norm_zero]; positivity
-  exact StarGeom.subset_vertexSet_of_segments (coordLip_of hM hq hC) hx
-    (StarGeom.mem_starSet.2 ⟨T, T.2, hgT, hxT⟩) h1
-    (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment hxx htt hy)) h2
-    (fun y hy => coord_near hq hC hh hγ hθ (norm_sub_le_of_mem_segment htt ht' hy)) T'.2 htT'
+  intro T g hgT _ hg ξ hξ hξb _ ht _ htT'
+  exact subset_vertexSet_of_isMinimal hM hq hC hstar hs₀ hint hp hpA hR hRx hσ1 hσ hγ hγh hθ hgT
+    (isFacePoint_lexEnum hg hξb) (FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ) ht htT'
 
 /-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
 field. -/

@@ -35,8 +35,9 @@ do not use it.
 simplex (`whitney_globalInterp_apply`). With `formL2` the degree-`k` coefficients of a continuous
 form as an element of `L²(Ω; Λᵏ)`, on a mesh with `h_T ‖B_T⁻¹‖ ≤ C₀` and `h_T ≤ h`:
 `‖w - Π_h w‖_{L²(Ω; Λᵏ)} ≤ #Λᵏ |Ω|^{1/2} C_{n,k} C₀^k h sup_{cl Ω} ‖Dw‖`
-(`norm_formL2_sub_glue_le`). Since `Π_h` commutes with `d` (`glue_globalInterp_mem_maximal`),
-the same bound for `dw` (with `sup ‖D dw‖`, so `w ∈ C²`) gives the graph-norm error. Smooth
+(`norm_formL2_sub_glue_le`). Since `Π_h` commutes with `d`
+(`LocalElement.glue_globalInterp_mem_maximal` in `Feec.FiniteElement.GlobalInterpolation`), the
+same bound for `dw` (with `sup ‖D dw‖`, so `w ∈ C²`) gives the graph-norm error. Smooth
 `k`-forms are in `D(d_max)` with the classical `d` (`formL2_mem_maximal`). The estimate takes
 the raw shape bound `h_T ‖B_T⁻¹‖ ≤ C₀`, which follows from the second condition of
 `Feec.Mesh.IsShapeRegular` (`diam_mul_norm_symm_le_of_isShapeRegular`,
@@ -57,8 +58,7 @@ of `Π_T` under affine maps).
 * `isRefInterpolant_whitney`: the Whitney interpolant as a reference interpolant.
 * `whitney_globalInterp_apply`, `norm_formL2_sub_glue_le`,
   `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error.
-* `glue_globalInterp_mem_maximal`, `formL2_mem_maximal`, `contDiff_extDeriv`: `d` on smooth and
-  interpolated forms.
+* `formL2_mem_maximal`, `contDiff_extDeriv`: `d` on smooth forms.
 
 ## References
 
@@ -713,25 +713,6 @@ theorem contDiff_extDeriv {m : WithTop ℕ∞} {ω : FormField n} (hω : ContDif
     ContDiff ℝ m (extDeriv ω) :=
   contDiff_pi.2 fun s => ContDiff.sum fun j _ =>
     contDiff_const.mul ((contDiff_pi.1 hω (s.erase j)).partialDeriv le_rfl j)
-
-/-- **`Π_h` commutes with `d` in `L²`**: for a `C¹` form `w`, `Π_h w ∈ D(d_max)` and
-`d_max Π_h w = Π_h dw` (glued). -/
-theorem glue_globalInterp_mem_maximal [NeZero n] (hΩo : IsOpen M.domain) (k : ℕ) (w : c1Forms n) :
-    ∃ h : (whitneyElement n).glue M k ((whitneyElement n).globalInterp M k
-        (Submodule.inclusion c1Forms_le_contForms w) : (whitneyElement n).Piecewise M k) ∈
-        ((extDerivOp ℝ n k).maximal M.domain).domain,
-      (extDerivOp ℝ n k).maximal M.domain ⟨_, h⟩ =
-        (whitneyElement n).glue M ((k : ℤ) + 1) ((whitneyElement n).globalInterp M (k + 1)
-          (extDerivC1 w) : (whitneyElement n).Piecewise M (k + 1)) := by
-  obtain ⟨h, hval⟩ := (whitneyElement n).glue_mem_maximal M hΩo k
-    ((whitneyElement n).globalInterp M k (Submodule.inclusion c1Forms_le_contForms w))
-  refine ⟨h, hval.trans ?_⟩
-  have h1 : (whitneyElement n).dPiecewise M k ((whitneyElement n).globalInterp M k
-      (Submodule.inclusion c1Forms_le_contForms w) : (whitneyElement n).Piecewise M k) =
-      ((whitneyElement n).dGlobal M k ((whitneyElement n).globalInterp M k
-        (Submodule.inclusion c1Forms_le_contForms w)) :
-        (whitneyElement n).Piecewise M (k + 1)) := rfl
-  rw [h1, ← LocalElement.globalInterp_extDeriv]
 
 /-- **Smooth `k`-forms are in `D(d_max)`**: for a `C¹` form `w` of degree `k`, `w|_Ω ∈ HΛᵏ(Ω)`
 with `d_max (w|_Ω) = (dw)|_Ω`. -/

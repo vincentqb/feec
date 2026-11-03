@@ -247,23 +247,6 @@ theorem exists_mem_poly_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
   have hdw : ContDiff ℝ (s + 1) (extDeriv w) := contDiff_extDeriv (m := s + 1) (by
     exact_mod_cast hw)
   have hdeg' : ∀ x, IsDeg (k + 1) (extDeriv w x) := fun x => IsDeg.extDeriv hdeg x
-  refine (deRham ℝ n).maximalSubcomplexOfEq_induction (F.domain_eq N) (F.isOpen_domain N)
-    D.isOpen (S.subcomplex (F.mesh N) (F.isOpen_domain N))
-    (fun Θ hΘ S' => ∀ hb : Bornology.IsBounded Θ, ∀ hvol : volume.real Θ = volume.real D.Ω,
-      ∃ v ∈ S'.V k,
-        ‖formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - FEM.asForm n v‖ ≤
-          F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L) ∧
-        ∃ hv : v ∈ (((deRham ℝ n).maximalComplex hΘ).d k (k + 1)).domain,
-          ‖formL2 hΘ.measurableSet hb ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv hw1⟩ -
-            FEM.asForm n (((deRham ℝ n).maximalComplex hΘ).d k (k + 1) ⟨v, hv⟩)‖ ≤
-            F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L')) ?_
-    D.isBounded rfl
-  intro hb hvol
-  set M := F.mesh N
-  have hΩo := F.isOpen_domain N
-  set u := (polyElement n S).globalInterp M k (Submodule.inclusion c1Forms_le_contForms
-    (⟨w, hw1⟩ : c1Forms n))
-  obtain ⟨hmem, hval⟩ := FEM.glue_globalInterp_mem_maximal_of (polyElement n S) M hΩo k ⟨w, hw1⟩
   have hh := (F.meshSize_pos N).le
   have hB1 : 0 ≤ (1 + F.polyDofConst S k * polyCoeffConst n S k) *
       ((F.mesh N).meshSize ^ (s + 1) * L) := by
@@ -272,25 +255,22 @@ theorem exists_mem_poly_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
       ((F.mesh N).meshSize ^ (s + 1) * L') := by
     have := F.polyDofConst_nonneg S (k + 1); have := polyCoeffConst_nonneg (n := n) S (k + 1)
     positivity
-  refine ⟨(polyElement n S).glue M k (u : (polyElement n S).Piecewise M k), ⟨u, rfl⟩, ?_, ?_⟩
-  · have h := FEM.norm_formL2_sub_glue_le_of_forall (polyElement n S) M hΩo.measurableSet k
-      ⟨w, hw.continuous⟩ (u : (polyElement n S).Piecewise M k) hB1
+  have hΩ := (F.isOpen_domain N).measurableSet
+  refine (polyElement n S).exists_mem_maximalSubcomplexOfEq_le (F.mesh N) (F.domain_eq N)
+    (F.isOpen_domain N) D.isOpen D.isBounded k hw1
+    (A := F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L))
+    (A' := F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L'))
+    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
+      ((polyElement n S).globalInterp (F.mesh N) k ⟨w, hw.continuous⟩ :
+        (polyElement n S).Piecewise (F.mesh N) k) hB1
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs hws hdeg hL T (interior_subset hx) t
-    refine h.trans (le_of_eq ?_)
-    rw [hvol, polyInterpConst]; ring
-  · refine ⟨by rw [deRham_maximalComplex_d]; exact hmem, ?_⟩
-    rw [LinearPMap.apply_eq_of_eq' (deRham_maximalComplex_d hΩo (k : ℤ))]
-    have h := FEM.norm_formL2_sub_glue_le_of_forall (polyElement n S) M hΩo.measurableSet (k + 1)
-      ⟨extDeriv w, hdw.continuous⟩ ((polyElement n S).globalInterp M (k + 1)
-        ⟨extDeriv w, hdw.continuous⟩ : (polyElement n S).Piecewise M (k + 1)) hB2
+      ).trans_eq ?_)
+    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
+      ((polyElement n S).globalInterp (F.mesh N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
+        (polyElement n S).Piecewise (F.mesh N) (k + 1)) hB2
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs' hdw hdeg' hL' T (interior_subset hx) t
-    have e : (extDerivOp ℝ n k).maximal M.domain
-        ⟨(polyElement n S).glue M k (u : (polyElement n S).Piecewise M k), hmem⟩ =
-        (polyElement n S).glue M ((k + 1 : ℕ) : ℤ) ((polyElement n S).globalInterp M (k + 1)
-          ⟨extDeriv w, hdw.continuous⟩ : (polyElement n S).Piecewise M (k + 1)) := hval
-    erw [e]
-    refine h.trans (le_of_eq ?_)
-    rw [hvol, polyInterpConst]; push_cast; ring
+      ).trans_eq ?_) <;>
+  · rw [F.domain_eq N, polyInterpConst]; push_cast; ring
 
 /-- **The `L²` interpolation error with vanishing boundary DOFs**: for a `C^{s+2}` form `w`
 vanishing outside `Ω`, the canonical interpolant lies in `V̊ₕᵏ ⊆ H̊Λᵏ(Ω)`, with the estimates of
@@ -315,27 +295,6 @@ theorem exists_mem_polyMin_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n 
   have hdw : ContDiff ℝ (s + 1) (extDeriv w) := contDiff_extDeriv (m := s + 1) (by
     exact_mod_cast hw)
   have hdeg' : ∀ x, IsDeg (k + 1) (extDeriv w x) := fun x => IsDeg.extDeriv hdeg x
-  refine (deRham ℝ n).minimalSubcomplexOfEq_induction (F.domain_eq N) (F.isOpen_domain N)
-    D.isOpen (S.subcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
-    (fun Θ hΘ S' => ∀ hb : Bornology.IsBounded Θ, ∀ hvol : volume.real Θ = volume.real D.Ω,
-      ∃ v ∈ S'.V k,
-        ‖formL2 hΘ.measurableSet hb k ⟨w, hw.continuous⟩ - FEM.asForm n v‖ ≤
-          F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L) ∧
-        ∃ hv : v ∈ (((deRham ℝ n).minimalComplex hΘ).d k (k + 1)).domain,
-          ‖formL2 hΘ.measurableSet hb ((k : ℤ) + 1) ⟨extDeriv w, continuous_extDeriv hw1⟩ -
-            FEM.asForm n (((deRham ℝ n).minimalComplex hΘ).d k (k + 1) ⟨v, hv⟩)‖ ≤
-            F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L')) ?_
-    D.isBounded rfl
-  intro hb hvol
-  set M := F.mesh N
-  have hΩo := F.isOpen_domain N
-  set w' : c1Forms n := ⟨w, hw1⟩
-  set u := (polyElement n S).globalInterp M k (Submodule.inclusion c1Forms_le_contForms w')
-  have hu₀ : (u : (polyElement n S).Piecewise M k) ∈ (polyElement n S).globalSpace₀ M k :=
-    LocalElement.globalInterp_mem_globalSpace₀ _ M k fun x hx => hsupp x (by
-      rw [← F.domain_eq N]; exact M.notMem_domain_of_mem_frontier hΩo hx)
-  obtain ⟨hmem, hval⟩ := (polyElement n S).glue_mem_minimal M hΩo D.x₀ (F.strict_mesh N) k
-    ⟨_, hu₀⟩
   have hh := (F.meshSize_pos N).le
   have hB1 : 0 ≤ (1 + F.polyDofConst S k * polyCoeffConst n S k) *
       ((F.mesh N).meshSize ^ (s + 1) * L) := by
@@ -344,33 +303,22 @@ theorem exists_mem_polyMin_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n 
       ((F.mesh N).meshSize ^ (s + 1) * L') := by
     have := F.polyDofConst_nonneg S (k + 1); have := polyCoeffConst_nonneg (n := n) S (k + 1)
     positivity
-  refine ⟨(polyElement n S).glue M k (u : (polyElement n S).Piecewise M k),
-    ⟨⟨_, hu₀⟩, rfl⟩, ?_, ?_⟩
-  · have h := FEM.norm_formL2_sub_glue_le_of_forall (polyElement n S) M hΩo.measurableSet k
-      ⟨w, hw.continuous⟩ (u : (polyElement n S).Piecewise M k) hB1
+  have hΩ := (F.isOpen_domain N).measurableSet
+  refine (polyElement n S).exists_mem_minimalSubcomplexOfEq_le (F.mesh N) (F.domain_eq N)
+    (F.isOpen_domain N) D.isOpen D.isBounded D.x₀ (F.strict_mesh N) k hw1 hsupp
+    (A := F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L))
+    (A' := F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L'))
+    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
+      ((polyElement n S).globalInterp (F.mesh N) k ⟨w, hw.continuous⟩ :
+        (polyElement n S).Piecewise (F.mesh N) k) hB1
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs hws hdeg hL T (interior_subset hx) t
-    refine h.trans (le_of_eq ?_)
-    rw [hvol, polyInterpConst]; ring
-  · refine ⟨by rw [deRham_minimalComplex_d]; exact hmem, ?_⟩
-    rw [LinearPMap.apply_eq_of_eq' (deRham_minimalComplex_d hΩo (k : ℤ))]
-    have h := FEM.norm_formL2_sub_glue_le_of_forall (polyElement n S) M hΩo.measurableSet (k + 1)
-      ⟨extDeriv w, hdw.continuous⟩ ((polyElement n S).globalInterp M (k + 1)
-        ⟨extDeriv w, hdw.continuous⟩ : (polyElement n S).Piecewise M (k + 1)) hB2
+      ).trans_eq ?_)
+    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
+      ((polyElement n S).globalInterp (F.mesh N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
+        (polyElement n S).Piecewise (F.mesh N) (k + 1)) hB2
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs' hdw hdeg' hL' T (interior_subset hx) t
-    have h1 : (polyElement n S).dPiecewise M k (u : (polyElement n S).Piecewise M k) =
-        ((polyElement n S).dGlobal M k u : (polyElement n S).Piecewise M (k + 1)) := rfl
-    have e : (extDerivOp ℝ n k).minimal M.domain
-        ⟨(polyElement n S).glue M k (u : (polyElement n S).Piecewise M k), hmem⟩ =
-        (polyElement n S).glue M ((k + 1 : ℕ) : ℤ) ((polyElement n S).globalInterp M (k + 1)
-          ⟨extDeriv w, hdw.continuous⟩ : (polyElement n S).Piecewise M (k + 1)) := by
-      rw [hval]
-      change (polyElement n S).glue M ((k : ℤ) + 1)
-        ((polyElement n S).dPiecewise M k (u : (polyElement n S).Piecewise M k)) = _
-      rw [h1, ← LocalElement.globalInterp_extDeriv]
-      rfl
-    erw [e]
-    refine h.trans (le_of_eq ?_)
-    rw [hvol, polyInterpConst]; push_cast; ring
+      ).trans_eq ?_) <;>
+  · rw [F.domain_eq N, polyInterpConst]; push_cast; ring
 
 /-! ### Degreewise rates -/
 
@@ -435,33 +383,24 @@ theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : FEM.PolyO
 
 /-! ### Density of the higher-order complexes -/
 
-/-- **Graph-norm density of the higher-order spaces in `HΛᵏ(Ω)`**: smooth forms are dense
-(`StarDomain.exists_smooth_near`) and their canonical interpolants converge at rate `h_N`
-(`exists_mem_poly_le` with `s = 0`). -/
+/-- **Graph-norm density of the higher-order spaces in `HΛᵏ(Ω)`**: the canonical interpolants of
+smooth forms converge at rate `h_N` (`exists_mem_poly_le` with `s = 0`,
+`FEM.eventually_exists_graph_of_smooth`). -/
 theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complex.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.poly S N).V k, ‖x - v‖ < ε ∧
       ‖D.complex.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.poly S N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  rcases k with k | k
-  swap
-  · have := LocalElement.subsingleton_L2F_negSucc D.Ω (n := n) k
-    refine Eventually.of_forall fun N => ⟨0, Submodule.zero_mem _, ?_, ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
-  change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.poly S N).V (k : ℤ), ‖x - v‖ < ε ∧
-      ‖D.complex.d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((F.poly S N).le_domain k (k + 1) hv)⟩‖ < ε
-  refine FEM.eventually_exists_graph_of_near (fun N => F.poly S N) hx (fun ε hε => ?_) hε
-  obtain ⟨w, hw, hdeg, h1, h2⟩ := D.exists_smooth_near k ⟨x, hx⟩ hε
+  refine FEM.eventually_exists_graph_of_smooth D.isOpen D.isBounded D.s₀_pos D.starBall
+    (fun N => F.poly S N) (fun k w hw hdeg => ?_) k x hx hε
   have hw2 : ContDiff ℝ (0 + 2) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1)
     (contDiff_infty.1 hw _)
   have hdw : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) :=
     contDiff_extDeriv (contDiff_infty.1 hw _)
   obtain ⟨L', hL'0, hL'⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1) hdw
-  refine ⟨_, _, fun N => F.polyInterpConst S k * ((F.mesh N).meshSize * L) +
-      F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize * L'), h1, h2, by
+  refine ⟨fun N => F.polyInterpConst S k * ((F.mesh N).meshSize * L) +
+      F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize * L'), by
     have := ((F.tendsto_meshSize.mul_const L).const_mul (F.polyInterpConst S k)).add
       ((F.tendsto_meshSize.mul_const L').const_mul (F.polyInterpConst S (k + 1)))
     simpa using this, fun N => ?_⟩
@@ -472,7 +411,8 @@ theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (mul_nonneg (F.meshSize_pos N).le hL'0)
   have hb0 := mul_nonneg (F.polyInterpConst_nonneg S k)
     (mul_nonneg (F.meshSize_pos N).le hL0)
-  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hv2.trans (le_add_of_nonneg_left hb0)⟩
+  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hdv,
+    hv2.trans (le_add_of_nonneg_left hb0)⟩
 
 /-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
@@ -497,80 +437,36 @@ theorem tendsto_infDist_poly (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
   FEM.tendsto_infDist_of_lt (S := fun N => F.poly S N) q fun _ ha =>
     F.eventually_exists_poly_lt S j q ha
 
-omit [NeZero n] in
-/-- The `L²` class of a `k`-form only sees its degree-`k` part. -/
-theorem formL2_degField {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (hb : Bornology.IsBounded Ω)
-    (k : ℕ) {w : FormField n} (hw : Continuous w) :
-    formL2 hΩ hb k ⟨degField k w, continuous_degField k hw⟩ = formL2 hΩ hb k ⟨w, hw⟩ := by
-  refine PiLp.ext fun s => Lp.ext ?_
-  filter_upwards [coeFn_formL2 hΩ hb k ⟨degField k w, continuous_degField k hw⟩ s,
-    coeFn_formL2 hΩ hb k ⟨w, hw⟩ s] with x h1 h2
-  rw [h1, h2]
-  have hs : #s.1 = k := by exact_mod_cast s.2
-  simp [degField, hs]
-
 /-- **Graph-norm density of the higher-order spaces with vanishing boundary DOFs in
-`H̊Λᵏ(Ω)`**: smooth forms with compact support in `Ω` are dense
-(`StarDomain.exists_smooth_near_min`, degree-`k` parts) and their canonical interpolants lie in
-`V̊ₕᵏ` and converge at rate `h_N`. -/
+`H̊Λᵏ(Ω)`**: the canonical interpolants of smooth forms vanishing outside `Ω` lie in `V̊ₕᵏ` and
+converge at rate `h_N` (`exists_mem_polyMin_le`, `FEM.eventually_exists_graph_of_smooth_min`). -/
 theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complexMin.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.polyMin S N).V k, ‖x - v‖ < ε ∧
       ‖D.complexMin.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.polyMin S N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  rcases k with k | k
-  swap
-  · have := LocalElement.subsingleton_L2F_negSucc D.Ω (n := n) k
-    refine Eventually.of_forall fun N => ⟨0, Submodule.zero_mem _, ?_, ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
-  change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.polyMin S N).V (k : ℤ), ‖x - v‖ < ε ∧
-      ‖D.complexMin.d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((F.polyMin S N).le_domain k (k + 1) hv)⟩‖ < ε
-  refine FEM.eventually_exists_graph_of_near (fun N => F.polyMin S N) hx (fun ε hε => ?_) hε
-  obtain ⟨w₀, hw₀, hsupp₀, h1₀, h2₀⟩ := D.exists_smooth_near_min k ⟨x, hx⟩ hε
-  set w := degField k w₀
-  have hw : ContDiff ℝ ∞ w := contDiff_degField k hw₀
-  have hdeg : ∀ y, IsDeg k (w y) := isDeg_degField k w₀
-  have hsupp : ∀ y ∉ D.Ω, w y = 0 := fun y hy => by
-    funext s; simp [w, degField, hsupp₀ y hy]
-  have hdw : extDeriv w = degField (k + 1) (extDeriv w₀) := extDeriv_degField k w₀
-  have h1 : ‖(x : L2F ℝ D.Ω (formIdx n k)) -
-      formL2 D.isOpen.measurableSet D.isBounded k ⟨w, hw.continuous⟩‖ < ε := by
-    rw [formL2_degField D.isOpen.measurableSet D.isBounded k hw₀.continuous]; exact h1₀
-  have h2 : ‖D.complexMin.d k (k + 1) ⟨x, hx⟩ -
-      formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
-        ⟨extDeriv w, continuous_extDeriv (contDiff_infty.1 hw _)⟩‖ < ε := by
-    have e : formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
-        ⟨extDeriv w, continuous_extDeriv (contDiff_infty.1 hw _)⟩ =
-        formL2 D.isOpen.measurableSet D.isBounded ((k : ℤ) + 1)
-          ⟨extDeriv w₀, continuous_extDeriv (contDiff_infty.1 hw₀ _)⟩ := by
-      have h := formL2_degField D.isOpen.measurableSet D.isBounded (k + 1)
-        (continuous_extDeriv (contDiff_infty.1 hw₀ _))
-      push_cast at h
-      rw [← h]
-      congr 2
-    rw [e]; exact h2₀
+  refine FEM.eventually_exists_graph_of_smooth_min D.isOpen D.isBounded D.s₀_pos D.starBall
+    (fun N => F.polyMin S N) (fun k w hw hdeg hsupp => ?_) k x hx hε
   have hw2 : ContDiff ℝ (0 + 2) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1)
     (contDiff_infty.1 hw _)
-  have hdw' : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) :=
+  have hdw : ContDiff ℝ ((0 + 1 : ℕ) : WithTop ℕ∞) (extDeriv w) :=
     contDiff_extDeriv (contDiff_infty.1 hw _)
-  obtain ⟨L', hL'0, hL'⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1) hdw'
-  refine ⟨_, _, fun N => F.polyInterpConst S k * ((F.mesh N).meshSize * L) +
-      F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize * L'), h1, h2, by
+  obtain ⟨L', hL'0, hL'⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1) hdw
+  refine ⟨fun N => F.polyInterpConst S k * ((F.mesh N).meshSize * L) +
+      F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize * L'), by
     have := ((F.tendsto_meshSize.mul_const L).const_mul (F.polyInterpConst S k)).add
       ((F.tendsto_meshSize.mul_const L').const_mul (F.polyInterpConst S (k + 1)))
     simpa using this, fun N => ?_⟩
-  obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_polyMin_le S N k 0
-    (FEM.polySpace_zero_le_space S k) (FEM.polySpace_zero_le_space S (k + 1)) hw2 hdeg hsupp
-    hL0 hL'0 hL hL'
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_polyMin_le S N k 0 (FEM.polySpace_zero_le_space S k)
+    (FEM.polySpace_zero_le_space S (k + 1)) hw2 hdeg hsupp hL0 hL'0 hL hL'
   rw [zero_add, pow_one] at hv1 hv2
   have hb1 := mul_nonneg (F.polyInterpConst_nonneg S (k + 1))
     (mul_nonneg (F.meshSize_pos N).le hL'0)
   have hb0 := mul_nonneg (F.polyInterpConst_nonneg S k)
     (mul_nonneg (F.meshSize_pos N).le hL0)
-  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hv2.trans (le_add_of_nonneg_left hb0)⟩
+  exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right hb1), hdv,
+    hv2.trans (le_add_of_nonneg_left hb0)⟩
 
 /-- **`L²` density of the higher-order spaces with vanishing boundary DOFs** `V̊ₕᵏ` in
 `L²(Ω; Λᵏ)`. -/

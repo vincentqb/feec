@@ -722,7 +722,7 @@ theorem canonicalInterp_le (N : ℕ) (j : ℤ) :
     rw [e]; linarith
   by_cases hj' : (k' : ℤ) + 1 = j'
   · subst hj'
-    obtain ⟨hmem, hval⟩ := glue_globalInterp_mem_maximal M hΩo k' ⟨w, hw1⟩
+    obtain ⟨hmem, hval⟩ := (whitneyElement n).glue_globalInterp_mem_maximal M hΩo k' ⟨w, hw1⟩
     obtain ⟨hmw, hvw⟩ := formL2_mem_maximal M hΩo k' hw1 hdeg
     have hd := deRham_maximalComplex_d (𝕜 := ℝ) (n := n) hΩo (k' : ℤ)
     have e1 : ((deRham ℝ n).maximalComplex hΩo).d k' (k' + 1) ⟨_, Submodule.sub_mem _ hx

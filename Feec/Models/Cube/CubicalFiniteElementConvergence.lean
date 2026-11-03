@@ -206,32 +206,24 @@ theorem eventually_exists_qMinus_graph (hb : ∀ j, 1 ≤ b j) (k : ℤ)
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (qMinus n b N).V k, ‖x - v‖ < ε ∧
       ‖(complex n).d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((qMinus n b N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  rcases k with k | k
-  swap
-  · have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
-    refine Eventually.of_forall fun N => ⟨0, Submodule.zero_mem _, ?_, ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
-  change ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (qMinus n b N).V (k : ℤ), ‖x - v‖ < ε ∧
-      ‖(complex n).d k (k + 1)
-        ⟨x - v, Submodule.sub_mem _ hx ((qMinus n b N).le_domain k (k + 1) hv)⟩‖ < ε
-  refine eventually_exists_graph_of_near (fun N => qMinus n b N) hx (fun ε hε => ?_) hε
-  obtain ⟨w, hw, hdeg, h1, h2⟩ := exists_smooth_near k ⟨x, hx⟩ hε
+  refine eventually_exists_graph_of_smooth (isOpen_cubeDomain n) (isBounded_cubeDomain n)
+    (by norm_num : (0 : ℝ) < 1 / 4) (starBall n) (fun N => qMinus n b N)
+    (fun k w hw hdeg => ?_) k x hx hε
   have hw2 : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv
     (hw.of_le (WithTop.coe_le_coe.2 le_top) : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w)
   obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv (m := 1)
     (contDiff_extDeriv (m := 1) (hw.of_le (WithTop.coe_le_coe.2 le_top)))
   have hs : ∀ j, 0 + 1 ≤ b j := hb
-  refine ⟨_, _, fun N => qMinusInterpConst n b 0 k * (meshSize N ^ (0 + 1) * L) +
-    qMinusInterpConst n b 0 (k + 1) * (meshSize N ^ (0 + 1) * L'), h1, h2, by
+  refine ⟨fun N => qMinusInterpConst n b 0 k * (meshSize N ^ (0 + 1) * L) +
+    qMinusInterpConst n b 0 (k + 1) * (meshSize N ^ (0 + 1) * L'), by
       simpa using (((tendsto_meshSize.pow 1).mul_const L).const_mul
         (qMinusInterpConst n b 0 k)).add
         (((tendsto_meshSize.pow 1).mul_const L').const_mul (qMinusInterpConst n b 0 (k + 1))),
     fun N => ?_⟩
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_qMinus_le hs N k hw2 hdeg hL hL'
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right (mul_nonneg (qMinusInterpConst_nonneg _ _ _)
-    (mul_nonneg (pow_nonneg (meshSize_pos N).le _) hL'0))), hv2.trans (le_add_of_nonneg_left
+    (mul_nonneg (pow_nonneg (meshSize_pos N).le _) hL'0))), hdv, hv2.trans (le_add_of_nonneg_left
       (mul_nonneg (qMinusInterpConst_nonneg _ _ _) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
         hL0)))⟩
 

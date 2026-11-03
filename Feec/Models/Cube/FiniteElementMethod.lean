@@ -1,6 +1,6 @@
 module
 
-public import Feec.FiniteElement.SmoothedProjection
+public import Feec.FiniteElement.GlobalInterpolation
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.Domain.StarShapedSmoothing
 public import Feec.HilbertComplex.Approximation.Convergence
@@ -287,12 +287,6 @@ theorem maximal_smoothedInterp [NeZero n] (hΩ : MeasurableSet M.domain) (hΩo :
   rw [h2]
   rfl
 
-/-- Evaluating equal partial maps. -/
-theorem _root_.LinearPMap.apply_eq_of_eq' {V W : Type*} [AddCommGroup V] [Module ℝ V]
-    [AddCommGroup W] [Module ℝ W] {T T' : V →ₗ.[ℝ] W} (h : T = T') (x : T.domain) :
-    T x = T' ⟨x, h ▸ x.2⟩ := by
-  subst h; rfl
-
 /-- **The smoothed canonical interpolant as a commuting map** into the finite element subcomplex
 `Vₕ ⊆ HΛ(Ω)` (maximal family, `Ω` star-shaped with respect to `B(x₀, s₀)`): `Q = Π_h R` with
 `d Q = Q d` in every degree. -/
@@ -328,23 +322,6 @@ def smoothedCommutingMap [NeZero n] (hΩo : IsOpen M.domain) {x₀ : Fin n → �
   rfl
 
 /-! ### The vanishing-trace family -/
-
-/-- A point of the boundary `∂(cl Ω)` is not in the open set `Ω`. -/
-theorem _root_.Feec.Mesh.SimplicialMesh.notMem_domain_of_mem_frontier (hΩo : IsOpen M.domain)
-    {x : Fin n → ℝ} (hx : x ∈ frontier (closure M.domain)) : x ∉ M.domain := fun hxΩ =>
-  hx.2 (interior_maximal subset_closure hΩo hxΩ)
-
-/-- **`Π_h` of a form vanishing on `∂(cl Ω)` has vanishing boundary DOFs**: the DOFs of a face
-in a boundary facet see only the traces there (`dof_congr`). -/
-theorem globalInterp_mem_globalSpace₀ (k : ℕ) {w : contForms n}
-    (h : ∀ x ∈ frontier (closure M.domain), (w : FormField n) x = 0) :
-    (E.globalInterp M k w : E.Piecewise M k) ∈ E.globalSpace₀ M k := by
-  refine ⟨(E.globalInterp M k w).2, fun T F hF hFT g hg i => ?_⟩
-  rw [localDof_globalInterp _ _ _ _ _ _ (hg.trans hFT)]
-  have h0 : E.dof g k i w = E.dof g k i 0 := E.dof_congr i fun x hx V _ => by
-    rw [h x (hF.2.2 (convexHull_mono (Finset.coe_subset.2 hg) hx))]
-    rfl
-  rw [h0, map_zero]
 
 /-- **Minimal family: `Q = Π_h R` has vanishing boundary DOFs**, `Q u ∈ V̊ₕ`. -/
 theorem smoothedInterp_mem_V₀ (hΩo : IsOpen M.domain) (hb : Bornology.IsBounded M.domain)
@@ -427,52 +404,6 @@ def smoothedCommutingMapMin [NeZero n] (hΩo : IsOpen M.domain)
 end LocalElement
 
 end Feec.FiniteElement
-
-/-! ## Transport of subcomplexes along an equality of domains -/
-
-namespace Feec.Domain.ConstCoeffComplex
-
-variable {n : ℕ} (C : ConstCoeffComplex (Fin n → ℝ) ℝ)
-
-/-- A subcomplex of the maximal complex on `Ω`, as a subcomplex of the maximal complex on
-`Ω' = Ω`. -/
-def maximalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
-    (hΩ' : IsOpen Ω') (S : (C.maximalComplex hΩ).Subcomplex) :
-    (C.maximalComplex hΩ').Subcomplex := by
-  subst h; exact S
-
-theorem finiteDimensional_maximalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
-    (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (S : (C.maximalComplex hΩ).Subcomplex)
-    [hS : ∀ k, FiniteDimensional ℝ (S.V k)] (k : ℤ) :
-    FiniteDimensional ℝ ((C.maximalSubcomplexOfEq h hΩ hΩ' S).V k) := by
-  subst h; exact hS k
-
-/-- A commuting map into `S`, transported along `Ω = Ω'`. -/
-def commutingMapOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω')
-    {S : (C.maximalComplex hΩ).Subcomplex} (Q : S.CommutingMap) :
-    (C.maximalSubcomplexOfEq h hΩ hΩ' S).CommutingMap := by
-  subst h; exact Q
-
-/-- A subcomplex of the minimal complex on `Ω`, as a subcomplex of the minimal complex on
-`Ω' = Ω`. -/
-def minimalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
-    (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex) :
-    (C.minimalComplex hΩ').Subcomplex := by
-  subst h; exact S
-
-theorem finiteDimensional_minimalSubcomplexOfEq {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω')
-    (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω') (S : (C.minimalComplex hΩ).Subcomplex)
-    [hS : ∀ k, FiniteDimensional ℝ (S.V k)] (k : ℤ) :
-    FiniteDimensional ℝ ((C.minimalSubcomplexOfEq h hΩ hΩ' S).V k) := by
-  subst h; exact hS k
-
-/-- A commuting map into a subcomplex of the minimal complex, transported along `Ω = Ω'`. -/
-def commutingMapOfEqMin {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω) (hΩ' : IsOpen Ω')
-    {S : (C.minimalComplex hΩ).Subcomplex} (Q : S.CommutingMap) :
-    (C.minimalSubcomplexOfEq h hΩ hΩ' S).CommutingMap := by
-  subst h; exact Q
-
-end Feec.Domain.ConstCoeffComplex
 
 /-! ## Rate of the semi-discrete Hodge wave equation on a subcomplex -/
 

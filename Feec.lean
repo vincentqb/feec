@@ -87,6 +87,7 @@ public import Feec.FiniteElement.CubeDof
 public import Feec.FiniteElement.CubeInterpolation
 public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
+public import Feec.FiniteElement.GlobalInterpolation
 public import Feec.FiniteElement.InterpolationError
 public import Feec.FiniteElement.InverseEstimate
 public import Feec.FiniteElement.LumpedLaplacian

@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.Cube.WeakSymmetryEstimates
-public import Feec.Models.Cube.PolyRate
+public import Feec.Models.Cube.TangentialRate
 public import Feec.HilbertComplex.BGG.WeakConsistency
 
 /-!
@@ -43,15 +43,18 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
   `Feec.BGG.Discrete.weakConsistency_of_regularPotential_of_bound`, with `S¹u ∈ D(d¹*)` as a
   functional bound (in the `W`-normed model `V¹ = H̊Λ¹(Q)` is not complete, so `d¹*S¹u ∈ L²` has no
   representative in `V¹`).
-* `cubeFEM_rate`, `cubeFEM_rate_C2`: **Thm 5.5 on the cube with the elements of Table 5.1**,
-  `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u, S¹u`
-  `C²` and vanishing outside `Q` (bound `L` on the first derivatives) and `‖λ‖ ≤ L`, `K`
-  independent of `N`;
-  `IsCsFormMin.norm_le` (flatness and the mean value theorem) and `IsCsFormMin.abs_inner_D1_le`
-  (Green's formula on `D(d_min)`) supply `‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`. The rates for
-  solutions that are `C²` up to `∂Q` with vanishing tangential traces (no flatness) are
-  `cubeFEM_rate_tr`, `cubeFEM_rate_isSaddle_tr` in `Feec.Models.Cube.WeakSymmetryTangentialRate`.
-* `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle`: the solution of Prop 5.2
+* `cubeFEM_rate_tr`: **Thm 5.5 on the cube with the elements of Table 5.1**,
+  `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` for exact solutions with `σ, φ, u`
+  `C²` up to `∂Q` with vanishing tangential traces (`FEM.IsCsFormTr 0`, bound `L`; no condition on
+  the normal components) and `‖λ‖ ≤ L`, `K` independent of `N`. The class of `S¹u` is derived
+  (`exists_isCsFormTr_segS1`: the tangential trace of `dxₐ ∧ uₐ` vanishes with that of `uₐ`),
+  and `IsCsFormTr.norm_le` (sup bound) and `IsCsFormTr.abs_inner_D1_le` (Green's formula on
+  `D(d_min)`) supply `‖S¹u‖ ≤ cL` and `|⟪S¹u, dw⟫| ≤ cL ‖w‖`; `cubeFEM_rate_tr_of_bounds` takes
+  these as hypotheses. The interpolation errors (`cubeFEM_err_P0_tr`, …) come from
+  `IsCsFormTr.exists_mem_polyMin_le`.
+* `cubeFEM_rate`, `cubeFEM_rate_C2`: the same rates for flat data (`IsCsFormMin 0`: `C²` forms
+  vanishing outside `Q`), through `IsCsFormMin.isCsFormTr`.
+* `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle_tr`, `cubeFEM_rate_isSaddle`: the solution of Prop 5.2
   (`bggHilb.IsSaddle`, graph spaces) with multiplier in `L²Λ¹(Q)` solves the domain form of (5.3),
   so the rate applies to it.
 * `cubeFEM_existsUnique`: unique discrete solvability (thesis Prop 5.4).
@@ -732,42 +735,6 @@ theorem norm_L2F_le_of_bound {ι : Type*} [Fintype ι] (z : L2F ℝ (cubeDomain 
   calc ∑ s, ‖z s‖ ≤ ∑ _s : ι, B := Finset.sum_le_sum fun s _ => norm_L2_le_of_bound hB (h s)
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
 
-theorem mem_closure_cube_update {y : Fin 3 → ℝ} (hy : y ∈ cubeDomain 3) :
-    Function.update y 0 (1 / 2) ∈ closure (cubeDomain 3) := by
-  rw [cubeDomain, closure_pi_set]
-  intro i _
-  rw [closure_Ioo (by norm_num)]
-  by_cases hi : i = 0
-  · subst hi; simp
-  · rw [Function.update_of_ne hi]
-    exact ⟨(hy i (Set.mem_univ i)).1.le, (hy i (Set.mem_univ i)).2.le⟩
-
-/-- **A `C¹` field vanishing outside `Q`, with `‖Dw‖ ≤ L` on `cl Q`, is bounded by `L / 2` on `Q`**
-(mean value theorem along a segment to a point of `∂Q`). -/
-theorem norm_le_of_flat {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-    {w : (Fin 3 → ℝ) → E} (hw : Differentiable ℝ w)
-    (hsupp : ∀ y ∉ cubeDomain 3, w y = 0) {L : ℝ}
-    (hL : ∀ y ∈ closure (cubeDomain 3), ‖fderiv ℝ w y‖ ≤ L) {y : Fin 3 → ℝ}
-    (hy : y ∈ cubeDomain 3) : ‖w y‖ ≤ L * (1 / 2) := by
-  set y' := Function.update y 0 (1 / 2)
-  have hy' : y' ∉ cubeDomain 3 := fun h => by
-    have := (h 0 (Set.mem_univ 0)).2
-    simp [y'] at this
-  have hmvt := (convex_cubeDomain 3).closure.norm_image_sub_le_of_norm_fderiv_le
-    (fun x _ => hw x) hL (subset_closure hy) (mem_closure_cube_update hy)
-  rw [hsupp y' hy', zero_sub, norm_neg] at hmvt
-  have hd : ‖y' - y‖ ≤ 1 / 2 := by
-    refine (pi_norm_le_iff_of_nonneg (by norm_num)).2 fun i => ?_
-    by_cases hi : i = 0
-    · subst hi
-      have h0 := hy 0 (Set.mem_univ 0)
-      simp only [y', Pi.sub_apply, Function.update_self, Real.norm_eq_abs]
-      rw [abs_of_nonneg (by linarith [h0.2])]
-      linarith [h0.1]
-    · simp [y', Function.update_of_ne hi]
-  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hL y (subset_closure hy))
-  exact hmvt.trans (mul_le_mul_of_nonneg_left hd hL0)
-
 theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.mono {n : ℕ} {s : ℕ} {j : ℤ} {L L' : ℝ}
     {x : L2F ℝ (cubeDomain n) (formIdx n j)} (hx : IsCsFormMin s j L x) (hLL' : L ≤ L') :
     IsCsFormMin s j L' x := by
@@ -781,21 +748,18 @@ theorem norm_eq_zero_of_neg {j : ℤ} (hj : j < 0) (x : L2F ℝ (cubeDomain 3) (
   obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
   exact FEM.norm_eq_zero_negSucc k x
 
-/-- **`L²` bound of a `C²` form vanishing outside `Q`**: `‖x‖ ≤ #(formIdx) L`. -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.norm_le {j : ℤ} {L : ℝ}
-    {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)}
-    (hx : IsCsFormMin 0 j L x) (hL0 : 0 ≤ L) : ‖x‖ ≤ Fintype.card (formIdx 3 j) * L := by
-  rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, -, rfl⟩
+/-- **`L²` bound from the sup bound**: `‖x‖ ≤ #(formIdx) L` for `IsCsFormTr s j L x` (`|Q| ≤ 1`). -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.norm_le {s : ℕ} {j : ℤ} {L : ℝ}
+    {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} (hx : IsCsFormTr s j L x) (hL0 : 0 ≤ L) :
+    ‖x‖ ≤ Fintype.card (formIdx 3 j) * L := by
+  rcases hx with hj | ⟨k, rfl, w, hw, -, -, hL, rfl⟩
   · rw [norm_eq_zero_of_neg hj]; positivity
-  refine norm_L2F_le_of_bound _ hL0 fun s => ?_
+  refine norm_L2F_le_of_bound _ hL0 fun t => ?_
   filter_upwards [coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) k
-    ⟨w, hw.continuous⟩ s, ae_restrict_mem (isOpen_cubeDomain 3).measurableSet] with y h1 hy
+    ⟨w, hw.continuous⟩ t, ae_restrict_mem (isOpen_cubeDomain 3).measurableSet] with y h1 hy
   rw [h1]
-  have hb := norm_le_of_flat (hw.differentiable (by norm_num)) hsupp
-    (fun z hz => by simpa [norm_iteratedFDeriv_one] using hL z hz) hy
-  calc ‖(w y) s.1‖ ≤ ‖w y‖ := norm_le_pi_norm (w y) s.1
-    _ ≤ L * (1 / 2) := hb
-    _ ≤ L := by linarith
+  calc ‖(w y) t.1‖ ≤ ‖w y‖ := norm_le_pi_norm (w y) t.1
+    _ ≤ L := by simpa using (hL 0 (Nat.zero_le _) y (subset_closure hy)).1
 
 theorem norm_coordDir_le (j : Fin 3) : ‖(coordDir j : Fin 3 → ℝ)‖ ≤ 1 := by
   refine (pi_norm_le_iff_of_nonneg zero_le_one).2 fun i => ?_
@@ -870,10 +834,10 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsForm.abs_inner_D1_le {L : ℝ} {x : W2}
   rw [mul_comm]
   exact mul_le_mul_of_nonneg_right hnorm (norm_nonneg _)
 
-/-- **`S¹u ∈ D(d¹*)` for flat `C²` fields**: the Green bound of `IsCsForm.abs_inner_D1_le`. -/
-theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.abs_inner_D1_le {L : ℝ} {x : W2}
-    (hx : IsCsFormMin 0 2 L x) (hL0 : 0 ≤ L)
-    (w : U1) : |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ :=
+/-- The Green bound for the class `IsCsFormTr` (which carries no condition used by it). -/
+theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.abs_inner_D1_le {L : ℝ} {x : W2}
+    (hx : IsCsFormTr 0 2 L x) (hL0 : 0 ≤ L) (w : U1) :
+    |⟪x, D1 w⟫| ≤ (Fintype.card (formIdx 3 1) * (3 * L)) * ‖w‖ :=
   hx.isCsForm.abs_inner_D1_le hL0 w
 
 /-- The centre `(¼, ¼, ¼)` of the cube. -/
@@ -1177,15 +1141,120 @@ theorem exists_manufactured_solution : ∃ L, 0 ≤ L ∧
 
 end SmoothBounds
 
+/-! ### Regularity of `S¹u` from that of `u` -/
+
+section S1Regularity
+
+open Feec.ExteriorFibre
+
+/-- The fibre maps `v ↦ dxₐ ∧ v` of `S` (`S v = Σₐ dxₐ ∧ vₐ`) on `ℝ³`. -/
+def coordWedgeCLM (a : Fin 3) : (Finset (Fin 3) → ℝ) →L[ℝ] (Finset (Fin 3) → ℝ) :=
+  LinearMap.toContinuousLinearMap
+    ((coordWedgeSumₗ : (Fin 3 → Finset (Fin 3) → ℝ) →ₗ[ℝ] _) ∘ₗ
+      LinearMap.single ℝ (fun _ : Fin 3 => Finset (Fin 3) → ℝ) a)
+
+/-- `S v = Σₐ dxₐ ∧ vₐ` as a sum of fibre maps. -/
+theorem coordWedgeField_eq_sum (v : Fin 3 → FormField 3) :
+    coordWedgeField v = ∑ a, (coordWedgeCLM a) ∘ v a := by
+  funext x
+  rw [coordWedgeField_apply, Finset.sum_apply]
+  conv_lhs => rw [← Finset.univ_sum_single (fun i => v i x)]
+  rw [coordWedgeSum_sum]
+  refine Finset.sum_congr rfl fun b _ => ?_
+  rfl
+
+/-- Derivative bounds for `S v` from those of the `vₐ`. -/
+theorem norm_iteratedFDeriv_coordWedgeField_le_sum {v : Fin 3 → FormField 3} {m : ℕ}
+    (hv : ∀ a, ContDiff ℝ m (v a)) {L : ℝ} {i : ℕ} (hi : i ≤ m) {y : Fin 3 → ℝ}
+    (h : ∀ a, ‖iteratedFDeriv ℝ i (v a) y‖ ≤ L) :
+    ‖iteratedFDeriv ℝ i (coordWedgeField v) y‖ ≤ (∑ a, ‖coordWedgeCLM a‖) * L := by
+  have hi' : (i : WithTop ℕ∞) ≤ m := by exact_mod_cast hi
+  rw [coordWedgeField_eq_sum, iteratedFDeriv_sum_apply fun a _ =>
+    ((coordWedgeCLM a).contDiff.comp ((hv a).of_le hi')).contDiffAt, Finset.sum_mul]
+  refine (norm_sum_le _ _).trans (Finset.sum_le_sum fun a _ => ?_)
+  exact ((coordWedgeCLM a).norm_iteratedFDeriv_comp_left (hv a).contDiffAt hi').trans
+    (mul_le_mul_of_nonneg_left (h a) (norm_nonneg _))
+
+/-- `S` preserves vanishing tangential traces: for `j ∉ t`, `j ∉ t ∖ {l}`. -/
+theorem isTangentialZero_coordWedgeField {v : Fin 3 → FormField 3}
+    (hv : ∀ a, IsTangentialZero (v a)) : IsTangentialZero (coordWedgeField v) := by
+  intro y hy j t hjt hyj
+  rw [coordWedgeField_apply, coordWedgeSum_apply]
+  refine Finset.sum_eq_zero fun i _ => Finset.sum_eq_zero fun l hl => ?_
+  rw [hv i y hy j (t.erase l) (fun h' => hjt (Finset.mem_of_mem_erase h')) hyj, mul_zero]
+
+/-- **`S¹u` inherits the class of `u`**: if every component `uₐ` is a `C²` `1`-form with vanishing
+tangential traces and bound `L` (`IsCsFormTr 0`), then `S¹u = Σₐ dxₐ ∧ uₐ` is a `C²` `2`-form with
+vanishing tangential traces and bound `c L`, with `c` universal: the tangential trace of
+`dxₐ ∧ uₐ` on a face vanishes with that of `uₐ` (`isTangentialZero_coordWedgeField`),
+`d(S¹u) = −Σₐ dxₐ ∧ duₐ` (`extDeriv_coordWedgeField_eq`), and the derivatives are bounded through
+the fibre maps (`norm_iteratedFDeriv_coordWedgeField_le_sum`). -/
+theorem exists_isCsFormTr_segS1 : ∃ c : ℝ, 1 ≤ c ∧ ∀ (u : Wv U1) {L : ℝ}, 0 ≤ L →
+    (∀ a, IsCsFormTr 0 1 L (u a : W1)) → IsCsFormTr 0 2 (c * L) (bggSegment.S1 u) := by
+  have hc0 : 0 ≤ ∑ a, ‖coordWedgeCLM a‖ := Finset.sum_nonneg fun a _ => norm_nonneg _
+  refine ⟨1 + ∑ a, ‖coordWedgeCLM a‖, by linarith, fun u L hL0 hu => ?_⟩
+  have hex : ∀ a, ∃ w : FormField 3, ∃ hw : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) w,
+      (∀ y, IsDeg 1 (w y)) ∧ IsTangentialZero w ∧
+      (∀ i ≤ 0 + 1, ∀ y ∈ closure (cubeDomain 3),
+        ‖iteratedFDeriv ℝ i w y‖ ≤ L ∧ ‖iteratedFDeriv ℝ i (FiniteElement.extDeriv w) y‖ ≤ L) ∧
+      (u a : W1) = formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
+        ⟨w, hw.continuous⟩ := by
+    intro a
+    rcases hu a with h | ⟨k, hk, w, hw, hdeg, htan, hL, he⟩
+    · exact absurd h (by norm_num)
+    · obtain rfl : k = 1 := by exact_mod_cast hk
+      exact ⟨w, hw, hdeg, htan, hL, he⟩
+  choose w hw hdeg htan hL he using hex
+  have hw2 : ∀ a, ContDiff ℝ 2 (w a) := fun a => by simpa using hw a
+  have hw1 : ∀ a, ContDiff ℝ 1 (w a) := fun a => (hw2 a).of_le (by norm_num)
+  have hdw : ∀ a, ContDiff ℝ 1 (FiniteElement.extDeriv (w a)) := fun a =>
+    contDiff_extDeriv (by simpa [one_add_one_eq_two] using hw2 a)
+  have hW : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) (coordWedgeField w) :=
+    contDiff_coordWedgeField hw
+  have hcL : (∑ a, ‖coordWedgeCLM a‖) * L ≤ (1 + ∑ a, ‖coordWedgeCLM a‖) * L := by nlinarith
+  refine Or.inr ⟨2, rfl, coordWedgeField w, hW, fun y => isDeg_coordWedgeField hdeg y,
+    isTangentialZero_coordWedgeField htan, fun i hi y hy => ⟨?_, ?_⟩, ?_⟩
+  · exact (norm_iteratedFDeriv_coordWedgeField_le_sum hw (by omega)
+      fun a => (hL a i hi y hy).1).trans hcL
+  · rw [extDeriv_coordWedgeField_eq hw1, iteratedFDeriv_neg_apply, norm_neg]
+    exact (norm_iteratedFDeriv_coordWedgeField_le_sum (m := 1) (fun a => by exact_mod_cast hdw a)
+      (by omega)
+      fun a => (hL a i hi y hy).2).trans hcL
+  · change wsL2 (Ω := cubeDomain 3) 1 (incl1 u) = _
+    refine PiLp.ext fun t => Lp.ext ?_
+    rw [wsL2_apply]
+    have h1 := Lp.coeFn_finsetSum Finset.univ fun p : Fin 3 × formIdx 3 1 =>
+      wsCoeff 1 t p • (incl1 u) p.1 p.2
+    have h2 : ∀ p : Fin 3 × formIdx 3 1,
+        (((wsCoeff 1 t p • (incl1 u) p.1 p.2 : L2 ℝ (cubeDomain 3))) : (Fin 3 → ℝ) → ℝ) =ᵐ[
+          volume.restrict (cubeDomain 3)] fun x => wsCoeff 1 t p * w p.1 x p.2.1 := by
+      intro p
+      have e : (incl1 u) p.1 = formL2 (isOpen_cubeDomain 3).measurableSet
+          (isBounded_cubeDomain 3) 1 ⟨w p.1, (hw p.1).continuous⟩ := he p.1
+      rw [e]
+      filter_upwards [Lp.coeFn_smul (wsCoeff 1 t p) (formL2 (isOpen_cubeDomain 3).measurableSet
+          (isBounded_cubeDomain 3) 1 ⟨w p.1, (hw p.1).continuous⟩ p.2),
+        coeFn_formL2 (isOpen_cubeDomain 3).measurableSet (isBounded_cubeDomain 3) 1
+          ⟨w p.1, (hw p.1).continuous⟩ p.2] with x hx1 hx2
+      rw [hx1, Pi.smul_apply, smul_eq_mul, hx2]
+    filter_upwards [h1, ae_all_iff.2 h2, coeFn_formL2 (isOpen_cubeDomain 3).measurableSet
+      (isBounded_cubeDomain 3) 2 ⟨coordWedgeField w, hW.continuous⟩ t] with x hx1 hx2 hx3
+    rw [hx1, Finset.sum_apply, hx3]
+    simp only [hx2]
+    rw [coordWedgeField_apply]
+    exact (coordWedgeSum_eq_sum_wsCoeff (k := 1) (fun a => hdeg a x) t).symm
+
+end S1Regularity
+
 /-! ### Projection errors of smooth fields -/
 
 section ProjError
 
 variable {S' : (complexMin 3).Subcomplex}
 
-/-- Interpolation of a `C²` scalar field vanishing outside `Q` (degree `0`), in the graph norm. -/
-theorem exists_approx_zero {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (σ : U0)
-    (hσ : IsCsFormMin 0 0 L (σ : W0)) :
+/-- Interpolation of a `C²` scalar field vanishing on `∂Q` (degree `0`), in the graph norm. -/
+theorem exists_approx_zero_tr {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (σ : U0)
+    (hσ : IsCsFormTr 0 0 L (σ : W0)) :
     ∃ v, ∃ hv : v ∈ (polyMin 3 S N).V 0,
       ‖(σ : W0) - v‖ ≤ polyInterpBound 3 S 0 * L * meshSize N ∧
       ‖D0 ⟨(σ : W0) - v, D0.domain.sub_mem σ.2 (mem_D0_of_mem_V hv)⟩‖ ≤
@@ -1196,9 +1265,9 @@ theorem exists_approx_zero {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (σ
   rw [d01_apply] at h
   simpa using h
 
-/-- Interpolation of a `C²` `1`-form vanishing outside `Q`, in the graph norm. -/
-theorem exists_approx_one {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (u : U1)
-    (hu : IsCsFormMin 0 1 L (u : W1)) :
+/-- Interpolation of a `C²` `1`-form with vanishing tangential traces, in the graph norm. -/
+theorem exists_approx_one_tr {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (u : U1)
+    (hu : IsCsFormTr 0 1 L (u : W1)) :
     ∃ v, ∃ hv : v ∈ (polyMin 3 S N).V 1,
       ‖(u : W1) - v‖ ≤ polyInterpBound 3 S 1 * L * meshSize N ∧
       ‖D1 ⟨(u : W1) - v, D1.domain.sub_mem u.2 (mem_D1_of_mem_V hv)⟩‖ ≤
@@ -1208,6 +1277,9 @@ theorem exists_approx_one {S : PolySeq} {L : ℝ} (hL0 : 0 ≤ L) (N : ℕ) (u :
   have h := h2 2 (mem_dom12 u.2)
   rw [d12_apply] at h
   simpa using h
+
+
+
 
 /-- Graph-norm error of a cochain projection in degree `0` from an approximation. -/
 theorem graphSq_projU0_sub_le (P : S'.CochainProjection) {C : ℝ}
@@ -1513,17 +1585,17 @@ theorem cubeFEM_gnSq_le (N : ℕ) (w : Wv U1) :
   unfold Feec.BGG.Discrete.gnSq Feec.BGG.graphSq
   nlinarith [sq_nonneg ‖bggSegment.dt1 w‖, sq_nonneg C, sq_nonneg ‖w‖]
 
-theorem cubeFEM_err_P0 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (σ : U0) (hσ : IsCsFormMin 0 0 L (σ : W0)) :
+theorem cubeFEM_err_P0_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (σ : U0) (hσ : IsCsFormTr 0 0 L (σ : W0)) :
     Feec.BGG.graphSq bggSegment.d0 ((cubeFEM hT hB N).P0 σ - σ) ≤
       2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2 * (L * meshSize N) ^ 2 := by
   have hA : 0 ≤ 1 + 2 * C := by linarith [hT.two_mul_nonneg]
-  obtain ⟨v, hv, hv1, hv2⟩ := exists_approx_zero (S := PolySeq.lowestOrder) hL0 N σ hσ
+  obtain ⟨v, hv, hv1, hv2⟩ := exists_approx_zero_tr (S := PolySeq.lowestOrder) hL0 N σ hσ
   refine (graphSq_projU0_sub_le (hT.proj N) (hT.norm_proj_le N 1) (hT.norm_proj_le N 0) σ hv
     hv1 hv2 hA).trans (le_of_eq ?_)
   ring
 
-theorem cubeFEM_err_Pt0 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (φ : Wv U0)
-    (hφ : ∀ a, IsCsFormMin 0 0 L (φ a : W0)) :
+theorem cubeFEM_err_Pt0_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (φ : Wv U0)
+    (hφ : ∀ a, IsCsFormTr 0 0 L (φ a : W0)) :
     Feec.BGG.graphSq bggSegment.dt0 ((cubeFEM hT hB N).Pt0 φ - φ) ≤
       3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2) *
         (L * meshSize N) ^ 2 := by
@@ -1533,15 +1605,15 @@ theorem cubeFEM_err_Pt0 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (φ : Wv U0)
         ∑ _a : Fin 3, 2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2 *
           (L * meshSize N) ^ 2 := by
         refine Finset.sum_le_sum fun a _ => ?_
-        obtain ⟨v, hv, hv1, hv2⟩ := exists_approx_zero (S := PolySeq.lagrangeP2) hL0 N (φ a)
+        obtain ⟨v, hv, hv1, hv2⟩ := exists_approx_zero_tr (S := PolySeq.lagrangeP2) hL0 N (φ a)
           (hφ a)
         refine (graphSq_projU0_sub_le (hB.proj N) (hB.norm_proj_le N 1) (hB.norm_proj_le N 0)
           (φ a) hv hv1 hv2 hA).trans (le_of_eq ?_)
         ring
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
-theorem cubeFEM_err_Pt1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
-    (hu : ∀ a, IsCsFormMin 0 1 L (u a : W1)) :
+theorem cubeFEM_err_Pt1_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
+    (hu : ∀ a, IsCsFormTr 0 1 L (u a : W1)) :
     Feec.BGG.graphSq bggSegment.dt1 ((cubeFEM hT hB N).Pt1 u - u) ≤
       3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2) *
         (L * meshSize N) ^ 2 := by
@@ -1551,27 +1623,27 @@ theorem cubeFEM_err_Pt1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
         ∑ _a : Fin 3, 2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2 *
           (L * meshSize N) ^ 2 := by
         refine Finset.sum_le_sum fun a _ => ?_
-        obtain ⟨v, hv, hv1, hv2⟩ := exists_approx_one (S := PolySeq.lagrangeP2) hL0 N (u a)
+        obtain ⟨v, hv, hv1, hv2⟩ := exists_approx_one_tr (S := PolySeq.lagrangeP2) hL0 N (u a)
           (hu a)
         refine (graphSq_projU1_sub_le (hB.proj N) (hB.norm_proj_le N 2) (hB.norm_proj_le N 1)
           (u a) hv hv1 hv2 hA).trans (le_of_eq ?_)
         ring
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
 
-theorem cubeFEM_err_gnSq (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
-    (hu : ∀ a, IsCsFormMin 0 1 L (u a : W1)) :
+theorem cubeFEM_err_gnSq_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
+    (hu : ∀ a, IsCsFormTr 0 1 L (u a : W1)) :
     (cubeFEM hT hB N).gnSq ((cubeFEM hT hB N).Pt1 u - u) ≤
       (1 + 8 * C ^ 2) * (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)) *
         (L * meshSize N) ^ 2 := by
   have h1 := cubeFEM_gnSq_le hT hB N ((cubeFEM hT hB N).Pt1 u - u)
-  have h2 := mul_le_mul_of_nonneg_left (cubeFEM_err_Pt1 hT hB N hL0 u hu)
+  have h2 := mul_le_mul_of_nonneg_left (cubeFEM_err_Pt1_tr hT hB N hL0 u hu)
     (by positivity : (0 : ℝ) ≤ 1 + 8 * C ^ 2)
   calc _ ≤ _ := h1
     _ ≤ _ := h2
     _ = _ := by ring
 
-theorem cubeFEM_err_S1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
-    (hSu : IsCsFormMin 0 2 L (bggSegment.S1 u)) :
+theorem cubeFEM_err_S1_tr (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
+    (hSu : IsCsFormTr 0 2 L (bggSegment.S1 u)) :
     ‖bggSegment.S1 u - (cubeFEM hT hB N).S1h u‖ ^ 2 ≤
       ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2 * (L * meshSize N) ^ 2 := by
   have hA : 0 ≤ 1 + 2 * C := by linarith [hT.two_mul_nonneg]
@@ -1588,12 +1660,13 @@ theorem cubeFEM_err_S1 (N : ℕ) {L : ℝ} (hL0 : 0 ≤ L) (u : Wv U1)
   have := pow_le_pow_left₀ (norm_nonneg _) h' 2
   nlinarith
 
+
 set_option maxHeartbeats 1000000 in
 /-- **The rate of `cubeFEM_rate` from the projection errors**: for constants `A₀, …, A₃ ≥ 0`
 there is `K` such that `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K δ)²` for every solution of
 (5.3) whose projection errors are `≤ Aᵢ δ²` at a level `δ ≥ h_N L` (e.g. the conclusions of
-`cubeFEM_err_P0`, `cubeFEM_err_Pt0`, `cubeFEM_err_gnSq`, `cubeFEM_err_S1` with `δ = L h_N`), with
-`‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
+`cubeFEM_err_P0_tr`, `cubeFEM_err_Pt0_tr`, `cubeFEM_err_gnSq_tr`, `cubeFEM_err_S1_tr` with
+`δ = L h_N`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`. -/
 theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖)
     {A0 A1 A2 A3 : ℝ} (hA0 : 0 ≤ A0) (hA1 : 0 ≤ A1) (hA2 : 0 ≤ A2) (hA3 : 0 ≤ A3) :
@@ -1718,11 +1791,157 @@ theorem cubeFEM_rate_of_err {CR : ℝ} (hCR0 : 0 ≤ CR)
 set_option maxHeartbeats 1000000 in
 /-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate**: under the regularity
 hypothesis (`curl H̊(curl) = curl S⁰H̊¹(Q;ℝ³)` with constant `C_R`), for every `N` and every
-solution `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` and
-vanish outside `Q` (`IsCsFormMin 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`
+solution `(σ, φ, u, λ)` of the continuous system (5.3) whose components and `S¹u` are `C²` up to
+`∂Q` with vanishing tangential traces (`IsCsFormTr 0`, bound `L`), with `‖λ‖, ‖S¹u‖ ≤ L` and
+`|⟪S¹u, d w⟫| ≤ L ‖w‖`
 (`S¹u ∈ D(d¹*)`), every discrete solution of the method (5.6), i.e. (5.7) with `S_h = πS` in place
 of the canonical `Π¹_h S⁰`, `Π²_h S¹`, satisfies
 `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K` independent of `N`. -/
+theorem cubeFEM_rate_tr_of_bounds {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
+      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
+        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
+      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
+      bggSegment.d0 σ = bggSegment.S0 φ →
+      IsCsFormTr 0 0 L (σ : W0) → (∀ a, IsCsFormTr 0 0 L (φ a : W0)) →
+      (∀ a, IsCsFormTr 0 1 L (u a : W1)) → IsCsFormTr 0 2 L (bggSegment.S1 u) →
+      ‖lam‖ ≤ L → ‖bggSegment.S1 u‖ ≤ L →
+      (∀ w : U1, |⟪bggSegment.S1 u, bggSegment.d1 w⟫| ≤ L * ‖w‖) →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
+        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+  have hK := cubeFEM_rate_of_err hT hB hCR0 hCR
+    (by positivity : 0 ≤ 2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2)
+    (by positivity : 0 ≤ 3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2))
+    (by positivity : 0 ≤ (1 + 8 * C ^ 2) *
+      (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)))
+    (by positivity : 0 ≤ ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2)
+  refine ⟨hK.choose, hK.choose_spec.1, ?_⟩
+  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu hlam hSun hz σh φh uh lh hσh hφh huh h1 h2 h3
+  exact (hK.choose_spec.2 N hL0 (le_of_eq (mul_comm _ _)) c1 c2 c3
+    (cubeFEM_err_P0_tr hT hB N hL0 σ hσ) (cubeFEM_err_Pt0_tr hT hB N hL0 φ hφ)
+    (cubeFEM_err_gnSq_tr hT hB N hL0 u hu) (cubeFEM_err_S1_tr hT hB N hL0 u hSu) hlam hSun hz
+    hσh hφh huh h1 h2 h3).trans_eq (by ring)
+
+set_option maxHeartbeats 1000000 in
+/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions
+with vanishing tangential traces** (thesis' boundary conditions, no flatness): the form of
+`cubeFEM_rate_tr_of_bounds` where the hypotheses on `σ, φ, u` are `C²` regularity up to
+`∂Q`: if `σ`, `φ` and `u` are `C²` forms whose tangential components vanish on `∂Q`, with
+values and first derivatives bounded by `L` on `cl Q` (`IsCsFormTr 0`), and the multiplier
+`λ ∈ L²` (no boundary condition, no smoothness) has
+`‖λ‖ ≤ L`, then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`; the class of `S¹u`
+(`exists_isCsFormTr_segS1`), its `L²` bound
+and the regularity `S¹u ∈ D(d¹*)` are derived (`IsCsFormTr.norm_le`,
+`IsCsFormTr.abs_inner_D1_le`). -/
+theorem cubeFEM_rate_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
+      {F : Wv U1 →ₗ[ℝ] ℝ} {L : ℝ}, 0 ≤ L →
+      (∀ τ ψ, ⟪σ, τ⟫ - ⟪u, bggSegment.dt0 ψ⟫ -
+        ⟪lam, ((bggSegment.d0 τ - bggSegment.S0 ψ : U1) : W1)⟫ = 0) →
+      (∀ v, ⟪bggSegment.dt0 φ, v⟫ + ⟪bggSegment.S1 u, bggSegment.S1 v⟫ +
+        ⟪bggSegment.dt1 u, bggSegment.dt1 v⟫ = F v) →
+      bggSegment.d0 σ = bggSegment.S0 φ →
+      IsCsFormTr 0 0 L (σ : W0) → (∀ a, IsCsFormTr 0 0 L (φ a : W0)) →
+      (∀ a, IsCsFormTr 0 1 L (u a : W1)) → ‖lam‖ ≤ L →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = F v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
+        (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
+  have hex := cubeFEM_rate_tr_of_bounds hT hB hCR0 hCR
+  obtain ⟨K, hK⟩ := hex
+  have hK0 := hK.1
+  have hrate := hK.2
+  obtain ⟨cS, hcS1, hcS⟩ := exists_isCsFormTr_segS1
+  have hcS0 : 0 ≤ cS := by linarith
+  have hc1 : (0 : ℝ) ≤ Fintype.card (formIdx 3 1) := Nat.cast_nonneg _
+  have hc2 : (0 : ℝ) ≤ Fintype.card (formIdx 3 2) := Nat.cast_nonneg _
+  refine ⟨K * (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * cS,
+    mul_nonneg (by positivity) hcS0,
+    fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hlam σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
+  have hSu : IsCsFormTr 0 2 (cS * L) (bggSegment.S1 u) := hcS u hL0 hu
+  have hL' : L ≤ cS * L := le_mul_of_one_le_left hL0 hcS1
+  have hL'0 : 0 ≤ cS * L := mul_nonneg hcS0 hL0
+  have hc1' : (1 : ℝ) ≤ 1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2) := by
+    linarith
+  have hcL : cS * L ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) *
+      (cS * L) := le_mul_of_one_le_left hL'0 hc1'
+  have hcL0 : 0 ≤ (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) *
+      (cS * L) := le_trans hL'0 hcL
+  have hLc := hL'.trans hcL
+  have hn : (Fintype.card (formIdx 3 2) : ℝ) * (cS * L) ≤
+      (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * (cS * L) :=
+    mul_le_mul_of_nonneg_right (by linarith) hL'0
+  have hd : (Fintype.card (formIdx 3 1) : ℝ) * (3 * (cS * L)) ≤
+      (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)) * (cS * L) := by
+    rw [← mul_assoc]; exact mul_le_mul_of_nonneg_right (by linarith) hL'0
+  have hb := hrate N hcL0 c1 c2 c3 (hσ.mono hLc) (fun a => (hφ a).mono hLc)
+    (fun a => (hu a).mono hLc) (hSu.mono hcL) (hlam.trans hLc) ((hSu.norm_le hL'0).trans hn)
+    (fun w => (hSu.abs_inner_D1_le hL'0 w).trans (mul_le_mul_of_nonneg_right hd (norm_nonneg _)))
+    hσh hφh huh h1 h2 h3
+  refine hb.trans (le_of_eq ?_)
+  ring
+
+/-- **The rate for the solution of Prop 5.2** (`bggHilb.IsSaddle`, `bgg_existsUnique_isSaddle`):
+`cubeFEM_rate_tr` applied to the graph-space solution `(x, jW λ)` of (5.3) with right-hand side `f`
+and multiplier in `W¹` (`λ ∈ L²Λ¹(Q)`), through `isSaddle_jW_domain_eqs`; the discrete datum is
+`F v = ⟪f, v⟫`. -/
+theorem cubeFEM_rate_isSaddle_tr {CR : ℝ} (hCR0 : 0 ≤ CR)
+    (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
+    ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {lam : W1} {L : ℝ},
+      0 ≤ L → bggHilb.IsSaddle f x (bggHilb.jW lam) →
+      IsCsFormTr 0 0 L ((graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) : U0) : W0) →
+      (∀ a, IsCsFormTr 0 0 L ((rp (Feec.BGG.pφ V0 Vt0 Vt1 x) a : U0) : W0)) →
+      (∀ a, IsCsFormTr 0 1 L ((rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) a : U1) : W1)) → ‖lam‖ ≤ L →
+      ∀ {σh : U0} {φh : Wv U0} {uh : Wv U1} {lh : U1},
+      σh ∈ (cubeFEM hT hB N).V0h → φh ∈ (cubeFEM hT hB N).Vt0h →
+      uh ∈ (cubeFEM hT hB N).Vt1h →
+      (∀ τ ∈ (cubeFEM hT hB N).V0h, ∀ ψ ∈ (cubeFEM hT hB N).Vt0h,
+        ⟪σh, τ⟫ - ⟪uh, bggSegment.dt0 ψ⟫ -
+          ⟪lh, bggSegment.d0 τ - (cubeFEM hT hB N).S0h ψ⟫ = 0) →
+      (∀ v ∈ (cubeFEM hT hB N).Vt1h, ⟪bggSegment.dt0 φh, v⟫ +
+        ⟪(cubeFEM hT hB N).S1h uh, (cubeFEM hT hB N).S1h v⟫ +
+          ⟪bggSegment.dt1 uh, bggSegment.dt1 v⟫ = ((innerSL ℝ f).toLinearMap ∘ₗ incl1) v) →
+      (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
+      Feec.BGG.graphSq bggSegment.d0 (graphDomₗ (Feec.BGG.pσ V0 Vt0 Vt1 x) - σh) +
+        Feec.BGG.graphSq bggSegment.dt0 (rp (Feec.BGG.pφ V0 Vt0 Vt1 x) - φh) +
+        (cubeFEM hT hB N).gnSq (rp1 (Feec.BGG.pu V0 Vt0 Vt1 x) - uh) ≤
+          (K * L * meshSize N) ^ 2 := by
+  have hex := cubeFEM_rate_tr hT hB hCR0 hCR
+  obtain ⟨K, hK0, hK⟩ := hex
+  refine ⟨K, hK0, fun N f x lam L hL0 hs hσ hφ hu hlam σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
+  have e := isSaddle_jW_domain_eqs hs
+  exact hK N hL0 e.1 e.2.1 e.2.2 hσ hφ hu hlam hσh hφh huh h1 h2 h3
+
+
+set_option maxHeartbeats 1000000 in
+/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for flat data**: the
+form of `cubeFEM_rate_tr_of_bounds` for solutions whose components and `S¹u` are `C²` and vanish
+outside `Q` (`IsCsFormMin 0`, bound `L`; every such form is `IsCsFormTr 0` with the same bound,
+`IsCsFormMin.isCsFormTr`), with `‖λ‖, ‖S¹u‖ ≤ L` and `|⟪S¹u, d w⟫| ≤ L ‖w‖`: every discrete solution
+of the method (5.6) satisfies `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²` with `K`
+independent of `N`. -/
 theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1748,27 +1967,17 @@ theorem cubeFEM_rate {CR : ℝ} (hCR0 : 0 ≤ CR)
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
-  have hK := cubeFEM_rate_of_err hT hB hCR0 hCR
-    (by positivity : 0 ≤ 2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 0) ^ 2)
-    (by positivity : 0 ≤ 3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 0) ^ 2))
-    (by positivity : 0 ≤ (1 + 8 * C ^ 2) *
-      (3 * (2 * ((1 + 2 * C) * polyInterpBound 3 PolySeq.lagrangeP2 1) ^ 2)))
-    (by positivity : 0 ≤ ((1 + 2 * C) * polyInterpBound 3 PolySeq.lowestOrder 2) ^ 2)
-  refine ⟨hK.choose, hK.choose_spec.1, ?_⟩
-  intro N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu hlam hSun hz σh φh uh lh hσh hφh huh h1 h2 h3
-  exact (hK.choose_spec.2 N hL0 (le_of_eq (mul_comm _ _)) c1 c2 c3
-    (cubeFEM_err_P0 hT hB N hL0 σ hσ) (cubeFEM_err_Pt0 hT hB N hL0 φ hφ)
-    (cubeFEM_err_gnSq hT hB N hL0 u hu) (cubeFEM_err_S1 hT hB N hL0 u hSu) hlam hSun hz hσh hφh
-    huh h1 h2 h3).trans_eq (by ring)
+  obtain ⟨K, hK0, hK⟩ := cubeFEM_rate_tr_of_bounds hT hB hCR0 hCR
+  exact ⟨K, hK0, fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hSu =>
+    hK N hL0 c1 c2 c3 hσ.isCsFormTr (fun a => (hφ a).isCsFormTr) (fun a => (hu a).isCsFormTr)
+      hSu.isCsFormTr⟩
 
 set_option maxHeartbeats 1000000 in
-/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for `C²` solutions**:
-the form of `cubeFEM_rate` where the hypotheses on `σ, φ, u, S¹u` are `C²` regularity: if
-`σ`, `φ`, `u` and `S¹u` are `C²` forms vanishing outside `Q` with first derivatives bounded by `L`
-(`IsCsFormMin 0`) and the multiplier `λ ∈ L²` (no boundary condition, no smoothness) has
-`‖λ‖ ≤ L`, then `‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`; the `L²` bound of `S¹u`
-and the regularity `S¹u ∈ D(d¹*)` are derived (`IsCsFormMin.norm_le`,
-`IsCsFormMin.abs_inner_D1_le`). -/
+/-- **Thesis Thm 5.5 on the cube with the elements of Table 5.1, with rate, for flat `C²`
+solutions**: if `σ`, `φ`, `u` and `S¹u` are `C²` forms vanishing outside `Q` with first
+derivatives bounded by `L` (`IsCsFormMin 0`) and the multiplier `λ ∈ L²` has `‖λ‖ ≤ L`, then
+`‖σ − σₕ‖²_V + ‖φ − φₕ‖²_V + ‖u − uₕ‖²_{Γₕ} ≤ (K L h_N)²`. This is `cubeFEM_rate_tr`
+(`IsCsFormMin.isCsFormTr`), which needs no hypothesis on `S¹u`. -/
 theorem cubeFEM_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
     (hCR : ∀ u : V1, ∃ φ : Vt0, bggD1 (bggS0 φ) = bggD1 u ∧ ‖φ‖ ≤ CR * ‖bggD1 u‖) :
     ∃ K, 0 ≤ K ∧ ∀ (N : ℕ) {σ : U0} {φ : Wv U0} {u : Wv U1} {lam : W1}
@@ -1793,26 +2002,10 @@ theorem cubeFEM_rate_C2 {CR : ℝ} (hCR0 : 0 ≤ CR)
       (∀ μ ∈ (cubeFEM hT hB N).V1h, ⟪bggSegment.d0 σh - (cubeFEM hT hB N).S0h φh, μ⟫ = 0) →
       Feec.BGG.graphSq bggSegment.d0 (σ - σh) + Feec.BGG.graphSq bggSegment.dt0 (φ - φh) +
         (cubeFEM hT hB N).gnSq (u - uh) ≤ (K * L * meshSize N) ^ 2 := by
-  have hex := cubeFEM_rate hT hB hCR0 hCR
-  obtain ⟨K, hK⟩ := hex
-  have hK0 := hK.1
-  have hrate := hK.2
-  have hc1 : (0 : ℝ) ≤ Fintype.card (formIdx 3 1) := Nat.cast_nonneg _
-  have hc2 : (0 : ℝ) ≤ Fintype.card (formIdx 3 2) := Nat.cast_nonneg _
-  refine ⟨K * (1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2)), by positivity,
-    fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hlam hSu σh φh uh lh hσh hφh huh h1 h2 h3 => ?_⟩
-  set c : ℝ := 1 + Fintype.card (formIdx 3 1) * 3 + Fintype.card (formIdx 3 2) with hc
-  have hcL : L ≤ c * L := le_mul_of_one_le_left hL0 (by rw [hc]; linarith)
-  have hcL0 : 0 ≤ c * L := by positivity
-  have hb := hrate N (L := c * L) hcL0 c1 c2 c3 (hσ.mono hcL) (fun a => (hφ a).mono hcL)
-    (fun a => (hu a).mono hcL) (hSu.mono hcL)
-    (hlam.trans hcL)
-    ((hSu.norm_le hL0).trans (by rw [hc]; nlinarith))
-    (fun w => (hSu.abs_inner_D1_le hL0 w).trans
-      (mul_le_mul_of_nonneg_right (by rw [hc]; nlinarith) (norm_nonneg _)))
-    hσh hφh huh h1 h2 h3
-  refine hb.trans (le_of_eq ?_)
-  ring
+  obtain ⟨K, hK0, hK⟩ := cubeFEM_rate_tr hT hB hCR0 hCR
+  exact ⟨K, hK0, fun N σ φ u lam F L hL0 c1 c2 c3 hσ hφ hu hlam _ =>
+    hK N hL0 c1 c2 c3 hσ.isCsFormTr (fun a => (hφ a).isCsFormTr) (fun a => (hu a).isCsFormTr)
+      hlam⟩
 
 /-- **The rate for the solution of Prop 5.2** (`bggHilb.IsSaddle`, `bgg_existsUnique_isSaddle`):
 `cubeFEM_rate_C2` applied to the graph-space solution `(x, jW λ)` of (5.3) with right-hand side `f`

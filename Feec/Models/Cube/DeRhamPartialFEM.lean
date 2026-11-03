@@ -66,8 +66,6 @@ open Feec.Models.Cube.DeRhamIdent (HQpartZ dPart Hpart)
 
 variable (n : ℕ)
 
-theorem cubeDomain_subset_Q : cubeDomain n ⊆ Geometry.Q (Fin n) := (cubeDomain_eq_Q n).le
-
 /-- **`HΛ_J(Q)`**: the de Rham complex of the cube with vanishing tangential traces on the faces
 normal to the directions of `J`. -/
 abbrev complexPart (J : Finset (Fin n)) :

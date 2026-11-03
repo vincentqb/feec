@@ -53,6 +53,8 @@ variable (n : ℕ)
 theorem cubeDomain_eq_Q : cubeDomain n = Geometry.Q (Fin n) := by
   ext y; simp [cubeDomain, Geometry.mem_Q]
 
+theorem cubeDomain_subset_Q : cubeDomain n ⊆ Geometry.Q (Fin n) := (cubeDomain_eq_Q n).le
+
 variable {n}
 
 /-- **The Poincaré inequality of `HΛ(Q)`**: `‖z‖ ≤ (2π)⁻¹ ‖d z‖` for `z ∈ D(d) ∩ (𝔷ⁱ)ᗮ`, in every

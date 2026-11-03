@@ -29,7 +29,7 @@ extension theorem for the cube, which is not formalized). The class of `S¹u` is
 of `u` (`exists_isCsFormTr_segS1`). The states `M`, `ρ` are required to have vanishing tangential
 traces as well: the discrete `Mₕ, ρₕ` have vanishing boundary DOFs, so without that condition the
 error is expected to be of order `h^{1/2}` at `t = 0` already (boundary-layer argument, not
-formalized; see `Feec.Models.Cube.WeakSymmetryTangentialRate`).
+formalized; see `Feec.Models.Cube.WeakSymmetryWave`).
 
 ## References
 

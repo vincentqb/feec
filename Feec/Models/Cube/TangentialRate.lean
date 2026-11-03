@@ -529,9 +529,6 @@ theorem not_isCsFormMin_normalWitness [NeZero n] (s : ℕ) (L : ℝ) : ¬ IsCsFo
 theorem Q_subset_cubeDomain : Geometry.Q (Fin n) ⊆ cubeDomain n := fun _ hy i _ =>
   Geometry.mem_Q.1 hy i
 
-theorem cubeDomain_subset_Q : cubeDomain n ⊆ Geometry.Q (Fin n) := fun _ hy =>
-  Geometry.mem_Q.2 fun i => hy i (mem_univ i)
-
 /-- **`L²(Q)`-convergence of uniformly bounded, pointwise convergent sequences** (dominated
 convergence on the bounded cube). -/
 theorem tendsto_toLp_cubeDomain_of_bdd {g : ℕ → (Fin n → ℝ) → ℝ} {h : (Fin n → ℝ) → ℝ}
@@ -715,7 +712,7 @@ theorem mem_minimal_of_isTangentialZero [NeZero n] {k : ℕ} {w : FormField n}
   have hev : ∀ y ∈ cubeDomain n, ∀ᶠ m in atTop, u m y = w y ∧
       FiniteElement.extDeriv (u m) y = FiniteElement.extDeriv w y := by
     intro y hy
-    filter_upwards [DeRhamIdent.eventually_chi_eq_one (d := Fin n) (cubeDomain_subset_Q hy)]
+    filter_upwards [DeRhamIdent.eventually_chi_eq_one (d := Fin n) (cubeDomain_subset_Q n hy)]
       with m hm
     have h1 : χ m y = 1 := hm.eq_of_nhds
     have hg : grad (χ m) y = 0 := by

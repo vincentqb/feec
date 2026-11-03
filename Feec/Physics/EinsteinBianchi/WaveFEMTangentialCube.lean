@@ -6,8 +6,8 @@ public import Feec.Physics.EinsteinBianchi.WaveFEMTangential
 /-!
 # The tangential-trace rates on the cube, unconditionally
 
-The rates of `Feec.Models.Cube.WeakSymmetryTangentialRate` (Thm 5.5, the elliptic projection (6.4)
-and the scheme (6.5) for solutions that are `C²` up to `∂Q` with vanishing tangential traces) and
+The rates of `Feec.Models.Cube.WeakSymmetryFEM` and `Feec.Models.Cube.WeakSymmetryWave` (Thm 5.5,
+the elliptic projection (6.4) and the scheme (6.5) for solutions that are `C²` up to `∂Q` with vanishing tangential traces) and
 the headline theorems of `Feec.Physics.EinsteinBianchi.WaveFEMTangential` take the regularity
 hypothesis `curl H̊(curl) = curl S⁰ H̊¹(Q; ℝ³)` (`CurlPotential`, or its constant `C_R`) as a
 hypothesis. It is a theorem (`Feec.Models.Cube.WeakSymmetry.curlPotential`,

@@ -600,7 +600,8 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
   hypothesis: the regular decomposition `Feec.Models.Cube.WeakSymmetry.CurlPotential` is proved
   (`Feec.Models.Cube.RegularDecomposition`, `Feec.Physics.EinsteinBianchi.Unconditional`), and the
   rates hold for solutions `C²` up to `∂Q` with vanishing tangential traces
-  (`Feec.Models.Cube.TangentialRate`, `Feec.Models.Cube.WeakSymmetryTangentialRate`,
+  (`Feec.Models.Cube.TangentialRate`, `Feec.Models.Cube.WeakSymmetryFEM`,
+  `Feec.Models.Cube.WeakSymmetryWave`, `Feec.Models.Cube.WeakSymmetryTangentialRate`,
   `Feec.Physics.EinsteinBianchi.WaveFEMTangentialCube`); (6.5) converges without rate for every
   datum in `D(L)` (`Feec.Models.Cube.WeakSymmetryConvergence`,
   `Feec.Physics.EinsteinBianchi.BoundedConvergence`). For `HΛ_J(Q)` the partial-boundary finite

@@ -17,8 +17,7 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
   pointwise on each simplex by the Bramble–Hilbert argument with the DOF bound and the DOF
   stability of `Feec.Models.Cube.PolySmoothingEstimates` (`Poly.abs_sub_globalInterp_le`: the
   degree-`k` part of a Taylor polynomial lies in `P_sΛᵏ ⊆ P(T)ᵏ`, `Poly.exists_polySpace_near`), and
-  in `L²` and in the graph norm on the cube (`exists_mem_poly_le`, `exists_mem_polyMin_le`, with
-  `d Π_h = Π_h d`).
+  in `L²` and in the graph norm on the cube (`exists_mem_poly_le`, with `d Π_h = Π_h d`).
 * **Density** of the higher-order spaces in `HΛ(Q)`, `H̊Λ(Q)` and in the graph spaces of every
   window (`eventually_exists_poly_graph`, `dense_window_poly`, and `Min` versions), so the
   semi-discrete Hodge wave equation converges on every window for `D(L)` data
@@ -319,57 +318,6 @@ theorem exists_mem_poly_le (S : PolySeq) (N k s : ℕ) (hs : polySpace n s k ≤
       ).trans_eq ?_) <;>
   · rw [mesh_domain, polyInterpConst]; push_cast; ring
 
-/-- **Interpolation error with vanishing boundary DOFs**: for a `C^{s+2}` form `w` vanishing
-outside `Q`, the canonical interpolant lies in `V̊ₕᵏ ⊆ H̊Λᵏ(Q)` with the estimates of
-`exists_mem_poly_le`. -/
-theorem exists_mem_polyMin_le (S : PolySeq) (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
-    (hs' : polySpace n s (k + 1) ≤ S.space n (k + 1)) {w : FormField n}
-    (hw : ContDiff ℝ (s + 2) w) (hdeg : ∀ x, IsDeg k (w x))
-    (hsupp : ∀ x ∉ cubeDomain n, w x = 0) {L L' : ℝ}
-    (hL : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L)
-    (hL' : ∀ y ∈ closure (cubeDomain n), ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L') :
-    ∃ v ∈ (polyMin n S N).V k,
-      ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) k
-          ⟨w, hw.continuous⟩ - v‖ ≤ polyInterpConst n S k * (meshSize N ^ (s + 1) * L) ∧
-      ∃ hv : v ∈ ((complexMin n).d k (k + 1)).domain,
-        ‖formL2 (isOpen_cubeDomain n).measurableSet (isBounded_cubeDomain n) ((k : ℤ) + 1)
-            ⟨extDeriv w, continuous_extDeriv (hw.of_le (by
-              exact_mod_cast Nat.le_add_left 1 (s + 1)))⟩ -
-          (complexMin n).d k (k + 1) ⟨v, hv⟩‖ ≤
-            polyInterpConst n S (k + 1) * (meshSize N ^ (s + 1) * L') := by
-  have hw1 : ContDiff ℝ 1 w := hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1))
-  have hws : ContDiff ℝ (s + 1) w := hw.of_le (by exact_mod_cast Nat.le_succ (s + 1))
-  have hdw : ContDiff ℝ (s + 1) (extDeriv w) := contDiff_extDeriv (m := s + 1) (by
-    exact_mod_cast hw)
-  have hdeg' : ∀ x, IsDeg (k + 1) (extDeriv w x) := fun x => IsDeg.extDeriv hdeg x
-  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hL _ (subset_closure (center_mem_cubeDomain n)))
-  have hL'0 : 0 ≤ L' := (norm_nonneg _).trans (hL' _ (subset_closure (center_mem_cubeDomain n)))
-  have hB1 : 0 ≤ (1 + dofConst n S k * Module.finrank ℝ (S.space n k) * coeffConst n S k) *
-      (meshSize N ^ (s + 1) * L) := by
-    have := dofConst_nonneg (n := n) S k; have := coeffConst_nonneg (n := n) S k
-    have := (meshSize_pos N).le; positivity
-  have hB2 : 0 ≤ (1 + dofConst n S (k + 1) * Module.finrank ℝ (S.space n (k + 1)) *
-      coeffConst n S (k + 1)) * (meshSize N ^ (s + 1) * L') := by
-    have := dofConst_nonneg (n := n) S (k + 1); have := coeffConst_nonneg (n := n) S (k + 1)
-    have := (meshSize_pos N).le; positivity
-  have hΩ := (isOpen_mesh_domain n N).measurableSet
-  refine (polyElement n S).exists_mem_minimalSubcomplexOfEq_le (mesh n N) (mesh_domain n N)
-    (isOpen_mesh_domain n N) (isOpen_cubeDomain n) (isBounded_cubeDomain n) (center n)
-    (strictStar_mesh n N) k hw1 hsupp
-    (A := polyInterpConst n S k * (meshSize N ^ (s + 1) * L))
-    (A' := polyInterpConst n S (k + 1) * (meshSize N ^ (s + 1) * L'))
-    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
-      ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw.continuous⟩ :
-        (polyElement n S).Piecewise (mesh n N) k) hB1
-      fun T x hx t _ => abs_sub_globalInterp_le_cube S hs hws hdeg hL T (interior_subset hx) t
-      ).trans_eq ?_)
-    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
-      ((polyElement n S).globalInterp (mesh n N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
-        (polyElement n S).Piecewise (mesh n N) (k + 1)) hB2
-      fun T x hx t _ => abs_sub_globalInterp_le_cube S hs' hdw hdeg' hL' T (interior_subset hx) t
-      ).trans_eq ?_) <;>
-  · rw [mesh_domain, polyInterpConst]; push_cast; ring
-
 /-! ### Density of the higher-order complexes -/
 
 omit [NeZero n] in
@@ -481,18 +429,40 @@ theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
   refine eventually_exists_graph_of_smooth_min (isOpen_cubeDomain n) (isBounded_cubeDomain n)
     (by norm_num : (0 : ℝ) < 1 / 4) (starBall n) (fun N => polyMin n S N)
     (fun k w hw hdeg hsupp => ?_) k x hx hε
-  have hw2 : ContDiff ℝ ((0 + 2 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
-  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv
-    (hw.of_le (WithTop.coe_le_coe.2 le_top) : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w)
-  obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv (m := 1)
-    (contDiff_extDeriv (m := 1) (hw.of_le (WithTop.coe_le_coe.2 le_top)))
+  have hw1 : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
+  have hdw : ContDiff ℝ ((1 : ℕ) : WithTop ℕ∞) (extDeriv w) :=
+    contDiff_extDeriv (m := 1) (hw.of_le (WithTop.coe_le_coe.2 le_top))
+  obtain ⟨L, hL0, hL⟩ := exists_bound_iteratedFDeriv hw1
+  obtain ⟨L', hL'0, hL'⟩ := exists_bound_iteratedFDeriv hdw
   refine ⟨fun N => polyInterpConst n S k * (meshSize N ^ (0 + 1) * L) +
     polyInterpConst n S (k + 1) * (meshSize N ^ (0 + 1) * L'), by
       simpa using (((tendsto_meshSize.pow 1).mul_const L).const_mul (polyInterpConst n S k)).add
         (((tendsto_meshSize.pow 1).mul_const L').const_mul (polyInterpConst n S (k + 1))),
     fun N => ?_⟩
-  obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_polyMin_le S N k 0 (polySpace_zero_le_space S k)
-    (polySpace_zero_le_space S (k + 1)) hw2 hdeg hsupp hL hL'
+  -- the canonical interpolant, with the interpolation error of order `h` (`s = 0`)
+  have hB : ∀ (j : ℕ) {M : ℝ}, 0 ≤ M → 0 ≤ (1 + dofConst n S j *
+      Module.finrank ℝ (S.space n j) * coeffConst n S j) * (meshSize N ^ (0 + 1) * M) :=
+    fun j _ hM => by
+      have := dofConst_nonneg (n := n) S j; have := coeffConst_nonneg (n := n) S j
+      have := (meshSize_pos N).le; positivity
+  have hΩ := (isOpen_mesh_domain n N).measurableSet
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := (polyElement n S).exists_mem_minimalSubcomplexOfEq_le
+    (mesh n N) (mesh_domain n N) (isOpen_mesh_domain n N) (isOpen_cubeDomain n)
+    (isBounded_cubeDomain n) (center n) (strictStar_mesh n N) k hw1 hsupp
+    (A := polyInterpConst n S k * (meshSize N ^ (0 + 1) * L))
+    (A' := polyInterpConst n S (k + 1) * (meshSize N ^ (0 + 1) * L'))
+    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw1.continuous⟩
+      ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw1.continuous⟩ :
+        (polyElement n S).Piecewise (mesh n N) k) (hB k hL0)
+      fun T x hx t _ => abs_sub_globalInterp_le_cube S (polySpace_zero_le_space S k) hw1 hdeg hL
+        T (interior_subset hx) t).trans_eq (by
+          rw [mesh_domain, polyInterpConst]; push_cast; ring))
+    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
+      ((polyElement n S).globalInterp (mesh n N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
+        (polyElement n S).Piecewise (mesh n N) (k + 1)) (hB (k + 1) hL'0)
+      fun T x hx t _ => abs_sub_globalInterp_le_cube S (polySpace_zero_le_space S (k + 1)) hdw
+        (fun x => IsDeg.extDeriv hdeg x) hL' T (interior_subset hx) t).trans_eq (by
+          rw [mesh_domain, polyInterpConst]; push_cast; ring))
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right (mul_nonneg (polyInterpConst_nonneg S (k + 1))
     (mul_nonneg (pow_nonneg (meshSize_pos N).le _) hL'0))), hdv, hv2.trans (le_add_of_nonneg_left
       (mul_nonneg (polyInterpConst_nonneg S k) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)

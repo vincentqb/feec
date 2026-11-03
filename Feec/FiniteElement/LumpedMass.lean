@@ -339,13 +339,6 @@ theorem isNonobtuse_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (
   rw [mapEquiv_boxMap_freudenthalSimplex_points]
   exact baryGrad_dotProduct_freudenthalPoints_nonpos b (freudenthalScale_ne_zero hs N) _ _ hjk
 
-/-- **The Freudenthal meshes are non-obtuse**, so their stiffness matrices have nonpositive
-off-diagonal entries (Ciarlet–Raviart). [CiarletRaviart1973] -/
-theorem p1Stiffness_freudenthalMesh_indicator_nonpos (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
-    (N : ℕ) [NeZero N] {x y : Fin n → ℝ} (hxy : x ≠ y) :
-    p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator x) (nodalIndicator y) ≤ 0 :=
-  p1Stiffness_indicator_nonpos _ (isNonobtuse_freudenthalMesh b hs N) hxy
-
 /-! ### Lattice nodes -/
 
 /-- The lattice node `b + h q`. -/

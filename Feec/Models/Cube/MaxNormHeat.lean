@@ -861,9 +861,9 @@ maximum-norm consistency, the semidiscrete, backward Euler and rational-scheme e
 every classical solution, Brenner–Thomée's stability bound, and the verdict of the Banach layer
 for the family. -/
 structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
-  /-- the Freudenthal meshes are non-obtuse: nonpositive off-diagonal stiffness -/
-  nonobtuse (N : ℕ) [NeZero N] {x y : Fin n → ℝ} (hxy : x ≠ y) :
-    p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator x) (nodalIndicator y) ≤ 0
+  /-- the Freudenthal meshes are non-obtuse (so the off-diagonal stiffness is nonpositive,
+  `Feec.FiniteElement.p1Stiffness_indicator_nonpos`) -/
+  nonobtuse (N : ℕ) [NeZero N] : IsNonobtuse (freudenthalMesh b s hs N)
   /-- the lumped-mass `P₁` Laplacian is the `(2n + 1)`-point difference Laplacian -/
   stencil (N : ℕ) (U : Space n N) (p : Nodes n N) :
     lumpedLaplacian b hs N U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
@@ -958,7 +958,7 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
 meshes of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. [Thomee2006], Ch. 15;
 [CiarletRaviart1973]; [BrennerThomee1979] -/
 theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
-  nonobtuse := fun N _ _ _ hxy => p1Stiffness_freudenthalMesh_indicator_nonpos b hs N hxy
+  nonobtuse N _ := isNonobtuse_freudenthalMesh b hs N
   stencil := fun _ U p => lumpedLaplacian_apply b hs U p
   maximumPrinciple := isSubMarkovGenerator b hs
   consistency := @fun N _ hu _ hB hbd => norm_interp_laplacian_sub_le hs N hu hB hbd

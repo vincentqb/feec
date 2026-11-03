@@ -17,6 +17,10 @@ earlier non-vacuity statement, the earlier `lumpedLaplacianFun` with its stencil
 field `maxNorm` are stated verbatim and derived from the new API, and so are
 `Feec.FiniteElement.p1Stiffness_indicator_nonpos` (now with the hypothesis `IsNonobtuse M`) and
 the removed `Feec.FiniteElement.fderiv_apply_eq_sum_partialDeriv` (now at the root, general).
+The field `nonobtuse` now states `Feec.FiniteElement.IsNonobtuse` of the meshes; the earlier
+field (nonpositive off-diagonal stiffness) and the removed wrapper
+`Feec.FiniteElement.p1Stiffness_freudenthalMesh_indicator_nonpos` are derived from it with
+`Feec.FiniteElement.p1Stiffness_indicator_nonpos`.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -75,7 +79,7 @@ structure Verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Prop where
 /-- The earlier verdict, from the new one. -/
 theorem verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Verdict_old b hs :=
   let V := maxNormHeat b hs
-  ⟨V.nonobtuse, V.stencil, V.maximumPrinciple, V.consistency, V.semidiscrete, V.backwardEuler,
+  ⟨fun N _ _ _ hxy => p1Stiffness_indicator_nonpos _ (V.nonobtuse N) hxy, V.stencil, V.maximumPrinciple, V.consistency, V.semidiscrete, V.backwardEuler,
     V.stable_rational, V.rational, V.banach⟩
 
 /-- The earlier `MaxNormHeat.maxNormHeat_nonvacuous`, verbatim (with `Verdict_old`). -/
@@ -130,5 +134,11 @@ theorem p1Stiffness_indicator_nonpos_old (M : SimplicialMesh n)
 theorem fderiv_apply_eq_sum_partialDeriv_old (f : (Fin n → ℝ) → ℝ) (x v : Fin n → ℝ) :
     fderiv ℝ f x v = ∑ j, v j * partialDeriv j f x :=
   _root_.fderiv_apply_eq_sum_partialDeriv f x v
+
+/-- The earlier `FiniteElement.p1Stiffness_freudenthalMesh_indicator_nonpos`, verbatim. -/
+theorem p1Stiffness_freudenthalMesh_indicator_nonpos_old (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
+    (N : ℕ) [NeZero N] {x y : Fin n → ℝ} (hxy : x ≠ y) :
+    p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator x) (nodalIndicator y) ≤ 0 :=
+  p1Stiffness_indicator_nonpos _ ((maxNormHeat b hs).nonobtuse N) hxy
 
 end FeecCheck.MaxNormHeat

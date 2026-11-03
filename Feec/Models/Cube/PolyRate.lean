@@ -13,7 +13,7 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
 
 * `FEM.IsCsForm s j L x` (resp. `FEM.IsCsFormMin`, vanishing outside `Q`): `x` is a `C^{s+2}`
   `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`
-  (satisfiable: `exists_isCsFormMin`).
+  (satisfiable: `exists_isCsFormMin`; the zero form, `IsCsFormMin.zero`).
 * **Degreewise**: `‖x - v‖, ‖d(x - v)‖ ≤ B_j L h_N^{s+1}` for some `v ∈ Vₕʲ`
   (`IsCsForm.exists_mem_poly_le`), and the graph-norm distances
   (`IsCsForm.infDist_domainSub_poly_le`).
@@ -166,6 +166,15 @@ theorem IsCsFormMin.isCsForm {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDom
   rcases hx with hj | ⟨k, hk, w, hw, hdeg, -, hL, hL', he⟩
   · exact Or.inl hj
   · exact Or.inr ⟨k, hk, w, hw, hdeg, hL, hL', he⟩
+
+/-- The zero form is in the flat class, with every bound `L ≥ 0`. -/
+theorem IsCsFormMin.zero (s k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
+    IsCsFormMin s (k : ℤ) L (0 : L2F ℝ (cubeDomain n) (formIdx n k)) := by
+  have e : extDeriv (0 : FormField n) = 0 := extDeriv_const (0 : Finset (Fin n) → ℝ)
+  refine Or.inr ⟨k, rfl, 0, contDiff_const, fun y t _ => rfl, fun y _ => rfl, fun y _ => ?_,
+    fun y _ => ?_, (map_zero _).symm⟩
+  · simpa using hL0
+  · rw [e]; simpa using hL0
 
 variable (n) in
 /-- The constant `B_j = A_j + A_{j+1}` of the graph-norm interpolation error of `S` in degree

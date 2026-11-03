@@ -1069,11 +1069,8 @@ theorem segS1_manufacturedU :
   rw [incl1_manufacturedU, wsL2_testField]
 
 theorem isCsFormMin_zero {k : ℕ} : ∃ L, 0 ≤ L ∧
-    IsCsFormMin 0 k L (0 : L2F ℝ (cubeDomain 3) (formIdx 3 k)) := by
-  have e := exists_isCsFormMin_testField (k := k)
-    (IsTestField.zero : IsTestField (cubeDomain 3) (0 : formIdx 3 k → (Fin 3 → ℝ) → ℝ))
-  rw [testField_zero] at e
-  exact e
+    IsCsFormMin 0 k L (0 : L2F ℝ (cubeDomain 3) (formIdx 3 k)) :=
+  ⟨0, le_rfl, IsCsFormMin.zero 0 k le_rfl⟩
 
 /-- The datum of the manufactured solution, `F v = ⟪S¹u, S¹v⟫ + ⟪d u, d v⟫`. -/
 def manufacturedDatum : Wv U1 →ₗ[ℝ] ℝ :=

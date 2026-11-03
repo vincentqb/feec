@@ -184,15 +184,6 @@ theorem segS1_tangentialU : bggSegment.S1 tangentialU = 0 := by
       rw [hp, PiLp.zero_apply, smul_zero]
   · rw [zero_smul]
 
-/-- The zero field is in the flat class (with every bound `L ≥ 0`). -/
-theorem isCsFormMin_zero_field {n : ℕ} (s k : ℕ) {L : ℝ} (hL0 : 0 ≤ L) :
-    IsCsFormMin s (k : ℤ) L (0 : L2F ℝ (cubeDomain n) (formIdx n k)) := by
-  have e : FiniteElement.extDeriv (0 : FormField n) = 0 := extDeriv_const (0 : Finset (Fin n) → ℝ)
-  refine Or.inr ⟨k, rfl, 0, contDiff_const, fun y t _ => rfl, fun y _ => rfl, fun y _ => ?_,
-    fun y _ => ?_, (map_zero _).symm⟩
-  · simpa using hL0
-  · rw [e]; simpa using hL0
-
 /-- **The manufactured `u` is not flat**: its first row has a nonzero normal component at the
 boundary point `(0, ⅛, ⅛)` (`normalWitness_ne_zero`) and is in no class `IsCsFormMin`. -/
 theorem not_isCsFormMin_tangentialU0 (s : ℕ) (L : ℝ) :
@@ -206,7 +197,7 @@ theorem tangentialU_ne_zero : tangentialU ≠ 0 := by
     have := congrArg (fun z : Wv U1 => ((z 0 : U1) : W1)) h
     simpa [tangentialU_apply_zero, tangentialU0] using this
   exact not_isCsFormMin_normalWitness (n := 3) 0 0
-    (by change IsCsFormMin 0 1 0 tangentialX; rw [h0]; exact isCsFormMin_zero_field 0 1 le_rfl)
+    (by change IsCsFormMin 0 1 0 tangentialX; rw [h0]; exact IsCsFormMin.zero 0 1 le_rfl)
 
 end TangentialManufactured
 

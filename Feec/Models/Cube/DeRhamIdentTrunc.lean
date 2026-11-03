@@ -94,12 +94,6 @@ theorem tendsto_trunc (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : 
   Fourier.tendsto_starProjection_band (TS n) (fun N => (finite_bandN N).measurableSet)
     Fourier.Torus.bandN_mono Fourier.Torus.exists_mem_bandN k x
 
-theorem flipAt_mem_bandN {N : ℕ} {m : Fin n → ℤ} (j : Fin n) :
-    DeRham.flipAt j m ∈ bandN N ↔ m ∈ bandN N := by
-  have h : ∀ i, |DeRham.flipAt j m i| = |m i| := fun i => by
-    unfold DeRham.flipAt; split_ifs <;> simp
-  simp only [bandN, mem_ofPred_eq, h]
-
 theorem neg_mem_bandN {N : ℕ} {m : Fin n → ℤ} : -m ∈ bandN N ↔ m ∈ bandN N := by
   simp [bandN]
 
@@ -115,8 +109,8 @@ theorem realPar_trunc {rel : Bool} {k : ℕ}
     · simp [hm, mt neg_mem_bandN.1 hm]
   · rw [coeFn_trunc, coeFn_trunc]
     by_cases hm : m ∈ bandN N
-    · simp [hm, (flipAt_mem_bandN j).2 hm, hx.2 j m t]
-    · simp [hm, mt (flipAt_mem_bandN j).1 hm]
+    · simp [hm, (Fourier.Torus.flipAt_mem_bandN j).2 hm, hx.2 j m t]
+    · simp [hm, mt (Fourier.Torus.flipAt_mem_bandN j).1 hm]
 
 open scoped Classical in
 /-- **Truncation commutes with the symbol.** -/
@@ -239,16 +233,16 @@ theorem Jinvf_eq_toL2F {k : ℕ} {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count :
 components (`j ∉ s`) of the lift vanish on `{y_j ∈ {0, ½}}`. -/
 theorem trigLift_eq_zero_of_face {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealPar true k x)
-    {S : Finset (Fin n → ℤ)} (hSr : ∀ j, ∀ m ∈ S, DeRham.flipAt j m ∈ S)
+    {S : Finset (Fin n → ℤ)} (hSr : ∀ j, ∀ m ∈ S, Fourier.Torus.flipAt j m ∈ S)
     {s : formIdx n (k : ℤ)} {j : Fin n} (hj : j ∉ s.1) {y : Fin n → ℝ}
     (hy : y j = 0 ∨ y j = 1 / 2) : trigLift k x S s y = 0 := by
   have hf : ∀ m, mFourierBasis.repr (physF k x s) (flipB (single j) m) =
       -1 * mFourierBasis.repr (physF k x s) m := fun m => by
-    have e : flipB (single j) m = DeRham.flipAt j m := flipAt_eq j m
+    have e : flipB (single j) m = Fourier.Torus.flipAt j m := flipB_single j m
     rw [e, repr_physF, repr_physF, hx.2]
     simp [DeRham.parSign, DeRham.reflSign, hj]
   have h := trigPoly_reflB (ε := single j) (S := S)
-    (fun m hm => by rw [show flipB (single j) m = DeRham.flipAt j m from flipAt_eq j m];
+    (fun m hm => by rw [show flipB (single j) m = Fourier.Torus.flipAt j m from flipB_single j m];
                     exact hSr j m hm) hf (proj y)
   rw [show reflB (single j) (proj y) = proj y from reflB_single_proj_of_face hy] at h
   have h0 : trigPoly (mFourierBasis.repr (physF k x s)) S (proj y) = 0 := by
@@ -326,8 +320,8 @@ theorem trunc_eq_zero_of_notMem {N k : ℕ}
   rw [coeFn_trunc, ite_eq_right (fun h => hm ((Set.Finite.mem_toFinset _).2 h))]
 
 theorem flipAt_mem_bandS {N : ℕ} (j : Fin n) {m : Fin n → ℤ} (hm : m ∈ bandS N) :
-    DeRham.flipAt j m ∈ bandS N :=
-  (Set.Finite.mem_toFinset _).2 ((flipAt_mem_bandN j).2 ((Set.Finite.mem_toFinset _).1 hm))
+    Fourier.Torus.flipAt j m ∈ bandS N :=
+  (Set.Finite.mem_toFinset _).2 ((Fourier.Torus.flipAt_mem_bandN j).2 ((Set.Finite.mem_toFinset _).1 hm))
 
 /-- Bounds for the lifts of the truncations. -/
 theorem trigLift_bounds (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))

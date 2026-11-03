@@ -26,7 +26,6 @@ and takes Fourier coefficients (`Feec.Fourier.Torus.fieldFourier`): a scaled iso
 
 ## Main definitions
 
-* `flipAt k`: the frequency reflection `n ↦ (…, -n_k, …)`.
 * `paritySub c`, `extL2 c`: the parity subspace of `L²(𝕋ᵈ)` and the extension `L²(Q) → L²(𝕋ᵈ)`.
 * `fieldParity c`, `extF c`: the same for fields, on the Fourier side.
 
@@ -54,6 +53,7 @@ open Set MeasureTheory Filter UnitAddTorus Feec.Fourier.TorusWeak
 namespace Feec.Models.Cube.MirrorExt
 
 open Geometry
+open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_flipAt flipAt_involutive)
 
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
@@ -64,22 +64,6 @@ variable {d : Type*} [Fintype d] [DecidableEq d]
 abbrev T2 (d : Type*) [Fintype d] := Lp ℂ 2 (volume : Measure (UnitAddTorus d))
 
 /-! ### Frequency reflections -/
-
-/-- The reflection `n ↦ (…, -n_k, …)` of the frequencies (`Geometry.flipB` for one variable). -/
-def flipAt (k : d) : (d → ℤ) → (d → ℤ) := flipB fun j => decide (j = k)
-
-omit [Fintype d] in
-theorem flipAt_apply (k : d) (n : d → ℤ) (j : d) :
-    flipAt k n j = if j = k then -n j else n j := by
-  simp [flipAt, flipB]
-
-omit [Fintype d] in
-@[simp] theorem flipAt_flipAt (k : d) (n : d → ℤ) : flipAt k (flipAt k n) = n :=
-  flipB_flipB _ n
-
-omit [Fintype d] in
-theorem flipAt_comm (k l : d) (n : d → ℤ) : flipAt k (flipAt l n) = flipAt l (flipAt k n) := by
-  funext j; simp only [flipAt_apply]; split_ifs <;> simp
 
 /-- The Bool vector of a finite set of variables. -/
 def boolOf (s : Finset d) : d → Bool := fun j => decide (j ∈ s)
@@ -169,7 +153,7 @@ theorem norm_sq_of_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {f : T2 d}
 theorem toL2_ext_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d → ℝ) → ℂ}
     (hΦ : Domain.IsTest (Q d) Φ) : toL2 (continuous_ext c hΦ) ∈ paritySub c := by
   refine mem_paritySub.2 fun k n => ?_
-  rw [mFourierCoeff_toL2, mFourierCoeff_toL2, flipAt, ← mFourierCoeff_comp_reflB]
+  rw [mFourierCoeff_toL2, mFourierCoeff_toL2, ← flipB_eq_flipAt, ← mFourierCoeff_comp_reflB]
   have e : (fun x => ext c Φ (reflB (fun j => decide (j = k)) x)) =
       fun x => c k * ext c Φ x := by
     funext x
@@ -489,7 +473,7 @@ omit hc
 
 /-- The frequency reflection `flip_k` as a reflection of the counting measure on `ℤᵈ`. -/
 def flipRefl (k : d) : Fourier.Reflection (Measure.count : Measure (d → ℤ)) :=
-  Fourier.Reflection.count_of_involutive (flipAt k) (flipAt_flipAt k)
+  Fourier.Reflection.count_of_involutive (flipAt k) (flipAt_involutive k)
 
 @[simp] theorem flipRefl_σ (k : d) : (flipRefl k).σ = flipAt k := rfl
 

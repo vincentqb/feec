@@ -63,6 +63,7 @@ open MeasureTheory LinearPMap Set Feec.Fourier Feec.Fourier.Exterior Finset
 namespace Feec.Models.Cube.DeRham
 
 open Feec.Models.Torus.DeRham (window windowSymbol)
+open Feec.Fourier.Torus (flipAt flipAt_involutive flipAt_comm flipAt_zero flipAt_eq_zero_iff)
 
 variable {d : Type*} [LinearOrder d]
 
@@ -102,7 +103,7 @@ variable (d) in
 /-- **The reflections of the cube in the mixed class `J`**, as fibre symmetries of the torus de
 Rham window: `n ↦ flip_j n` on the frequencies, `v ↦ ε_j R_j^* v` on the coefficients. -/
 def mixedSymmetries (J : Finset d) : (windowSymbol d).Symmetries d where
-  R j := Reflection.count_of_involutive (flipAt j) (flipAt_flipAt j)
+  R j := Reflection.count_of_involutive (flipAt j) (flipAt_involutive j)
   ρ j i := mixedSign J j • reflForm j (i : ℕ)
   invol j i v := by
     simp only [_root_.smul_apply, _root_.map_smul, reflForm_reflForm, smul_smul,

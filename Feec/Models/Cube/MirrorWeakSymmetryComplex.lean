@@ -308,7 +308,7 @@ theorem realParJ_coexactLp {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measu
       ext t; exact hx.1 m t
     rw [this, coexactProj_cjForm, cjForm_apply]
   · rw [coexactLp_apply, coexactLp_apply, freq_flipAt]
-    have : (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (DeRham.flipAt j m) =
+    have : (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (Fourier.Torus.flipAt j m) =
         DeRham.mixedSign J j • reflForm j k (x m) := by
       ext t; rw [hx.2, PiLp.smul_apply, reflForm_apply, smul_eq_mul]; ring
     rw [this, map_smul, coexactProj_reflForm, PiLp.smul_apply, reflForm_apply, smul_eq_mul]

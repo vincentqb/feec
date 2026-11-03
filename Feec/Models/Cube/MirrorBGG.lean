@@ -54,8 +54,10 @@ namespace Feec.Models.Cube.MirrorBGG
 open Feec.Fourier Feec.Fourier.GradCurl Feec.Fourier.SymCurl Feec.Fourier.BGG
   Feec.ShortHilbertComplex
 open Feec.Models.Cube.MirrorExt
-open Feec.Models.Cube.Mirror (sgn sgn_mul_self conj_sgn cE cB cPV cE_sq cB_sq cPV_sq conj_cE
-  conj_cB freq_flipAt curl_flip matR_mem_tsd leviCivita3_sgn)
+open Feec.Models.Cube.Mirror (cE cB cPV cE_sq cB_sq cPV_sq conj_cE conj_cB curl_flip
+  matR_mem_tsd)
+open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self conj_sgn freq_flipAt leviCivita3_sgn)
+open Feec.Fourier.Torus (flipAt flipAt_comm)
 open Feec.Models.Cube.MirrorSym (cU cU_sq)
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 

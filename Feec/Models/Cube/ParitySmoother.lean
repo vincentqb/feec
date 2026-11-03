@@ -2090,7 +2090,7 @@ theorem exists_symm_approx (J' : Finset (Fin n))
   set f := mFourierBasis.repr (physF 0 (trunc N 0 x) s)
   refine ⟨fun j z => ?_, fun z m => ?_⟩
   · have hf : ∀ m, f (flipB (single j) m) = (pvec J' ∅ j : ℂ) * f m := fun m => by
-      have e : flipB (single j) m = DeRham.flipAt j m := flipAt_eq j m
+      have e : flipB (single j) m = Fourier.Torus.flipAt j m := flipB_single j m
       simp only [f]
       rw [e, repr_physF, repr_physF, hxN.2]
       have hs : (idx 0 s).1 = ∅ := by
@@ -2099,7 +2099,7 @@ theorem exists_symm_approx (J' : Finset (Fin n))
         mul_one]
       split_ifs <;> simp
     have h := trigPoly_reflB (ε := single j) (S := bandS N)
-      (fun m hm => by rw [show flipB (single j) m = DeRham.flipAt j m from flipAt_eq j m];
+      (fun m hm => by rw [show flipB (single j) m = Fourier.Torus.flipAt j m from flipB_single j m];
                       exact flipAt_mem_bandS j hm) hf (proj z)
     have hz : proj (coordRefl j z) = reflB (single j) (proj z) := by
       rw [← proj_reflR]

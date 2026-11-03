@@ -106,12 +106,6 @@ section MirrorBands
 
 open Feec.Fourier
 
-theorem flipAt_mem_bandN {k : Fin 3} {n : Fin 3 → ℤ} {N : ℕ} :
-    Models.Cube.MirrorExt.flipAt k n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by
-  simp only [Fourier.Torus.bandN, mem_ofPred_eq, Models.Cube.MirrorExt.flipAt_apply]
-  refine forall_congr' fun j => ?_
-  split_ifs <;> simp
-
 variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {E : ι → Type*}
   [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)]
   [∀ i, FiniteDimensional ℂ (E i)] [∀ i, CompleteSpace (E i)]
@@ -120,7 +114,7 @@ variable {ι : Type*} [Fintype ι] {c : ComplexShape ι} {E : ι → Type*}
 omit [Fintype ι] in
 /-- **A mirror action preserves the Fourier bands** (`|flip_k n|_∞ = |n|_∞`): for symmetries of a
 torus complex whose frequency reflections are the mirror flips `n ↦ flip_k n`. -/
-theorem act_mem_torusBand (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n) (N : ℕ)
+theorem act_mem_torusBand (hY : ∀ k n, (Y.R k).σ n = Fourier.Torus.flipAt k n) (N : ℕ)
     (g : Multiplicative (Fin 3 → ZMod 2)) (i : ι)
     {x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))} (hx : x ∈ (bandSpectralFamily S).B N i) :
     Y.toAction.act g i x ∈ (bandSpectralFamily S).B N i := by
@@ -130,7 +124,7 @@ theorem act_mem_torusBand (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.fl
   rw [hY] at hv
   by_cases hn : n ∈ Fourier.Torus.bandN N
   · simp [bandFibre, hn]
-  · have hn' : Models.Cube.MirrorExt.flipAt k n ∉ Fourier.Torus.bandN N := flipAt_mem_bandN.not.2 hn
+  · have hn' : Fourier.Torus.flipAt k n ∉ Fourier.Torus.bandN N := (Fourier.Torus.flipAt_mem_bandN k).not.2 hn
     have hv0 : v = 0 := by simpa [bandFibre, hn'] using hv
     simp [bandFibre, hn, hv0]
 
@@ -141,7 +135,7 @@ omit [Fintype ι] in
 /-- **The band projections preserve the fixed fields** of a mirror action, i.e. the range of an
 embedding onto them (the method of images). -/
 theorem exists_J_eq_starProjection_torusBand
-    (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n)
+    (hY : ∀ k n, (Y.R k).σ n = Fourier.Torus.flipAt k n)
     (e : ScaledEmbedding H' S.toHilbertComplex)
     (he : ∀ i, LinearMap.range (e.J i : W' i →ₗ[ℂ] _) = Y.toAction.fixed i) (N : ℕ) (i : ι)
     (x : W' i) : ∃ y, e.J i y = ((bandSpectralFamily S).B N i).starProjection (e.J i x) := by
@@ -155,7 +149,7 @@ theorem exists_J_eq_starProjection_torusBand
 scaling) in a torus complex onto the fields fixed by a mirror action (`e.J` onto `Y.toAction.fixed`,
 the method of images), the pull-back of the Fourier bands `|n|_∞ ≤ N` (the action preserves them,
 `act_mem_torusBand`, so their projections preserve the fixed fields). -/
-def mirrorSpectralFamily (hY : ∀ k n, (Y.R k).σ n = Models.Cube.MirrorExt.flipAt k n)
+def mirrorSpectralFamily (hY : ∀ k n, (Y.R k).σ n = Fourier.Torus.flipAt k n)
     (e : ScaledEmbedding H' S.toHilbertComplex)
     (he : ∀ i, LinearMap.range (e.J i : W' i →ₗ[ℂ] _) = Y.toAction.fixed i) : SpectralFamily H' :=
   (bandSpectralFamily S).comap e (exists_J_eq_starProjection_torusBand Y hY e he)

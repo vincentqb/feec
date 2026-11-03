@@ -1,6 +1,7 @@
 module
 
 public import Feec.Models.Cube.MirrorBase
+public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Torus.GradCurl
 public import Feec.Models.BoundedDomain.GradCurl
@@ -78,28 +79,10 @@ namespace Feec.Models.Cube.Mirror
 
 open Feec.Fourier Feec.Fourier.GradCurl Feec.ShortHilbertComplex Feec.Models.Cube.MirrorExt
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
+open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self conj_sgn leviCivita3_sgn freq_flipAt)
+open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_comm flipAt_neg)
 
 /-! ### Signs -/
-
-/-- The sign `s_k(a)`: `-1` if `a = k`, `1` otherwise. -/
-def sgn (k a : Fin 3) : ℂ := if a = k then -1 else 1
-
-theorem sgn_mul_self (k a : Fin 3) : sgn k a * sgn k a = 1 := by
-  unfold sgn; split_ifs <;> norm_num
-
-theorem conj_sgn (k a : Fin 3) : (starRingEnd ℂ) (sgn k a) = sgn k a := by
-  unfold sgn; split_ifs <;> simp
-
-/-- `ε_{bcd} s_c s_d = -s_b ε_{bcd}` (`det D_k = -1`). -/
-theorem leviCivita3_sgn (k b c d : Fin 3) :
-    leviCivita3 ℂ b c d * (sgn k c * sgn k d) = -(sgn k b * leviCivita3 ℂ b c d) := by
-  fin_cases k <;> fin_cases b <;> fin_cases c <;> fin_cases d <;>
-    simp [sgn, leviCivita3_apply]
-
-theorem freq_flipAt (k : Fin 3) (n : Fin 3 → ℤ) (a : Fin 3) :
-    ((Fourier.Torus.freq (flipAt k n) a : ℝ) : ℂ) = sgn k a * (Fourier.Torus.freq n a : ℂ) := by
-  simp only [Fourier.Torus.freq_apply, flipAt_apply, sgn]
-  split_ifs <;> push_cast <;> ring
 
 /-- The parity of the component `σ_a` of a mirror vector in `x_k`: `s_k(a)` (`σ · n = 0`). -/
 def cV (a k : Fin 3) : ℂ := sgn k a
@@ -320,9 +303,6 @@ def cosE : Lp Mat 2 (Measure.count : Measure (Fin 3 → ℤ)) := memLp_cosCoeff.
 
 theorem coe_cosE (n : Fin 3 → ℤ) : (cosE : (Fin 3 → ℤ) → Mat) n = cosCoeff n :=
   Measure.ae_count_iff.1 memLp_cosCoeff.coeFn_toLp n
-
-theorem flipAt_neg (k : Fin 3) (n : Fin 3 → ℤ) : flipAt k (-n) = -flipAt k n := by
-  funext j; simp only [flipAt_apply, Pi.neg_apply]; split_ifs <;> rfl
 
 theorem flipAt_mem_k0 (k : Fin 3) (n : Fin 3 → ℤ) :
     (flipAt k n = k0 ∨ flipAt k n = -k0) ↔ (n = k0 ∨ n = -k0) := by

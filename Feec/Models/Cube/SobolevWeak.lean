@@ -1021,13 +1021,13 @@ theorem realParJ_mulSeq_single {J : Finset (Fin n)} {x : Seq n k} (hJ : RealParJ
       Pi.neg_apply, Int.cast_neg, map_mul, map_ofNat, Complex.conj_ofReal, Complex.conj_I,
       map_intCast]
     ring
-  · change cf (mulSeq [j] x) (DeRham.flipAt i m) t = _ * cf (mulSeq [j] x) m t
+  · change cf (mulSeq [j] x) (Fourier.Torus.flipAt i m) t = _ * cf (mulSeq [j] x) m t
     rw [cf_mulSeq hx hl, cf_mulSeq hx hl]
-    change symb [j] (DeRham.flipAt i m) * cf x (DeRham.flipAt i m) t =
+    change symb [j] (Fourier.Torus.flipAt i m) * cf x (Fourier.Torus.flipAt i m) t =
       _ * (symb [j] m * cf x m t)
-    rw [show cf x (DeRham.flipAt i m) t = _ from hJ.2 i m t]
+    rw [show cf x (Fourier.Torus.flipAt i m) t = _ from hJ.2 i m t]
     simp only [symb, List.map_cons, List.map_nil, List.prod_cons, List.prod_nil, mul_one,
-      DeRham.flipAt, DeRham.mixedSign, Finset.mem_symmDiff, Finset.mem_singleton]
+      Fourier.Torus.flipAt_apply, DeRham.mixedSign, Finset.mem_symmDiff, Finset.mem_singleton]
     by_cases hij : i = j
     · subst hij
       by_cases hi : i ∈ J <;> simp [hi] <;> ring

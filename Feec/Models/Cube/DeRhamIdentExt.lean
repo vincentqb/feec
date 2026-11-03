@@ -46,6 +46,7 @@ open Set MeasureTheory Filter UnitAddTorus Feec.Fourier.TorusWeak
 namespace Feec.Models.Cube.DeRhamIdent
 
 open Geometry MirrorExt
+open Feec.Fourier.Torus (flipAt flipAt_neg)
 open RowWise (ofRealL reL coeFn_ofRealL coeFn_reL reL_ofRealL ofRealL_reL star_ofRealL
   inner_ofRealL)
 
@@ -70,6 +71,10 @@ variable [DecidableEq d]
 
 /-- The single reflection `R_j` as a Bool vector. -/
 def single (j : d) : d → Bool := fun i => decide (i = j)
+
+omit [Fintype d] in
+theorem flipB_single (j : d) (m : d → ℤ) : flipB (single j) m = flipAt j m :=
+  congrFun (flipB_eq_flipAt j) m
 
 theorem sign_single (c : d → ℂ) (j : d) : sign c (single j) = c j := by
   rw [sign, Finset.prod_eq_single j (fun i _ hi => by simp [single, hi]) (by simp)]
@@ -275,7 +280,7 @@ theorem mFourierCoeff_extL2 {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (f : Dom
 theorem star_extL2 {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (hcr : ∀ j, conj (c j) = c j)
     (f : Domain.L2 ℂ (Q d)) : star (extL2 hc f) = extL2 hc (star f) := by
   refine (eq_extL2_iff hc).2 ⟨mem_paritySub.2 fun k n => ?_, ?_⟩
-  · have e : flipAt k (-n) = -flipAt k n := flipB_neg _ n
+  · have e : flipAt k (-n) = -flipAt k n := flipAt_neg k n
     rw [mFourierCoeff_star, mFourierCoeff_star, ← e,
       mem_paritySub.1 (extL2_mem hc f), map_mul, hcr]
   · rw [← resQ_star, resQ_extL2]

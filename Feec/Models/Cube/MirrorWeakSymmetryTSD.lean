@@ -184,14 +184,14 @@ parity of `E_{ab}`. -/
 theorem pcJ_one (a b : Fin 3) : pcJ {a} {b} = Mirror.cE (a, b) := by
   funext k
   fin_cases a <;> fin_cases b <;> fin_cases k <;>
-    simp [pcJ, DeRham.mixedSign, DeRham.reflSign, Mirror.cE, Mirror.sgn]
+    simp [pcJ, DeRham.mixedSign, DeRham.reflSign, Mirror.cE, MirrorTorus.sgn]
 
 /-- The parity class of the coefficient of `⋆dx_i` in the row `a` of the bottom `2`-forms is the
 pseudo-tensor parity of `B_{ai}`. -/
 theorem pcJ_two (a i : Fin 3) : pcJ {a} (univ.erase i) = Mirror.cB (a, i) := by
   funext k
   fin_cases a <;> fin_cases i <;> fin_cases k <;>
-    simp [pcJ, DeRham.mixedSign, DeRham.reflSign, Mirror.cB, Mirror.sgn]
+    simp [pcJ, DeRham.mixedSign, DeRham.reflSign, Mirror.cB, MirrorTorus.sgn]
 
 /-! ### Real parts -/
 

@@ -172,7 +172,7 @@ def RealParJ (J : Finset (Fin n)) (k : ℕ)
     (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))) : Prop :=
   (∀ m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (-m) t =
       conj ((x : (Fin n → ℤ) → Form ℂ (Fin n) k) m t)) ∧
-    ∀ j m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (DeRham.flipAt j m) t =
+    ∀ j m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (Fourier.Torus.flipAt j m) t =
       DeRham.mixedSign J j * DeRham.reflSign j t.1 * (x : (Fin n → ℤ) → Form ℂ (Fin n) k) m t
 
 theorem JfJ_realParJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
@@ -180,7 +180,7 @@ theorem JfJ_realParJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (fo
   refine ⟨fun m t => ?_, fun j m t => ?_⟩
   · rw [JfJ_apply, reidx_apply, reidx_apply]
     exact JR_isReal (pcJF_mul_self J) (conj_pcJF J) u m _
-  · rw [JfJ_apply, reidx_apply, reidx_apply, ← flipAt_eq]
+  · rw [JfJ_apply, reidx_apply, reidx_apply]
     exact (mem_fieldParity_iff.1 (JR_mem_fieldParity (pcJF_mul_self J) u)) j m _
 
 /-- **Real mixed parity sequences are extensions of `k`-forms on `Q`.** -/
@@ -190,7 +190,7 @@ theorem JfJ_Jinvf {J : Finset (Fin n)} {k : ℕ}
   set w := (reidx k).symm x
   have hw : w ∈ fieldParity (pcJF (n := n) (k := (k : ℤ)) J) :=
     mem_fieldParity_iff.2 fun j m s => by
-      rw [reidx_symm_apply, reidx_symm_apply, flipAt_eq, hx.2]
+      rw [reidx_symm_apply, reidx_symm_apply, hx.2]
       rfl
   have hr : IsReal w := fun m s => by
     rw [reidx_symm_apply, reidx_symm_apply, hx.1]
@@ -209,7 +209,7 @@ def reflJ (J : Finset (Fin n)) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1)) 
 theorem coeFn_reflJ (J : Finset (Fin n)) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1))
     (u : TW n i) (m : Fin n → ℤ) :
     (reflJ J j i u : (Fin n → ℤ) → Form ℂ (Fin n) i) m =
-      DeRham.mixedSign J j • DeRham.reflForm j i (u (DeRham.flipAt j m)) :=
+      DeRham.mixedSign J j • DeRham.reflForm j i (u (Fourier.Torus.flipAt j m)) :=
   Measure.ae_count_iff.1 (coeFn_symLp ((DeRham.mixedSymmetries (Fin n) J).R j)
     ((DeRham.mixedSymmetries (Fin n) J).ρ j i) u) m
 
@@ -217,8 +217,8 @@ theorem reflJ_cnj (J : Finset (Fin n)) (j : Fin n) (i : Fin (Fintype.card (Fin n
     (u : TW n i) : reflJ J j i (cnj i u) = cnj i (reflJ J j i u) := by
   refine Lp.ext_count fun m => ?_
   rw [coeFn_reflJ, coeFn_cnj, coeFn_cnj, coeFn_reflJ]
-  have e : DeRham.flipAt j (-m) = -DeRham.flipAt j m := by
-    funext a; by_cases h : a = j <;> simp [DeRham.flipAt, h]
+  have e : Fourier.Torus.flipAt j (-m) = -Fourier.Torus.flipAt j m := by
+    funext a; by_cases h : a = j <;> simp [h]
   rw [e]
   ext t
   simp only [PiLp.smul_apply, DeRham.reflForm_apply, Feec.Fourier.entryConj_apply, smul_eq_mul,
@@ -277,10 +277,10 @@ theorem mem_realFixedJ_iff {J : Finset (Fin n)} {i : Fin (Fintype.card (Fin n) +
         Feec.Fourier.entryConj_apply] at e
       exact e.symm
     · have e := congrArg (fun v : TW n i => (v : (Fin n → ℤ) → Form ℂ (Fin n) i)
-        (DeRham.flipAt j m) t) (h (some j))
+        (Fourier.Torus.flipAt j m) t) (h (some j))
       simp only [realInvolutionsJ, realRJ, coeFn_reflJ, PiLp.smul_apply,
         DeRham.reflForm_apply, smul_eq_mul] at e
-      rw [DeRham.flipAt_flipAt j m] at e
+      rw [Fourier.Torus.flipAt_flipAt j m] at e
       rw [← e]; ring
   · rintro ⟨h1, h2⟩ k
     cases k with
@@ -1205,23 +1205,23 @@ theorem realParJ_trunc {J : Finset (Fin n)} {k : ℕ}
     · simp [hm, mt neg_mem_bandN.1 hm]
   · rw [coeFn_trunc, coeFn_trunc]
     by_cases hm : m ∈ bandN N
-    · simp [hm, (flipAt_mem_bandN j).2 hm, hx.2 j m t]
-    · simp [hm, mt (flipAt_mem_bandN j).1 hm]
+    · simp [hm, (Fourier.Torus.flipAt_mem_bandN j).2 hm, hx.2 j m t]
+    · simp [hm, mt (Fourier.Torus.flipAt_mem_bandN j).1 hm]
 
 /-- **Odd trigonometric polynomials vanish on the faces**, mixed class: the tangential components
 (`j ∉ s`) vanish on `{y_j ∈ {0, ½}}` for `j ∈ J`. -/
 theorem trigLift_eq_zero_of_faceJ {J : Finset (Fin n)} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealParJ J k x)
-    {S : Finset (Fin n → ℤ)} (hSr : ∀ j, ∀ m ∈ S, DeRham.flipAt j m ∈ S)
+    {S : Finset (Fin n → ℤ)} (hSr : ∀ j, ∀ m ∈ S, Fourier.Torus.flipAt j m ∈ S)
     {s : formIdx n (k : ℤ)} {j : Fin n} (hjJ : j ∈ J) (hj : j ∉ s.1) {y : Fin n → ℝ}
     (hy : y j = 0 ∨ y j = 1 / 2) : trigLift k x S s y = 0 := by
   have hf : ∀ m, mFourierBasis.repr (physF k x s) (flipB (single j) m) =
       -1 * mFourierBasis.repr (physF k x s) m := fun m => by
-    have e : flipB (single j) m = DeRham.flipAt j m := flipAt_eq j m
+    have e : flipB (single j) m = Fourier.Torus.flipAt j m := flipB_single j m
     rw [e, repr_physF, repr_physF, hx.2]
     simp [DeRham.mixedSign, DeRham.reflSign, hj, hjJ]
   have h := trigPoly_reflB (ε := single j) (S := S)
-    (fun m hm => by rw [show flipB (single j) m = DeRham.flipAt j m from flipAt_eq j m];
+    (fun m hm => by rw [show flipB (single j) m = Fourier.Torus.flipAt j m from flipB_single j m];
                     exact hSr j m hm) hf (proj y)
   rw [show reflB (single j) (proj y) = proj y from reflB_single_proj_of_face hy] at h
   have h0 : trigPoly (mFourierBasis.repr (physF k x s)) S (proj y) = 0 := by
@@ -1422,7 +1422,7 @@ theorem JfJ_zero_eq_zero_of_ne {J : Finset (Fin n)} {k : ℕ}
     push Not at h
     exact ht (DeRham.forall_mixedSign_mul_reflSign_eq_one_iff.1 h)
   have e := (JfJ_realParJ J k x).2 j 0 t
-  rw [DeRham.flipAt_zero] at e
+  rw [Fourier.Torus.flipAt_zero] at e
   by_contra hne
   exact hj (mul_right_cancel₀ hne (e.symm.trans (one_mul _).symm))
 

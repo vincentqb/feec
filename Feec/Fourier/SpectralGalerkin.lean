@@ -354,6 +354,13 @@ omit [Fintype d] in
 theorem mem_bandN {N : ℕ} {k : d → ℤ} : k ∈ bandN N ↔ ∀ j, |k j| ≤ N := Iff.rfl
 
 omit [Fintype d] in
+theorem flipAt_mem_bandN [DecidableEq d] {N : ℕ} {k : d → ℤ} (j : d) :
+    flipAt j k ∈ bandN N ↔ k ∈ bandN N := by
+  simp only [mem_bandN, flipAt_apply]
+  refine forall_congr' fun a => ?_
+  split_ifs <;> simp
+
+omit [Fintype d] in
 theorem bandN_mono : Monotone (bandN (d := d)) := fun N M h k hk j =>
   (hk j).trans (by exact_mod_cast h)
 

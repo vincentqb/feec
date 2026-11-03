@@ -695,12 +695,12 @@ theorem inner_JfJ_eq_zero {J J' : Finset (Fin n)} (h : J ≠ J')
   have hx := (JfJ_realParJ J k u).2 j
   have hy := (JfJ_realParJ J' k v).2 j
   set F : (Fin n → ℤ) → ℂ := fun m => ⟪cf x m, cf y m⟫_ℂ
-  have hF : ∀ m, F (DeRham.flipAt j m) = -F m := by
+  have hF : ∀ m, F (Fourier.Torus.flipAt j m) = -F m := by
     intro m
     simp only [F, PiLp.inner_apply, RCLike.inner_apply]
     rw [← Finset.sum_neg_distrib]
     refine Finset.sum_congr rfl fun t _ => ?_
-    change cf y (DeRham.flipAt j m) t * conj (cf x (DeRham.flipAt j m) t) =
+    change cf y (Fourier.Torus.flipAt j m) t * conj (cf x (Fourier.Torus.flipAt j m) t) =
       -(cf y m t * conj (cf x m t))
     rw [hx m t, hy m t]
     have hs : conj (DeRham.mixedSign J j * DeRham.reflSign j t.1) *
@@ -709,9 +709,9 @@ theorem inner_JfJ_eq_zero {J J' : Finset (Fin n)} (h : J ≠ J')
         simp_all [DeRham.mixedSign, DeRham.reflSign]
     rw [map_mul]
     linear_combination (cf y m t * conj (cf x m t)) * hs
-  have e : (DeRham.flipAt_flipAt j).toPerm _ = _ := rfl
+  have e : (Fourier.Torus.flipAt_involutive j).toPerm _ = _ := rfl
   have hsum : ∑' m, F m = -∑' m, F m := by
-    rw [← tsum_neg, ← (Function.Involutive.toPerm _ (DeRham.flipAt_flipAt j)).tsum_eq]
+    rw [← tsum_neg, ← (Function.Involutive.toPerm _ (Fourier.Torus.flipAt_involutive j)).tsum_eq]
     exact tsum_congr fun m => hF m
   rw [inner_eq_tsum]
   change ∑' m, F m = 0

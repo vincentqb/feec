@@ -577,6 +577,12 @@ omit [Fintype d] in
 theorem flipB_neg (ε : d → Bool) (n : d → ℤ) : flipB ε (-n) = -flipB ε n := by
   funext j; by_cases h : ε j <;> simp [flipB, h]
 
+omit [Fintype d] in
+/-- One variable reflected: `flipB (· = k) = flipAt k`. -/
+theorem flipB_eq_flipAt [DecidableEq d] (k : d) :
+    flipB (fun j => decide (j = k)) = Fourier.Torus.flipAt k := by
+  funext n j; by_cases h : j = k <;> simp [flipB, h]
+
 theorem fourier_neg_arg (m : ℤ) (t : UnitAddCircle) : fourier m (-t) = fourier (-m) t := by
   rw [fourier_apply, fourier_apply, smul_neg, neg_smul]
 
@@ -591,7 +597,7 @@ theorem mFourier_reflB (ε : d → Bool) (n : d → ℤ) (x : UnitAddTorus d) :
 
 /-- **Fourier coefficients of a reflected function**: `(g ∘ R_ε)^(n) = ĝ(flip_ε n)`; the
 physical reflections of `𝕋ᵈ` are the frequency reflections of the Fourier side
-(`Feec.Models.Cube.MirrorExt.flipAt`). -/
+(`Feec.Fourier.Torus.flipAt`). -/
 theorem mFourierCoeff_comp_reflB (ε : d → Bool) (g : UnitAddTorus d → ℂ) (n : d → ℤ) :
     mFourierCoeff (fun x => g (reflB ε x)) n = mFourierCoeff g (flipB ε n) := by
   simp only [mFourierCoeff]

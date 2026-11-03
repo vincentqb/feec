@@ -13,20 +13,19 @@ faces is a field on `𝕋³` with prescribed parities in each variable, so a Hil
 cube is the subcomplex of a torus complex fixed by a unitary action of `(ℤ/2)³` (the method of
 images, `Feec.HilbertComplex.Action.fixedComplex`; from commuting involutions,
 `Feec.HilbertComplex.Involutions.toAction`). This file holds what the row-wise parity model
-(`Feec.Models.Cube.Parity`) needs on the Fourier side: the group, the reflections
-`n ↦ (…, -n_k, …)` of the frequencies with the signs `s_k(a)`, and the torus grad–curl complex
-as a real Hilbert complex. The mirror models (`Feec.Models.Cube.Mirror`) use the fibre
-symmetries of `Feec.Fourier.SymbolComplex.Symmetries` with their own sign conventions.
+(`Feec.Models.Cube.Parity`) and the mirror models (`Feec.Models.Cube.Mirror`) need on the Fourier
+side: the group, the signs `s_k(a)` of the reflections `n ↦ (…, -n_k, …)` of the frequencies
+(`Feec.Fourier.Torus.flipAt`), and the torus grad–curl complex as a real Hilbert complex.
 
 ## Main definitions
 
 * `Feec.Models.Cube.ReflGroup`: `(ℤ/2)³`.
-* `MirrorTorus.sgn`, `MirrorTorus.flip`: the signs `s_k(a)` and the frequency reflections.
+* `MirrorTorus.sgn`: the signs `s_k(a)` of the frequency reflections.
 * `RealTorus.gradCurl`, `RealTorus.constraint`: the torus complex and its TSD constraint over `ℝ`.
 
 ## Main results
 
-* `MirrorTorus.freq_flip`, `MirrorTorus.leviCivita3_sgn`.
+* `MirrorTorus.freq_flipAt`, `MirrorTorus.leviCivita3_sgn`.
 * `RealTorus.wave_gradCurl`, `RealTorus.reducingSubcomplex`.
 
 ## References
@@ -70,18 +69,12 @@ theorem leviCivita3_sgn (k b c d : Fin 3) :
   fin_cases k <;> fin_cases b <;> fin_cases c <;> fin_cases d <;>
     simp [sgn, leviCivita3_apply]
 
-/-- The reflection `n ↦ (…, -n_k, …)` of the frequencies `ℤ³`. -/
-def flip (k : Fin 3) (n : Fin 3 → ℤ) : Fin 3 → ℤ := fun a => if a = k then -n a else n a
-
-theorem flip_flip (k : Fin 3) : Function.Involutive (flip k) := fun n => by
-  funext a; unfold flip; split_ifs <;> simp
-
-theorem flip_comm (k l : Fin 3) (n : Fin 3 → ℤ) : flip k (flip l n) = flip l (flip k n) := by
-  funext a; unfold flip; split_ifs <;> simp
-
-theorem freq_flip (k : Fin 3) (n : Fin 3 → ℤ) (a : Fin 3) :
-    ((Fourier.Torus.freq (flip k n) a : ℝ) : ℂ) = sgn k a * (Fourier.Torus.freq n a : ℂ) := by
-  simp only [Fourier.Torus.freq_apply, flip, sgn]
+/-- The reflection `flip_k` of the frequencies multiplies the components by the signs `s_k(a)`
+(`Feec.Fourier.Torus.flipAt`). -/
+theorem freq_flipAt (k : Fin 3) (n : Fin 3 → ℤ) (a : Fin 3) :
+    ((Fourier.Torus.freq (Fourier.Torus.flipAt k n) a : ℝ) : ℂ) =
+      sgn k a * (Fourier.Torus.freq n a : ℂ) := by
+  simp only [Fourier.Torus.freq_apply, Fourier.Torus.flipAt_apply, sgn]
   split_ifs <;> push_cast <;> ring
 
 end Feec.Models.Cube.MirrorTorus

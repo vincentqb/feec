@@ -117,6 +117,7 @@ namespace Feec.Models.Cube.RowWise
 open Feec.Models.Torus.GradCurl (Space)
 open Feec.Models.Cube.Geometry (Q resQ resQF ext per reflB sign)
 open Feec.Fourier.TorusWeak (toL2 toL2_ae_eq IsSmooth proj)
+open Feec.Fourier.Torus (flipAt flipAt_mem_bandN)
 
 /- Over `ℝ`, the real structure of `W3` is the one of its inner product space. -/
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
@@ -511,8 +512,8 @@ theorem mFourierCoeff_X_neg (hc : ∀ j, conj (c j) = c j)
 /-- The single reflection `R_k`. -/
 def single (k : Fin 3) : Fin 3 → Bool := fun j => decide (j = k)
 
-theorem flipB_single (k : Fin 3) (n : Fin 3 → ℤ) : flipB (single k) n = MirrorTorus.flip k n := by
-  funext j; simp [flipB, single, MirrorTorus.flip]
+theorem flipB_single (k : Fin 3) (n : Fin 3 → ℤ) : flipB (single k) n = flipAt k n := by
+  funext j; simp [flipB, single]
 
 theorem sign_single (k : Fin 3) : sign c (single k) = c k := by
   rw [sign, Finset.prod_eq_single k (fun j _ hj => by simp [single, hj]) (by simp)]
@@ -541,7 +542,7 @@ theorem forall_of_single {P : (Fin 3 → Bool) → Prop} (h0 : P fun _ => false)
 /-- **Fourier parities from single reflections**: if `x(flip_k n) = c_k x(n)` for every single
 reflection, then `x(flip_ε n) = sign_c(ε) x(n)` for every reflection. -/
 theorem flipB_of_single (hc : ∀ j, c j * c j = 1) {g : (Fin 3 → ℤ) → ℂ}
-    (h : ∀ k n, g (MirrorTorus.flip k n) = c k * g n) (ε : Fin 3 → Bool) (n : Fin 3 → ℤ) :
+    (h : ∀ k n, g (flipAt k n) = c k * g n) (ε : Fin 3 → Bool) (n : Fin 3 → ℤ) :
     g (flipB ε n) = sign c ε * g n := by
   revert n
   refine forall_of_single (P := fun ε => ∀ n, g (flipB ε n) = sign c ε * g n) (fun n => ?_)
@@ -654,28 +655,28 @@ theorem ext_c2 {x y : Space 2} (h : ∀ n p, c2 x n p = c2 y n p) : x = y :=
   Lp.ext_count fun n => (WithLp.ext_iff 2).2 (funext (h n))
 
 theorem fixed_zero_iff {x : Space 0} : x ∈ rowAction.fixed 0 ↔
-    ∀ k n a, cv x (MirrorTorus.flip k n) a = pv a k * cv x n a := by
+    ∀ k n a, cv x (flipAt k n) a = pv a k * cv x n a := by
   rw [Parity.mem_fixed_iff_coeff]
   refine forall₂_congr fun k n => ?_
-  change cv x (MirrorTorus.flip k n) = -cv x n ↔ _
+  change cv x (flipAt k n) = -cv x n ↔ _
   constructor
   · intro h a; rw [h]; simp [pv]
   · intro h; ext a; rw [h a]; simp [pv]
 
 theorem fixed_one_iff {x : Space 1} : x ∈ rowAction.fixed 1 ↔
-    ∀ k n p, c1 x (MirrorTorus.flip k n) p = pe p k * c1 x n p := by
+    ∀ k n p, c1 x (flipAt k n) p = pe p k * c1 x n p := by
   rw [Parity.mem_fixed_iff_coeff]
   refine forall₂_congr fun k n => ?_
-  change c1 x (MirrorTorus.flip k n) = -Parity.colR k (c1 x n) ↔ _
+  change c1 x (flipAt k n) = -Parity.colR k (c1 x n) ↔ _
   constructor
   · intro h p; rw [h, PiLp.neg_apply, Parity.colR_apply, pe_eq]; ring
   · intro h; ext p; rw [h p, PiLp.neg_apply, Parity.colR_apply, pe_eq]; ring
 
 theorem fixed_two_iff {x : Space 2} : x ∈ rowAction.fixed 2 ↔
-    ∀ k n p, c2 x (MirrorTorus.flip k n) p = pb p k * c2 x n p := by
+    ∀ k n p, c2 x (flipAt k n) p = pb p k * c2 x n p := by
   rw [Parity.mem_fixed_iff_coeff]
   refine forall₂_congr fun k n => ?_
-  change c2 x (MirrorTorus.flip k n) = Parity.colR k (c2 x n) ↔ _
+  change c2 x (flipAt k n) = Parity.colR k (c2 x n) ↔ _
   constructor
   · intro h p; rw [h, Parity.colR_apply, pb_eq]
   · intro h; ext p; rw [h p, Parity.colR_apply, pb_eq]
@@ -1587,8 +1588,8 @@ theorem trigPoly_reflB {ε : Fin 3 → Bool} {f : lp (fun _ : Fin 3 → ℤ => �
 
 /-- A trigonometric polynomial odd under `R_c` vanishes on the faces `y_c ∈ {0, ½}`. -/
 theorem reLift_eq_zero_of_odd {c : Fin 3} {f : lp (fun _ : Fin 3 → ℤ => ℂ) 2}
-    {S : Finset (Fin 3 → ℤ)} (hSr : ∀ k ∈ S, MirrorTorus.flip c k ∈ S)
-    (hf : ∀ k, f (MirrorTorus.flip c k) = -f k) {y : R3} (hy : y c = 0 ∨ y c = 1 / 2) :
+    {S : Finset (Fin 3 → ℤ)} (hSr : ∀ k ∈ S, flipAt c k ∈ S)
+    (hf : ∀ k, f (flipAt c k) = -f k) {y : R3} (hy : y c = 0 ∨ y c = 1 / 2) :
     reLift (trigPoly f S) y = 0 := by
   have h := trigPoly_reflB (ε := single c) (s := -1)
     (fun k hk => by rw [flipB_single]; exact hSr k hk)
@@ -1644,7 +1645,7 @@ limit of test fields (cut-offs of its trigonometric polynomial, whose tangential
 on `∂Q`). -/
 theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
     {S : Finset (Fin 3 → ℤ)} (hS : ∀ n ∉ S, c1 z n = 0)
-    (hSr : ∀ k, ∀ n ∈ S, MirrorTorus.flip k n ∈ S) (hd : z ∈ (RealTorus.gradCurl.d 1 2).domain) :
+    (hSr : ∀ k, ∀ n ∈ S, flipAt k n ∈ S) (hd : z ∈ (RealTorus.gradCurl.d 1 2).domain) :
     (Jinv (P := Ix) z, Jinv (P := Ix) (RealTorus.gradCurl.d 1 2 ⟨z, hd⟩)) ∈
       closure ((Domain.curlOp 3 : Domain.ConstCoeffOp R3 ℝ Ix Ix).testGraph (Q (Fin 3)) :
         Set (Domain.L2F ℝ (Q (Fin 3)) Ix × Domain.L2F ℝ (Q (Fin 3)) Ix)) := by
@@ -1678,8 +1679,8 @@ theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
   have hV : ∀ a c d, c ≠ d → ∀ y : R3, (y c = 0 ∨ y c = 1 / 2) → ψ (a, d) y = 0 := by
     intro a c d hcd y hy
     refine reLift_eq_zero_of_odd (hSr c) (fun k => ?_) hy
-    have e1 : (mFourierBasis.repr (physF (P := Ix) z (a, d))) (MirrorTorus.flip c k) =
-        c1 z (MirrorTorus.flip c k) (a, d) := repr_physF (P := Ix) z (a, d) _
+    have e1 : (mFourierBasis.repr (physF (P := Ix) z (a, d))) (flipAt c k) =
+        c1 z (flipAt c k) (a, d) := repr_physF (P := Ix) z (a, d) _
     have e2 : (mFourierBasis.repr (physF (P := Ix) z (a, d))) k = c1 z k (a, d) :=
       repr_physF (P := Ix) z (a, d) _
     rw [e1, e2, hpar c k (a, d)]
@@ -1703,7 +1704,7 @@ theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
 /-- **A trigonometric polynomial in the Dirichlet parity class restricts into `H̊¹(Q)`.** -/
 theorem trig_closure_grad {z : Space 0} (hz : z ∈ Parity.realAction.fixed 0)
     {S : Finset (Fin 3 → ℤ)} (hS : ∀ n ∉ S, cv z n = 0)
-    (hSr : ∀ k, ∀ n ∈ S, MirrorTorus.flip k n ∈ S) (hd : z ∈ (RealTorus.gradCurl.d 0 1).domain) :
+    (hSr : ∀ k, ∀ n ∈ S, flipAt k n ∈ S) (hd : z ∈ (RealTorus.gradCurl.d 0 1).domain) :
     (Jinv (P := Fin 3) z, Jinv (P := Ix) (RealTorus.gradCurl.d 0 1 ⟨z, hd⟩)) ∈
       closure ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).testGraph (Q (Fin 3)) :
         Set (Domain.L2F ℝ (Q (Fin 3)) (Fin 3) × Domain.L2F ℝ (Q (Fin 3)) Ix)) := by
@@ -1726,8 +1727,8 @@ theorem trig_closure_grad {z : Space 0} (hz : z ∈ Parity.realAction.fixed 0)
   have hV : ∀ a c, ∀ y : R3, (y c = 0 ∨ y c = 1 / 2) → ψ a y = 0 := by
     intro a c y hy
     refine reLift_eq_zero_of_odd (hSr c) (fun k => ?_) hy
-    have e1 : (mFourierBasis.repr (physF (P := Fin 3) z a)) (MirrorTorus.flip c k) =
-        cv z (MirrorTorus.flip c k) a := repr_physF (P := Fin 3) z a _
+    have e1 : (mFourierBasis.repr (physF (P := Fin 3) z a)) (flipAt c k) =
+        cv z (flipAt c k) a := repr_physF (P := Fin 3) z a _
     have e2 : (mFourierBasis.repr (physF (P := Fin 3) z a)) k = cv z k a :=
       repr_physF (P := Fin 3) z a _
     rw [e1, e2, hpar c k a]
@@ -1782,12 +1783,6 @@ theorem coeFn_trunc (N : ℕ) (i : Fin 3) (x : Space i) (n : Fin 3 → ℤ) :
   · simp [hn, Operator.cutoff_apply_of_mem hn]
   · simp [hn, Operator.cutoff_apply_of_notMem hn]
 
-theorem flip_mem_bandN {N : ℕ} {n : Fin 3 → ℤ} (k : Fin 3) :
-    MirrorTorus.flip k n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by
-  have h : ∀ j, |MirrorTorus.flip k n j| = |n j| := fun j => by
-    unfold MirrorTorus.flip; split_ifs <;> simp
-  simp only [Fourier.Torus.bandN, mem_ofPred_eq, h]
-
 theorem neg_mem_bandN {N : ℕ} {n : Fin 3 → ℤ} :
     -n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by
   simp [Fourier.Torus.bandN]
@@ -1807,8 +1802,8 @@ theorem trunc_mem_zero {N : ℕ} {x : Space 0} (hx : x ∈ Parity.realAction.fix
     · simp [hn, mt neg_mem_bandN.1 hn]
   · rw [e, e]
     by_cases hn : n ∈ Fourier.Torus.bandN N
-    · simp [hn, (flip_mem_bandN k).2 hn, hf']
-    · simp [hn, mt (flip_mem_bandN k).1 hn]
+    · simp [hn, (flipAt_mem_bandN k).2 hn, hf']
+    · simp [hn, mt (flipAt_mem_bandN k).1 hn]
 
 open scoped Classical in
 theorem trunc_mem_one {N : ℕ} {x : Space 1} (hx : x ∈ Parity.realAction.fixed 1) :
@@ -1825,8 +1820,8 @@ theorem trunc_mem_one {N : ℕ} {x : Space 1} (hx : x ∈ Parity.realAction.fixe
     · simp [hn, mt neg_mem_bandN.1 hn]
   · rw [e, e]
     by_cases hn : n ∈ Fourier.Torus.bandN N
-    · simp [hn, (flip_mem_bandN k).2 hn, hf']
-    · simp [hn, mt (flip_mem_bandN k).1 hn]
+    · simp [hn, (flipAt_mem_bandN k).2 hn, hf']
+    · simp [hn, mt (flipAt_mem_bandN k).1 hn]
 
 /-- The truncation preserves the torus domains and commutes with the differentials. -/
 theorem trunc_mem_domain (N : ℕ) {i j : Fin 3} {x : Space i}
@@ -1862,7 +1857,7 @@ theorem mem_minimal_curl_of_J {u : Domain.L2F ℝ (Q (Fin 3)) Ix}
         change (trunc N 1 x : (Fin 3 → ℤ) → W3 Vec Mat Mat 1) n = 0
         rw [coeFn_trunc]; simp [this])
       (fun k n hn => (Set.Finite.mem_toFinset _).2
-        ((flip_mem_bandN k).2 ((Set.Finite.mem_toFinset _).1 hn))) (hN N)
+        ((flipAt_mem_bandN k).2 ((Set.Finite.mem_toFinset _).1 hn))) (hN N)
   have hlim : Tendsto (fun N => (Jinv (P := Ix) (trunc N 1 x),
       Jinv (P := Ix) (RealTorus.gradCurl.d 1 2 ⟨_, hN N⟩))) atTop
       (𝓝 (Jinv (P := Ix) x, Jinv (P := Ix) (RealTorus.gradCurl.d 1 2 ⟨x, h⟩))) := by
@@ -1896,7 +1891,7 @@ theorem mem_minimal_grad_of_J {u : Domain.L2F ℝ (Q (Fin 3)) (Fin 3)}
         change (trunc N 0 x : (Fin 3 → ℤ) → W3 Vec Mat Mat 0) n = 0
         rw [coeFn_trunc]; simp [this])
       (fun k n hn => (Set.Finite.mem_toFinset _).2
-        ((flip_mem_bandN k).2 ((Set.Finite.mem_toFinset _).1 hn))) (hN N)
+        ((flipAt_mem_bandN k).2 ((Set.Finite.mem_toFinset _).1 hn))) (hN N)
   have hlim : Tendsto (fun N => (Jinv (P := Fin 3) (trunc N 0 x),
       Jinv (P := Ix) (RealTorus.gradCurl.d 0 1 ⟨_, hN N⟩))) atTop
       (𝓝 (Jinv (P := Fin 3) x, Jinv (P := Ix) (RealTorus.gradCurl.d 0 1 ⟨x, h⟩))) := by

@@ -22,7 +22,8 @@ Mathlib's `UnitAddTorus.mFourierBasis`) identifies the model with fields on the 
 
 ## Main definitions and results
 
-* `Torus.freq k = 2πk ∈ ℝᵈ`; `Torus.symbolComplex S`, `Torus.complex S` for a continuous family
+* `Torus.freq k = 2πk ∈ ℝᵈ`; `Torus.flipAt j`, the reflection of the frequencies in the variable
+  `j`; `Torus.symbolComplex S`, `Torus.complex S` for a continuous family
   of fibre complexes `S`.
 * `Torus.fibreReducing`: fibre reducing subspaces of `S` give a reducing subcomplex of the torus
   model (hence constraint propagation, `Feec.Fourier.FibreReducing.propagates`).
@@ -61,6 +62,38 @@ def freq (k : d → ℤ) : EuclideanSpace ℝ d := WithLp.toLp 2 fun j => 2 * Re
 
 @[simp] theorem freq_neg (k : d → ℤ) : freq (-k) = -freq k := by
   ext j; simp
+
+/-! ### Reflections of the frequencies -/
+
+section Flip
+
+variable [DecidableEq d]
+
+/-- The reflection `k ↦ (…, -k_j, …)` of the frequencies `ℤᵈ` in the variable `j` (the Fourier
+side of the reflection `x_j ↦ -x_j` of `𝕋ᵈ`). -/
+def flipAt (j : d) (k : d → ℤ) : d → ℤ := fun a => if a = j then -k a else k a
+
+@[simp] theorem flipAt_apply (j : d) (k : d → ℤ) (a : d) :
+    flipAt j k a = if a = j then -k a else k a := rfl
+
+@[simp] theorem flipAt_flipAt (j : d) (k : d → ℤ) : flipAt j (flipAt j k) = k := by
+  funext a; by_cases h : a = j <;> simp [h]
+
+theorem flipAt_involutive (j : d) : Function.Involutive (flipAt j) := flipAt_flipAt j
+
+theorem flipAt_comm (j l : d) (k : d → ℤ) : flipAt j (flipAt l k) = flipAt l (flipAt j k) := by
+  funext a; simp only [flipAt_apply]; split_ifs <;> simp
+
+@[simp] theorem flipAt_zero (j : d) : flipAt j (0 : d → ℤ) = 0 := by
+  funext a; simp
+
+theorem flipAt_neg (j : d) (k : d → ℤ) : flipAt j (-k) = -flipAt j k := by
+  funext a; by_cases h : a = j <;> simp [h]
+
+@[simp] theorem flipAt_eq_zero_iff (j : d) {k : d → ℤ} : flipAt j k = 0 ↔ k = 0 :=
+  (flipAt_involutive j).injective.eq_iff' (flipAt_zero j)
+
+end Flip
 
 variable [Fintype d]
 

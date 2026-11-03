@@ -1092,8 +1092,8 @@ theorem onAxis_neg_iff (m : Fin 3 → ℤ) : OnAxis (-m) ↔ OnAxis m := by
   simp only [OnAxis, Pi.neg_apply, neg_eq_zero]
 
 theorem onAxis_flipAt_iff (j : Fin 3) (m : Fin 3 → ℤ) :
-    OnAxis (Feec.Models.Cube.DeRham.flipAt j m) ↔ OnAxis m := by
-  simp only [OnAxis, Feec.Models.Cube.DeRham.flipAt]
+    OnAxis (Fourier.Torus.flipAt j m) ↔ OnAxis m := by
+  simp only [OnAxis, Fourier.Torus.flipAt_apply]
   refine forall_congr' fun a => imp_congr_right fun _ => ?_
   split_ifs <;> simp
 
@@ -1113,18 +1113,18 @@ theorem realParJ_sawSeq : RealParJ (Finset.univ : Finset (Fin 3)) 2 sawSeq := by
         rw [inv_neg]; ring
       · simp
     · simp
-  · change cf sawSeq (Feec.Models.Cube.DeRham.flipAt j m) t =
+  · change cf sawSeq (Fourier.Torus.flipAt j m) t =
       Feec.Models.Cube.DeRham.mixedSign Finset.univ j * Feec.Models.Cube.DeRham.reflSign j t.1 *
         cf sawSeq m t
     rw [cf_sawSeq, cf_sawSeq, sawCoeff, sawCoeff]
     simp only [onAxis_flipAt_iff]
     by_cases hm : OnAxis m ∧ m 0 ≠ 0
-    · have hf : Feec.Models.Cube.DeRham.flipAt j m 0 = if j = 0 then -m 0 else m 0 := by
-        simp only [Feec.Models.Cube.DeRham.flipAt]
+    · have hf : Fourier.Torus.flipAt j m 0 = if j = 0 then -m 0 else m 0 := by
+        simp only [Fourier.Torus.flipAt_apply]
         by_cases hj : j = 0
         · subst hj; simp
         · simp [Ne.symm hj, hj]
-      have hc : OnAxis m ∧ Feec.Models.Cube.DeRham.flipAt j m 0 ≠ 0 := ⟨hm.1, by
+      have hc : OnAxis m ∧ Fourier.Torus.flipAt j m 0 ≠ 0 := ⟨hm.1, by
         rw [hf]; split_ifs <;> simp [hm.2]⟩
       rw [ite_eq_left_of_eq_true _ _ (eq_true hc), ite_eq_left_of_eq_true _ _ (eq_true hm),
         PiLp.single_apply, PiLp.single_apply, hf]
@@ -1134,10 +1134,10 @@ theorem realParJ_sawSeq : RealParJ (Finset.univ : Finset (Fin 3)) 2 sawSeq := by
           Feec.Models.Cube.DeRham.reflSign, t12]
         fin_cases j <;> simp
       · simp [ht]
-    · have hc : ¬ (OnAxis m ∧ Feec.Models.Cube.DeRham.flipAt j m 0 ≠ 0) := by
+    · have hc : ¬ (OnAxis m ∧ Fourier.Torus.flipAt j m 0 ≠ 0) := by
         rintro ⟨h1, h2⟩
         refine hm ⟨h1, fun h0 => h2 ?_⟩
-        simp only [Feec.Models.Cube.DeRham.flipAt]
+        simp only [Fourier.Torus.flipAt_apply]
         split_ifs with hj
         · subst hj; simp [h0]
         · exact h0

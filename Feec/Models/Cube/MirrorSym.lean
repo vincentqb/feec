@@ -54,8 +54,9 @@ namespace Feec.Models.Cube.MirrorSym
 
 open Feec.Fourier Feec.Fourier.GradCurl Feec.Fourier.SymCurl Feec.ShortHilbertComplex
 open Feec.Models.Cube.MirrorExt
-open Feec.Models.Cube.Mirror (sgn sgn_mul_self cE cB cE_sq cB_sq conj_cE conj_cB freq_flipAt
-  curl_flip matR_mem_tsd)
+open Feec.Models.Cube.Mirror (cE cB cE_sq cB_sq conj_cE conj_cB curl_flip matR_mem_tsd)
+open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self freq_flipAt)
+open Feec.Fourier.Torus (flipAt flipAt_comm)
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 
 /-! ### The mirror symmetries of the torus complex (4.16) -/

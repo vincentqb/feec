@@ -273,7 +273,7 @@ theorem eq_zero_of_harmonic_parity {rel : Bool} {k : ℕ} {x : L2F ℝ (Q (Fin n
     ext t
     obtain ⟨j, hj⟩ := ht t
     have e := (Jf_realPar rel k x).2 j 0 t
-    rw [DeRham.flipAt_zero] at e
+    rw [Fourier.Torus.flipAt_zero] at e
     have : (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 t = 0 := by
       by_contra hne
       exact hj (mul_right_cancel₀ hne (e.symm.trans (one_mul _).symm))

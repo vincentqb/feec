@@ -55,7 +55,7 @@ the unitary exchange of the spaces and of the harmonic forms is.
 
 ## Main definitions
 
-* `flipAt`, `reflFreq`, `reflSign`, `reflForm`, `parSign`; `symmetries`, `action`, `complex`,
+* `reflFreq` (the frequency side of `Feec.Fourier.Torus.flipAt`), `reflSign`, `reflForm`, `parSign`; `symmetries`, `action`, `complex`,
   `relative`, `absolute`.
 * `complForm`, `starLp`, `hodgeStar`, `harmonicHodgeStar` (the Hodge star up to sign).
 
@@ -92,6 +92,8 @@ open MeasureTheory LinearPMap Set Feec.Fourier Feec.Fourier.Exterior Finset
 namespace Feec.Models.Cube.DeRham
 
 open Feec.Models.Torus.DeRham (window windowSymbol window_hasCompactProperty window_cartan gap)
+open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_involutive flipAt_comm flipAt_zero
+  flipAt_eq_zero_iff)
 
 variable {d : Type*} [Fintype d] [LinearOrder d]
 
@@ -108,25 +110,6 @@ theorem coeFn_smul_count {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] 
 
 /-! ### The reflections on the Fourier side -/
 
-/-- The reflection `n ↦ (…, -n_j, …)` of the frequencies `ℤᵈ`. -/
-def flipAt (j : d) (n : d → ℤ) : d → ℤ := fun a => if a = j then -n a else n a
-
-omit [Fintype d] in
-theorem flipAt_flipAt (j : d) : Function.Involutive (flipAt j) := fun n => by
-  funext a; unfold flipAt; split_ifs <;> simp
-
-omit [Fintype d] in
-theorem flipAt_comm (j l : d) (n : d → ℤ) : flipAt j (flipAt l n) = flipAt l (flipAt j n) := by
-  funext a; unfold flipAt; split_ifs <;> simp
-
-omit [Fintype d] in
-@[simp] theorem flipAt_zero (j : d) : flipAt j (0 : d → ℤ) = 0 := by
-  funext a; simp [flipAt]
-
-omit [Fintype d] in
-theorem flipAt_eq_zero_iff (j : d) {n : d → ℤ} : flipAt j n = 0 ↔ n = 0 :=
-  ⟨fun h => by rw [← flipAt_flipAt j n, h, flipAt_zero], fun h => by rw [h, flipAt_zero]⟩
-
 /-- The reflection `ξ ↦ (…, -ξ_j, …)` of the frequency space. -/
 def reflFreq (j : d) (ξ : EuclideanSpace ℝ d) : EuclideanSpace ℝ d :=
   WithLp.toLp 2 fun a => if a = j then -ξ a else ξ a
@@ -139,7 +122,7 @@ omit [Fintype d] in
 theorem freq_flipAt (j : d) (n : d → ℤ) :
     Fourier.Torus.freq (flipAt j n) = reflFreq j (Fourier.Torus.freq n) := by
   ext a
-  simp only [Fourier.Torus.freq_apply, flipAt, reflFreq_apply]
+  simp only [Fourier.Torus.freq_apply, flipAt_apply, reflFreq_apply]
   split_ifs <;> push_cast <;> ring
 
 /-- The sign `ε_j(s)` of `R_j^* dx_s = ε_j(s) dx_s`: `-1` if `j ∈ s`, `1` otherwise. -/
@@ -224,7 +207,7 @@ variable (d) in
 /-- **The reflections of the cube**, as fibre symmetries of the torus de Rham window:
 `n ↦ flip_j n` on the frequencies, `v ↦ ± R_j^* v` on the coefficients. -/
 def symmetries (rel : Bool) : (windowSymbol d).Symmetries d where
-  R j := Reflection.count_of_involutive (flipAt j) (flipAt_flipAt j)
+  R j := Reflection.count_of_involutive (flipAt j) (flipAt_involutive j)
   ρ j i := parSign rel • reflForm j (i : ℕ)
   invol j i v := by
     simp only [_root_.smul_apply, _root_.map_smul, reflForm_reflForm, smul_smul,

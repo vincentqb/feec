@@ -79,7 +79,8 @@ open MeasureTheory Set LinearPMap Feec.Fourier Feec.Fourier.GradCurl Feec.ShortH
 namespace Feec.Models.Cube
 
 open Feec.Models.Torus.GradCurl (Space)
-open MirrorTorus (sgn sgn_mul_self conj_sgn leviCivita3_sgn flip_flip flip_comm freq_flip)
+open MirrorTorus (sgn sgn_mul_self conj_sgn leviCivita3_sgn freq_flipAt)
+open Fourier.Torus (flipAt flipAt_flipAt flipAt_involutive flipAt_comm flipAt_neg flipAt_zero)
 
 /- Over `ℝ`, the real structure of `W3` is the one of its inner product space. -/
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
@@ -113,19 +114,19 @@ theorem inner_colR (k : Fin 3) (M N : Mat) : ⟪colR k M, colR k N⟫_ℂ = ⟪M
 
 /-- `grad_{flip ξ} (-v) = -(grad_ξ v) D_k`. -/
 theorem grad_flip (k : Fin 3) (n : Fin 3 → ℤ) (v : Vec) :
-    grad (Fourier.Torus.freq (MirrorTorus.flip k n)) (-v) =
+    grad (Fourier.Torus.freq (flipAt k n)) (-v) =
       -colR k (grad (Fourier.Torus.freq n) v) := by
   ext ⟨a, b⟩
-  simp only [grad_apply, PiLp.neg_apply, colR_apply, freq_flip]
+  simp only [grad_apply, PiLp.neg_apply, colR_apply, freq_flipAt]
   ring
 
 /-- `curl_{flip ξ} (-M D_k) = (curl_ξ M) D_k`. -/
 theorem curl_flip (k : Fin 3) (n : Fin 3 → ℤ) (M : Mat) :
-    curl (Fourier.Torus.freq (MirrorTorus.flip k n)) (-colR k M) =
+    curl (Fourier.Torus.freq (flipAt k n)) (-colR k M) =
       colR k (curl (Fourier.Torus.freq n) M) := by
   ext ⟨a, b⟩
   rw [colR_apply, curl_apply, curl_apply]
-  simp only [PiLp.neg_apply, colR_apply, freq_flip, Finset.mul_sum]
+  simp only [PiLp.neg_apply, colR_apply, freq_flipAt, Finset.mul_sum]
   refine Finset.sum_congr rfl fun c _ => Finset.sum_congr rfl fun d _ => ?_
   linear_combination (-Complex.I * (Fourier.Torus.freq n c : ℂ) * M (a, d)) *
     leviCivita3_sgn k b c d
@@ -199,19 +200,19 @@ theorem cjF_fib (k i : Fin 3) (v : W3 Vec Mat Mat i) : cjF i (fib k i v) = fib k
 
 /-- **The row-wise reflections of the torus grad–curl complex**, as fibre symmetries. -/
 def symmetries : (Fourier.Torus.symbolComplex gradCurl).Symmetries (Fin 3) where
-  R k := Reflection.count_of_involutive (MirrorTorus.flip k) (flip_flip k)
+  R k := Reflection.count_of_involutive (flipAt k) (flipAt_involutive k)
   ρ := fib
   invol := fib_fib
   inner_ρ := inner_fib
   symm k i j n v := by
-    change gradCurl.m i j (Fourier.Torus.freq (MirrorTorus.flip k n)) (fib k i v) =
+    change gradCurl.m i j (Fourier.Torus.freq (flipAt k n)) (fib k i v) =
       fib k j (gradCurl.m i j _ v)
     fin_cases i <;> fin_cases j
     all_goals first
       | (change (0 : _ →L[ℂ] _) _ = fib k _ ((0 : _ →L[ℂ] _) v); simp)
       | exact grad_flip k n v
       | exact curl_flip k n v
-  comm_σ k l n := flip_comm k l n
+  comm_σ k l n := flipAt_comm k l n
   comm_ρ := fib_comm
 
 /-! ### The real unitaries -/
@@ -222,7 +223,7 @@ def refl (k i : Fin 3) : Space i ≃ₗᵢ[ℝ] Space i where
   norm_map' := (symmetries.toInvolutions.R k i).norm_map
 
 theorem coeFn_refl (k i : Fin 3) (u : Space i) (n : Fin 3 → ℤ) :
-    (refl k i u : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = fib k i (u (MirrorTorus.flip k n)) :=
+    (refl k i u : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = fib k i (u (flipAt k n)) :=
   Measure.ae_count_iff.1 (coeFn_symLp (symmetries.R k) (fib k i) u) n
 
 /-- The conjugation `u ↦ conj (u ∘ (-·))` of `Space i` (the real fields are its fixed points). -/
@@ -274,12 +275,9 @@ theorem cnj_mapsTo_comm {i j : Fin 3} (u : (Models.Torus.GradCurl.complex.d i j)
       (Filter.Eventually.of_forall fun n => (hpt n).symm)
   exact ⟨hm, (Operator.mulOp_apply_eq_iff _ _).2 (Filter.Eventually.of_forall hpt)⟩
 
-theorem flip_neg (k : Fin 3) (n : Fin 3 → ℤ) : MirrorTorus.flip k (-n) = -MirrorTorus.flip k n := by
-  funext a; simp only [MirrorTorus.flip, Pi.neg_apply]; split_ifs <;> rfl
-
 theorem refl_cnj (k i : Fin 3) (u : Space i) : refl k i (cnj i u) = cnj i (refl k i u) := by
   refine Lp.ext_count fun n => ?_
-  rw [coeFn_refl, coeFn_cnj, coeFn_cnj, coeFn_refl, cjF_fib, flip_neg]
+  rw [coeFn_refl, coeFn_cnj, coeFn_cnj, coeFn_refl, cjF_fib, flipAt_neg]
 
 theorem refl_refl (k i : Fin 3) (u : Space i) : refl k i (refl k i u) = u :=
   symmetries.toInvolutions.invol k i u
@@ -350,13 +348,13 @@ theorem mem_realFixed_iff {i : Fin 3} {u : Space i} :
 /-- Fixed fields: `u (flip_k n) = ρ_k (u n)` for every reflection. -/
 theorem mem_fixed_iff_coeff {i : Fin 3} {u : Space i} :
     u ∈ rowAction.fixed i ↔
-      ∀ k n, (u : (Fin 3 → ℤ) → W3 Vec Mat Mat i) (MirrorTorus.flip k n) = fib k i (u n) := by
+      ∀ k n, (u : (Fin 3 → ℤ) → W3 Vec Mat Mat i) (flipAt k n) = fib k i (u n) := by
   rw [mem_fixed_iff]
   constructor
   · intro h k n
     have := congrArg
-      (fun v : Space i => (v : (Fin 3 → ℤ) → W3 Vec Mat Mat i) (MirrorTorus.flip k n)) (h k)
-    simp only [coeFn_refl, flip_flip k n] at this
+      (fun v : Space i => (v : (Fin 3 → ℤ) → W3 Vec Mat Mat i) (flipAt k n)) (h k)
+    simp only [coeFn_refl, flipAt_flipAt k n] at this
     exact this.symm
   · intro h k
     refine Lp.ext_count fun n => ?_
@@ -554,7 +552,7 @@ theorem fibre_eq_zero_of_isEigenSq_symAlong {ω : ℝ} (hω : 0 < ω) {v : PiLp 
 theorem exists_finset_of_isEigenSq_symAlong {ω : ℝ} (hfin : {n | ‖ξ n‖ = ω}.Finite) (hω : 0 < ω)
     {v : PiLp 2 Space} (h : (symAlong ξ).toHilbertComplex.restrictScalars.wave.IsEigenSq ω v) :
     ∃ S : Finset (Fin 3 → ℤ), ∀ i, ∀ n ∉ S, (v i : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = 0 :=
-  ⟨hfin.toFinset, fun i n hn => congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w i)
+  ⟨hfin.toFinset, fun i _ hn => congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w i)
     (fibre_eq_zero_of_isEigenSq_symAlong ξ hω h fun e => hn (hfin.mem_toFinset.2 e))⟩
 
 /-- Stationary data of the real complex along `ξ` are annihilated by the wave symbol, mode by
@@ -761,7 +759,7 @@ the cube vanish.** The extensions of `A_{ab}` and `A_{ba}` (`a ≠ b`) have oppo
 all of `𝕋³` (analytic continuation from the cube, `symm_of_finite`, `trace_of_finite`), the
 parities force every entry to vanish. -/
 theorem eq_zero_of_finite_of_parity {ε : ℂ} (hε : ε ≠ 0) {A : MatL}
-    (hpar : ∀ k n p, (A : (Fin 3 → ℤ) → Mat) (MirrorTorus.flip k n) p =
+    (hpar : ∀ k n p, (A : (Fin 3 → ℤ) → Mat) (flipAt k n) p =
       ε * sgn k p.2 * (A : (Fin 3 → ℤ) → Mat) n p)
     (hs : A ∈ boxSym) (ht : A ∈ boxTr) (S : Finset (Fin 3 → ℤ))
     (hS : ∀ n ∉ S, (A : (Fin 3 → ℤ) → Mat) n = 0) : A = 0 := by
@@ -773,7 +771,7 @@ theorem eq_zero_of_finite_of_parity {ε : ℂ} (hε : ε ≠ 0) {A : MatL}
   rw [Pi.zero_apply, PiLp.zero_apply]
   by_cases hab : a = b
   · subst hab
-    have h1 := htr (MirrorTorus.flip a n)
+    have h1 := htr (flipAt a n)
     simp only [hpar] at h1
     have h2 : ∑ c, sgn a c * (A : (Fin 3 → ℤ) → Mat) n (c, c) = 0 := by
       have : ε * ∑ c, sgn a c * (A : (Fin 3 → ℤ) → Mat) n (c, c) = 0 := by
@@ -782,7 +780,7 @@ theorem eq_zero_of_finite_of_parity {ε : ℂ} (hε : ε ≠ 0) {A : MatL}
     have h3 := htr n
     fin_cases a <;> simp [sgn, Fin.sum_univ_three] at h2 h3 ⊢ <;>
       linear_combination (h3 - h2) / 2
-  · have h1 := hsym (MirrorTorus.flip a n) a b
+  · have h1 := hsym (flipAt a n) a b
     rw [hpar a n (a, b), hpar a n (b, a), hsym n b a] at h1
     have hc1 : sgn a b = 1 := by simp [sgn, Ne.symm hab]
     have hc2 : sgn a a = -1 := by simp [sgn]
@@ -792,18 +790,18 @@ theorem eq_zero_of_finite_of_parity {ε : ℂ} (hε : ε ≠ 0) {A : MatL}
 
 /-- The parities of the electric slot. -/
 theorem parity_one {A : MatL} (hA : (A : Space 1) ∈ rowAction.fixed 1) (k : Fin 3)
-    (n : Fin 3 → ℤ) (p : Fin 3 × Fin 3) : (A : (Fin 3 → ℤ) → Mat) (MirrorTorus.flip k n) p =
+    (n : Fin 3 → ℤ) (p : Fin 3 × Fin 3) : (A : (Fin 3 → ℤ) → Mat) (flipAt k n) p =
       (-1) * sgn k p.2 * (A : (Fin 3 → ℤ) → Mat) n p := by
   have h := mem_fixed_iff_coeff.1 hA k n
-  change (A : (Fin 3 → ℤ) → Mat) (MirrorTorus.flip k n) = -colR k ((A : (Fin 3 → ℤ) → Mat) n) at h
+  change (A : (Fin 3 → ℤ) → Mat) (flipAt k n) = -colR k ((A : (Fin 3 → ℤ) → Mat) n) at h
   rw [h, PiLp.neg_apply, colR_apply]; ring
 
 /-- The parities of the magnetic slot. -/
 theorem parity_two {A : MatL} (hA : (A : Space 2) ∈ rowAction.fixed 2) (k : Fin 3)
-    (n : Fin 3 → ℤ) (p : Fin 3 × Fin 3) : (A : (Fin 3 → ℤ) → Mat) (MirrorTorus.flip k n) p =
+    (n : Fin 3 → ℤ) (p : Fin 3 × Fin 3) : (A : (Fin 3 → ℤ) → Mat) (flipAt k n) p =
       1 * sgn k p.2 * (A : (Fin 3 → ℤ) → Mat) n p := by
   have h := mem_fixed_iff_coeff.1 hA k n
-  change (A : (Fin 3 → ℤ) → Mat) (MirrorTorus.flip k n) = colR k ((A : (Fin 3 → ℤ) → Mat) n) at h
+  change (A : (Fin 3 → ℤ) → Mat) (flipAt k n) = colR k ((A : (Fin 3 → ℤ) → Mat) n) at h
   rw [h, colR_apply]; ring
 
 /-- The constant Fourier mode of an electric parity field vanishes. -/
@@ -812,8 +810,7 @@ theorem coeff_zero_of_mem_fixed_one {A : MatL} (hA : (A : Space 1) ∈ rowAction
   ext ⟨a, b⟩
   obtain ⟨k, hk⟩ : ∃ k : Fin 3, k ≠ b := ⟨b + 1, by fin_cases b <;> decide⟩
   have h := parity_one hA k 0 (a, b)
-  have h0 : MirrorTorus.flip k 0 = 0 := by funext j; simp [MirrorTorus.flip]
-  rw [h0, show sgn k b = 1 by simp [sgn, Ne.symm hk]] at h
+  rw [flipAt_zero, show sgn k b = 1 by simp [sgn, Ne.symm hk]] at h
   rw [PiLp.zero_apply]
   linear_combination h / 2
 

@@ -170,18 +170,15 @@ def RealPar (rel : Bool) (k : ℕ)
     (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))) : Prop :=
   (∀ m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (-m) t =
       conj ((x : (Fin n → ℤ) → Form ℂ (Fin n) k) m t)) ∧
-    ∀ j m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (DeRham.flipAt j m) t =
+    ∀ j m t, (x : (Fin n → ℤ) → Form ℂ (Fin n) k) (Fourier.Torus.flipAt j m) t =
       DeRham.parSign rel * DeRham.reflSign j t.1 * (x : (Fin n → ℤ) → Form ℂ (Fin n) k) m t
-
-theorem flipAt_eq (j : Fin n) (m : Fin n → ℤ) : MirrorExt.flipAt j m = DeRham.flipAt j m := by
-  funext i; rw [MirrorExt.flipAt_apply]; rfl
 
 theorem Jf_realPar (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     RealPar rel k (Jf rel k u) := by
   refine ⟨fun m t => ?_, fun j m t => ?_⟩
   · rw [Jf_apply, reidx_apply, reidx_apply]
     exact JR_isReal (pc_mul_self rel) (conj_pc rel) u m _
-  · rw [Jf_apply, reidx_apply, reidx_apply, ← flipAt_eq]
+  · rw [Jf_apply, reidx_apply, reidx_apply]
     exact (mem_fieldParity_iff.1 (JR_mem_fieldParity (pc_mul_self rel) u)) j m _
 
 /-- **Real parity sequences are extensions of `k`-forms on `Q`.** -/
@@ -190,7 +187,7 @@ theorem Jf_Jinvf {rel : Bool} {k : ℕ}
     Jf rel k (Jinvf k x) = x := by
   set w := (reidx k).symm x
   have hw : w ∈ fieldParity (pc (n := n) (k := (k : ℤ)) rel) := mem_fieldParity_iff.2 fun j m s => by
-    rw [reidx_symm_apply, reidx_symm_apply, flipAt_eq, hx.2]
+    rw [reidx_symm_apply, reidx_symm_apply, hx.2]
     rfl
   have hr : IsReal w := fun m s => by
     rw [reidx_symm_apply, reidx_symm_apply, hx.1]

@@ -108,7 +108,7 @@ def refl (rel : Bool) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1)) : TW n i 
 theorem coeFn_refl (rel : Bool) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1)) (u : TW n i)
     (m : Fin n → ℤ) :
     (refl rel j i u : (Fin n → ℤ) → Form ℂ (Fin n) i) m =
-      DeRham.parSign rel • DeRham.reflForm j i (u (DeRham.flipAt j m)) :=
+      DeRham.parSign rel • DeRham.reflForm j i (u (Fourier.Torus.flipAt j m)) :=
   Measure.ae_count_iff.1 (coeFn_symLp ((DeRham.symmetries (Fin n) rel).R j)
     ((DeRham.symmetries (Fin n) rel).ρ j i) u) m
 
@@ -116,8 +116,8 @@ theorem refl_cnj (rel : Bool) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1)) (
     refl rel j i (cnj i u) = cnj i (refl rel j i u) := by
   refine Lp.ext_count fun m => ?_
   rw [coeFn_refl, coeFn_cnj, coeFn_cnj, coeFn_refl]
-  have e : DeRham.flipAt j (-m) = -DeRham.flipAt j m := by
-    funext a; by_cases h : a = j <;> simp [DeRham.flipAt, h]
+  have e : Fourier.Torus.flipAt j (-m) = -Fourier.Torus.flipAt j m := by
+    funext a; by_cases h : a = j <;> simp [h]
   rw [e]
   ext t
   simp only [PiLp.smul_apply, DeRham.reflForm_apply, entryConj_apply, smul_eq_mul, map_mul]
@@ -174,10 +174,10 @@ theorem mem_realFixed_iff {rel : Bool} {i : Fin (Fintype.card (Fin n) + 1)} {u :
       simp only [realInvolutions, realR, coeFn_cnj, neg_neg, entryConj_apply] at e
       exact e.symm
     · have e := congrArg (fun v : TW n i => (v : (Fin n → ℤ) → Form ℂ (Fin n) i)
-        (DeRham.flipAt j m) t) (h (some j))
+        (Fourier.Torus.flipAt j m) t) (h (some j))
       simp only [realInvolutions, realR, coeFn_refl, PiLp.smul_apply,
         DeRham.reflForm_apply, smul_eq_mul] at e
-      rw [DeRham.flipAt_flipAt j m] at e
+      rw [Fourier.Torus.flipAt_flipAt j m] at e
       rw [← e]; ring
   · rintro ⟨h1, h2⟩ k
     cases k with

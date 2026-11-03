@@ -25,7 +25,7 @@ Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference s
   `∂ₗ Πₜu = (u(v_{k+1}) - u(v_k)) / h` along the edge `v_k → v_{k+1} = v_k + h eₗ`,
   `k = σ⁻¹ l`; the element stiffness matrix is `hⁿ⁻² / n!` times the Laplacian of the path
   `v₀ - v₁ - ⋯ - vₙ` (`baryGrad_dotProduct_freudenthalPoints_nonpos`: **Freudenthal simplices are
-  non-obtuse**);
+  non-obtuse**, `isNonobtuse_freudenthalMesh`);
 * **`p1Stiffness_nodalIndicator_eq`**, `lumpedMass_node_eq`: on the level-`N` Freudenthal mesh
   of a box (`h = s / N`), at every lattice node `p`, boundary nodes included,
   `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻ Dₗw(p - eₗ) - α⁺ Dₗw(p)) / h` with the difference quotients
@@ -33,10 +33,10 @@ Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference s
   `p → p ± eₗ` of the Kuhn simplex `σ` lies in the mesh (`upCount`, `downCount`), and
   `m(p) = hⁿ C(p) / (n + 1)!`, `C(p)` the number of simplices at `p` (`vertexCount`): each
   simplex has volume `hⁿ / n!` and couples only the vertices of its path edges;
-* `lumpedMass_freudenthalMesh`: `m(x) = hⁿ` at every interior node (`α± = 1`,
-  `C = (n + 1)!`);
+* `lumpedMass_freudenthalMesh`: `m(x) = hⁿ` at every interior node (`C = (n + 1)!`,
+  `vertexCount_of_mem_interiorNodes`);
 * **`neg_p1Stiffness_div_lumpedMass`**: the lumped-mass `P₁` Laplacian at an interior node `p`
-  is the `(2n + 1)`-point difference Laplacian
+  (`α± = 1`, `upCount_of_mem_interiorNodes`) is the `(2n + 1)`-point difference Laplacian
   `-a(φₚ, w) / m(p) = Σₗ (w(p + h eₗ) - 2 w(p) + w(p - h eₗ)) / h²`.
 
 ## References
@@ -97,7 +97,8 @@ def p1Stiffness (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
 /-- The integrands are constant: `a(u, w) = Σ_T |T| ∇Πₜu · ∇Πₜw`. -/
 theorem p1Stiffness_eq (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
     p1Stiffness M u w =
-      ∑ T ∈ M.simplices, volume.real T.closedInterior * (p1Grad T.points u ⬝ᵥ p1Grad T.points w) := by
+      ∑ T ∈ M.simplices,
+        volume.real T.closedInterior * (p1Grad T.points u ⬝ᵥ p1Grad T.points w) := by
   simp [p1Stiffness, smul_eq_mul]
 
 theorem p1Stiffness_comm (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
@@ -108,7 +109,8 @@ theorem p1Stiffness_comm (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) 
 theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι) (c : ι → ℝ)
     (u : ι → (Fin n → ℝ) → ℝ) (w : (Fin n → ℝ) → ℝ) :
     p1Stiffness M (∑ i ∈ s, c i • u i) w = ∑ i ∈ s, c i * p1Stiffness M (u i) w := by
-  simp only [p1Stiffness_eq, map_sum, map_smul, sum_dotProduct, smul_dotProduct, smul_eq_mul, mul_sum]
+  simp only [p1Stiffness_eq, map_sum, map_smul, sum_dotProduct, smul_dotProduct, smul_eq_mul,
+    mul_sum]
   rw [sum_comm]
   exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
 
@@ -676,8 +678,8 @@ theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
   simp_rw [e, sum_sub_distrib, ← sum_mul]
   rfl
 
-/-- **The lumped mass of any node** of the level-`N` Freudenthal mesh: `m(p) = hⁿ C(p) / (n + 1)!`.
--/
+/-- **The lumped mass of any node** of the level-`N` Freudenthal mesh:
+`m(p) = hⁿ C(p) / (n + 1)!`. -/
 theorem lumpedMass_node_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     (p : Fin n → ℤ) :
     lumpedMass (freudenthalMesh b s hs N) (node b (s / N) p) =

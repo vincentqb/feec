@@ -79,8 +79,9 @@ structure Verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Prop where
 /-- The earlier verdict, from the new one. -/
 theorem verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Verdict_old b hs :=
   let V := maxNormHeat b hs
-  ⟨fun N _ _ _ hxy => p1Stiffness_indicator_nonpos _ (V.nonobtuse N) hxy, V.stencil, V.maximumPrinciple, V.consistency, V.semidiscrete, V.backwardEuler,
-    V.stable_rational, V.rational, V.banach⟩
+  ⟨fun N _ _ _ hxy => p1Stiffness_indicator_nonpos _ (V.nonobtuse N) hxy, V.stencil,
+    V.maximumPrinciple, V.consistency, V.semidiscrete, V.backwardEuler, V.stable_rational,
+    V.rational, V.banach⟩
 
 /-- The earlier `MaxNormHeat.maxNormHeat_nonvacuous`, verbatim (with `Verdict_old`). -/
 theorem maxNormHeat_nonvacuous_old (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :

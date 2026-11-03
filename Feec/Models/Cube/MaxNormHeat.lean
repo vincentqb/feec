@@ -40,8 +40,9 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
 
 **`MaxNormHeat.maxNormHeat`** (statement `MaxNormHeat.Verdict`):
 
-1. (**the stencil**, `lumpedLaplacian_apply`) the Freudenthal simplices are non-obtuse, so the
-   stiffness matrix has nonpositive off-diagonal entries (Ciarlet–Raviart), and `Lₕ` is the
+1. (**the stencil**, `lumpedLaplacian_apply`) the Freudenthal simplices are non-obtuse
+   (`Feec.FiniteElement.isNonobtuse_freudenthalMesh`), so the stiffness matrix has nonpositive
+   off-diagonal entries (Ciarlet–Raviart), and `Lₕ` is the
    `(2n + 1)`-point difference Laplacian
    `(Lₕ U)(p) = Σₗ (U(p + eₗ) - 2 U(p) + U(p - eₗ)) / h²` (`U = 0` at the boundary nodes);
 2. (**the discrete maximum principle**, `isSubMarkovGenerator`) `Lₕ` is a sub-Markov generator:
@@ -600,8 +601,8 @@ theorem iterate_partialDeriv_sine (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) (k
 /-- `∏ⱼ G̃ⱼ(xⱼ) = κ ∏ⱼ Gⱼ(xⱼ)` when the `i`-th factor is replaced by `κ Gᵢ`. -/
 theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ) (x : Fin n → ℝ) :
     ∏ j, Function.update G i (fun y => κ * G i y) j (x j) = κ * ∏ j, G j (x j) := by
-  rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i), ← Finset.mul_prod_erase _ _ (Finset.mem_univ i),
-    Function.update_self, mul_assoc]
+  rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i),
+    ← Finset.mul_prod_erase _ _ (Finset.mem_univ i), Function.update_self, mul_assoc]
   congr 2
   exact Finset.prod_congr rfl fun j hj => by rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
 

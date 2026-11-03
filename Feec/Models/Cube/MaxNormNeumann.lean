@@ -85,6 +85,7 @@ open Feec.Models.Cube.MaxNormHeat (meshSize meshSize_pos meshSize_mul meshSize_l
 
 variable {n : ℕ} {b : Fin n → ℝ} {s : ℝ} {N : ℕ}
 
+/-! ### The boundary edges: a Kuhn order through each boundary node -/
 
 /-- The Kuhn order putting the coordinates at the upper face first, then `l`, then the others. -/
 def boundaryPerm (N : ℕ) (p : Fin n → ℤ) (l : Fin n) : Equiv.Perm (Fin n) :=

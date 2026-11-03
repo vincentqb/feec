@@ -28,12 +28,12 @@ about its centre, and the Freudenthal meshes are uniformly shape regular and qua
 bound and the closeness for every `γ ≤ γ₀` (`exists_gamma₀`, `smoothingEstimates_pMax_forall`,
 `smoothingEstimatesMin_pMin_forall`).
 
-The file also keeps the lattice geometry of the Freudenthal meshes used by the other cube
-families: the separation of lattice points and the faces through nearby points
-(`isSep_latticePoint_add_sum`, `subset_vertexSet_of_near`), bounded overlap with the constant
-`6ⁿ n!` (`card_filter_mem_cthickening_le`, `sum_locMass_le`), the local estimates on the Kuhn
-simplices with one constant (`DofBound`, `InvBound`), and the boundary facets of the cube meshes
-(`exists_boundaryFacet_of_lower`, `exists_boundaryFacet_of_upper`, `exists_boundaryFacet_of_near`).
+The file also keeps the geometry of the Freudenthal meshes used by the other cube families: the
+Kuhn simplices `cubeSimplex`, the separation of lattice points (`isSep_latticePoint_add_sum`,
+`isSep_inv_smul_sum`), bounded overlap with the constant `6ⁿ n!`
+(`card_filter_mem_cthickening_le`, `sum_locMass_le`), and the boundary facets of the cube meshes
+(`exists_boundaryFacet_of_lower`, `exists_boundaryFacet_of_upper`, `coord_eq_zero_of_near`,
+`coord_eq_half_of_near`).
 
 ## References
 
@@ -274,66 +274,11 @@ theorem norm_sub_le_of_mem_cubeSimplex {N : ℕ} {m : Fin n → Fin (N + 1)}
   rw [← smul_sub, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 h.le)] at key
   rwa [inv_mul_le_iff₀ h, mul_one] at key
 
-/-- The simplices of the level-`(N + 1)` mesh have diameter at most `h_N`. -/
-theorem diam_le_hN {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) : diam T ≤ hN N := by
-  obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  exact Metric.diam_le_of_forall_dist_le (hN_pos N).le fun x hx y hy => by
-    rw [dist_eq_norm]; exact norm_sub_le_of_mem_cubeSimplex hx hy
-
 /-- The simplices of the level-`(N + 1)` mesh have diameter `h_N` (`n ≠ 0`). -/
 theorem diam_eq_hN [NeZero n] {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) : diam T = hN N := by
   obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
   exact diam_freudenthalMesh_simplex (0 : Fin n → ℝ) (hN_pos N) (finLattice m) σ
-
-/-- **Faces through nearby points.** Let `x = Σₐ λₐ qₐ` be a point of a `k`-face `g` of a mesh
-simplex `T`, with all barycentric weights `λₐ ≥ θ`, `0 < θ ≤ ½`. Every mesh simplex `T'` containing
-a point at sup-distance `< θ h_N / 2` from `x` has `g` among its faces. -/
-theorem subset_vertexSet_of_near {N : ℕ} {T T' : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) (hT' : T' ∈ (mesh n N).simplices) {k : ℕ}
-    {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) {θ : ℝ}
-    (hθ0 : 0 < θ) (hθ : θ ≤ 1 / 2) {μ : Fin (k + 1) → ℝ} (hμ : ∀ a, θ ≤ μ a)
-    (hμ1 : ∑ a, μ a = 1) {t : Fin n → ℝ} (ht : t ∈ T'.closedInterior)
-    (hxt : ‖∑ a, μ a • faceEnum g (k + 1) a - t‖ < θ * hN N / 2) : g ⊆ vertexSet T' := by
-  classical
-  set q := faceEnum g (k + 1)
-  have hq := injective_faceEnum hg
-  have hqT : ∀ a, q a ∈ vertexSet T := fun a => hgT (by
-    have : q a ∈ Set.range q := ⟨a, rfl⟩
-    rwa [range_faceEnum hg] at this)
-  obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  obtain ⟨m', σ', rfl⟩ := mem_mesh_simplices.1 hT'
-  have hj : ∀ a, ∃ j, q a = hN N • (latticePoint (finLattice m) + kuhnVertex σ j) := fun a => by
-    obtain ⟨j, hj⟩ := mem_vertexSet.1 (hqT a)
-    exact ⟨j, by rw [← hj, cubeSimplex_points]⟩
-  choose j hj using hj
-  set x := ∑ a, μ a • q a
-  have hxs : (hN N)⁻¹ • x = latticePoint (finLattice m) + ∑ a, μ a • kuhnVertex σ (j a) := by
-    have hh := hN_ne_zero N
-    simp only [x, hj, Finset.smul_sum, smul_smul, smul_add, Finset.sum_add_distrib,
-      ← Finset.sum_smul]
-    have e1 : (hN N)⁻¹ * ∑ i, μ i * hN N = 1 := by
-      rw [← Finset.sum_mul, hμ1]; field_simp
-    have e2 : ∀ a, (hN N)⁻¹ * (μ a * hN N) = μ a := fun a => by field_simp
-    simp only [e1, e2, one_smul]
-  have hsep := isSep_latticePoint_add_sum hθ0.le hθ (finLattice m) σ j hμ hμ1
-  rw [← hxs] at hsep
-  have hx' : x ∈ (cubeSimplex N m' σ').closedInterior := by
-    rw [mem_closedInterior_cubeSimplex] at ht ⊢
-    refine mem_freudenthalSet_of_isSep hsep ht fun l => ?_
-    have h := hN_pos N
-    have : ‖(hN N)⁻¹ • x - (hN N)⁻¹ • t‖ < θ / 2 := by
-      rw [← smul_sub, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 h.le), inv_mul_lt_iff₀ h]
-      linarith
-    exact lt_of_le_of_lt (by
-      have := norm_le_pi_norm ((hN N)⁻¹ • x - (hN N)⁻¹ • t) l
-      rwa [Real.norm_eq_abs, Pi.sub_apply] at this) this
-  intro v hv
-  have : v ∈ Set.range q := by rw [range_faceEnum hg]; exact hv
-  obtain ⟨a, rfl⟩ := this
-  exact SimplicialMesh.subset_vertexSet_of_mem hT hT' hq hqT
-    (fun a => hθ0.trans_le (hμ a)) hμ1 hx' a
 
 /-! ### Bounded overlap -/
 
@@ -516,35 +461,6 @@ theorem gamma_pos (hp : IsAdm γ N p) : 0 < γ := by
 
 end IsAdm
 
-/-- The local DOF estimate with a uniform bound on the face integrals. -/
-theorem exists_local_dof_bound_of_le (K : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
-    ∃ B, 0 ≤ B ∧ ∀ {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {z : FormField n},
-      z ∈ p1MinusForms n k → ∀ {D : ℝ}, 0 ≤ D →
-        (∀ g ⊆ vertexSet (mapEquiv (boxMap t h hh.ne') K), g.card = k + 1 →
-          |simplexIntegral (faceEnum g (k + 1)) z| ≤ D) →
-        ∀ x ∈ (mapEquiv (boxMap t h hh.ne') K).closedInterior, ∀ s,
-          h ^ k * |z x s| ≤ B * D := by
-  classical
-  obtain ⟨B, hB0, hB⟩ := exists_local_dof_bound K k
-  refine ⟨B * Fintype.card (Σ g : (vertexSet K).powerset,
-    WhitneyDofIdx (g : Finset (Fin n → ℝ)) k), by positivity,
-    fun {h} hh t z hz D hD0 hD x hx s => (hB hh t hz x hx s).trans ?_⟩
-  rw [mul_assoc]
-  refine mul_le_mul_of_nonneg_left ?_ hB0
-  calc _ ≤ ∑ _p : Σ g : (vertexSet K).powerset, WhitneyDofIdx (g : Finset (Fin n → ℝ)) k, D := by
-        refine Finset.sum_le_sum fun p _ => hD _ ?_ ?_
-        · intro v hv
-          obtain ⟨y, hy, rfl⟩ := Finset.mem_image.1 hv
-          have hyK := (Finset.mem_powerset.1 p.1.2) hy
-          have : (fun y => t + h • y) y ∈ (vertexSet (mapEquiv (boxMap t h hh.ne') K) :
-              Set (Fin n → ℝ)) := by
-            rw [vertexSet_mapEquiv, coe_boxMap]; exact ⟨y, hyK, rfl⟩
-          exact this
-        · rw [Finset.card_image_of_injective _ (fun y y' e => by
-            have : h • y = h • y' := by simpa using e
-            exact smul_right_injective _ hh.ne' this), p.2.2]
-    _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul, mul_comm]
-
 theorem volume_real_kuhnSet_le (σ : Equiv.Perm (Fin n)) : volume.real (kuhnSet σ) ≤ 1 := by
   have h1 : volume (kuhnSet σ) ≤ volume (Set.Icc (0 : Fin n → ℝ) 1) :=
     measure_mono (kuhnSet_subset_Icc σ)
@@ -582,32 +498,6 @@ theorem integral_cubeSimplex_le {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equi
         refine mul_le_mul_of_nonneg_right ?_ hA0
         rw [closedInterior_kuhnSimplex]; exact volume_real_kuhnSet_le σ
     _ = A := one_mul A
-
-/-- The local DOF estimate on all the Kuhn simplices, with one constant. -/
-def DofBound (n k : ℕ) (B : ℝ) : Prop :=
-  ∀ (σ : Equiv.Perm (Fin n)) {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {z : FormField n},
-    z ∈ p1MinusForms n k → ∀ {D : ℝ}, 0 ≤ D →
-      (∀ g ⊆ vertexSet (mapEquiv (boxMap t h hh.ne') (kuhnSimplex σ)), g.card = k + 1 →
-        |simplexIntegral (faceEnum g (k + 1)) z| ≤ D) →
-      ∀ x ∈ (mapEquiv (boxMap t h hh.ne') (kuhnSimplex σ)).closedInterior, ∀ s,
-        h ^ k * |z x s| ≤ B * D
-
-theorem exists_dofBound (k : ℕ) : ∃ B, 0 ≤ B ∧ DofBound n k B := by
-  choose B hB0 hB using fun σ : Equiv.Perm (Fin n) => exists_local_dof_bound_of_le (kuhnSimplex σ) k
-  refine ⟨∑ σ, B σ, Finset.sum_nonneg fun σ _ => hB0 σ,
-    fun σ h hh t z hz D hD0 hD x hx s => (hB σ hh t hz hD0 hD x hx s).trans ?_⟩
-  exact mul_le_mul_of_nonneg_right (Finset.single_le_sum (fun σ _ => hB0 σ) (Finset.mem_univ σ))
-    hD0
-
-theorem DofBound.apply {k : ℕ} {B : ℝ} (hB : DofBound n k B) {N : ℕ}
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {z : FormField n}
-    (hz : z ∈ p1MinusForms n k) {D : ℝ} (hD0 : 0 ≤ D)
-    (hD : ∀ g ⊆ vertexSet T, g.card = k + 1 → |simplexIntegral (faceEnum g (k + 1)) z| ≤ D)
-    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) (s : Finset (Fin n)) :
-    hN N ^ k * |z x s| ≤ B * D := by
-  obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  rw [cubeSimplex_eq] at hD hx
-  exact hB σ (hN_pos N) _ hz hD0 hD x hx s
 
 /-! ### The uniform `L²` bound -/
 
@@ -700,19 +590,6 @@ theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam 
         add_le_add (add_le_add h2 (by rw [dist_eq_norm]; exact h1)) hyz
     _ ≤ 2 * hN N := by nlinarith
 
-/-- **The smoothed field on a simplex is bounded by the local mass**:
-`|R x (y)ₛ| ≤ 2ᵏ ((32 / (γ h_N))ⁿ m_T(x))^{1/2}` on `T`. -/
-theorem IsAdm.abs_smoothForm_le_locMass {N k : ℕ} {p : SmoothingParam (Fin n → ℝ)}
-    (hp : IsAdm γ N p) (hγ1 : γ ≤ 1) (x : L2F ℝ (mesh n N).domain (formIdx n k))
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) :
-    ∀ y ∈ T.closedInterior, ∀ s,
-      |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
-        2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := fun y hy s => by
-  have hyc : y ∈ closure (cubeDomain n) := by
-    rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure hT hy
-  exact hp.abs_smoothForm_le_locMass_of_near hγ1 x T hyc hy (by rw [dist_self]; exact
-    (hN_pos N).le) s
-
 /-- **The `L²` norm of a glued field by local masses** (any element family on the cube meshes):
 `‖glue u‖² ≤ K 6ⁿ n! ‖x‖²` when `Σₛ ‖(u_T)ₛ‖²_{L²(T)} ≤ K m_T(x)` for every simplex. -/
 theorem norm_sq_glue_le_locMass (E : LocalElement n) {N k : ℕ}
@@ -743,39 +620,6 @@ theorem sum_integral_sq_le_locMass (E : LocalElement n) {N k : ℕ} (u : E.Piece
   sum_integral_sq_le_of_subset E (isOpen_mesh_domain n N).measurableSet
     (fun _ hT => by rw [mesh_domain]; exact interior_closedInterior_subset_cubeDomain hT) u T' hsub
 
-/-- The local inverse estimates on all the Kuhn simplices, with one constant. -/
-def InvBound (n k : ℕ) (A : ℝ) : Prop :=
-  ∀ (σ : Equiv.Perm (Fin n)) {h : ℝ} (hh : 0 < h) (t : Fin n → ℝ) {z : FormField n},
-    z ∈ p1MinusForms n k →
-      (∀ x ∈ (mapEquiv (boxMap t h hh.ne') (kuhnSimplex σ)).closedInterior, ∀ s,
-        √h ^ n * |z x s| ≤ A * √(∑ s, ∫ x in (mapEquiv (boxMap t h hh.ne')
-          (kuhnSimplex σ)).closedInterior, (z x s) ^ 2)) ∧
-      (∀ x x' s, √h ^ n * h * |z x s - z x' s| ≤ A * ‖x - x'‖ *
-        √(∑ s, ∫ x in (mapEquiv (boxMap t h hh.ne') (kuhnSimplex σ)).closedInterior,
-          (z x s) ^ 2))
-
-theorem exists_invBound (k : ℕ) : ∃ A, 0 ≤ A ∧ InvBound n k A := by
-  choose A hA0 hA using fun σ : Equiv.Perm (Fin n) => exists_local_inverse_bound (kuhnSimplex σ) k
-  have hle : ∀ σ, A σ ≤ ∑ σ, A σ := fun σ =>
-    Finset.single_le_sum (fun σ _ => hA0 σ) (Finset.mem_univ σ)
-  refine ⟨∑ σ, A σ, Finset.sum_nonneg fun σ _ => hA0 σ, fun σ h hh t z hz => ?_⟩
-  obtain ⟨h1, h2⟩ := hA σ hh t hz
-  exact ⟨fun x hx s => (h1 x hx s).trans (mul_le_mul_of_nonneg_right (hle σ)
-      (Real.sqrt_nonneg _)),
-    fun x x' s => (h2 x x' s).trans (mul_le_mul_of_nonneg_right
-      (mul_le_mul_of_nonneg_right (hle σ) (norm_nonneg _)) (Real.sqrt_nonneg _))⟩
-
-theorem InvBound.apply {k : ℕ} {A : ℝ} (hA : InvBound n k A) {N : ℕ}
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {z : FormField n}
-    (hz : z ∈ p1MinusForms n k) :
-    (∀ x ∈ T.closedInterior, ∀ s, √(hN N) ^ n * |z x s| ≤
-      A * √(∑ s, ∫ x in T.closedInterior, (z x s) ^ 2)) ∧
-    (∀ x x' s, √(hN N) ^ n * hN N * |z x s - z x' s| ≤
-      A * ‖x - x'‖ * √(∑ s, ∫ x in T.closedInterior, (z x s) ^ 2)) := by
-  obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  rw [cubeSimplex_eq]
-  exact hA σ (hN_pos N) _ hz
-
 /-- **Samples of the smoother near a point of the closed cube**: a point `t` in the support of the
 bump at the dilated point of `x ∈ cl Q` has `‖x - t‖ < γ h / 2`. -/
 theorem IsAdm.norm_sub_lt {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : IsAdm γ N p)
@@ -792,28 +636,6 @@ theorem IsAdm.norm_sub_lt {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : I
     _ < γ * hN N / 4 + γ * hN N / 32 := by
         rw [norm_sub_rev] at hŷ; exact add_lt_add_of_le_of_lt hŷ h1
     _ ≤ γ * hN N / 2 := by linarith
-
-/-- **Samples of the smoother near a point of the closed cube**: if `x ∈ T` and `t ∈ T'` lies in
-the support of the bump at the dilated point of `x`, then `‖x - t‖ < γ h / 2` and `T'` lies in
-the `2h`-neighbourhood of `T`. -/
-theorem IsAdm.norm_sub_lt_and_subset {N : ℕ} {p : SmoothingParam (Fin n → ℝ)} (hp : IsAdm γ N p)
-    (hγ1 : γ ≤ 1) {T T' : Affine.Simplex ℝ (Fin n → ℝ) n} (hT' : T' ∈ (mesh n N).simplices)
-    {x t : Fin n → ℝ} (hxT : x ∈ T.closedInterior) (hxc : x ∈ closure (cubeDomain n))
-    (htT' : t ∈ T'.closedInterior)
-    (hdist : dist t (p.center + p.factor • (x - p.center)) < p.bump.rOut) :
-    ‖x - t‖ < γ * hN N / 2 ∧
-      T'.closedInterior ⊆ Metric.cthickening (2 * hN N) T.closedInterior := by
-  have hxt := hp.norm_sub_lt hxc hdist
-  refine ⟨hxt, fun y hy => ?_⟩
-  obtain ⟨m', σ', rfl⟩ := mem_mesh_simplices.1 hT'
-  have hdy : ‖y - t‖ ≤ hN N := norm_sub_le_of_mem_cubeSimplex hy htT'
-  refine Metric.mem_cthickening_of_dist_le y x _ _ hxT ?_
-  rw [dist_eq_norm]
-  have hh := hN_pos N
-  calc ‖y - x‖ = ‖(y - t) + (t - x)‖ := by congr 1; abel
-    _ ≤ ‖y - t‖ + ‖t - x‖ := norm_add_le _ _
-    _ ≤ hN N + γ * hN N / 2 := by rw [norm_sub_rev t x]; exact add_le_add hdy hxt.le
-    _ ≤ 2 * hN N := by nlinarith
 
 /-! ### Assembly: the smoothing estimates -/
 
@@ -1222,45 +1044,6 @@ theorem coord_eq_half_of_near {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) 
   simp only [Pi.neg_apply, neg_inj] at h1
   exact h1
 
-/-- **A sample outside the cube near a good face point forces a boundary facet**: if the vertices
-of `g ⊆ T` are the `qₐ`, `Σₐ μₐ qₐ` (weights `≥ θ`) lies within `θ h_N / 2` of `t ∉ Ω`, then `g`
-lies in a boundary facet of the mesh. -/
-theorem exists_boundaryFacet_of_near {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T)
-    (hgne : g.Nonempty) {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ} (hqT : ∀ a, q a ∈ vertexSet T)
-    (hgq : ∀ v ∈ g, ∃ a, q a = v) {θ : ℝ} (hθ0 : 0 < θ) (hθ : θ ≤ 1 / 2)
-    {μ : Fin (m + 1) → ℝ} (hμ : ∀ a, θ ≤ μ a) (hμ1 : ∑ a, μ a = 1) {t : Fin n → ℝ}
-    (hxt : ‖∑ a, μ a • q a - t‖ < θ * hN N / 2) (htΩ : t ∉ (mesh n N).domain) :
-    ∃ T'' ∈ (mesh n N).simplices, ∃ F, (mesh n N).IsBoundaryFacet F ∧ F ⊆ vertexSet T'' ∧
-      g ⊆ F := by
-  obtain ⟨i, hi⟩ : ∃ i, ¬ (0 < t i ∧ t i < 1 / 2) := by
-    by_contra hcon; push Not at hcon
-    exact htΩ (by rw [mesh_domain]; exact fun i _ => hcon i)
-  have hxi : |(∑ a, μ a • q a) i - t i| < θ * hN N / 2 := by
-    have := norm_le_pi_norm (∑ a, μ a • q a - t) i
-    rw [Real.norm_eq_abs, Pi.sub_apply] at this
-    exact this.trans_lt hxt
-  rw [abs_lt] at hxi
-  obtain ⟨m₀, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  by_cases hlow : t i ≤ 0
-  · refine exists_boundaryFacet_of_lower m₀ σ i hgT (fun v hv => ?_) hgne
-    obtain ⟨a, rfl⟩ := hgq v hv
-    exact coord_eq_zero_of_near hT hqT hθ0 hθ hμ hμ1 (by linarith) a
-  · have hup : 1 / 2 ≤ t i := by
-      by_contra h'; push Not at h'; exact hi ⟨by push Not at hlow; exact hlow, h'⟩
-    refine exists_boundaryFacet_of_upper m₀ σ i hgT (fun v hv => ?_) hgne
-    obtain ⟨a, rfl⟩ := hgq v hv
-    exact coord_eq_half_of_near hT hqT hθ0 hθ hμ hμ1 (by linarith) a
-
-theorem smoothedCommutingMapMin_Q {M : SimplicialMesh n} [NeZero n] (p : SmoothingParam (Fin n → ℝ))
-    (hΩo : IsOpen M.domain) (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
-    (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
-    (hp : p.IsMinimal x₀ s₀) (y₀ : Fin n → ℝ)
-    (hstar' : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → y₀ + t • (x - y₀) ∈ M.domain)
-    (i : ℤ) :
-    ((whitneyElement n).smoothedCommutingMapMin M p hΩo hb hstar hp y₀ hstar').Q i =
-      (whitneyElement n).smoothedInterp M p hΩo.measurableSet i := rfl
-
 /-- Estimates of a commuting map into a subcomplex of the minimal complex transport along an
 equality of domains. -/
 theorem commutingMapOfEqMin_estimates {Ω Ω' : Set (Fin n → ℝ)} (h : Ω = Ω') (hΩ : IsOpen Ω)
@@ -1351,12 +1134,6 @@ theorem exists_gamma₀ :
       (StarShaped.sampleOK_of_isMinimal hM one_pos hC hstar (by norm_num) hpA (by norm_num) hRx
         (by norm_num) hγ4 hθ hu)
 
-omit [NeZero n] in
-theorem norm_eq_zero_negSucc {Ω : Set (Fin n → ℝ)} (k : ℕ)
-    (y : L2F ℝ Ω (formIdx n (Int.negSucc k))) : ‖y‖ = 0 := by
-  have := LocalElement.subsingleton_L2F_negSucc Ω (n := n) k
-  rw [Subsingleton.elim y 0, norm_zero]
-
 /-- **The smoothing estimates from estimates on the mesh**: a uniform `L²` bound of the smoothed
 interpolants and `‖v - Q_N v‖ ≤ ½ ‖v‖` on the global Whitney fields give
 `SmoothingEstimates n p (max C ½)`. -/
@@ -1402,11 +1179,11 @@ theorem smoothingEstimatesMin_of {p : ℕ → SmoothingParam (Fin n → ℝ)}
     intro N
     refine commutingMapOfEqMin_estimates (mesh_domain n N) (isOpen_mesh_domain n N)
       (isOpen_cubeDomain n) _ (fun i x => ?_) (fun i v hv => ?_)
-    · rw [smoothedCommutingMapMin_Q]
+    · rw [LocalElement.smoothedCommutingMapMin_Q]
       rcases i with k | k
       · exact (hb N k x).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
       · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
-    · rw [smoothedCommutingMapMin_Q]
+    · rw [LocalElement.smoothedCommutingMapMin_Q]
       rcases i with k | k
       · obtain ⟨u, rfl⟩ := hv
         exact hc N k u.1 u.2
@@ -1461,7 +1238,6 @@ theorem smoothingEstimatesMin_pMin :
     ∃ (γ : ℝ) (hγ : 0 < γ) (C : ℝ), SmoothingEstimatesMin n (pMin γ hγ) C := by
   obtain ⟨γ₀, hγ₀, -, h⟩ := smoothingEstimatesMin_pMin_forall (n := n)
   exact ⟨γ₀, hγ₀, h γ₀ hγ₀ le_rfl⟩
-
 
 /-- **The smoothed-projection estimates hold on the Freudenthal meshes of the cube**, as an
 existence statement over the parameters (`smoothingEstimates_pMax` with the parameters `pMax γ`

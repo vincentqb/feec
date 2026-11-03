@@ -1,7 +1,7 @@
 module
 
-public import Feec.Models.StarShaped.FiniteElement
-public import Feec.Models.Cube.PolySmoothingEstimates
+public import Feec.Models.StarShaped.Smoothing
+public import Feec.Models.Cube.PolySmoothingBasic
 
 /-!
 # Smoothed projections for the higher-order families on star-shaped domains
@@ -26,7 +26,7 @@ Freudenthal meshes of the cube (`Feec.Models.Cube.PolySmoothingEstimates`) to ge
   `F_T` (`refPull`): the lexicographic parametrizations of `ĝ` and of `F_T(ĝ)` differ by a
   vertex permutation `π`, so a moment of `F_T^* z` is `sign π` times a moment of `z` against the
   reparametrized test form `A_{π⁻¹}^* ηᵢ` (`abs_dof_refPull_le`, from
-  `Feec.Models.Parallelepiped.vertexMoment_comp_perm`), which is a combination of the DOFs of
+  `Feec.FiniteElement.vertexMoment_comp_perm`), which is a combination of the DOFs of
   `F_T(ĝ)` with coefficients bounded uniformly in `π` (`permConst`, `abs_vertexMoment_le_of_dof`).
 * *Interpolation error* of the canonical interpolant `Π_T` of `S` (the moment DOFs on the faces
   of `T`; [Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): for `P_sΛᵏ ⊆ P(T)ᵏ`,
@@ -147,7 +147,7 @@ def permTest (k m : ℕ) (π : Equiv.Perm (Fin (m + 1)))
 
 theorem permTest_mem (k m : ℕ) (π : Equiv.Perm (Fin (m + 1)))
     (i : Fin (Module.finrank ℝ (S.test k m))) : permTest S k m π i ∈ S.test k m :=
-  Parallelepiped.affinePullback_mem_test S _ _ k (S.testBasis k m i).2
+  S.affinePullback_mem_test _ _ k (S.testBasis k m i).2
 
 /-- The size of the reparametrized test forms in the basis of the test forms, summed over all
 permutations and basis elements. -/
@@ -180,7 +180,7 @@ theorem abs_vertexMoment_le_of_dof {g : Finset (Fin n → ℝ)} {m : ℕ} (hg : 
 /-- **The degrees of freedom of the reference pullback** `F_T^* z` on a face `ĝ` are
 controlled by the degrees of freedom of `z` on the face `F_T(ĝ)` of `T`: the two lexicographic
 parametrizations differ by a vertex permutation `π`, the moment changes by `sign π` and the test
-form by `A_{π⁻¹}^*` (`Feec.Models.Parallelepiped.vertexMoment_comp_perm`). -/
+form by `A_{π⁻¹}^*` (`Feec.FiniteElement.vertexMoment_comp_perm`). -/
 theorem abs_dof_refPull_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {g : Finset (Fin n → ℝ)}
     {k : ℕ} (i : S.DofIdx g k) {z : FormField n} (hz : Continuous z) {D' : ℝ}
     (hD : ∀ i' : S.DofIdx (g.image T.refMap) k,
@@ -207,8 +207,8 @@ theorem abs_dof_refPull_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {g : Finse
         (degField k (⟨z, hz⟩ : contForms n)) := by
     change vertexMoment q (S.testBasis k m i.1 : FormField m)
       (degField k (affinePullback (simplexMatrix T.points) (T.points 0) z)) = _
-    rw [Parallelepiped.degField_affinePullback, Parallelepiped.vertexMoment_affinePullback, hπ,
-      Parallelepiped.vertexMoment_comp_perm]
+    rw [degField_affinePullback, vertexMoment_affinePullback, hπ,
+      vertexMoment_comp_perm]
     rfl
   have hsign : |((Equiv.Perm.sign π : ℤ) : ℝ)| = 1 := by
     rcases Int.units_eq_one_or (Equiv.Perm.sign π) with h | h <;> simp [h]
@@ -251,7 +251,7 @@ theorem exists_polyDofBound (k : ℕ) (C c : ℝ) : ∃ B, 0 ≤ B ∧ PolyDofBo
     S.dof (p.1 : Finset (Fin n → ℝ)) k p.2 ∘ₗ Submodule.inclusion (S.space_le_contForms n k)
   have hℓ : Function.Injective (LinearMap.pi ℓ) := (S.isUnisolvent_dof (Mesh.refSimplex n) k).1
   obtain ⟨B₀, hB₀, hB⟩ := exists_dof_bound_of_le_polySpace (S.space_le_polySpace k)
-    (fun B b u hu => Parallelepiped.affinePullback_mem_space_poly S B b k hu) ℓ hℓ (C := C)
+    (fun B b u hu => S.affinePullback_mem_space B b k hu) ℓ hℓ (C := C)
     (c := c)
   set Kc := ∑ m ∈ Finset.range (n + 1), permConst S k m
   have hKc0 : 0 ≤ Kc := Finset.sum_nonneg fun m _ => permConst_nonneg S k m
@@ -261,7 +261,7 @@ theorem exists_polyDofBound (k : ℕ) (C c : ℝ) : ∃ B, 0 ≤ B ∧ PolyDofBo
   refine ⟨B₀ * (Fintype.card J * Kc), by positivity,
     fun {Sset} hS T hT hh z hz D' hD0 hD x hx => ?_⟩
   refine (hB hS T hT hh z hz x hx).trans ?_
-  have hterm : ∀ p : J, |ℓ p ⟨refPull T z, Parallelepiped.affinePullback_mem_space_poly S _ _ k
+  have hterm : ∀ p : J, |ℓ p ⟨refPull T z, S.affinePullback_mem_space _ _ k
       hz⟩| ≤ Kc * D' := by
     intro p
     have hsub : (p.1 : Finset (Fin n → ℝ)).image T.refMap ⊆ vertexSet T :=
@@ -272,95 +272,11 @@ theorem exists_polyDofBound (k : ℕ) (C c : ℝ) : ∃ B, 0 ≤ B ∧ PolyDofBo
       have := Finset.card_le_card (Finset.mem_powerset.1 p.1.2)
       rw [card_vertexSet] at this; omega
     exact hp.trans (mul_le_mul_of_nonneg_right (hKc _ hle) hD0)
-  calc B₀ * ∑ j, |ℓ j ⟨refPull T z, Parallelepiped.affinePullback_mem_space_poly S _ _ k hz⟩|
+  calc B₀ * ∑ j, |ℓ j ⟨refPull T z, S.affinePullback_mem_space _ _ k hz⟩|
       ≤ B₀ * ∑ _j : J, Kc * D' :=
         mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun p _ => hterm p) hB₀
     _ = B₀ * (Fintype.card J * Kc) * D' := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]; ring
-
-/-! #### The interpolation error on shape-regular simplices -/
-
-/-- **Taylor approximation on a simplex**: for a `C^{s+1}` degree-`k` field `w` with
-`‖D^{s+1} w‖ ≤ M` on `T`, the degree-`k` part `P` of its Taylor polynomial of order `s` at a
-vertex lies in `P_sΛᵏ` and `‖w - P‖ ≤ h_T^{s+1} M` on `T`. -/
-theorem exists_polySpace_near_diam {k s : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    {w : FormField n} (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) :
-    ∃ P ∈ polySpace n s k, ∀ x ∈ T.closedInterior, ‖w x - P x‖ ≤ diam T ^ (s + 1) * M := by
-  set x₀ := T.points 0
-  have hx₀ : x₀ ∈ T.closedInterior := T.point_mem_closedInterior 0
-  refine ⟨degPartField k (taylorPoly w x₀ (s + 1)), FEM.Poly.degPartField_taylorPoly_mem w x₀,
-    fun x hx => ?_⟩
-  have htay := norm_iteratedFDeriv_sub_taylorPoly_le (k := s + 1) (f := w) (U := Set.univ)
-    (K := T.closedInterior) (x₀ := x₀) (d := diam T) (M := M) isOpen_univ
-    (Set.subset_univ _) (convex_closedInterior _) hx₀ (hw.contDiffOn)
-    (fun y hy => by
-      rw [← dist_eq_norm]
-      exact Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded hy hx₀) hM hx
-    (Nat.zero_le _)
-  rw [norm_iteratedFDeriv_zero, Nat.sub_zero] at htay
-  have e : w x - degPartField k (taylorPoly w x₀ (s + 1)) x =
-      degPart k (w x - taylorPoly w x₀ (s + 1) x) := by
-    have h2 := congrFun (degPartField_sub k w (taylorPoly w x₀ (s + 1))) x
-    rw [degPartField_of_isDeg hdeg] at h2
-    exact h2.symm
-  rw [e]
-  exact (norm_degPart_le k _).trans htay
-
-/-- **The pointwise interpolation error of the canonical interpolant `Π_T` of an admissible
-sequence on a shape-regular simplex** ([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): if
-`P_sΛᵏ ⊆ P(T)ᵏ` and `‖D^{s+1} w‖ ≤ M` on `T`, then
-`‖w - Π_T w‖ ≤ (1 + B D) h_T^{s+1} M` on `T`, with `B` the DOF constant of the shape-regular family
-and `D` the coefficient constant of the degrees of freedom (Bramble–Hilbert through the DOF bound
-and the DOF stability). -/
-theorem norm_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
-    {C c B D : ℝ} (hB : PolyDofBound S n k C c B) (hD0 : 0 ≤ D) (hD : PolyCoeffBound S n k D)
-    {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} (hS : IsShapeRegular Sset C c)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ Sset) (hh : 0 < diam T) {w : FormField n}
-    (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
-    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M)
-    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
-    ‖w x - (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
-      (polyElement n S).space T k) : FormField n) x‖ ≤ (1 + B * D) * (diam T ^ (s + 1) * M) := by
-  obtain ⟨P, hP, hwP⟩ := exists_polySpace_near_diam hw hdeg hM
-  have hPS : P ∈ S.space n k := hs hP
-  set e := diam T ^ (s + 1) * M
-  have he : 0 ≤ e := (norm_nonneg _).trans (hwP x hx)
-  set Iw : (polyElement n S).space T k := (polyElement n S).localInterp T k ⟨w, hw.continuous⟩
-  have hIw : (Iw : FormField n) ∈ S.space n k := Iw.2
-  set z : FormField n := (Iw : FormField n) - P
-  have hz : z ∈ S.space n k := Submodule.sub_mem _ hIw hPS
-  have hwPc : Continuous (w - P) :=
-    hw.continuous.sub (PolyKind.contDiff_of_mem_space hPS).continuous
-  have hdof : ∀ g ⊆ vertexSet T, ∀ i : S.DofIdx g k,
-      |S.dof g k i ⟨z, S.space_le_contForms n k hz⟩| ≤ D * diam T ^ k * e := by
-    intro g hgT i
-    have e1 : S.dof g k i ⟨(Iw : FormField n), S.space_le_contForms n k hIw⟩ =
-        S.dof g k i ⟨w, hw.continuous⟩ :=
-      (polyElement n S).localDof_localInterp T k ⟨w, hw.continuous⟩ g hgT i
-    have e2 : S.dof g k i ⟨z, S.space_le_contForms n k hz⟩ = S.dof g k i ⟨w - P, hwPc⟩ := by
-      have h1 : (⟨z, S.space_le_contForms n k hz⟩ : contForms n) =
-          ⟨(Iw : FormField n), S.space_le_contForms n k hIw⟩ -
-            ⟨P, S.space_le_contForms n k hPS⟩ := rfl
-      have h2 : (⟨w - P, hwPc⟩ : contForms n) = ⟨w, hw.continuous⟩ -
-          ⟨P, S.space_le_contForms n k hPS⟩ := rfl
-      rw [h1, h2, map_sub, map_sub, e1]
-    rw [e2]
-    refine abs_polyDof_le S hD hgT i _ he fun y hy t => ?_
-    have := norm_le_pi_norm ((w - P) y) t
-    rw [Real.norm_eq_abs] at this
-    exact this.trans (hwP y hy)
-  have hzb := hB hS T hT hh hz (by positivity) hdof x hx
-  have hzx : ‖z x‖ ≤ B * D * e := by
-    have hk : 0 < diam T ^ k := pow_pos hh k
-    refine le_of_mul_le_mul_left (hzb.trans (le_of_eq ?_)) hk
-    ring
-  have h1 := hwP x hx
-  calc ‖w x - (Iw : FormField n) x‖ = ‖(w x - P x) - z x‖ := by
-        congr 1; simp only [z, Pi.sub_apply]; abel
-    _ ≤ ‖w x - P x‖ + ‖z x‖ := norm_sub_le _ _
-    _ ≤ e + B * D * e := add_le_add h1 hzx
-    _ = (1 + B * D) * e := by ring
 
 end Local
 
@@ -470,7 +386,7 @@ theorem exists_polyInvBound (k : ℕ) {C c : ℝ} (hC : 0 ≤ C) (hc : 0 < c) :
           √(diam T) ^ n * diam T * ‖u x - u x'‖ ≤
             A * ‖x - x'‖ * √(formL2Sq T.closedInterior u)) :=
   exists_inverse_bound_of_le_polySpace (S.space_le_polySpace k)
-    (fun B b _ hu => Parallelepiped.affinePullback_mem_space_poly S B b k hu) hC hc
+    (fun B b _ hu => S.affinePullback_mem_space B b k hu) hC hc
 
 end MeshTools
 
@@ -992,17 +908,19 @@ section Estimates
 variable (S : PolySeq) {x₀ : Fin n → ℝ}
 
 variable (n) in
-/-- **The smoothing scale** `γ` and the threshold `θ` for an admissible sequence, depending only
-on `n, S, C, c, q`: for every admissible parameter at scale `γ h` (either family) satisfying the
-geometric and sampling conditions at threshold `θ`, `‖v - Q v‖ ≤ ½ ‖v‖` on `Vₕ`. -/
+/-- **The smoothing scale** `γ₀` and the threshold factor `K₀` for an admissible sequence,
+depending only on `n, S, C, c, q`: for every `γ ∈ (0, γ₀]` and every admissible parameter at scale
+`γ h` (either family) satisfying the geometric and sampling conditions at threshold `θ = K₀ γ`,
+`‖v - Q v‖ ≤ ½ ‖v‖` on `Vₕ`. -/
 theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (hq : 0 < q) :
-    ∃ γ θ : ℝ, 0 < γ ∧ γ ≤ 1 / 4 ∧ 0 ≤ θ ∧ θ ≤ 1 ∧ 2 * (n * ((n + 1) * C)) / q * γ < θ ∧
+    ∃ γ₀ K₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 4 ∧ 2 * (n * ((n + 1) * C)) / q < K₀ ∧
+      ∀ γ, 0 < γ → γ ≤ γ₀ →
       ∀ (M : SimplicialMesh n), MeshData M C c q → ∀ (hΩ : MeasurableSet M.domain),
       (∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain) →
       ∀ {R σ : ℝ}, 0 < R → (∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) → M.meshSize ≤ 2 * R →
       σ ≤ 1 → ∀ (p : SmoothingParam (Fin n → ℝ)), IsAdm x₀ R σ γ M.meshSize p →
-      PolyGeomOK M p θ → ∀ (k : ℕ), ∀ u ∈ (polyElement n S).globalSpace M k,
-        PolySampleOK S p θ u →
+      PolyGeomOK M p (K₀ * γ) → ∀ (k : ℕ), ∀ u ∈ (polyElement n S).globalSpace M k,
+        PolySampleOK S p (K₀ * γ) u →
         ‖(polyElement n S).glue M k u - (polyElement n S).smoothedInterp M p hΩ k
           ((polyElement n S).glue M k u)‖ ≤ 1 / 2 * ‖(polyElement n S).glue M k u‖ := by
   classical
@@ -1023,20 +941,15 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
   have hS : 0 ≤ Sx := Finset.sum_nonneg fun k _ => hx0 k
   set Kc : ℝ := max 1 (4 ^ n * covConst n c q)
   have hKc : 1 ≤ Kc := le_max_left _ _
-  set γ₀ := 1 / (2 * (1 + Sx * Kc))
+  set γ₁ := 1 / (2 * (1 + Sx * Kc))
   have hpos : 0 < 1 + Sx * Kc := by nlinarith
-  have hγ₀ : 0 < γ₀ := by positivity
-  set γ := min (min (1 / 4) (1 / K₀)) γ₀
-  have hγ : 0 < γ := lt_min (lt_min (by norm_num) (by positivity)) hγ₀
-  have hγ4 : γ ≤ 1 / 4 := (min_le_left _ _).trans (min_le_left _ _)
-  have hγK : γ ≤ 1 / K₀ := (min_le_left _ _).trans (min_le_right _ _)
-  have hγγ₀ : γ ≤ γ₀ := min_le_right _ _
-  refine ⟨γ, K₀ * γ, hγ, hγ4, by positivity, ?_, ?_, ?_⟩
-  · calc K₀ * γ ≤ K₀ * (1 / K₀) := mul_le_mul_of_nonneg_left hγK (by linarith)
-      _ = 1 := by field_simp
-  · have : 2 * (n * ((n + 1) * C)) / q * γ < (2 * (n * ((n + 1) * C)) / q + 1) * γ := by
-      nlinarith
-    exact this
+  have hγ₁ : 0 < γ₁ := by positivity
+  set γ₀ := min (min (1 / 4) (1 / K₀)) γ₁
+  refine ⟨γ₀, K₀, lt_min (lt_min (by norm_num) (by positivity)) hγ₁,
+    (min_le_left _ _).trans (min_le_left _ _), lt_add_one _, fun γ hγ hγγ₀ => ?_⟩
+  have hγ4 : γ ≤ 1 / 4 := hγγ₀.trans ((min_le_left _ _).trans (min_le_left _ _))
+  have hγK : γ ≤ 1 / K₀ := hγγ₀.trans ((min_le_left _ _).trans (min_le_right _ _))
+  have hγγ₀ : γ ≤ γ₁ := hγγ₀.trans (min_le_right _ _)
   intro M hM hΩ hint R σ hR hRx hhR hσ1 p hp hgeom k u hu hs
   by_cases hk : n < k
   · have := FEM.subsingleton_L2F_of_lt (Ω := M.domain) hk
@@ -1054,11 +967,11 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
       q ^ k = x k * γ := by simp only [x]; ring
   rw [he] at h
   have hq1 : 4 ^ n * (x k * γ) ^ 2 * covConst n c q ≤ 1 / 4 := by
-    have h1 : 4 ^ n * (x k * γ) ^ 2 * covConst n c q ≤ Kc * (x k * γ₀) ^ 2 := by
+    have h1 : 4 ^ n * (x k * γ) ^ 2 * covConst n c q ≤ Kc * (x k * γ₁) ^ 2 := by
       have hcov : 0 ≤ covConst n c q := by unfold covConst; positivity
       calc 4 ^ n * (x k * γ) ^ 2 * covConst n c q = (4 ^ n * covConst n c q) * (x k * γ) ^ 2 := by
             ring
-        _ ≤ Kc * (x k * γ₀) ^ 2 := mul_le_mul (le_max_right _ _)
+        _ ≤ Kc * (x k * γ₁) ^ 2 := mul_le_mul (le_max_right _ _)
             (pow_le_pow_left₀ (by have := hx0 k; positivity)
               (mul_le_mul_of_nonneg_left hγγ₀ (hx0 k)) 2) (sq_nonneg _) (by linarith)
     exact h1.trans (FEM.sq_le_quarter hS hKc (hx0 k) hxk)
@@ -1083,7 +996,9 @@ theorem exists_uniform_polyCochainProjection [NeZero n] {C c q : ℝ} (hC : 0 �
       StarBall M.domain x₀ s₀ → (∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) →
       ∃ π : ((polyElement n S).subcomplex M hΩo).CochainProjection,
         (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
-  obtain ⟨γ, θ, hγ, hγ4, hθ0, hθ1, hθ, hclose⟩ := exists_polyGamma n S (x₀ := x₀) hC hc hq
+  obtain ⟨γ, K₀, hγ, hγ4, hK₀, hclose⟩ := exists_polyGamma n S (x₀ := x₀) hC hc hq
+  have hθ : 2 * (n * ((n + 1) * C)) / q * γ < K₀ * γ := mul_lt_mul_of_pos_right hK₀ hγ
+  replace hclose := hclose γ hγ le_rfl
   set σ := sigmaOf s₀ R
   obtain ⟨K', hK'0, hbound⟩ := exists_norm_polySmoothedInterp_le S (x₀ := x₀) (R := R) hc hq hγ
     (by linarith) (sigmaOf_pos hs₀ hR) (sigmaOf_le_one s₀ R)
@@ -1135,7 +1050,9 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
       ∃ π : ((polyElement n S).subcomplexMin M hΩo x₀
           (fun _ hx _ ht0 ht1 => hstar.strict hs₀ hx ht0 ht1)).CochainProjection,
         (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
-  obtain ⟨γ, θ, hγ, hγ4, hθ0, hθ1, hθ, hclose⟩ := exists_polyGamma n S (x₀ := x₀) hC hc hq
+  obtain ⟨γ, K₀, hγ, hγ4, hK₀, hclose⟩ := exists_polyGamma n S (x₀ := x₀) hC hc hq
+  have hθ : 2 * (n * ((n + 1) * C)) / q * γ < K₀ * γ := mul_lt_mul_of_pos_right hK₀ hγ
+  replace hclose := hclose γ hγ le_rfl
   set σ := sigmaOf s₀ R
   obtain ⟨K', hK'0, hbound⟩ := exists_norm_polySmoothedInterp_le S (x₀ := x₀) (R := R) hc hq hγ
     (by linarith) (sigmaOf_pos hs₀ hR) (sigmaOf_le_one s₀ R)
@@ -1183,62 +1100,5 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
   exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 end Estimates
-
-/-! ### The complexes of an admissible sequence on a mesh family -/
-
-namespace MeshFamily
-
-variable {D : StarDomain n} (F : MeshFamily D) [NeZero n] (S : PolySeq)
-
-/-- **The complex `Vₕ(S, M_N)` of the admissible sequence `S`** (`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in
-degree `k`) on the mesh `M_N`, as a subcomplex of `HΛ(Ω)`. -/
-def poly (N : ℕ) : D.complex.Subcomplex :=
-  (deRham ℝ n).maximalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
-    (S.subcomplex (F.mesh N) (F.isOpen_domain N))
-
-instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.poly S N).V k) :=
-  (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
-
-/-- **The complex `V̊ₕ(S, M_N)` of `S` with vanishing boundary DOFs** on the mesh `M_N`, as a
-subcomplex of `H̊Λ(Ω)`. -/
-def polyMin (N : ℕ) : D.complexMin.Subcomplex :=
-  (deRham ℝ n).minimalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
-    (S.subcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
-
-instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.polyMin S N).V k) :=
-  (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
-
-/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` on the family**,
-in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.5; [ChristiansenWinther2008]), with no
-hypothesis beyond shape regularity and quasi-uniformity. -/
-theorem exists_uniform_polyProj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
-    ∃ π : (F.poly S N).CochainProjection,
-      (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
-  obtain ⟨K, hK1, hK⟩ := exists_uniform_polyCochainProjection S (x₀ := D.x₀) F.C_nonneg F.c_pos
-    F.q_pos D.s₀_pos D.R_pos
-  refine ⟨K, hK1, fun N => ?_⟩
-  obtain ⟨π, h1, h2⟩ := hK (F.mesh N) (F.data N) (F.isOpen_domain N) (F.starBall_mesh N)
-    (F.norm_sub_le_mesh N)
-  exact (deRham ℝ n).maximalSubcomplexOfEq_induction (F.domain_eq N) (F.isOpen_domain N)
-    D.isOpen (S.subcomplex (F.mesh N) (F.isOpen_domain N))
-    (fun Θ hΘ S' => ∃ π : S'.CochainProjection, (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧
-      ∀ i j, π.IsGraphBounded i j K) ⟨π, h1, h2⟩
-
-/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` with vanishing
-boundary DOFs on the family**, in `L²` and in every graph norm of `H̊Λ(Ω)`. -/
-theorem exists_uniform_polyProjMin : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
-    ∃ π : (F.polyMin S N).CochainProjection,
-      (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
-  obtain ⟨K, hK1, hK⟩ := exists_uniform_polyCochainProjectionMin S (x₀ := D.x₀) F.C_nonneg
-    F.c_pos F.q_pos D.s₀_pos D.R_pos
-  refine ⟨K, hK1, fun N => ?_⟩
-  obtain ⟨π, h1, h2⟩ := hK (F.mesh N) (F.data N) (F.isOpen_domain N) (F.starBall_mesh N)
-    (F.norm_sub_le_mesh N)
-  exact (deRham ℝ n).minimalSubcomplexOfEq_induction (F.domain_eq N) (F.isOpen_domain N)
-    D.isOpen (S.subcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
-    (fun Θ hΘ S' => ∃ π : S'.CochainProjection, (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧
-      ∀ i j, π.IsGraphBounded i j K) ⟨π, h1, h2⟩
-
-end MeshFamily
 
 end Feec.Models.StarShaped

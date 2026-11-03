@@ -1,6 +1,7 @@
 module
 
 public import Feec.Models.StarShaped.PolySmoothing
+public import Feec.Models.StarShaped.FiniteElement
 public import Feec.Models.Cube.PolyRate
 
 /-!
@@ -90,6 +91,153 @@ namespace Feec.Models.StarShaped
 open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre Feec.Models.Cube
 
 variable {n : ℕ}
+
+/-! ### The interpolation error on shape-regular simplices -/
+
+section Interp
+
+variable (S : PolySeq)
+
+/-- **Taylor approximation on a simplex**: for a `C^{s+1}` degree-`k` field `w` with
+`‖D^{s+1} w‖ ≤ M` on `T`, the degree-`k` part `P` of its Taylor polynomial of order `s` at a
+vertex lies in `P_sΛᵏ` and `‖w - P‖ ≤ h_T^{s+1} M` on `T`. -/
+theorem exists_polySpace_near_diam {k s : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    {w : FormField n} (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
+    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) :
+    ∃ P ∈ polySpace n s k, ∀ x ∈ T.closedInterior, ‖w x - P x‖ ≤ diam T ^ (s + 1) * M := by
+  set x₀ := T.points 0
+  have hx₀ : x₀ ∈ T.closedInterior := T.point_mem_closedInterior 0
+  refine ⟨degPartField k (taylorPoly w x₀ (s + 1)), FEM.Poly.degPartField_taylorPoly_mem w x₀,
+    fun x hx => ?_⟩
+  have htay := norm_iteratedFDeriv_sub_taylorPoly_le (k := s + 1) (f := w) (U := Set.univ)
+    (K := T.closedInterior) (x₀ := x₀) (d := diam T) (M := M) isOpen_univ
+    (Set.subset_univ _) (convex_closedInterior _) hx₀ (hw.contDiffOn)
+    (fun y hy => by
+      rw [← dist_eq_norm]
+      exact Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded hy hx₀) hM hx
+    (Nat.zero_le _)
+  rw [norm_iteratedFDeriv_zero, Nat.sub_zero] at htay
+  have e : w x - degPartField k (taylorPoly w x₀ (s + 1)) x =
+      degPart k (w x - taylorPoly w x₀ (s + 1) x) := by
+    have h2 := congrFun (degPartField_sub k w (taylorPoly w x₀ (s + 1))) x
+    rw [degPartField_of_isDeg hdeg] at h2
+    exact h2.symm
+  rw [e]
+  exact (norm_degPart_le k _).trans htay
+
+/-- **The pointwise interpolation error of the canonical interpolant `Π_T` of an admissible
+sequence on a shape-regular simplex** ([Ciarlet2002], Thm 3.1.4; [Arnold2018], Ch. 7): if
+`P_sΛᵏ ⊆ P(T)ᵏ` and `‖D^{s+1} w‖ ≤ M` on `T`, then
+`‖w - Π_T w‖ ≤ (1 + B D) h_T^{s+1} M` on `T`, with `B` the DOF constant of the shape-regular family
+and `D` the coefficient constant of the degrees of freedom (Bramble–Hilbert through the DOF bound
+and the DOF stability). -/
+theorem norm_sub_polyLocalInterp_le {k s : ℕ} (hs : polySpace n s k ≤ S.space n k)
+    {C c B D : ℝ} (hB : PolyDofBound S n k C c B) (hD0 : 0 ≤ D) (hD : PolyCoeffBound S n k D)
+    {Sset : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} (hS : IsShapeRegular Sset C c)
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ Sset) (hh : 0 < diam T) {w : FormField n}
+    (hw : ContDiff ℝ (s + 1) w) (hdeg : ∀ x, IsDeg k (w x)) {M : ℝ}
+    (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M)
+    {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
+    ‖w x - (((polyElement n S).localInterp T k ⟨w, hw.continuous⟩ :
+      (polyElement n S).space T k) : FormField n) x‖ ≤ (1 + B * D) * (diam T ^ (s + 1) * M) := by
+  obtain ⟨P, hP, hwP⟩ := exists_polySpace_near_diam hw hdeg hM
+  have hPS : P ∈ S.space n k := hs hP
+  set e := diam T ^ (s + 1) * M
+  have he : 0 ≤ e := (norm_nonneg _).trans (hwP x hx)
+  set Iw : (polyElement n S).space T k := (polyElement n S).localInterp T k ⟨w, hw.continuous⟩
+  have hIw : (Iw : FormField n) ∈ S.space n k := Iw.2
+  set z : FormField n := (Iw : FormField n) - P
+  have hz : z ∈ S.space n k := Submodule.sub_mem _ hIw hPS
+  have hwPc : Continuous (w - P) :=
+    hw.continuous.sub (PolyKind.contDiff_of_mem_space hPS).continuous
+  have hdof : ∀ g ⊆ vertexSet T, ∀ i : S.DofIdx g k,
+      |S.dof g k i ⟨z, S.space_le_contForms n k hz⟩| ≤ D * diam T ^ k * e := by
+    intro g hgT i
+    have e1 : S.dof g k i ⟨(Iw : FormField n), S.space_le_contForms n k hIw⟩ =
+        S.dof g k i ⟨w, hw.continuous⟩ :=
+      (polyElement n S).localDof_localInterp T k ⟨w, hw.continuous⟩ g hgT i
+    have e2 : S.dof g k i ⟨z, S.space_le_contForms n k hz⟩ = S.dof g k i ⟨w - P, hwPc⟩ := by
+      have h1 : (⟨z, S.space_le_contForms n k hz⟩ : contForms n) =
+          ⟨(Iw : FormField n), S.space_le_contForms n k hIw⟩ -
+            ⟨P, S.space_le_contForms n k hPS⟩ := rfl
+      have h2 : (⟨w - P, hwPc⟩ : contForms n) = ⟨w, hw.continuous⟩ -
+          ⟨P, S.space_le_contForms n k hPS⟩ := rfl
+      rw [h1, h2, map_sub, map_sub, e1]
+    rw [e2]
+    refine abs_polyDof_le S hD hgT i _ he fun y hy t => ?_
+    have := norm_le_pi_norm ((w - P) y) t
+    rw [Real.norm_eq_abs] at this
+    exact this.trans (hwP y hy)
+  have hzb := hB hS T hT hh hz (by positivity) hdof x hx
+  have hzx : ‖z x‖ ≤ B * D * e := by
+    have hk : 0 < diam T ^ k := pow_pos hh k
+    refine le_of_mul_le_mul_left (hzb.trans (le_of_eq ?_)) hk
+    ring
+  have h1 := hwP x hx
+  calc ‖w x - (Iw : FormField n) x‖ = ‖(w x - P x) - z x‖ := by
+        congr 1; simp only [z, Pi.sub_apply]; abel
+    _ ≤ ‖w x - P x‖ + ‖z x‖ := norm_sub_le _ _
+    _ ≤ e + B * D * e := add_le_add h1 hzx
+    _ = (1 + B * D) * e := by ring
+
+end Interp
+
+/-! ### The complexes of an admissible sequence on a mesh family -/
+
+namespace MeshFamily
+
+variable {D : StarDomain n} (F : MeshFamily D) [NeZero n] (S : PolySeq)
+
+/-- **The complex `Vₕ(S, M_N)` of the admissible sequence `S`** (`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in
+degree `k`) on the mesh `M_N`, as a subcomplex of `HΛ(Ω)`. -/
+def poly (N : ℕ) : D.complex.Subcomplex :=
+  (deRham ℝ n).maximalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
+    (S.subcomplex (F.mesh N) (F.isOpen_domain N))
+
+instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.poly S N).V k) :=
+  (deRham ℝ n).finiteDimensional_maximalSubcomplexOfEq _ _ _ _ k
+
+/-- **The complex `V̊ₕ(S, M_N)` of `S` with vanishing boundary DOFs** on the mesh `M_N`, as a
+subcomplex of `H̊Λ(Ω)`. -/
+def polyMin (N : ℕ) : D.complexMin.Subcomplex :=
+  (deRham ℝ n).minimalSubcomplexOfEq (F.domain_eq N) (F.isOpen_domain N) D.isOpen
+    (S.subcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
+
+instance (N : ℕ) (k : ℤ) : FiniteDimensional ℝ ((F.polyMin S N).V k) :=
+  (deRham ℝ n).finiteDimensional_minimalSubcomplexOfEq _ _ _ _ k
+
+/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` on the family**,
+in `L²` and in every graph norm of `HΛ(Ω)` ([AFW2010], §5.5; [ChristiansenWinther2008]), with no
+hypothesis beyond shape regularity and quasi-uniformity. -/
+theorem exists_uniform_polyProj : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
+    ∃ π : (F.poly S N).CochainProjection,
+      (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
+  obtain ⟨K, hK1, hK⟩ := exists_uniform_polyCochainProjection S (x₀ := D.x₀) F.C_nonneg F.c_pos
+    F.q_pos D.s₀_pos D.R_pos
+  refine ⟨K, hK1, fun N => ?_⟩
+  obtain ⟨π, h1, h2⟩ := hK (F.mesh N) (F.data N) (F.isOpen_domain N) (F.starBall_mesh N)
+    (F.norm_sub_le_mesh N)
+  exact (deRham ℝ n).maximalSubcomplexOfEq_induction (F.domain_eq N) (F.isOpen_domain N)
+    D.isOpen (S.subcomplex (F.mesh N) (F.isOpen_domain N))
+    (fun Θ hΘ S' => ∃ π : S'.CochainProjection, (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧
+      ∀ i j, π.IsGraphBounded i j K) ⟨π, h1, h2⟩
+
+/-- **Uniformly bounded smoothed cochain projections onto the complexes of `S` with vanishing
+boundary DOFs on the family**, in `L²` and in every graph norm of `H̊Λ(Ω)`. -/
+theorem exists_uniform_polyProjMin : ∃ K : ℝ, 1 ≤ K ∧ ∀ N,
+    ∃ π : (F.polyMin S N).CochainProjection,
+      (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧ ∀ i j, π.IsGraphBounded i j K := by
+  obtain ⟨K, hK1, hK⟩ := exists_uniform_polyCochainProjectionMin S (x₀ := D.x₀) F.C_nonneg
+    F.c_pos F.q_pos D.s₀_pos D.R_pos
+  refine ⟨K, hK1, fun N => ?_⟩
+  obtain ⟨π, h1, h2⟩ := hK (F.mesh N) (F.data N) (F.isOpen_domain N) (F.starBall_mesh N)
+    (F.norm_sub_le_mesh N)
+  exact (deRham ℝ n).minimalSubcomplexOfEq_induction (F.domain_eq N) (F.isOpen_domain N)
+    D.isOpen (S.subcomplexMin (F.mesh N) (F.isOpen_domain N) D.x₀ (F.strict_mesh N))
+    (fun Θ hΘ S' => ∃ π : S'.CochainProjection, (∀ i x, ‖π.π i x‖ ≤ K * ‖x‖) ∧
+      ∀ i j, π.IsGraphBounded i j K) ⟨π, h1, h2⟩
+
+end MeshFamily
 
 /-! ### Smooth forms of order `s` on a star-shaped domain -/
 

@@ -342,6 +342,7 @@ public import Feec.Models.Cube.ParitySmoother
 public import Feec.Models.Cube.ParitySmoothingEstimates
 public import Feec.Models.Cube.PolyFiniteElementConvergence
 public import Feec.Models.Cube.PolyRate
+public import Feec.Models.Cube.PolySmoothingBasic
 public import Feec.Models.Cube.PolySmoothingEstimates
 public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.RegularDecomposition

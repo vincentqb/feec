@@ -401,6 +401,16 @@ def smoothedCommutingMapMin [NeZero n] (hΩo : IsOpen M.domain)
         HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hij)]
       exact (E.smoothedInterp M p hΩo.measurableSet j).map_zero.symm
 
+@[simp] theorem smoothedCommutingMapMin_Q [NeZero n] (hΩo : IsOpen M.domain)
+    (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
+    (hstar : ∀ y ∈ M.domain, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ M.domain)
+    (hp : p.IsMinimal x₀ s₀) (y₀ : Fin n → ℝ)
+    (hstar' : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → y₀ + t • (x - y₀) ∈ M.domain)
+    (i : ℤ) :
+    (E.smoothedCommutingMapMin M p hΩo hb hstar hp y₀ hstar').Q i =
+      E.smoothedInterp M p hΩo.measurableSet i :=
+  rfl
+
 end LocalElement
 
 end Feec.FiniteElement

@@ -689,4 +689,9 @@ theorem sq_le_quarter {S K x : ℝ} (hS : 0 ≤ S) (hK : 1 ≤ K) (hx0 : 0 ≤ x
   have h2 : K * S ^ 2 ≤ (S * K) ^ 2 := by nlinarith
   nlinarith
 
+theorem norm_eq_zero_negSucc {Ω : Set (Fin n → ℝ)} (k : ℕ)
+    (y : L2F ℝ Ω (formIdx n (Int.negSucc k))) : ‖y‖ = 0 := by
+  have := LocalElement.subsingleton_L2F_negSucc Ω (n := n) k
+  rw [Subsingleton.elim y 0, norm_zero]
+
 end Feec.Models.Cube.FEM

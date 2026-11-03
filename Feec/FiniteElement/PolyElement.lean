@@ -928,4 +928,107 @@ def polyElement (n : ℕ) (S : PolySeq) : LocalElement n where
   dof_congr := S.dof_congr
   dof_extDeriv := S.dof_comp_extDerivC1_mem_span
 
+/-! ### Naturality of the higher-order families under affine maps -/
+
+theorem PolySeq.affinePullback_mem_space (S : PolySeq) {m n' : ℕ} (B : Fin n' → Fin m → ℝ)
+    (b' : Fin n' → ℝ) (k : ℕ) {w : FormField n'} (hw : w ∈ S.space n' k) :
+    affinePullback B b' w ∈ S.space m k := by
+  change _ ∈ (S.kind k).space m (S.deg k) k
+  change w ∈ (S.kind k).space n' (S.deg k) k at hw
+  generalize S.kind k = κ at hw ⊢
+  cases κ
+  · exact affinePullback_mem_polySpace B b' hw
+  · exact affinePullback_mem_polyMinusSpace B b' hw
+
+theorem PolySeq.affinePullback_mem_test (S : PolySeq) {m : ℕ} (B : Fin m → Fin m → ℝ)
+    (b' : Fin m → ℝ) (k : ℕ) {η : FormField m} (hη : η ∈ S.test k m) :
+    affinePullback B b' η ∈ S.test k m := by
+  change _ ∈ (S.kind k).test (S.deg k) k m
+  change η ∈ (S.kind k).test (S.deg k) k m at hη
+  by_cases hc : k ≤ m ∧ m < S.deg k + k
+  · generalize S.kind k = κ at hη ⊢
+    cases κ
+    · change η ∈ testSpace _ k m at hη
+      change _ ∈ testSpace _ k m
+      rw [testSpace_eq hc] at hη ⊢
+      exact affinePullback_mem_polyMinusSpace B b' hη
+    · change η ∈ testSpaceMinus _ k m at hη
+      change _ ∈ testSpaceMinus _ k m
+      rw [testSpaceMinus_eq hc] at hη ⊢
+      exact affinePullback_mem_polySpace B b' hη
+  · rw [PolyKind.test_eq_bot hc, Submodule.mem_bot] at hη ⊢
+    subst hη
+    funext x s
+    simp [affinePullback_apply, pullback_apply]
+
+/-- `degField` commutes with the pullback (the pullback preserves degrees). -/
+theorem degField_affinePullback {m n' : ℕ} (k : ℕ) (B : Fin n' → Fin m → ℝ) (b' : Fin n' → ℝ)
+    (w : FormField n') :
+    degField k (affinePullback B b' w) = affinePullback B b' (degField k w) := by
+  funext x s
+  simp only [degField, affinePullback_apply, pullback_apply]
+  by_cases hs : #s = k
+  · simp only [hs, ite_true]
+    refine Finset.sum_congr rfl fun t _ => ?_
+    by_cases ht : #t = k
+    · simp only [ht, ite_true]
+    · simp only [ht, ite_false, isDeg_wedgeProd B t s (by rw [hs]; exact Ne.symm ht), mul_zero]
+  · simp only [hs, ite_false]
+    refine (Finset.sum_eq_zero fun t _ => ?_).symm
+    by_cases ht : #t = k
+    · rw [isDeg_wedgeProd B t s (by rw [ht]; exact hs), mul_zero]
+    · simp only [ht, ite_false, zero_mul]
+
+/-- **Moments along an affine image**: `∫_{T̂} F_q^* (G^* ω) ∧ η = ∫_{T̂} F_{G ∘ q}^* ω ∧ η`. -/
+theorem vertexMoment_affinePullback {m n' : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
+    (B : Fin n' → Fin n → ℝ) (b' : Fin n' → ℝ) (w : FormField n') :
+    vertexMoment q η (affinePullback B b' w) = vertexMoment (fun i => affine B b' (q i)) η w := by
+  simp only [vertexMoment, affinePullback_affinePullback, simplexMatrix_comp_affine]
+
+/-- `wedgeField` commutes with the pullback. -/
+theorem affinePullback_wedgeField {m : ℕ} (B : Fin m → Fin m → ℝ) (b' : Fin m → ℝ)
+    (α β : FormField m) :
+    affinePullback B b' (wedgeField α β) =
+      wedgeField (affinePullback B b' α) (affinePullback B b' β) := by
+  funext x
+  simp only [affinePullback_apply, wedgeField, pullback_wedgeForm]
+
+/-- `(A_π)^* (A_{π⁻¹})^* η = η`. -/
+theorem affinePullback_permMap_inv {m : ℕ} (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) :
+    affinePullback (simplexMatrix (refVertex m ∘ π)) (refVertex m (π 0))
+      (affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹))) (refVertex m (π⁻¹ 0)) η) = η := by
+  rw [affinePullback_affinePullback, ← simplexMatrix_perm_mul π⁻¹ π]
+  have h0 : affine (simplexMatrix (refVertex m ∘ ⇑(π⁻¹))) (refVertex m (π⁻¹ 0))
+      (refVertex m (π 0)) = refVertex m 0 := by
+    have := simplexMap_refVertex (refVertex m ∘ ⇑(π⁻¹)) (π 0)
+    simpa [simplexMap] using this
+  rw [h0, inv_mul_cancel, show refVertex m ∘ (1 : Equiv.Perm (Fin (m + 1))) = refVertex m from rfl,
+    simplexMatrix_refVertex, refVertex_zero]
+  exact affinePullback_id η
+
+/-- **Moments under a reparametrization of the face**: permuting the vertices by `π` multiplies
+the moment by `sign π` and transforms the test form by `A_{π⁻¹}`. -/
+theorem vertexMoment_comp_perm {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ)
+    (π : Equiv.Perm (Fin (m + 1))) (η : FormField m) (w : FormField n) :
+    vertexMoment (q ∘ π) η w = ((Equiv.Perm.sign π : ℤ) : ℝ) *
+      vertexMoment q (affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹))) (refVertex m (π⁻¹ 0))
+        η) w := by
+  set P := simplexMatrix (refVertex m ∘ π)
+  set p0 := refVertex m (π 0)
+  set η' := affinePullback (simplexMatrix (refVertex m ∘ ⇑(π⁻¹)))
+    (refVertex m (π⁻¹ 0)) η
+  have hq : q ∘ π = fun i => affine (simplexMatrix q) (q 0) ((refVertex m ∘ π) i) := by
+    funext i; exact (simplexMap_refVertex q (π i)).symm
+  have hF : affinePullback (simplexMatrix (q ∘ π)) ((q ∘ π) 0) w =
+      affinePullback P p0 (affinePullback (simplexMatrix q) (q 0) w) := by
+    rw [affinePullback_affinePullback, hq, simplexMatrix_comp_affine]
+    rfl
+  have hη : η = affinePullback P p0 η' := (affinePullback_permMap_inv π η).symm
+  have hp : (fun i => affine P p0 (refVertex m i)) = refVertex m ∘ π := by
+    funext i; exact simplexMap_refVertex (refVertex m ∘ π) i
+  simp only [vertexMoment]
+  rw [hF]
+  conv_lhs => rw [hη]
+  rw [← affinePullback_wedgeField, ← simplexIntegral_comp_affine, hp, simplexIntegral_comp_perm]
+
 end Feec.FiniteElement

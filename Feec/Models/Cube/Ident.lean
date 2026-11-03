@@ -16,9 +16,8 @@ forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces s
 The cube complex is also the transport of the one on `Q` along the affine map
 `T x = (x - b) / (2s)` (`Feec.Domain.ConstCoeffOp.minimal_pull`), with chain-rule factor
 `a = 1/(2s)` (`Ident.complexCube_eq`), so its wave group is the conjugate of the one on `Q` with
-time rescaled by `a` (`Feec.HilbertComplex.waveGroup_transport_const`); the eigenvectors and the
-compactness of `Feec.Models.Cube.EigenDense` and `Feec.Models.BoundedDomain.Compactness` are
-transported along it.
+time rescaled by `a` (`Feec.HilbertComplex.waveGroup_transport_const`); the compactness of
+`Feec.Models.BoundedDomain.Compactness` is transported along it.
 
 ## Main results
 

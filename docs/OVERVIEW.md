@@ -593,7 +593,8 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
   higher-order families `P_rΛᵏ`,
   `P_r⁻Λᵏ` of every admissible sequence (`Feec.FiniteElement.PolyElement`,
   `Feec.Models.Cube.PolySmoothingEstimates`, `Feec.Models.Cube.PolyFiniteElementConvergence`,
-  `Feec.Models.Cube.PolyRate`, with rates `h^{s+1}`), and for the Einstein–Bianchi (BGG) pair of
+  `Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate`, with rates `h^{s+1}`), and for
+  the Einstein–Bianchi (BGG) pair of
   Tables 5.1/6.1 (vector-valued spaces, `S_h = πS` for smoothed projections of one smoother):
   (5.4), Props 5.7–5.9(1), the static estimate and the semi-discrete wave convergence
   (`Feec.Physics.EinsteinBianchi.StaticFEM`, `Feec.Physics.EinsteinBianchi.WaveFEM`), with no

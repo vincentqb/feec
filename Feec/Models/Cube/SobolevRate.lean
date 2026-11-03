@@ -63,9 +63,10 @@ equation ([QuennevilleBelair2015], Thm 4.14).
 | semi-discrete Hodge wave | `h^s`, `s ≤ 1` | `h^{min(s, r_eff)}` | as above |
 
 For `s ≤ 1` the proved exponent is optimal. The `O(h^{s+1})` rates for `C^{s+2}` data are in
-`Feec.Models.Cube.PolyRate` and `Feec.Models.Cube.ParitySmoothingEstimates`; the BGG rates of
-Tables 5.1/6.1 (`Feec.Models.Cube.WeakSymmetryWave`, unconditional since `CurlPotential` is
-proved, `Feec.Models.Cube.RegularDecomposition`) are not restated here for Sobolev data.
+`Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate` and
+`Feec.Models.Cube.ParitySmoothingEstimates`; the BGG rates of Tables 5.1/6.1
+(`Feec.Models.Cube.WeakSymmetryWave`, unconditional since `CurlPotential` is proved,
+`Feec.Models.Cube.RegularDecomposition`) are not restated here for Sobolev data.
 
 ## References
 

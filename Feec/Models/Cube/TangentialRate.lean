@@ -6,10 +6,10 @@ public import Feec.Models.Cube.DeRhamIdentCutoff
 /-!
 # Rates of convergence on the cube for solutions with vanishing tangential traces
 
-The rates in `H̊Λ(Q)` of the higher-order methods of `Feec.Models.Cube.PolyRate` on
-`Q = (0, ½)ⁿ`, for the natural class of `C^{s+2}` forms whose **tangential components vanish on
-the faces**, and as corollaries for the flat class `FEM.IsCsFormMin` (`C^{s+2}` forms on `ℝⁿ`
-vanishing outside `Q`):
+This module proves the rates in `H̊Λ(Q)` of the higher-order methods of
+`Feec.Models.Cube.PolyRate` on `Q = (0, ½)ⁿ` for the natural class of `C^{s+2}` forms whose
+**tangential components vanish on the faces**, and derives them for the flat class
+`FEM.IsCsFormMin` (`C^{s+2}` forms on `ℝⁿ` vanishing outside `Q`):
 
 * `FEM.IsTangentialZero w`: for `j ∉ t` and `y ∈ cl Q` with `y_j ∈ {0, ½}`, `(w y)_t = 0`;
   `extDeriv` preserves it (`IsTangentialZero.extDeriv`).

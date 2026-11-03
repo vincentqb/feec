@@ -35,7 +35,8 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
   the domain of the maximal gradient (`H¹(Q)`), resp. of the minimal gradient (`H¹₀(Q)`: the
   extension by zero is in `H¹(ℝⁿ)`), `‖y - π_N y‖ ≤ (1 + 2C) K_k h_N Σₛ ‖∇ yₛ‖` with `K_k`
   independent of `N` (`PolySmoothingEstimates.norm_sub_proj_le_grad`,
-  `PolySmoothingEstimatesMin.norm_sub_proj_le_grad`; both rows of Tables 5.1/6.1 with one smoother: `tableRows_H1`). The approximant is
+  `PolySmoothingEstimatesMin.norm_sub_proj_le_grad`; both rows of Tables 5.1/6.1 with one
+  smoother: `tableRows_H1`). The approximant is
   `c⁻ᵏ Q_N y`: **mollification at scale `h_N`**, `‖f - R f‖ ≤ γ h_N √(n 2ⁿ) ‖∇f‖`
   (`norm_sub_smoothL2_le_pMax`, `norm_sub_smoothL2_le_pMin`: for smooth `f` by the fundamental
   theorem of calculus along segments, Jensen's inequality, Tonelli and the change of variables
@@ -122,13 +123,13 @@ def IsCsForm (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx 
 
 /-- `x ∈ L²(Q; Λʲ)` is a `C^{s+2}` form of degree `j` **vanishing outside `Q`**, with the bounds of
 `IsCsForm`. Since the representative is `C^{s+2}` on `ℝⁿ`, this is flatness of order `s + 2` at
-`∂Q`, stronger than vanishing tangential traces (e.g. `∏ᵢ sin (2π xᵢ)` on `(0, ½)ⁿ` is excluded);
-the general case of `H̊Λ(Q)` is covered, without a rate, by the quasi-optimality of the static
+`∂Q`, stronger than vanishing tangential traces (e.g. `∏ᵢ sin (2π xᵢ)` on `(0, ½)ⁿ` is excluded).
+The general case of `H̊Λ(Q)` is covered, without a rate, by the quasi-optimality of the static
 FEEC theorem for `polyFamilyMin`
 (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.quasiOptimal`). The class with vanishing
 tangential traces only, `FEM.IsCsFormTr` of `Feec.Models.Cube.TangentialRate`, contains this one
-with the same bound (`IsCsFormMin.isCsFormTr`); the rates of this class are corollaries of its
-rates there. -/
+with the same bound (`IsCsFormMin.isCsFormTr`), so the rates for this class there are
+corollaries of those for `FEM.IsCsFormTr`. -/
 def IsCsFormMin (s : ℕ) (j : ℤ) (L : ℝ) (x : L2F ℝ (cubeDomain n) (formIdx n j)) : Prop :=
   j < 0 ∨ ∃ k : ℕ, (k : ℤ) = j ∧ ∃ w : FormField n,
     ∃ hw : ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w, (∀ y, IsDeg k (w y)) ∧

@@ -11,8 +11,8 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 Let `Ω = A · Q + b` with `Q = (0, ½)ⁿ` and `A` invertible (`Parallelepiped.domain`; every open box
 `∏ᵢ (aᵢ, cᵢ)` is one, `domain_boxMatrix`), `T x = A x + b`. The finite element theory of the cube
 (`Feec.Models.Cube.FiniteElementConvergence`, `Feec.Models.Cube.PolyFiniteElementConvergence`,
-`Feec.Models.Cube.PolyRate`) is carried to `Ω` by **affine transport**, with no hypothesis beyond
-the data and smoothness.
+`Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate`) is carried to `Ω` by **affine
+transport**, with no hypothesis beyond the data and smoothness.
 
 * **The pullback of forms.** The fibre matrices of `T^*` are the `k × k` minors of `A`
   (`minorMat`; `pullFun_minorMat`: pointwise `T^*` is `Feec.FiniteElement.affinePullback`), they

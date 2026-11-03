@@ -33,7 +33,8 @@ and `FEM.polyMin n S N ⊆ H̊Λ(Q)` (vanishing boundary DOFs), this module prov
   (`Feec.HilbertComplex.ConformingFamily.staticFEEC`) gives, unconditionally, the uniform discrete
   Poincaré inequality ([AFW2010], Thm 3.6), uniform well-posedness and stability of the discrete
   mixed Hodge Laplacian (Thm 3.8), the vanishing harmonic gap, the discrete cohomology,
-  quasi-optimality (Thm 3.9) and convergence; the rates are in `Feec.Models.Cube.PolyRate`.
+  quasi-optimality (Thm 3.9) and convergence; the rates are in `Feec.Models.Cube.PolyRate` (in
+  `H̊Λ(Q)`: `Feec.Models.Cube.TangentialRate`).
 * **The rows of Tables 5.1 and 6.1** of [QuennevilleBelair2015] (§5.3, §6.3) on `(0, ½)³` with
   vanishing boundary DOFs, the top row `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` (`PolySeq.lowestOrder`, and the
   Whitney complex) and the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` (`PolySeq.lagrangeP2`), **share

@@ -121,7 +121,7 @@ theorem norm_sub_le_of_defect_of_dissipative (L : X →L[𝕜] X)
   set G := C0Group.ofBounded L
   set e : ℝ → X := fun t => p t - G.S t (p 0)
   have hGd : ∀ t, HasDerivAt (fun s => G.S s (p 0)) (L (G.S t (p 0))) t := fun t =>
-    C0Group.hasDerivAt_exp_ofReal_smul_apply L (p 0) t
+    ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply L (p 0) t
   have hec : ContinuousOn e (Icc 0 T) :=
     hpc.sub (fun t _ => (hGd t).continuousAt.continuousWithinAt)
   have hed : ∀ t ∈ Ico 0 T, HasDerivWithinAt e (p' t - L (G.S t (p 0))) (Ici t) t :=
@@ -401,7 +401,7 @@ omit [CompleteSpace E] in
 theorem hasDerivAt_sol (h : κ) (v : F.X h) (t : ℝ) :
     HasDerivAt (F.sol h v) (F.incl h (F.L h ((F.group h).S t v))) t :=
   ((F.incl h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt t
-    (C0Group.hasDerivAt_exp_ofReal_smul_apply (F.L h) v t)
+    (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.L h) v t)
 
 /-- The **exact flow** `S(t)` of `F`: the Lumer–Phillips contraction semigroup of `A` (only
 `t ≥ 0` matters). -/

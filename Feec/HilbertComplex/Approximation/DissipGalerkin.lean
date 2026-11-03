@@ -411,7 +411,7 @@ theorem norm_sq_galerkin_sol (h : κ) (x : G.Xh h) {t : ℝ} (ht : 0 ≤ t) :
       C0Group.generator_ofBounded_apply (G.Lh h) ⟨x, hx⟩
     have hc : S.S s (G.Lh h x) = G.Lh h (S.S s x) :=
       (congrArg (fun M : G.Xh h →L[ℝ] G.Xh h => M x)
-        (C0Group.commute_exp_ofReal_smul (G.Lh h) s).eq).symm
+        (ContinuousLinearMap.commute_exp_ofReal_smul (G.Lh h) s).eq).symm
     have hi := G.inner_Lh h (S.S s x)
     rw [hg, hc, RCLike.re_to_real, hi, mul_neg]
     rfl

@@ -1,7 +1,7 @@
 module
 
 public import Feec.ForMathlib.LinearPMap.Reducing
-public import Feec.Semigroup.Basic
+public import Feec.Semigroup.Orbit
 
 /-!
 # Invariant subspaces of a group: the invariant core and reducing subspaces

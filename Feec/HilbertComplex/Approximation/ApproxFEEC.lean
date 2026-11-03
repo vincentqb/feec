@@ -465,8 +465,8 @@ theorem complexify_sol (F : ApproxFEEC.{u} H' κ') (J : PiLp 2 W' →L[ℝ] PiLp
   set F' := F.complexify J hJJ hJ hπJ hJι
   set u : ℝ → F'.X h := fun s => WithLp.toLp 2 ((F.group h).S s a, (F.group h).S s b)
   have hu : ∀ s, HasDerivAt u (F'.L h (u s)) s := fun s => by
-    have ha := C0Group.hasDerivAt_exp_ofReal_smul_apply (F.L h) a s
-    have hb := C0Group.hasDerivAt_exp_ofReal_smul_apply (F.L h) b s
+    have ha := ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.L h) a s
+    have hb := ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.L h) b s
     have hp := ha.prodMk hb
     exact (WithLp.prodContinuousLinearEquiv 2 ℝ (F.X h) (F.X h)).symm.hasFDerivAt.comp_hasDerivAt
       s hp

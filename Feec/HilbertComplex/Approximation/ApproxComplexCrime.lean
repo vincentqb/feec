@@ -267,7 +267,7 @@ theorem mem_of_invariant [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X �
   set LK : K →L[𝕜] K := LinearMap.toContinuousLinearMap (L.toLinearMap.restrict hK)
   set u : ℝ → X := fun s => (K.subtypeL ((C0Group.ofBounded LK).S s ⟨v, hv⟩))
   have hu : ∀ s, HasDerivAt u (L (u s)) s := fun s => by
-    have hd := C0Group.hasDerivAt_exp_ofReal_smul_apply LK ⟨v, hv⟩ s
+    have hd := ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply LK ⟨v, hv⟩ s
     exact (K.subtypeL.restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt s hd
   have e := eq_ofBounded_of_hasDerivAt L hL hu t
   have e0 : u 0 = v := by simp only [u, C0Group.S_zero_apply]; rfl

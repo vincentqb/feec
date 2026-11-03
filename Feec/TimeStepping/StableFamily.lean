@@ -74,14 +74,6 @@ variable {𝕜 : Type*} [RCLike 𝕜] {X : Type*} [NormedAddCommGroup X] [Normed
 local instance instNormedAlgebraRatStableFamily : NormedAlgebra ℚ (X →L[𝕜] X) :=
   NormedAlgebra.restrictScalars ℚ 𝕜 _
 
-/-- **The product rule along the flow**: for a bounded `L` and a curve `U` with derivative `U'`
-at `s`, `r ↦ e^{(t - r)L} U(r)` has derivative `e^{(t - s)L} (U' - L U(s))` at `s`. -/
-theorem hasDerivAt_exp_sub_smul_apply (L : X →L[𝕜] X) (t : ℝ) {U : ℝ → X} {U' : X} {s : ℝ}
-    (hU : HasDerivAt U U' s) :
-    HasDerivAt (fun r => exp (((t - r : ℝ) : 𝕜) • L) (U r))
-      (exp (((t - s : ℝ) : 𝕜) • L) (U' - L (U s))) s :=
-  L.hasDerivAt_exp_sub_smul_apply t hU
-
 /-- **Duhamel's estimate along a trajectory**: for a bounded `L` with `‖e^{sL}‖ ≤ M` (`s ≥ 0`)
 and a curve `U` with derivatives `U'` on `[0, t]` and defect `‖U' - L U‖ ≤ D`,
 `‖U(t) - e^{tL} v‖ ≤ M ‖U(0) - v‖ + M t D`. -/
@@ -91,7 +83,7 @@ theorem norm_sub_exp_apply_le_of_defect {L : X →L[𝕜] X} {M : ℝ}
     (v : X) : ‖U t - exp ((t : 𝕜) • L) v‖ ≤ M * ‖U 0 - v‖ + M * t * D := by
   set f : ℝ → X := fun r => exp (((t - r : ℝ) : 𝕜) • L) (U r)
   have hf : ∀ r ∈ Icc 0 t, HasDerivAt f (exp (((t - r : ℝ) : 𝕜) • L) (U' r - L (U r))) r :=
-    fun r hr => hasDerivAt_exp_sub_smul_apply L t (hU r hr)
+    fun r hr => L.hasDerivAt_exp_sub_smul_apply t (hU r hr)
   have hb : ∀ r ∈ Ico 0 t, ‖exp (((t - r : ℝ) : 𝕜) • L) (U' r - L (U r))‖ ≤ M * D := fun r hr =>
     ((exp (((t - r : ℝ) : 𝕜) • L)).le_opNorm _).trans (mul_le_mul (hL _ (sub_nonneg.2 hr.2.le))
       (hD r (Ico_subset_Icc_self hr)) (norm_nonneg _)

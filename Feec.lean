@@ -138,6 +138,7 @@ public import Feec.ForMathlib.InnerProductSpace.Isometry
 public import Feec.ForMathlib.InnerProductSpace.MoorePenrose
 public import Feec.ForMathlib.InnerProductSpace.OrthogonalClosure
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
+public import Feec.ForMathlib.LinearPMap.Basic
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
 public import Feec.ForMathlib.LinearPMap.GraphSpace

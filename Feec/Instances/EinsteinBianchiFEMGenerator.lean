@@ -446,7 +446,7 @@ theorem hasDerivAt_waveGroupH (v : HiddenState D) (t : ℝ) :
     HasDerivAt (fun s => ((waveGroupH D hdinj hS).S s v).toEState)
       (waveOp D hdinj hS ((waveGroupH D hdinj hS).S t v).toEState) t :=
   (HiddenState.subtypeL D).hasFDerivAt.comp_hasDerivAt t
-    (C0Group.hasDerivAt_exp_ofReal_smul_apply (waveGen D hdinj hS) v t)
+    (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (waveGen D hdinj hS) v t)
 
 /-! ### Solutions of (6.3) are the orbits of the generator -/
 

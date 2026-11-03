@@ -288,7 +288,7 @@ def timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) : X :=
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
 theorem continuous_exp_apply (L : X →L[𝕜] X) (y : X) :
     Continuous fun s : ℝ => exp ((s : 𝕜) • L) y :=
-  (C0Group.continuous_exp_ofReal_smul L).clm_apply continuous_const
+  (ContinuousLinearMap.continuous_exp_ofReal_smul L).clm_apply continuous_const
 
 omit [IsScalarTower ℝ 𝕜 X] in
 theorem timeAvg_sub (L : X →L[𝕜] X) (δ : ℝ) (y z : X) :
@@ -306,7 +306,7 @@ theorem apply_timeAvg (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
     ((continuous_exp_apply L y).intervalIntegrable _ _)]
   congr 1
   refine intervalIntegral.integral_congr fun s _ => ?_
-  exact congrArg (fun C : X →L[𝕜] X => C y) (C0Group.commute_exp_ofReal_smul L s).eq
+  exact congrArg (fun C : X →L[𝕜] X => C y) (ContinuousLinearMap.commute_exp_ofReal_smul L s).eq
 
 /-- `L A_δ y = δ⁻¹ (e^{δL} y - y)` (the fundamental theorem of calculus). -/
 theorem apply_timeAvg_eq (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
@@ -315,7 +315,7 @@ theorem apply_timeAvg_eq (L : X →L[𝕜] X) (δ : ℝ) (y : X) :
   rw [L.map_smul_of_tower, ← ContinuousLinearMap.intervalIntegral_comp_comm L
     ((continuous_exp_apply L y).intervalIntegrable _ _),
     intervalIntegral.integral_eq_sub_of_hasDerivAt
-      (fun s _ => C0Group.hasDerivAt_exp_ofReal_smul_apply L y s)
+      (fun s _ => ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply L y s)
       ((L.continuous.comp (continuous_exp_apply L y)).intervalIntegrable _ _)]
   simp
 

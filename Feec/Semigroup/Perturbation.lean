@@ -19,8 +19,7 @@ a strongly continuous semigroup `G.perturb B`, and it is the only one:
   `S'(t) x = S(t) x + ∫₀ᵗ S(t - r) B S'(r) x dr` (`perturb_S_apply_eq`,
   `eqOn_zero_of_volterra`);
 * **`C0Semigroup.generator_perturb`**: `(G.perturb B).generator = B +ᵥ G.generator`;
-* `C0Semigroup.norm_perturb_le`: `‖S t‖ ≤ M e^{ωt}` gives `‖S' t‖ ≤ M e^{(ω + M‖B‖)t}`;
-* `C0Semigroup.dense_domain_generator`: the generator of a semigroup is densely defined.
+* `C0Semigroup.norm_perturb_le`: `‖S t‖ ≤ M e^{ωt}` gives `‖S' t‖ ≤ M e^{(ω + M‖B‖)t}`.
 
 `C0Semigroup.S` is defined at negative times too, where it carries no information; uniqueness is
 therefore stated on `t ≥ 0` (`Set.EqOn _ _ (Ici 0)`).
@@ -87,24 +86,6 @@ namespace C0Semigroup
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (G : C0Semigroup 𝕜 E)
-
-/-! ### Density of the domain -/
-
-/-- **The generator of a semigroup is densely defined**: `h⁻¹ ∫₀ʰ S σ x dσ ∈ D(A)` tends to
-`x` as `h → 0⁺`. -/
-theorem dense_domain_generator : Dense (G.generator.domain : Set E) := by
-  intro x
-  have hd := ((G.continuous_extS_apply x).integral_hasStrictDerivAt 0 0).hasDerivAt
-  rw [hasDerivAt_iff_tendsto_slope] at hd
-  have hd' := hd.mono_left (nhdsWithin_mono _
-    (fun h (hh : h ∈ Ioi (0 : ℝ)) => (ne_of_gt hh : h ≠ 0) : Ioi (0 : ℝ) ⊆ {0}ᶜ))
-  rw [G.extS_of_nonneg le_rfl, S_zero_apply] at hd'
-  refine mem_closure_of_tendsto hd' ?_
-  filter_upwards [self_mem_nhdsWithin] with h (hh : 0 < h)
-  rw [slope_def_module, intervalIntegral.integral_same, sub_zero, sub_zero,
-    G.integral_extS_eq hh.le]
-  exact Submodule.smul_of_tower_mem _ _
-    (LinearPMap.mem_domain_of_mem_graph (G.integral_mem_graph_S hh.le x))
 
 variable (B : E →L[𝕜] E)
 

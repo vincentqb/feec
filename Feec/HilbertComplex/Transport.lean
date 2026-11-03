@@ -135,7 +135,7 @@ theorem IsReducingPair.adjoint_part [CompleteSpace E] [CompleteSpace K]
     refine IsFormalAdjoint.le_adjoint hdp fun x y => ?_
     simp only [Submodule.coe_inner]
     exact (adjoint_isFormalAdjoint hd).symm ⟨_, x.2⟩ ⟨_, y.2⟩
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   change ((y : L) : F) ∈ T†.domain
   refine mem_adjoint_domain_of_exists _ ⟨((h.part† ⟨y, hy⟩ : K) : E), fun x => ?_⟩
   set px : h.part.domain := ⟨K.orthogonalProjectionOnto x, by
@@ -539,7 +539,7 @@ theorem adjoint_transportD (hs : 0 < s)
       conj (κ i j) * ((s : 𝕜) * ⟪(e i).symm x, (H.d i j)† _⟫_𝕜)
     rw [← inner_conj_symm, ← h1, inner_conj_symm]
     rfl
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   change (e j).symm y ∈ ((H.d i j)†).domain
   set z := (transportD H e κ i j)† ⟨y, hy⟩
   refine mem_adjoint_domain_of_exists _ ⟨conj (κ i j)⁻¹ • (e i).symm z, fun x => ?_⟩

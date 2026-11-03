@@ -205,7 +205,7 @@ theorem adjoint_totalD : H.totalD† = H.dual.totalD := by
   classical
   have hle : H.dual.totalD ≤ H.totalD† :=
     IsFormalAdjoint.le_adjoint H.dense_totalDomain fun x y => H.inner_totalD_dual x y
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   intro j i
   change (y : PiLp 2 W) j ∈ ((H.d i j)†).domain
   by_cases hij : c.Rel i j

@@ -1,10 +1,11 @@
 module
 
 public import Mathlib.Analysis.LocallyConvex.Barrelled
-public import Mathlib.MeasureTheory.Integral.DominatedConvergence
 public import Mathlib.Topology.UniformSpace.UniformApproximation
 public import Feec.Operator.Resolvent
-public import Feec.Semigroup.Basic
+public import Feec.Semigroup.Orbit
+public import Feec.ForMathlib.Analysis.Gronwall
+public import Feec.ForMathlib.Analysis.StrongConvergence
 
 /-!
 # Stone's theorem
@@ -29,7 +30,10 @@ skew approximants `B_n = (c²/2) (R(c) + R(-c)) = c² A (c² - A²)⁻¹` (`Feec
 groups `exp(t B_n)` (`C0Group.ofBounded`) converge strongly (they commute, and
 `‖e^{tB_n} x - e^{tB_m} x‖ ≤ |t| ‖B_n x - B_m x‖`); the limit is the Stone group. Unlike the
 Yosida approximant `c A (c - A)⁻¹`, which is only dissipative, `B_n` is skew, so every
-approximating group is isometric.
+approximating group is isometric. The limit argument is shared with the Lumer–Phillips theorem:
+`Stone.cauchySeq_exp_apply`, `Stone.continuous_apply_of_lipschitz`,
+`Stone.sub_eq_integral_of_tendsto_exp`, `Stone.hasDerivWithinAt_of_sub_eq_integral`; so is the
+energy argument for uniqueness, `C0Semigroup.eqOn_of_generator_eq_of_isDissipative`.
 
 ## References
 
@@ -53,20 +57,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
   [CompleteSpace E]
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
-
-/-- Membership in `D(A†)` with `A† y = w` transfers to `D(A)` with `A y = -w` for skew-adjoint
-`A`. -/
-theorem LinearPMap.IsSkewAdjoint.exists_mem_domain_of_inner_eq {A : E →ₗ.[𝕜] E}
-    (hA : A.IsSkewAdjoint) {y w : E} (h : ∀ x : A.domain, ⟪w, (x : E)⟫ = ⟪y, A x⟫) :
-    ∃ hy : y ∈ A.domain, A ⟨y, hy⟩ = -w := by
-  have hya : y ∈ A†.domain := mem_adjoint_domain_of_exists y ⟨w, h⟩
-  have hval : A† ⟨y, hya⟩ = w := adjoint_apply_eq hA.dense_domain ⟨y, hya⟩ h
-  have hle : A† ≤ -A := hA ▸ le_rfl
-  have hy : y ∈ A.domain := hle.1 hya
-  refine ⟨hy, ?_⟩
-  have h2 : A† ⟨y, hya⟩ = (-A) ⟨y, hy⟩ := hle.2 rfl
-  rw [hval, LinearPMap.neg_apply] at h2
-  rw [h2, neg_neg]
 
 namespace Feec
 
@@ -267,11 +257,97 @@ theorem norm_approxU_apply (hA : A.IsSkewAdjoint) (n : ℕ) (t : ℝ) (x : E) :
     ‖approxU A n t x‖ = ‖x‖ :=
   C0Group.norm_exp_ofReal_smul_apply (approxB_skew hA n) t x
 
+theorem norm_approxU_le (hA : A.IsSkewAdjoint) (n : ℕ) (t : ℝ) : ‖approxU A n t‖ ≤ 1 :=
+  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+    rw [norm_approxU_apply hA, one_mul]
+
 theorem approxU_add (n : ℕ) (s t : ℝ) :
     approxU A n (s + t) = approxU A n s * approxU A n t :=
-  C0Group.exp_ofReal_smul_add _ s t
+  ContinuousLinearMap.exp_ofReal_smul_add _ s t
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+
+/-! ### Strong limits of contractive exponentials
+
+The limit argument shared with the Lumer–Phillips theorem (`Feec.LumerPhillips`): bounded `B_n`
+with `‖e^{sB_n}‖ ≤ 1` and `B_n x → A x` on `D(A)`. -/
+
+omit [InnerProductSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- `(e^{tB_n} x)_n` is Cauchy when `‖e^{tB_n} y‖ ≤ ‖y‖`,
+`‖e^{tB_n} y - e^{tB_m} y‖ ≤ |t| ‖B_n y - B_m y‖` and `(B_n y)_n` is Cauchy on a dense set. -/
+theorem cauchySeq_exp_apply [NormedSpace 𝕜 E] {B : ℕ → E →L[𝕜] E} {t : ℝ}
+    (hS : ∀ n y, ‖exp ((t : 𝕜) • B n) y‖ ≤ ‖y‖)
+    (hsub : ∀ n m y, ‖exp ((t : 𝕜) • B n) y - exp ((t : 𝕜) • B m) y‖ ≤ |t| * ‖B n y - B m y‖)
+    {D : Set E} (hD : Dense D) (hB : ∀ y ∈ D, CauchySeq fun n => B n y) (x : E) :
+    CauchySeq fun n => exp ((t : 𝕜) • B n) x := by
+  refine cauchySeq_apply_of_dense hS hD (fun y hy => Metric.cauchySeq_iff.2 fun ε hε => ?_) x
+  obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.1 (hB y hy) (ε / (|t| + 1)) (by positivity)
+  refine ⟨N, fun m hm n hn => ?_⟩
+  have h := hN m hm n hn
+  rw [dist_eq_norm] at h ⊢
+  calc _ ≤ |t| * ‖B m y - B n y‖ := hsub m n y
+    _ ≤ |t| * (ε / (|t| + 1)) := mul_le_mul_of_nonneg_left h.le (abs_nonneg t)
+    _ < ε := by rw [mul_div_assoc', div_lt_iff₀ (by positivity)]; nlinarith [abs_nonneg t]
+
+omit [InnerProductSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+/-- Contractions `S t`, Lipschitz in `t` on a dense `D(A)` (`‖S t x - S s x‖ ≤ |t - s| ‖A x‖`), are
+strongly continuous. -/
+theorem continuous_apply_of_lipschitz [NormedSpace 𝕜 E] {A : E →ₗ.[𝕜] E} {S : ℝ → E →L[𝕜] E}
+    (hD : Dense (A.domain : Set E)) (hS : ∀ t x, ‖S t x‖ ≤ ‖x‖)
+    (hL : ∀ (x : A.domain) t s, ‖S t x - S s x‖ ≤ |t - s| * ‖A x‖) (x : E) :
+    Continuous fun t => S t x := by
+  refine continuous_of_uniform_approx_of_continuous fun u hu => ?_
+  obtain ⟨ε, hε, hεu⟩ := Metric.mem_uniformity_dist.1 hu
+  obtain ⟨d, hd, hdD⟩ := Metric.dense_iff.1 hD x ε hε
+  rw [Metric.mem_ball] at hd
+  refine ⟨fun t => S t d, ?_, fun t => hεu ?_⟩
+  · refine (LipschitzWith.of_dist_le_mul (K := ‖A ⟨d, hdD⟩‖₊) fun t s => ?_).continuous
+    rw [dist_eq_norm, dist_eq_norm, Real.norm_eq_abs, coe_nnnorm, mul_comm]
+    exact hL ⟨d, hdD⟩ t s
+  · rw [dist_eq_norm, ← _root_.map_sub]
+    exact (hS t _).trans_lt (by rw [← dist_eq_norm, dist_comm]; exact hd)
+
+/-- **The integral identity in the limit**: if `e^{sB_n} → S s` strongly with `‖e^{sB_n}‖ ≤ 1` on
+`[0, t]` and `B_n x → v` boundedly, then `S t x - x = ∫₀ᵗ S s v ds`, the limit of
+`e^{tB_n} x - x = ∫₀ᵗ e^{sB_n} B_n x ds`. -/
+theorem sub_eq_integral_of_tendsto_exp {B : ℕ → E →L[𝕜] E}
+    {S : ℝ → E →L[𝕜] E} {t C : ℝ} {x v : E} (hS : ∀ s ∈ uIcc 0 t, ∀ n, ‖exp ((s : 𝕜) • B n)‖ ≤ 1)
+    (hlim : ∀ s ∈ uIcc 0 t, ∀ y, Tendsto (fun n => exp ((s : 𝕜) • B n) y) atTop (𝓝 (S s y)))
+    (hB : Tendsto (fun n => B n x) atTop (𝓝 v)) (hC : ∀ n, ‖B n x‖ ≤ C) :
+    S t x - x = ∫ s in (0 : ℝ)..t, S s v := by
+  have hcont : ∀ n, Continuous fun s : ℝ => exp ((s : 𝕜) • B n) (B n x) := fun n =>
+    (B n).continuous_exp_ofReal_smul.clm_apply continuous_const
+  have hftc : ∀ n, exp ((t : 𝕜) • B n) x - x = ∫ s in (0 : ℝ)..t, exp ((s : 𝕜) • B n) (B n x) := by
+    intro n
+    rw [intervalIntegral.integral_eq_sub_of_hasDerivAt (f := fun s : ℝ => exp ((s : 𝕜) • B n) x)
+      (fun s _ => ?_) ((hcont n).intervalIntegrable _ _)]
+    · simp
+    · have hc : B n (exp ((s : 𝕜) • B n) x) = exp ((s : 𝕜) • B n) (B n x) :=
+        congrArg (fun T : E →L[𝕜] E => T x) ((B n).commute_exp_ofReal_smul s).eq
+      exact hc ▸ (B n).hasDerivAt_exp_ofReal_smul_apply x s
+  have hlim' : Tendsto (fun n => ∫ s in (0 : ℝ)..t, exp ((s : 𝕜) • B n) (B n x)) atTop
+      (𝓝 (∫ s in (0 : ℝ)..t, S s v)) := by
+    refine intervalIntegral.tendsto_integral_filter_of_dominated_convergence (fun _ => C)
+      (Eventually.of_forall fun n => (hcont n).aestronglyMeasurable) ?_
+      intervalIntegrable_const ?_
+    · refine Eventually.of_forall fun n => Eventually.of_forall fun s hs => ?_
+      exact ((exp ((s : 𝕜) • B n)).le_opNorm _).trans ((mul_le_mul (hS s (uIoc_subset_uIcc hs) n) (hC n)
+        (norm_nonneg _) zero_le_one).trans_eq (one_mul C))
+    · exact Eventually.of_forall fun s hs => ContinuousLinearMap.tendsto_apply_of_tendsto
+        (hS s (uIoc_subset_uIcc hs)) (hlim s (uIoc_subset_uIcc hs)) hB
+  refine tendsto_nhds_unique ((hlim t right_mem_uIcc x).sub_const x) ?_
+  simp_rw [hftc]; exact hlim'
+
+omit [IsScalarTower ℝ 𝕜 E] in
+/-- `t ↦ S t x` has derivative `v` at `0` within `T ∋ 0` when `S 0 = 1`, `s ↦ S s v` is continuous
+and `S t x - x = ∫₀ᵗ S s v ds` on `T`. -/
+theorem hasDerivWithinAt_of_sub_eq_integral {S : ℝ → E →L[𝕜] E} {x v : E}
+    {T : Set ℝ} (hc : Continuous fun s => S s v) (h0 : S 0 = 1)
+    (h : ∀ t ∈ T, S t x - x = ∫ s in (0 : ℝ)..t, S s v) (hT : (0 : ℝ) ∈ T) :
+    HasDerivWithinAt (fun t => S t x) v T 0 := by
+  have hd := (hc.integral_hasStrictDerivAt 0 0).hasDerivAt.const_add x
+  rw [h0, one_apply_eq_self] at hd
+  exact hd.hasDerivWithinAt.congr_of_mem (fun t ht => by rw [← h t ht, add_sub_cancel]) hT
 
 /-- `‖e^{tB_n} x - e^{tB_m} x‖ ≤ |t| ‖B_n x - B_m x‖`. -/
 theorem norm_approxU_sub_le (hA : A.IsSkewAdjoint) (n m : ℕ) (t : ℝ) (x : E) :
@@ -292,23 +368,9 @@ theorem norm_approxU_sub_le (hA : A.IsSkewAdjoint) (n m : ℕ) (t : ℝ) (x : E)
 
 /-- `(exp(t B_n) x)_n` is Cauchy. -/
 theorem cauchySeq_approxU (hA : A.IsSkewAdjoint) (t : ℝ) (x : E) :
-    CauchySeq fun n => approxU A n t x := by
-  refine cauchySeq_apply_of_dense (fun n x => (norm_approxU_apply hA n t x).le)
-    hA.dense_domain ?_ x
-  intro y hy
-  rw [Metric.cauchySeq_iff]
-  intro ε hε
-  obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.1 (tendsto_approxB hA ⟨y, hy⟩).cauchySeq
-    (ε / (|t| + 1)) (by positivity)
-  refine ⟨N, fun m hm n hn => ?_⟩
-  have h1 := norm_approxU_sub_le hA m n t y
-  have h2 := hN m hm n hn
-  rw [dist_eq_norm] at h2 ⊢
-  have h3 : |t| * ‖approxB A m y - approxB A n y‖ ≤ |t| * (ε / (|t| + 1)) :=
-    mul_le_mul_of_nonneg_left h2.le (abs_nonneg t)
-  have h4 : |t| * (ε / (|t| + 1)) < ε := by
-    rw [mul_div_assoc', div_lt_iff₀ (by positivity)]; nlinarith [abs_nonneg t]
-  linarith
+    CauchySeq fun n => approxU A n t x :=
+  cauchySeq_exp_apply (fun n y => (norm_approxU_apply hA n t y).le) (norm_approxU_sub_le hA · · t)
+    hA.dense_domain (fun y hy => (tendsto_approxB hA ⟨y, hy⟩).cauchySeq) x
 
 /-- The Stone group `S(t) x = lim_n exp(t B_n) x` (a continuous linear map by
 Banach–Steinhaus). -/
@@ -319,17 +381,6 @@ def stoneS (hA : A.IsSkewAdjoint) (t : ℝ) : E →L[𝕜] E :=
 theorem tendsto_approxU (hA : A.IsSkewAdjoint) (t : ℝ) (x : E) :
     Tendsto (fun n => approxU A n t x) atTop (𝓝 (stoneS hA t x)) :=
   (cauchySeq_approxU hA t x).tendsto_limUnder
-
-theorem tendsto_approxU_of_tendsto (hA : A.IsSkewAdjoint) (t : ℝ) {y : ℕ → E} {y₀ : E}
-    (hy : Tendsto y atTop (𝓝 y₀)) :
-    Tendsto (fun n => approxU A n t (y n)) atTop (𝓝 (stoneS hA t y₀)) := by
-  have h0 : Tendsto (fun n => approxU A n t (y n - y₀)) atTop (𝓝 0) := by
-    rw [tendsto_zero_iff_norm_tendsto_zero]
-    simp_rw [norm_approxU_apply hA]
-    exact tendsto_zero_iff_norm_tendsto_zero.1 (by simpa using hy.sub_const y₀)
-  have := h0.add (tendsto_approxU hA t y₀)
-  rw [zero_add] at this
-  exact this.congr fun n => by rw [← _root_.map_add, sub_add_cancel]
 
 theorem norm_stoneS_apply (hA : A.IsSkewAdjoint) (t : ℝ) (x : E) : ‖stoneS hA t x‖ = ‖x‖ :=
   tendsto_nhds_unique (tendsto_approxU hA t x).norm
@@ -345,7 +396,8 @@ theorem stoneS_add (hA : A.IsSkewAdjoint) (s t : ℝ) :
   ext x
   refine tendsto_nhds_unique (tendsto_approxU hA (s + t) x) ?_
   simp_rw [approxU_add, mul_apply_eq_comp]
-  exact tendsto_approxU_of_tendsto hA s (tendsto_approxU hA t x)
+  exact ContinuousLinearMap.tendsto_apply_of_tendsto (norm_approxU_le hA · s) (tendsto_approxU hA s)
+    (tendsto_approxU hA t x)
 
 /-- `‖S(t) x - S(s) x‖ ≤ |t - s| ‖A x‖` on `D(A)`. -/
 theorem norm_stoneS_sub_le (hA : A.IsSkewAdjoint) (x : A.domain) (t s : ℝ) :
@@ -359,59 +411,75 @@ theorem norm_stoneS_sub_le (hA : A.IsSkewAdjoint) (x : A.domain) (t s : ℝ) :
     _ ≤ |t - s| * ‖A x‖ := by gcongr; exact norm_approxB_apply_domain_le hA n x
 
 theorem continuous_stoneS_apply (hA : A.IsSkewAdjoint) (x : E) :
-    Continuous fun t => stoneS hA t x := by
-  refine continuous_of_uniform_approx_of_continuous fun u hu => ?_
-  obtain ⟨ε, hε, hεu⟩ := Metric.mem_uniformity_dist.1 hu
-  obtain ⟨d, hd, hdD⟩ := Metric.dense_iff.1 hA.dense_domain x ε hε
-  rw [Metric.mem_ball] at hd
-  refine ⟨fun t => stoneS hA t d, ?_, fun t => hεu ?_⟩
-  · refine (LipschitzWith.of_dist_le_mul (K := ‖A ⟨d, hdD⟩‖₊) fun t s => ?_).continuous
-    rw [dist_eq_norm, dist_eq_norm, Real.norm_eq_abs, coe_nnnorm, mul_comm]
-    exact norm_stoneS_sub_le hA ⟨d, hdD⟩ t s
-  · rw [dist_eq_norm, ← _root_.map_sub, norm_stoneS_apply, ← dist_eq_norm, dist_comm]
-    exact hd
+    Continuous fun t => stoneS hA t x :=
+  continuous_apply_of_lipschitz hA.dense_domain (fun t x => (norm_stoneS_apply hA t x).le)
+    (norm_stoneS_sub_le hA) x
 
 /-- `S(t) x - x = ∫₀ᵗ S(s) (A x) ds` on `D(A)`. -/
 theorem stoneS_sub_eq_integral (hA : A.IsSkewAdjoint) (x : A.domain) (t : ℝ) :
-    stoneS hA t x - x = ∫ s in (0 : ℝ)..t, stoneS hA s (A x) := by
-  have hcont : ∀ n, Continuous fun s => approxU A n s (approxB A n x) := fun n =>
-    (C0Group.continuous_exp_ofReal_smul _).clm_apply continuous_const
-  have hftc : ∀ n, approxU A n t x - x = ∫ s in (0 : ℝ)..t, approxU A n s (approxB A n x) := by
-    intro n
-    have h := intervalIntegral.integral_eq_sub_of_hasDerivAt
-      (f := fun s => approxU A n s x) (a := 0) (b := t)
-      (f' := fun s => approxU A n s (approxB A n x)) (fun s _ => ?_)
-      ((hcont n).intervalIntegrable _ _)
-    · rw [h]; simp [approxU]
-    · have h := C0Group.hasDerivAt_exp_ofReal_smul_apply (approxB A n) (x : E) s
-      have hc : approxB A n (exp ((s : 𝕜) • approxB A n) x) =
-          exp ((s : 𝕜) • approxB A n) (approxB A n x) :=
-        congrArg (fun C : E →L[𝕜] E => C x) (C0Group.commute_exp_ofReal_smul (approxB A n) s).eq
-      rw [hc] at h
-      exact h
-  have hlim : Tendsto (fun n => ∫ s in (0 : ℝ)..t, approxU A n s (approxB A n x)) atTop
-      (𝓝 (∫ s in (0 : ℝ)..t, stoneS hA s (A x))) := by
-    refine intervalIntegral.tendsto_integral_filter_of_dominated_convergence (fun _ => ‖A x‖)
-      (Eventually.of_forall fun n => (hcont n).aestronglyMeasurable) ?_
-      intervalIntegrable_const ?_
-    · refine Eventually.of_forall fun n => Eventually.of_forall fun s _ => ?_
-      rw [norm_approxU_apply hA]; exact norm_approxB_apply_domain_le hA n x
-    · exact Eventually.of_forall fun s _ =>
-        tendsto_approxU_of_tendsto hA s (tendsto_approxB hA x)
-  refine tendsto_nhds_unique ((tendsto_approxU hA t x).sub_const (x : E)) ?_
-  simp_rw [hftc]; exact hlim
+    stoneS hA t x - x = ∫ s in (0 : ℝ)..t, stoneS hA s (A x) :=
+  sub_eq_integral_of_tendsto_exp (fun s _ n => norm_approxU_le hA n s)
+    (fun s _ => tendsto_approxU hA s) (tendsto_approxB hA x)
+    (norm_approxB_apply_domain_le hA · x)
 
 /-- `(d/dt) S(t) x |_{t=0} = A x` on `D(A)`. -/
 theorem hasDerivAt_stoneS_zero (hA : A.IsSkewAdjoint) (x : A.domain) :
-    HasDerivAt (fun t => stoneS hA t x) (A x) 0 := by
-  have hc : Continuous fun s => stoneS hA s (A x) := continuous_stoneS_apply hA _
-  have h := (hc.integral_hasStrictDerivAt 0 0).hasDerivAt.const_add (x : E)
-  rw [stoneS_zero, one_apply_eq_self] at h
-  refine h.congr_of_eventuallyEq (Eventually.of_forall fun t => ?_)
-  simp only
-  rw [← stoneS_sub_eq_integral]; abel
+    HasDerivAt (fun t => stoneS hA t x) (A x) 0 :=
+  hasDerivWithinAt_univ.1 (hasDerivWithinAt_of_sub_eq_integral (continuous_stoneS_apply hA _)
+    (stoneS_zero hA) (fun t _ => stoneS_sub_eq_integral hA x t) (mem_univ 0))
 
 end Stone
+
+namespace C0Semigroup
+
+variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+
+omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
+private theorem apply_eq_of_eq {T T' : E →ₗ.[𝕜] E} (e : T = T') {y : E} (hy : y ∈ T.domain)
+    (hy' : y ∈ T'.domain) : T ⟨y, hy⟩ = T' ⟨y, hy'⟩ := by
+  subst e; rfl
+
+/-- **Uniqueness for a dissipative generator** (energy method): two strongly continuous
+semigroups with the same dissipative generator agree for `t ≥ 0`. -/
+theorem eqOn_of_generator_eq_of_isDissipative {G G' : C0Semigroup 𝕜 E}
+    (hA : G.generator.IsDissipative) (h : G'.generator = G.generator) :
+    EqOn G'.S G.S (Ici 0) := by
+  set A := G.generator
+  have hmem' : ∀ y, y ∈ A.domain → y ∈ G'.generator.domain := fun y hy => h ▸ hy
+  have hmem : ∀ y, y ∈ G'.generator.domain → y ∈ A.domain := fun y hy => h ▸ hy
+  have hD : ∀ x : A.domain, ∀ T, 0 ≤ T → G'.S T x = G.S T x := by
+    intro x T hT
+    set x' : G'.generator.domain := ⟨x, hmem' x x.2⟩
+    have hAx : G'.generator x' = A x := apply_eq_of_eq h _ _
+    set e : ℝ → E := fun s => G'.S s x - G.S s x
+    have hm : ∀ s, 0 ≤ s → e s ∈ A.domain := fun s hs =>
+      A.domain.sub_mem (hmem _ (G'.mapsTo_domain x' hs)) (G.mapsTo_domain x hs)
+    have hAe : ∀ s (hs : 0 ≤ s), A ⟨e s, hm s hs⟩ = G'.S s (A x) - G.S s (A x) := by
+      intro s hs
+      have e1 : (⟨e s, hm s hs⟩ : A.domain) =
+          ⟨G'.S s x, hmem _ (G'.mapsTo_domain x' hs)⟩ - ⟨G.S s x, G.mapsTo_domain x hs⟩ := rfl
+      rw [e1, LinearPMap.map_sub, G.generator_apply_S x hs, ← hAx,
+        ← G'.generator_apply_S x' hs]
+      congr 1
+      exact (apply_eq_of_eq h _ _).symm
+    have hec : ContinuousOn e (Icc 0 T) :=
+      ((G'.strongCont x).sub (G.strongCont x)).mono Icc_subset_Ici_self
+    have he : ∀ s ∈ Ico 0 T, HasDerivWithinAt e (G'.S s (A x) - G.S s (A x)) (Ici s) s := by
+      intro s hs
+      have h1 := G'.hasDerivWithinAt_Ici_apply x' hs.1
+      rw [hAx] at h1
+      exact h1.sub (G.hasDerivWithinAt_Ici_apply x hs.1)
+    have hle := _root_.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := 𝕜) (g := fun _ => 0)
+      hec he continuousOn_const (fun _ _ => le_rfl) (fun s hs => by
+        rw [← hAe s hs.1, zero_mul]; exact hA _) T ⟨hT, le_rfl⟩
+    simp only [e, S_zero_apply, sub_self, norm_zero, intervalIntegral.integral_zero,
+      add_zero] at hle
+    exact sub_eq_zero.1 (norm_le_zero_iff.1 hle)
+  intro t (ht : 0 ≤ t)
+  exact DFunLike.coe_injective (Continuous.ext_on G.dense_domain_generator (G'.S t).continuous
+    (G.S t).continuous fun x hx => hD ⟨x, hx⟩ t ht)
+
+end C0Semigroup
 
 open Stone
 
@@ -426,7 +494,7 @@ theorem IsIsometric.isSkewAdjoint_generator {G : C0Group 𝕜 E} (hG : G.IsIsome
   have hD : Dense (L.domain : Set E) := G.dense_domain_generator
   have hS : L.IsSkewSymmetric := hG.isSkewSymmetric_generator
   have hle : -L ≤ L† := (isSkewSymmetric_iff_neg_le_adjoint hD).1 hS
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   set w := L† ⟨y, hy⟩
   have hw : ∀ x : L.domain, ⟪w, (x : E)⟫ = ⟪y, L x⟫ := fun x =>
     adjoint_isFormalAdjoint hD ⟨y, hy⟩ x
@@ -478,45 +546,19 @@ theorem IsIsometric.isSkewAdjoint_generator {G : C0Group 𝕜 E} (hG : G.IsIsome
   exact (hd.congr_of_eventuallyEq (Eventually.of_forall key)).differentiableAt
 
 /-- **Uniqueness**: a strongly continuous group with the same generator as an isometric group is
-that group (energy argument; `G'` need not be isometric). -/
+that group (`G'` need not be isometric): for `t ≥ 0` by the energy argument
+(`C0Semigroup.eqOn_of_generator_eq_of_isDissipative`), for `t ≤ 0` by `S(t) S(-t) = 1`. -/
 theorem IsIsometric.ext_of_generator_eq {G G' : C0Group 𝕜 E} (hG : G.IsIsometric)
     (h : G.generator = G'.generator) : G = G' := by
-  set L := G.generator
-  have hS : L.IsSkewSymmetric := hG.isSkewSymmetric_generator
-  have hmem' : ∀ x : L.domain, (x : E) ∈ G'.generator.domain := fun x => h ▸ x.2
-  have happ' : ∀ (x : L.domain), G'.generator ⟨x, hmem' x⟩ = L x := fun x => by
-    have : ∀ (T T' : E →ₗ.[𝕜] E) (e : T = T') (x : T.domain), T' ⟨x, e ▸ x.2⟩ = T x := by
-      rintro T T' rfl x; rfl
-    exact this _ _ h x
+  have h0 : EqOn G'.S G.S (Ici 0) := C0Semigroup.eqOn_of_generator_eq_of_isDissipative
+    (G := G.toC0Semigroup) (G' := G'.toC0Semigroup) hG.isSkewSymmetric_generator.isDissipative
+    h.symm
   refine C0Group.ext (funext fun t => ?_)
-  have hD : ∀ x : L.domain, G.S t x = G'.S t x := by
-    intro x
-    set e : ℝ → E := fun s => G.S s x - G'.S s x
-    have hm1 : ∀ s, G.S s x ∈ L.domain := fun s => G.mapsTo_domain x s
-    have hdom : G'.generator.domain = L.domain := congrArg LinearPMap.domain h.symm
-    have hm2 : ∀ s, G'.S s x ∈ L.domain := fun s =>
-      (SetLike.ext_iff.1 hdom _).1 (G'.mapsTo_domain ⟨x, hmem' x⟩ s)
-    have hmem : ∀ s, e s ∈ L.domain := fun s => L.domain.sub_mem (hm1 s) (hm2 s)
-    have hde : ∀ s, HasDerivAt e (L ⟨e s, hmem s⟩) s := by
-      intro s
-      have h1 := G.hasDerivAt_apply' x s
-      have h2 := G'.hasDerivAt_apply' ⟨x, hmem' x⟩ s
-      have e2 : G'.generator ⟨G'.S s x, G'.mapsTo_domain ⟨x, hmem' x⟩ s⟩ =
-          L ⟨G'.S s x, hm2 s⟩ := happ' ⟨_, hm2 s⟩
-      rw [e2] at h2
-      convert h1.sub h2 using 1
-      have e1 : (⟨e s, hmem s⟩ : L.domain) = ⟨G.S s x, hm1 s⟩ - ⟨G'.S s x, hm2 s⟩ := rfl
-      rw [e1, LinearPMap.map_sub]
-    have hn : ∀ s, HasDerivAt (fun s => ⟪e s, e s⟫) 0 s := by
-      intro s
-      have := (hde s).inner 𝕜 (hde s)
-      rwa [hS ⟨e s, hmem s⟩ ⟨e s, hmem s⟩, add_neg_cancel] at this
-    have hc := is_const_of_deriv_eq_zero (fun s => (hn s).differentiableAt)
-      (fun s => (hn s).deriv) t 0
-    simp only [e, S_zero_apply, sub_self, inner_zero_left] at hc
-    exact sub_eq_zero.1 (inner_self_eq_zero.1 hc)
-  exact DFunLike.coe_injective (Continuous.ext_on G.dense_domain_generator (G.S t).continuous
-    (G'.S t).continuous fun x hx => hD ⟨x, hx⟩)
+  rcases le_total 0 t with ht | ht
+  · exact (h0 ht).symm
+  calc G.S t = G.S t * G'.S (-t + t) := by rw [neg_add_cancel, G'.map_zero, mul_one]
+    _ = G.S t * G.S (-t) * G'.S t := by rw [G'.map_add, h0 (neg_nonneg.2 ht), mul_assoc]
+    _ = G'.S t := by rw [← G.map_add, add_neg_cancel, G.map_zero, one_mul]
 
 end C0Group
 
@@ -543,7 +585,7 @@ theorem generator_group (hA : A.IsSkewAdjoint) : (group hA).generator = A := by
     have hy : HasDerivAt (fun t => G.S t y) (A x) 0 := by
       rw [← hxy]; exact hasDerivAt_stoneS_zero hA x
     exact (G.generator_apply_eq hy).symm
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun x hx => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun x hx => ?_).symm
   obtain ⟨y, hy⟩ : ∃ y, HasDerivAt (fun t => G.S t x) y 0 :=
     ⟨_, G.hasDerivAt_generator ⟨x, hx⟩⟩
   have key : ∀ z : A.domain, ⟪-y, (z : E)⟫ = ⟪x, A z⟫ := by

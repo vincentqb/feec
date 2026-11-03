@@ -4,6 +4,7 @@ public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Function.StronglyMeasurable.Lemmas
 public import Mathlib.MeasureTheory.Constructions.BorelSpace.ContinuousLinearMap
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
+public import Feec.ForMathlib.LinearPMap.Basic
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.Normed.Ring.Units
 public import Feec.ForMathlib.Lp.CountEquiv
@@ -454,7 +455,7 @@ theorem adjoint_mulOp_of_stronglyMeasurable (hm : StronglyMeasurable m) :
         _ = ⟪cutoffCLM 𝕜 E μ (hS n) z, (mulOp μ m)† ⟨y, hy⟩⟫ := h1
         _ = _ := inner_mulCLM (hcutadj n) z _
     exact hy'
-  exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+  exact (LinearPMap.eq_of_le_of_domain_le hle hdom).symm
 
 end MulOp
 

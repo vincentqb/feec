@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
+public import Feec.ForMathlib.LinearPMap.Basic
 
 /-!
 # Skew-symmetric, skew-adjoint and dissipative unbounded operators
@@ -219,7 +220,7 @@ theorem isSkewAdjoint_iff_neg_le_adjoint :
     rw [h']
     exact ⟨le_rfl, le_rfl⟩
   · rintro ⟨hle, hdom⟩
-    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+    exact (LinearPMap.eq_of_le_of_domain_le hle hdom).symm
 
 /-- `A` is skew-adjoint iff it is densely defined, skew-symmetric and `D(A†) ⊆ D(A)`.
 See [QuennevilleBelair2015], §4.1. -/
@@ -236,7 +237,7 @@ theorem isSelfAdjoint_iff_le_adjoint :
     rw [h]
     exact ⟨le_rfl, le_rfl⟩
   · rintro ⟨hle, hdom⟩
-    exact (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 hdom)).symm
+    exact (LinearPMap.eq_of_le_of_domain_le hle hdom).symm
 
 /-- A densely defined `A` is self-adjoint iff it is symmetric and `D(A†) ⊆ D(A)`. -/
 theorem isSelfAdjoint_iff (hD : Dense (A.domain : Set E)) :

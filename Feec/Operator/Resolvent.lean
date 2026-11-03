@@ -272,9 +272,11 @@ section SkewAdjoint
 
 variable [CompleteSpace E]
 
-/-- Membership in `D(A†)` with `A† y = w` transfers to `D(A)` with `A y = -w`. -/
-private theorem mem_domain_of_inner_eq (hA : A.IsSkewAdjoint) {y w : E}
-    (h : ∀ x : A.domain, ⟪w, (x : E)⟫ = ⟪y, A x⟫) : ∃ hy : y ∈ A.domain, A ⟨y, hy⟩ = -w := by
+/-- Membership in `D(A†)` with `A† y = w` transfers to `D(A)` with `A y = -w` for skew-adjoint
+`A`. -/
+theorem _root_.LinearPMap.IsSkewAdjoint.exists_mem_domain_of_inner_eq (hA : A.IsSkewAdjoint)
+    {y w : E} (h : ∀ x : A.domain, ⟪w, (x : E)⟫ = ⟪y, A x⟫) :
+    ∃ hy : y ∈ A.domain, A ⟨y, hy⟩ = -w := by
   have hya : y ∈ A†.domain := mem_adjoint_domain_of_exists y ⟨w, h⟩
   have hval : A† ⟨y, hya⟩ = w := adjoint_apply_eq hA.dense_domain ⟨y, hya⟩ h
   have hle : A† ≤ -A := hA ▸ le_rfl
@@ -298,7 +300,7 @@ theorem orthogonal_range_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0)
     rw [map_mul, RCLike.conj_conj, inner_conj_symm, inner_conj_symm] at h1
     rw [inner_smul_left, RCLike.conj_conj]
     exact h1
-  obtain ⟨hyD, hAy⟩ := mem_domain_of_inner_eq hA h
+  obtain ⟨hyD, hAy⟩ := hA.exists_mem_domain_of_inner_eq h
   have h0 : shiftOp A (-(starRingEnd 𝕜) z) ⟨y, hyD⟩ = 0 := by
     rw [shiftOp_apply, hAy]; simp
   have hz' : RCLike.re (-(starRingEnd 𝕜) z) ≠ 0 := by
@@ -333,7 +335,7 @@ theorem isClosed_range_shiftOp (hA : A.IsSkewAdjoint) (hz : RCLike.re z ≠ 0) :
     refine tendsto_nhds_unique l2 (l1.congr fun n => ?_)
     rw [← hx n, shiftOp_apply, sub_sub_cancel_left, inner_neg_left, hA.isSkewSymmetric,
       neg_neg]
-  obtain ⟨hD, hAx⟩ := mem_domain_of_inner_eq hA h
+  obtain ⟨hD, hAx⟩ := hA.exists_mem_domain_of_inner_eq h
   refine ⟨⟨x₀, hD⟩, ?_⟩
   rw [shiftOp_apply]
   change z • x₀ - A ⟨x₀, hD⟩ = y

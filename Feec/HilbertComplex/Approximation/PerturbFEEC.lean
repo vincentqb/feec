@@ -105,9 +105,9 @@ theorem discreteRes_eq_integral_add (h : κ) (v : F.X h) {T : ℝ} (hT : 0 ≤ T
   have h' := integral_exp_neg_smul_sub_eq (u := fun s => (F.group h).S s y)
     (w := fun s => F.L h ((F.group h).S s y)) hT hc.continuousOn
     ((F.L h).continuous.comp hc).continuousOn fun s _ =>
-      (C0Group.hasDerivAt_exp_ofReal_smul_apply (F.L h) y s).hasDerivWithinAt
+      (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.L h) y s).hasDerivWithinAt
   have e : ∀ s, (F.group h).S s y - F.L h ((F.group h).S s y) = (F.group h).S s v := fun s => by
-    have hcomm := (C0Group.commute_exp_ofReal_smul (F.L h) s).eq
+    have hcomm := (ContinuousLinearMap.commute_exp_ofReal_smul (F.L h) s).eq
     have e1 : F.L h ((F.group h).S s y) = (F.group h).S s (F.L h y) :=
       congrArg (fun T : F.X h →L[𝕜] F.X h => T y) hcomm
     rw [e1, ← _root_.map_sub, F.discreteRes_sub h v]

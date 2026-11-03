@@ -21,6 +21,7 @@ public import FeecCheck.TimeSchemes
 public import FeecCheck.StableFamilies
 public import FeecCheck.MaxNormHeat
 public import FeecCheck.MaxNormNeumann
+public import FeecCheck.Semigroups
 
 public section
 

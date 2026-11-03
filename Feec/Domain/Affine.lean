@@ -131,7 +131,7 @@ theorem adjoint_conjScaled {s : ℝ} (hs : 0 < s)
     conv_rhs => rw [hx]
     rw [inner_smul_left, he₂, inner_smul_right, he₁]
     rw [← inner_conj_symm, ← h1, inner_conj_symm]
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   change e₂.symm y ∈ (T†).domain
   set z := (T.conjScaled e₁ e₂ κ)† ⟨y, hy⟩
   refine mem_adjoint_domain_of_exists _ ⟨conj κ⁻¹ • e₁.symm z, fun x => ?_⟩

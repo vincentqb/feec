@@ -242,16 +242,16 @@ theorem norm_leapfrog_sub_exp_le (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) (h
     have e1 : w (k + 2) = exp ((τ : 𝕜) • L) (w (k + 1)) := by
       simp only [w]
       rw [show (((k + 2 : ℕ) : ℝ) * τ) = τ + ((k + 1 : ℕ) : ℝ) * τ by push_cast; ring,
-        C0Group.exp_ofReal_smul_add]
+        ContinuousLinearMap.exp_ofReal_smul_add]
       rfl
     have e0 : w k = exp (((-τ : ℝ) : 𝕜) • L) (w (k + 1)) := by
       simp only [w]
       rw [show ((k : ℝ) * τ) = -τ + ((k + 1 : ℕ) : ℝ) * τ by push_cast; ring,
-        C0Group.exp_ofReal_smul_add]
+        ContinuousLinearMap.exp_ofReal_smul_add]
       rfl
     have e3 : (L ^ 3) (w (k + 1)) = exp ((((k + 1 : ℕ) * τ : ℝ) : 𝕜) • L) ((L ^ 3) x) :=
       congrArg (fun C : X →L[𝕜] X => C x)
-        ((C0Group.commute_exp_ofReal_smul L (((k + 1 : ℕ) : ℝ) * τ)).pow_left 3).eq
+        ((ContinuousLinearMap.commute_exp_ofReal_smul L (((k + 1 : ℕ) : ℝ) * τ)).pow_left 3).eq
     have : r k = -(exp ((τ : 𝕜) • L) (w (k + 1)) - exp (((-τ : ℝ) : 𝕜) • L) (w (k + 1)) -
         ((2 * τ : ℝ) : 𝕜) • L (w (k + 1))) := by
       simp only [r]; rw [e1, ← e0]; abel

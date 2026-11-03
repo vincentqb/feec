@@ -223,9 +223,6 @@ def partIn : K →ₗ.[𝕜] K where
 
 variable {A K}
 
-theorem mem_partIn_domain {u : K} :
-    u ∈ (A.partIn K).domain ↔ ∃ h : (u : E) ∈ A.domain, A ⟨u, h⟩ ∈ K := Iff.rfl
-
 theorem coe_partIn_apply (u : (A.partIn K).domain) :
     ((A.partIn K u : K) : E) = A ⟨((u : K) : E), u.2.1⟩ := rfl
 
@@ -237,7 +234,7 @@ theorem IsDissipative.partIn (hA : A.IsDissipative) : (A.partIn K).IsDissipative
 /-- **Maximality**: an m-dissipative operator has no proper dissipative extension. -/
 theorem IsMDissipative.eq_of_le [CompleteSpace E] (hA : A.IsMDissipative) {B : E →ₗ.[𝕜] E}
     (hAB : A ≤ B) (hB : B.IsDissipative) : B = A := by
-  refine (LinearPMap.eq_of_le_of_domain_eq hAB (le_antisymm hAB.1 fun x hx => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hAB fun x hx => ?_).symm
   obtain ⟨y, hy⟩ := hA.surjective one_pos ((x : E) - B ⟨x, hx⟩)
   set y' : B.domain := ⟨y, hAB.1 y.2⟩
   have hBy : B y' = A y := (hAB.2 rfl).symm
@@ -295,13 +292,6 @@ theorem apply_semigroup (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0
 theorem hasDerivWithinAt_semigroup (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     HasDerivWithinAt (fun s => hA.semigroup.S s x) (hA.semigroup.S t (A x)) (Ici t) t := by
   have h := hA.semigroup.hasDerivWithinAt_Ici_apply ⟨x, hA.mem_semigroup_generator_domain x⟩ ht
-  rwa [hA.semigroup_generator_apply] at h
-
-/-- On `D(A)`, `t ↦ S(t) x` has derivative `S(t) A x` within `[0, ∞)` at every `t ≥ 0`. -/
-theorem hasDerivWithinAt_semigroup_Ici_zero (hA : A.IsMDissipative) (x : A.domain) {t : ℝ}
-    (ht : 0 ≤ t) :
-    HasDerivWithinAt (fun s => hA.semigroup.S s x) (hA.semigroup.S t (A x)) (Ici 0) t := by
-  have h := hA.semigroup.hasDerivWithinAt_apply ⟨x, hA.mem_semigroup_generator_domain x⟩ ht
   rwa [hA.semigroup_generator_apply] at h
 
 /-- **The energy identity** for the Lumer–Phillips semigroup:

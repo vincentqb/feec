@@ -24,6 +24,8 @@ generator `A`:
 * convolutions `∫ₐᵗ S(t - s) g(s) ds`: continuity (`continuousOn_conv`), the graph property
   (`conv_mem_graph`, `integral_mem_graph_S`) and the primitive identity (`conv_primitive`);
 * `C0Semigroup.hasDerivWithinAt_extS_comp`: the product rule along the semigroup;
+* `C0Semigroup.dense_domain_generator`, `C0Group.dense_domain_generator`: generators are densely
+  defined;
 * `C0Semigroup.forall_nonneg_of_forall_Icc`, `C0Group.forall_of_forall_Icc_neg`: invariance on
   `[0, T]` (resp. `[-T, T]`), `T > 0`, is invariance for all `t ≥ 0` (resp. all `t`).
 
@@ -449,6 +451,22 @@ theorem hasDerivAt_extS_apply (x : G.generator.domain) {u : ℝ} (hu : 0 < u) :
   filter_upwards [eventually_gt_nhds hu] with v hv
   exact congrArg (· (x : E)) (G.extS_of_nonneg hv.le)
 
+/-- **The generator of a semigroup is densely defined**: `h⁻¹ ∫₀ʰ S σ x dσ ∈ D(A)` tends to
+`x` as `h → 0⁺`. -/
+theorem dense_domain_generator : Dense (G.generator.domain : Set E) := by
+  intro x
+  have hd := ((G.continuous_extS_apply x).integral_hasStrictDerivAt 0 0).hasDerivAt
+  rw [hasDerivAt_iff_tendsto_slope] at hd
+  have hd' := hd.mono_left (nhdsWithin_mono _
+    (fun h (hh : h ∈ Ioi (0 : ℝ)) => (ne_of_gt hh : h ≠ 0) : Ioi (0 : ℝ) ⊆ {0}ᶜ))
+  rw [G.extS_of_nonneg le_rfl, S_zero_apply] at hd'
+  refine mem_closure_of_tendsto hd' ?_
+  filter_upwards [self_mem_nhdsWithin] with h (hh : 0 < h)
+  rw [slope_def_module, intervalIntegral.integral_same, sub_zero, sub_zero,
+    G.integral_extS_eq hh.le]
+  exact Submodule.smul_of_tower_mem _ _
+    (LinearPMap.mem_domain_of_mem_graph (G.integral_mem_graph_S hh.le x))
+
 end Generator
 
 end C0Semigroup
@@ -456,6 +474,11 @@ end C0Semigroup
 namespace C0Group
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+
+/-- **The generator of a group is densely defined** (that of `G.toC0Semigroup`). -/
+theorem dense_domain_generator (G : C0Group 𝕜 E) [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+    [CompleteSpace E] : Dense (G.generator.domain : Set E) :=
+  G.toC0Semigroup.dense_domain_generator
 
 /-- **Invariance on `[-T, T]` is invariance for all `t`** (`T > 0`): the forward case for the
 group and for its reversal `t ↦ S(-t)`. -/

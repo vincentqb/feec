@@ -236,7 +236,7 @@ theorem adjoint_conj (hT : Dense (T.domain : Set E)) :
     rw [h]
     simp only [ContinuousLinearEquiv.symm_symm, ContinuousLinearEquiv.inner_adjoint_apply,
       inner_conj_symm]
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   change b.adjoint.symm.symm y ∈ T†.domain
   rw [ContinuousLinearEquiv.symm_symm]
   set z := (T.conj a b)† ⟨y, hy⟩

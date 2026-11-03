@@ -1,6 +1,7 @@
 module
 
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
+public import Feec.ForMathlib.LinearPMap.Basic
 
 /-!
 # Complex partial linear maps viewed over `ℝ`
@@ -92,7 +93,7 @@ theorem adjoint_restrictScalars (hE : ∀ x y : E, ⟪x, y⟫_ℝ = re ⟪x, y�
     rw [restrictScalars_apply, restrictScalars_apply, hF, hE]
     have := hfa ⟨y.1, y.2⟩ ⟨x.1, x.2⟩
     rw [← inner_conj_symm, ← this, inner_conj_symm]
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun y hy => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun y hy => ?_).symm
   change y ∈ (T†).domain
   set w := (T.restrictScalars)† ⟨y, hy⟩
   have hra := adjoint_isFormalAdjoint (T.dense_restrictScalars_domain hd)

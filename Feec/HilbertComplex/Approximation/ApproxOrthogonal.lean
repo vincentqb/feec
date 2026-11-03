@@ -88,7 +88,7 @@ variable (F) in
 /-- The discrete orbit is differentiable, `(d/dt) e^{tLₕ} v = Lₕ e^{tLₕ} v`. -/
 theorem hasDerivAt_group (h : κ) (v : F.X h) (t : ℝ) :
     HasDerivAt (fun s => (F.group h).S s v) (F.L h ((F.group h).S t v)) t :=
-  C0Group.hasDerivAt_exp_ofReal_smul_apply (F.L h) v t
+  ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.L h) v t
 
 variable (F) in
 /-- **The orbit comparison**: the discrete orbit `e^{tLₕ} πₕ x` itself, with derivative

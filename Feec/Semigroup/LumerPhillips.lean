@@ -2,8 +2,6 @@ module
 
 public import Feec.Semigroup.Stone
 public import Feec.Semigroup.Perturbation
-public import Feec.ForMathlib.Analysis.Gronwall
-public import Feec.ForMathlib.Analysis.StrongConvergence
 
 /-!
 # The Lumer–Phillips theorem
@@ -47,8 +45,8 @@ The theorem:
 Properties of the semigroup:
 
 * `C0Semigroup.IsContraction.isDissipative_generator`,
-  `C0Semigroup.eqOn_of_generator_eq_of_isDissipative` (uniqueness by the energy method, in the
-  semigroup layer), `C0Semigroup.S_apply_of_mem_ker` (stationary points).
+  `C0Semigroup.eqOn_of_generator_eq_of_isDissipative` (uniqueness by the energy method, in
+  `Feec.Semigroup.Stone`), `C0Semigroup.S_apply_of_mem_ker` (stationary points).
 * `C0Semigroup.inner_S_left_of_isSymmetric`, `C0Semigroup.isSelfAdjoint_S_of_isSymmetric`: a
   symmetric generator gives self-adjoint `S t`;
   `C0Semigroup.starProjection_S_of_isSymmetric`: then `S t` commutes with the projection onto a
@@ -340,7 +338,7 @@ variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
 theorem norm_exp_smul_apply_le {B : E →L[𝕜] E} (hB : ∀ x, RCLike.re ⟪B x, x⟫ ≤ 0) {t : ℝ}
     (ht : 0 ≤ t) (x : E) : ‖exp ((t : 𝕜) • B) x‖ ≤ ‖x‖ := by
   have hd : ∀ s : ℝ, HasDerivAt (fun s : ℝ => exp ((s : 𝕜) • B) x)
-      (B (exp ((s : 𝕜) • B) x)) s := C0Group.hasDerivAt_exp_ofReal_smul_apply B x
+      (B (exp ((s : 𝕜) • B) x)) s := ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply B x
   have h := _root_.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := 𝕜) (g := fun _ => 0)
     (a := 0) (b := t) (e := fun s : ℝ => exp ((s : 𝕜) • B) x)
     (e' := fun s => B (exp ((s : 𝕜) • B) x))
@@ -366,13 +364,13 @@ theorem norm_exp_smul_sub_exp_smul_le {B C : E →L[𝕜] E} (hB : ∀ x, RCLike
   set f' : ℝ → E := fun s => exp ((t : 𝕜) • C) (D (exp ((s : 𝕜) • D) x))
   have hf : ∀ s, HasDerivAt f (f' s) s := fun s =>
     (exp ((t : 𝕜) • C)).hasDerivAt_apply_of_hasDerivAt
-      (C0Group.hasDerivAt_exp_ofReal_smul_apply D x s)
+      (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply D x s)
   have hf' : ∀ s ∈ Ico (0 : ℝ) t, ‖f' s‖ ≤ ‖D x‖ := by
     intro s hs
     have e1 : exp ((t : 𝕜) • C) = exp (((t - s : ℝ) : 𝕜) • C) * exp ((s : 𝕜) • C) := by
-      rw [← C0Group.exp_ofReal_smul_add, sub_add_cancel]
+      rw [← ContinuousLinearMap.exp_ofReal_smul_add, sub_add_cancel]
     have e2 : D (exp ((s : 𝕜) • D) x) = exp ((s : 𝕜) • D) (D x) :=
-      congrArg (fun T : E →L[𝕜] E => T x) (C0Group.commute_exp_ofReal_smul D s).eq
+      congrArg (fun T : E →L[𝕜] E => T x) (ContinuousLinearMap.commute_exp_ofReal_smul D s).eq
     have e3 : f' s = exp (((t - s : ℝ) : 𝕜) • C) (exp ((s : 𝕜) • B) (D x)) := by
       change exp ((t : 𝕜) • C) (D (exp ((s : 𝕜) • D) x)) = _
       rw [e2, e1, ← hsplit s]
@@ -531,11 +529,16 @@ def approxS (A : E →ₗ.[𝕜] E) (n : ℕ) (t : ℝ) : E →L[𝕜] E := exp 
 
 omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 theorem approxS_add (n : ℕ) (s t : ℝ) : approxS A n (s + t) = approxS A n s * approxS A n t :=
-  C0Group.exp_ofReal_smul_add _ s t
+  ContinuousLinearMap.exp_ofReal_smul_add _ s t
 
 theorem norm_approxS_apply_le (hA : A.IsMDissipative) (n : ℕ) {t : ℝ} (ht : 0 ≤ t) (x : E) :
     ‖approxS A n t x‖ ≤ ‖x‖ :=
   norm_exp_smul_apply_le (re_inner_yosida_le hA n) ht x
+
+theorem norm_approxS_le (hA : A.IsMDissipative) (n : ℕ) {t : ℝ} (ht : 0 ≤ t) :
+    ‖approxS A n t‖ ≤ 1 :=
+  ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
+    simpa using norm_approxS_apply_le hA n ht x
 
 /-- `‖S_n(t) x - S_m(t) x‖ ≤ t ‖A_n x - A_m x‖`. -/
 theorem norm_approxS_sub_le (hA : A.IsMDissipative) (n m : ℕ) {t : ℝ} (ht : 0 ≤ t) (x : E) :
@@ -553,23 +556,10 @@ theorem norm_approxS_sub_self_le (hA : A.IsMDissipative) (n : ℕ) {t : ℝ} (ht
   exact h.trans (mul_le_mul_of_nonneg_left (norm_yosida_apply_domain_le hA n x) ht)
 
 theorem cauchySeq_approxS (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) (x : E) :
-    CauchySeq fun n => approxS A n t x := by
-  refine Stone.cauchySeq_apply_of_dense (fun n x => norm_approxS_apply_le hA n ht x)
-    hA.dense_domain ?_ x
-  intro y hy
-  rw [Metric.cauchySeq_iff]
-  intro ε hε
-  obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.1 (tendsto_yosida hA ⟨y, hy⟩).cauchySeq
-    (ε / (t + 1)) (by positivity)
-  refine ⟨N, fun m hm n hn => ?_⟩
-  have h1 := norm_approxS_sub_le hA m n ht y
-  have h2 := hN m hm n hn
-  rw [dist_eq_norm] at h2 ⊢
-  have h3 : t * ‖yosida A m y - yosida A n y‖ ≤ t * (ε / (t + 1)) :=
-    mul_le_mul_of_nonneg_left h2.le ht
-  have h4 : t * (ε / (t + 1)) < ε := by
-    rw [mul_div_assoc', div_lt_iff₀ (by positivity)]; nlinarith
-  linarith
+    CauchySeq fun n => approxS A n t x :=
+  Stone.cauchySeq_exp_apply (norm_approxS_apply_le hA · ht)
+    (fun n m y => by rw [abs_of_nonneg ht]; exact norm_approxS_sub_le hA n m ht y) hA.dense_domain
+    (fun y hy => (tendsto_yosida hA ⟨y, hy⟩).cauchySeq) x
 
 /-- The **Lumer–Phillips semigroup** `S(t) x = lim_n exp(t A_n) x` for `t ≥ 0`, normalized by
 `S(t) = 1` for `t < 0` (a continuous linear map by Banach–Steinhaus). -/
@@ -588,9 +578,7 @@ theorem tendsto_approxS (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) (x : E)
 theorem tendsto_approxS_of_tendsto (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) {y : ℕ → E}
     {y₀ : E} (hy : Tendsto y atTop (𝓝 y₀)) :
     Tendsto (fun n => approxS A n t (y n)) atTop (𝓝 (lpS hA t y₀)) :=
-  ContinuousLinearMap.tendsto_apply_of_tendsto
-    (fun n => ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
-      simpa using norm_approxS_apply_le hA n ht x) (tendsto_approxS hA ht) hy
+  ContinuousLinearMap.tendsto_apply_of_tendsto (norm_approxS_le hA · ht) (tendsto_approxS hA ht) hy
 
 theorem norm_lpS_apply_le (hA : A.IsMDissipative) (t : ℝ) (x : E) : ‖lpS hA t x‖ ≤ ‖x‖ :=
   le_of_tendsto' (tendsto_approxS_max hA t x).norm fun n =>
@@ -642,58 +630,22 @@ theorem norm_lpS_sub_le (hA : A.IsMDissipative) (x : A.domain) (t s : ℝ) :
     exact (le_abs_self _).trans hab
 
 theorem continuous_lpS_apply (hA : A.IsMDissipative) (x : E) :
-    Continuous fun t => lpS hA t x := by
-  refine continuous_of_uniform_approx_of_continuous fun u hu => ?_
-  obtain ⟨ε, hε, hεu⟩ := Metric.mem_uniformity_dist.1 hu
-  obtain ⟨d, hd, hdD⟩ := Metric.dense_iff.1 hA.dense_domain x ε hε
-  rw [Metric.mem_ball] at hd
-  refine ⟨fun t => lpS hA t d, ?_, fun t => hεu ?_⟩
-  · refine (LipschitzWith.of_dist_le_mul (K := ‖A ⟨d, hdD⟩‖₊) fun t s => ?_).continuous
-    rw [dist_eq_norm, dist_eq_norm, Real.norm_eq_abs, coe_nnnorm, mul_comm]
-    exact norm_lpS_sub_le hA ⟨d, hdD⟩ t s
-  · rw [dist_eq_norm, ← _root_.map_sub]
-    exact (norm_lpS_apply_le hA t _).trans_lt (by rw [← dist_eq_norm, dist_comm]; exact hd)
+    Continuous fun t => lpS hA t x :=
+  Stone.continuous_apply_of_lipschitz hA.dense_domain (norm_lpS_apply_le hA) (norm_lpS_sub_le hA) x
 
 /-- `S(t) x - x = ∫₀ᵗ S(s) (A x) ds` on `D(A)`, `t ≥ 0`. -/
 theorem lpS_sub_eq_integral (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     lpS hA t x - x = ∫ s in (0 : ℝ)..t, lpS hA s (A x) := by
-  have hcont : ∀ n, Continuous fun s => approxS A n s (yosida A n x) := fun n =>
-    (C0Group.continuous_exp_ofReal_smul _).clm_apply continuous_const
-  have hftc : ∀ n, approxS A n t x - x = ∫ s in (0 : ℝ)..t, approxS A n s (yosida A n x) := by
-    intro n
-    have h := intervalIntegral.integral_eq_sub_of_hasDerivAt
-      (f := fun s => approxS A n s x) (a := 0) (b := t)
-      (f' := fun s => approxS A n s (yosida A n x)) (fun s _ => ?_)
-      ((hcont n).intervalIntegrable _ _)
-    · rw [h]; simp [approxS]
-    · have h := C0Group.hasDerivAt_exp_ofReal_smul_apply (yosida A n) (x : E) s
-      have hc : yosida A n (exp ((s : 𝕜) • yosida A n) x) =
-          exp ((s : 𝕜) • yosida A n) (yosida A n x) :=
-        congrArg (fun C : E →L[𝕜] E => C x) (C0Group.commute_exp_ofReal_smul (yosida A n) s).eq
-      rw [hc] at h
-      exact h
-  have hlim : Tendsto (fun n => ∫ s in (0 : ℝ)..t, approxS A n s (yosida A n x)) atTop
-      (𝓝 (∫ s in (0 : ℝ)..t, lpS hA s (A x))) := by
-    refine intervalIntegral.tendsto_integral_filter_of_dominated_convergence (fun _ => ‖A x‖)
-      (Eventually.of_forall fun n => (hcont n).aestronglyMeasurable) ?_
-      intervalIntegrable_const ?_
-    · refine Eventually.of_forall fun n => Eventually.of_forall fun s hs => ?_
-      rw [uIoc_of_le ht] at hs
-      exact (norm_approxS_apply_le hA n hs.1.le _).trans (norm_yosida_apply_domain_le hA n x)
-    · refine Eventually.of_forall fun s hs => ?_
-      rw [uIoc_of_le ht] at hs
-      exact tendsto_approxS_of_tendsto hA hs.1.le (tendsto_yosida hA x)
-  refine tendsto_nhds_unique ((tendsto_approxS hA ht x).sub_const (x : E)) ?_
-  simp_rw [hftc]; exact hlim
+  have h0 : ∀ s ∈ uIcc 0 t, 0 ≤ s := fun s hs => by rw [uIcc_of_le ht] at hs; exact hs.1
+  exact Stone.sub_eq_integral_of_tendsto_exp (fun s hs n => norm_approxS_le hA n (h0 s hs))
+    (fun s hs => tendsto_approxS hA (h0 s hs)) (tendsto_yosida hA x)
+    (norm_yosida_apply_domain_le hA · x)
 
 /-- On `D(A)`, `t ↦ S(t) x` has right derivative `A x` at `0`. -/
 theorem hasDerivWithinAt_lpS (hA : A.IsMDissipative) (x : A.domain) :
-    HasDerivWithinAt (fun t => lpS hA t x) (A x) (Ici 0) 0 := by
-  have hc : Continuous fun s => lpS hA s (A x) := continuous_lpS_apply hA _
-  have h := (hc.integral_hasStrictDerivAt 0 0).hasDerivAt.const_add (x : E)
-  rw [lpS_zero, one_apply_eq_self] at h
-  refine h.hasDerivWithinAt.congr_of_mem (fun t (ht : 0 ≤ t) => ?_) self_mem_Ici
-  rw [← lpS_sub_eq_integral hA x ht, add_sub_cancel]
+    HasDerivWithinAt (fun t => lpS hA t x) (A x) (Ici 0) 0 :=
+  Stone.hasDerivWithinAt_of_sub_eq_integral (continuous_lpS_apply hA _) (lpS_zero hA)
+    (fun _ ht => lpS_sub_eq_integral hA x ht) self_mem_Ici
 
 end Limit
 
@@ -704,11 +656,6 @@ end Feec
 namespace Feec.C0Semigroup
 
 variable [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-private theorem apply_eq_of_eq {T T' : E →ₗ.[𝕜] E} (e : T = T') {y : E} (hy : y ∈ T.domain)
-    (hy' : y ∈ T'.domain) : T ⟨y, hy⟩ = T' ⟨y, hy'⟩ := by
-  subst e; rfl
 
 /-- **The generator of a contraction semigroup on an inner product space is dissipative**:
 `re ⟪S t x, x⟫ ≤ ‖x‖²` for `t ≥ 0`, so the right derivative `re ⟪A x, x⟫` at `0` is `≤ 0`. -/
@@ -731,46 +678,6 @@ theorem IsContraction.isDissipative_generator {G : C0Semigroup 𝕜 E} (hG : G.I
     (RCLike.re_le_norm _).trans ((norm_inner_le_norm _ _).trans (by nlinarith [norm_nonneg (x : E)]))
   rw [_root_.map_sub, S_zero_apply, inner_self_eq_norm_sq, sub_nonpos]
   exact h2
-
-/-- **Uniqueness for a dissipative generator** (energy method): two strongly continuous
-semigroups with the same dissipative generator agree for `t ≥ 0`. -/
-theorem eqOn_of_generator_eq_of_isDissipative [CompleteSpace E] {G G' : C0Semigroup 𝕜 E}
-    (hA : G.generator.IsDissipative) (h : G'.generator = G.generator) :
-    EqOn G'.S G.S (Ici 0) := by
-  set A := G.generator
-  have hmem' : ∀ y, y ∈ A.domain → y ∈ G'.generator.domain := fun y hy => h ▸ hy
-  have hmem : ∀ y, y ∈ G'.generator.domain → y ∈ A.domain := fun y hy => h ▸ hy
-  have hD : ∀ x : A.domain, ∀ T, 0 ≤ T → G'.S T x = G.S T x := by
-    intro x T hT
-    set x' : G'.generator.domain := ⟨x, hmem' x x.2⟩
-    have hAx : G'.generator x' = A x := apply_eq_of_eq h _ _
-    set e : ℝ → E := fun s => G'.S s x - G.S s x
-    have hm : ∀ s, 0 ≤ s → e s ∈ A.domain := fun s hs =>
-      A.domain.sub_mem (hmem _ (G'.mapsTo_domain x' hs)) (G.mapsTo_domain x hs)
-    have hAe : ∀ s (hs : 0 ≤ s), A ⟨e s, hm s hs⟩ = G'.S s (A x) - G.S s (A x) := by
-      intro s hs
-      have e1 : (⟨e s, hm s hs⟩ : A.domain) =
-          ⟨G'.S s x, hmem _ (G'.mapsTo_domain x' hs)⟩ - ⟨G.S s x, G.mapsTo_domain x hs⟩ := rfl
-      rw [e1, LinearPMap.map_sub, G.generator_apply_S x hs, ← hAx,
-        ← G'.generator_apply_S x' hs]
-      congr 1
-      exact (apply_eq_of_eq h _ _).symm
-    have hec : ContinuousOn e (Icc 0 T) :=
-      ((G'.strongCont x).sub (G.strongCont x)).mono Icc_subset_Ici_self
-    have he : ∀ s ∈ Ico 0 T, HasDerivWithinAt e (G'.S s (A x) - G.S s (A x)) (Ici s) s := by
-      intro s hs
-      have h1 := G'.hasDerivWithinAt_Ici_apply x' hs.1
-      rw [hAx] at h1
-      exact h1.sub (G.hasDerivWithinAt_Ici_apply x hs.1)
-    have hle := _root_.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := 𝕜) (g := fun _ => 0)
-      hec he continuousOn_const (fun _ _ => le_rfl) (fun s hs => by
-        rw [← hAe s hs.1, zero_mul]; exact hA _) T ⟨hT, le_rfl⟩
-    simp only [e, S_zero_apply, sub_self, norm_zero, intervalIntegral.integral_zero,
-      add_zero] at hle
-    exact sub_eq_zero.1 (norm_le_zero_iff.1 hle)
-  intro t (ht : 0 ≤ t)
-  exact DFunLike.coe_injective (Continuous.ext_on G.dense_domain_generator (G'.S t).continuous
-    (G.S t).continuous fun x hx => hD ⟨x, hx⟩ t ht)
 
 /-- **Converse of Lumer–Phillips**: the generator of a contraction semigroup on a Hilbert space
 is m-dissipative. If `y ⊥ R(1 - A)`, then `f(t) = ⟪S t x, y⟫` solves `f' = f` for `x ∈ D(A)`, so
@@ -949,7 +856,7 @@ theorem generator_semigroup (hA : A.IsMDissipative) : hA.semigroup.generator = A
     have hy : HasDerivWithinAt (fun t => G.S t y) (A x) (Ici 0) 0 := by
       rw [← hxy]; exact hasDerivWithinAt_lpS hA x
     exact (G.generator_apply_eq hy).symm
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 fun x hx => ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle fun x hx => ?_).symm
   set B := G.generator
   have hB := hA.isContraction_semigroup.isDissipative_generator
   obtain ⟨y, hy⟩ := hA.surjective one_pos ((x : E) - B ⟨x, hx⟩)

@@ -1016,7 +1016,7 @@ theorem toComplex_sol (h : κ) (v : PiLp 2 (F.toFamily.V h)) (t : ℝ) :
   set u : ℝ → F.Xh h := fun s => F.toXh h ((C0Group.ofBounded B).S s v)
   have hu : ∀ s, HasDerivAt u (F.discreteWave h (u s)) s := fun s => by
     have hd := ((F.toXh h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt s
-      (C0Group.hasDerivAt_exp_ofReal_smul_apply B v s)
+      (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply B v s)
     rw [← F.toXh_L]
     exact hd
   have e := eq_ofBounded_of_hasDerivAt (F.discreteWave h) (F.discreteWave_skew h) hu t

@@ -311,7 +311,7 @@ theorem isSemidiscreteSolution_orbit (h : κ) (w : F.Xh h) (a : ℝ) (I : Set �
     IsSemidiscreteSolution (F.Kh h) I (fun s => F.liftXh h ((F.discreteGroup h).S (s - a) w))
       (fun s => F.liftXh h (F.discreteWave h ((F.discreteGroup h).S (s - a) w))) := by
   refine ⟨fun s _ => F.liftXh_mem h _, fun s _ => ?_, fun s _ ψ hψ => ?_⟩
-  · have hd := (C0Group.hasDerivAt_exp_ofReal_smul_apply (F.discreteWave h) w
+  · have hd := (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply (F.discreteWave h) w
       (s - a)).comp_sub_const s a
     exact (((F.liftXh h).restrictScalars ℝ).hasFDerivAt.comp_hasDerivAt s hd).hasDerivWithinAt
   · set z := (F.discreteGroup h).S (s - a) w

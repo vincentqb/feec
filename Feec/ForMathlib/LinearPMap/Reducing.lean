@@ -253,7 +253,7 @@ theorem IsSkewAdjoint.restrict (hA : A.IsSkewAdjoint) [CompleteSpace K] (hK : A.
       inner_neg_right]
     exact skew ⟨_, x.2⟩ ⟨_, y.2⟩
   have hle : -At ≤ At† := hform.le_adjoint hDt
-  refine (LinearPMap.eq_of_le_of_domain_eq hle (le_antisymm hle.1 ?_)).symm
+  refine (LinearPMap.eq_of_le_of_domain_le hle ?_).symm
   intro u hu
   have key : ∀ x : A.domain, ⟪((At† ⟨u, hu⟩ : K) : E), (x : E)⟫_𝕜 = ⟪(u : E), A x⟫_𝕜 := by
     intro x

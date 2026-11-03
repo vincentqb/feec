@@ -11,8 +11,12 @@ public import Mathlib.Analysis.Normed.Operator.BoundedLinearMaps
 /-!
 # Derivatives along the flow of a bounded operator
 
-For a bounded operator `L` on a Banach space over `𝕜` (`ℝ` or `ℂ`, with the real structure),
+For `𝕜 = ℝ` or `ℂ` and a bounded operator `L` on a Banach space over `𝕜` (with the real
+structure),
 
+* `RCLike.exp_ofReal`, `RCLike.norm_exp`: `e^r` is real for real `r`, and `‖e^z‖ = e^{re z}`;
+* `ContinuousLinearMap.exp_ofReal_smul_add`, `continuous_exp_ofReal_smul`,
+  `commute_exp_ofReal_smul`: `t ↦ e^{tL}` is a continuous group commuting with `L`;
 * `ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply`: `(d/dt) e^{tL} x = L e^{tL} x`;
 * `ContinuousLinearMap.hasDerivAt_exp_sub_smul_apply` (**the product rule along the flow**): for a
   curve `U` with derivative `U'` at `s`, `r ↦ e^{(t - r)L} U(r)` has derivative
@@ -30,22 +34,54 @@ open NormedSpace Filter Topology
 @[expose] public noncomputable section
 
 variable {𝕜 : Type*} [RCLike 𝕜] {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-  [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X]
 
-/-- An `𝕜`-derivative along the real axis is an `ℝ`-derivative. -/
-theorem HasDerivAt.comp_ofReal_rclike {f : 𝕜 → X} {f' : X} {t : ℝ}
-    (h : HasDerivAt f f' (t : 𝕜)) : HasDerivAt (fun s : ℝ => f s) f' t := by
-  have h1 := (h.hasFDerivAt.restrictScalars ℝ).comp_hasDerivAt t
-    (RCLike.ofRealCLM (K := 𝕜)).hasDerivAt
-  simpa [Function.comp_def] using h1
+namespace RCLike
+
+/-- `e^r` is real for real `r`. -/
+theorem exp_ofReal (r : ℝ) : exp (r : 𝕜) = (Real.exp r : 𝕜) := by
+  rw [Real.exp_eq_exp_ℝ, ← RCLike.algebraMap_eq_ofReal, map_exp _ (continuous_algebraMap ℝ 𝕜)]
+
+/-- `‖e^z‖ = e^{re z}`: `‖e^z‖² = e^z e^{conj z} = e^{2 re z}`. -/
+theorem norm_exp (z : 𝕜) : ‖exp z‖ = Real.exp (re z) := by
+  have h : ((‖exp z‖ ^ 2 : ℝ) : 𝕜) = ((Real.exp (re z) ^ 2 : ℝ) : 𝕜) := by
+    rw [RCLike.ofReal_pow, ← RCLike.mul_conj, map_exp _ RCLike.continuous_conj, ← exp_add,
+      RCLike.add_conj, ← Real.exp_nat_mul, Nat.cast_ofNat, ← exp_ofReal, RCLike.ofReal_mul,
+      RCLike.ofReal_ofNat]
+  exact (pow_left_inj₀ (norm_nonneg _) (Real.exp_pos _).le two_ne_zero).1
+    (RCLike.ofReal_injective h)
+
+end RCLike
 
 namespace ContinuousLinearMap
-
-variable [CompleteSpace X]
 
 /-- `ℚ`-algebra structure on operators, for `NormedSpace.exp`. -/
 local instance instNormedAlgebraRatExpFlow : NormedAlgebra ℚ (X →L[𝕜] X) :=
   NormedAlgebra.restrictScalars ℚ 𝕜 _
+
+theorem commute_exp_ofReal_smul (L : X →L[𝕜] X) (t : ℝ) : Commute L (exp ((t : 𝕜) • L)) :=
+  ((Commute.refl L).smul_right (t : 𝕜)).exp_right
+
+variable [CompleteSpace X]
+
+/-- `e^{(s + t)L} = e^{sL} e^{tL}`. -/
+theorem exp_ofReal_smul_add (L : X →L[𝕜] X) (s t : ℝ) :
+    exp (((s + t : ℝ) : 𝕜) • L) = exp ((s : 𝕜) • L) * exp ((t : 𝕜) • L) := by
+  rw [RCLike.ofReal_add, add_smul,
+    exp_add_of_commute ((Commute.refl L).smul_left (s : 𝕜) |>.smul_right (t : 𝕜))]
+
+theorem continuous_exp_ofReal_smul (L : X →L[𝕜] X) : Continuous fun t : ℝ => exp ((t : 𝕜) • L) :=
+  exp_continuous.comp (Continuous.smul (f := fun t : ℝ => (t : 𝕜)) (g := fun _ => L)
+    RCLike.continuous_ofReal continuous_const)
+
+variable [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X]
+
+omit [CompleteSpace X] in
+/-- An `𝕜`-derivative along the real axis is an `ℝ`-derivative. -/
+theorem _root_.HasDerivAt.comp_ofReal_rclike {f : 𝕜 → X} {f' : X} {t : ℝ}
+    (h : HasDerivAt f f' (t : 𝕜)) : HasDerivAt (fun s : ℝ => f s) f' t := by
+  have h1 := (h.hasFDerivAt.restrictScalars ℝ).comp_hasDerivAt t
+    (RCLike.ofRealCLM (K := 𝕜)).hasDerivAt
+  simpa [Function.comp_def] using h1
 
 /-- `(d/dt) e^{tL} x = L e^{tL} x`. -/
 theorem hasDerivAt_exp_ofReal_smul_apply (L : X →L[𝕜] X) (x : X) (t : ℝ) :
@@ -77,8 +113,7 @@ theorem hasDerivAt_exp_sub_smul_apply (L : X →L[𝕜] X) (t : ℝ) {U : ℝ �
       simpa using (hasDerivAt_id s).const_sub t
     have h := (hasDerivAt_exp_ofReal_smul_apply L (U s) (t - s)).scomp s hh
     have hc : L (E s (U s)) = E s (L (U s)) :=
-      congrArg (fun T : X →L[𝕜] X => T (U s))
-        (((Commute.refl L).smul_right ((t - s : ℝ) : 𝕜)).exp_right).eq
+      congrArg (fun T : X →L[𝕜] X => T (U s)) (L.commute_exp_ofReal_smul (t - s)).eq
     exact h.congr_deriv (by rw [hc, neg_one_smul])
   refine ((h1.add h2).congr_of_eventuallyEq (Eventually.of_forall fun r => ?_)).congr_deriv ?_
   · simp only [Pi.add_apply]

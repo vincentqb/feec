@@ -225,7 +225,8 @@ private theorem isUnit_resolventEval_complex (H : Feec.C0Semigroup ℂ F) {M ω 
   have hM : 0 ≤ M := by simpa using (norm_nonneg _).trans (hS 0 le_rfl)
   have hω1 : ω < τ⁻¹ := lt_inv_of_mul_lt hτ hτω
   have hR1 : IsResolvent H.generator (τ : ℂ)⁻¹ (resolvent H.generator (τ : ℂ)⁻¹) :=
-    H.isResolvent_resolvent hS (by rw [← Complex.ofReal_inv, Complex.ofReal_re]; exact hω1)
+    H.isResolvent_resolvent hS
+      (by rwa [← Complex.ofReal_inv, RCLike.re_to_complex, Complex.ofReal_re])
   -- the factors `(1 - ζ) X - 1`
   have hfac' : ∀ ζ ∈ L, 0 ≤ 1 + ‖1 - ζ‖ * (M / (ζ.re - ω * τ)) ∧ ∃ g : F →L[ℂ] F,
       g * ((1 - ζ) • T - 1) = 1 ∧ ((1 - ζ) • T - 1) * g = 1 ∧
@@ -240,7 +241,7 @@ private theorem isUnit_resolventEval_complex (H : Feec.C0Semigroup ℂ F) {M ω 
       rw [hwre]
       have := (div_lt_div_iff_of_pos_right hτ).2 hζre
       rwa [mul_div_cancel_right₀ _ hτ.ne', div_eq_mul_inv] at this
-    have hRw := H.isResolvent_resolvent hS hw
+    have hRw := H.isResolvent_resolvent hS (z := w) hw
     set W := (τ : ℂ)⁻¹ • resolvent H.generator w
     have hrel : T - W = (ζ - 1) • (T * W) := by
       simp only [T, W, ← smul_sub, hR1.sub_eq hRw, smul_mul_smul_comm, smul_smul]
@@ -251,7 +252,7 @@ private theorem isUnit_resolventEval_complex (H : Feec.C0Semigroup ℂ F) {M ω 
     have hc : Commute T W := ((hR1.commute hRw).smul_left _).smul_right _
     have hden : 0 < ζ.re - ω * τ := sub_pos.2 hζre
     have hWn : ‖W‖ ≤ M / (ζ.re - ω * τ) := by
-      have h1 := H.norm_resolvent_pow_le hS hw 1
+      have h1 := H.norm_resolvent_pow_le hS (z := w) hw 1
       rw [pow_one, pow_one] at h1
       rw [norm_smul, norm_inv, Complex.norm_real, Real.norm_of_nonneg hτ.le]
       calc τ⁻¹ * ‖resolvent H.generator w‖ ≤ τ⁻¹ * (M / (w.re - ω)) :=

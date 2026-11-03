@@ -947,7 +947,7 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T
   set E : ℝ → Space n N := fun r => interp b s N (S.u r) - exp (r • L) v
   have hE : ∀ r ∈ Icc 0 t, HasDerivAt E (interp b s N (S.u₁ r) - L (exp (r • L) v)) r :=
     fun r hr => (hasDerivAt_pi.2 fun p => S.hasDerivAt r (hsub hr) _ (node_mem_closedCube hs p)).sub
-      (C0Group.hasDerivAt_exp_ofReal_smul_apply L v r)
+      (ContinuousLinearMap.hasDerivAt_exp_ofReal_smul_apply L v r)
   refine (pi_norm_le_iff_of_nonempty _).2 fun p => ?_
   have hbar := (isSubMarkovGenerator b hs N).abs_apply_le_of_barrier
     (neumannLaplacian_apply_one b hs N) ht.1 hE hψ (fun r hr q => by

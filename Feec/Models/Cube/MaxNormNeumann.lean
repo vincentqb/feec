@@ -26,7 +26,7 @@ form and lumped mass of `Feec.FiniteElement.LumpedMass`.
    with `C(p)` the number of (simplex, vertex position) pairs at `p` and
    `S_u(p) = Σ_σ Σₗ (α⁺ D⁺ₗu - α⁻ D⁻ₗu)`, `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge
    `p → p ± eₗ` of the Kuhn simplex `σ` lies in the mesh; along a coordinate interior to the cube
-   `α⁺ = α⁻` (`upCount_eq_downCount`);
+   `α⁺ = α⁻` (`Feec.FiniteElement.upCount_eq_downCount`);
 3. (**consistency**) `O(h²)` at the interior nodes (`abs_laplacian_sub_interior_le`, the
    `(2n + 1)`-point stencil), and `O(1)` at the boundary nodes for `∂_ν u = 0`:
    `|Δu(p) - (Lₕ Iₕ u)(p)| ≤ n B₂ (1 + (n + 1)!)` (`abs_laplacian_sub_boundary_le`);
@@ -84,134 +84,6 @@ open Feec.Models.Cube.MaxNormHeat (meshSize meshSize_pos meshSize_mul closedCube
 
 variable {n : ℕ} {b : Fin n → ℝ} {s : ℝ} {N : ℕ}
 
-/-! ### Counting the simplices at a node -/
-
-/-- The cell `m` with `m + a = q` is unique, and exists iff `0 ≤ q - a ≤ N`. -/
-theorem sum_finLattice_add_ite_eq (a q : Fin n → ℤ) :
-    ∑ m : Fin n → Fin (N + 1), (if finLattice m + a = q then 1 else 0 : ℝ) =
-      if ∀ i, 0 ≤ q i - a i ∧ q i - a i ≤ N then 1 else 0 := by
-  split_ifs with h
-  · set m₀ : Fin n → Fin (N + 1) := fun j => ⟨(q j - a j).toNat, by have := h j; omega⟩
-    have key : ∀ m, finLattice m + a = q ↔ m = m₀ := fun m => by
-      constructor
-      · intro e; funext j; apply Fin.ext
-        have := congrFun e j; have := h j
-        simp only [Pi.add_apply, finLattice, m₀] at *; omega
-      · rintro rfl; funext j; have := h j; simp only [Pi.add_apply, finLattice, m₀]; omega
-    simp_rw [key]
-    simp
-  · refine sum_eq_zero fun m _ => ?_
-    rw [ite_eq_right]
-    intro e
-    refine absurd (fun i => ?_) h
-    have := congrFun e i
-    have := (m i).2
-    simp only [Pi.add_apply, finLattice] at *
-    omega
-
-/-- The edge shift `κ_{σ,l} = v_{σ⁻¹ l}`: the path edge of the Kuhn simplex `σ` along `eₗ` is
-`v_{σ⁻¹ l} → v_{σ⁻¹ l} + eₗ`. -/
-def edgeShift (σ : Equiv.Perm (Fin n)) (l : Fin n) : Fin n → ℤ :=
-  kuhnLattice σ (σ.symm l).castSucc
-
-/-- `α⁺_{σ,l}(p)`: the simplex `σ` with path edge `p → p + eₗ` lies in the mesh. -/
-def upCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) : ℝ :=
-  ∑ m : Fin n → Fin (N + 1), if finLattice m + edgeShift σ l = p then 1 else 0
-
-/-- `α⁻_{σ,l}(p)`: the simplex `σ` with path edge `p - eₗ → p` lies in the mesh. -/
-def downCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) : ℝ :=
-  upCount N σ l (p - Pi.single l 1)
-
-/-- `C(p)`: the number of pairs (simplex `m + K_σ` of the mesh, vertex index `j`) with
-`m + v_j = p`, i.e. the simplices with vertex `p` (each once, `vₖ` being distinct); the lumped
-mass is
-`m(p) = hⁿ C(p) / (n + 1)!` (`lumpedMass_node_eq`). -/
-def vertexCount (N : ℕ) (p : Fin n → ℤ) : ℝ :=
-  ∑ σ : Equiv.Perm (Fin n), ∑ j, ∑ m : Fin n → Fin (N + 1),
-    if finLattice m + kuhnLattice σ j = p then 1 else 0
-
-theorem upCount_eq (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
-    upCount N σ l p =
-      if ∀ i, 0 ≤ p i - edgeShift σ l i ∧ p i - edgeShift σ l i ≤ N then 1 else 0 :=
-  sum_finLattice_add_ite_eq _ _
-
-theorem upCount_nonneg (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
-    0 ≤ upCount N σ l p := by
-  rw [upCount_eq]; split_ifs <;> norm_num
-
-theorem upCount_le_one (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
-    upCount N σ l p ≤ 1 := by
-  rw [upCount_eq]; split_ifs <;> norm_num
-
-theorem edgeShift_self (σ : Equiv.Perm (Fin n)) (l : Fin n) : edgeShift σ l l = 0 :=
-  kuhnLattice_symm_self σ l
-
-/-- **Interior directions are symmetric**: for `1 ≤ pₗ ≤ N`, `α⁺_{σ,l}(p) = α⁻_{σ,l}(p)`. -/
-theorem upCount_eq_downCount (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
-    (h1 : 1 ≤ p l) (h2 : p l ≤ N) : upCount N σ l p = downCount N σ l p := by
-  rw [downCount, upCount_eq, upCount_eq]
-  congr 1
-  refine propext (forall_congr' fun i => ?_)
-  by_cases hi : i = l
-  · subst hi; simp [edgeShift_self]; omega
-  · simp [hi]
-
-theorem downCount_eq_zero (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
-    (h : p l = 0) : downCount N σ l p = 0 := by
-  rw [downCount, upCount_eq, ite_eq_right]
-  intro H
-  have := (H l).1
-  simp [edgeShift_self, h] at this
-
-theorem upCount_eq_zero (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
-    (h : p l = N + 1) : upCount N σ l p = 0 := by
-  rw [upCount_eq, ite_eq_right]
-  intro H
-  have := (H l).2
-  simp [edgeShift_self, h] at this
-
-theorem vertexCount_le (p : Fin n → ℤ) : vertexCount N p ≤ (n + 1) * n.factorial := by
-  calc vertexCount N p ≤ ∑ _σ : Equiv.Perm (Fin n), ∑ _j : Fin (n + 1), (1 : ℝ) :=
-        sum_le_sum fun σ _ => sum_le_sum fun j _ => by
-          rw [sum_finLattice_add_ite_eq]; split_ifs <;> norm_num
-    _ = _ := by simp [Fintype.card_perm]; ring
-
-theorem upCount_le_vertexCount (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
-    upCount N σ l p ≤ vertexCount N p := by
-  have hnn : ∀ σ' : Equiv.Perm (Fin n), ∀ j : Fin (n + 1), 0 ≤ ∑ m : Fin n → Fin (N + 1),
-      (if finLattice m + kuhnLattice σ' j = p then 1 else 0 : ℝ) := fun _ _ =>
-    sum_nonneg fun _ _ => by split_ifs <;> norm_num
-  calc upCount N σ l p = ∑ m : Fin n → Fin (N + 1),
-        (if finLattice m + kuhnLattice σ (σ.symm l).castSucc = p then 1 else 0 : ℝ) := rfl
-    _ ≤ ∑ j, ∑ m : Fin n → Fin (N + 1),
-        (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ) :=
-      single_le_sum (f := fun j => ∑ m : Fin n → Fin (N + 1),
-        (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ)) (fun j _ => hnn σ j)
-        (mem_univ _)
-    _ ≤ vertexCount N p :=
-      single_le_sum (f := fun σ' => ∑ j, ∑ m : Fin n → Fin (N + 1),
-        (if finLattice m + kuhnLattice σ' j = p then 1 else 0 : ℝ))
-        (fun σ' _ => sum_nonneg fun j _ => hnn σ' j) (mem_univ σ)
-
-theorem downCount_le_vertexCount (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
-    downCount N σ l p ≤ vertexCount N p := by
-  have hnn : ∀ σ' : Equiv.Perm (Fin n), ∀ j : Fin (n + 1), 0 ≤ ∑ m : Fin n → Fin (N + 1),
-      (if finLattice m + kuhnLattice σ' j = p then 1 else 0 : ℝ) := fun _ _ =>
-    sum_nonneg fun _ _ => by split_ifs <;> norm_num
-  have e : downCount N σ l p = ∑ m : Fin n → Fin (N + 1),
-      (if finLattice m + kuhnLattice σ (σ.symm l).succ = p then 1 else 0 : ℝ) := by
-    refine sum_congr rfl fun m _ => ?_
-    rw [kuhnLattice_succ, Equiv.apply_symm_apply, edgeShift]
-    congr 1
-    exact propext ⟨fun h => by rw [← add_assoc, h, sub_add_cancel],
-      fun h => by rw [eq_sub_iff_add_eq, add_assoc, h]⟩
-  rw [e]
-  refine (single_le_sum (f := fun j => ∑ m : Fin n → Fin (N + 1),
-        (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ)) (fun j _ => hnn σ j)
-        (mem_univ _)).trans ?_
-  exact single_le_sum (f := fun σ' => ∑ j, ∑ m : Fin n → Fin (N + 1),
-        (if finLattice m + kuhnLattice σ' j = p then 1 else 0 : ℝ))
-        (fun σ' _ => sum_nonneg fun j _ => hnn σ' j) (mem_univ σ)
 
 /-- The Kuhn order putting the coordinates at the upper face first, then `l`, then the others. -/
 def boundaryPerm (N : ℕ) (p : Fin n → ℤ) (l : Fin n) : Equiv.Perm (Fin n) :=
@@ -239,7 +111,7 @@ theorem edgeShift_boundaryPerm {p : Fin n → ℤ} {l i : Fin n} (hi : i ≠ l) 
 
 /-- At a node of the lower face `pₗ = 0`, the edge `p → p + eₗ` lies in a simplex. -/
 theorem upCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) {l : Fin n}
-    (hl : p l = 0) : upCount N (boundaryPerm N p l) l p = 1 := by
+    (hl : p l = 0) : upCount (N + 1) (boundaryPerm N p l) l p = 1 := by
   rw [upCount_eq, ite_eq_left_iff]
   intro H
   refine absurd (fun i => ?_) H
@@ -252,7 +124,7 @@ theorem upCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i 
 
 /-- At a node of the upper face `pₗ = N + 1`, the edge `p - eₗ → p` lies in a simplex. -/
 theorem downCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) {l : Fin n}
-    (hl : p l = N + 1) : downCount N (boundaryPerm N p l) l p = 1 := by
+    (hl : p l = N + 1) : downCount (N + 1) (boundaryPerm N p l) l p = 1 := by
   rw [downCount, upCount_eq, ite_eq_left_iff]
   intro H
   refine absurd (fun i => ?_) H
@@ -263,57 +135,6 @@ theorem downCount_boundaryPerm {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p 
     by_cases hN : p i = N + 1
     · rw [(edgeShift_boundaryPerm hi).1 hN]; omega
     · rw [(edgeShift_boundaryPerm hi).2 hN]; omega
-
-/-! ### The stiffness rows and the lumped masses at every node -/
-
-/-- The difference quotient `(w(q + eₗ) - w(q)) / h²` along the edge `q → q + eₗ`. -/
-def edgeQuot (b : Fin n → ℝ) (h : ℝ) (w : (Fin n → ℝ) → ℝ) (l : Fin n) (q : Fin n → ℤ) : ℝ :=
-  (w (node b h (q + Pi.single l 1)) - w (node b h q)) / h / h
-
-/-- **The stiffness row of any node** `p` (boundary nodes included):
-`a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻_{σ,l}(p) Dₗw(p - eₗ) - α⁺_{σ,l}(p) Dₗw(p)) / h`. -/
-theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) (p : Fin n → ℤ)
-    (w : (Fin n → ℝ) → ℝ) :
-    p1Stiffness (freudenthalMesh b s hs (N + 1)) (nodalIndicator (node b (meshSize s N) p)) w =
-      meshSize s N ^ n / n.factorial * ∑ σ : Equiv.Perm (Fin n), ∑ l,
-        (downCount N σ l p * edgeQuot b (meshSize s N) w l (p - Pi.single l 1) -
-          upCount N σ l p * edgeQuot b (meshSize s N) w l p) := by
-  have hh := freudenthalScale_pos hs (N + 1)
-  have hh' := hh.ne'
-  rw [p1Stiffness_eq, sum_freudenthalMesh_simplices, meshSize]
-  simp_rw [volume_real_freudenthalMesh_simplex b hh, mapEquiv_boxMap_freudenthalSimplex_points,
-    p1Grad_dotProduct_freudenthalPoints b hh', mul_sum]
-  rw [sum_comm]
-  simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin (N + 1)))) (t := (univ : Finset (Fin n)))]
-  refine sum_congr rfl fun σ _ => sum_congr rfl fun l _ => ?_
-  have e : ∀ q, edgeTerm b (s / ↑(N + 1)) (nodalIndicator (node b (s / ↑(N + 1)) p)) w l q =
-      (if q = p - Pi.single l 1 then 1 else 0) * edgeQuot b (s / ↑(N + 1)) w l (p - Pi.single l 1) -
-        (if q = p then 1 else 0) * edgeQuot b (s / ↑(N + 1)) w l p := fun q => by
-    have hne : p - Pi.single l 1 ≠ p := fun h => by have := congrFun h l; simp at this
-    simp only [edgeTerm, edgeQuot, nodalIndicator_node b hh', ← eq_sub_iff_add_eq]
-    by_cases h1 : q = p - Pi.single l 1
-    · subst h1; simp [hne]; field_simp
-    · by_cases h2 : q = p
-      · subst h2; simp [h1]; field_simp
-      · simp [h1, h2]
-  rw [← mul_sum]
-  congr 1
-  simp_rw [e, sum_sub_distrib, ← sum_mul]
-  rfl
-
-/-- **The lumped mass of any node**: `m(p) = hⁿ C(p) / (n + 1)!`. -/
-theorem lumpedMass_node_eq (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) (p : Fin n → ℤ) :
-    lumpedMass (freudenthalMesh b s hs (N + 1)) (node b (meshSize s N) p) =
-      meshSize s N ^ n / n.factorial / (n + 1) * vertexCount N p := by
-  have hh := freudenthalScale_pos hs (N + 1)
-  rw [lumpedMass, sum_freudenthalMesh_simplices, meshSize]
-  simp_rw [volume_real_freudenthalMesh_simplex b hh, mapEquiv_boxMap_freudenthalSimplex_points,
-    freudenthalPoints_eq_node, (node_injective b hh.ne').eq_iff, card_filter, Nat.cast_sum,
-    Nat.cast_ite, Nat.cast_one, Nat.cast_zero, ← mul_sum]
-  rw [vertexCount]
-  congr 1
-  rw [sum_comm]
-  exact sum_congr rfl fun σ _ => sum_comm
 
 /-! ### The Neumann problem: all nodes -/
 
@@ -384,26 +205,23 @@ def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ)
 /-- The stencil sum `Σ_σ Σₗ (α⁺_{σ,l}(p) D⁺ₗw(p) - α⁻_{σ,l}(p) D⁻ₗw(p))`, `D±` the one-sided
 second-order difference quotients. -/
 def stencilSum (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (w : (Fin n → ℝ) → ℝ) (p : Fin n → ℤ) : ℝ :=
-  ∑ σ : Equiv.Perm (Fin n), ∑ l, (upCount N σ l p * edgeQuot b (meshSize s N) w l p -
-    downCount N σ l p * edgeQuot b (meshSize s N) w l (p - Pi.single l 1))
+  ∑ σ : Equiv.Perm (Fin n), ∑ l, (upCount (N + 1) σ l p * edgeQuot b (meshSize s N) w l p -
+    downCount (N + 1) σ l p * edgeQuot b (meshSize s N) w l (p - Pi.single l 1))
 
 /-- **The Neumann stencil at any node**: `(Lₕ Iₕ u)(p) = (n + 1) S_u(p) / C(p)`. -/
 theorem neumannLaplacian_interp (hs : 0 < s) (u : (Fin n → ℝ) → ℝ) (p : Nodes n N) :
     neumannLaplacian b hs N (interp b s N u) p =
-      (n + 1) * stencilSum b s N u p / vertexCount N (p : Fin n → ℤ) := by
-  rw [neumannLaplacian_apply, p1Stiffness_congr_right _ _ (w' := u) fun T hT j => ?_,
-    p1Stiffness_nodalIndicator_eq, lumpedMass_node_eq]
-  · have ha : meshSize s N ^ n / n.factorial ≠ 0 :=
-      div_ne_zero (pow_ne_zero _ (meshSize_pos hs N).ne') (by positivity)
-    have e : stencilSum b s N u p = -∑ σ : Equiv.Perm (Fin n), ∑ l,
-        (downCount N σ l p * edgeQuot b (meshSize s N) u l ((p : Fin n → ℤ) - Pi.single l 1) -
-          upCount N σ l p * edgeQuot b (meshSize s N) u l p) := by
+      (n + 1) * stencilSum b s N u p / vertexCount (N + 1) (p : Fin n → ℤ) := by
+  rw [neumannLaplacian_apply, p1Stiffness_congr_right _ _ (w' := u) fun T hT j => ?_]
+  · have e : stencilSum b s N u p = -∑ σ : Equiv.Perm (Fin n), ∑ l,
+        (downCount (N + 1) σ l p * edgeQuot b (meshSize s N) u l ((p : Fin n → ℤ) - Pi.single l 1) -
+          upCount (N + 1) σ l p * edgeQuot b (meshSize s N) u l p) := by
       rw [stencilSum, ← sum_neg_distrib]
       exact sum_congr rfl fun σ _ => by
         rw [← sum_neg_distrib]; exact sum_congr rfl fun l _ => by ring
-    rw [e]
-    have hh := (meshSize_pos hs N).ne'
-    rcases eq_or_ne (vertexCount N (p : Fin n → ℤ)) 0 with hC | hC
+    rw [e, meshSize, p1Stiffness_nodalIndicator_eq, lumpedMass_node_eq]
+    have hh := (freudenthalScale_pos hs (N + 1)).ne'
+    rcases eq_or_ne (vertexCount (N + 1) (p : Fin n → ℤ)) 0 with hC | hC
     · simp [hC]
     · field_simp
   · obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
@@ -448,10 +266,10 @@ theorem node_eq_sub_single_add (b : Fin n → ℝ) (h : ℝ) (p : Fin n → ℤ)
 
 /-- The stencil terms of the barrier: `α⁺ (2yₗ/h + 1) - α⁻ (2yₗ/h - 1)`, `yₗ = xₗ - cₗ`. -/
 theorem stencilTerm_chi (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
-    upCount N σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
-        downCount N σ l p * edgeQuot b (meshSize s N) (chi b s) l (p - Pi.single l 1) =
-      upCount N σ l p * (2 * (meshSize s N * p l - s / 2) / meshSize s N + 1) -
-        downCount N σ l p * (2 * (meshSize s N * p l - s / 2) / meshSize s N - 1) := by
+    upCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
+        downCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l (p - Pi.single l 1) =
+      upCount (N + 1) σ l p * (2 * (meshSize s N * p l - s / 2) / meshSize s N + 1) -
+        downCount (N + 1) σ l p * (2 * (meshSize s N * p l - s / 2) / meshSize s N - 1) := by
   have hh := (meshSize_pos hs N).ne'
   have d1 : chi b s (node b (meshSize s N) (p + Pi.single l 1)) -
       chi b s (node b (meshSize s N) p) =
@@ -476,8 +294,8 @@ theorem meshSize_le (hs : 0 < s) (N : ℕ) : meshSize s N ≤ s := by
 `α± (1 - s/h) ≤ 0`. -/
 theorem stencilTerm_chi_le (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
     (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) :
-    upCount N σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
-        downCount N σ l p * edgeQuot b (meshSize s N) (chi b s) l (p - Pi.single l 1) ≤
+    upCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
+        downCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l (p - Pi.single l 1) ≤
       2 - (if σ = boundaryPerm N p l ∧ (p l = 0 ∨ p l = N + 1) then 1 + s / meshSize s N
         else 0) := by
   have hh := meshSize_pos hs N
@@ -485,10 +303,10 @@ theorem stencilTerm_chi_le (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) {p
   push_cast at hm
   have hsh : 1 ≤ s / meshSize s N := by rw [le_div_iff₀ hh, one_mul]; exact meshSize_le hs N
   rw [stencilTerm_chi hs]
-  have hu0 := upCount_nonneg (N := N) σ l p
-  have hu1 := upCount_le_one (N := N) σ l p
-  have hd0 := upCount_nonneg (N := N) σ l (p - Pi.single l 1)
-  have hd1 := upCount_le_one (N := N) σ l (p - Pi.single l 1)
+  have hu0 := upCount_nonneg (N := N + 1) σ l p
+  have hu1 := upCount_le_one (N := N + 1) σ l p
+  have hd0 := upCount_nonneg (N := N + 1) σ l (p - Pi.single l 1)
+  have hd1 := upCount_le_one (N := N + 1) σ l (p - Pi.single l 1)
   rw [← downCount] at hd0 hd1
   rcases (hp l).1.eq_or_lt with h0 | h0
   · -- the lower face
@@ -542,7 +360,7 @@ theorem neumannLaplacian_interp_chi_interior (hs : 0 < s) {p : Nodes n N}
 def layerConst (n : ℕ) : ℝ := 2 * (1 + 2 * n * n.factorial)
 
 theorem one_le_vertexCount_of_boundary {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1)
-    {l : Fin n} (hl : p l = 0 ∨ p l = N + 1) : 1 ≤ vertexCount N p := by
+    {l : Fin n} (hl : p l = 0 ∨ p l = N + 1) : 1 ≤ vertexCount (N + 1) p := by
   rcases hl with hl | hl
   · rw [← upCount_boundaryPerm hp hl]; exact upCount_le_vertexCount _ _ _
   · rw [← downCount_boundaryPerm hp hl]; exact downCount_le_vertexCount _ _ _
@@ -579,7 +397,7 @@ theorem neumannLaplacian_interp_chi_boundary (hs : 0 < s) (p : Nodes n N) {l₀ 
               (mem_univ _)
           linarith
   have hC1 := one_le_vertexCount_of_boundary hp hl₀
-  have hC2 := vertexCount_le (N := N) (p : Fin n → ℤ)
+  have hC2 := vertexCount_le (N := N + 1) (p : Fin n → ℤ)
   have hfac : (1 : ℝ) ≤ n.factorial := by
     exact_mod_cast Nat.one_le_iff_ne_zero.2 (Nat.factorial_ne_zero n)
   have hK' : 2 * (1 + 2 * n * n.factorial) ≤ r := hK
@@ -635,8 +453,8 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
     (hB : ∀ x ∈ closedCube b s, ∀ i, |partialDeriv i (partialDeriv i u) x| ≤ B)
     (hneu : ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s → partialDeriv i u x = 0)
     (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1) :
-    |upCount N σ l p * edgeQuot b (meshSize s N) u l p -
-        downCount N σ l p * edgeQuot b (meshSize s N) u l (p - Pi.single l 1)| ≤ B := by
+    |upCount (N + 1) σ l p * edgeQuot b (meshSize s N) u l p -
+        downCount (N + 1) σ l p * edgeQuot b (meshSize s N) u l (p - Pi.single l 1)| ≤ B := by
   set h := meshSize s N
   have hh := meshSize_pos hs N
   have hm := meshSize_mul s N
@@ -649,10 +467,10 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
           positivity)
       (by have : (p l : ℝ) ≤ N + 1 := by exact_mod_cast (hp l).2
           nlinarith)
-  have hu0 := upCount_nonneg (N := N) σ l p
-  have hu1 := upCount_le_one (N := N) σ l p
-  have hd0 := upCount_nonneg (N := N) σ l (p - Pi.single l 1)
-  have hd1 := upCount_le_one (N := N) σ l (p - Pi.single l 1)
+  have hu0 := upCount_nonneg (N := N + 1) σ l p
+  have hu1 := upCount_le_one (N := N + 1) σ l p
+  have hd0 := upCount_nonneg (N := N + 1) σ l (p - Pi.single l 1)
+  have hd1 := upCount_le_one (N := N + 1) σ l (p - Pi.single l 1)
   rw [← downCount] at hd0 hd1
   have hh2 : 0 < h ^ 2 := by positivity
   have hh' : h ≠ 0 := hh.ne'
@@ -668,7 +486,7 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
       (by rw [Set.uIcc_of_le hh.le] at hτ; simp [hl]; linarith [hτ.2])) l
     rw [hneu x hx l (Or.inl (by simp [x, node_coord, hl])), mul_zero, sub_zero] at hT
     rw [abs_mul, abs_of_nonneg hu0, div_div, ← sq, abs_div, abs_of_pos hh2]
-    calc upCount N σ l p * (|u (x + h • Pi.single l 1) - u x| / h ^ 2)
+    calc upCount (N + 1) σ l p * (|u (x + h • Pi.single l 1) - u x| / h ^ 2)
         ≤ 1 * (B * h ^ 2 / 2 / h ^ 2) := mul_le_mul hu1 (div_le_div_of_nonneg_right hT hh2.le)
           (by positivity) zero_le_one
       _ = B / 2 := by field_simp
@@ -685,7 +503,7 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
     rw [hneu x hx l (Or.inr (by simp [x, node_coord, hN]; linarith)), mul_zero, sub_zero] at hT
     rw [abs_mul, abs_of_nonneg hd0, div_div, ← sq, abs_div, abs_of_pos hh2, abs_sub_comm]
     rw [neg_sq] at hT
-    calc downCount N σ l p * (|u (x + (-h) • Pi.single l 1) - u x| / h ^ 2)
+    calc downCount (N + 1) σ l p * (|u (x + (-h) • Pi.single l 1) - u x| / h ^ 2)
         ≤ 1 * (B * h ^ 2 / 2 / h ^ 2) := mul_le_mul hd1 (div_le_div_of_nonneg_right hT hh2.le)
           (by positivity) zero_le_one
       _ = B / 2 := by field_simp
@@ -705,8 +523,7 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
         (u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1)) / h ^ 2 := by
       field_simp; ring
     rw [e, abs_div, abs_of_pos hh2]
-    calc upCount N σ l p * (|u (x + h • Pi.single l 1) - 2 * u x + u (x + (-h) • Pi.single l 1)| /
-          h ^ 2) ≤ 1 * (B * h ^ 2 / h ^ 2) :=
+    calc _ ≤ 1 * (B * h ^ 2 / h ^ 2) :=
           mul_le_mul hu1 (div_le_div_of_nonneg_right hD hh2.le) (by positivity) zero_le_one
       _ = B := by rw [one_mul, mul_div_assoc, div_self hh2.ne', mul_one]
 
@@ -753,17 +570,15 @@ theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
       _ = n * B := by simp
   have hS : |stencilSum b s N u p| ≤ n.factorial * n * B := by
     refine (abs_sum_le_sum_abs _ _).trans ?_
-    calc ∑ σ : Equiv.Perm (Fin n), |∑ l, (upCount N σ l p * edgeQuot b (meshSize s N) u l p -
-          downCount N σ l p * edgeQuot b (meshSize s N) u l ((p : Fin n → ℤ) - Pi.single l 1))|
-        ≤ ∑ _σ : Equiv.Perm (Fin n), ∑ _l : Fin n, B := sum_le_sum fun σ _ =>
+    calc _ ≤ ∑ _σ : Equiv.Perm (Fin n), ∑ _l : Fin n, B := sum_le_sum fun σ _ =>
           (abs_sum_le_sum_abs _ _).trans (sum_le_sum fun l _ =>
             abs_stencilTerm_le hs hu hB hneu σ l hp)
       _ = _ := by simp [Fintype.card_perm]; ring
   have hC := one_le_vertexCount_of_boundary hp hl₀
   have hL : |neumannLaplacian b hs N (interp b s N u) p| ≤ (n + 1).factorial * n * B := by
     rw [neumannLaplacian_interp, abs_div, abs_mul, abs_of_pos (by positivity : (0 : ℝ) < n + 1),
-      abs_of_pos (by linarith : (0 : ℝ) < vertexCount N (p : Fin n → ℤ))]
-    calc (n + 1) * |stencilSum b s N u p| / vertexCount N (p : Fin n → ℤ)
+      abs_of_pos (by linarith : (0 : ℝ) < vertexCount (N + 1) (p : Fin n → ℤ))]
+    calc (n + 1) * |stencilSum b s N u p| / vertexCount (N + 1) (p : Fin n → ℤ)
         ≤ (n + 1) * |stencilSum b s N u p| := div_le_self (by positivity) hC
       _ ≤ (n + 1) * (n.factorial * n * B) := mul_le_mul_of_nonneg_left hS (by positivity)
       _ = _ := by rw [Nat.factorial_succ]; push_cast; ring
@@ -1111,7 +926,7 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the stencil at every node, `(Lₕ Iₕ u)(p) = (n + 1) S_u(p) / C(p)` -/
   stencil (N : ℕ) (u : (Fin n → ℝ) → ℝ) (p : Nodes n N) :
     neumannLaplacian b hs N (interp b s N u) p =
-      (n + 1) * stencilSum b s N u p / vertexCount N (p : Fin n → ℤ)
+      (n + 1) * stencilSum b s N u p / vertexCount (N + 1) (p : Fin n → ℤ)
   /-- consistency `O(h²)` at the interior nodes -/
   consistency_interior (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B) {p : Nodes n N}

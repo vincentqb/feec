@@ -20,19 +20,21 @@ Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference s
 
 * `p1Stiffness_indicator_nonpos` (Ciarlet–Raviart): if every simplex is **non-obtuse**,
   `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k`, the stiffness matrix has nonpositive off-diagonal entries;
-* `baryGrad_freudenthal`: on a Freudenthal simplex `b + h (m + K_σ)` with vertices
-  `vⱼ = Σ_{i<j} e_{σ i}`, `∇λⱼ = h⁻¹ (e_{σ(j-1)} - e_{σ j})`, so (`p1Grad_freudenthal`)
+* `baryGrad_freudenthalPoints`: on a Freudenthal simplex `b + h (m + K_σ)` with vertices
+  `vⱼ = Σ_{i<j} e_{σ i}`, `∇λⱼ = h⁻¹ (e_{σ(j-1)} - e_{σ j})`, so (`p1Grad_freudenthalPoints`)
   `∂ₗ Πₜu = (u(v_{k+1}) - u(v_k)) / h` along the edge `v_k → v_{k+1} = v_k + h eₗ`,
   `k = σ⁻¹ l`; the element stiffness matrix is `hⁿ⁻² / n!` times the Laplacian of the path
-  `v₀ - v₁ - ⋯ - vₙ` (`baryGrad_dotProduct_freudenthal_nonpos`: **Freudenthal simplices are
+  `v₀ - v₁ - ⋯ - vₙ` (`baryGrad_dotProduct_freudenthalPoints_nonpos`: **Freudenthal simplices are
   non-obtuse**);
-* **`p1Stiffness_freudenthalMesh`**: on the level-`N` Freudenthal mesh of a box, for nodal values
-  vanishing on the boundary, `a(u, w) = hⁿ Σₗ Σ_{edges q → q + eₗ} Dₗu(q) Dₗw(q)` with the
-  difference quotients `Dₗu(q) = (u(q + eₗ) - u(q)) / h`: every axis edge with an interior
-  endpoint lies in exactly `n!` simplices as a path edge (one for each `σ`), each of volume
-  `hⁿ / n!`, and the diagonal edges carry no coupling;
-* `lumpedMass_freudenthalMesh`: `m(x) = hⁿ` at every interior node (`(n + 1)!` simplices of
-  volume `hⁿ / n!` meet there);
+* **`p1Stiffness_nodalIndicator_eq`**, `lumpedMass_node_eq`: on the level-`N` Freudenthal mesh
+  of a box (`h = s / N`), at every lattice node `p`, boundary nodes included,
+  `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻ Dₗw(p - eₗ) - α⁺ Dₗw(p)) / h` with the difference quotients
+  `Dₗw(q) = (w(q + eₗ) - w(q)) / h` and `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge
+  `p → p ± eₗ` of the Kuhn simplex `σ` lies in the mesh (`upCount`, `downCount`), and
+  `m(p) = hⁿ C(p) / (n + 1)!`, `C(p)` the number of simplices at `p` (`vertexCount`): each
+  simplex has volume `hⁿ / n!` and couples only the vertices of its path edges;
+* `lumpedMass_freudenthalMesh`: `m(x) = hⁿ` at every interior node (`α± = 1`,
+  `C = (n + 1)!`);
 * **`neg_p1Stiffness_div_lumpedMass`**: the lumped-mass `P₁` Laplacian at an interior node `p`
   is the `(2n + 1)`-point difference Laplacian
   `-a(φₚ, w) / m(p) = Σₗ (w(p + h eₗ) - 2 w(p) + w(p - h eₗ)) / h²`.
@@ -351,7 +353,7 @@ theorem p1Stiffness_freudenthalMesh_indicator_nonpos (b : Fin n → ℝ) {s : �
     p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator x) (nodalIndicator y) ≤ 0 :=
   p1Stiffness_indicator_nonpos _ (isNonobtuse_freudenthalMesh b hs N) hxy
 
-/-! ### Lattice nodes, edges and the boundary -/
+/-! ### Lattice nodes -/
 
 /-- The lattice node `b + h q`. -/
 def node (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) : Fin n → ℝ := b + h • latticePoint q
@@ -379,72 +381,6 @@ theorem node_add_single (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) (l : F
 
 /-- The interior nodes `q ∈ {1, …, N - 1}ⁿ` of the level-`N` lattice. -/
 def interiorNodes (n N : ℕ) : Finset (Fin n → ℤ) := Fintype.piFinset fun _ => Ioo 0 (N : ℤ)
-
-/-- The base points `q` of the axis edges `q → q + eₗ` with an interior endpoint:
-`qₗ ∈ {0, …, N - 1}`, `qⱼ ∈ {1, …, N - 1}` for `j ≠ l`. -/
-def edgeBases (n N : ℕ) (l : Fin n) : Finset (Fin n → ℤ) :=
-  Fintype.piFinset fun j => if j = l then Ico 0 (N : ℤ) else Ioo 0 (N : ℤ)
-
-/-- The nodal values `u` vanish at the boundary nodes of the level-`N` lattice of `b + h ℤⁿ`. -/
-def VanishesOnBoundary (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Prop :=
-  ∀ q : Fin n → ℤ, (∀ j, 0 ≤ q j ∧ q j ≤ (N : ℤ)) → (∃ j, q j = 0 ∨ q j = (N : ℤ)) →
-    u (node b h q) = 0
-
-/-- **Shift invariance of the edge sums**: for a `0/1` vector `a` with `aₗ = 0` and `G` vanishing
-on the edges `q → q + eₗ` of the boundary faces (`qⱼ ∈ {0, N}` for some `j ≠ l`), the sum of `G`
-over the cells shifted by `a` is its sum over the edges with an interior endpoint. -/
-theorem sum_finLattice_add {N : ℕ} (l : Fin n) {a : Fin n → ℤ} (ha : ∀ j, a j = 0 ∨ a j = 1)
-    (hal : a l = 0) (G : (Fin n → ℤ) → ℝ)
-    (hG : ∀ q : Fin n → ℤ, (∀ j, 0 ≤ q j ∧ q j ≤ (N : ℤ)) → q l < N →
-      (∃ j, j ≠ l ∧ (q j = 0 ∨ q j = (N : ℤ))) → G q = 0) :
-    ∑ m : Fin n → Fin N, G (finLattice m + a) = ∑ q ∈ edgeBases n N l, G q := by
-  have hinj : Function.Injective fun m : Fin n → Fin N => finLattice m + a := by
-    intro m m' e
-    funext j
-    have := congrFun e j
-    simp only [Pi.add_apply, finLattice, add_left_inj, Nat.cast_inj] at this
-    exact Fin.ext this
-  rw [← sum_image (f := G) fun m _ m' _ e => hinj e]
-  symm
-  refine sum_subset (fun q hq => ?_) fun q hq hq' => ?_
-  · rw [edgeBases, Fintype.mem_piFinset] at hq
-    rw [mem_image]
-    have hb : ∀ j, 0 ≤ q j - a j ∧ q j - a j < N := fun j => by
-      have h1 := hq j
-      by_cases hj : j = l
-      · subst hj
-        rw [ite_eq_left rfl, mem_Ico] at h1
-        rw [hal]; omega
-      · rw [ite_eq_right hj, mem_Ioo] at h1
-        rcases ha j with h | h <;> rw [h] <;> omega
-    refine ⟨fun j => ⟨(q j - a j).toNat, by have := hb j; omega⟩, mem_univ _, ?_⟩
-    funext j
-    simp only [finLattice, Pi.add_apply]
-    have := hb j
-    omega
-  · obtain ⟨m, -, rfl⟩ := mem_image.1 hq
-    have hm : ∀ j, 0 ≤ (finLattice m j : ℤ) ∧ (finLattice m j : ℤ) < N := fun j => by
-      have := (m j).2
-      simp only [finLattice]; omega
-    apply hG
-    · intro j
-      have := hm j
-      rcases ha j with h | h <;> simp only [Pi.add_apply, h] <;> omega
-    · have := hm l
-      simp only [Pi.add_apply, hal, add_zero]; omega
-    · rw [edgeBases, Fintype.mem_piFinset] at hq'
-      simp only [not_forall] at hq'
-      obtain ⟨j, hj⟩ := hq'
-      have := hm j
-      by_cases hjl : j = l
-      · subst hjl
-        rw [ite_eq_left rfl, mem_Ico] at hj
-        simp only [Pi.add_apply, hal, add_zero] at hj
-        omega
-      · refine ⟨j, hjl, ?_⟩
-        rw [ite_eq_right hjl, mem_Ioo] at hj
-        simp only [Pi.add_apply] at hj ⊢
-        rcases ha j with h | h <;> rw [h] at hj ⊢ <;> omega
 
 /-! ### Assembly on the Freudenthal mesh of a box -/
 
@@ -555,132 +491,226 @@ theorem sum_freudenthalMesh_simplices (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s)
 theorem freudenthalScale_pos {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N] : 0 < s / N :=
   div_pos hs (by exact_mod_cast Nat.pos_of_ne_zero (NeZero.ne N))
 
-/-- **The `P₁` stiffness form on the Freudenthal mesh** of the box `b + (0, s)ⁿ` at level `N`
-(`h = s / N`): for nodal values `u` vanishing on the boundary,
-`a(u, w) = hⁿ Σₗ Σ_{q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges with an interior endpoint.
-Every such edge is the path edge `v_{σ⁻¹ l} → v_{σ⁻¹ l + 1}` of exactly one simplex
-`b + h (m + K_σ)` for each `σ` (`sum_finLattice_add`), and `|T| = hⁿ / n!`. -/
-theorem p1Stiffness_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
-    {u : (Fin n → ℝ) → ℝ} (hu : VanishesOnBoundary b (s / N) N u) (w : (Fin n → ℝ) → ℝ) :
-    p1Stiffness (freudenthalMesh b s hs N) u w =
-      (s / N) ^ n * ∑ l, ∑ q ∈ edgeBases n N l, edgeTerm b (s / N) u w l q := by
+theorem nodalIndicator_node (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (p q : Fin n → ℤ) :
+    nodalIndicator (node b h p) (node b h q) = if q = p then 1 else 0 := by
+  simp [nodalIndicator, (node_injective b hh).eq_iff]
+
+/-! ### Counting the simplices at a node -/
+
+/-- The cell `m` with `m + a = q` is unique, and exists iff `0 ≤ q - a < N`. -/
+theorem sum_finLattice_add_ite {N : ℕ} (a q : Fin n → ℤ) :
+    ∑ m : Fin n → Fin N, (if finLattice m + a = q then 1 else 0 : ℝ) =
+      if ∀ i, 0 ≤ q i - a i ∧ q i - a i < N then 1 else 0 := by
+  split_ifs with h
+  · set m₀ : Fin n → Fin N := fun j => ⟨(q j - a j).toNat, by have := h j; omega⟩
+    have key : ∀ m, finLattice m + a = q ↔ m = m₀ := fun m => by
+      constructor
+      · intro e; funext j; apply Fin.ext
+        have := congrFun e j; have := h j
+        simp only [Pi.add_apply, finLattice, m₀] at *; omega
+      · rintro rfl; funext j; have := h j; simp only [Pi.add_apply, finLattice, m₀]; omega
+    simp_rw [key]
+    simp
+  · refine sum_eq_zero fun m _ => ?_
+    rw [ite_eq_right]
+    intro e
+    refine absurd (fun i => ?_) h
+    have := congrFun e i
+    have := (m i).2
+    simp only [Pi.add_apply, finLattice] at *
+    omega
+
+/-- The edge shift `κ_{σ,l} = v_{σ⁻¹ l}`: the path edge of the Kuhn simplex `σ` along `eₗ` is
+`v_{σ⁻¹ l} → v_{σ⁻¹ l} + eₗ`. -/
+def edgeShift (σ : Equiv.Perm (Fin n)) (l : Fin n) : Fin n → ℤ :=
+  kuhnLattice σ (σ.symm l).castSucc
+
+theorem edgeShift_self (σ : Equiv.Perm (Fin n)) (l : Fin n) : edgeShift σ l l = 0 :=
+  kuhnLattice_symm_self σ l
+
+/-- `α⁺_{σ,l}(p)`: the simplex `σ` of the level-`N` lattice with path edge `p → p + eₗ` exists. -/
+def upCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) : ℝ :=
+  ∑ m : Fin n → Fin N, if finLattice m + edgeShift σ l = p then 1 else 0
+
+/-- `α⁻_{σ,l}(p)`: the simplex `σ` with path edge `p - eₗ → p` exists. -/
+def downCount (N : ℕ) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) : ℝ :=
+  upCount N σ l (p - Pi.single l 1)
+
+/-- `C(p)`: the number of pairs (simplex `m + K_σ` of the level-`N` lattice, vertex index `j`)
+with `m + v_j = p`, i.e. the simplices with vertex `p` (each once, the `vⱼ` being distinct); the
+lumped mass is `m(p) = hⁿ C(p) / (n + 1)!` (`lumpedMass_node_eq`). -/
+def vertexCount (N : ℕ) (p : Fin n → ℤ) : ℝ :=
+  ∑ σ : Equiv.Perm (Fin n), ∑ j, ∑ m : Fin n → Fin N,
+    if finLattice m + kuhnLattice σ j = p then 1 else 0
+
+section counting
+
+variable {N : ℕ}
+
+theorem upCount_eq (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
+    upCount N σ l p =
+      if ∀ i, 0 ≤ p i - edgeShift σ l i ∧ p i - edgeShift σ l i < N then 1 else 0 :=
+  sum_finLattice_add_ite _ _
+
+theorem upCount_nonneg (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
+    0 ≤ upCount N σ l p := by
+  rw [upCount_eq]; split_ifs <;> norm_num
+
+theorem upCount_le_one (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
+    upCount N σ l p ≤ 1 := by
+  rw [upCount_eq]; split_ifs <;> norm_num
+
+/-- **Interior directions are symmetric**: for `1 ≤ pₗ < N`, `α⁺_{σ,l}(p) = α⁻_{σ,l}(p)`. -/
+theorem upCount_eq_downCount (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
+    (h1 : 1 ≤ p l) (h2 : p l < N) : upCount N σ l p = downCount N σ l p := by
+  rw [downCount, upCount_eq, upCount_eq]
+  congr 1
+  refine propext (forall_congr' fun i => ?_)
+  by_cases hi : i = l
+  · subst hi; simp [edgeShift_self]; omega
+  · simp [hi]
+
+theorem downCount_eq_zero (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
+    (h : p l = 0) : downCount N σ l p = 0 := by
+  rw [downCount, upCount_eq, ite_eq_right]
+  intro H
+  have := (H l).1
+  simp [edgeShift_self, h] at this
+
+theorem upCount_eq_zero (σ : Equiv.Perm (Fin n)) {l : Fin n} {p : Fin n → ℤ}
+    (h : p l = N) : upCount N σ l p = 0 := by
+  rw [upCount_eq, ite_eq_right]
+  intro H
+  have := (H l).2
+  simp [edgeShift_self, h] at this
+
+/-- At an interior node, every path edge `p → p + eₗ` lies in the mesh. -/
+theorem upCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
+    (hp : p ∈ interiorNodes n N) : upCount N σ l p = 1 := by
+  rw [upCount_eq, ite_eq_left]
+  intro i
+  have := mem_Ioo.1 (Fintype.mem_piFinset.1 hp i)
+  rcases kuhnLattice_mem σ (σ.symm l).castSucc i with h | h <;> rw [edgeShift, h] <;> omega
+
+/-- At an interior node, every path edge `p - eₗ → p` lies in the mesh. -/
+theorem downCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
+    (hp : p ∈ interiorNodes n N) : downCount N σ l p = 1 := by
+  have := mem_Ioo.1 (Fintype.mem_piFinset.1 hp l)
+  rw [← upCount_eq_downCount σ (by omega) this.2, upCount_of_mem_interiorNodes σ l hp]
+
+theorem vertexCount_le (p : Fin n → ℤ) : vertexCount N p ≤ (n + 1) * n.factorial := by
+  calc vertexCount N p ≤ ∑ _σ : Equiv.Perm (Fin n), ∑ _j : Fin (n + 1), (1 : ℝ) :=
+        sum_le_sum fun σ _ => sum_le_sum fun j _ => by
+          rw [sum_finLattice_add_ite]; split_ifs <;> norm_num
+    _ = _ := by simp [Fintype.card_perm]; ring
+
+/-- `C(p) = (n + 1)!` at an interior node. -/
+theorem vertexCount_of_mem_interiorNodes {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
+    vertexCount N p = (n + 1) * n.factorial := by
+  have h1 : ∀ σ : Equiv.Perm (Fin n), ∀ j, ∑ m : Fin n → Fin N,
+      (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ) = 1 := fun σ j => by
+    rw [sum_finLattice_add_ite, ite_eq_left]
+    intro i
+    have := mem_Ioo.1 (Fintype.mem_piFinset.1 hp i)
+    rcases kuhnLattice_mem σ j i with h | h <;> rw [h] <;> omega
+  simp [vertexCount, h1, Fintype.card_perm]; ring
+
+/-- Every term `#{m | m + v_j = p}` of `C(p)` is at most `C(p)`. -/
+theorem le_vertexCount (σ : Equiv.Perm (Fin n)) (j : Fin (n + 1)) (p : Fin n → ℤ) :
+    ∑ m : Fin n → Fin N, (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ) ≤
+      vertexCount N p := by
+  have h0 : ∀ σ' : Equiv.Perm (Fin n), ∀ j', 0 ≤ ∑ m : Fin n → Fin N,
+      (if finLattice m + kuhnLattice σ' j' = p then 1 else 0 : ℝ) := fun _ _ =>
+    sum_nonneg fun _ _ => by split_ifs <;> norm_num
+  exact (single_le_sum (fun j' _ => h0 σ j') (mem_univ j)).trans
+    (single_le_sum (f := fun σ' => ∑ j', ∑ m : Fin n → Fin N,
+      (if finLattice m + kuhnLattice σ' j' = p then 1 else 0 : ℝ))
+      (fun σ' _ => sum_nonneg fun j' _ => h0 σ' j') (mem_univ σ))
+
+theorem upCount_le_vertexCount (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
+    upCount N σ l p ≤ vertexCount N p :=
+  le_vertexCount σ _ p
+
+theorem downCount_le_vertexCount (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
+    downCount N σ l p ≤ vertexCount N p := by
+  have e : downCount N σ l p = ∑ m : Fin n → Fin N,
+      (if finLattice m + kuhnLattice σ (σ.symm l).succ = p then 1 else 0 : ℝ) := by
+    refine sum_congr rfl fun m _ => ?_
+    rw [kuhnLattice_succ, Equiv.apply_symm_apply, edgeShift]
+    congr 1
+    exact propext ⟨fun h => by rw [← add_assoc, h, sub_add_cancel],
+      fun h => by rw [eq_sub_iff_add_eq, add_assoc, h]⟩
+  rw [e]
+  exact le_vertexCount σ _ p
+
+end counting
+
+/-! ### The stiffness rows and the lumped masses -/
+
+/-- The difference quotient `(w(q + eₗ) - w(q)) / h²` along the edge `q → q + eₗ`. -/
+def edgeQuot (b : Fin n → ℝ) (h : ℝ) (w : (Fin n → ℝ) → ℝ) (l : Fin n) (q : Fin n → ℤ) : ℝ :=
+  (w (node b h (q + Pi.single l 1)) - w (node b h q)) / h / h
+
+/-- **The stiffness row of any node** `p` (boundary nodes included) of the level-`N` Freudenthal
+mesh: `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻_{σ,l}(p) Dₗw(p - eₗ) - α⁺_{σ,l}(p) Dₗw(p)) / h`. Every
+simplex `b + h (m + K_σ)` couples only the `n` vertices of its path edges
+(`p1Grad_dotProduct_freudenthalPoints`), and `|T| = hⁿ / n!`. -/
+theorem p1Stiffness_nodalIndicator_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
+    (p : Fin n → ℤ) (w : (Fin n → ℝ) → ℝ) :
+    p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator (node b (s / N) p)) w =
+      (s / N) ^ n / n.factorial * ∑ σ : Equiv.Perm (Fin n), ∑ l,
+        (downCount N σ l p * edgeQuot b (s / N) w l (p - Pi.single l 1) -
+          upCount N σ l p * edgeQuot b (s / N) w l p) := by
   have hh := freudenthalScale_pos hs N
+  have hh' := hh.ne'
   rw [p1Stiffness_eq, sum_freudenthalMesh_simplices]
   simp_rw [volume_real_freudenthalMesh_simplex b hh, mapEquiv_boxMap_freudenthalSimplex_points,
-    p1Grad_dotProduct_freudenthalPoints b hh.ne', mul_sum]
+    p1Grad_dotProduct_freudenthalPoints b hh', mul_sum]
   rw [sum_comm]
-  simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin N))) (t := (univ : Finset (Fin n))),
-    ← mul_sum]
-  have hshift : ∀ σ : Equiv.Perm (Fin n), ∀ l, ∑ m : Fin n → Fin N,
-      edgeTerm b (s / N) u w l (finLattice m + kuhnLattice σ (σ.symm l).castSucc) =
-        ∑ q ∈ edgeBases n N l, edgeTerm b (s / N) u w l q := fun σ l =>
-    sum_finLattice_add l (kuhnLattice_mem σ _) (kuhnLattice_symm_self σ l) _
-      fun q hq hql ⟨j, hjl, hj⟩ => by
-        have h0 : u (node b (s / N) q) = 0 := hu q hq ⟨j, hj⟩
-        have h1 : u (node b (s / N) (q + Pi.single l 1)) = 0 := hu _ (fun i => by
-          by_cases hi : i = l
-          · subst hi; simp; have := hq i; omega
-          · simp [Pi.single_eq_of_ne hi, hq i]) ⟨j, by simpa [Pi.single_eq_of_ne hjl] using hj⟩
-        simp [edgeTerm, h0, h1]
-  simp_rw [hshift, sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, nsmul_eq_mul]
-  rw [← mul_assoc, div_mul_cancel₀ _ (by exact_mod_cast n.factorial_ne_zero :
-    (n.factorial : ℝ) ≠ 0)]
+  simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin N))) (t := (univ : Finset (Fin n)))]
+  refine sum_congr rfl fun σ _ => sum_congr rfl fun l _ => ?_
+  have e : ∀ q, edgeTerm b (s / N) (nodalIndicator (node b (s / N) p)) w l q =
+      (if q = p - Pi.single l 1 then 1 else 0) * edgeQuot b (s / N) w l (p - Pi.single l 1) -
+        (if q = p then 1 else 0) * edgeQuot b (s / N) w l p := fun q => by
+    have hne : p - Pi.single l 1 ≠ p := fun h => by have := congrFun h l; simp at this
+    simp only [edgeTerm, edgeQuot, nodalIndicator_node b hh', ← eq_sub_iff_add_eq]
+    by_cases h1 : q = p - Pi.single l 1
+    · subst h1; simp [hne]; field_simp
+    · by_cases h2 : q = p
+      · subst h2; simp [h1]; field_simp
+      · simp [h1, h2]
+  rw [← mul_sum]
+  congr 1
+  simp_rw [e, sum_sub_distrib, ← sum_mul]
+  rfl
 
-/-- An interior node `p` is reached from exactly one cell `m` by every `0/1` shift `a`. -/
-theorem sum_finLattice_add_ite {N : ℕ} {a : Fin n → ℤ} (ha : ∀ j, a j = 0 ∨ a j = 1)
-    {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
-    ∑ m : Fin n → Fin N, (if finLattice m + a = p then 1 else 0 : ℝ) = 1 := by
-  rw [interiorNodes, Fintype.mem_piFinset] at hp
-  have hb : ∀ j, 0 ≤ p j - a j ∧ p j - a j < N := fun j => by
-    have := mem_Ioo.1 (hp j); rcases ha j with h | h <;> rw [h] <;> omega
-  set m₀ : Fin n → Fin N := fun j => ⟨(p j - a j).toNat, by have := hb j; omega⟩
-  have key : ∀ m, finLattice m + a = p ↔ m = m₀ := fun m => by
-    constructor
-    · intro e; funext j; apply Fin.ext
-      have := congrFun e j; have := hb j
-      simp only [Pi.add_apply, finLattice, m₀] at *; omega
-    · rintro rfl; funext j; have := hb j; simp only [Pi.add_apply, finLattice, m₀]; omega
-  simp_rw [key]
-  simp
-
-theorem interiorNodes_subset_edgeBases (N : ℕ) (l : Fin n) :
-    interiorNodes n N ⊆ edgeBases n N l := fun p hp => by
-  rw [interiorNodes, Fintype.mem_piFinset] at hp
-  rw [edgeBases, Fintype.mem_piFinset]
-  intro j
-  have := mem_Ioo.1 (hp j)
-  split_ifs
-  · exact mem_Ico.2 ⟨this.1.le, this.2⟩
-  · exact hp j
-
-/-- **The lumped mass of the Freudenthal mesh**: `m(x) = hⁿ` at every interior node, `(n + 1)!`
-simplices of volume `hⁿ / n!` meeting there (`n + 1` vertex positions for each `σ`). -/
-theorem lumpedMass_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
-    {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
-    lumpedMass (freudenthalMesh b s hs N) (node b (s / N) p) = (s / N) ^ n := by
+/-- **The lumped mass of any node** of the level-`N` Freudenthal mesh: `m(p) = hⁿ C(p) / (n + 1)!`.
+-/
+theorem lumpedMass_node_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
+    (p : Fin n → ℤ) :
+    lumpedMass (freudenthalMesh b s hs N) (node b (s / N) p) =
+      (s / N) ^ n / n.factorial / (n + 1) * vertexCount N p := by
   have hh := freudenthalScale_pos hs N
   rw [lumpedMass, sum_freudenthalMesh_simplices]
   simp_rw [volume_real_freudenthalMesh_simplex b hh, mapEquiv_boxMap_freudenthalSimplex_points,
     freudenthalPoints_eq_node, (node_injective b hh.ne').eq_iff, card_filter, Nat.cast_sum,
     Nat.cast_ite, Nat.cast_one, Nat.cast_zero, ← mul_sum]
-  rw [sum_comm]
-  have hσ : ∀ σ : Equiv.Perm (Fin n), ∑ m : Fin n → Fin N,
-      ∑ j, (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ) = n + 1 := fun σ => by
-    rw [sum_comm, sum_congr rfl fun j _ => sum_finLattice_add_ite (kuhnLattice_mem σ j) hp]
-    simp
-  rw [sum_congr rfl fun σ _ => hσ σ]
-  simp only [sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, nsmul_eq_mul]
-  field_simp
-
-theorem nodalIndicator_node (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (p q : Fin n → ℤ) :
-    nodalIndicator (node b h p) (node b h q) = if q = p then 1 else 0 := by
-  simp [nodalIndicator, (node_injective b hh).eq_iff]
-
-/-- The hat function of an interior node vanishes on the boundary. -/
-theorem vanishesOnBoundary_nodalIndicator (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) {N : ℕ}
-    {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
-    VanishesOnBoundary b h N (nodalIndicator (node b h p)) := by
-  rintro q - ⟨j, hj⟩
-  rw [nodalIndicator_node b hh, ite_eq_right]
-  rintro rfl
-  rw [interiorNodes, Fintype.mem_piFinset] at hp
-  have := mem_Ioo.1 (hp j)
-  omega
-
-theorem sub_single_mem_edgeBases {N : ℕ} {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N)
-    (l : Fin n) : p - Pi.single l 1 ∈ edgeBases n N l := by
-  rw [interiorNodes, Fintype.mem_piFinset] at hp
-  rw [edgeBases, Fintype.mem_piFinset]
-  intro j
-  have := mem_Ioo.1 (hp j)
-  by_cases hj : j = l
-  · subst hj; simp only [ite_true, Pi.sub_apply, Pi.single_eq_same, mem_Ico]; omega
-  · simpa [hj, Pi.single_eq_of_ne hj] using hp j
-
-/-- **The stiffness row of an interior node**: `a(φₚ, w) = hⁿ Σₗ (2 w(p) - w(p + eₗ) - w(p - eₗ)) / h²`
-on the Freudenthal mesh. -/
-theorem p1Stiffness_nodalIndicator_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ)
-    [NeZero N] {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) (w : (Fin n → ℝ) → ℝ) :
-    p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator (node b (s / N) p)) w =
-      (s / N) ^ n * ∑ l, (2 * w (node b (s / N) p) - w (node b (s / N) (p + Pi.single l 1)) -
-        w (node b (s / N) (p - Pi.single l 1))) / (s / N) ^ 2 := by
-  have hh := (freudenthalScale_pos hs N).ne'
-  rw [p1Stiffness_freudenthalMesh b hs N (vanishesOnBoundary_nodalIndicator b hh hp) w]
+  rw [vertexCount]
   congr 1
-  refine sum_congr rfl fun l _ => ?_
-  set X : (Fin n → ℤ) → ℝ := fun q =>
-    (w (node b (s / N) (q + Pi.single l 1)) - w (node b (s / N) q)) / (s / N) / (s / N)
-  have e : ∀ q, edgeTerm b (s / N) (nodalIndicator (node b (s / N) p)) w l q =
-      (if q = p - Pi.single l 1 then X q else 0) - (if q = p then X q else 0) := fun q => by
-    simp only [edgeTerm, nodalIndicator_node b hh, ← eq_sub_iff_add_eq, X]
-    split_ifs <;> ring
-  simp_rw [e, sum_sub_distrib, sum_ite_eq', ite_eq_left (sub_single_mem_edgeBases hp l),
-    ite_eq_left (interiorNodes_subset_edgeBases N l hp), X, sub_add_cancel]
+  rw [sum_comm]
+  exact sum_congr rfl fun σ _ => sum_comm
+
+/-- **The lumped mass of the Freudenthal mesh**: `m(x) = hⁿ` at every interior node, `(n + 1)!`
+simplices of volume `hⁿ / n!` meeting there (`vertexCount_of_mem_interiorNodes`). -/
+theorem lumpedMass_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
+    {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) :
+    lumpedMass (freudenthalMesh b s hs N) (node b (s / N) p) = (s / N) ^ n := by
+  rw [lumpedMass_node_eq, vertexCount_of_mem_interiorNodes hp]
+  have : (n.factorial : ℝ) ≠ 0 := by positivity
   field_simp
-  ring
 
 /-- **The lumped-mass `P₁` Laplacian on the Freudenthal mesh is the `(2n + 1)`-point difference
-Laplacian**: at every interior node `p`,
+Laplacian**: at every interior node `p` (where `α± = 1`, `upCount_of_mem_interiorNodes`),
 `-a(φₚ, w) / m(p) = Σₗ (w(p + h eₗ) - 2 w(p) + w(p - h eₗ)) / h²`. [Thomee2006], Ch. 15 -/
 theorem neg_p1Stiffness_div_lumpedMass (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]
     {p : Fin n → ℤ} (hp : p ∈ interiorNodes n N) (w : (Fin n → ℝ) → ℝ) :
@@ -689,9 +719,15 @@ theorem neg_p1Stiffness_div_lumpedMass (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s
       ∑ l, (w (node b (s / N) (p + Pi.single l 1)) - 2 * w (node b (s / N) p) +
         w (node b (s / N) (p - Pi.single l 1))) / (s / N) ^ 2 := by
   have hh := (freudenthalScale_pos hs N).ne'
-  rw [p1Stiffness_nodalIndicator_freudenthalMesh b hs N hp, lumpedMass_freudenthalMesh b hs N hp,
-    neg_div, mul_div_cancel_left₀ _ (pow_ne_zero n hh), ← sum_neg_distrib]
+  have hf : (n.factorial : ℝ) ≠ 0 := by positivity
+  rw [p1Stiffness_nodalIndicator_eq, lumpedMass_freudenthalMesh b hs N hp]
+  simp_rw [upCount_of_mem_interiorNodes _ _ hp, downCount_of_mem_interiorNodes _ _ hp, one_mul,
+    sum_const, card_univ, Fintype.card_perm, Fintype.card_fin, nsmul_eq_mul]
+  rw [← mul_assoc, div_mul_cancel₀ _ hf, neg_div, mul_div_cancel_left₀ _ (pow_ne_zero n hh),
+    ← sum_neg_distrib]
   refine sum_congr rfl fun l _ => ?_
+  simp only [edgeQuot, sub_add_cancel]
+  field_simp
   ring
 
 end Feec.FiniteElement

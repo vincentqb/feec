@@ -12,7 +12,10 @@ public import Feec.Instances.CrownNonVacuity
 and of the second space derivatives of the witness; the field `neumann` of
 `Instances.CrownNonVacuity` states the new non-vacuity. Below, the earlier verdict, the earlier
 non-vacuity statement and the earlier field `neumann` are stated verbatim and derived from the
-new API.
+new API. The counting functions `upCount`, `downCount` and `vertexCount` moved to
+`Feec.FiniteElement` (`Feec.FiniteElement.LumpedMass`) with the level of the mesh as argument
+(`vertexCount (N + 1)` for the earlier `vertexCount N`); the earlier `vertexCount` is stated
+verbatim as `vertexCount_old`, and the earlier verdict with it.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -27,6 +30,15 @@ open Feec.Models.Cube.MaxNormNeumann
 
 variable {n : ℕ} {s : ℝ}
 
+/-- The earlier `MaxNormNeumann.vertexCount`, verbatim. -/
+def vertexCount_old (N : ℕ) (p : Fin n → ℤ) : ℝ :=
+  ∑ σ : Equiv.Perm (Fin n), ∑ j, ∑ m : Fin n → Fin (N + 1),
+    if finLattice m + kuhnLattice σ j = p then 1 else 0
+
+/-- The earlier `vertexCount N` is `Feec.FiniteElement.vertexCount (N + 1)`. -/
+theorem vertexCount_old_eq (N : ℕ) (p : Fin n → ℤ) : vertexCount_old N p = vertexCount (N + 1) p :=
+  rfl
+
 /-- The earlier `MaxNormNeumann.Verdict`, verbatim. -/
 structure Verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the discrete maximum principle: `e^{tLₕ}` is positive and contractive in the maximum norm -/
@@ -36,7 +48,7 @@ structure Verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the stencil at every node, `(Lₕ Iₕ u)(p) = (n + 1) S_u(p) / C(p)` -/
   stencil (N : ℕ) (u : (Fin n → ℝ) → ℝ) (p : Nodes n N) :
     neumannLaplacian b hs N (interp b s N u) p =
-      (n + 1) * stencilSum b s N u p / vertexCount N (p : Fin n → ℤ)
+      (n + 1) * stencilSum b s N u p / vertexCount_old N (p : Fin n → ℤ)
   /-- consistency `O(h²)` at the interior nodes -/
   consistency_interior (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B) {p : Nodes n N}

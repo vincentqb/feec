@@ -916,8 +916,8 @@ theorem polyGeomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hs₀ : 0 < s₀) (hint : ∀ T ∈ M.simplices, interior T.closedInterior ⊆ M.domain)
     {p : SmoothingParam (Fin n → ℝ)} (hp : p.IsMinimal x₀ s₀)
     (hpA : IsAdm x₀ R σ γ M.meshSize p) (hR : 0 < R)
-    (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hσ : σ ≤ s₀ / (16 * R))
-    (hγ : 0 < γ) (hγh : γ * M.meshSize / R ≤ 1) {θ : ℝ}
+    (hRx : ∀ y ∈ closure M.domain, ‖y - x₀‖ ≤ R) (hσ1 : σ ≤ 1) (hσ : σ ≤ s₀ / (8 * R))
+    (hγ : 0 < γ) (hγh : γ * M.meshSize / R < 1) {θ : ℝ}
     (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) : PolyGeomOK M p θ := by
   intro T g hgT m hg ξ hξ hξb t ht T' htT'
   have hh := hM.meshSize_pos
@@ -1143,7 +1143,7 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
   set h := M.meshSize
   have hh := hM.meshSize_pos
   have hhR := meshSize_le_two_mul hR hRx
-  have hγh1 : γ * h / R ≤ 1 := by
+  have hγh1 : γ * h / R ≤ 1 / 2 := by
     rw [div_le_iff₀ hR]; nlinarith
   have hpos : 0 < γ * h * σ := by have := sigmaOf_pos hs₀ hR; positivity
   have hnn : 0 ≤ γ * h / R := by positivity
@@ -1160,7 +1160,7 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
     intro i x
     rw [hQ]
     rcases i with k | k
-    · exact hbound M hM hΩo.measurableSet hR hRx hγh1 p hpA k x
+    · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
     · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((polyElement n S).subcomplexMin M hΩo x₀
       (fun _ hx _ ht0 ht1 => hstar.strict hs₀ hx ht0 ht1)).V i,
@@ -1171,7 +1171,7 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
     · obtain ⟨u, rfl⟩ := hv
       exact hclose M hM hΩo.measurableSet hint hR hRx hhR (sigmaOf_le_one s₀ R) p hpA
         (polyGeomOK_of_isMinimal hM hq hC hstar hs₀ hint hp hpA hR hRx (sigmaOf_le_one s₀ R)
-          (sigmaOf_le s₀ R) hγ hγh1 hθ)
+          (sigmaOf_le s₀ R) hγ (by linarith) hθ)
         k u.1 ((polyElement n S).globalSpace₀_le M k u.2)
         (polySampleOK_of_isMinimal S hM hq hC hstar hs₀ hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ
           u.2)

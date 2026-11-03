@@ -17,8 +17,8 @@ depending only on `n` and `S` (`FEM.polySmoothingEstimates_pMax`,
 `pMin γ` (factor `1 + γ h_N`) of `Feec.Models.Cube.SmoothingEstimates` give uniformly
 `L²`-bounded `Q_N` with `‖v - Q_N v‖ ≤ ½ ‖v‖` on `Vₕ` (`FEM.PolySmoothingEstimates`,
 `FEM.PolySmoothingEstimatesMin`). The same "for all small `γ`" form holds for the Whitney family
-(`FEM.smoothingEstimates_pMax_forall`, `FEM.smoothingEstimatesMin_pMin_forall`, from the Whitney
-lemmas of `Feec.Models.Cube.SmoothingEstimates`), so that one smoother serves finitely many
+(`FEM.smoothingEstimates_pMax_forall`, `FEM.smoothingEstimatesMin_pMin_forall` of
+`Feec.Models.Cube.SmoothingEstimates`), so that one smoother serves finitely many
 families at once (`FEM.exists_common_gamma`).
 
 The geometry of `Feec.Models.Cube.SmoothingEstimates` (Kuhn homotheties `h_N (m + K_σ)`, lattice
@@ -48,7 +48,7 @@ the polynomial ones of `Feec.FiniteElement.PolyInverseEstimate` and
   `O(γ)`. Samples outside `Q` are controlled by `Poly.SampleOK`, vacuous for the maximal family
   (`Poly.sampleOK_pMax`) and the vanishing of the boundary DOFs for the minimal family
   (`Poly.sampleOK_pMin`). Since the bound `‖v - Q_N v‖² ≲ γ² ‖v‖²` is monotone in `γ`, every
-  `γ ≤ γ₀` works (`Poly.exists_gamma₀`, `Poly.exists_gamma₀_whitney`).
+  `γ ≤ γ₀` works (`Poly.exists_gamma₀`).
 
 ## Main definitions
 
@@ -942,48 +942,6 @@ theorem exists_gamma₀ :
         mul_le_mul_of_nonneg_right hq (sq_nonneg _)
     _ = (1 / 2 * ‖(polyElement n S).glue (mesh n N) k u‖) ^ 2 := by ring
 
-variable (n) in
-/-- **The smoothing scale of the Whitney family, for all small `γ`** (the form of
-`FEM.exists_gamma` with every `γ ∈ (0, γ₀]`), so that one smoother serves the Whitney and the
-higher-order families at once. -/
-theorem exists_gamma₀_whitney :
-    ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ γ : ℝ, γ ≤ γ₀ → ∀ (N k : ℕ)
-      (p : SmoothingParam (Fin n → ℝ)), IsAdm γ N p →
-      ∀ u ∈ (whitneyElement n).globalSpace (mesh n N) k, FEM.SampleOK γ p u →
-        ‖(whitneyElement n).glue (mesh n N) k u - (whitneyElement n).smoothedInterp (mesh n N) p
-          (isOpen_mesh_domain n N).measurableSet k ((whitneyElement n).glue (mesh n N) k u)‖ ≤
-          1 / 2 * ‖(whitneyElement n).glue (mesh n N) k u‖ := by
-  classical
-  choose A hA0 hA using fun k : ℕ => FEM.exists_invBound (n := n) k
-  choose B hB0 hB using fun k : ℕ => FEM.exists_dofBound (n := n) k
-  set x : ℕ → ℝ := fun k => B k * (3 * (k + 1) * 2 ^ n * k.factorial * 2 ^ (k + 1) * A k)
-  have hx0 : ∀ k, 0 ≤ x k := fun k => mul_nonneg (hB0 k) (by have := hA0 k; positivity)
-  set S' := ∑ k ∈ Finset.range (n + 1), x k
-  have hS : 0 ≤ S' := Finset.sum_nonneg fun k _ => hx0 k
-  set K : ℝ := 2 ^ n * ((6 ^ n * n.factorial : ℕ) : ℝ)
-  have hK : 1 ≤ K := one_le_cov
-  set γ₀ := 1 / (2 * (1 + S' * K)) with hγe
-  have hpos : 0 < 1 + S' * K := by nlinarith
-  have hγ₀ : 0 < γ₀ := by positivity
-  have hγ₀2 : γ₀ ≤ 1 / 2 := by
-    rw [div_le_div_iff₀ (by positivity) (by norm_num)]; nlinarith
-  refine ⟨γ₀, hγ₀, hγ₀2, fun γ hγ N k p hp u hu hs => ?_⟩
-  have hγ0 := hp.gamma_pos
-  by_cases hk : n < k
-  · have := subsingleton_L2F_of_lt (Ω := (mesh n N).domain) hk
-    rw [Subsingleton.elim ((whitneyElement n).glue (mesh n N) k u) 0]; simp
-  push Not at hk
-  have hxk : x k ≤ S' := Finset.single_le_sum (fun k _ => hx0 k) (Finset.mem_range.2 (by omega))
-  have h := FEM.norm_sq_sub_smoothedInterp_le (hA0 k) (hA k) (hB k) hp (hγ.trans hγ₀2) hu hs
-  have hq := sq_le_quarter_of_le hS hK (hx0 k) hxk hγ0.le hγ
-  refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) (h.trans ?_)
-  calc 2 ^ n * (x k * γ) ^ 2 *
-        (((6 ^ n * n.factorial : ℕ) : ℝ) * ‖(whitneyElement n).glue (mesh n N) k u‖ ^ 2)
-      = K * (x k * γ) ^ 2 * ‖(whitneyElement n).glue (mesh n N) k u‖ ^ 2 := by ring
-    _ ≤ 1 / 4 * ‖(whitneyElement n).glue (mesh n N) k u‖ ^ 2 :=
-        mul_le_mul_of_nonneg_right hq (sq_nonneg _)
-    _ = (1 / 2 * ‖(whitneyElement n).glue (mesh n N) k u‖) ^ 2 := by ring
-
 /-! ### The sampling condition for both families -/
 
 /-- **The maximal family samples only inside `Ω`** (`pMax_samples_mem`), so the sampling
@@ -1103,12 +1061,6 @@ structure PolySmoothingEstimatesMin (S : PolySeq) (p : ℕ → SmoothingParam (F
   close : ∀ N i, ∀ v ∈ (polyMin n S N).V i,
     ‖v - (polySmoothedMin n S N (p N) (isMinimal N)).Q i v‖ ≤ 1 / 2 * ‖v‖
 
-omit [NeZero n] in
-theorem norm_eq_zero_negSucc {Ω : Set (Fin n → ℝ)} (k : ℕ)
-    (y : L2F ℝ Ω (formIdx n (Int.negSucc k))) : ‖y‖ = 0 := by
-  have := LocalElement.subsingleton_L2F_negSucc Ω (n := n) k
-  rw [Subsingleton.elim y 0, norm_zero]
-
 theorem smoothedCommutingMapMin_Q_eq (E : LocalElement n) {M : SimplicialMesh n}
     (p : SmoothingParam (Fin n → ℝ))
     (hΩo : IsOpen M.domain) (hb : Bornology.IsBounded M.domain) {x₀ : Fin n → ℝ} {s₀ : ℝ}
@@ -1180,64 +1132,6 @@ theorem polySmoothingEstimatesMin_pMin (S : PolySeq) :
       · obtain ⟨u, rfl⟩ := hv
         exact hclose γ hγγ₀ N k _ (pMin_isAdm N) u.1
           ((polyElement n S).globalSpace₀_le (mesh n N) k u.2) (Poly.sampleOK_pMin S hγ2 u.2)
-      · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
-  exact ⟨fun N => pMin_isMinimal N, le_max_right _ _, fun N => (hest N).1,
-    fun N => (hest N).2⟩
-
-/-- **The Whitney smoothing estimates for all small `γ`** (`FEM.smoothingEstimates_pMax` fixes
-one `γ`): for every `γ ∈ (0, γ₀]` the parameters `pMax γ` satisfy `FEM.SmoothingEstimates`. -/
-theorem smoothingEstimates_pMax_forall :
-    ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ) (hγ1 : γ ≤ 1), γ ≤ γ₀ →
-      ∃ C, SmoothingEstimates n (pMax γ hγ hγ1) C := by
-  obtain ⟨γ₀, hγ₀, hγ₀2, hclose⟩ := Poly.exists_gamma₀_whitney n
-  refine ⟨γ₀, hγ₀, hγ₀2, fun γ hγ hγ1 hγγ₀ => ?_⟩
-  obtain ⟨C, hC0, hbound⟩ := exists_norm_smoothedInterp_le (n := n) hγ hγ1
-  refine ⟨max C (1 / 2), ?_⟩
-  have hest : ∀ N, (∀ i x, ‖(smoothed n N (pMax γ hγ hγ1 N) (pMax_isMaximal N)).Q i x‖ ≤
-      max C (1 / 2) * ‖x‖) ∧ (∀ i, ∀ v ∈ (whitney n N).V i,
-        ‖v - (smoothed n N (pMax γ hγ hγ1 N) (pMax_isMaximal N)).Q i v‖ ≤ 1 / 2 * ‖v‖) := by
-    intro N
-    refine commutingMapOfEq_estimates (mesh_domain n N) (isOpen_mesh_domain n N)
-      (isOpen_cubeDomain n) _ (fun i x => ?_) (fun i v hv => ?_)
-    · rw [LocalElement.smoothedCommutingMap_Q]
-      rcases i with k | k
-      · exact (hbound N k _ (pMax_isAdm N) x).trans
-          (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-      · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
-    · rw [LocalElement.smoothedCommutingMap_Q]
-      rcases i with k | k
-      · obtain ⟨u, rfl⟩ := hv
-        exact hclose γ hγγ₀ N k _ (pMax_isAdm N) u.1 u.2 (sampleOK_pMax _)
-      · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
-  exact ⟨fun N => pMax_isMaximal N, le_max_right _ _, fun N => (hest N).1,
-    fun N => (hest N).2⟩
-
-/-- **The Whitney smoothing estimates with vanishing boundary DOFs for all small `γ`**. -/
-theorem smoothingEstimatesMin_pMin_forall :
-    ∃ γ₀ : ℝ, 0 < γ₀ ∧ γ₀ ≤ 1 / 2 ∧ ∀ (γ : ℝ) (hγ : 0 < γ), γ ≤ γ₀ →
-      ∃ C, SmoothingEstimatesMin n (pMin γ hγ) C := by
-  obtain ⟨γ₀, hγ₀, hγ₀2, hclose⟩ := Poly.exists_gamma₀_whitney n
-  refine ⟨γ₀, hγ₀, hγ₀2, fun γ hγ hγγ₀ => ?_⟩
-  have hγ2 : γ ≤ 1 / 2 := hγγ₀.trans hγ₀2
-  have hγ1 : γ ≤ 1 := by linarith
-  obtain ⟨C, hC0, hbound⟩ := exists_norm_smoothedInterp_le (n := n) hγ hγ1
-  refine ⟨max C (1 / 2), ?_⟩
-  have hest : ∀ N, (∀ i x, ‖(smoothedMin n N (pMin γ hγ N) (pMin_isMinimal N)).Q i x‖ ≤
-      max C (1 / 2) * ‖x‖) ∧ (∀ i, ∀ v ∈ (whitneyMin n N).V i,
-        ‖v - (smoothedMin n N (pMin γ hγ N) (pMin_isMinimal N)).Q i v‖ ≤ 1 / 2 * ‖v‖) := by
-    intro N
-    refine commutingMapOfEqMin_estimates (mesh_domain n N) (isOpen_mesh_domain n N)
-      (isOpen_cubeDomain n) _ (fun i x => ?_) (fun i v hv => ?_)
-    · rw [smoothedCommutingMapMin_Q]
-      rcases i with k | k
-      · exact (hbound N k _ (pMin_isAdm N) x).trans
-          (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-      · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
-    · rw [smoothedCommutingMapMin_Q]
-      rcases i with k | k
-      · obtain ⟨u, rfl⟩ := hv
-        exact hclose γ hγγ₀ N k _ (pMin_isAdm N) u.1
-          ((whitneyElement n).globalSpace₀_le (mesh n N) k u.2) (sampleOK_pMin hγ2 u.2)
       · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   exact ⟨fun N => pMin_isMinimal N, le_max_right _ _, fun N => (hest N).1,
     fun N => (hest N).2⟩

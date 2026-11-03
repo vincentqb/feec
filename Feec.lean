@@ -347,6 +347,7 @@ public import Feec.Models.Cube.Reflection
 public import Feec.Models.Cube.RegularDecomposition
 public import Feec.Models.Cube.RowWiseIdent
 public import Feec.Models.Cube.ShellExtension
+public import Feec.Models.Cube.SmoothingBasic
 public import Feec.Models.Cube.SmoothingEstimates
 public import Feec.Models.Cube.Sobolev
 public import Feec.Models.Cube.SobolevRate
@@ -373,6 +374,7 @@ public import Feec.Models.StarShaped.EigenDense
 public import Feec.Models.StarShaped.FiniteElement
 public import Feec.Models.StarShaped.PolyFiniteElement
 public import Feec.Models.StarShaped.PolySmoothing
+public import Feec.Models.StarShaped.Smoothing
 public import Feec.Models.Torus.BGG
 public import Feec.Models.Torus.DeRham
 public import Feec.Models.Torus.DeRhamGalerkin

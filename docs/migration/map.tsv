@@ -3979,7 +3979,7 @@ Feec.BoxIdent.mem_Ioo_of_coe_mem_halfArc	Feec.Models.Cube.Geometry.mem_Ioo_of_co
 Feec.BoxIdent.mem_Qr_iff_openCube	Feec.Models.Cube.Geometry.mem_Q	generalize
 Feec.BoxIdent.mem_Qr_of_closedBox	Feec.Models.Cube.DeRhamIdent.abs_le_of_faces	generalize
 Feec.BoxIdent.mem_Qr_of_ne_zero	Feec.Models.Cube.Geometry.mem_Q_of_ne_zero	generalize
-Feec.BoxIdent.mem_boxFin	Feec.Models.Cube.RowWise.flip_mem_bandN	generalize
+Feec.BoxIdent.mem_boxFin	Feec.Fourier.Torus.flipAt_mem_bandN	generalize
 Feec.BoxIdent.mem_boxTSD_of	Feec.Models.Cube.Parity.J_two_mem_tsdB	generalize
 Feec.BoxIdent.mem_closure_curlGraph_of_smooth	Feec.Models.Cube.RowWise.mem_closure_curl_of_smooth	generalize
 Feec.BoxIdent.mem_closure_gradGraph_of_smooth	Feec.Models.Cube.RowWise.mem_closure_grad_of_smooth	generalize
@@ -4069,7 +4069,7 @@ Feec.BoxIdent.reflT_apply_ne	Feec.Models.Cube.Geometry.reflB	generalize
 Feec.BoxIdent.reflT_apply_self	Feec.Models.Cube.Geometry.reflB	generalize
 Feec.BoxIdent.reflT_proj_of_face	Feec.Models.Cube.RowWise.reflB_proj_of_face	generalize
 Feec.BoxIdent.reflT_reflT	Feec.Models.Cube.Geometry.reflB_reflB	generalize
-Feec.BoxIdent.refl_mem_boxFin_iff	Feec.Models.Cube.RowWise.flip_mem_bandN	generalize
+Feec.BoxIdent.refl_mem_boxFin_iff	Feec.Fourier.Torus.flipAt_mem_bandN	generalize
 Feec.BoxIdent.refl_neg'	-	deleted-helper
 Feec.BoxIdent.rep	Feec.Models.Cube.Geometry.rep	rename
 Feec.BoxIdent.rep_proj	Feec.Models.Cube.Geometry.rep_proj	rename

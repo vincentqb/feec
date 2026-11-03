@@ -585,7 +585,9 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
   `J⁻¹ Π_h R` a uniformly bounded cochain projection (`Feec.Models.Cube.SmoothingEstimates`, from
   the inverse estimates of `Feec.FiniteElement.InverseEstimate`), the Poincaré inequalities of
   `HΛ` and `H̊Λ` (`Feec.Models.Cube.DeRhamIdentFEM`) and the Whitney interpolation error
-  (`Feec.FiniteElement.WhitneyInterpolation`, `Feec.Models.Cube.WhitneyApprox`,
+  (`Feec.FiniteElement.WhitneyInterpolation`; in the graph norm of `HΛ(Ω)`, `H̊Λ(Ω)` for any
+  element family on any mesh of `Ω`, `Feec.FiniteElement.GlobalInterpolation`;
+  `Feec.Models.Cube.WhitneyApprox`,
   `Feec.Models.Cube.WhitneyRate`). `Feec.Models.Cube.FiniteElementConvergence` states stability,
   quasi-optimality, `O(h)` rates and the semi-discrete Hodge wave equation with no hypothesis
   beyond the data and, for the rates, `C²` regularity of the solution; Maxwell (PMC and PEC) is

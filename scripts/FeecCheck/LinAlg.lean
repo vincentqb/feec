@@ -17,8 +17,9 @@ cochain projections (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.infSup`
 in the graph norm; for projections bounded in `W` in degree `j`,
 `Feec.HilbertComplex.Subcomplex.CochainProjection.exists_isFortinOperator_of_norm_le`).
 
-On the way, the testing lemmas `Feec.TimeStepping.inner_eq_sum_repr` and
-`Feec.TimeStepping.eq_of_inner_basis` were generalized from `ℝ` to every `RCLike` field, and the
+On the way, the testing lemma `Feec.TimeStepping.inner_eq_sum_repr` was generalized from `ℝ` to
+every `RCLike` field, `Feec.TimeStepping.eq_of_inner_basis` was replaced by Mathlib's
+`InnerProductSpace.ext_inner_left_basis`, and the
 continuous inf-sup hypothesis of Fortin's lemma
 (`Feec.Variational.IsFortinOperator.discrete_infSup`,
 `Feec.Variational.existsUnique_discrete_isSaddleSolution`) is now required on `Yₕ` only. The
@@ -44,7 +45,7 @@ theorem linalg_old_inner_eq_sum_repr {W : Type*} [NormedAddCommGroup W] [InnerPr
 theorem linalg_old_eq_of_inner_basis {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
     {m : Type*} [Fintype m] (b : Module.Basis m ℝ W) {y y' : W}
     (h : ∀ i, ⟪b i, y⟫ = ⟪b i, y'⟫) : y = y' :=
-  TimeStepping.eq_of_inner_basis b h
+  InnerProductSpace.ext_inner_left_basis b h
 
 section Normed
 

@@ -58,13 +58,6 @@ def IsLeapfrog (L : X →L[𝕜] X) (τ : ℝ) (u : ℕ → X) : Prop :=
 def leapfrogEnergy (L : X →L[𝕜] X) (τ : ℝ) (a b : X) : ℝ :=
   ‖b‖ ^ 2 + ‖a‖ ^ 2 - 2 * τ * RCLike.re ⟪L a, b⟫
 
-/-- `re ⟪x - y, x + y⟫ = ‖x‖² - ‖y‖²`. -/
-private theorem re_inner_sub_add (x y : X) :
-    RCLike.re ⟪x - y, x + y⟫ = ‖x‖ ^ 2 - ‖y‖ ^ 2 := by
-  rw [inner_sub_left, inner_add_right, inner_add_right, _root_.map_sub, _root_.map_add,
-    _root_.map_add, inner_self_eq_norm_sq, inner_self_eq_norm_sq, inner_re_symm y x]
-  ring
-
 /-- **The leapfrog energy identity**: for skew `L` and `b' = a + 2 τ L b + r`,
 `E(b, b') = E(a, b) + re ⟪r, b' + a⟫`; for `r = 0` the energy is conserved. -/
 theorem leapfrogEnergy_succ (hL : ∀ x y, ⟪L x, y⟫ = -⟪x, L y⟫) {a b b' r : X}

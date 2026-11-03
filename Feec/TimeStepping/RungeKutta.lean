@@ -21,7 +21,6 @@ inequality) and converge at their order (Brenner–Thomée).
 Each tableau below gives a rational scheme of the same name in `RationalScheme`, with its order
 (`HasOrder`) and A-stability (`IsAStable`, or `IsSymmetric` for the Gauss methods):
 
-* `implicitEuler` (one-stage Radau IIA): `R(z) = 1/(1 - z)`, order `1` (`implicitEuler_eq_theta`);
 * `implicitMidpoint` (one-stage Gauss): `R(z) = (1 + z/2)/(1 - z/2)`, order `2`, symmetric: the
   Crank–Nicolson scheme (`implicitMidpoint_eq_theta`);
 * `gaussLegendre2`: `R(z) = (1 + z/2 + z²/12)/(1 - z/2 + z²/12)`, the `(2, 2)` Padé approximation,
@@ -155,21 +154,10 @@ theorem norm_div_le_one_of_sq {n d : ℂ} (hd : d ≠ 0) (h : ‖n‖ ^ 2 ≤ �
   rw [norm_div, div_le_one (norm_pos_iff.2 hd)]
   exact (sq_le_sq₀ (norm_nonneg _) (norm_nonneg _)).1 h
 
-/-! ### Implicit Euler and the implicit midpoint rule -/
-
-/-- **Implicit Euler**, the one-stage Radau IIA method. [HairerWanner1996], §IV.5 -/
-def implicitEuler : ButcherTableau 1 := ⟨!![1], ![1]⟩
+/-! ### The implicit midpoint rule -/
 
 /-- **The implicit midpoint rule**, the one-stage Gauss method. [HairerWanner1996], §IV.5 -/
 def implicitMidpoint : ButcherTableau 1 := ⟨!![1 / 2], ![1]⟩
-
-theorem implicitEuler_stability :
-    implicitEuler.stabilityNum = (RationalScheme.theta 1 one_pos).num ∧
-      implicitEuler.stabilityDen = (RationalScheme.theta 1 one_pos).den :=
-  ⟨Polynomial.funext fun x => by
-    rw [eval_stabilityNum, det_fin_one]; simp [implicitEuler, RationalScheme.theta],
-   Polynomial.funext fun x => by
-    rw [eval_stabilityDen, det_fin_one]; simp [implicitEuler, RationalScheme.theta]⟩
 
 theorem implicitMidpoint_stability :
     implicitMidpoint.stabilityNum = (RationalScheme.theta (1 / 2) (by norm_num)).num ∧
@@ -269,16 +257,6 @@ open ButcherTableau
 
 namespace RationalScheme
 
-/-- The rational scheme of implicit Euler, `r(z) = 1/(1 - z)`. -/
-def implicitEuler : RationalScheme :=
-  ButcherTableau.implicitEuler.toRationalScheme
-    (by rw [implicitEuler_stability.1, implicitEuler_stability.2]
-        exact (RationalScheme.theta 1 one_pos).natDegree_num_le)
-    (by rw [implicitEuler_stability.2]; exact (RationalScheme.theta 1 one_pos).aeval_den_ne_zero)
-
-theorem implicitEuler_eq_theta : implicitEuler = theta 1 one_pos :=
-  RationalScheme.ext implicitEuler_stability.1 implicitEuler_stability.2
-
 /-- The rational scheme of the implicit midpoint rule, `r(z) = (1 + z/2)/(1 - z/2)`
 (Crank–Nicolson). -/
 def implicitMidpoint : RationalScheme :=
@@ -307,12 +285,6 @@ def gaussLegendre2 : RationalScheme :=
       intro z hz
       convert quadratic_ne_zero (a := 1 / 2) (b := 1 / 12) (by norm_num) (by norm_num) hz using 1
       simp)
-
-theorem isAStable_implicitEuler : implicitEuler.IsAStable := by
-  rw [implicitEuler_eq_theta]; exact isAStable_theta (by norm_num)
-
-theorem hasOrder_implicitEuler : implicitEuler.HasOrder 1 := by
-  rw [implicitEuler_eq_theta]; exact hasOrder_theta one_pos
 
 theorem isSymmetric_implicitMidpoint : implicitMidpoint.IsSymmetric := by
   rw [implicitMidpoint_eq_theta]; exact isSymmetric_theta_half

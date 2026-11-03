@@ -97,9 +97,8 @@ theorem tendsto_resolvent_yosida (hA : A.IsMDissipative) {z : 𝕜} (hz : 0 < RC
   rw [tendsto_iff_norm_sub_tendsto_zero]
   refine squeeze_zero (fun _ => norm_nonneg _) (fun m => ?_) hA'
   rw [e]
-  exact ((Operator.resolvent _ z).le_opNorm _).trans (mul_le_mul_of_nonneg_right
-    ((hRm m).norm_le_of_isDissipative (isMDissipative_yosida hA m).dissipative hz)
-    (norm_nonneg _))
+  exact (Operator.resolvent _ z).le_of_opNorm_le
+    ((hRm m).norm_le_of_isDissipative (isMDissipative_yosida hA m).dissipative hz) _
 
 end Feec.LumerPhillips
 

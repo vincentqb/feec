@@ -37,32 +37,18 @@ layers.
 ## θ-schemes for bounded generators
 
 `ContinuousLinearMap.isMDissipative_toPMap_top`: a bounded dissipative operator on a Hilbert space
-is m-dissipative, so `Feec.TimeStepping.thetaStep` applies to it. For real `θ > 0` and `τ > 0`,
-`r_θ(τ L) = 1 + τ L + θ τ² W L²` with `W = (1 - θ τ L)⁻¹`, `‖W‖ ≤ 1`
-(`exists_thetaStep_apply_eq`); for
-`θ = 1/2`, `r_{1/2}(τ L) = 1 + τ L + τ²/2 L² + τ³/4 W L³` (`exists_thetaStep_half_apply_eq`). Hence
-(`isConsistent_thetaStep`, `isConsistent_thetaStep_half`) the θ-scheme is consistent of order `1`
-with `K = θ + 1/2`, and Crank–Nicolson of order `2` with `K = 5/12`, and:
-
-* **`norm_implicitEuler_pow_sub_exp_le`**: implicit Euler,
-  `‖(1 - τ L)⁻ⁿ y - e^{tL} y‖ ≤ 3/2 t τ ‖L² y‖`;
-* **`norm_cayley_pow_sub_exp_le`**: Crank–Nicolson (`cayley`),
-  `‖cayley(L, τ/2)ⁿ y - e^{tL} y‖ ≤ 5/12 t τ² ‖L³ y‖`;
-* `norm_thetaStep_pow_sub_exp_le`: the θ-scheme, `re θ ≥ 1/2`, `‖·‖ ≤ (θ + 1/2) t τ ‖L² y‖`;
-
-at `t = n τ`, for every bounded dissipative `L`, the rate of [BrennerThomee1979] (smooth data).
-`thetaStep_mem_of_mapsTo`: a closed subspace `K` with `L K ⊆ K` is kept by the θ-scheme (discrete
-constraint propagation, for instance for a discrete Gauss law).
-
-The constants come from bounding the two remainders separately and are not sharp: the leading
-error constant of Crank–Nicolson is `1/12` (`e^z - r_{1/2}(z) = -z³/12 + O(z⁴)`), not `5/12`.
+is m-dissipative, so `Feec.TimeStepping.thetaStep` applies to it, and is power bounded for
+`re θ ≥ 1/2` (`norm_thetaStep_pow_le`). `thetaStep_mem_of_mapsTo`: a closed subspace `K` with
+`L K ⊆ K` is kept by the θ-scheme (discrete constraint propagation, for instance for a discrete
+Gauss law). The θ-schemes are rational schemes (`RationalScheme.apply_theta`); their consistency
+and global errors (`isConsistent_thetaStep`, `norm_thetaStep_pow_sub_exp_le`,
+`norm_cayley_pow_sub_exp_le`) are in `Feec.TimeStepping.Rational`.
 
 **Smoothing** (`timeAvg`, `norm_pow_timeAvg_iterate_le_of_norm_exp_le`,
 `norm_timeAvg_iterate_sub_le_of_norm_exp_le`): on a Banach space with `‖e^{sL}‖ ≤ M`, the time
 average `A_δ y = δ⁻¹ ∫₀^δ e^{sL} y ds` satisfies `‖Lᵏ A_δᵏ y‖ ≤ ((M + 1)/δ)ᵏ ‖y‖` and
-`‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L` (for dissipative `L`,
-`M = 1`: `(2/δ)ᵏ` and `k`, `norm_pow_timeAvg_iterate_le`, `norm_timeAvg_iterate_sub_le`); it
-turns the rate for smooth data into convergence for all data (downstream:
+`‖A_δᵏ y - y‖ ≤ (Σ_{j<k} Mʲ) sup_{s ≤ δ} ‖e^{sL} y - y‖`, uniformly in `L`; it turns the rate
+for smooth data into convergence for all data (downstream:
 `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, and through it
 `Feec.HilbertComplex.DissipFEEC.TimeScheme.converges`).
 
@@ -125,8 +111,7 @@ theorem norm_sub_le_of_step {M : ℝ} {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ �
     ‖U n - w n‖ ≤ M * (‖U 0 - w 0‖ + ∑ k ∈ range n, ‖w (k + 1) - P (w k) - g k‖) := by
   have hM : 0 ≤ M := (norm_nonneg _).trans (hP 0 (Nat.zero_le _))
   rw [sub_eq_sum_of_step hU n, mul_add, mul_sum]
-  refine (norm_add_le _ _).trans (add_le_add (((P ^ n).le_opNorm _).trans
-    (mul_le_mul_of_nonneg_right (hP n le_rfl) (norm_nonneg _))) ?_)
+  refine (norm_add_le _ _).trans (add_le_add ((P ^ n).le_of_opNorm_le (hP n le_rfl) _) ?_)
   refine (norm_sum_le _ _).trans ?_
   rw [← sum_range_reflect (fun k => M * ‖w (k + 1) - P (w k) - g k‖) n]
   refine sum_le_sum fun j hj => ?_
@@ -136,7 +121,7 @@ theorem norm_sub_le_of_step {M : ℝ} {n : ℕ} (hP : ∀ k ≤ n, ‖P ^ k‖ �
       ‖P (w (n - 1 - j)) + g (n - 1 - j) - w (n - j)‖ := by
     rw [← norm_neg]; congr 1; abel
   rw [e]
-  exact ((P ^ j).le_opNorm _).trans (mul_le_mul_of_nonneg_right (hP j hj'.le) (norm_nonneg _))
+  exact (P ^ j).le_of_opNorm_le (hP j hj'.le) _
 
 /-- `‖Pᵏ‖ ≤ aᵏ` for `‖P‖ ≤ a`. -/
 theorem norm_pow_le_pow {P : X →L[𝕜] X} {a : ℝ} (hP : ‖P‖ ≤ a) (k : ℕ) : ‖P ^ k‖ ≤ a ^ k := by
@@ -173,8 +158,7 @@ theorem norm_S_sub_taylor_le {T M : ℝ} (hM : ∀ t ∈ Icc 0 T, ‖G.S t‖ �
   induction p with
   | zero =>
     intro u _ t ht
-    simpa using ((G.S t).le_opNorm (u 0)).trans
-      (mul_le_mul_of_nonneg_right (hM t ht) (norm_nonneg _))
+    simpa using (G.S t).le_of_opNorm_le (hM t ht) (u 0)
   | succ p ih =>
     intro u hu t ht
     set F : ℝ → E := fun s => G.S s (u 0) - ∑ j ∈ range (p + 1), (s ^ j / j.factorial) • u j
@@ -250,7 +234,7 @@ theorem norm_pow_apply_sub_S_le {P : E →L[𝕜] E} {n : ℕ} {τ : ℝ} (hτ :
     rw [sub_zero, e1, norm_sub_rev]
     refine (hc (fun j => G.S (k * τ) (u j)) fun j hj => G.S_mem_graph (hu j hj) hkτ).trans ?_
     have hn : ‖G.S (k * τ) (u (p + 1))‖ ≤ M * ‖u (p + 1)‖ :=
-      ((G.S _).le_opNorm _).trans (mul_le_mul_of_nonneg_right (hS _ hkn) (norm_nonneg _))
+      (G.S _).le_of_opNorm_le (hS _ hkn) _
     exact mul_le_mul_of_nonneg_left hn (by positivity)
   refine h.trans ?_
   rw [hw0, norm_zero, zero_add]
@@ -363,8 +347,7 @@ theorem norm_timeAvg_le_of_norm_exp_le {M δ : ℝ}
   have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := 0) (b := δ)
     (f := fun s : ℝ => exp ((s : 𝕜) • L) y) (C := M * ‖y‖) fun s hs => by
       rw [Set.uIoc_of_le hδ.le] at hs
-      exact ((exp ((s : 𝕜) • L)).le_opNorm y).trans
-        (mul_le_mul_of_nonneg_right (hL s ⟨hs.1.le, hs.2⟩) (norm_nonneg _))
+      exact (exp ((s : 𝕜) • L)).le_of_opNorm_le (hL s ⟨hs.1.le, hs.2⟩) y
   rw [sub_zero, abs_of_pos hδ] at h
   calc δ⁻¹ * ‖∫ s in (0 : ℝ)..δ, exp ((s : 𝕜) • L) y‖ ≤ δ⁻¹ * (M * ‖y‖ * δ) := by gcongr
     _ = M * ‖y‖ := by field_simp
@@ -374,8 +357,7 @@ theorem norm_apply_timeAvg_le_of_norm_exp_le {M δ : ℝ} (hL : ‖exp ((δ : �
     (hδ : 0 < δ) (y : X) : ‖L (timeAvg L δ y)‖ ≤ (M + 1) / δ * ‖y‖ := by
   rw [apply_timeAvg_eq, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hδ.le)]
   have h1 := norm_sub_le (exp ((δ : 𝕜) • L) y) y
-  have h2 := ((exp ((δ : 𝕜) • L)).le_opNorm y).trans
-    (mul_le_mul_of_nonneg_right hL (norm_nonneg y))
+  have h2 := (exp ((δ : 𝕜) • L)).le_of_opNorm_le hL y
   calc δ⁻¹ * ‖exp ((δ : 𝕜) • L) y - y‖ ≤ δ⁻¹ * ((M + 1) * ‖y‖) := by gcongr; linarith
     _ = _ := by ring
 
@@ -482,7 +464,7 @@ theorem isConsistent_of_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P ρ : X 
   have h2 : ‖τ ^ (p + 1) • ρ ((L ^ (p + 1)) y)‖ ≤ τ ^ (p + 1) * (K₀ * ‖(L ^ (p + 1)) y‖) := by
     rw [norm_smul, Real.norm_of_nonneg (by positivity)]
     gcongr
-    exact (ρ.le_opNorm _).trans (mul_le_mul_of_nonneg_right hρ (norm_nonneg _))
+    exact ρ.le_of_opNorm_le hρ _
   have e : P y - exp ((τ : 𝕜) • L) y = τ ^ (p + 1) • ρ ((L ^ (p + 1)) y) -
       (exp ((τ : 𝕜) • L) y - ∑ j ∈ range (p + 1), (τ ^ j / j.factorial) • (L ^ j) y) := by
     rw [hP]; abel
@@ -505,25 +487,6 @@ theorem norm_pow_apply_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {P 
   simpa using norm_pow_apply_sub_exp_le_of_norm_exp_le (fun t ht => norm_exp_le_one hL ht) hP hτ
     hK hc y
 
-/-! ### Smoothing by time averages of dissipative generators -/
-
-/-- `‖A_δ y‖ ≤ ‖y‖` for dissipative `L`, `δ > 0`. -/
-theorem norm_timeAvg_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ) (y : X) :
-    ‖timeAvg L δ y‖ ≤ ‖y‖ := by
-  simpa using norm_timeAvg_le_of_norm_exp_le (fun s hs => norm_exp_le_one hL hs.1) hδ y
-
-/-- **Smoothing**: `‖Lᵏ A_δᵏ y‖ ≤ (2/δ)ᵏ ‖y‖`, uniformly in the bounded dissipative `L`. -/
-theorem norm_pow_timeAvg_iterate_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
-    (k : ℕ) (y : X) : ‖(L ^ k) ((timeAvg L δ)^[k] y)‖ ≤ (2 / δ) ^ k * ‖y‖ := by
-  simpa [one_add_one_eq_two] using
-    norm_pow_timeAvg_iterate_le_of_norm_exp_le (norm_exp_le_one hL hδ.le) hδ k y
-
-/-- `‖A_δᵏ y - y‖ ≤ k ‖A_δ y - y‖` (contraction and linearity). -/
-theorem norm_timeAvg_iterate_sub_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {δ : ℝ} (hδ : 0 < δ)
-    (k : ℕ) (y : X) : ‖(timeAvg L δ)^[k] y - y‖ ≤ k * ‖timeAvg L δ y - y‖ := by
-  simpa using
-    norm_timeAvg_iterate_sub_le_of_norm_exp_le (fun s hs => norm_exp_le_one hL hs.1) hδ k y
-
 /-! ### θ-schemes of bounded dissipative operators -/
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
@@ -540,150 +503,12 @@ theorem _root_.ContinuousLinearMap.isMDissipative_toPMap_top (L : X →L[𝕜] X
     exact hL x
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
-/-- The resolvent `R = (λ - L)⁻¹`, `λ = (θ τ)⁻¹`, of a bounded dissipative `L` (real `θ, τ > 0`):
-`λ R y - L R y = y`, `R L = L R`, `‖λ R‖ ≤ 1`, and the θ-scheme is `(θ² τ)⁻¹ R - (1 - θ)/θ`. -/
-private theorem thetaStep_resolvent (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ τ : ℝ} (hθ : 0 < θ)
-    (hτ : 0 < τ) :
-    let R := resolvent ((L : X →ₗ[𝕜] X).toPMap ⊤) ((θ : 𝕜) * (τ : 𝕜))⁻¹
-    (∀ y, ((θ : 𝕜) * (τ : 𝕜))⁻¹ • R y - L (R y) = y) ∧ (∀ y, R (L y) = L (R y)) ∧
-      ‖((θ : 𝕜) * (τ : 𝕜))⁻¹ • R‖ ≤ 1 := by
-  intro R
-  have hA := L.isMDissipative_toPMap_top hL
-  have hμ : 0 < (θ * τ)⁻¹ := by positivity
-  have e : ((θ : 𝕜) * (τ : 𝕜))⁻¹ = (((θ * τ)⁻¹ : ℝ) : 𝕜) := by push_cast; rfl
-  have hR : IsResolvent ((L : X →ₗ[𝕜] X).toPMap ⊤) ((θ : 𝕜) * (τ : 𝕜))⁻¹ R := by
-    rw [e]; exact e ▸ hA.isResolvent hμ
-  have h1 : ∀ y, ((θ : 𝕜) * (τ : 𝕜))⁻¹ • R y - L (R y) = y := hR.sub_apply
-  refine ⟨h1, fun y => ?_, ?_⟩
-  · have h2 : R (((θ : 𝕜) * (τ : 𝕜))⁻¹ • y - L y) = y := hR.apply_sub ⟨y, trivial⟩
-    rw [_root_.map_sub, _root_.map_smul] at h2
-    exact sub_right_injective (h2.trans (h1 y).symm)
-  · rw [norm_smul]
-    have hn : ‖R‖ ≤ ((θ * τ)⁻¹)⁻¹ := by
-      have := hA.norm_resolvent_le hμ
-      rwa [← e] at this
-    rw [e, RCLike.norm_ofReal, abs_of_pos hμ]
-    calc (θ * τ)⁻¹ * ‖R‖ ≤ (θ * τ)⁻¹ * ((θ * τ)⁻¹)⁻¹ := by gcongr
-      _ = 1 := mul_inv_cancel₀ hμ.ne'
-
-/-- **The θ-scheme of a bounded dissipative operator, expanded to first order**: for real
-`θ > 0`, `τ > 0`, `r_θ(τ L) y = y + τ L y + τ² (θ W) (L² y)` with `W = (1 - θ τ L)⁻¹`,
-`‖θ W‖ ≤ θ`. -/
-theorem exists_thetaStep_apply_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ τ : ℝ} (hθ : 0 < θ)
-    (hτ : 0 < τ) : ∃ ρ : X →L[𝕜] X, ‖ρ‖ ≤ θ ∧ ∀ y,
-      thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) θ τ y =
-        ∑ j ∈ range 2, (τ ^ j / j.factorial) • (L ^ j) y + τ ^ 2 • ρ ((L ^ 2) y) := by
-  obtain ⟨h1, h2, h3⟩ := thetaStep_resolvent (𝕜 := 𝕜) hL hθ hτ
-  set R := resolvent ((L : X →ₗ[𝕜] X).toPMap ⊤) ((θ : 𝕜) * (τ : 𝕜))⁻¹
-  refine ⟨((θ : 𝕜) * ((θ : 𝕜) * (τ : 𝕜))⁻¹) • R, ?_, fun y => ?_⟩
-  · rw [mul_smul, norm_smul, RCLike.norm_ofReal, abs_of_pos hθ]
-    exact mul_le_of_le_one_right hθ.le h3
-  have hθ' : (θ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hθ.ne'
-  have hτ' : (τ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hτ.ne'
-  have hL1 : L (R y) = ((θ : 𝕜) * (τ : 𝕜))⁻¹ • R y - y := by
-    have h := h1 y; generalize R y = r at h ⊢; rw [← h]; abel
-  have hL2 : R ((L ^ 2) y) =
-      ((θ : 𝕜) * (τ : 𝕜))⁻¹ • (((θ : 𝕜) * (τ : 𝕜))⁻¹ • R y - y) - L y := by
-    rw [show (L ^ 2) y = L (L y) by simp [pow_succ], h2, h2, hL1, _root_.map_sub,
-      _root_.map_smul, hL1]
-  simp only [thetaStep, sum_range_succ, sum_range_zero, _root_.sub_apply, _root_.smul_apply,
-    pow_zero, pow_one, Nat.factorial_zero, Nat.factorial_one, Nat.cast_one, div_one, one_smul,
-    zero_add, ContinuousLinearMap.one_def, ContinuousLinearMap.id_apply]
-  rw [hL2]
-  simp only [RCLike.real_smul_eq_coe_smul (K := 𝕜)]
-  match_scalars <;> field_simp <;> ring
-
-/-- **Crank–Nicolson of a bounded dissipative operator, expanded to second order**: for
-`τ > 0`, `r_{1/2}(τ L) y = y + τ L y + τ²/2 L² y + τ³ (W/4) (L³ y)` with `W = (1 - τ L / 2)⁻¹`,
-`‖W/4‖ ≤ 1/4`. -/
-theorem exists_thetaStep_half_apply_eq (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {τ : ℝ}
-    (hτ : 0 < τ) : ∃ ρ : X →L[𝕜] X, ‖ρ‖ ≤ 1 / 4 ∧ ∀ y,
-      thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) ((1 / 2 : ℝ) : 𝕜) τ y =
-        ∑ j ∈ range 3, (τ ^ j / j.factorial) • (L ^ j) y + τ ^ 3 • ρ ((L ^ 3) y) := by
-  obtain ⟨h1, h2, h3⟩ := thetaStep_resolvent (𝕜 := 𝕜) hL (θ := 1 / 2) (by norm_num) hτ
-  set R := resolvent ((L : X →ₗ[𝕜] X).toPMap ⊤) (((1 / 2 : ℝ) : 𝕜) * (τ : 𝕜))⁻¹
-  refine ⟨((1 / 4 : 𝕜) * (((1 / 2 : ℝ) : 𝕜) * (τ : 𝕜))⁻¹) • R, ?_, fun y => ?_⟩
-  · rw [mul_smul, norm_smul]
-    have : ‖(1 / 4 : 𝕜)‖ = 1 / 4 := by
-      rw [show (1 / 4 : 𝕜) = ((1 / 4 : ℝ) : 𝕜) by push_cast; rfl, RCLike.norm_ofReal]
-      norm_num
-    rw [this]
-    exact mul_le_of_le_one_right (by norm_num) h3
-  have hτ' : (τ : 𝕜) ≠ 0 := RCLike.ofReal_ne_zero.2 hτ.ne'
-  set c : 𝕜 := (((1 / 2 : ℝ) : 𝕜) * (τ : 𝕜))⁻¹
-  have hL1 : L (R y) = c • R y - y := by
-    have h := h1 y; generalize R y = r at h ⊢; rw [← h]; abel
-  have hL3 : R ((L ^ 3) y) = c • (c • (c • R y - y) - L y) - L (L y) := by
-    rw [show (L ^ 3) y = L (L (L y)) by simp [pow_succ], h2, h2, h2, hL1, _root_.map_sub,
-      _root_.map_smul, hL1, _root_.map_sub, _root_.map_smul, _root_.map_sub, _root_.map_smul,
-      hL1]
-  simp only [thetaStep, sum_range_succ, sum_range_zero, _root_.sub_apply, _root_.smul_apply,
-    pow_zero, pow_one, Nat.factorial, Nat.cast_one, Nat.succ_eq_add_one, div_one, one_smul,
-    zero_add, ContinuousLinearMap.one_def, ContinuousLinearMap.id_apply]
-  rw [hL3, show (L ^ 2) y = L (L y) by simp [pow_succ]]
-  simp only [c, RCLike.real_smul_eq_coe_smul (K := 𝕜)]
-  match_scalars <;> field_simp <;> ring
-
-/-- **The θ-scheme is consistent of order `1`** with constant `θ + 1/2` (real `θ > 0`, `τ > 0`),
-uniformly in the bounded dissipative `L`. [Thomee2006], Ch. 7 -/
-theorem isConsistent_thetaStep (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ τ : ℝ} (hθ : 0 < θ)
-    (hτ : 0 < τ) :
-    IsConsistent L (thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) θ τ) τ 1 (θ + 1 / 2) := by
-  obtain ⟨ρ, hρ, hP⟩ := exists_thetaStep_apply_eq (𝕜 := 𝕜) hL hθ hτ
-  have := isConsistent_of_eq hL hτ.le hρ hP
-  rwa [show θ + 1 / 2 = θ + 1 / ((1 + 1).factorial : ℝ) by norm_num [Nat.factorial]]
-
-/-- **Crank–Nicolson is consistent of order `2`** with constant `5/12` (`τ > 0`), uniformly in
-the bounded dissipative `L`. [Thomee2006], Ch. 7 -/
-theorem isConsistent_thetaStep_half (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {τ : ℝ} (hτ : 0 < τ) :
-    IsConsistent L (thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) ((1 / 2 : ℝ) : 𝕜) τ) τ 2 (5 / 12) := by
-  obtain ⟨ρ, hρ, hP⟩ := exists_thetaStep_half_apply_eq (𝕜 := 𝕜) hL hτ
-  have := isConsistent_of_eq hL hτ.le hρ hP
-  rwa [show (5 / 12 : ℝ) = 1 / 4 + 1 / ((2 + 1).factorial : ℝ) by norm_num [Nat.factorial]]
-
-omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
 /-- The θ-scheme of a bounded dissipative operator is power bounded by `1` (`re θ ≥ 1/2`,
 `τ > 0`). -/
 theorem norm_thetaStep_pow_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ : 𝕜}
     (hθ : 1 / 2 ≤ RCLike.re θ) {τ : ℝ} (hτ : 0 < τ) (n : ℕ) :
     ‖thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) θ τ ^ n‖ ≤ 1 :=
   norm_pow_le_one (norm_thetaStep_le (L.isMDissipative_toPMap_top hL) hθ hτ) n
-
-/-- **The global error of the θ-scheme** (`1/2 ≤ θ`, real): at `t = n τ`,
-`‖r_θ(τ L)ⁿ y - e^{tL} y‖ ≤ (θ + 1/2) t τ ‖L² y‖` for every bounded dissipative `L`.
-[BrennerThomee1979]; [Thomee2006], Ch. 7 -/
-theorem norm_thetaStep_pow_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {θ τ : ℝ}
-    (hθ : 1 / 2 ≤ θ) (hτ : 0 < τ) (n : ℕ) (y : X) :
-    ‖(thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) θ τ ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤
-      (θ + 1 / 2) * (n * τ) * τ * ‖(L ^ 2) y‖ := by
-  have := norm_pow_apply_sub_exp_le hL (n := n) (M := 1)
-    (fun k _ => norm_thetaStep_pow_le hL (by simpa using hθ) hτ k) hτ.le (by linarith)
-    (isConsistent_thetaStep hL (by linarith) hτ) y
-  simpa using this
-
-/-- **The global error of implicit Euler**: at `t = n τ`,
-`‖(1 - τ L)⁻ⁿ y - e^{tL} y‖ ≤ 3/2 t τ ‖L² y‖` for every bounded dissipative `L`.
-[Thomee2006], Ch. 7 -/
-theorem norm_implicitEuler_pow_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {τ : ℝ}
-    (hτ : 0 < τ) (n : ℕ) (y : X) :
-    ‖(thetaStep ((L : X →ₗ[𝕜] X).toPMap ⊤) 1 τ ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤
-      3 / 2 * (n * τ) * τ * ‖(L ^ 2) y‖ := by
-  have := norm_thetaStep_pow_sub_exp_le (𝕜 := 𝕜) hL (θ := 1) (by norm_num) hτ n y
-  norm_num at this ⊢
-  exact this
-
-/-- **The global error of Crank–Nicolson** (`cayley` with half step `τ/2`): at `t = n τ`,
-`‖cayley(L, τ/2)ⁿ y - e^{tL} y‖ ≤ 5/12 t τ² ‖L³ y‖` for every bounded dissipative `L`.
-[BrennerThomee1979]; [Thomee2006], Ch. 7 -/
-theorem norm_cayley_pow_sub_exp_le (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {τ : ℝ} (hτ : 0 < τ)
-    (n : ℕ) (y : X) :
-    ‖(cayley ((L : X →ₗ[𝕜] X).toPMap ⊤) (τ / 2) ^ n) y - exp (((n * τ : ℝ) : 𝕜) • L) y‖ ≤
-      5 / 12 * (n * τ) * τ ^ 2 * ‖(L ^ 3) y‖ := by
-  rw [cayley_half_eq_thetaStep]
-  have := norm_pow_apply_sub_exp_le hL (n := n) (M := 1)
-    (fun k _ => norm_thetaStep_pow_le hL (by rw [RCLike.ofReal_re]) hτ k) hτ.le (by norm_num)
-    (isConsistent_thetaStep_half hL hτ) y
-  simpa using this
 
 omit [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] in
 /-- **Discrete constraint propagation for closed invariant subspaces**: if `L K ⊆ K` for a closed

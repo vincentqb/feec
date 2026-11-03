@@ -123,8 +123,7 @@ theorem norm_proj_le (h : κ) : ‖B.proj h‖ ≤ B.boundConst :=
 /-- **Stability of the reading map**: `‖v‖ ≤ C ‖ιₕ v‖` (from `πₕ ιₕ = 1`). -/
 theorem norm_le_norm_incl (h : κ) (v : B.X h) : ‖v‖ ≤ B.boundConst * ‖B.incl h v‖ :=
   calc ‖v‖ = ‖B.proj h (B.incl h v)‖ := by rw [B.proj_incl]
-    _ ≤ ‖B.proj h‖ * ‖B.incl h v‖ := (B.proj h).le_opNorm _
-    _ ≤ _ := mul_le_mul_of_nonneg_right (B.norm_proj_le h) (norm_nonneg _)
+    _ ≤ _ := (B.proj h).le_of_opNorm_le (B.norm_proj_le h) _
 
 /-- The semidiscrete solution `ιₕ e^{tLₕ} v`. -/
 def sol (h : κ) (v : B.X h) (t : ℝ) : E := B.incl h (exp ((t : 𝕜) • B.L h) v)
@@ -150,8 +149,7 @@ theorem norm_sol_le {T : ℝ} (h : κ) (v : B.X h) {n : ℕ} (hn : (n : ℝ) * �
     ‖Θ.sol h v n‖ ≤ ‖B.incl h‖ * Θ.M T * ‖v‖ := by
   rw [mul_assoc]
   refine ((B.incl h).le_opNorm _).trans (mul_le_mul_of_nonneg_left ?_ (norm_nonneg _))
-  exact ((Θ.P h ^ n).le_opNorm v).trans
-    (mul_le_mul_of_nonneg_right (Θ.stable T h n hn) (norm_nonneg _))
+  exact (Θ.P h ^ n).le_of_opNorm_le (Θ.stable T h n hn) v
 
 /-- **The temporal error**: `‖ιₕ e^{tₙ Lₕ} v - ιₕ Pₕⁿ v‖ ≤ ‖ιₕ‖ M(T) K M tₙ τₕᵖ ‖Lₕ^{p+1} v‖` for
 `tₙ ≤ T`. [BrennerThomee1979] -/

@@ -67,7 +67,7 @@ With block mass matrix `M = diag(M₀, M₁, M₂)` (`blockMass`) and stiffness
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open Matrix
+open Matrix InnerProductSpace
 
 @[expose] public noncomputable section
 
@@ -152,14 +152,6 @@ theorem inner_eq_sum_repr (b : Module.Basis n 𝕜 E) (w y : E) :
     ⟪w, y⟫_𝕜 = ∑ j, b.repr y j * ⟪w, b j⟫_𝕜 :=
   inner_map_eq_sum_repr b LinearMap.id w y
 
-omit [DecidableEq n] in
-/-- Testing against a basis determines a vector. -/
-theorem eq_of_inner_basis (b : Module.Basis n 𝕜 E) {y y' : E}
-    (h : ∀ i, ⟪b i, y⟫_𝕜 = ⟪b i, y'⟫_𝕜) : y = y' := by
-  refine ext_inner_left 𝕜 fun w => ?_
-  rw [← b.sum_repr w, sum_inner, sum_inner]
-  simp [inner_smul_left, h]
-
 /-- The **stiffness matrix** `K i j = -⟪bᵢ, T bⱼ⟫` of `T` in the basis `b`: tested against `b`,
 `u' = T u` reads `M c' = -K c` with the Gram (mass) matrix `M` and the coefficients `c` of `u`. -/
 def stiffness (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) : Matrix n n 𝕜 :=
@@ -201,7 +193,7 @@ theorem isCNStep_iff_mulVec (b : Module.Basis n 𝕜 E) (T : E →ₗ[𝕜] E) (
     rw [inner_basis_apply_eq_neg_stiffness_mulVec, neg_neg]
   rw [hC, add_mulVec, sub_mulVec, smul_mulVec, smul_mulVec, ← inner_basis_eq_gram_mulVec,
     ← inner_basis_eq_gram_mulVec, hK, hK]
-  refine ⟨fun e => funext fun i => ?_, fun e => eq_of_inner_basis b fun i => ?_⟩
+  refine ⟨fun e => funext fun i => ?_, fun e => ext_inner_left_basis b fun i => ?_⟩
   · have := congrArg (⟪b i, ·⟫_𝕜) e
     simp only [inner_sub_right, inner_add_right, inner_smul_right] at this
     simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, Pi.neg_apply, smul_eq_mul]
@@ -691,13 +683,13 @@ def blockLoad (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ 
   Sum.elim (fun i => ⟪b₀ i, y.1⟫) (Sum.elim (fun i => ⟪b₁ i, y.2.1⟫) fun i => ⟪b₂ i, y.2.2⟫)
 
 omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂]
-  [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
+  [Fintype n₀] [Fintype n₁] [Fintype n₂] [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
 theorem blockLoad_injective (b₀ : Module.Basis n₀ ℝ V₀) (b₁ : Module.Basis n₁ ℝ V₁)
     (b₂ : Module.Basis n₂ ℝ V₂) : Function.Injective (blockLoad b₀ b₁ b₂) := by
   intro y y' h
-  have h0 : y.1 = y'.1 := eq_of_inner_basis b₀ fun i => congrFun h (.inl i)
-  have h1 : y.2.1 = y'.2.1 := eq_of_inner_basis b₁ fun i => congrFun h (.inr (.inl i))
-  have h2 : y.2.2 = y'.2.2 := eq_of_inner_basis b₂ fun i => congrFun h (.inr (.inr i))
+  have h0 : y.1 = y'.1 := ext_inner_left_basis b₀ fun i => congrFun h (.inl i)
+  have h1 : y.2.1 = y'.2.1 := ext_inner_left_basis b₁ fun i => congrFun h (.inr (.inl i))
+  have h2 : y.2.2 = y'.2.2 := ext_inner_left_basis b₂ fun i => congrFun h (.inr (.inr i))
   exact Prod.ext h0 (Prod.ext h1 h2)
 
 omit [DecidableEq n₀] [DecidableEq n₁] [DecidableEq n₂] in
@@ -783,7 +775,7 @@ theorem testMatrix_eq_zero_iff {W W' : Type*} [NormedAddCommGroup W] [InnerProdu
     testMatrix b b' d = 0 ↔ d = 0 := by
   constructor
   · intro h
-    refine b.ext fun j => eq_of_inner_basis b' fun i => ?_
+    refine b.ext fun j => ext_inner_left_basis b' fun i => ?_
     simpa [testMatrix] using congrFun (congrFun h i) j
   · rintro rfl; ext i j; simp [testMatrix]
 

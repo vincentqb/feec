@@ -106,8 +106,7 @@ theorem norm_sub_exp_apply_le_of_defect {L : X →L[𝕜] X} {M : ℝ}
     rw [_root_.map_sub]; abel
   rw [e]
   refine (norm_add_le _ _).trans ?_
-  have h2 := ((exp ((t : 𝕜) • L)).le_opNorm (U 0 - v)).trans
-    (mul_le_mul_of_nonneg_right (hL t ht) (norm_nonneg _))
+  have h2 := (exp ((t : 𝕜) • L)).le_of_opNorm_le (hL t ht) (U 0 - v)
   linarith
 
 end Duhamel

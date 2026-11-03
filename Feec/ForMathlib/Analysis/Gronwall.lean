@@ -18,8 +18,8 @@ differentiable where `e` vanishes. The proof compares `√(Q² + ε²)` with
 
 * `le_add_half_sub_of_sq_deriv_le_mul`: the primitive form.
 * `le_add_half_integral_of_sq_deriv_le_mul`: the integral form `Q t ≤ Q a + ½ ∫ₐᵗ F`.
-* `ContinuousOn.exists_continuous_eqOn_Icc`, `ContinuousOn.intervalIntegral_primitive_Icc`:
-  extension of a function continuous on `[a, b]`, and its primitive.
+* `ContinuousOn.intervalIntegral_primitive_Icc`: the primitive of a function continuous on
+  `[a, b]`.
 
 ## Energy estimates
 
@@ -94,40 +94,21 @@ theorem le_add_half_sub_of_sq_deriv_le_mul {Q q' F G : ℝ → ℝ} {a b : ℝ}
     · positivity
   linarith
 
-/-- A function continuous on `[a,b]` (`a ≤ b`) agrees on `[a,b]` with a continuous function on
-`ℝ` (constant outside `[a,b]`). -/
-theorem ContinuousOn.exists_continuous_eqOn_Icc {F : ℝ → ℝ} {a b : ℝ} (hab : a ≤ b)
-    (hFc : ContinuousOn F (Icc a b)) :
-    ∃ F₁ : ℝ → ℝ, Continuous F₁ ∧ EqOn F₁ F (Icc a b) := by
-  refine ⟨fun s => F (projIcc a b hab s), ?_, fun s hs => by simp [projIcc_of_mem hab hs]⟩
-  exact hFc.comp_continuous (continuous_subtype_val.comp continuous_projIcc)
-    fun s => (projIcc a b hab s).2
-
 /-- Primitive of a function continuous on `[a,b]`: `t ↦ ∫ₐᵗ F` is continuous on `[a,b]` with
-right derivative `F t` on `[a,b)`. -/
+right derivative `F t` on `[a,b)` (the fundamental theorem of calculus within `[a,b]`). -/
 theorem ContinuousOn.intervalIntegral_primitive_Icc {F : ℝ → ℝ} {a b : ℝ}
     (hFc : ContinuousOn F (Icc a b)) :
     ContinuousOn (fun t => ∫ s in a..t, F s) (Icc a b) ∧
       ∀ t ∈ Ico a b, HasDerivWithinAt (fun t => ∫ s in a..t, F s) (F t) (Ici t) t := by
-  rcases lt_or_ge b a with hab | hab
-  · exact ⟨by simp [Icc_eq_empty (not_le.2 hab)],
-      fun t ht => absurd (ht.1.trans_lt ht.2) (lt_asymm hab)⟩
-  obtain ⟨F₁, hF₁, hEq⟩ := hFc.exists_continuous_eqOn_Icc hab
-  have hI : ∀ t ∈ Icc a b, ∫ s in a..t, F s = ∫ s in a..t, F₁ s := by
-    intro t ht
-    refine intervalIntegral.integral_congr fun s hs => (hEq ?_).symm
-    rw [uIcc_of_le ht.1] at hs
-    exact ⟨hs.1, hs.2.trans ht.2⟩
-  have hd : ∀ t, HasDerivAt (fun t => ∫ s in a..t, F₁ s) (F₁ t) t := fun t =>
-    (hF₁.integral_hasStrictDerivAt a t).hasDerivAt
-  refine ⟨?_, fun t ht => ?_⟩
-  · refine (continuous_iff_continuousAt.2 fun t => (hd t).continuousAt).continuousOn.congr ?_
-    exact fun t ht => hI t ht
-  · have ht' : t ∈ Icc a b := Ico_subset_Icc_self ht
-    rw [← hEq ht']
-    refine (hd t).hasDerivWithinAt.congr_of_eventuallyEq ?_ (hI t ht')
-    filter_upwards [Icc_mem_nhdsGE ht.2] with s hs
-    exact hI s ⟨ht.1.trans hs.1, hs.2⟩
+  have hd : ∀ t ∈ Icc a b,
+      HasDerivWithinAt (fun t => ∫ s in a..t, F s) (F t) (Icc a b) t := fun t ht => by
+    have : Fact (t ∈ Icc a b) := ⟨ht⟩
+    exact intervalIntegral.integral_hasDerivWithinAt_right
+      ((hFc.mono (Icc_subset_Icc_right ht.2)).intervalIntegrable_of_Icc ht.1)
+      (hFc.stronglyMeasurableAtFilter_nhdsWithin measurableSet_Icc t) (hFc t ht)
+  refine ⟨fun t ht => (hd t ht).continuousWithinAt, fun t ht => ?_⟩
+  exact (hd t (Ico_subset_Icc_self ht)).mono_of_mem_nhdsWithin
+    (Filter.mem_of_superset (Icc_mem_nhdsGE ht.2) (Icc_subset_Icc_left ht.1))
 
 /-- **Square-root Gronwall inequality**, integral form: `Q t ≤ Q a + ½ ∫ₐᵗ F` for `F ≥ 0`
 continuous on `[a,b]` and `d/dt Q² ≤ F Q` on `[a,b)`.

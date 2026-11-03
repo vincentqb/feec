@@ -305,9 +305,8 @@ theorem norm_resolventStep_sub_S_le {p : ℕ} (hp : r.HasOrder p) {τ : ℝ} (h�
   have hρu : ‖(τ : 𝕜) ^ (p + 1) • (r.remainder p).resolventStep R (u (p + 1))‖ ≤
       K₀ * τ ^ (p + 1) * ‖u (p + 1)‖ := by
     rw [norm_smul, norm_pow, RCLike.norm_ofReal, abs_of_nonneg hτ]
-    have := ((r.remainder p).resolventStep R).le_opNorm (u (p + 1))
     have h2 : ‖(r.remainder p).resolventStep R (u (p + 1))‖ ≤ K₀ * ‖u (p + 1)‖ :=
-      this.trans (mul_le_mul_of_nonneg_right hρ (norm_nonneg _))
+      ((r.remainder p).resolventStep R).le_of_opNorm_le hρ _
     calc τ ^ (p + 1) * ‖(r.remainder p).resolventStep R (u (p + 1))‖
         ≤ τ ^ (p + 1) * (K₀ * ‖u (p + 1)‖) := by gcongr
       _ = _ := by ring

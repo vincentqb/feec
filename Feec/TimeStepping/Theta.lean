@@ -11,7 +11,7 @@ a **θ-step** `u ↦ u'` is `u' - u = τ A (θ u' + (1 - θ) u)` with `θ u' + (
 (`IsThetaStep`): the one-step scheme of the rational function
 `r_θ(z) = (1 + (1 - θ) z) / (1 - θ z)`, `r_θ(τ A) = θ⁻¹ (1 - θ τ A)⁻¹ - (1 - θ) / θ`, defined
 through the resolvent `R(z) = (z - A)⁻¹` at `z = (θ τ)⁻¹` (`thetaStep`) for every possibly
-unbounded `A`. `θ = 1` is implicit Euler (`thetaStep_one`), `θ = 1/2` is Crank–Nicolson:
+unbounded `A`. `θ = 1` is implicit Euler, `r_1(τ A) = (1 - τ A)⁻¹`; `θ = 1/2` is Crank–Nicolson:
 **`cayley_eq_thetaStep`**: the Cayley transform `cayley A s` of `Feec.TimeStepping.Cayley` is
 `thetaStep A (1/2) (2 s)` (`cayley_half_eq_thetaStep`: Crank–Nicolson with step `τ` is
 `r_{1/2}(τ A)`), and `isCNStep_iff_isThetaStep`; the `fem4gr` step without boundary degrees of
@@ -164,11 +164,6 @@ theorem cayley_half_eq_thetaStep (A : E →ₗ.[𝕜] E) (τ : ℝ) :
     cayley A (τ / 2) = thetaStep A ((1 / 2 : ℝ) : 𝕜) τ := by
   rw [cayley_eq_thetaStep, show 2 * (τ / 2) = τ by ring]
   congr 1; push_cast; ring
-
-/-- **Implicit Euler is the θ-scheme with `θ = 1`**: `r_1(τ A) = (1 - τ A)⁻¹ = τ⁻¹ R(τ⁻¹)`. -/
-theorem thetaStep_one (A : E →ₗ.[𝕜] E) (τ : ℝ) :
-    thetaStep A 1 τ = ((τ : 𝕜))⁻¹ • resolvent A ((τ : 𝕜))⁻¹ := by
-  simp [thetaStep]
 
 /-- A CN step with half step `s` is a θ-step with `θ = 1/2`, `τ = 2 s`. -/
 theorem isCNStep_iff_isThetaStep :

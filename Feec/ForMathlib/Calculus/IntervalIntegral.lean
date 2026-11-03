@@ -76,17 +76,10 @@ variable [CompleteSpace E]
 theorem hasDerivWithinAt_integral_of_continuousOn {W : ℝ → E} {a b t : ℝ}
     (hW : ContinuousOn W (Icc a b)) (ht : t ∈ Icc a b) :
     HasDerivWithinAt (fun τ => ∫ s in a..τ, W s) (W t) (Icc a b) t := by
-  have hab : a ≤ b := ht.1.trans ht.2
-  set W' : ℝ → E := fun s => W (projIcc a b hab s)
-  have hW' : Continuous W' :=
-    hW.comp_continuous (continuous_subtype_val.comp continuous_projIcc) fun s => (projIcc a b hab s).2
-  have e : ∀ τ ∈ Icc a b, ∫ s in a..τ, W s = ∫ s in a..τ, W' s := fun τ hτ =>
-    intervalIntegral.integral_congr fun s hs => by
-      rw [uIcc_of_le hτ.1] at hs
-      simp [W', projIcc_of_mem hab ⟨hs.1, hs.2.trans hτ.2⟩]
-  have hd := ((hW'.integral_hasStrictDerivAt a t).hasDerivAt).hasDerivWithinAt (s := Icc a b)
-  rw [show W' t = W t by simp [W', projIcc_of_mem hab ht]] at hd
-  exact hd.congr_of_mem e ht
+  have : Fact (t ∈ Icc a b) := ⟨ht⟩
+  exact intervalIntegral.integral_hasDerivWithinAt_right
+    ((hW.mono (Icc_subset_Icc_right ht.2)).intervalIntegrable_of_Icc ht.1)
+    (hW.stronglyMeasurableAtFilter_nhdsWithin measurableSet_Icc t) (hW t ht)
 
 /-- **The Laplace identity on `[0, T]`**: for `u` continuous on `[0, T]` with continuous right
 derivative `w`, `∫₀ᵀ e⁻ˢ (u s - w s) ds = u 0 - e⁻ᵀ u T` (`e⁻ˢ u` has derivative

@@ -82,6 +82,12 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
+/-- `re ⟪x - y, x + y⟫ = ‖x‖² - ‖y‖²`. -/
+theorem re_inner_sub_add (x y : E) : RCLike.re ⟪x - y, x + y⟫ = ‖x‖ ^ 2 - ‖y‖ ^ 2 := by
+  rw [inner_sub_left, inner_add_right, inner_add_right, _root_.map_sub, _root_.map_add,
+    _root_.map_add, inner_self_eq_norm_sq, inner_self_eq_norm_sq, inner_re_symm y x]
+  ring
+
 /-- `u'` is a **Crank–Nicolson step** from `u` for `u' = A u` with half time step `s`:
 `u' + u ∈ D(A)` and `u' - u = s A (u' + u)`. [QuennevilleBelair2015], Ch. 7 -/
 def IsCNStep (A : E →ₗ.[𝕜] E) (s : ℝ) (u u' : E) : Prop :=
@@ -160,14 +166,7 @@ theorem IsCNStep.unique_of_isSkewSymmetric (hA : A.IsSkewSymmetric) {u₁ u₂ :
 `v = u' + u`. -/
 private theorem norm_sq_sub_norm_sq (h : IsCNStep A s u u') :
     ‖u'‖ ^ 2 - ‖u‖ ^ 2 = s * RCLike.re ⟪A ⟨u' + u, h.1⟩, u' + u⟫ := by
-  have e := h.2
-  have h1 : RCLike.re ⟪u' - u, u' + u⟫ = ‖u'‖ ^ 2 - ‖u‖ ^ 2 := by
-    rw [inner_sub_left, inner_add_right, inner_add_right, inner_self_eq_norm_sq_to_K,
-      inner_self_eq_norm_sq_to_K, ← inner_conj_symm u u']
-    simp only [_root_.map_sub, _root_.map_add, RCLike.conj_re, ← RCLike.ofReal_pow,
-      RCLike.ofReal_re]
-    ring
-  rw [← h1, e, inner_smul_left, RCLike.conj_ofReal, RCLike.re_ofReal_mul]
+  rw [← re_inner_sub_add (𝕜 := 𝕜), h.2, inner_smul_left, RCLike.conj_ofReal, RCLike.re_ofReal_mul]
 
 /-- **Energy conservation**: a CN step of a skew-symmetric operator preserves the norm.
 [QuennevilleBelair2015], Ch. 7 -/
@@ -387,10 +386,9 @@ theorem IsReducedCNStep.adjoint_eq_zero_of_isFullCNStep {d₀ : V₀ →ₗ[ℝ]
     simpa using this
 
 omit [FiniteDimensional ℝ V₀] [FiniteDimensional ℝ V₁] [FiniteDimensional ℝ V₂] in
-private theorem inner_sub_add_eq' {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
+private theorem real_inner_sub_add {W : Type*} [NormedAddCommGroup W] [InnerProductSpace ℝ W]
     (x y : W) : ⟪x - y, x + y⟫ = ‖x‖ ^ 2 - ‖y‖ ^ 2 := by
-  rw [inner_sub_left, inner_add_right, inner_add_right, real_inner_self_eq_norm_sq,
-    real_inner_self_eq_norm_sq, real_inner_comm x y]; ring
+  simpa using re_inner_sub_add (𝕜 := ℝ) x y
 
 /-- **Energy conservation of the full CN step**: `‖σ‖² + ‖E‖² + ‖B‖²` is conserved (not `‖E‖`
 alone). See [QuennevilleBelair2015], Ch. 7 (Table 7.1). -/
@@ -408,7 +406,7 @@ theorem IsFullCNStep.norm_sq_add {d₀ : V₀ →ₗ[ℝ] V₁} {d₁ : V₁ →
       LinearMap.adjoint_inner_left, real_inner_comm (d₀ (σ' + σ)) (E' + E),
       real_inner_comm (B' + B) (d₁ (E' + E))]
     ring
-  rw [inner_sub_add_eq'] at e1 e2 e3
+  rw [real_inner_sub_add] at e1 e2 e3
   linarith
 
 /-- **Uniqueness of the full CN step** (the thesis never argues solvability): the difference
@@ -685,10 +683,7 @@ theorem IsDirichletCNStep.norm_sub_le (hA : ∀ w ∈ V₀, s * ⟪A w, w⟫ ≤
     rw [this, inner_sub_left, e1, e2, show e' + e = (u' + u) - (ũ' + ũ) by simp only [e, e']; abel,
       map_sub, inner_sub_left]
     ring
-  have hsq : ⟪e' - e, e' + e⟫ = ‖e'‖ ^ 2 - ‖e‖ ^ 2 := by
-    rw [inner_sub_left, inner_add_right, inner_add_right, real_inner_self_eq_norm_sq,
-      real_inner_self_eq_norm_sq, real_inner_comm e e']
-    ring
+  have hsq : ⟪e' - e, e' + e⟫ = ‖e'‖ ^ 2 - ‖e‖ ^ 2 := real_inner_sub_add e' e
   have hτb : -⟪τ, e' + e⟫ ≤ ‖τ‖ * (‖e'‖ + ‖e‖) := by
     have := abs_real_inner_le_norm τ (e' + e)
     have := norm_add_le e' e

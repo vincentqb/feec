@@ -51,33 +51,6 @@ open Set Filter Polynomial Finset Feec.Operator LinearPMap
 
 namespace Feec.TimeStepping
 
-/-! ### Rational functions on closed sets -/
-
-/-- **A complex rational function `p/q` with `deg p ≤ deg q` is bounded on every closed set on
-which `q` has no zero**: `p = O(q)` at infinity, and the rest of the set is compact. -/
-theorem exists_norm_div_le_of_isClosed {p q : ℂ[X]} (hpq : p.natDegree ≤ q.natDegree)
-    {F : Set ℂ} (hF : IsClosed F) (hq : ∀ z ∈ F, q.eval z ≠ 0) :
-    ∃ C, ∀ z ∈ F, ‖p.eval z / q.eval z‖ ≤ C := by
-  rcases eq_or_ne p 0 with rfl | hp
-  · exact ⟨0, fun z _ => by simp⟩
-  rcases eq_or_ne q 0 with rfl | hq0
-  · exact ⟨0, fun z hz => (hq z hz (by simp)).elim⟩
-  have hdeg : p.degree ≤ q.degree := by
-    rw [degree_eq_natDegree hp, degree_eq_natDegree hq0]; exact_mod_cast hpq
-  obtain ⟨C₁, hC₁⟩ := (isBigO_cobounded_of_degree_le hdeg).bound
-  obtain ⟨S, hS, hSb⟩ := hC₁.exists_mem
-  have hb : Bornology.IsBounded Sᶜ := by rw [Bornology.isBounded_def, compl_compl]; exact hS
-  have hK : IsCompact (closure Sᶜ ∩ F) := Metric.isCompact_of_isClosed_isBounded
-    (isClosed_closure.inter hF) (hb.closure.subset inter_subset_left)
-  obtain ⟨C₂, hC₂⟩ := hK.exists_bound_of_continuousOn (f := fun z => p.eval z / q.eval z)
-    ((p.continuous.continuousOn).div q.continuous.continuousOn fun z hz => hq z hz.2)
-  refine ⟨max C₁ C₂, fun z hz => ?_⟩
-  by_cases hzS : z ∈ S
-  · have h := hSb z hzS
-    rw [norm_div, div_le_iff₀ (norm_pos_iff.2 (hq z hz))]
-    exact h.trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
-  · exact (hC₂ z ⟨subset_closure hzS, hz⟩).trans (le_max_right _ _)
-
 namespace RationalScheme
 
 variable (r : RationalScheme)
@@ -210,12 +183,6 @@ namespace RationalScheme
 
 variable (r : RationalScheme)
 
-private theorem mul_inverse_mul_of_commute' {M : Type*} [MonoidWithZero M] {U n d : M}
-    (hU : IsUnit U) (hn : Commute U n) (hd : Commute U d) :
-    U * n * Ring.inverse (U * d) = n * Ring.inverse d := by
-  rw [Ring.mul_inverse_rev' hd, hn.eq, mul_assoc, ← mul_assoc U, hd.ringInverse_right.eq,
-    mul_assoc, Ring.mul_inverse_cancel _ hU, mul_one]
-
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
 
 /-- **`r(τA) = r_c(τB)` in the resolvent form**: if `(1 - cY) U = 1`, `U` invertible and
@@ -240,7 +207,7 @@ theorem resolventStep_mul_eq_shift {Y U : E →L[𝕜] E} {c : ℝ}
       exact (commute_aeval (hYU.pow_right _) _).symm
   rw [resolventStep, resolventStep, hN, hn, hd]
   simp only [shift, hmap]
-  exact mul_inverse_mul_of_commute' (hUu.pow _) (hcomm _) (hcomm _)
+  exact Ring.mul_inverse_mul_of_commute (hUu.pow _) (hcomm _) (hcomm _)
 
 /-! ### Quasi-contractive semigroups on Hilbert spaces -/
 

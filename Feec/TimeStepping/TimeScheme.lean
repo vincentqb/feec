@@ -90,12 +90,10 @@ theorem norm_exp_sub_pow_le {T : ℝ} {h : κ}
       (ML + Θ.M T) * ‖v - w‖ +
         Θ.M T * Θ.K * ML * (n * Θ.τ h) * Θ.τ h ^ Θ.p * ‖(L h ^ (Θ.p + 1)) w‖ := by
   have ht : 0 ≤ (n : ℝ) * Θ.τ h := mul_nonneg (Nat.cast_nonneg n) (Θ.τ_pos h).le
-  have h1 := ((exp (((n * Θ.τ h : ℝ) : 𝕜) • L h)).le_opNorm (v - w)).trans
-    (mul_le_mul_of_nonneg_right (hL _ ht) (norm_nonneg _))
+  have h1 := (exp (((n * Θ.τ h : ℝ) : 𝕜) • L h)).le_of_opNorm_le (hL _ ht) (v - w)
   have h2 := norm_pow_apply_sub_exp_le_of_norm_exp_le hL (Θ.stable_le h hn)
     (Θ.τ_pos h).le Θ.K_nonneg (Θ.consistent h) w
-  have h3 := ((Θ.P h ^ n).le_opNorm (v - w)).trans
-    (mul_le_mul_of_nonneg_right (Θ.stable T h n hn) (norm_nonneg _))
+  have h3 := (Θ.P h ^ n).le_of_opNorm_le (Θ.stable T h n hn) (v - w)
   have e : exp (((n * Θ.τ h : ℝ) : 𝕜) • L h) v - (Θ.P h ^ n) v =
       exp (((n * Θ.τ h : ℝ) : 𝕜) • L h) (v - w) -
         ((Θ.P h ^ n) w - exp (((n * Θ.τ h : ℝ) : 𝕜) • L h) w) - (Θ.P h ^ n) (v - w) := by

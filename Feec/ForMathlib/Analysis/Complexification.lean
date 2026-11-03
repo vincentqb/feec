@@ -28,6 +28,13 @@ on inner product spaces (`Feec.ForMathlib.InnerProductSpace.Complexification`). 
 
 This is how statements about complex spaces (complex points of the spectrum, von Neumann's
 inequality) reach real ones.
+
+## References
+
+* [P. R. Halmos, *Finite-Dimensional Vector Spaces*][Halmos1974], §77 (complexification)
+* [G. Muñoz, Y. Sarantopoulos, A. Tonge, *Complexifications of real Banach spaces, polynomials and multilinear maps*][MunozSarantopoulosTonge1999]
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

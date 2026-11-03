@@ -344,6 +344,10 @@ theorem isNonobtuse_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (
 /-- The lattice node `b + h q`. -/
 def node (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) : Fin n → ℝ := b + h • latticePoint q
 
+@[simp] theorem node_coord (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) (l : Fin n) :
+    node b h q l = b l + h * q l := by
+  simp [node, latticePoint_apply]
+
 theorem node_injective (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) : Function.Injective (node b h) := by
   intro q q' e
   funext i
@@ -365,8 +369,20 @@ theorem node_add_single (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) (l : F
   · subst hi; simp; ring
   · simp [hi]
 
+theorem node_add_single_one (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) (l : Fin n) :
+    node b h (q + Pi.single l 1) = node b h q + h • Pi.single l 1 := by
+  rw [node_add_single]; simp
+
+theorem node_sub_single_one (b : Fin n → ℝ) (h : ℝ) (q : Fin n → ℤ) (l : Fin n) :
+    node b h (q - Pi.single l 1) = node b h q + (-h) • Pi.single l 1 := by
+  rw [sub_eq_add_neg, ← Pi.single_neg, node_add_single]; simp
+
 /-- The interior nodes `q ∈ {1, …, N - 1}ⁿ` of the level-`N` lattice. -/
 def interiorNodes (n N : ℕ) : Finset (Fin n → ℤ) := Fintype.piFinset fun _ => Ioo 0 (N : ℤ)
+
+theorem mem_interiorNodes {N : ℕ} {q : Fin n → ℤ} :
+    q ∈ interiorNodes n N ↔ ∀ j, 0 < q j ∧ q j < N := by
+  simp [interiorNodes]
 
 /-! ### Assembly on the Freudenthal mesh of a box -/
 
@@ -575,13 +591,13 @@ theorem upCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : 
     (hp : p ∈ interiorNodes n N) : upCount N σ l p = 1 := by
   rw [upCount_eq, ite_eq_left]
   intro i
-  have := mem_Ioo.1 (Fintype.mem_piFinset.1 hp i)
+  have := mem_interiorNodes.1 hp i
   rcases kuhnLattice_mem σ (σ.symm l).castSucc i with h | h <;> rw [edgeShift, h] <;> omega
 
 /-- At an interior node, every path edge `p - eₗ → p` lies in the mesh. -/
 theorem downCount_of_mem_interiorNodes (σ : Equiv.Perm (Fin n)) (l : Fin n) {p : Fin n → ℤ}
     (hp : p ∈ interiorNodes n N) : downCount N σ l p = 1 := by
-  have := mem_Ioo.1 (Fintype.mem_piFinset.1 hp l)
+  have := mem_interiorNodes.1 hp l
   rw [← upCount_eq_downCount σ (by omega) this.2, upCount_of_mem_interiorNodes σ l hp]
 
 theorem vertexCount_le (p : Fin n → ℤ) : vertexCount N p ≤ (n + 1) * n.factorial := by
@@ -597,7 +613,7 @@ theorem vertexCount_of_mem_interiorNodes {p : Fin n → ℤ} (hp : p ∈ interio
       (if finLattice m + kuhnLattice σ j = p then 1 else 0 : ℝ) = 1 := fun σ j => by
     rw [sum_finLattice_add_ite, ite_eq_left]
     intro i
-    have := mem_Ioo.1 (Fintype.mem_piFinset.1 hp i)
+    have := mem_interiorNodes.1 hp i
     rcases kuhnLattice_mem σ j i with h | h <;> rw [h] <;> omega
   simp [vertexCount, h1, Fintype.card_perm]; ring
 

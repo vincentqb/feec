@@ -131,6 +131,9 @@ variable {d : Type*} [Fintype d]
 /-- The open cube `∏ᵢ (bᵢ, bᵢ + s) ⊂ ℝᵈ`. -/
 def openCube (b : d → ℝ) (s : ℝ) : Set (d → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
 
+/-- The closed cube `∏ [bᵢ, bᵢ + s]`. -/
+def closedCube (b : d → ℝ) (s : ℝ) : Set (d → ℝ) := univ.pi fun i => Icc (b i) (b i + s)
+
 variable (d) in
 /-- **The cube `Q = (0, ½)ᵈ`**, a fundamental domain of the reflection group `(ℤ/2)ᵈ` of `𝕋ᵈ`. -/
 def Q : Set (d → ℝ) := openCube 0 (1 / 2)

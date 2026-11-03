@@ -30,7 +30,7 @@ This file is part of the `FeecCheck` library, not of `Feec`.
 namespace FeecCheck.MaxNormHeat
 
 open Set Finset NormedSpace Feec.Mesh Feec.FiniteElement Feec.TimeStepping
-open Feec.Models.Cube.Geometry (openCube)
+open Feec.Models.Cube.Geometry (openCube closedCube)
 open Feec.Models.Cube.MaxNormHeat
 
 variable {n : ℕ} {s : ℝ}

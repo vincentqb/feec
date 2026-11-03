@@ -90,7 +90,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 open Set Finset NormedSpace Feec.Mesh Feec.FiniteElement Feec.TimeStepping
 open scoped InnerProductSpace
-open Feec.Models.Cube.Geometry (openCube)
+open Feec.Models.Cube.Geometry (openCube closedCube)
 
 @[expose] public noncomputable section
 
@@ -104,6 +104,14 @@ variable {n : ℕ} {b : Fin n → ℝ} {s : ℝ}
 def meshSize (s : ℝ) (N : ℕ) : ℝ := s / (N + 1 : ℕ)
 
 theorem meshSize_pos (hs : 0 < s) (N : ℕ) : 0 < meshSize s N := freudenthalScale_pos hs (N + 1)
+
+theorem meshSize_mul (s : ℝ) (N : ℕ) : meshSize s N * (N + 1 : ℕ) = s := by
+  rw [meshSize, div_mul_cancel₀]; positivity
+
+theorem meshSize_le (hs : 0 < s) (N : ℕ) : meshSize s N ≤ s := by
+  rw [meshSize, div_le_iff₀ (by positivity)]
+  have : (1 : ℝ) ≤ ((N + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.succ_pos N
+  nlinarith
 
 /-- The interior nodes of the level-`(N + 1)` lattice. -/
 abbrev Nodes (n N : ℕ) := ↥(interiorNodes n (N + 1))
@@ -170,79 +178,77 @@ theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
 def laplacian (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   ∑ i, partialDeriv i (partialDeriv i u) x
 
-/-- The closed cube `b + [0, s]ⁿ`. -/
-def closedCube (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Icc (b i) (b i + s)
-
 /-- The nodal interpolant `(Iₕ u)(p) = u(b + h p)` at the interior nodes. -/
 def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Space n N :=
   fun p => u (node b (meshSize s N) p)
 
-theorem meshSize_mul (s : ℝ) (N : ℕ) : meshSize s N * (N + 1 : ℕ) = s := by
-  rw [meshSize, div_mul_cancel₀]; positivity
-
-theorem mem_interiorNodes {N : ℕ} {p : Fin n → ℤ} :
-    p ∈ interiorNodes n (N + 1) ↔ ∀ j, 1 ≤ p j ∧ p j ≤ N := by
-  rw [interiorNodes, Fintype.mem_piFinset]
+/-- A lattice node lies in the closed cube iff it is a node of the level-`(N + 1)` lattice. -/
+theorem node_mem_closedCube_iff (hs : 0 < s) {q : Fin n → ℤ} :
+    node b (meshSize s N) q ∈ closedCube b s ↔ ∀ j, 0 ≤ q j ∧ q j ≤ N + 1 := by
+  have hm := meshSize_mul s N
+  have hh := meshSize_pos hs N
+  set h := meshSize s N
+  simp only [closedCube, mem_univ_pi]
   refine forall_congr' fun j => ?_
-  rw [Finset.mem_Ioo]; push_cast; omega
+  rw [node_coord, Set.mem_Icc, le_add_iff_nonneg_right, add_le_add_iff_left, ← hm,
+    mul_nonneg_iff_of_pos_left hh, mul_le_mul_iff_of_pos_left hh]
+  push_cast
+  norm_cast
+
+/-- A lattice node lies in the open cube iff it is an interior node. -/
+theorem node_mem_openCube_iff (hs : 0 < s) {q : Fin n → ℤ} :
+    node b (meshSize s N) q ∈ openCube b s ↔ q ∈ interiorNodes n (N + 1) := by
+  have hm := meshSize_mul s N
+  have hh := meshSize_pos hs N
+  set h := meshSize s N
+  simp only [openCube, mem_univ_pi, mem_interiorNodes]
+  refine forall_congr' fun j => ?_
+  rw [node_coord, Set.mem_Ioo, lt_add_iff_pos_right, add_lt_add_iff_left, ← hm,
+    mul_pos_iff_of_pos_left hh, mul_lt_mul_iff_of_pos_left hh]
+  norm_cast
+
+/-- The axis segment `x + τ eₗ` through a node `x` of the closed lattice lies in the closed cube
+while its `l`-th coordinate does. -/
+theorem node_add_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1)
+    (l : Fin n) {τ : ℝ} (h1 : 0 ≤ meshSize s N * p l + τ) (h2 : meshSize s N * p l + τ ≤ s) :
+    node b (meshSize s N) p + τ • Pi.single l 1 ∈ closedCube b s := by
+  intro i _
+  have := (node_mem_closedCube_iff (b := b) hs).2 hp i (mem_univ i)
+  by_cases hi : i = l
+  · subst hi
+    simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, Pi.single_eq_same, mul_one, node_coord,
+      Set.mem_Icc]
+    constructor <;> linarith
+  · simpa [Pi.single_eq_of_ne hi] using this
 
 /-- The segments `x ± t eₗ`, `|t| ≤ h`, through an interior node lie in the closed cube. -/
-theorem node_add_smul_mem_closedCube (hs : 0 < s) (p : Nodes n N) (l : Fin n) {t : ℝ}
-    (ht : t ∈ Icc (-meshSize s N) (meshSize s N)) :
+theorem node_add_smul_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : p ∈ interiorNodes n (N + 1))
+    (l : Fin n) {t : ℝ} (ht : t ∈ Icc (-meshSize s N) (meshSize s N)) :
     node b (meshSize s N) p + t • Pi.single l 1 ∈ closedCube b s := by
-  have hp := mem_interiorNodes.1 p.2
-  have hh := (meshSize_pos hs N).le
+  have hp' := mem_interiorNodes.1 hp
   have hm := meshSize_mul s N
-  intro j _
-  have h1 : (1 : ℝ) ≤ (p : Fin n → ℤ) j := by exact_mod_cast (hp j).1
-  have h2 : ((p : Fin n → ℤ) j : ℝ) ≤ N := by exact_mod_cast (hp j).2
   push_cast at hm
-  simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul, Set.mem_Icc]
-  by_cases hj : j = l
-  · subst hj
-    simp only [Pi.single_eq_same, mul_one]
-    constructor <;> nlinarith [ht.1, ht.2]
-  · simp only [Pi.single_eq_of_ne hj, mul_zero, add_zero]
-    constructor <;> nlinarith
+  have := hp' l
+  have h1 : (1 : ℝ) ≤ p l := by exact_mod_cast (by omega : (1 : ℤ) ≤ p l)
+  have h2 : (p l : ℝ) ≤ N := by exact_mod_cast (by omega : p l ≤ N)
+  exact node_add_mem_closedCube hs (fun i => by have := hp' i; omega) l
+    (by nlinarith [ht.1, meshSize_pos hs N]) (by nlinarith [ht.2, meshSize_pos hs N])
 
 /-- Interior nodes lie in the open cube. -/
 theorem node_mem_openCube (hs : 0 < s) (p : Nodes n N) :
-    node b (meshSize s N) p ∈ openCube b s := by
-  have hp := mem_interiorNodes.1 p.2
-  have hh := meshSize_pos hs N
-  have hm := meshSize_mul s N
-  push_cast at hm
-  intro j _
-  have h1 : (1 : ℝ) ≤ (p : Fin n → ℤ) j := by exact_mod_cast (hp j).1
-  have h2 : ((p : Fin n → ℤ) j : ℝ) ≤ N := by exact_mod_cast (hp j).2
-  simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul, Set.mem_Ioo]
-  constructor <;> nlinarith
+    node b (meshSize s N) p ∈ openCube b s :=
+  (node_mem_openCube_iff hs).2 p.2
 
 /-- The extension by `0` of the interpolant of `u`, `u = 0` on `∂Q`, is `u` at every node of the
 closed lattice. -/
 theorem ext_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → u x = 0) {q : Fin n → ℤ}
     (hq : ∀ j, 0 ≤ q j ∧ q j ≤ N + 1) : ext (interp b s N u) q = u (node b (meshSize s N) q) := by
-  have hh := meshSize_pos hs N
-  have hm := meshSize_mul s N
-  push_cast at hm
   simp only [ext, interp]
   split_ifs with hq'
   · rfl
-  · symm
-    have hc : node b (meshSize s N) q ∈ closedCube b s := fun j _ => by
-      have h1 : (0 : ℝ) ≤ q j := by exact_mod_cast (hq j).1
-      have h2 : (q j : ℝ) ≤ N + 1 := by exact_mod_cast (hq j).2
-      simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul, Set.mem_Icc]
-      constructor <;> nlinarith
-    refine hbd _ hc fun ho => hq' (mem_interiorNodes.2 fun j => ?_)
-    have := ho j (mem_univ j)
-    simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul, Set.mem_Ioo] at this
-    have h1 : (0 : ℝ) < q j := by nlinarith
-    have h2 : (q j : ℝ) < N + 1 := by nlinarith
-    have h1' : (0 : ℤ) < q j := by exact_mod_cast h1
-    have h2' : q j < (N : ℤ) + 1 := by exact_mod_cast h2
-    omega
+  · exact (hbd _ ((node_mem_closedCube_iff hs).2 hq) fun ho =>
+      hq' ((node_mem_openCube_iff hs).1 ho)).symm
 
 /-- **Consistency in the maximum norm**: for `u ∈ C⁴` vanishing on `∂Q` with `|∂ᵢ⁴ u| ≤ B` on
 `Q̄`, `|(Iₕ Δu)(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12` at every interior node (the truncation error of
@@ -261,14 +267,9 @@ theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) 
       (u (node b h ((p : Fin n → ℤ) + Pi.single l 1)) - 2 * u x +
         u (node b h ((p : Fin n → ℤ) - Pi.single l 1))) / h ^ 2| ≤ B * h ^ 2 / 12 := by
     intro l
-    have e1 : node b h ((p : Fin n → ℤ) + Pi.single l 1) = x + h • Pi.single l 1 := by
-      rw [node_add_single, Int.cast_one, mul_one]
-    have e2 : node b h ((p : Fin n → ℤ) - Pi.single l 1) = x + (-h) • Pi.single l 1 := by
-      rw [sub_eq_add_neg, ← Pi.single_neg, node_add_single, Int.cast_neg, Int.cast_one, mul_neg,
-        mul_one]
-    rw [e1, e2]
+    rw [node_add_single_one, node_sub_single_one]
     exact abs_partialDeriv_sub_secondDiff_le hu hh x l fun t ht =>
-      hB _ (node_add_smul_mem_closedCube hs p l ht) l
+      hB _ (node_add_smul_mem_closedCube hs p.2 l ht) l
   have hplus : ∀ l, ext (interp b s N u) ((p : Fin n → ℤ) + Pi.single l 1) =
       u (node b h ((p : Fin n → ℤ) + Pi.single l 1)) := fun l =>
     ext_interp hs hbd fun j => by
@@ -379,23 +380,6 @@ theorem lumpedLaplacian_eq_iff (b : Fin n → ℝ) (hs : 0 < s) (U W : Space n N
     rw [lumpedInner_lumpedLaplacian_eq_neg_inner, ← h (Pi.single p 1), key] at h1
     exact (mul_left_cancel₀ (lumpedMass_node_pos b hs p).ne' h1).symm
 
-/-- A lattice node in the open cube is an interior node. -/
-theorem mem_interiorNodes_of_node_mem_openCube (hs : 0 < s) {q : Fin n → ℤ}
-    (h : node b (meshSize s N) q ∈ openCube b s) : q ∈ interiorNodes n (N + 1) := by
-  have hh := meshSize_pos hs N
-  have hm := meshSize_mul s N
-  push_cast at hm
-  refine mem_interiorNodes.2 fun j => ?_
-  have hj := h j (mem_univ j)
-  simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul,
-    Set.mem_Ioo] at hj
-  have h1 : 0 < q j := by
-    exact_mod_cast pos_of_mul_pos_right (by linarith : 0 < meshSize s N * q j) hh.le
-  have h2 : q j < N + 1 := by
-    exact_mod_cast lt_of_mul_lt_mul_left (by linarith : meshSize s N * q j <
-      meshSize s N * (N + 1)) hh.le
-  omega
-
 theorem interior_closure_freudenthalMesh_domain (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     interior (closure (freudenthalMesh b s hs (N + 1)).domain) = openCube b s := by
   rw [freudenthalMesh_domain, closure_pi_set, interior_pi_set Set.finite_univ]
@@ -418,7 +402,7 @@ theorem isFreeVertexEnum (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
       by_contra h
       exact hyf ⟨subset_closure ((freudenthalMesh b s hs (N + 1)).closedInterior_subset_closure hT
         (vertexSet_subset_closedInterior' T hy)), h⟩
-    exact ⟨⟨q, mem_interiorNodes_of_node_mem_openCube hs hq⟩, rfl⟩
+    exact ⟨⟨q, (node_mem_openCube_iff hs).1 hq⟩, rfl⟩
 
 /-- **The nodal values are a linear isomorphism `ℝ^{interior nodes} ≃ P̊₁⁻Λ⁰`**, `U ↦ U_h`: every
 `P₁` function with vanishing boundary DOFs is `U_h` for its values `U` at the interior nodes

@@ -3,7 +3,7 @@ module
 public import Feec.Models.Cube.MaxNormHeat
 
 open Set Finset NormedSpace Feec.Mesh Feec.FiniteElement Feec.TimeStepping MeasureTheory
-open Feec.Models.Cube.Geometry (openCube)
+open Feec.Models.Cube.Geometry (openCube closedCube)
 
 /-!
 # The heat equation with natural boundary conditions in the maximum norm
@@ -76,8 +76,9 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 namespace Feec.Models.Cube.MaxNormNeumann
 
-open Feec.Models.Cube.MaxNormHeat (meshSize meshSize_pos meshSize_mul closedCube
-  exists_node_eq_points mem_interiorNodes sineDeriv sineFreq iterate_partialDeriv_sine sineFactors
+open Feec.Models.Cube.MaxNormHeat (meshSize meshSize_pos meshSize_mul meshSize_le
+  node_mem_closedCube_iff node_add_mem_closedCube node_add_smul_mem_closedCube
+  exists_node_eq_points sineDeriv sineFreq iterate_partialDeriv_sine sineFactors
   sineSolution hasDerivAt_sineMode laplacian_sineMode abs_iterate_partialDeriv_sineMode_le
   abs_partialDeriv_partialDeriv_sineSolution_le sineSolution_hasDerivAt₁ abs_sineSolution_u₂_le
   feDefect abs_sub_p1Interp_le_of_nodes)
@@ -252,18 +253,6 @@ theorem chi_le (b : Fin n → ℝ) {s : ℝ} {x : Fin n → ℝ} (hx : x ∈ clo
         nlinarith [this.1, this.2]
     _ = _ := by simp; ring
 
-theorem node_coord (b : Fin n → ℝ) (h : ℝ) (p : Fin n → ℤ) (l : Fin n) :
-    node b h p l = b l + h * p l := by
-  simp [node, latticePoint_apply]
-
-theorem node_add_single_one (b : Fin n → ℝ) (h : ℝ) (p : Fin n → ℤ) (l : Fin n) :
-    node b h (p + Pi.single l 1) = node b h p + h • Pi.single l 1 := by
-  rw [node_add_single]; simp
-
-theorem node_eq_sub_single_add (b : Fin n → ℝ) (h : ℝ) (p : Fin n → ℤ) (l : Fin n) :
-    node b h p = node b h (p - Pi.single l 1) + h • Pi.single l 1 := by
-  rw [← node_add_single_one, sub_add_cancel]
-
 /-- The stencil terms of the barrier: `α⁺ (2yₗ/h + 1) - α⁻ (2yₗ/h - 1)`, `yₗ = xₗ - cₗ`. -/
 theorem stencilTerm_chi (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : Fin n → ℤ) :
     upCount (N + 1) σ l p * edgeQuot b (meshSize s N) (chi b s) l p -
@@ -284,11 +273,6 @@ theorem stencilTerm_chi (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) (p : 
   simp only [edgeQuot]
   rw [d1, d2]
   field_simp
-
-theorem meshSize_le (hs : 0 < s) (N : ℕ) : meshSize s N ≤ s := by
-  rw [meshSize, div_le_iff₀ (by positivity)]
-  have : (1 : ℝ) ≤ ((N + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.succ_pos N
-  nlinarith
 
 /-- Every stencil term of the barrier is at most `2`; at a boundary coordinate it is
 `α± (1 - s/h) ≤ 0`. -/
@@ -332,29 +316,38 @@ theorem stencilTerm_chi_le (hs : 0 < s) (σ : Equiv.Perm (Fin n)) (l : Fin n) {p
     rw [ite_eq_right_iff.2 (by rintro ⟨-, h | h⟩ <;> omega)]
     nlinarith
 
+/-- `Lₕ Iₕ u` at an interior node is the `(2n + 1)`-point difference Laplacian. -/
+theorem neumannLaplacian_interp_interior (hs : 0 < s) (u : (Fin n → ℝ) → ℝ) {p : Nodes n N}
+    (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
+    neumannLaplacian b hs N (interp b s N u) p = ∑ l,
+      (u (node b (meshSize s N) p + meshSize s N • Pi.single l 1) -
+        2 * u (node b (meshSize s N) p) +
+        u (node b (meshSize s N) p + (-meshSize s N) • Pi.single l 1)) / meshSize s N ^ 2 := by
+  rw [neumannLaplacian_apply, p1Stiffness_congr_right _ _ (w' := u) fun T hT j => ?_]
+  · have := neg_p1Stiffness_div_lumpedMass b hs (N + 1) hp u
+    rw [meshSize] at *
+    rw [this]
+    refine sum_congr rfl fun l _ => ?_
+    rw [node_add_single_one, node_sub_single_one]
+  · obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
+    rw [e, nodal_node hs (q := ⟨q, mem_closedNodes.2 hq⟩)]
+    rfl
+
 /-- `L χ = 2n` at the interior nodes (the difference Laplacian is exact on quadratics). -/
 theorem neumannLaplacian_interp_chi_interior (hs : 0 < s) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
     neumannLaplacian b hs N (interp b s N (chi b s)) p = 2 * n := by
   have hh := (meshSize_pos hs N).ne'
-  rw [neumannLaplacian_apply, p1Stiffness_congr_right _ _ (w' := chi b s) fun T hT j => ?_]
-  · have := neg_p1Stiffness_div_lumpedMass b hs (N + 1) hp (chi b s)
-    rw [meshSize, this]
-    have e : ∀ l, (chi b s (node b (s / ↑(N + 1)) ((p : Fin n → ℤ) + Pi.single l 1)) -
-        2 * chi b s (node b (s / ↑(N + 1)) p) +
-        chi b s (node b (s / ↑(N + 1)) ((p : Fin n → ℤ) - Pi.single l 1))) / (s / ↑(N + 1)) ^ 2
-        = 2 := fun l => by
-      rw [node_add_single_one, chi_add_single, node_eq_sub_single_add b _ (p : Fin n → ℤ) l,
-        chi_add_single, node_coord, ← node_eq_sub_single_add, node_coord]
-      simp only [Pi.sub_apply, Pi.single_eq_same, Int.cast_sub, Int.cast_one]
-      have : s / ↑(N + 1) ≠ 0 := hh
-      field_simp
-      ring
-    simp only [e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
+  rw [neumannLaplacian_interp_interior hs _ hp]
+  have e : ∀ l, (chi b s (node b (meshSize s N) p + meshSize s N • Pi.single l 1) -
+      2 * chi b s (node b (meshSize s N) p) +
+      chi b s (node b (meshSize s N) p + (-meshSize s N) • Pi.single l 1)) / meshSize s N ^ 2
+      = 2 := fun l => by
+    rw [chi_add_single, chi_add_single]
+    field_simp
     ring
-  · obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
-    rw [e, nodal_node hs (q := ⟨q, mem_closedNodes.2 hq⟩)]
-    rfl
+  simp only [e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
+  ring
 
 /-- The constant `K_n = 2 (1 + 2n · n!)` of the boundary layer. -/
 def layerConst (n : ℕ) : ℝ := 2 * (1 + 2 * n * n.factorial)
@@ -428,25 +421,10 @@ structure NeumannSolution (b : Fin n → ℝ) (s T : ℝ) where
   B₄ : ℝ
   bound₄ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] (u t) x| ≤ B₄
 
-theorem node_add_mem_closedCube (hs : 0 < s) {p : Fin n → ℤ} (hp : ∀ i, 0 ≤ p i ∧ p i ≤ N + 1)
-    (l : Fin n) {τ : ℝ} (h1 : 0 ≤ meshSize s N * p l + τ)
-    (h2 : meshSize s N * p l + τ ≤ s) :
-    node b (meshSize s N) p + τ • Pi.single l 1 ∈ closedCube b s := by
-  have hh := meshSize_pos hs N
-  have hm := meshSize_mul s N
-  push_cast at hm
-  intro i _
-  have a1 : (0 : ℝ) ≤ p i := by exact_mod_cast (hp i).1
-  have a2 : (p i : ℝ) ≤ N + 1 := by exact_mod_cast (hp i).2
-  simp only [Pi.add_apply, Pi.smul_apply, smul_eq_mul, node_coord, Set.mem_Icc]
-  by_cases hi : i = l
-  · subst hi; simp only [Pi.single_eq_same, mul_one]; constructor <;> linarith
-  · simp only [Pi.single_eq_of_ne hi, mul_zero, add_zero]; constructor <;> nlinarith
-
-theorem node_sub_single_one (b : Fin n → ℝ) (h : ℝ) (p : Fin n → ℤ) (l : Fin n) :
-    node b h (p - Pi.single l 1) = node b h p + (-h) • Pi.single l 1 := by
-  rw [node_eq_sub_single_add b h p l]
-  simp [add_assoc]
+/-- Every node lies in the closed cube. -/
+theorem node_mem_closedCube (hs : 0 < s) (p : Nodes n N) :
+    node b (meshSize s N) p ∈ closedCube b s :=
+  (node_mem_closedCube_iff hs).2 (mem_closedNodes.1 p.2)
 
 /-- The stencil terms of a function with `∂_ν u = 0` are bounded by `max |∂ₗ²u|`. -/
 theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 2 u) {B : ℝ}
@@ -461,12 +439,7 @@ theorem abs_stencilTerm_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : Cont
   push_cast at hm
   have hhs := meshSize_le hs N
   set x := node b h p
-  have hx : x ∈ closedCube b s := by
-    simpa using node_add_mem_closedCube (b := b) hs hp l (τ := 0)
-      (by have : (0 : ℝ) ≤ p l := by exact_mod_cast (hp l).1
-          positivity)
-      (by have : (p l : ℝ) ≤ N + 1 := by exact_mod_cast (hp l).2
-          nlinarith)
+  have hx : x ∈ closedCube b s := (node_mem_closedCube_iff hs).2 hp
   have hu0 := upCount_nonneg (N := N + 1) σ l p
   have hu1 := upCount_le_one (N := N + 1) σ l p
   have hd0 := upCount_nonneg (N := N + 1) σ l (p - Pi.single l 1)
@@ -532,13 +505,13 @@ theorem interior_or_boundary (p : Nodes n N) :
     (p : Fin n → ℤ) ∈ interiorNodes n (N + 1) ∨
       ∃ l, (p : Fin n → ℤ) l = 0 ∨ (p : Fin n → ℤ) l = N + 1 := by
   have hp := mem_closedNodes.1 p.2
-  by_cases h : ∀ j, 1 ≤ (p : Fin n → ℤ) j ∧ (p : Fin n → ℤ) j ≤ N
+  by_cases h : ∀ j, 0 < (p : Fin n → ℤ) j ∧ (p : Fin n → ℤ) j < (N + 1 : ℕ)
   · exact Or.inl (mem_interiorNodes.2 h)
   · push Not at h
     obtain ⟨l, hl⟩ := h
     refine Or.inr ⟨l, ?_⟩
     have := hp l
-    by_cases h1 : 1 ≤ (p : Fin n → ℤ) l
+    by_cases h1 : 0 < (p : Fin n → ℤ) l
     · have := hl h1; omega
     · omega
 
@@ -553,16 +526,7 @@ theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     |MaxNormHeat.laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * (1 + (n + 1).factorial) := by
   have hp := mem_closedNodes.1 p.2
-  have hx : node b (meshSize s N) p ∈ closedCube b s := by
-    simpa using node_add_mem_closedCube (b := b) hs hp l₀ (τ := 0)
-      (by have : (0 : ℝ) ≤ (p : Fin n → ℤ) l₀ := by exact_mod_cast (hp l₀).1
-          have := meshSize_pos hs N
-          positivity)
-      (by have : ((p : Fin n → ℤ) l₀ : ℝ) ≤ N + 1 := by exact_mod_cast (hp l₀).2
-          have := meshSize_pos hs N
-          have hm := meshSize_mul s N
-          push_cast at hm
-          nlinarith)
+  have hx := node_mem_closedCube (b := b) hs p
   have hΔ : |MaxNormHeat.laplacian u (node b (meshSize s N) p)| ≤ n * B := by
     refine (abs_sum_le_sum_abs _ _).trans ?_
     calc ∑ i, |partialDeriv i (partialDeriv i u) (node b (meshSize s N) p)|
@@ -587,23 +551,6 @@ theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     _ ≤ n * B + (n + 1).factorial * n * B := add_le_add hΔ hL
     _ = _ := by ring
 
-/-- `Lₕ Iₕ u` at an interior node is the `(2n + 1)`-point difference Laplacian. -/
-theorem neumannLaplacian_interp_interior (hs : 0 < s) (u : (Fin n → ℝ) → ℝ) {p : Nodes n N}
-    (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
-    neumannLaplacian b hs N (interp b s N u) p = ∑ l,
-      (u (node b (meshSize s N) p + meshSize s N • Pi.single l 1) -
-        2 * u (node b (meshSize s N) p) +
-        u (node b (meshSize s N) p + (-meshSize s N) • Pi.single l 1)) / meshSize s N ^ 2 := by
-  rw [neumannLaplacian_apply, p1Stiffness_congr_right _ _ (w' := u) fun T hT j => ?_]
-  · have := neg_p1Stiffness_div_lumpedMass b hs (N + 1) hp u
-    rw [meshSize] at *
-    rw [this]
-    refine sum_congr rfl fun l _ => ?_
-    rw [node_add_single_one, node_sub_single_one]
-  · obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hT j
-    rw [e, nodal_node hs (q := ⟨q, mem_closedNodes.2 hq⟩)]
-    rfl
-
 /-- **Consistency at the interior nodes is `O(h²)`**: `|Δu(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12`
 for `u ∈ C⁴` with `|∂ᵢ⁴u| ≤ B` on `Q̄`. -/
 theorem abs_laplacian_sub_interior_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u)
@@ -611,20 +558,11 @@ theorem abs_laplacian_sub_interior_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
     |MaxNormHeat.laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * meshSize s N ^ 2 / 12 := by
-  have hh := meshSize_pos hs N
-  have hm := meshSize_mul s N
-  push_cast at hm
-  have hpc := mem_closedNodes.1 p.2
-  have hpi := mem_interiorNodes.1 hp
   rw [neumannLaplacian_interp_interior hs u hp, MaxNormHeat.laplacian, ← sum_sub_distrib]
   refine (abs_sum_le_sum_abs _ _).trans ?_
   calc _ ≤ ∑ _l : Fin n, B * meshSize s N ^ 2 / 12 := sum_le_sum fun l _ =>
-        abs_partialDeriv_sub_secondDiff_le hu hh _ l fun t ht => hB _
-          (node_add_mem_closedCube hs hpc l
-            (by have : (1 : ℝ) ≤ (p : Fin n → ℤ) l := by exact_mod_cast (hpi l).1
-                nlinarith [ht.1])
-            (by have : ((p : Fin n → ℤ) l : ℝ) ≤ N := by exact_mod_cast (hpi l).2
-                nlinarith [ht.2])) l
+        abs_partialDeriv_sub_secondDiff_le hu (meshSize_pos hs N) _ l fun t ht =>
+          hB _ (node_add_smul_mem_closedCube hs hp l ht) l
     _ = _ := by simp; ring
 
 /-! ### The barrier and the errors in the maximum norm at the nodes -/
@@ -636,21 +574,6 @@ def NeumannSolution.defect {T : ℝ} (S : NeumannSolution b s T) (N : ℕ) : ℝ
 /-- The boundary truncation bound `G = n B₂ (1 + (n + 1)!)`. -/
 def NeumannSolution.boundaryDefect {T : ℝ} (S : NeumannSolution b s T) : ℝ :=
   n * S.B₂ * (1 + (n + 1).factorial)
-
-/-- Every node lies in the closed cube. -/
-theorem node_mem_closedCube (hs : 0 < s) (p : Nodes n N) :
-    node b (meshSize s N) p ∈ closedCube b s := by
-  have hp := mem_closedNodes.1 p.2
-  have hh := meshSize_pos hs N
-  have hm := meshSize_mul s N
-  push_cast at hm
-  rcases isEmpty_or_nonempty (Fin n) with hn | ⟨⟨l⟩⟩
-  · intro i; exact (hn.false i).elim
-  · simpa using node_add_mem_closedCube (b := b) hs hp l (τ := 0)
-      (by have : (0 : ℝ) ≤ (p : Fin n → ℤ) l := by exact_mod_cast (hp l).1
-          positivity)
-      (by have : ((p : Fin n → ℤ) l : ℝ) ≤ N + 1 := by exact_mod_cast (hp l).2
-          nlinarith)
 
 instance (n N : ℕ) : Nonempty (Nodes n N) :=
   ⟨⟨0, mem_closedNodes.2 fun _ => by simp only [Pi.zero_apply]; omega⟩⟩

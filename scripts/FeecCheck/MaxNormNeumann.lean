@@ -25,7 +25,8 @@ This file is part of the `FeecCheck` library, not of `Feec`.
 namespace FeecCheck.MaxNormNeumann
 
 open Set Finset NormedSpace Feec.Mesh Feec.FiniteElement Feec.TimeStepping
-open Feec.Models.Cube.MaxNormHeat (meshSize closedCube)
+open Feec.Models.Cube.MaxNormHeat (meshSize)
+open Feec.Models.Cube.Geometry (closedCube)
 open Feec.Models.Cube.MaxNormNeumann
 
 variable {n : ℕ} {s : ℝ}

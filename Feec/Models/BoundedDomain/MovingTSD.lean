@@ -276,14 +276,14 @@ theorem sum_pd_curlM (hV : ∀ ij, ContDiff ℝ ∞ (V ij)) (i : Fin 3) (x : R3)
 /-- `curl curl V = ∇ div V - ΔV` row-wise, for `C²` matrix fields. -/
 theorem curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ 2 (V ij)) (i k : Fin 3) (x : R3) :
     curlM (curlM V) (i, k) x =
-      partialDeriv k (fun y => ∑ l, partialDeriv l (V (i, l)) y) x - ∑ j,
-        partialDeriv j (partialDeriv j (V (i, k))) x := by
+      partialDeriv k (fun y => ∑ l, partialDeriv l (V (i, l)) y) x - laplacian (V (i, k)) x := by
   have hd : ∀ ij a, Differentiable ℝ (partialDeriv a (V ij)) := fun ij a =>
     ((hV ij).partialDeriv (m := 1) (by norm_num) a).differentiable one_ne_zero
   have hc : ∀ ij a b, partialDeriv a (partialDeriv b (V ij)) x =
     partialDeriv b (partialDeriv a (V ij)) x := fun ij a b =>
     partialDeriv_comm (hV ij) a b x
-  rw [partialDeriv_sum Finset.univ (fun l _ => hd _ _ x) k, sum_fin3_rot k, sum_fin3_rot k]
+  rw [laplacian_apply, partialDeriv_sum Finset.univ (fun l _ => hd _ _ x) k, sum_fin3_rot k,
+    sum_fin3_rot k]
   have e1 : curlM V (i, k + 2) = fun y => partialDeriv k (V (i, k + 1)) y -
     partialDeriv (k + 1) (V (i, k)) y := by
     funext y
@@ -321,7 +321,6 @@ theorem eq_zero_of_curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij))
   have e := curlM_curlM_eq (fun ij => (hV ij).of_le (by simp)) i k x
   rw [hdiv i, h] at e
   simp only [partialDeriv_zero] at e
-  rw [laplacian_apply]
   linarith
 
 end CurlCurl

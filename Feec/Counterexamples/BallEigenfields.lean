@@ -2113,7 +2113,6 @@ theorem eq_zero_of_isEigenfield_of_contDiff_two {ξ : ℝ} (hξ : ξ ≠ 0)
   -- `ΔU = 0` on `S²`
   have hlap : ∀ x, rho x = 1 → ∀ ij, laplacian (U ij) x = 0 := by
     intro x hx ij
-    rw [laplacian_apply]
     obtain ⟨i, k⟩ := ij
     have hdivC : ContDiff ℝ 1 (fun y => ∑ l, partialDeriv l (U (i, l)) y) :=
       ContDiff.sum fun l _ => (hU _).partialDeriv (m := 1) (by norm_num) l
@@ -2530,7 +2529,7 @@ theorem curlM_curlM_shearWave (ξ : ℝ) (ij : Ix) (x : R3) :
   have hdiv : (fun y => ∑ l, partialDeriv l (shearWave ξ (i, l)) y) = 0 :=
     funext fun y => shearWave_div ξ i y
   rw [hdiv, partialDeriv_zero]
-  simp only [pd_pd_shearWave, Fin.sum_univ_three, shearWave]
+  simp only [laplacian, pd_pd_shearWave, Fin.sum_univ_three, shearWave]
   fin_cases k <;> simp <;> ring
 
 /-- The plane wave as an element of `L²(B)`. -/

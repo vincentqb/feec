@@ -641,9 +641,9 @@ theorem sum_integral_sq_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} {C :
     fun z hz => (pi_norm_le_iff_of_nonneg (by positivity)).2 fun s => by
       rw [Real.norm_eq_abs]
       exact hp.abs_smoothForm_le_locMass_of_near hγ1 x T (closedCell_subset_closure N m hz)
-        (vertexSet_subset_closedInterior T (points_mem_vertexSet T 0))
+        (vertexSet_subset_closedInterior' T (points_mem_vertexSet T 0))
         (dist_le_of_mem_closedCell hz
-          (hTm (vertexSet_subset_closedInterior T (points_mem_vertexSet T 0)))) s
+          (hTm (vertexSet_subset_closedInterior' T (points_mem_vertexSet T 0)))) s
   have hzb : ∀ y ∈ T.closedInterior, ∀ s, |cellField (1 / 2) (cubeFieldGlobalInterp (1 / 2) k hb
       (smoothForm p (isOpen_mesh_domain n N).measurableSet k x)) m y s| ≤ C * B := fun y hy s => by
     rw [cellField_cubeFieldGlobalInterp]
@@ -763,7 +763,7 @@ theorem sqrt_mul_abs_fieldDof_sub_le {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
   have hTm : T.closedInterior ⊆ closedCell (1 / 2) m :=
     simplexCell_closedInterior_subset (L := 1 / 2) (N := N + 1) hT
   set z₀ := T.points 0
-  have hz₀T : z₀ ∈ T.closedInterior := vertexSet_subset_closedInterior T (points_mem_vertexSet T 0)
+  have hz₀T : z₀ ∈ T.closedInterior := vertexSet_subset_closedInterior' T (points_mem_vertexSet T 0)
   have hz₀m : z₀ ∈ closedCell (1 / 2) m := hTm hz₀T
   have hmass : ∀ m', closedCell (1 / 2) m' ⊆ Metric.cthickening (2 * h) T.closedInterior →
       formL2Sq (closedCell (1 / 2) m') (cellField (1 / 2) ω m') ≤ Lm :=

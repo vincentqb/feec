@@ -123,23 +123,9 @@ def PolyCoeffBound (n k : ℕ) (D : ℝ) : Prop :=
         ξ s| ≤ D * diam T ^ k
 
 theorem exists_polyCoeffBound (k : ℕ) : ∃ D, 0 ≤ D ∧ PolyCoeffBound S n k D := by
-  obtain ⟨M, hM0, hM⟩ := FEM.Poly.exists_testBound (n := n) S k
-  refine ⟨2 ^ n * (2 ^ n * k.factorial) * M, by positivity, fun {T g} hgT i ξ hξ => ?_⟩
-  have hne := i.2
-  have hg : #g = (#g - 1) + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
-  have hgn : #g - 1 ≤ n := by
-    have := Finset.card_le_card hgT
-    rw [card_vertexSet] at this; omega
-  refine (sum_abs_dofCoeff_le (diam_nonneg T) (abs_simplexMatrix_lexEnum_le_diam hgT hg) _ k
-    ξ).trans ?_
-  have h2 : (2 : ℝ) ^ (#g - 1) ≤ 2 ^ n := pow_le_pow_right₀ (by norm_num) hgn
-  have hη := hM (#g - 1) hgn i.1 ξ hξ
-  have hh := pow_nonneg (diam_nonneg T) k
-  calc 2 ^ n * (2 ^ (#g - 1) * (k.factorial * diam T ^ k)) *
-        ‖(S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) ξ‖
-      ≤ 2 ^ n * (2 ^ n * (k.factorial * diam T ^ k)) * M := by
-        gcongr
-    _ = _ := by ring
+  obtain ⟨D, hD0, hD⟩ := FEM.Poly.exists_coeffBound_of_le (n := n) S k
+  exact ⟨D, hD0, fun {T g} hgT i => hD hgT i (diam_nonneg T)
+    (abs_simplexMatrix_lexEnum_le_diam hgT (Nat.succ_pred_eq_of_pos (card_pos.2 i.2)).symm)⟩
 
 /-- **Stability of the degrees of freedom in the sup norm** on any simplex:
 `|ℓ_{g,i}(ψ)| ≤ D h_Tᵏ sup_T |ψ|`. -/
@@ -147,37 +133,8 @@ theorem abs_polyDof_le {k : ℕ} {D : ℝ} (hD : PolyCoeffBound S n k D)
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T)
     (i : S.DofIdx g k) (ψ : contForms n) {B : ℝ} (hB0 : 0 ≤ B)
     (hB : ∀ x ∈ T.closedInterior, ∀ s, |(ψ : FormField n) x s| ≤ B) :
-    |S.dof g k i ψ| ≤ D * diam T ^ k * B := by
-  have hne := i.2
-  have hg : #g = (#g - 1) + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
-  set q := lexEnum g (#g - 1)
-  set η := (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
-  rw [S.dof_eq_integral]
-  have h0 : (0 : Fin (#g - 1) → ℝ) ∈ FiniteElement.refSimplex (#g - 1) := fun a => by
-    refine Fin.cases ?_ (fun l => ?_) a
-    · simp
-    · simp [refBary]
-  have hD0 : 0 ≤ D * diam T ^ k :=
-    (Finset.sum_nonneg fun s _ => abs_nonneg _).trans (hD hgT i 0 h0)
-  have hpt : ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
-      ‖∑ s, (ψ : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s‖ ≤ D * diam T ^ k * B := by
-    intro ξ hξ
-    rw [Real.norm_eq_abs]
-    refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
-    calc ∑ s, |(ψ : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s|
-        ≤ ∑ s, B * |dofCoeff q η k ξ s| := Finset.sum_le_sum fun s _ => by
-          rw [abs_mul]
-          exact mul_le_mul_of_nonneg_right
-            (hB _ (FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ) s) (abs_nonneg _)
-      _ = B * ∑ s, |dofCoeff q η k ξ s| := by rw [Finset.mul_sum]
-      _ ≤ B * (D * diam T ^ k) := mul_le_mul_of_nonneg_left (hD hgT i ξ hξ) hB0
-      _ = D * diam T ^ k * B := by ring
-  rw [← Real.norm_eq_abs]
-  refine (norm_setIntegral_le_of_norm_le_const (volume_refSimplex_lt_top _) hpt).trans ?_
-  calc D * diam T ^ k * B * volume.real (FiniteElement.refSimplex (#g - 1))
-      ≤ D * diam T ^ k * B * 1 :=
-        mul_le_mul_of_nonneg_left (FEM.volume_real_refSimplex_le_one _) (mul_nonneg hD0 hB0)
-    _ = _ := mul_one _
+    |S.dof g k i ψ| ≤ D * diam T ^ k * B :=
+  FEM.Poly.abs_dof_le_of_coeff_le S hgT i ψ (hD hgT i) hB0 hB
 
 /-! #### The degrees of freedom under the reference map -/
 

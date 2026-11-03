@@ -753,7 +753,7 @@ theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.
   set uT : FormField n := ((u T : (whitneyElement n).space T k) : FormField n)
   set L := locMass (2 * h) ((whitneyElement n).glue M k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
-    FEM.simplexMap_faceEnum_mem hgT hg hξ
+    simplexMap_faceEnum_mem' hgT hg hξ
   have hxc : x ∈ closure M.domain := M.closedInterior_subset_closure T.2 hxT
   -- the local fields near `x` obey the inverse estimates against the local mass of `T`
   have hinv : ∀ T' : M.simplices, (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ⊆
@@ -785,7 +785,7 @@ theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.
     refine ⟨u', hext, fun s => hb1 t htT'c s, fun hbad => ?_⟩
     have hgT' : g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
       hgeom T g hgT hg ξ hξ hbad t hdist T' htT'
-    have hxT' := FEM.simplexMap_faceEnum_mem hgT' hg hξ
+    have hxT' := simplexMap_faceEnum_mem' hgT' hg hξ
     refine ⟨?_, fun s => hb1 x hxT' s, fun s => ?_⟩
     · rw [FEM.sum_mul_minor_eq (FEM.mem_p1MinusForms_of_space (u T)) q ξ,
         FEM.sum_mul_minor_eq (FEM.mem_p1MinusForms_of_space (u T')) q ξ,
@@ -1014,7 +1014,7 @@ theorem geomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM 
   have hh := hM.meshSize_pos
   set x := simplexMap (faceEnum g (k + 1)) ξ
   have hx := isFacePoint_of_notMem_nearBdry (M := M) hg hξb
-  have hxT := FEM.simplexMap_faceEnum_mem hgT hg hξ
+  have hxT := simplexMap_faceEnum_mem' hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   obtain ⟨h1, h2⟩ := path_of_isMaximal hstar hs₀ hp hxc ht
   have hgh := hpA.gh_nonneg hR
@@ -1041,7 +1041,7 @@ theorem geomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ} (hM 
   have hh := hM.meshSize_pos
   set x := simplexMap (faceEnum g (k + 1)) ξ
   have hx := isFacePoint_of_notMem_nearBdry (M := M) hg hξb
-  have hxT := FEM.simplexMap_faceEnum_mem hgT hg hξ
+  have hxT := simplexMap_faceEnum_mem' hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   have htΩ := hint T' T'.2 htT'
   obtain ⟨h1, h2, h3⟩ := path_of_isMinimal hstar hs₀ hR hp hpA hγh hσ htΩ ht
@@ -1064,7 +1064,7 @@ theorem sampleOK_of_isMaximal {M : SimplicialMesh n} (hstar : StarBall M.domain 
     (u : (whitneyElement n).Piecewise M k) : SampleOK p θ u := by
   intro T g hgT hg ξ hξ _ t ht htΩ
   exfalso
-  have hxT := FEM.simplexMap_faceEnum_mem hgT hg hξ
+  have hxT := simplexMap_faceEnum_mem' hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   have := closedBall_dil_subset_of_starBall hstar p.half_le_factor hp.factor_lt_one hp.rOut_lt hxc
   rw [← hp.center_eq] at this
@@ -1086,7 +1086,7 @@ theorem sampleOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
   have hh := hM.meshSize_pos
   set x := simplexMap (faceEnum g (k + 1)) ξ
   have hx := isFacePoint_of_notMem_nearBdry (M := M) hg hξb
-  have hxT := FEM.simplexMap_faceEnum_mem hgT hg hξ
+  have hxT := simplexMap_faceEnum_mem' hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   have ht' : ‖t - x‖ ≤ 2 * (γ * M.meshSize) :=
     hpA.norm_sub_le_of_dist_le hR hσ1 (hRx x hxc) ht.le

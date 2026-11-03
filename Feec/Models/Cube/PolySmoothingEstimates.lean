@@ -261,7 +261,7 @@ theorem abs_simplexMatrix_lexEnum_le {N : ℕ} {T : Affine.Simplex ℝ (Fin n �
     |simplexMatrix (lexEnum g m) i l| ≤ hN N := by
   obtain ⟨m', σ, rfl⟩ := mem_mesh_simplices.1 hT
   have hmem : ∀ a, lexEnum g m a ∈ (cubeSimplex N m' σ).closedInterior := fun a =>
-    vertexSet_subset_closedInterior _ (hgT (lexEnum_mem hg a))
+    vertexSet_subset_closedInterior' _ (hgT (lexEnum_mem hg a))
   have := norm_sub_le_of_mem_cubeSimplex (hmem l.succ) (hmem 0)
   refine le_trans ?_ this
   have h := norm_le_pi_norm (lexEnum g m l.succ - lexEnum g m 0) i
@@ -293,6 +293,70 @@ theorem exists_testBound (k : ℕ) : ∃ M, 0 ≤ M ∧ ∀ m ≤ n,
     _ ≤ _ := Finset.single_le_sum (f := fun m => ∑ i, M m i)
         (fun m _ => Finset.sum_nonneg fun i _ => hM0 m i) (Finset.mem_range.2 (by omega))
 
+/-- **The coefficient fields of the degrees of freedom are `O(hᵏ)`** on every simplex whose edge
+vectors are bounded by `h`, with one constant. -/
+theorem exists_coeffBound_of_le (k : ℕ) : ∃ D, 0 ≤ D ∧
+    ∀ {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)}, g ⊆ vertexSet T →
+      ∀ (i : S.DofIdx g k) {h : ℝ}, 0 ≤ h →
+        (∀ j l, |simplexMatrix (lexEnum g (#g - 1)) j l| ≤ h) →
+        ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
+          ∑ s, |dofCoeff (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 :
+            FormField (#g - 1)) k ξ s| ≤ D * h ^ k := by
+  obtain ⟨M, hM0, hM⟩ := exists_testBound S k
+  refine ⟨2 ^ n * (2 ^ n * k.factorial) * M, by positivity,
+    fun {T g} hgT i h hh hle ξ hξ => ?_⟩
+  have hgn : #g - 1 ≤ n := by
+    have := Finset.card_le_card hgT
+    rw [card_vertexSet] at this; omega
+  refine (sum_abs_dofCoeff_le hh hle _ k ξ).trans ?_
+  have h2 : (2 : ℝ) ^ (#g - 1) ≤ 2 ^ n := pow_le_pow_right₀ (by norm_num) hgn
+  have hη := hM (#g - 1) hgn i.1 ξ hξ
+  have hhk := pow_nonneg hh k
+  calc 2 ^ n * (2 ^ (#g - 1) * (k.factorial * h ^ k)) *
+        ‖(S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) ξ‖
+      ≤ 2 ^ n * (2 ^ n * (k.factorial * h ^ k)) * M := by
+        gcongr
+    _ = _ := by ring
+
+/-- **Stability of the degrees of freedom in the sup norm**: if the coefficient fields of the
+moment `ℓ_{g,i}` of a face `g` of `T` satisfy `Σₛ |cₛ| ≤ K` on the reference simplex, then
+`|ℓ_{g,i}(ω)| ≤ K sup_T |ω|` for every continuous form `ω`. -/
+theorem abs_dof_le_of_coeff_le {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (i : S.DofIdx g k) (ω : contForms n)
+    {K B : ℝ} (hK : ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
+      ∑ s, |dofCoeff (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) k
+        ξ s| ≤ K) (hB0 : 0 ≤ B)
+    (hB : ∀ x ∈ T.closedInterior, ∀ s, |(ω : FormField n) x s| ≤ B) :
+    |S.dof g k i ω| ≤ K * B := by
+  have hne := i.2
+  have hg : #g = (#g - 1) + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
+  set q := lexEnum g (#g - 1)
+  set η := (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
+  rw [S.dof_eq_integral]
+  have h0 : (0 : Fin (#g - 1) → ℝ) ∈ FiniteElement.refSimplex (#g - 1) := fun a => by
+    refine Fin.cases ?_ (fun l => ?_) a
+    · simp
+    · simp [refBary]
+  have hK0 : 0 ≤ K := (Finset.sum_nonneg fun s _ => abs_nonneg _).trans (hK 0 h0)
+  have hpt : ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
+      ‖∑ s, (ω : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s‖ ≤ K * B := by
+    intro ξ hξ
+    rw [Real.norm_eq_abs]
+    refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
+    calc ∑ s, |(ω : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s|
+        ≤ ∑ s, B * |dofCoeff q η k ξ s| := Finset.sum_le_sum fun s _ => by
+          rw [abs_mul]
+          exact mul_le_mul_of_nonneg_right (hB _ (simplexMap_lexEnum_mem hgT hg hξ) s)
+            (abs_nonneg _)
+      _ = B * ∑ s, |dofCoeff q η k ξ s| := by rw [Finset.mul_sum]
+      _ ≤ B * K := mul_le_mul_of_nonneg_left (hK ξ hξ) hB0
+      _ = K * B := by ring
+  rw [← Real.norm_eq_abs]
+  refine (norm_setIntegral_le_of_norm_le_const (volume_refSimplex_lt_top _) hpt).trans ?_
+  calc K * B * volume.real (FiniteElement.refSimplex (#g - 1)) ≤ K * B * 1 :=
+        mul_le_mul_of_nonneg_left (volume_real_refSimplex_le_one _) (mul_nonneg hK0 hB0)
+    _ = _ := mul_one _
+
 /-- **The coefficient fields of the degrees of freedom are `O(h_Nᵏ)`** on the mesh simplices,
 with one constant. -/
 def CoeffBound (n k : ℕ) (D : ℝ) : Prop :=
@@ -303,23 +367,9 @@ def CoeffBound (n k : ℕ) (D : ℝ) : Prop :=
           ξ s| ≤ D * hN N ^ k
 
 theorem exists_coeffBound (k : ℕ) : ∃ D, 0 ≤ D ∧ CoeffBound S n k D := by
-  obtain ⟨M, hM0, hM⟩ := exists_testBound S k
-  refine ⟨2 ^ n * (2 ^ n * k.factorial) * M, by positivity,
-    fun N T hT g hgT i ξ hξ => ?_⟩
-  have hne := i.2
-  have hg : #g = (#g - 1) + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
-  have hgn : #g - 1 ≤ n := by
-    have := Finset.card_le_card hgT
-    rw [card_vertexSet] at this; omega
-  refine (sum_abs_dofCoeff_le (hN_pos N).le (abs_simplexMatrix_lexEnum_le hT hgT hg) _ k ξ).trans ?_
-  have h2 : (2 : ℝ) ^ (#g - 1) ≤ 2 ^ n := pow_le_pow_right₀ (by norm_num) hgn
-  have hη := hM (#g - 1) hgn i.1 ξ hξ
-  have hh := pow_nonneg (hN_pos N).le k
-  calc 2 ^ n * (2 ^ (#g - 1) * (k.factorial * hN N ^ k)) *
-        ‖(S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) ξ‖
-      ≤ 2 ^ n * (2 ^ n * (k.factorial * hN N ^ k)) * M := by
-        gcongr
-    _ = _ := by ring
+  obtain ⟨D, hD0, hD⟩ := exists_coeffBound_of_le S k
+  exact ⟨D, hD0, fun N T hT g hgT i => hD hgT i (hN_pos N).le
+    (abs_simplexMatrix_lexEnum_le hT hgT (Nat.succ_pred_eq_of_pos (card_pos.2 i.2)).symm)⟩
 
 /-- **Stability of the degrees of freedom in the sup norm**: `|ℓ_{g,i}(ω)| ≤ D h_Nᵏ sup_T |ω|`
 for a face `g` of a mesh simplex `T` and a continuous form `ω`. -/
@@ -327,38 +377,8 @@ theorem abs_dof_le {k : ℕ} {D : ℝ} (hD : CoeffBound S n k D) {N : ℕ}
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices)
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (i : S.DofIdx g k) (ω : contForms n)
     {B : ℝ} (hB0 : 0 ≤ B) (hB : ∀ x ∈ T.closedInterior, ∀ s, |(ω : FormField n) x s| ≤ B) :
-    |S.dof g k i ω| ≤ D * hN N ^ k * B := by
-  have hne := i.2
-  have hg : #g = (#g - 1) + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
-  set q := lexEnum g (#g - 1)
-  set η := (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
-  rw [S.dof_eq_integral]
-  have hD0 : 0 ≤ D * hN N ^ k := by
-    obtain ⟨ξ, hξ⟩ : (FiniteElement.refSimplex (#g - 1)).Nonempty :=
-      ⟨0, fun a => by
-        refine Fin.cases ?_ (fun l => ?_) a
-        · simp
-        · simp [refBary]⟩
-    exact (Finset.sum_nonneg fun s _ => abs_nonneg _).trans (hD N hT hgT i ξ hξ)
-  have hpt : ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
-      ‖∑ s, (ω : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s‖ ≤ D * hN N ^ k * B := by
-    intro ξ hξ
-    rw [Real.norm_eq_abs]
-    refine (Finset.abs_sum_le_sum_abs _ _).trans ?_
-    calc ∑ s, |(ω : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s|
-        ≤ ∑ s, B * |dofCoeff q η k ξ s| := Finset.sum_le_sum fun s _ => by
-          rw [abs_mul]
-          exact mul_le_mul_of_nonneg_right (hB _ (simplexMap_lexEnum_mem hgT hg hξ) s)
-            (abs_nonneg _)
-      _ = B * ∑ s, |dofCoeff q η k ξ s| := by rw [Finset.mul_sum]
-      _ ≤ B * (D * hN N ^ k) := mul_le_mul_of_nonneg_left (hD N hT hgT i ξ hξ) hB0
-      _ = D * hN N ^ k * B := by ring
-  rw [← Real.norm_eq_abs]
-  refine (norm_setIntegral_le_of_norm_le_const (volume_refSimplex_lt_top _) hpt).trans ?_
-  calc D * hN N ^ k * B * volume.real (FiniteElement.refSimplex (#g - 1))
-      ≤ D * hN N ^ k * B * 1 :=
-        mul_le_mul_of_nonneg_left (volume_real_refSimplex_le_one _) (mul_nonneg hD0 hB0)
-    _ = _ := mul_one _
+    |S.dof g k i ω| ≤ D * hN N ^ k * B :=
+  abs_dof_le_of_coeff_le S hgT i ω (hD N hT hgT i) hB0 hB
 
 /-- **The local DOF estimate on the mesh simplices**, with one constant:
 `h_Nᵏ ‖z(x)‖ ≤ B Σ_{g ⊆ T, i} |ℓ_{g,i}(z)|` for `z ∈ P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`). -/

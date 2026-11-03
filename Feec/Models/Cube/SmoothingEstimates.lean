@@ -1,6 +1,7 @@
 module
 
 public import Feec.FiniteElement.InverseEstimate
+public import Feec.FiniteElement.ShapeRegularSmoothing
 public import Feec.Models.Cube.FiniteElementMethod
 
 /-!
@@ -291,6 +292,17 @@ theorem norm_sub_le_of_mem_cubeSimplex {N : ℕ} {m : Fin n → Fin (N + 1)}
   rw [← smul_sub, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 h.le)] at key
   rwa [inv_mul_le_iff₀ h, mul_one] at key
 
+theorem diam_le_hN {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) : diam T ≤ hN N := by
+  obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
+  exact Metric.diam_le_of_forall_dist_le (hN_pos N).le fun x hx y hy => by
+    rw [dist_eq_norm]; exact norm_sub_le_of_mem_cubeSimplex hx hy
+
+theorem diam_eq_hN [NeZero n] {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ (mesh n N).simplices) : diam T = hN N := by
+  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
+  exact diam_freudenthalMesh_simplex (0 : Fin n → ℝ) (hN_pos N) (finLattice m) σ
+
 /-- **Faces through nearby points.** Let `x = Σₐ λₐ qₐ` be a point of a `k`-face `g` of a mesh
 simplex `T`, with all barycentric weights `λₐ ≥ θ`, `0 < θ ≤ ½`. Every mesh simplex `T'` containing
 a point at sup-distance `< θ h_N / 2` from `x` has `g` among its faces. -/
@@ -342,108 +354,41 @@ theorem subset_vertexSet_of_near {N : ℕ} {T T' : Affine.Simplex ℝ (Fin n →
 
 /-! ### Bounded overlap -/
 
-theorem card_filter_Icc_le (N : ℕ) (c : ℝ) :
-    ((Finset.univ : Finset (Fin (N + 1))).filter fun j : Fin (N + 1) => c ≤ ((j : ℕ) : ℝ) ∧
-      ((j : ℕ) : ℝ) ≤ c + 5).card ≤ 6 := by
-  classical
-  set f : Fin (N + 1) → ℕ := fun j => (((j : ℕ) : ℤ) - ⌈c⌉).toNat
-  have hmaps : ∀ j ∈ (Finset.univ : Finset (Fin (N + 1))).filter (fun j : Fin (N + 1) => c ≤ ((j : ℕ) : ℝ) ∧
-      ((j : ℕ) : ℝ) ≤ c + 5), f j ∈ Finset.range 6 := by
-    intro j hj
-    simp only [Finset.mem_filter, Finset.mem_univ, true_and] at hj
-    have h1 : ((j : ℕ) : ℤ) ≤ ⌈c⌉ + 5 := by
-      have : ((j : ℕ) : ℝ) ≤ ⌈c⌉ + 5 := hj.2.trans (by linarith [Int.le_ceil c])
-      exact_mod_cast this
-    simp only [Finset.mem_range, f]
-    omega
-  have hinj : Set.InjOn f ((Finset.univ : Finset (Fin (N + 1))).filter fun j : Fin (N + 1) =>
-      c ≤ ((j : ℕ) : ℝ) ∧ ((j : ℕ) : ℝ) ≤ c + 5) := by
-    intro j hj j' hj' e
-    simp only [Finset.coe_filter, Finset.mem_univ, true_and] at hj hj'
-    have h1 : ⌈c⌉ ≤ ((j : ℕ) : ℤ) := Int.ceil_le.2 (by exact_mod_cast hj.1)
-    have h2 : ⌈c⌉ ≤ ((j' : ℕ) : ℤ) := Int.ceil_le.2 (by exact_mod_cast hj'.1)
-    simp only [f] at e
-    apply Fin.ext
-    omega
-  have := Finset.card_le_card_of_injOn f hmaps hinj
-  simpa using this
-
 open Classical in
 /-- **Bounded overlap**: a point lies in the `2 h_N`-neighbourhoods of at most `6ⁿ n!` simplices
-of the level-`(N + 1)` mesh. -/
+of the level-`(N + 1)` mesh (`Feec.FiniteElement.card_filter_mem_cthickening_le` with the shape
+constants `max n 2, 1` and `q = 1`). -/
 theorem card_filter_mem_cthickening_le (N : ℕ) (t : Fin n → ℝ) :
     ((mesh n N).simplices.filter fun T : Affine.Simplex ℝ (Fin n → ℝ) n =>
       t ∈ Metric.cthickening (2 * hN N) T.closedInterior).card ≤ 6 ^ n * n.factorial := by
-  set h := hN N
-  have hh := hN_pos N
-  set A : Fin n → Finset (Fin (N + 1)) := fun i => Finset.univ.filter fun j : Fin (N + 1) =>
-    t i / h - 3 ≤ ((j : ℕ) : ℝ) ∧ ((j : ℕ) : ℝ) ≤ t i / h - 3 + 5
-  set S := Fintype.piFinset A ×ˢ (Finset.univ : Finset (Equiv.Perm (Fin n)))
-  have hsub : (mesh n N).simplices.filter (fun T : Affine.Simplex ℝ (Fin n → ℝ) n =>
-      t ∈ Metric.cthickening (2 * h) T.closedInterior) ⊆
-      S.image fun p => cubeSimplex N p.1 p.2 := by
-    intro T hT
-    rw [Finset.mem_filter] at hT
-    obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT.1
-    have hc := hT.2
-    rw [Metric.cthickening_eq_biUnion_closedBall _ (by positivity),
-      (cubeSimplex N m σ).isClosed_closedInterior.closure_eq, Set.mem_iUnion₂] at hc
-    obtain ⟨y, hy, hty⟩ := hc
-    refine Finset.mem_image.2 ⟨(m, σ), Finset.mem_product.2 ⟨Fintype.mem_piFinset.2 fun i => ?_,
-      Finset.mem_univ _⟩, rfl⟩
-    rw [mem_closedInterior_cubeSimplex] at hy
-    have h01 := hy.1 i
-    simp only [Pi.sub_apply, Pi.smul_apply, smul_eq_mul, latticePoint_apply, finLattice] at h01
-    have hdist : |t i - y i| ≤ 2 * h := by
-      have := norm_le_pi_norm (t - y) i
-      rw [Real.norm_eq_abs, Pi.sub_apply] at this
-      exact this.trans (by rw [← dist_eq_norm]; exact hty)
-    rw [abs_le] at hdist
-    simp only [A, Finset.mem_filter, Finset.mem_univ, true_and]
-    have e : h⁻¹ * y i = y i / h := by rw [inv_mul_eq_div]
-    rw [e] at h01
-    have hy1 : (y i - 2 * h) / h ≤ t i / h := div_le_div_of_nonneg_right (by linarith) hh.le
-    have hy2 : t i / h ≤ (y i + 2 * h) / h := div_le_div_of_nonneg_right (by linarith) hh.le
-    rw [sub_div, mul_div_assoc, div_self hh.ne', mul_one] at hy1
-    rw [add_div, mul_div_assoc, div_self hh.ne', mul_one] at hy2
-    push_cast at h01
-    constructor <;> linarith [h01.1, h01.2]
-  calc _ ≤ (S.image fun p => cubeSimplex N p.1 p.2).card := Finset.card_le_card hsub
-    _ ≤ S.card := Finset.card_image_le
-    _ = (∏ i, (A i).card) * n.factorial := by
-        rw [Finset.card_product, Fintype.card_piFinset, Finset.card_univ, Fintype.card_perm,
-          Fintype.card_fin]
-    _ ≤ (∏ _i : Fin n, 6) * n.factorial := by
-        gcongr with i
-        exact card_filter_Icc_le N _
-    _ = 6 ^ n * n.factorial := by simp
+  rcases Nat.eq_zero_or_pos n with rfl | hn
+  · refine (Finset.card_filter_le _ _).trans ((Finset.card_le_card (t := Finset.univ.image
+      fun p : (Fin 0 → Fin (N + 1)) × Equiv.Perm (Fin 0) => cubeSimplex N p.1 p.2)
+      fun T hT => ?_).trans Finset.card_image_le |>.trans (by simp))
+    obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
+    exact Finset.mem_image.2 ⟨(m, σ), Finset.mem_univ _, rfl⟩
+  have : NeZero n := ⟨hn.ne'⟩
+  have hm : (mesh n N).meshSize = hN N :=
+    (mesh n N).meshSize_eq ⟨_, cubeSimplex_mem N 0 1⟩ fun T hT => diam_eq_hN hT
+  have h := Feec.FiniteElement.card_filter_mem_cthickening_le (mesh n N)
+    (C := ((max n 2 : ℕ) : ℝ)) (fun T hT => by
+      exact_mod_cast isShapeRegular_freudenthalMesh (0 : Fin n → ℝ) (1 / 2) (by norm_num) T
+        ⟨N, hT⟩) one_pos one_pos (fun T hT => by rw [one_mul, hm, diam_eq_hN hT])
+    (hm ▸ hN_pos N) (r := 2 * hN N) (by have := hN_pos N; positivity) t
+  rw [hm] at h
+  have e : (2 * (2 * hN N + hN N)) ^ n * n.factorial / (1 * (1 * hN N) ^ n) =
+      6 ^ n * n.factorial := by
+    have := hN_ne_zero N; field_simp; ring
+  exact_mod_cast h.trans_eq e
 
-
+open Classical in
 /-- **Bounded overlap of the neighbourhoods**, integrated. -/
 theorem sum_integral_cthickening_le (N : ℕ) {f : (Fin n → ℝ) → ℝ} (hf : Integrable f)
     (hf0 : ∀ x, 0 ≤ f x) :
     ∑ T ∈ (mesh n N).simplices, ∫ x in Metric.cthickening (2 * hN N) T.closedInterior, f x ≤
-      (6 ^ n * n.factorial : ℕ) * ∫ x, f x := by
-  classical
-  have hmeas : ∀ T : Affine.Simplex ℝ (Fin n → ℝ) n,
-      MeasurableSet (Metric.cthickening (2 * hN N) T.closedInterior) := fun T =>
-    Metric.isClosed_cthickening.measurableSet
-  have hint : ∀ T ∈ (mesh n N).simplices, Integrable
-      ((Metric.cthickening (2 * hN N) T.closedInterior).indicator f) :=
-    fun T _ => hf.indicator (hmeas T)
-  calc ∑ T ∈ (mesh n N).simplices, ∫ x in Metric.cthickening (2 * hN N) T.closedInterior, f x
-      = ∫ x, ∑ T ∈ (mesh n N).simplices,
-          (Metric.cthickening (2 * hN N) T.closedInterior).indicator f x := by
-        rw [integral_finsetSum _ hint]
-        exact Finset.sum_congr rfl fun T _ => (integral_indicator (hmeas T)).symm
-    _ ≤ ∫ x, ((6 ^ n * n.factorial : ℕ) : ℝ) * f x := by
-        refine integral_mono (integrable_finsetSum _ hint) (hf.const_mul _) fun x => ?_
-        simp only [Set.indicator_apply]
-        rw [← Finset.sum_filter]
-        rw [Finset.sum_const, nsmul_eq_mul]
-        exact mul_le_mul_of_nonneg_right (by exact_mod_cast card_filter_mem_cthickening_le N x)
-          (hf0 x)
-    _ = _ := integral_const_mul _ _
+      (6 ^ n * n.factorial : ℕ) * ∫ x, f x :=
+  sum_integral_le_of_card_le _ _ (fun _ => Metric.isClosed_cthickening.measurableSet)
+    (fun x => by exact_mod_cast card_filter_mem_cthickening_le N x) hf hf0
 
 /-! ### The smoother at a point -/
 
@@ -519,50 +464,15 @@ end Smoother
 
 /-! ### Face integrals on the mesh simplices -/
 
-theorem vertexSet_subset_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    (vertexSet T : Set (Fin n → ℝ)) ⊆ T.closedInterior := by
-  rw [← convexHull_vertexSet]; exact subset_convexHull ℝ _
-
-theorem simplexMap_faceEnum_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
-    {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) {x : Fin k → ℝ}
-    (hx : x ∈ FiniteElement.refSimplex k) : simplexMap (faceEnum g (k + 1)) x ∈ T.closedInterior := by
-  rw [← convexHull_vertexSet]
-  refine convexHull_mono ?_ (simplexMap_mem_convexHull _ hx)
-  rw [range_faceEnum hg]; exact Finset.coe_subset.2 hgT
-
-/-- The minors of a face of a mesh simplex are `O(h_Nᵏ)`. -/
-theorem sum_abs_minor_face_le {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) {k : ℕ} {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T)
-    (hg : g.card = k + 1) :
-    ∑ s, |wedgeProd (simplexMatrix (faceEnum g (k + 1))) s univ| ≤
-      2 ^ n * (k.factorial * hN N ^ k) := by
-  obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
-  refine sum_abs_wedgeProd_simplexMatrix_le (hN_pos N).le fun i l => ?_
-  have hmem : ∀ a, faceEnum g (k + 1) a ∈ (cubeSimplex N m σ).closedInterior := fun a =>
-    vertexSet_subset_closedInterior _ (hgT (by
-      have : faceEnum g (k + 1) a ∈ Set.range (faceEnum g (k + 1)) := ⟨a, rfl⟩
-      rwa [range_faceEnum hg] at this))
-  have := norm_sub_le_of_mem_cubeSimplex (hmem l.succ) (hmem 0)
-  refine le_trans ?_ this
-  have h := norm_le_pi_norm (faceEnum g (k + 1) l.succ - faceEnum g (k + 1) 0) i
-  rwa [Real.norm_eq_abs, Pi.sub_apply] at h
-
 /-- **Face integrals on the mesh**: `|∫_g ω| ≤ 2ⁿ h_Nᵏ sup_T |ω|`. -/
 theorem abs_simplexIntegral_face_le {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {k : ℕ} {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T)
     (hg : g.card = k + 1) {ω : FormField n} {A : ℝ} (hA0 : 0 ≤ A)
     (hA : ∀ x ∈ T.closedInterior, ∀ s, |ω x s| ≤ A) :
-    |simplexIntegral (faceEnum g (k + 1)) ω| ≤ 2 ^ n * hN N ^ k * A := by
-  have h := abs_simplexIntegral_le (p := faceEnum g (k + 1)) (ω := ω) (M := A)
-    fun x hx s => hA _ (simplexMap_faceEnum_mem hgT hg hx) s
-  have hm := sum_abs_minor_face_le hT hgT hg
-  have hk : (0 : ℝ) < k.factorial := by positivity
-  refine h.trans ?_
-  rw [div_le_iff₀ hk]
-  calc (∑ s, |wedgeProd (simplexMatrix (faceEnum g (k + 1))) s univ|) * A
-      ≤ 2 ^ n * (k.factorial * hN N ^ k) * A := mul_le_mul_of_nonneg_right hm hA0
-    _ = _ := by ring
-
+    |simplexIntegral (faceEnum g (k + 1)) ω| ≤ 2 ^ n * hN N ^ k * A :=
+  (abs_simplexIntegral_face_le' hgT hg hA0 hA).trans (mul_le_mul_of_nonneg_right
+    (mul_le_mul_of_nonneg_left (pow_le_pow_left₀ (diam_nonneg T) (diam_le_hN hT) k)
+      (by positivity)) hA0)
 
 /-! ### The cube and the smoothing parameters -/
 
@@ -824,7 +734,7 @@ theorem integral_cubeSimplex_le {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equi
   rw [cubeSimplex_eq, integral_closedInterior_mapEquiv_boxMap _ _ hh]
   refine mul_le_mul_of_nonneg_left ?_ (pow_nonneg hh.le n)
   have hA0 : 0 ≤ A := by
-    have := hA _ (vertexSet_subset_closedInterior _ (points_mem_vertexSet _ 0))
+    have := hA _ (vertexSet_subset_closedInterior' _ (points_mem_vertexSet _ 0))
     exact (hf0 _).trans this
   calc ∫ y in (kuhnSimplex σ).closedInterior, f (hN N • latticePoint (finLattice m) + hN N • y)
       ≤ ∫ _y in (kuhnSimplex σ).closedInterior, A := by
@@ -1676,7 +1586,7 @@ theorem sqrt_mul_abs_integrand_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : In
   set uT : FormField n := ((u T : (whitneyElement n).space T k) : FormField n)
   set L := locMass ((whitneyElement n).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
-    simplexMap_faceEnum_mem hgT hg hξ
+    simplexMap_faceEnum_mem' hgT hg hξ
   have hxc : x ∈ closure (cubeDomain n) := by
     rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure T.2 hxT
   -- the local fields near `x` obey the inverse estimates against the local mass of `T`
@@ -1708,7 +1618,7 @@ theorem sqrt_mul_abs_integrand_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : In
     have hgT' : g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
       subset_vertexSet_of_near T.2 T'.2 hgT hg hγ hγ2 hμ (sum_refBary ξ) htT'c
         (by rw [← simplexMap_eq_sum q ξ]; exact hxt)
-    refine ⟨?_, fun s => hb1 x (simplexMap_faceEnum_mem hgT' hg hξ) s, fun s => ?_⟩
+    refine ⟨?_, fun s => hb1 x (simplexMap_faceEnum_mem' hgT' hg hξ) s, fun s => ?_⟩
     · rw [sum_mul_minor_eq (mem_p1MinusForms_of_space (u T)) q ξ,
         sum_mul_minor_eq (mem_p1MinusForms_of_space (u T')) q ξ,
         simplexIntegral_eq_of_mem_globalSpace hu T T' hgT hgT' hg]
@@ -1745,7 +1655,8 @@ theorem sqrt_mul_abs_dof_err_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : InvB
     ((whitneyElement n).glue (mesh n N) k u) : FormField n)
   set L := locMass ((whitneyElement n).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hMm : ∑ s, |wedgeProd (simplexMatrix q) s univ| ≤ 2 ^ n * (k.factorial * hN N ^ k) :=
-    sum_abs_minor_face_le T.2 hgT hg
+    (sum_abs_minor_face_le' hgT hg).trans (mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left
+      (pow_le_pow_left₀ (diam_nonneg _) (diam_le_hN T.2) k) (by positivity)) (by positivity))
   have huc : Continuous uT :=
     (isAffineField_of_mem_p1MinusForms (mem_p1MinusForms_of_space _)).continuous
   have hwc : Continuous w := (mem_c1Forms.1 (smoothForm p
@@ -1959,7 +1870,7 @@ theorem sampleOK_pMax {N k : ℕ} (u : (whitneyElement n).Piecewise (mesh n N) k
     SampleOK γ (pMax (n := n) γ hγ hγ1 N) u := by
   intro T g hgT hg ξ hξ _ t ht htΩ
   exact absurd (pMax_samples_mem N _ ((mesh n N).closedInterior_subset_closure T.2
-    (simplexMap_faceEnum_mem hgT hg hξ)) t ht) htΩ
+    (simplexMap_faceEnum_mem' hgT hg hξ)) t ht) htΩ
 
 /-! ### The minimal family: boundary faces -/
 
@@ -2066,7 +1977,7 @@ theorem kuhnVertex_mul_swap {σ : Equiv.Perm (Fin n)} {a b : Fin n} {j : Fin (n 
 theorem apply_mem_Icc_of_mem_vertexSet {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {v : Fin n → ℝ} (hv : v ∈ vertexSet T) (i : Fin n) :
     0 ≤ v i ∧ v i ≤ 1 / 2 := by
-  have h := (mesh n N).closedInterior_subset_closure hT (vertexSet_subset_closedInterior T hv)
+  have h := (mesh n N).closedInterior_subset_closure hT (vertexSet_subset_closedInterior' T hv)
   rw [mesh_domain, closure_cubeDomain] at h
   exact h i (Set.mem_univ i)
 
@@ -2381,7 +2292,7 @@ theorem sampleOK_pMin (hγ2 : γ ≤ 1 / 2) {N k : ℕ} {u : (whitneyElement n).
     intro a; by_contra hlt; push Not at hlt; exact hgood ⟨a, hlt⟩
   have hxc : simplexMap q ξ ∈ closure (cubeDomain n) := by
     rw [← mesh_domain n N]
-    exact (mesh n N).closedInterior_subset_closure T.2 (simplexMap_faceEnum_mem hgT hg hξ)
+    exact (mesh n N).closedInterior_subset_closure T.2 (simplexMap_faceEnum_mem' hgT hg hξ)
   obtain ⟨T'', hT'', F, hF, hFT'', hgF⟩ := exists_boundaryFacet_of_near T.2 hgT
     (Finset.card_pos.1 (by rw [hg]; omega)) (q := q)
     (fun a => hgT (by

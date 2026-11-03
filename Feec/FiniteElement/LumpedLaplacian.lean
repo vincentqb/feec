@@ -41,22 +41,6 @@ open Feec.Mesh
 
 variable {n : ℕ} {ι : Type*} [Fintype ι]
 
-/-- The nodal function on `ℝⁿ` with values `U` at the nodes `x` and `0` elsewhere. -/
-def nodalFun (x : ι → Fin n → ℝ) (U : ι → ℝ) : (Fin n → ℝ) → ℝ :=
-  fun y => ∑ q, if x q = y then U q else 0
-
-theorem nodalFun_apply {x : ι → Fin n → ℝ} (hx : Function.Injective x) (U : ι → ℝ) (q : ι) :
-    nodalFun x U (x q) = U q := by
-  classical
-  simp only [nodalFun, hx.eq_iff]
-  rw [Finset.sum_eq_single q (fun c _ hc => by simp [hc]) (by simp)]
-  simp
-
-theorem nodalFun_eq_sum (x : ι → Fin n → ℝ) (U : ι → ℝ) :
-    nodalFun x U = ∑ q, U q • nodalIndicator (x q) := by
-  funext y
-  simp [nodalFun, nodalIndicator, Finset.sum_apply, eq_comm]
-
 variable (M : SimplicialMesh n) (x : ι → Fin n → ℝ)
 
 /-- The entries `-a(φ_{x p}, φ_{x q}) / m(x p)` of the lumped-mass Laplacian. -/

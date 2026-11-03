@@ -1,6 +1,6 @@
 module
 
-public import Feec.FiniteElement.LumpedLaplacian
+public import Feec.FiniteElement.LumpedMass
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.MeshDivergence
 public import Feec.FiniteElement.ShapeRegularSmoothing
@@ -228,23 +228,19 @@ theorem exists_p1Global_eq (M : SimplicialMesh n) (v : (whitneyElement n).global
   rw [dite_eq_left_of_eq_true (eq_true hex), ← hval _ hex.choose_spec]
   exact v.2 _ _ _ (singleton_subset_iff.2 hex.choose_spec) (singleton_subset_iff.2 hx) _
 
-/-- `p1Global M u` depends only on the values of `u` at the vertices of `M`. -/
-theorem p1Global_congr (M : SimplicialMesh n) {u w : (Fin n → ℝ) → ℝ}
-    (h : ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, u x = w x) : p1Global M u = p1Global M w :=
-  Subtype.ext (funext fun T => Subtype.ext (by
-    change p1Form _ u = p1Form _ w
+/-- **`p1Global M u` is determined by the values of `u` at the vertices** of `M`, and determines
+them. -/
+theorem p1Global_eq_p1Global_iff (M : SimplicialMesh n) {u w : (Fin n → ℝ) → ℝ} :
+    p1Global M u = p1Global M w ↔ ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, u x = w x := by
+  refine ⟨fun h T hT x hx => ?_, fun h => Subtype.ext (funext fun T => Subtype.ext ?_)⟩
+  · have h1 := congrArg (fun v : (whitneyElement n).globalSpace M 0 =>
+      (whitneyElement n).localDof (⟨T, hT⟩ : M.simplices) 0 {x} ⟨(), card_singleton x⟩
+        ((v : (whitneyElement n).Piecewise M 0) ⟨T, hT⟩)) h
+    exact (whitneyFaceDof_of_eq_p1Form _ u hx rfl).symm.trans
+      (h1.trans (whitneyFaceDof_of_eq_p1Form _ w hx rfl))
+  · change p1Form _ u = p1Form _ w
     rw [p1Form_eq_sum, p1Form_eq_sum]
-    exact sum_congr rfl fun j _ => by rw [h _ T.2 _ (mem_vertexSet.2 ⟨j, rfl⟩)]))
-
-/-- The vertex values of `p1Global M u` are those of `u`. -/
-theorem apply_eq_of_p1Global_eq (M : SimplicialMesh n) {u w : (Fin n → ℝ) → ℝ}
-    (h : p1Global M u = p1Global M w) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ M.simplices) {x : Fin n → ℝ} (hx : x ∈ vertexSet T) : u x = w x := by
-  have h1 := congrArg (fun v : (whitneyElement n).globalSpace M 0 =>
-    (whitneyElement n).localDof (⟨T, hT⟩ : M.simplices) 0 {x} ⟨(), card_singleton x⟩
-      ((v : (whitneyElement n).Piecewise M 0) ⟨T, hT⟩)) h
-  exact (whitneyFaceDof_of_eq_p1Form _ u hx rfl).symm.trans
-    (h1.trans (whitneyFaceDof_of_eq_p1Form _ w hx rfl))
+    exact sum_congr rfl fun j _ => by rw [h _ T.2 _ (mem_vertexSet.2 ⟨j, rfl⟩)]
 
 /-- **`u_h ∈ P̊₁⁻Λ⁰(M)` iff `u` vanishes at the vertices on the boundary** of `cl Ω`: the
 boundary vertices are the vertices of the boundary facets
@@ -301,16 +297,14 @@ def p1GlobalEquiv₀ (hx : IsFreeVertexEnum M x) :
     (ι → ℝ) ≃ₗ[ℝ] (whitneyElement n).globalSpace₀ M 0 := by
   refine LinearEquiv.ofBijective (p1Global₀ M hx) ⟨fun U V hUV => funext fun i => ?_, fun v => ?_⟩
   · obtain ⟨T, hT, hiT⟩ := ((hx.2 (x i)).1 ⟨i, rfl⟩).1
-    have := apply_eq_of_p1Global_eq M (Subtype.ext (show (p1Global M (nodalFun x U) :
-      (whitneyElement n).Piecewise M 0) = p1Global M (nodalFun x V) from
-        congrArg (fun v : (whitneyElement n).globalSpace₀ M 0 =>
-          (v : (whitneyElement n).Piecewise M 0)) hUV)) hT hiT
+    have := (p1Global_eq_p1Global_iff (u := nodalFun x U) (w := nodalFun x V) M).1
+      (Subtype.ext congr($hUV.1)) T hT _ hiT
     rwa [nodalFun_apply hx.1, nodalFun_apply hx.1] at this
   · obtain ⟨u, hu⟩ := exists_p1Global_eq M ⟨v, v.2.1⟩
     have h0 := (p1Global_mem_globalSpace₀_iff M u).1 (by rw [hu]; exact v.2)
     refine ⟨fun i => u (x i), Subtype.ext ?_⟩
     rw [p1Global₀_apply, ← congrArg Subtype.val hu]
-    refine congrArg Subtype.val (p1Global_congr M fun T hT y hy => ?_)
+    refine congrArg Subtype.val ((p1Global_eq_p1Global_iff M).2 fun T hT y hy => ?_)
     by_cases hyf : y ∈ frontier (closure M.domain)
     · rw [nodalFun_eq_zero_of_mem_frontier M hx _ hyf, h0 T hT y hy hyf]
     · obtain ⟨i, rfl⟩ := (hx.2 y).2 ⟨⟨T, hT, hy⟩, hyf⟩

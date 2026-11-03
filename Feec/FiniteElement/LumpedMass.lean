@@ -167,6 +167,28 @@ theorem exists_mem_vertexSet_of_lumpedMass_pos (M : SimplicialMesh n) {x : Fin n
 /-- The nodal values of the hat function `φₓ`: `1` at `x`, `0` elsewhere. -/
 def nodalIndicator (x : Fin n → ℝ) : (Fin n → ℝ) → ℝ := fun y => if y = x then 1 else 0
 
+section nodalFun
+
+variable {ι : Type*} [Fintype ι]
+
+/-- The nodal function on `ℝⁿ` with values `U` at the nodes `x` and `0` elsewhere. -/
+def nodalFun (x : ι → Fin n → ℝ) (U : ι → ℝ) : (Fin n → ℝ) → ℝ :=
+  fun y => ∑ q, if x q = y then U q else 0
+
+theorem nodalFun_apply {x : ι → Fin n → ℝ} (hx : Function.Injective x) (U : ι → ℝ) (q : ι) :
+    nodalFun x U (x q) = U q := by
+  classical
+  simp only [nodalFun, hx.eq_iff]
+  rw [Finset.sum_eq_single q (fun c _ hc => by simp [hc]) (by simp)]
+  simp
+
+theorem nodalFun_eq_sum (x : ι → Fin n → ℝ) (U : ι → ℝ) :
+    nodalFun x U = ∑ q, U q • nodalIndicator (x q) := by
+  funext y
+  simp [nodalFun, nodalIndicator, Finset.sum_apply, eq_comm]
+
+end nodalFun
+
 /-- The non-obtuseness of a mesh: `∇λⱼ · ∇λₖ ≤ 0` for `j ≠ k` on every simplex. -/
 def IsNonobtuse (M : SimplicialMesh n) : Prop :=
   ∀ T ∈ M.simplices, ∀ j k, j ≠ k → baryGrad T.points j ⬝ᵥ baryGrad T.points k ≤ 0

@@ -26,7 +26,8 @@ The scheme is the lumped-mass Galerkin method on the space `P̊₁⁻Λ⁰` of c
 global `P₁` functions `U_h` with values `U` at the interior nodes (`feFun`) are exactly
 `P̊₁⁻Λ⁰` (`feEquiv`, a linear isomorphism, since the interior nodes are the mesh vertices off
 `∂Q`), and `W = Lₕ U` iff `(W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V`
-(`lumpedLaplacian_eq_iff`, `lumpedLaplacian_eq_iff_globalSpace₀`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
+(`lumpedLaplacian_eq_iff`; for all test functions `V_h ∈ P̊₁⁻Λ⁰`,
+`lumpedLaplacian_eq_iff_globalSpace₀`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
 `m(p) = ∫_Q φₚ` (`Feec.FiniteElement.P1Global`). With the stencil theorem it is exactly the
 classical finite difference scheme for the heat equation.
 
@@ -59,8 +60,8 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
    (the sharp smooth-data estimate; the factor `‖Lₕ^{p+1} v‖_∞` is that of the discrete datum);
 7. the full verdict of the Banach layer for the family (`StableFamily.Verdict`);
 8. (**the Galerkin form**) `m(x) = ⟪φₓ, 1⟫_{L²(Q)}` and `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫`,
-   with `U ↦ U_h` a linear isomorphism onto `P̊₁⁻Λ⁰` (`feFun_bijective`, `galerkin₀`: the test
-   functions range over all of `P̊₁⁻Λ⁰`);
+   with `U ↦ U_h` a bijection onto `P̊₁⁻Λ⁰` (`feFun_bijective`), so the test functions `V_h`
+   range over all of `P̊₁⁻Λ⁰`;
 9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`) a `P₁` function attains
    its extreme values at the vertices (`Feec.FiniteElement.abs_p1Interp_le`) and the `P₁`
    interpolation error is `≤ n² D₂ h² / 2` for `|∂ᵢ∂ₖ u| ≤ D₂`
@@ -454,12 +455,9 @@ theorem lumpedLaplacian_eq_iff_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (
         lumpedInner b hs W ((feEquiv b hs N).symm v) = -⟪dFeFun b hs U, (whitneyElement n).glue _
           (((0 : ℕ) : ℤ) + 1) ((whitneyElement n).dPiecewise _ 0 v)⟫_ℝ := by
   refine (lumpedLaplacian_eq_iff b hs U W).trans ⟨fun h v => ?_, fun h V => ?_⟩
-  · rw [h]
-    conv_rhs => rw [← (feEquiv b hs N).apply_symm_apply v]
-    rfl
-  · have := h (feEquiv b hs N V)
-    rw [LinearEquiv.symm_apply_apply] at this
-    exact this
+  · simpa only [dFeFun, ← feEquiv_apply, LinearEquiv.apply_symm_apply] using
+      h ((feEquiv b hs N).symm v)
+  · simpa only [dFeFun, ← feEquiv_apply, LinearEquiv.symm_apply_apply] using h (feEquiv b hs N V)
 
 /-! ### The stable family and the heat equation -/
 
@@ -1016,11 +1014,6 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   feFun_bijective (N : ℕ) : Function.Bijective fun U : Space n N =>
     (⟨feFun b hs U, feFun_mem_globalSpace₀ b hs U⟩ :
       (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0)
-  /-- the lumped-mass Galerkin method with test functions ranging over all of `P̊₁⁻Λ⁰` -/
-  galerkin₀ (N : ℕ) (U W : Space n N) : lumpedLaplacian b hs N U = W ↔
-    ∀ v : (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0,
-      lumpedInner b hs W ((feEquiv b hs N).symm v) = -⟪dFeFun b hs U,
-        (whitneyElement n).glue _ (((0 : ℕ) : ℤ) + 1) ((whitneyElement n).dPiecewise _ 0 v)⟫_ℝ
 
 /-- **The heat equation in the maximum norm** (lumped-mass `P₁` elements on the Freudenthal
 meshes of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. [Thomee2006], Ch. 15;
@@ -1046,7 +1039,6 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
     abs_sub_p1Interp_step_pow_le hs S hD₂ hr hp N hτ hk v hK hx
   covers _ _ hx := exists_simplex_mem hs hx
   feFun_bijective N := (feEquiv b hs N).bijective
-  galerkin₀ _ U W := lumpedLaplacian_eq_iff_globalSpace₀ b hs U W
 
 /-- The second time derivative of the first eigenmode: `uₜₜ = λ² u`, `λ = n (π/s)²`. -/
 theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) (x : Fin n → ℝ) :

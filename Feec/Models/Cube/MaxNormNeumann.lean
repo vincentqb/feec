@@ -39,23 +39,35 @@ form and lumped mass of `Feec.FiniteElement.LumpedMass`.
    `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`,
    `G = n B₂ (1 + (n + 1)!)`: **first order** in the maximum norm at the nodes, by the comparison
    principle `IsSubMarkovGenerator.abs_apply_le_of_barrier` (positivity of `e^{tLₕ}` and the
-   barrier `κ χ`,
-   `κ = 2 n! h G / s`);
-6. the verdict of the Banach layer for the family (`StableFamily.Verdict`, `M = 1`).
+   barrier `κ χ`, `κ = 2 n! h G / s`, `NeumannSolution.exists_barrier`);
+6. the verdict of the Banach layer for the family (`StableFamily.Verdict`, `M = 1`);
+7. (**backward Euler**, `norm_interp_sub_res_pow_le`) with `|uₜₜ| ≤ Bₜ` on `Q̄`,
+   `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ Bₜ + n B₄ h² / 12)`
+   `+ K_n G h (kτ / s + s)`: `O(τ + h)`, by the same barrier and the discrete comparison
+   principle `IsSubMarkovGenerator.abs_apply_le_of_barrier_step` (positivity of `(1 - τLₕ)⁻¹`);
+8. (**every A-stable rational scheme**, `norm_interp_sub_step_pow_le`) Brenner–Thomée's stability
+   bound `1 + C'_r √k` and, for `r` of order `p`, the semidiscrete error plus
+   `C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞` (`StableFamily.norm_sub_step_pow_le_norm_sub_exp_add`);
+9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`, from
+   `MaxNormHeat.abs_sub_p1Interp_le_of_nodes`) `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D₂ h² / 2`
+   on every simplex, so 5, 7 and 8 bound the errors in `L^∞(Q)` (the simplices cover `Q̄`,
+   `MaxNormHeat.exists_simplex_mem`).
 
-The proved order is `O(h)`; `O(h²)` is not proved. The boundary consistency is only bounded:
+The proved order in `h` is `O(h)`; `O(h²)` is not proved. The boundary consistency is only bounded:
 at nodes with two or more coordinates on the boundary the edge weights `Σ_σ α±` are not those of
 the reflected interior stencil (the Freudenthal mesh is not reflection symmetric), and the nodal
 consistency error does not tend to `0` there (in the plane, at the corner `b`,
 `(Lₕ Iₕ u)(b) → (3/4) Δu(b)` for smooth `u` with `∂_ν u = 0`: a hand computation, not
 formalized). `cosSolution`
-(`e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)`) is a nonzero classical solution (`maxNormNeumann_nonvacuous`).
+(`e^{-λt} ∏ᵢ cos(π(xᵢ - bᵢ)/s)`) is a nonzero classical solution with `|uₜₜ| ≤ λ²` and
+`|∂ᵢ∂ₖ u| ≤ (π/s)²` (`maxNormNeumann_nonvacuous`).
 
 ## References
 
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
   (the lumped mass method)
+* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -67,7 +79,8 @@ namespace Feec.Models.Cube.MaxNormNeumann
 open Feec.Models.Cube.MaxNormHeat (meshSize meshSize_pos meshSize_mul closedCube
   exists_node_eq_points mem_interiorNodes sineDeriv sineFreq iterate_partialDeriv_sine sineFactors
   sineSolution hasDerivAt_sineMode laplacian_sineMode abs_iterate_partialDeriv_sineMode_le
-  abs_partialDeriv_partialDeriv_sineSolution_le)
+  abs_partialDeriv_partialDeriv_sineSolution_le sineSolution_hasDerivAt₁ abs_sineSolution_u₂_le
+  feDefect abs_sub_p1Interp_le_of_nodes)
 
 variable {n : ℕ} {b : Fin n → ℝ} {s : ℝ} {N : ℕ}
 
@@ -352,6 +365,16 @@ theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
   isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
     (node_injective_subtype b (meshSize_pos hs N).ne' _)
 
+/-- **The maximum-norm Neumann family**: the lumped-mass Neumann Laplacians of the levels
+`N + 1`, a uniformly stable family with `M = 1` (`isSubMarkovGenerator`). -/
+abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
+  StableFamily.ofSubMarkov (fun N => Nodes n N) (neumannLaplacian b hs) (isSubMarkovGenerator b hs)
+
+@[simp] theorem family_M (b : Fin n → ℝ) (hs : 0 < s) : (family b hs).M = 1 := rfl
+
+@[simp] theorem family_L (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
+    (family b hs).L N = neumannLaplacian b hs N := rfl
+
 /-! ### The stencil at every node -/
 
 /-- The nodal interpolant `(Iₕ u)(p) = u(b + h p)` at all nodes. -/
@@ -562,8 +585,6 @@ theorem neumannLaplacian_interp_chi_boundary (hs : 0 < s) (p : Nodes n N) {l₀ 
   have hK' : 2 * (1 + 2 * n * n.factorial) ≤ r := hK
   rw [neumannLaplacian_interp, div_le_div_iff₀ (by linarith) (by positivity)]
   nlinarith [mul_le_mul_of_nonneg_left hC2 (by linarith : (0 : ℝ) ≤ r / 2)]
-
-/-! ### Taylor's formula along the axes -/
 
 /-! ### Classical solutions of the Neumann problem -/
 
@@ -791,7 +812,7 @@ theorem abs_laplacian_sub_interior_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
                 nlinarith [ht.2])) l
     _ = _ := by simp; ring
 
-/-! ### The semidiscrete error in the maximum norm -/
+/-! ### The barrier and the errors in the maximum norm at the nodes -/
 
 /-- The interior truncation error `n B₄ h² / 12`. -/
 def NeumannSolution.defect {T : ℝ} (S : NeumannSolution b s T) (N : ℕ) : ℝ :=
@@ -801,89 +822,68 @@ def NeumannSolution.defect {T : ℝ} (S : NeumannSolution b s T) (N : ℕ) : ℝ
 def NeumannSolution.boundaryDefect {T : ℝ} (S : NeumannSolution b s T) : ℝ :=
   n * S.B₂ * (1 + (n + 1).factorial)
 
-/-- **The semidiscrete error of the Neumann problem in the maximum norm at the nodes**: for every
-classical solution and `t ∈ [0, T]`,
-`‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`:
-`O(h)` uniformly in the mesh, from `O(h²)` consistency at the interior nodes and `O(1)`
-consistency at the boundary nodes, through the barrier `χ = |x - c|²` (`Lₕ χ ≤ -s / (2 h n!)` at
-the boundary nodes) and the maximum principle. -/
-theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T) (N : ℕ)
-    {t : ℝ} (ht : t ∈ Icc 0 T) (v : Space n N) :
-    ‖interp b s N (S.u t) - exp (t • neumannLaplacian b hs N) v‖ ≤
-      ‖interp b s N (S.u 0) - v‖ + t * S.defect N +
-        layerConst n * S.boundaryDefect * meshSize s N * (t / s + s) := by
+/-- Every node lies in the closed cube. -/
+theorem node_mem_closedCube (hs : 0 < s) (p : Nodes n N) :
+    node b (meshSize s N) p ∈ closedCube b s := by
+  have hp := mem_closedNodes.1 p.2
+  have hh := meshSize_pos hs N
+  have hm := meshSize_mul s N
+  push_cast at hm
+  rcases isEmpty_or_nonempty (Fin n) with hn | ⟨⟨l⟩⟩
+  · intro i; exact (hn.false i).elim
+  · simpa using node_add_mem_closedCube (b := b) hs hp l (τ := 0)
+      (by have : (0 : ℝ) ≤ (p : Fin n → ℤ) l := by exact_mod_cast (hp l).1
+          positivity)
+      (by have : ((p : Fin n → ℤ) l : ℝ) ≤ N + 1 := by exact_mod_cast (hp l).2
+          nlinarith)
+
+instance (n N : ℕ) : Nonempty (Nodes n N) :=
+  ⟨⟨0, mem_closedNodes.2 fun _ => by simp only [Pi.zero_apply]; omega⟩⟩
+
+/-- **The barrier of the boundary layer**: there are `ψ ≥ 0` and `A` with
+`|Iₕ uₜ - Lₕ Iₕ u| ≤ A - Lₕ ψ` at every node on `[0, T]` (`O(h²)` in the interior, `O(1)` at the
+boundary nodes) and `ψ + t A ≤ t n B₄ h² / 12 + K_n G h (t / s + s)` for `t ≥ 0`: `ψ = κ χ`,
+`κ = 2 n! h G / s`, for `s / h ≥ K_n` (`Lₕ χ ≤ -s / (2 h n!)` at the boundary nodes), `ψ = 0`
+otherwise. -/
+theorem NeumannSolution.exists_barrier {T : ℝ} (S : NeumannSolution b s T) (hs : 0 < s)
+    (hT : 0 ≤ T) (N : ℕ) :
+    ∃ ψ : Space n N, ∃ A : ℝ, 0 ≤ ψ ∧
+      (∀ r ∈ Icc 0 T, ∀ p, |(interp b s N (S.u₁ r) -
+        neumannLaplacian b hs N (interp b s N (S.u r))) p| ≤ A - neumannLaplacian b hs N ψ p) ∧
+      ∀ t, 0 ≤ t → ∀ p, ψ p + t * A ≤
+        t * S.defect N + layerConst n * S.boundaryDefect * meshSize s N * (t / s + s) := by
   set L := neumannLaplacian b hs N
   set h := meshSize s N
-  have hh := meshSize_pos hs N
-  have hL := isSubMarkovGenerator b hs N
-  have hL1 := neumannLaplacian_apply_one b hs N
-  have hsub : Icc 0 t ⊆ Icc 0 T := Icc_subset_Icc le_rfl ht.2
+  have hh : 0 < h := meshSize_pos hs N
   have hh' : h ≠ 0 := hh.ne'
-  set E : ℝ → Space n N := fun r => interp b s N (S.u r) - exp (r • L) v
-  set E' : ℝ → Space n N := fun r => interp b s N (S.u₁ r) - L (exp (r • L) v)
-  have hnode : ∀ p : Nodes n N, node b h p ∈ closedCube b s := fun p => by
-    have hp := mem_closedNodes.1 p.2
-    have hm := meshSize_mul s N
-    push_cast at hm
-    rcases isEmpty_or_nonempty (Fin n) with hn | ⟨⟨l⟩⟩
-    · intro i; exact (hn.false i).elim
-    · simpa using node_add_mem_closedCube (b := b) hs hp l (τ := 0)
-        (by have : (0 : ℝ) ≤ (p : Fin n → ℤ) l := by exact_mod_cast (hp l).1
-            positivity)
-        (by have : ((p : Fin n → ℤ) l : ℝ) ≤ N + 1 := by exact_mod_cast (hp l).2
-            nlinarith)
-  have hE : ∀ r ∈ Icc 0 t, HasDerivAt E (E' r) r := fun r hr =>
-    (hasDerivAt_pi.2 fun p => S.hasDerivAt r (hsub hr) _ (hnode p)).sub
-      (C0Group.hasDerivAt_exp_ofReal_smul_apply L v r)
-  have hτ : ∀ r ∈ Icc 0 t, ∀ p, (E' r - L (E r)) p =
-      MaxNormHeat.laplacian (S.u r) (node b h p) - L (interp b s N (S.u r)) p := fun r hr p => by
-    simp only [E, E', map_sub, Pi.sub_apply]
-    rw [show interp b s N (S.u₁ r) p = S.u₁ r (node b h p) from rfl,
-      S.heat r (hsub hr) _ (hnode p)]
-    ring
   set D := S.defect N
   set G := S.boundaryDefect
   have hb : b ∈ closedCube b s := fun i _ => ⟨le_rfl, by linarith⟩
-  have hD0 : 0 ≤ D := by
+  obtain ⟨hD0, hG0⟩ : 0 ≤ D ∧ 0 ≤ G := by
     rcases isEmpty_or_nonempty (Fin n) with hn | ⟨⟨l⟩⟩
     · obtain rfl : n = 0 := by rw [← Fintype.card_fin n]; exact Fintype.card_eq_zero_iff.2 hn
-      simp [D, NeumannSolution.defect]
-    · have := (abs_nonneg _).trans (S.bound₄ 0 ⟨le_rfl, ht.1.trans ht.2⟩ b hb l)
-      simp only [D, NeumannSolution.defect]; positivity
-  have hG0 : 0 ≤ G := by
-    rcases isEmpty_or_nonempty (Fin n) with hn | ⟨⟨l⟩⟩
-    · obtain rfl : n = 0 := by rw [← Fintype.card_fin n]; exact Fintype.card_eq_zero_iff.2 hn
-      simp [G, NeumannSolution.boundaryDefect]
-    · have := (abs_nonneg _).trans (S.bound₂ 0 ⟨le_rfl, ht.1.trans ht.2⟩ b hb l)
-      simp only [G, NeumannSolution.boundaryDefect]; positivity
-  have hdef : ∀ r ∈ Icc 0 t, ∀ p : Nodes n N,
-      ((p : Fin n → ℤ) ∈ interiorNodes n (N + 1) → |(E' r - L (E r)) p| ≤ D) ∧
-      (∀ l, (p : Fin n → ℤ) l = 0 ∨ (p : Fin n → ℤ) l = N + 1 → |(E' r - L (E r)) p| ≤ G) :=
-    fun r hr p => by
-      rw [hτ r hr p]
-      exact ⟨fun hp => abs_laplacian_sub_interior_le hs (S.contDiff r (hsub hr))
-          (S.bound₄ r (hsub hr)) hp,
-        fun l hl => abs_laplacian_sub_boundary_le hs ((S.contDiff r (hsub hr)).of_le (by norm_num))
-          (S.bound₂ r (hsub hr)) (S.neumann r (hsub hr)) p hl⟩
+      simp [D, G, NeumannSolution.defect, NeumannSolution.boundaryDefect]
+    · have := (abs_nonneg _).trans (S.bound₄ 0 ⟨le_rfl, hT⟩ b hb l)
+      have := (abs_nonneg _).trans (S.bound₂ 0 ⟨le_rfl, hT⟩ b hb l)
+      simp only [D, G, NeumannSolution.defect, NeumannSolution.boundaryDefect]
+      constructor <;> positivity
+  have hdef : ∀ r ∈ Icc 0 T, ∀ p : Nodes n N,
+      ((p : Fin n → ℤ) ∈ interiorNodes n (N + 1) →
+        |(interp b s N (S.u₁ r) - L (interp b s N (S.u r))) p| ≤ D) ∧
+      (∀ l, (p : Fin n → ℤ) l = 0 ∨ (p : Fin n → ℤ) l = N + 1 →
+        |(interp b s N (S.u₁ r) - L (interp b s N (S.u r))) p| ≤ G) := fun r hr p => by
+    rw [Pi.sub_apply, show interp b s N (S.u₁ r) p = S.u₁ r (node b h p) from rfl,
+      S.heat r hr _ (node_mem_closedCube hs p)]
+    exact ⟨fun hp => abs_laplacian_sub_interior_le hs (S.contDiff r hr) (S.bound₄ r hr) hp,
+      fun l hl => abs_laplacian_sub_boundary_le hs ((S.contDiff r hr).of_le (by norm_num))
+        (S.bound₂ r hr) (S.neumann r hr) p hl⟩
   have hK0 : 0 < layerConst n := by unfold layerConst; positivity
-  have hbd0 : 0 ≤ ‖interp b s N (S.u 0) - v‖ + t * D + layerConst n * G * h * (t / s + s) := by
-    have h1 := norm_nonneg (interp b s N (S.u 0) - v)
-    have h2 : 0 ≤ t * D := mul_nonneg ht.1 hD0
-    have h3 : 0 ≤ layerConst n * G * h * (t / s + s) :=
-      mul_nonneg (mul_nonneg (mul_nonneg hK0.le hG0) hh.le)
-        (add_nonneg (div_nonneg ht.1 hs.le) hs.le)
-    linarith
-  refine (pi_norm_le_iff_of_nonneg hbd0).2 fun p => ?_
-  rw [Real.norm_eq_abs]
   by_cases hK : layerConst n ≤ s / h
-  · -- the barrier `κ χ`
-    set κ := 2 * n.factorial * h * G / s
+  · set κ := 2 * n.factorial * h * G / s
     have hκ : 0 ≤ κ := by positivity
-    set ψ : Space n N := κ • interp b s N (chi b s)
-    have hψ : 0 ≤ ψ := fun q => mul_nonneg hκ (chi_nonneg b s _)
-    have hbar := hL.abs_apply_le_of_barrier hL1 ht.1 hE (A := D + 2 * n * κ) hψ (fun r hr q => by
-      have hLψ : L ψ q = κ * L (interp b s N (chi b s)) q := by
-        show L (κ • interp b s N (chi b s)) q = _
+    refine ⟨κ • interp b s N (chi b s), D + 2 * n * κ, fun q => mul_nonneg hκ (chi_nonneg b s _),
+      fun r hr q => ?_, fun t ht p => ?_⟩
+    · have hLψ : L (κ • interp b s N (chi b s)) q = κ * L (interp b s N (chi b s)) q := by
         rw [map_smul]; rfl
       rcases interior_or_boundary q with hq | ⟨l, hl⟩
       · rw [hLψ, neumannLaplacian_interp_chi_interior hs hq]
@@ -895,46 +895,165 @@ theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T
             _ = -G := by simp only [κ]; field_simp
         rw [hLψ]
         have h2n : 0 ≤ 2 * (n : ℝ) * κ := mul_nonneg (by positivity) hκ
-        linarith [(hdef r hr q).2 l hl]) p
-    have hχ : ψ p ≤ κ * (n * s ^ 2 / 4) := mul_le_mul_of_nonneg_left (chi_le b (hnode p)) hκ
-    have hfac : (0 : ℝ) ≤ n.factorial := by positivity
-    calc |E t p| ≤ ‖E 0‖ + ψ p + t * (D + 2 * n * κ) := hbar
-      _ ≤ ‖E 0‖ + κ * (n * s ^ 2 / 4) + t * (D + 2 * n * κ) := by linarith
-      _ ≤ _ := by
-          have e0 : E 0 = interp b s N (S.u 0) - v := by simp [E]
-          rw [e0]
-          have hGh : 0 ≤ G * h := mul_nonneg hG0 hh.le
-          have hn1 : (n : ℝ) * n.factorial / 2 ≤ layerConst n := by
-            unfold layerConst; nlinarith [mul_nonneg (Nat.cast_nonneg n) hfac]
-          have hn2 : 4 * (n : ℝ) * n.factorial ≤ layerConst n := by
-            unfold layerConst; nlinarith [mul_nonneg (Nat.cast_nonneg n) hfac]
-          have h1 : κ * (n * s ^ 2 / 4) ≤ layerConst n * G * h * s := by
-            have e : κ * (n * s ^ 2 / 4) = (n * n.factorial / 2) * (G * h * s) := by
-              simp only [κ]; field_simp; ring
-            rw [e, show layerConst n * G * h * s = layerConst n * (G * h * s) by ring]
-            exact mul_le_mul_of_nonneg_right hn1 (mul_nonneg hGh hs.le)
-          have h2 : t * (2 * n * κ) ≤ layerConst n * G * h * (t / s) := by
-            have e : t * (2 * n * κ) = (4 * n * n.factorial) * (G * h * (t / s)) := by
-              simp only [κ]; field_simp; ring
-            rw [e, show layerConst n * G * h * (t / s) = layerConst n * (G * h * (t / s)) by ring]
-            exact mul_le_mul_of_nonneg_right hn2 (mul_nonneg hGh (div_nonneg ht.1 hs.le))
-          nlinarith
+        linarith [(hdef r hr q).2 l hl]
+    · have hχ : (κ • interp b s N (chi b s)) p ≤ κ * (n * s ^ 2 / 4) :=
+        mul_le_mul_of_nonneg_left (chi_le b (node_mem_closedCube hs p)) hκ
+      have hfac : (0 : ℝ) ≤ n.factorial := by positivity
+      have hGh : 0 ≤ G * h := mul_nonneg hG0 hh.le
+      have hn1 : (n : ℝ) * n.factorial / 2 ≤ layerConst n := by
+        unfold layerConst; nlinarith [mul_nonneg (Nat.cast_nonneg n) hfac]
+      have hn2 : 4 * (n : ℝ) * n.factorial ≤ layerConst n := by
+        unfold layerConst; nlinarith [mul_nonneg (Nat.cast_nonneg n) hfac]
+      have h1 : κ * (n * s ^ 2 / 4) ≤ layerConst n * G * h * s := by
+        have e : κ * (n * s ^ 2 / 4) = (n * n.factorial / 2) * (G * h * s) := by
+          simp only [κ]; field_simp; ring
+        rw [e, show layerConst n * G * h * s = layerConst n * (G * h * s) by ring]
+        exact mul_le_mul_of_nonneg_right hn1 (mul_nonneg hGh hs.le)
+      have h2 : t * (2 * n * κ) ≤ layerConst n * G * h * (t / s) := by
+        have e : t * (2 * n * κ) = (4 * n * n.factorial) * (G * h * (t / s)) := by
+          simp only [κ]; field_simp; ring
+        rw [e, show layerConst n * G * h * (t / s) = layerConst n * (G * h * (t / s)) by ring]
+        exact mul_le_mul_of_nonneg_right hn2 (mul_nonneg hGh (div_nonneg ht hs.le))
+      nlinarith
   · -- large mesh sizes: no barrier
-    have hbar := hL.abs_apply_le_of_barrier hL1 ht.1 hE (A := D + G) le_rfl (fun r hr q => by
-      simp only [map_zero, Pi.zero_apply, sub_zero]
+    refine ⟨0, D + G, le_rfl, fun r hr q => ?_, fun t ht p => ?_⟩
+    · simp only [map_zero, Pi.zero_apply, sub_zero]
       rcases interior_or_boundary q with hq | ⟨l, hl⟩
       · linarith [(hdef r hr q).1 hq]
-      · linarith [(hdef r hr q).2 l hl]) p
-    have e0 : E 0 = interp b s N (S.u 0) - v := by simp [E]
-    rw [e0] at hbar
-    have hKh : s ≤ layerConst n * h := by
-      rw [not_le, div_lt_iff₀ hh] at hK; linarith
-    have : t * G ≤ layerConst n * G * h * (t / s) := by
-      rw [mul_div_assoc', le_div_iff₀ hs]
-      nlinarith [mul_nonneg ht.1 hG0]
-    have : 0 ≤ layerConst n * G * h * s := by positivity
-    simp only [Pi.zero_apply, add_zero] at hbar
-    nlinarith
+      · linarith [(hdef r hr q).2 l hl]
+    · have hKh : s ≤ layerConst n * h := by
+        rw [not_le, div_lt_iff₀ hh] at hK; linarith
+      have : t * G ≤ layerConst n * G * h * (t / s) := by
+        rw [mul_div_assoc', le_div_iff₀ hs]
+        nlinarith [mul_nonneg ht hG0]
+      have : 0 ≤ layerConst n * G * h * s := by positivity
+      simp only [Pi.zero_apply, zero_add]
+      nlinarith
+
+/-- **The semidiscrete error of the Neumann problem in the maximum norm at the nodes**: for every
+classical solution and `t ∈ [0, T]`,
+`‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + t n B₄ h² / 12 + K_n G h (t / s + s)`:
+`O(h)` uniformly in the mesh, from `O(h²)` consistency at the interior nodes and `O(1)`
+consistency at the boundary nodes, through the barrier `χ = |x - c|²` (`Lₕ χ ≤ -s / (2 h n!)` at
+the boundary nodes, `NeumannSolution.exists_barrier`) and the maximum principle. -/
+theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T) (N : ℕ)
+    {t : ℝ} (ht : t ∈ Icc 0 T) (v : Space n N) :
+    ‖interp b s N (S.u t) - exp (t • neumannLaplacian b hs N) v‖ ≤
+      ‖interp b s N (S.u 0) - v‖ + t * S.defect N +
+        layerConst n * S.boundaryDefect * meshSize s N * (t / s + s) := by
+  set L := neumannLaplacian b hs N
+  have hsub : Icc 0 t ⊆ Icc 0 T := Icc_subset_Icc le_rfl ht.2
+  obtain ⟨ψ, A, hψ, hd, hb⟩ := S.exists_barrier hs (ht.1.trans ht.2) N
+  set E : ℝ → Space n N := fun r => interp b s N (S.u r) - exp (r • L) v
+  have hE : ∀ r ∈ Icc 0 t, HasDerivAt E (interp b s N (S.u₁ r) - L (exp (r • L) v)) r :=
+    fun r hr => (hasDerivAt_pi.2 fun p => S.hasDerivAt r (hsub hr) _ (node_mem_closedCube hs p)).sub
+      (C0Group.hasDerivAt_exp_ofReal_smul_apply L v r)
+  refine (pi_norm_le_iff_of_nonempty _).2 fun p => ?_
+  have hbar := (isSubMarkovGenerator b hs N).abs_apply_le_of_barrier
+    (neumannLaplacian_apply_one b hs N) ht.1 hE hψ (fun r hr q => by
+      have e : interp b s N (S.u₁ r) - L (exp (r • L) v) - L (E r) =
+          interp b s N (S.u₁ r) - L (interp b s N (S.u r)) := by simp only [E, map_sub]; abel
+      rw [e]; exact hd r (hsub hr) q) p
+  have e0 : E 0 = interp b s N (S.u 0) - v := by simp [E]
+  rw [e0] at hbar
+  rw [Real.norm_eq_abs]
+  linarith [hb t ht.1 p]
+
+/-- **Backward Euler for the Neumann problem in the maximum norm at the nodes**: if moreover
+`uₜ` has time derivative `u₂` with `|u₂| ≤ Bₜ` on `Q̄`, then for `kτ ≤ T`
+`‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ Bₜ + n B₄ h² / 12)`
+`+ K_n G h (kτ / s + s)`: `O(τ + h)`, unconditionally, by the same barrier and the discrete
+comparison principle (`IsSubMarkovGenerator.abs_apply_le_of_barrier_step`). -/
+theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T)
+    {u₂ : ℝ → (Fin n → ℝ) → ℝ} {Bₜ : ℝ}
+    (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
+    (hBₜ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, |u₂ t x| ≤ Bₜ) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
+    {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
+    ‖interp b s N (S.u (k * τ)) - ((family b hs).res τ N ^ k) v‖ ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * (3 / 2 * τ * Bₜ + S.defect N) +
+        layerConst n * S.boundaryDefect * meshSize s N * (k * τ / s + s) := by
+  set L := neumannLaplacian b hs N
+  set R := (family b hs).res τ N
+  set W : ℝ → Space n N := fun r => interp b s N (S.u r)
+  set W₁ : ℝ → Space n N := fun r => interp b s N (S.u₁ r)
+  obtain ⟨ψ, A, hψ, hd, hb⟩ := S.exists_barrier hs ((by positivity : (0 : ℝ) ≤ k * τ).trans hk) N
+  set E : ℕ → Space n N := fun j => W (j * τ) - (R ^ j) v
+  set δ : ℕ → Space n N := fun j =>
+    τ⁻¹ • (W ((j + 1 : ℕ) * τ) - W (j * τ) - τ • W₁ ((j + 1 : ℕ) * τ)) +
+      (W₁ ((j + 1 : ℕ) * τ) - L (W ((j + 1 : ℕ) * τ)))
+  have hE : ∀ j < k, E (j + 1) - τ • L (E (j + 1)) = E j + τ • δ j := fun j _ => by
+    have hR : R ((R ^ j) v) - τ • L (R ((R ^ j) v)) = (R ^ j) v := by
+      simpa using (family b hs).res_sub_smul_apply_res hτ N ((R ^ j) v)
+    have e : E (j + 1) - τ • L (E (j + 1)) = (W ((j + 1 : ℕ) * τ) -
+        τ • L (W ((j + 1 : ℕ) * τ))) - (R ((R ^ j) v) - τ • L (R ((R ^ j) v))) := by
+      have hp : (R ^ (j + 1)) v = R ((R ^ j) v) := by rw [pow_succ']; rfl
+      simp only [E, hp, map_sub, smul_sub]; abel
+    rw [e, hR]
+    simp only [E, δ, smul_add, smul_sub, smul_smul, mul_inv_cancel₀ hτ.ne', one_smul,
+      mul_inv_cancel_left₀ hτ.ne']
+    abel
+  have hδ : ∀ j < k, ∀ p, |δ j p| ≤ A + 3 / 2 * τ * Bₜ - L ψ p := fun j hj p => by
+    have hj' : ((j + 1 : ℕ) : ℝ) * τ ≤ k * τ :=
+      mul_le_mul_of_nonneg_right (by exact_mod_cast hj) hτ.le
+    have e : ((j + 1 : ℕ) : ℝ) * τ = j * τ + τ := by push_cast; ring
+    have hI : Icc ((j : ℝ) * τ) (j * τ + τ) ⊆ Icc 0 T :=
+      Icc_subset_Icc (by positivity) (by linarith)
+    have hq := norm_sub_sub_smul_le hτ.le (f := W) (f₁ := W₁)
+      (f₂ := fun r => interp b s N (u₂ r)) (a := j * τ) (B := Bₜ)
+      (fun r hr => hasDerivAt_pi.2 fun q => S.hasDerivAt r (hI hr) _ (node_mem_closedCube hs q))
+      (fun r hr => hasDerivAt_pi.2 fun q => hu₂ r (hI hr) _ (node_mem_closedCube hs q))
+      (fun r hr => (pi_norm_le_iff_of_nonempty _).2 fun q => by
+        rw [Real.norm_eq_abs]; exact hBₜ r (hI hr) _ (node_mem_closedCube hs q))
+    rw [← e] at hq
+    have h1 : |(τ⁻¹ • (W ((j + 1 : ℕ) * τ) - W (j * τ) - τ • W₁ ((j + 1 : ℕ) * τ))) p| ≤
+        3 / 2 * τ * Bₜ := by
+      rw [← Real.norm_eq_abs]
+      refine (norm_le_pi_norm _ p).trans ?_
+      rw [norm_smul, Real.norm_of_nonneg (inv_nonneg.2 hτ.le)]
+      calc τ⁻¹ * ‖W ((j + 1 : ℕ) * τ) - W (j * τ) - τ • W₁ ((j + 1 : ℕ) * τ)‖
+          ≤ τ⁻¹ * (3 / 2 * τ ^ 2 * Bₜ) := by gcongr
+        _ = 3 / 2 * τ * Bₜ := by field_simp
+    have h2 := hd _ ⟨by positivity, hj'.trans hk⟩ p
+    exact (abs_add_le _ _).trans (by linarith)
+  refine (pi_norm_le_iff_of_nonempty _).2 fun p => ?_
+  have hbar := (isSubMarkovGenerator b hs N).abs_apply_le_of_barrier_step
+    (neumannLaplacian_apply_one b hs N) hτ.le hE hψ hδ p
+  have e0 : E 0 = W 0 - v := by simp [E]
+  rw [e0] at hbar
+  rw [Real.norm_eq_abs]
+  have := hb (k * τ) (by positivity) p
+  show |E k p| ≤ _
+  nlinarith
+
+/-- **Every A-stable rational scheme for the Neumann problem in the maximum norm at the nodes**:
+for `r` of order `p` (Crank–Nicolson, the Gauss and Radau methods), the semidiscrete error plus
+Brenner–Thomée's smooth-data term `C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`. -/
+theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b s T)
+    {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
+    (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
+    ‖interp b s N (S.u (k * τ)) - ((family b hs).step r τ N ^ k) v‖ ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
+        layerConst n * S.boundaryDefect * meshSize s N * (k * τ / s + s) +
+        r.sharpConst p * (k * τ) * τ ^ p * ‖(neumannLaplacian b hs N ^ (p + 1)) v‖ := by
+  have := (family b hs).norm_sub_step_pow_le_norm_sub_exp_add hr hp hτ N
+    (interp b s N (S.u (k * τ))) k v
+  simp only [mul_one, RCLike.ofReal_real_eq_id, id_eq] at this
+  linarith [norm_interp_sub_exp_le hs S N ⟨by positivity, hk⟩ v]
+
+/-- **The finite element function in the maximum norm on `Q̄`** (Neumann): for `u ∈ C²` with
+`|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and nodal values `U`, at every point `x` of every simplex `K` of the mesh,
+`|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D h² / 2` (`MaxNormHeat.abs_sub_p1Interp_le_of_nodes`). -/
+theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) → ℝ}
+    (hu : ContDiff ℝ 2 u) {D : ℝ}
+    (hD : ∀ x ∈ closedCube b s, ∀ i k, |partialDeriv k (partialDeriv i u) x| ≤ D) (U : Space n N)
+    {K : Affine.Simplex ℝ (Fin n → ℝ) n} (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices)
+    {x : Fin n → ℝ} (hx : x ∈ K.closedInterior) :
+    |u x - p1Interp K.points (nodal b s U) x| ≤
+      ‖interp b s N u - U‖ + feDefect (s := s) (n := n) D N :=
+  abs_sub_p1Interp_le_of_nodes hs N hu hD (fun q hq => by
+    rw [show nodal b s U (node b (meshSize s N) q) = U ⟨q, mem_closedNodes.2 hq⟩ from
+      nodal_node hs U ⟨q, mem_closedNodes.2 hq⟩, ← Real.norm_eq_abs]
+    exact norm_le_pi_norm (interp b s N u - U) ⟨q, mem_closedNodes.2 hq⟩) hK hx
 
 /-! ### A classical solution: the first Neumann eigenmode -/
 
@@ -983,11 +1102,6 @@ theorem cosSolution_u_zero_corner (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
 
 /-! ### The verdict -/
 
-/-- **The maximum-norm Neumann family**: the lumped-mass Neumann Laplacians of the levels
-`N + 1`, a uniformly stable family with `M = 1` (`isSubMarkovGenerator`). -/
-abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
-  StableFamily.ofSubMarkov (fun N => Nodes n N) (neumannLaplacian b hs) (isSubMarkovGenerator b hs)
-
 /-- The conclusions of `maxNormNeumann` for the cube `b + (0, s)ⁿ`. -/
 structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the discrete maximum principle: `e^{tLₕ}` is positive and contractive in the maximum norm -/
@@ -1025,6 +1139,62 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
         layerConst n * S.boundaryDefect * meshSize s N * (t / s + s)
   /-- the verdict of the Banach layer for the Neumann family (`M = 1`) -/
   banach : (family b hs).Verdict
+  /-- backward Euler, `O(τ + h)` in the maximum norm at the nodes -/
+  backwardEuler {T : ℝ} (S : NeumannSolution b s T) {u₂ : ℝ → (Fin n → ℝ) → ℝ} {Bₜ : ℝ}
+    (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
+    (hBₜ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, |u₂ t x| ≤ Bₜ) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
+    {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
+    ‖interp b s N (S.u (k * τ)) - ((family b hs).res τ N ^ k) v‖ ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * (3 / 2 * τ * Bₜ + S.defect N) +
+        layerConst n * S.boundaryDefect * meshSize s N * (k * τ / s + s)
+  /-- Brenner–Thomée's stability bound for every A-stable rational scheme -/
+  stable_rational {r : RationalScheme} (hr : r.IsAStable) (N : ℕ) {τ : ℝ} (hτ : 0 < τ) (k : ℕ) :
+    ‖(family b hs).step r τ N ^ k‖ ≤ 1 + r.sqrtConst * √k
+  /-- every A-stable rational scheme of order `p` against every classical solution -/
+  rational {T : ℝ} (S : NeumannSolution b s T) {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) (N : ℕ) {τ : ℝ} (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
+    ‖interp b s N (S.u (k * τ)) - ((family b hs).step r τ N ^ k) v‖ ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
+        layerConst n * S.boundaryDefect * meshSize s N * (k * τ / s + s) +
+        r.sharpConst p * (k * τ) * τ ^ p * ‖(neumannLaplacian b hs N ^ (p + 1)) v‖
+  /-- the semidiscrete error of the finite element function at every point of `Q̄` -/
+  semidiscrete_fe {T : ℝ} (S : NeumannSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T)
+    (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u t x - p1Interp K.points (nodal b s (exp (t • neumannLaplacian b hs N) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + t * S.defect N +
+        layerConst n * S.boundaryDefect * meshSize s N * (t / s + s) +
+        feDefect (s := s) (n := n) D₂ N
+  /-- backward Euler: the error of the finite element function at every point of `Q̄` -/
+  backwardEuler_fe {T : ℝ} (S : NeumannSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
+    {u₂ : ℝ → (Fin n → ℝ) → ℝ} {Bₜ : ℝ}
+    (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
+    (hBₜ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, |u₂ t x| ≤ Bₜ) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
+    {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).res τ N ^ k) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * (3 / 2 * τ * Bₜ + S.defect N) +
+        layerConst n * S.boundaryDefect * meshSize s N * (k * τ / s + s) +
+        feDefect (s := s) (n := n) D₂ N
+  /-- every A-stable rational scheme: the error of the finite element function on `Q̄` -/
+  rational_fe {T : ℝ} (S : NeumannSolution b s T) {D₂ : ℝ}
+    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
+    {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
+    (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
+    (hx : x ∈ K.closedInterior) :
+    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).step r τ N ^ k) v)) x| ≤
+      ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
+        layerConst n * S.boundaryDefect * meshSize s N * (k * τ / s + s) +
+        r.sharpConst p * (k * τ) * τ ^ p * ‖(neumannLaplacian b hs N ^ (p + 1)) v‖ +
+        feDefect (s := s) (n := n) D₂ N
 
 /-- **The heat equation with natural boundary conditions in the maximum norm** (lumped-mass `P₁`
 elements on the Freudenthal meshes of the cube `b + (0, s)ⁿ`, all nodes): see `Verdict`.
@@ -1038,14 +1208,39 @@ theorem maxNormNeumann (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   barrier _ p _ hl hK := neumannLaplacian_interp_chi_boundary hs p hl hK
   semidiscrete S N _ ht v := norm_interp_sub_exp_le hs S N ht v
   banach := stableFamily _
+  backwardEuler S _ _ hu₂ hBₜ N _ hτ _ hk v := norm_interp_sub_res_pow_le hs S hu₂ hBₜ N hτ hk v
+  stable_rational hr N _ hτ k := by simpa using (family b hs).norm_step_pow_le hr hτ N k
+  rational S _ hr _ hp N _ hτ _ hk v := norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
+  semidiscrete_fe S _ hD₂ N _ ht v _ hK _ hx :=
+    (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ ht).of_le (by norm_num)) (hD₂ _ ht) _ hK
+      hx).trans (by linarith [norm_interp_sub_exp_le hs S N ht v])
+  backwardEuler_fe S _ hD₂ _ _ hu₂ hBₜ N τ hτ k hk v _ hK _ hx :=
+    have hkt : (k : ℝ) * τ ∈ Set.Icc 0 _ := ⟨by positivity, hk⟩
+    (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt) _ hK
+      hx).trans (by linarith [norm_interp_sub_res_pow_le hs S hu₂ hBₜ N hτ hk v])
+  rational_fe S _ hD₂ _ hr _ hp N τ hτ k hk v _ hK _ hx :=
+    have hkt : (k : ℝ) * τ ∈ Set.Icc 0 _ := ⟨by positivity, hk⟩
+    (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt) _ hK
+      hx).trans (by linarith [norm_interp_sub_step_pow_le hs S hr hp N hτ hk v])
 
 /-- **The Neumann verdict is not vacuous**: the first Neumann eigenmode `cosSolution` is a
-classical solution on every `[0, T] × Q̄`, nonzero at `t = 0`. -/
+classical solution on every `[0, T] × Q̄`, nonzero at `t = 0`, with `uₜₜ = λ² u`, `|uₜₜ| ≤ λ²`
+and `|∂ᵢ∂ₖ u| ≤ (π/s)²`; so the backward Euler and finite element clauses apply to it. -/
 theorem maxNormNeumann_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
-    Verdict b hs ∧ ∃ S : NeumannSolution b s T, S.u 0 ≠ 0 :=
+    Verdict b hs ∧ ∃ S : NeumannSolution b s T, S.u 0 ≠ 0 ∧
+      (∃ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (Bₜ : ℝ),
+        (∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t) ∧
+        ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, |u₂ t x| ≤ Bₜ) ∧
+      ∃ D₂ : ℝ, ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
+        |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂ :=
   ⟨maxNormNeumann b hs, cosSolution b hs T, fun h => by
     have := congrFun h b
     rw [cosSolution_u_zero_corner] at this
-    exact one_ne_zero this⟩
+    exact one_ne_zero this,
+    ⟨fun t x => (n * sineFreq s ^ 2) ^ 2 * (cosSolution b hs T).u t x, (n * sineFreq s ^ 2) ^ 2,
+      fun t _ x _ => sineSolution_hasDerivAt₁ (cosCentre b s) hs T t x,
+      fun t ht x _ => abs_sineSolution_u₂_le (cosCentre b s) hs T ht.1 x⟩,
+    sineFreq s ^ 2, fun t ht x _ i k =>
+      abs_partialDeriv_partialDeriv_sineSolution_le (cosCentre b s) hs T ht.1 x i k⟩
 
 end Feec.Models.Cube.MaxNormNeumann

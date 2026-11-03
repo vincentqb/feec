@@ -85,6 +85,22 @@ theorem norm_thetaRule_le {f f₁ f₂ : ℝ → X} {a b θ B : ℝ} (hab : a �
     convert hg using 2; norm_num
   nlinarith
 
+/-- **The backward Euler remainder**: for `f` with derivatives `f₁`, `f₂` on `[a, a + τ]` and
+`‖f₂‖ ≤ B`, `‖f(a + τ) - f(a) - τ f₁(a + τ)‖ ≤ 3/2 τ² B` (`norm_thetaRule_le`, `θ = 1`). -/
+theorem norm_sub_sub_smul_le {f f₁ f₂ : ℝ → X} {a τ B : ℝ} (hτ : 0 ≤ τ)
+    (hf : ∀ t ∈ Icc a (a + τ), HasDerivAt f (f₁ t) t)
+    (hf₁ : ∀ t ∈ Icc a (a + τ), HasDerivAt f₁ (f₂ t) t) (hB : ∀ t ∈ Icc a (a + τ), ‖f₂ t‖ ≤ B) :
+    ‖f (a + τ) - f a - τ • f₁ (a + τ)‖ ≤ 3 / 2 * τ ^ 2 * B := by
+  have hq := norm_thetaRule_le (f := f) (f₁ := f₁) (f₂ := f₂) (θ := 1) (B := B)
+    (le_add_of_nonneg_right hτ) zero_le_one
+    (fun t ht => (hf t ht).continuousAt.continuousWithinAt)
+    (fun t ht => (hf₁ t ht).continuousAt.continuousWithinAt)
+    (fun t ht => (hf t (Ico_subset_Icc_self ht)).hasDerivWithinAt)
+    (fun t ht => (hf₁ t (Ico_subset_Icc_self ht)).hasDerivWithinAt)
+    (fun t ht => hB t (Ico_subset_Icc_self ht))
+  simp only [add_sub_cancel_left, one_smul, sub_self, zero_smul, add_zero] at hq
+  convert hq using 2; norm_num
+
 /-- **The trapezoidal (Crank–Nicolson) remainder**, with the sharp constant: for `f` with right
 derivatives `f₁`, `f₂`, `f₃` on `[a, b)` and `‖f₃‖ ≤ B`,
 `‖f(b) - f(a) - (b - a)/2 (f₁(b) + f₁(a))‖ ≤ (b - a)³ B / 12`. -/

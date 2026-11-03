@@ -19,6 +19,7 @@ public import FeecCheck.BanachSchemes
 public import FeecCheck.TimeSchemes
 public import FeecCheck.StableFamilies
 public import FeecCheck.MaxNormHeat
+public import FeecCheck.MaxNormNeumann
 
 public section
 

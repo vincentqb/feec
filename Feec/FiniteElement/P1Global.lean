@@ -28,7 +28,9 @@ are a linear isomorphism onto `P̊₁⁻Λ⁰(M)` (`p1GlobalEquiv₀`). Then
 * **in the maximum norm**: a `P₁` function attains its extreme values at the vertices,
   `|Πₜu(x)| ≤ maxⱼ |u(pⱼ)|` on `T` (`abs_p1Interp_le`), and the `P₁` interpolation error of
   `f ∈ C²` with `|∂ᵢ∂ₖ f| ≤ D` on `T` is `|f(x) - Πₜf(x)| ≤ n² D δ² / 2`, `δ` the diameter of `T`
-  in the maximum norm (`abs_sub_p1Interp_le`, Taylor's formula along the segments `x → pⱼ`).
+  in the maximum norm (`abs_sub_p1Interp_le`, Taylor's formula along the segments `x → pⱼ`);
+  together, `|f(x) - Πₜg(x)| ≤ ε + n² D δ² / 2` when `|f - g| ≤ ε` at the vertices
+  (`abs_sub_p1Interp_le_of_vertices`).
 
 ## References
 
@@ -601,6 +603,23 @@ theorem abs_sub_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {f : (Fin
         rw [abs_mul, abs_of_nonneg (baryCoord_mem_Icc T hx j).1]
         exact mul_le_mul_of_nonneg_left (hR j) (baryCoord_mem_Icc T hx j).1
     _ = _ := by rw [← sum_mul, sum_baryCoord, one_mul]
+
+/-- **The `P₁` interpolant of approximate vertex values**: for `f` as in `abs_sub_p1Interp_le`
+and `g` with `|f(pⱼ) - g(pⱼ)| ≤ ε` at the vertices, `|f(x) - Πₜg(x)| ≤ ε + n² D δ² / 2` on `T`
+(the `P₁` function `Πₜ(f - g)` attains its extrema at the vertices). -/
+theorem abs_sub_p1Interp_le_of_vertices (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+    {f g : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) {D δ ε : ℝ}
+    (hD : ∀ y ∈ T.closedInterior, ∀ i k, |partialDeriv k (partialDeriv i f) y| ≤ D)
+    (hδ : ∀ y ∈ T.closedInterior, ∀ z ∈ T.closedInterior, dist y z ≤ δ)
+    (hε : ∀ j, |f (T.points j) - g (T.points j)| ≤ ε) {x : Fin n → ℝ}
+    (hx : x ∈ T.closedInterior) : |f x - p1Interp T.points g x| ≤ ε + n ^ 2 * D * δ ^ 2 / 2 := by
+  have h1 := abs_sub_p1Interp_le T hf hD hδ hx
+  have h2 := abs_p1Interp_le T (u := f - g) hε hx
+  rw [p1Interp_sub_values] at h2
+  calc |f x - p1Interp T.points g x|
+      = |(p1Interp T.points f x - p1Interp T.points g x) + (f x - p1Interp T.points f x)| := by
+        ring_nf
+    _ ≤ _ := (abs_add_le _ _).trans (by linarith)
 
 end MaxNorm
 

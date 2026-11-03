@@ -26,7 +26,11 @@ diagonally dominant M-matrix). Then `e^{tL}` is, for `t ≥ 0`,
 * positive along the flow (`IsSubMarkovGenerator.nonneg_of_hasDerivAt`: `Z(0) ≥ 0` and
   `Z' - L Z ≥ 0` give `Z(t) ≥ 0`), whence, for `L 𝟙 = 0`, the **barrier estimate**
   `IsSubMarkovGenerator.abs_apply_le_of_barrier`: `|E' - L E| ≤ A - L ψ`, `ψ ≥ 0`, give
-  `|E(t)| ≤ ‖E(0)‖ + ψ + t A`.
+  `|E(t)| ≤ ‖E(0)‖ + ψ + t A`;
+* for backward Euler, the **discrete minimum principle**
+  (`IsSubMarkovGenerator.nonneg_of_sub_smul_apply_nonneg`: `x - τ L x ≥ 0 ⇒ x ≥ 0`) and the
+  **discrete barrier estimate** `IsSubMarkovGenerator.abs_apply_le_of_barrier_step`:
+  `Eₖ₊₁ - τ L Eₖ₊₁ = Eₖ + τ δₖ`, `|δₖ| ≤ A - L ψ`, give `|Eₙ| ≤ ‖E₀‖ + ψ + nτ A`.
 
 The proofs avoid matrix entries: a positive operator `P` has `|P v| ≤ P |v| ≤ ‖v‖ P 𝟙`, so
 `‖P‖ ≤ c` as soon as `P 𝟙 ≤ c` (`ContinuousLinearMap.norm_le_of_nonneg_of_apply_one_le`), and
@@ -244,5 +248,57 @@ theorem abs_apply_le_of_barrier (h1 : L (fun _ => 1) = 0) {E E' : ℝ → ι →
   rcases abs_cases (E t i) with ⟨h, -⟩ | ⟨h, -⟩
   · rw [h]; simpa using key 1 (Or.inl rfl)
   · rw [h]; simpa using key (-1) (Or.inr rfl)
+
+/-- **The discrete minimum principle**: `x - τ L x ≥ 0` gives `x ≥ 0` for `τ ≥ 0`, so
+`(1 - τL)⁻¹` is positive (at a minimum `xⱼ < 0`, `(L x)ⱼ ≥ xⱼ (L 𝟙)ⱼ ≥ 0`). -/
+theorem nonneg_of_sub_smul_apply_nonneg {τ : ℝ} (hτ : 0 ≤ τ) {x : ι → ℝ}
+    (h : 0 ≤ x - τ • L x) : 0 ≤ x := by
+  intro i
+  by_contra hi
+  obtain ⟨j, -, hj⟩ := Finset.exists_min_image Finset.univ x ⟨i, Finset.mem_univ i⟩
+  obtain ⟨c, -, hc⟩ := hL.exists_shift
+  have hm : x j < 0 := (hj i (Finset.mem_univ i)).trans_lt (not_le.1 hi)
+  have h1 := hc (x - x j • fun _ => 1) (fun k => by simpa using hj k (Finset.mem_univ k)) j
+  have h2 := hL.apply_one_nonpos j
+  have h3 := h j
+  simp only [map_sub, map_smul, Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul, mul_one,
+    sub_self, mul_zero, add_zero, Pi.zero_apply] at h1 h3
+  nlinarith [mul_nonneg hτ (by nlinarith : 0 ≤ L x j)]
+
+/-- **The barrier estimate for backward Euler**: for a Markov generator `L` (`L 𝟙 = 0`),
+`τ ≥ 0` and `Eₖ₊₁ - τ L Eₖ₊₁ = Eₖ + τ δₖ` with defects `|δₖ| ≤ A - L ψ` for a barrier `ψ ≥ 0`
+(`k < n`), `|Eₙ| ≤ ‖E₀‖ + ψ + nτ A`. -/
+theorem abs_apply_le_of_barrier_step (h1 : L (fun _ => 1) = 0) {E δ : ℕ → ι → ℝ} {τ A : ℝ}
+    (hτ : 0 ≤ τ) {n : ℕ} (hE : ∀ k < n, E (k + 1) - τ • L (E (k + 1)) = E k + τ • δ k)
+    {ψ : ι → ℝ} (hψ : 0 ≤ ψ) (hδ : ∀ k < n, ∀ i, |δ k i| ≤ A - L ψ i) (i : ι) :
+    |E n i| ≤ ‖E 0‖ + ψ i + n * τ * A := by
+  have hL1 : ∀ c : ℝ, L (c • fun _ => (1 : ℝ)) = 0 := fun c => by rw [map_smul, h1, smul_zero]
+  have key : ∀ ε : ℝ, (ε = 1 ∨ ε = -1) → ∀ k ≤ n,
+      0 ≤ (‖E 0‖ + k * τ * A) • (fun _ => (1 : ℝ)) + ψ - ε • E k := fun ε hε k => by
+    induction k with
+    | zero =>
+      intro _ j
+      have := norm_le_pi_norm (E 0) j
+      rw [Real.norm_eq_abs] at this
+      have : 0 ≤ ψ j := hψ j
+      rcases hε with rfl | rfl <;> simp <;> linarith [le_abs_self (E 0 j), neg_abs_le (E 0 j)]
+    | succ k ih =>
+      intro hk
+      have hk' : k < n := hk
+      refine hL.nonneg_of_sub_smul_apply_nonneg hτ fun j => ?_
+      have e := congrFun (hE k hk') j
+      have hz := ih hk'.le j
+      have hb := hδ k hk' j
+      simp only [map_sub, map_add, hL1, map_smul, Pi.add_apply, Pi.sub_apply, Pi.smul_apply,
+        smul_eq_mul, mul_one, Pi.zero_apply, zero_add] at e hz ⊢
+      push_cast
+      rcases hε with rfl | rfl
+      · nlinarith [mul_nonneg hτ (by linarith [(abs_le.1 hb).2] : 0 ≤ A - L ψ j - δ k j)]
+      · nlinarith [mul_nonneg hτ (by linarith [(abs_le.1 hb).1] : 0 ≤ A - L ψ j + δ k j)]
+  have hp := key 1 (Or.inl rfl) n le_rfl i
+  have hm := key (-1) (Or.inr rfl) n le_rfl i
+  simp only [Pi.add_apply, Pi.sub_apply, Pi.smul_apply, smul_eq_mul, mul_one, one_mul,
+    neg_mul, Pi.zero_apply] at hp hm
+  exact abs_le.2 ⟨by linarith, by linarith⟩
 
 end IsSubMarkovGenerator

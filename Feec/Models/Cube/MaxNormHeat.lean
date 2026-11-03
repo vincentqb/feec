@@ -558,11 +558,10 @@ theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s
     ‖interp b s N (S.u (k * τ)) - ((family b hs).step r τ N ^ k) v‖ ≤
       ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
         r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ := by
-  have hsub : Icc 0 (k * τ) ⊆ Icc 0 T := Icc_subset_Icc le_rfl hk
-  have H := (family b hs).norm_sub_step_pow_le_of_traj hr hp hτ N
-    (U := fun t => interp b s N (S.u t)) (fun r hr => S.hasDerivAt_interp hs N (hsub hr))
-    (fun r hr => S.norm_defect_le hs N (hsub hr)) v
-  simpa using H
+  have := (family b hs).norm_sub_step_pow_le_norm_sub_exp_add hr hp hτ N
+    (interp b s N (S.u (k * τ))) k v
+  simp only [mul_one, RCLike.ofReal_real_eq_id, id_eq] at this
+  linarith [norm_interp_sub_exp_le hs S N ⟨by positivity, hk⟩ v]
 
 /-- **Brenner–Thomée's stability bound in the maximum norm**: `‖r(τLₕ)ᵏ‖_∞ ≤ 1 + C'_r √k` for
 every A-stable `r` (Crank–Nicolson included), uniformly in `h`. [BrennerThomee1979] -/
@@ -778,6 +777,27 @@ theorem exists_simplex_mem (hs : 0 < s) {x : Fin n → ℝ} (hx : x ∈ closedCu
   rw [← (freudenthalMesh b s hs (N + 1)).biUnion_closedInterior] at h
   simpa using h
 
+/-- The interpolation term `n² D₂ h² / 2`. -/
+def feDefect (D₂ : ℝ) (N : ℕ) : ℝ := n ^ 2 * D₂ * meshSize s N ^ 2 / 2
+
+/-- **A finite element function on `Q̄` from its values at the nodes**: for `u ∈ C²` with
+`|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and `g` with `|u - g| ≤ ε` at the nodes `{0, …, N + 1}ⁿ`, at every point `x`
+of every simplex `K` of the mesh, `|u(x) - Π_K g(x)| ≤ ε + n² D h² / 2`
+(`Feec.FiniteElement.abs_sub_p1Interp_le_of_vertices`); any boundary condition and node set. -/
+theorem abs_sub_p1Interp_le_of_nodes (hs : 0 < s) (N : ℕ) {u g : (Fin n → ℝ) → ℝ}
+    (hu : ContDiff ℝ 2 u) {D ε : ℝ}
+    (hD : ∀ x ∈ closedCube b s, ∀ i k, |partialDeriv k (partialDeriv i u) x| ≤ D)
+    (hε : ∀ q : Fin n → ℤ, (∀ i, 0 ≤ q i ∧ q i ≤ N + 1) →
+      |u (node b (meshSize s N) q) - g (node b (meshSize s N) q)| ≤ ε)
+    {K : Affine.Simplex ℝ (Fin n → ℝ) n} (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices)
+    {x : Fin n → ℝ} (hx : x ∈ K.closedInterior) :
+    |u x - p1Interp K.points g x| ≤ ε + feDefect (s := s) (n := n) D N :=
+  abs_sub_p1Interp_le_of_vertices K hu
+    (fun y hy => hD y (closedInterior_subset_closedCube hs hK hy))
+    (fun y hy z hz => dist_le_meshSize hs hK hy hz) (fun j => by
+      obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hK j
+      rw [e]; exact hε q hq) hx
+
 /-- **The finite element function in the maximum norm on `Q̄`**: for `u ∈ C²` vanishing on `∂Q`
 with `|∂ᵢ∂ₖ u| ≤ D` on `Q̄` and discrete values `U`, at every point `x` of every simplex `K` of the
 mesh, `|u(x) - U_h(x)| ≤ ‖Iₕ u - U‖_∞ + n² D h² / 2`, `U_h = Π_K U` the global `P₁` function
@@ -789,21 +809,9 @@ theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) �
     {K : Affine.Simplex ℝ (Fin n → ℝ) n} (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices)
     {x : Fin n → ℝ} (hx : x ∈ K.closedInterior) :
     |u x - p1Interp K.points (nodal b s U) x| ≤
-      ‖interp b s N u - U‖ + n ^ 2 * D * meshSize s N ^ 2 / 2 := by
-  have h1 := abs_sub_p1Interp_le K hu (fun y hy => hD y (closedInterior_subset_closedCube hs hK hy))
-    (fun y hy z hz => dist_le_meshSize hs hK hy hz) hx
-  have h2 := abs_p1Interp_le K (u := u - nodal b s U) (B := ‖interp b s N u - U‖) (fun j => by
-    obtain ⟨q, hq, e⟩ := exists_node_eq_points hs hK j
-    rw [e, Pi.sub_apply, nodal_node hs, ← ext_interp hs hbd hq, ← ext_sub]
-    exact abs_ext_le _ q) hx
-  rw [p1Interp_sub_values] at h2
-  calc |u x - p1Interp K.points (nodal b s U) x|
-      = |(u x - p1Interp K.points u x) +
-          (p1Interp K.points u x - p1Interp K.points (nodal b s U) x)| := by ring_nf
-    _ ≤ _ := (abs_add_le _ _).trans (by linarith)
-
-/-- The interpolation term `n² D₂ h² / 2`. -/
-def feDefect (D₂ : ℝ) (N : ℕ) : ℝ := n ^ 2 * D₂ * meshSize s N ^ 2 / 2
+      ‖interp b s N u - U‖ + n ^ 2 * D * meshSize s N ^ 2 / 2 :=
+  abs_sub_p1Interp_le_of_nodes hs N hu hD (fun q hq => by
+    rw [nodal_node hs, ← ext_interp hs hbd hq, ← ext_sub]; exact abs_ext_le _ q) hK hx
 
 /-- **The semidiscrete error of the finite element function on `Q̄`**. -/
 theorem abs_sub_p1Interp_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}

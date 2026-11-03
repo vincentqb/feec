@@ -37,7 +37,8 @@ factor `h^{-n/2}`).
 4. (**every A-stable rational scheme** `r`, through the resolvent) Brenner–Thomée's stability
    bound `‖r(τLₕ)ⁿ‖ ≤ M (1 + C'_r √n)`, for `r` of order `p` the sharp temporal error
    `‖r(τLₕ)ⁿ v - e^{nτLₕ} v‖ ≤ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`, and along a trajectory with defect `D`
-   the error `M ‖U(0) - v‖ + M nτ D + C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`.
+   the error `M ‖U(0) - v‖ + M nτ D + C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`; more generally, every
+   semidiscrete error bound gives one for `r(τLₕ)ⁿ` (`norm_sub_step_pow_le_norm_sub_exp_add`).
 
 All constants depend on `M`, `r`, `p`, `B`, `D` only, so they are independent of `h`.
 
@@ -206,6 +207,20 @@ theorem res_apply_sub_apply {τ : ℝ} (hτ : 0 < τ) (h : κ) (x : F.X h) :
     F.res τ h (x - (τ : 𝕜) • F.L h x) = x :=
   F.res_apply_sub hτ h x _ (C0Group.mem_graph_generator_ofBounded (F.L h) x)
 
+/-- `(1 - τLₕ) Rₕ x = x`, for `τ > 0`. -/
+theorem res_sub_smul_apply_res {τ : ℝ} (hτ : 0 < τ) (h : κ) (x : F.X h) :
+    F.res τ h x - (τ : 𝕜) • F.L h (F.res τ h x) = x := by
+  have hR := (F.discrete h).isResolvent_resolvent_ofReal (F.norm_discrete_S_le_exp h)
+    (inv_pos.2 hτ)
+  rw [RCLike.ofReal_inv] at hR
+  have hτ' : (τ : 𝕜) ≠ 0 := by exact_mod_cast hτ.ne'
+  have e := hR.sub_apply x
+  have hA : ∀ y : (F.discrete h).generator.domain, (F.discrete h).generator y = F.L h y :=
+    C0Group.generator_ofBounded_apply (F.L h)
+  rw [hA] at e
+  rw [res, _root_.smul_apply, map_smul, smul_smul, mul_inv_cancel₀ hτ', one_smul]
+  exact e
+
 /-- **Backward Euler is stable**: `‖Rₕⁿ‖ ≤ M`, by the Hille–Yosida estimates. [Pazy1983], §1.5 -/
 theorem norm_res_pow_le {τ : ℝ} (hτ : 0 < τ) (h : κ) (n : ℕ) : ‖F.res τ h ^ n‖ ≤ F.M := by
   simpa using TimeStepping.norm_pow_le_of_generator (F.discrete h) (F.norm_discrete_S_le_exp h)
@@ -219,14 +234,7 @@ theorem norm_sub_res_apply_le {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U₂ : 
     (hU₁ : ∀ s ∈ Icc a (a + τ), HasDerivAt U₁ (U₂ s) s) (hB : ∀ s ∈ Icc a (a + τ), ‖U₂ s‖ ≤ B)
     (hD : ‖U₁ (a + τ) - F.L h (U (a + τ))‖ ≤ D) :
     ‖U (a + τ) - F.res τ h (U a)‖ ≤ F.M * (3 / 2 * τ ^ 2 * B + τ * D) := by
-  have hab : a ≤ a + τ := by linarith
-  have hq := norm_thetaRule_le (f := U) (f₁ := U₁) (f₂ := U₂) (θ := 1) (B := B) hab zero_le_one
-    (fun s hs => (hU s hs).continuousAt.continuousWithinAt)
-    (fun s hs => (hU₁ s hs).continuousAt.continuousWithinAt)
-    (fun s hs => (hU s (Ico_subset_Icc_self hs)).hasDerivWithinAt)
-    (fun s hs => (hU₁ s (Ico_subset_Icc_self hs)).hasDerivWithinAt)
-    (fun s hs => hB s (Ico_subset_Icc_self hs))
-  simp only [add_sub_cancel_left, one_smul, sub_self, zero_smul, add_zero] at hq
+  have hq := norm_sub_sub_smul_le hτ.le hU hU₁ hB
   have e : U (a + τ) - F.res τ h (U a) = F.res τ h ((U (a + τ) - U a - τ • U₁ (a + τ)) +
       τ • (U₁ (a + τ) - F.L h (U (a + τ)))) := by
     have h1 := F.res_apply_sub_apply hτ h (U (a + τ))
@@ -240,8 +248,6 @@ theorem norm_sub_res_apply_le {τ : ℝ} (hτ : 0 < τ) (h : κ) {U U₁ U₂ : 
   have hR : ‖F.res τ h‖ ≤ F.M := by simpa using F.norm_res_pow_le hτ h 1
   refine mul_le_mul hR ((norm_add_le _ _).trans ?_) (norm_nonneg _) F.M_nonneg
   rw [norm_smul, Real.norm_of_nonneg hτ.le]
-  have : (1 + 1 / 2 : ℝ) = 3 / 2 := by norm_num
-  rw [this] at hq
   gcongr
 
 /-- **Backward Euler along a trajectory**: for a `C²` curve `U` on `[0, nτ]` with
@@ -306,6 +312,15 @@ theorem norm_step_pow_sub_exp_le {r : RationalScheme} (hr : r.IsAStable) {p : �
     (F.norm_discrete_S_le h) hr hp hτ (F.res_apply_sub hτ h) n (u := fun j => (F.L h ^ j) v)
     fun j _ => C0Group.pow_apply_mem_graph_generator_ofBounded (F.L h) v j
 
+/-- **Every A-stable rational scheme from the semidiscrete error**: for `r` of order `p` and
+every `W ∈ Xₕ`, `‖W - r(τLₕ)ⁿ v‖ ≤ ‖W - e^{nτLₕ} v‖ + C_r M nτ τᵖ ‖Lₕ^{p+1} v‖`. -/
+theorem norm_sub_step_pow_le_norm_sub_exp_add {r : RationalScheme} (hr : r.IsAStable) {p : ℕ}
+    (hp : r.HasOrder p) {τ : ℝ} (hτ : 0 < τ) (h : κ) (W : F.X h) (n : ℕ) (v : F.X h) :
+    ‖W - (F.step r τ h ^ n) v‖ ≤ ‖W - exp (((n * τ : ℝ) : 𝕜) • F.L h) v‖ +
+      r.sharpConst p * F.M * (n * τ) * τ ^ p * ‖(F.L h ^ (p + 1)) v‖ :=
+  (norm_sub_le_norm_sub_add_norm_sub _ _ _).trans
+    (add_le_add_right (by rw [norm_sub_rev]; exact F.norm_step_pow_sub_exp_le hr hp hτ h n v) _)
+
 /-- **Every A-stable rational scheme along a trajectory**: for `r` of order `p` and a curve `U`
 on `[0, nτ]` with defect `‖U' - Lₕ U‖ ≤ D`, `‖U(nτ) - r(τLₕ)ⁿ v‖ ≤ M ‖U(0) - v‖ + M nτ D`
 `+ C_r M nτ τᵖ ‖Lₕ^{p+1} v‖` (Duhamel plus the sharp temporal error). -/
@@ -315,13 +330,8 @@ theorem norm_sub_step_pow_le_of_traj {r : RationalScheme} (hr : r.IsAStable) {p 
     (hD : ∀ s ∈ Icc 0 (n * τ), ‖U' s - F.L h (U s)‖ ≤ D) (v : F.X h) :
     ‖U (n * τ) - (F.step r τ h ^ n) v‖ ≤ F.M * ‖U 0 - v‖ + F.M * (n * τ) * D +
       r.sharpConst p * F.M * (n * τ) * τ ^ p * ‖(F.L h ^ (p + 1)) v‖ := by
-  have h1 := F.norm_sub_exp_le_of_defect h (by positivity) hU hD v
-  have h2 := F.norm_step_pow_sub_exp_le hr hp hτ h n v
-  rw [norm_sub_rev] at h2
-  calc _ ≤ ‖U (n * τ) - exp (((n * τ : ℝ) : 𝕜) • F.L h) v‖ +
-        ‖exp (((n * τ : ℝ) : 𝕜) • F.L h) v - (F.step r τ h ^ n) v‖ :=
-          norm_sub_le_norm_sub_add_norm_sub _ _ _
-    _ ≤ _ := by linarith
+  have := F.norm_sub_exp_le_of_defect h (by positivity) hU hD v
+  linarith [F.norm_sub_step_pow_le_norm_sub_exp_add hr hp hτ h (U (n * τ)) n v]
 
 /-- **A rational scheme with uniformly bounded powers is a time scheme**: for an A-stable `r` of
 order `p ≥ 1`, time steps `τₕ > 0` and `‖r(τₕLₕ)ⁿ‖ ≤ Mₛ(T)` for `nτₕ ≤ T`, the scheme

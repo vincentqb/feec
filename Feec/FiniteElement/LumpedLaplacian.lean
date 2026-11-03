@@ -50,14 +50,7 @@ def lumpedEntry (p q : ι) : ℝ :=
 /-- **The lumped-mass `P₁` Laplacian** `(Lₕ U)(p) = -a(φ_{x p}, U_h) / m(x p)` on the nodes `x`
 of the mesh `M` (`lumpedLaplacianOn_apply`), in matrix form. -/
 def lumpedLaplacianOn : (ι → ℝ) →L[ℝ] (ι → ℝ) :=
-  LinearMap.toContinuousLinearMap
-    { toFun := fun U p => ∑ q, lumpedEntry M x p q * U q
-      map_add' := fun U V => by
-        funext p; simp only [Pi.add_apply, mul_add, sum_add_distrib]
-      map_smul' := fun c U => by
-        funext p
-        simp only [Pi.smul_apply, smul_eq_mul, RingHom.id_apply, mul_sum]
-        exact sum_congr rfl fun q _ => by ring }
+  (Matrix.of (lumpedEntry M x)).mulVecLin.toContinuousLinearMap
 
 theorem lumpedLaplacianOn_apply_eq_sum (U : ι → ℝ) (p : ι) :
     lumpedLaplacianOn M x U p = ∑ q, lumpedEntry M x p q * U q := rfl

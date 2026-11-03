@@ -62,9 +62,13 @@ variable {n : ℕ}
 /-! ### `P₁` interpolation, stiffness and lumped mass on a mesh -/
 
 /-- The gradient `∇Πₜu = Σⱼ u(pⱼ) ∇λⱼ` of the `P₁` interpolant of the nodal values `u` on the
-simplex with vertices `p`. -/
-def p1Grad (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) : Fin n → ℝ :=
-  ∑ j, u (p j) • baryGrad p j
+simplex with vertices `p`, linear in `u`. -/
+def p1Grad (p : Fin (n + 1) → Fin n → ℝ) : ((Fin n → ℝ) → ℝ) →ₗ[ℝ] Fin n → ℝ :=
+  ∑ j, (LinearMap.proj (p j)).smulRight (baryGrad p j)
+
+theorem p1Grad_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) :
+    p1Grad p u = ∑ j, u (p j) • baryGrad p j := by
+  simp [p1Grad]
 
 /-- The `P₁` interpolant `Πₜu = Σⱼ u(pⱼ) λⱼ` of the nodal values `u` on the simplex `p`. -/
 def p1Interp (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
@@ -73,7 +77,7 @@ def p1Interp (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (
 /-- `Πₜu` is affine with gradient `p1Grad p u`. -/
 theorem p1Interp_sub (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x y : Fin n → ℝ) :
     p1Interp p u x - p1Interp p u y = p1Grad p u ⬝ᵥ (x - y) := by
-  simp only [p1Interp, p1Grad, ← sum_sub_distrib, ← mul_sub, baryCoord_sub, dotProduct,
+  simp only [p1Interp, p1Grad_apply, ← sum_sub_distrib, ← mul_sub, baryCoord_sub, dotProduct,
     Pi.sub_apply, mul_sum, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, sum_mul]
   rw [Finset.sum_comm]
   simp only [mul_assoc]
@@ -82,14 +86,6 @@ theorem p1Interp_sub (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) �
 theorem p1Interp_vertex {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (u : (Fin n → ℝ) → ℝ) (j : Fin (n + 1)) : p1Interp p u (p j) = u (p j) := by
   simp [p1Interp, baryCoord_vertex hp]
-
-theorem p1Grad_add (p : Fin (n + 1) → Fin n → ℝ) (u w : (Fin n → ℝ) → ℝ) :
-    p1Grad p (u + w) = p1Grad p u + p1Grad p w := by
-  simp [p1Grad, add_smul, sum_add_distrib]
-
-theorem p1Grad_smul (p : Fin (n + 1) → Fin n → ℝ) (c : ℝ) (u : (Fin n → ℝ) → ℝ) :
-    p1Grad p (c • u) = c • p1Grad p u := by
-  simp [p1Grad, smul_sum, smul_smul]
 
 /-- **The `P₁` stiffness form** `a(u, w) = Σ_T ∫_T ∇Πₜu · ∇Πₜw` of the mesh `M`, on nodal
 values `u, w : ℝⁿ → ℝ` (only the values at the vertices enter), assembled elementwise; it is
@@ -112,13 +108,7 @@ theorem p1Stiffness_comm (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) 
 theorem p1Stiffness_sum_smul (M : SimplicialMesh n) {ι : Type*} (s : Finset ι) (c : ι → ℝ)
     (u : ι → (Fin n → ℝ) → ℝ) (w : (Fin n → ℝ) → ℝ) :
     p1Stiffness M (∑ i ∈ s, c i • u i) w = ∑ i ∈ s, c i * p1Stiffness M (u i) w := by
-  classical
-  have hg : ∀ p : Fin (n + 1) → Fin n → ℝ,
-      p1Grad p (∑ i ∈ s, c i • u i) = ∑ i ∈ s, c i • p1Grad p (u i) := fun p => by
-    induction s using Finset.induction_on with
-    | empty => simp [p1Grad]
-    | insert a s ha ih => rw [sum_insert ha, sum_insert ha, p1Grad_add, p1Grad_smul, ih]
-  simp only [p1Stiffness_eq, hg, sum_dotProduct, smul_dotProduct, smul_eq_mul, mul_sum]
+  simp only [p1Stiffness_eq, map_sum, map_smul, sum_dotProduct, smul_dotProduct, smul_eq_mul, mul_sum]
   rw [sum_comm]
   exact sum_congr rfl fun i _ => sum_congr rfl fun T _ => by ring
 
@@ -130,7 +120,7 @@ theorem p1Stiffness_sum_smul_right (M : SimplicialMesh n) {κ : Type*} (s : Fins
 
 theorem p1Stiffness_add_right (M : SimplicialMesh n) (u w w' : (Fin n → ℝ) → ℝ) :
     p1Stiffness M u (w + w') = p1Stiffness M u w + p1Stiffness M u w' := by
-  simp only [p1Stiffness_eq, p1Grad_add, dotProduct_add, mul_add, sum_add_distrib]
+  simp only [p1Stiffness_eq, map_add, dotProduct_add, mul_add, sum_add_distrib]
 
 theorem p1Stiffness_congr_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ)
     {w w' : (Fin n → ℝ) → ℝ} (h : ∀ T ∈ M.simplices, ∀ j, w (T.points j) = w' (T.points j)) :
@@ -138,14 +128,14 @@ theorem p1Stiffness_congr_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → 
   rw [p1Stiffness_eq, p1Stiffness_eq]
   refine sum_congr rfl fun T hT => ?_
   congr 2
-  simp only [p1Grad, h T hT]
+  simp only [p1Grad_apply, h T hT]
 
 theorem p1Stiffness_const_right (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) (c : ℝ) :
     p1Stiffness M u (fun _ => c) = 0 := by
   rw [p1Stiffness_eq]
   refine sum_eq_zero fun T _ => ?_
   have : p1Grad T.points (fun _ => c) = 0 := by
-    rw [p1Grad, ← smul_sum, sum_baryGrad, smul_zero]
+    rw [p1Grad_apply, ← smul_sum, sum_baryGrad, smul_zero]
   rw [this, dotProduct_zero, mul_zero]
 
 /-- **The lumped mass** at `x`: the vertex quadrature `Σ_T |T| / (n + 1) · #{j | pⱼ = x}` of
@@ -203,7 +193,7 @@ theorem p1Stiffness_indicator_nonpos (M : SimplicialMesh n) (hM : IsNonobtuse M)
     p1Stiffness M (nodalIndicator x) (nodalIndicator y) ≤ 0 := by
   rw [p1Stiffness_eq]
   refine sum_nonpos fun T hT => mul_nonpos_of_nonneg_of_nonpos measureReal_nonneg ?_
-  simp only [p1Grad, nodalIndicator, ite_smul, one_smul, zero_smul, sum_dotProduct,
+  simp only [p1Grad_apply, nodalIndicator, ite_smul, one_smul, zero_smul, sum_dotProduct,
     dotProduct_sum]
   refine sum_nonpos fun j _ => sum_nonpos fun k _ => ?_
   split_ifs
@@ -314,7 +304,7 @@ theorem p1Grad_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (m
         (if (j : ℕ) = σ.symm l then u (freudenthalPoints b h m σ j) else 0)) := by
     intro j; simp only [kuhnStep]; split_ifs <;> first | (exfalso; omega) | ring
   have hl := (σ.symm l).2
-  simp only [p1Grad, baryGrad_freudenthalPoints b hh, Finset.sum_apply, Pi.smul_apply,
+  simp only [p1Grad_apply, baryGrad_freudenthalPoints b hh, Finset.sum_apply, Pi.smul_apply,
     Pi.sub_apply, smul_eq_mul]
   rw [Finset.sum_congr rfl fun j _ => hterm j, ← mul_sum, sum_sub_distrib,
     sum_ite_val_eq _ (by omega), sum_ite_val_eq _ (by omega), div_eq_inv_mul]

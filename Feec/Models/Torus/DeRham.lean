@@ -73,10 +73,7 @@ theorem gap (i j : ℕ) {ξ : EuclideanSpace ℝ d} (hξ : 2 * Real.pi ≤ ‖ξ
     nlinarith [norm_nonneg v]
   · have h0 : (deRham d).m i j ξ = 0 := by rw [(deRham d).shape i j h]; rfl
     rw [h0] at hv ⊢
-    have : LinearMap.ker ((0 : Form ℂ d i →L[ℂ] Form ℂ d j) : Form ℂ d i →ₗ[ℂ] Form ℂ d j) = ⊤ := by
-      ext; simp
-    rw [this, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hv
-    simp [hv]
+    simp [eq_zero_of_mem_orthogonal_ker_zero hv]
 
 /-- **The de Rham complex of `𝕋ᵈ` has closed range in every degree.** -/
 theorem closedRangeAt (k : ℕ) : (complex d).ClosedRangeAt k :=
@@ -100,10 +97,7 @@ theorem norm_le_of_mem_orthogonal {k : ℕ} (u : ((complex d).d k (k + 1)).domai
   · subst hq
     intro v hv
     simp only [Fourier.Torus.symbolComplex_m, Fourier.Torus.freq_zero, deRham_m_zero] at hv ⊢
-    have : LinearMap.ker ((0 : Form ℂ d k →L[ℂ] Form ℂ d (k + 1)) :
-        Form ℂ d k →ₗ[ℂ] Form ℂ d (k + 1)) = ⊤ := by ext; simp
-    rw [this, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hv
-    simp [hv]
+    simp [eq_zero_of_mem_orthogonal_ker_zero hv]
   · exact gap _ _ (Fourier.Torus.two_pi_le_norm_freq hq)
 
 /-! ### Harmonic forms and cohomology -/

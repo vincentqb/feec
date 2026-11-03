@@ -317,10 +317,7 @@ theorem window_norm_le_of_mem_orthogonal {i j : Fin (Fintype.card d + 1)}
       change (deRham d).m i j (Fourier.Torus.freq 0) = 0
       rw [Fourier.Torus.freq_zero, deRham_m_zero]
     rw [h0] at hv ⊢
-    have : LinearMap.ker ((0 : Form ℂ d i →L[ℂ] Form ℂ d j) : Form ℂ d i →ₗ[ℂ] Form ℂ d j) = ⊤ := by
-      ext; simp
-    rw [this, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hv
-    simp [hv]
+    simp [eq_zero_of_mem_orthogonal_ker_zero hv]
   · exact gap _ _ (Fourier.Torus.two_pi_le_norm_freq hn)
 
 /-- **The Poincaré inequality on the cube**, in both parity classes and every degree:

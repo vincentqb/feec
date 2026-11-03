@@ -138,10 +138,7 @@ theorem closedRangeAt_of_gap {S : FibreComplex 𝕜 (EuclideanSpace ℝ d) c E} 
   · subst hk
     intro v hv
     simp only [symbolComplex_m, freq_zero, h0] at hv ⊢
-    have : LinearMap.ker ((0 : E (c.prev i) →L[𝕜] E i) : E (c.prev i) →ₗ[𝕜] E i) = ⊤ := by
-      ext; simp
-    rw [this, Submodule.top_orthogonal_eq_bot, Submodule.mem_bot] at hv
-    simp [hv]
+    simp [eq_zero_of_mem_orthogonal_ker_zero hv]
   · exact hgap _ (two_pi_le_norm_freq hk)
 
 /-- Closed range of the dual torus complex from a fibre gap of the outgoing symbol. -/

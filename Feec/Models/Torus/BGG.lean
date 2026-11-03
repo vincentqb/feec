@@ -122,23 +122,13 @@ theorem dual_closedRangeAt {i j : Fin 3} (hij : ComplexShape.fin3.Rel i j) :
   (Fourier.Torus.symbolComplex bggFamily).dual_closedRangeAt_of_gap hij (C := 4)
     (Filter.Eventually.of_forall fun k => bggFamily_gap _ _ (freq_cases k))
 
-theorem dual_closedRangeAt_two : complex.dual.ClosedRangeAt 2 := by
-  have hn : ComplexShape.fin3.next 2 = 2 := ComplexShape.fin3.next_eq_self' 2 fun k h => by
-    have : (2 : Fin 3).val + 1 = k.val := h
-    have := k.isLt; omega
-  have h0 : complex.d 2 (ComplexShape.fin3.next 2) = 0 := complex.shape _ _ (by
-    rw [hn]; intro h; have : (2 : Fin 3).val + 1 = (2 : Fin 3).val := h; omega)
-  rw [HilbertComplex.ClosedRangeAt, HilbertComplex.boundaries_dual, h0, LinearPMap.adjoint_zero]
-  convert (isClosed_singleton (x := (0 : Space 2))) using 1
-  ext y; constructor
-  · rintro ⟨x, rfl⟩; rfl
-  · rintro rfl; exact ⟨0, rfl⟩
-
 theorem dual_closedRangeAt' (i : Fin 3) : complex.dual.ClosedRangeAt i := by
   fin_cases i
   · exact dual_closedRangeAt (j := 1) rfl
   · exact dual_closedRangeAt (j := 2) rfl
-  · exact dual_closedRangeAt_two
+  · exact complex.dual_closedRangeAt_of_forall_not_rel fun k h => by
+      have : (2 : Fin 3).val + 1 = k.val := h
+      have := k.isLt; omega
 
 /-- **Hodge decomposition without closures** for the periodic BGG complex at every index,
 pairwise orthogonal. [QuennevilleBelair2015], §6.3 -/

@@ -133,7 +133,7 @@ theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hF : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub constraint)
     (hFr : ∀ t ∈ Icc a b, realConj (F t) = F t) :
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
-  fun t ht => ⟨tsd_propagates hU h0 hF t ht, realStructure.conj_eq hU h0r hFr t ht⟩
+  realStructure.toConj.propagates_real reducingSubcomplex hU h0 h0r hF hFr
 
 /-- **Prop 4.17 for real fields, with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.17 -/
 theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
@@ -145,10 +145,8 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution complex.wave (Icc a b) F U ∧
       (∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t) ∧
       ∀ V, V a = U₀ → Evolution.IsStrongSolution complex.wave (Icc a b) F V →
-        EqOn V U (Icc a b) := by
-  obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
-  exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
-    realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
+        EqOn V U (Icc a b) :=
+  realStructure.toConj.existsUnique_mem_real reducingSubcomplex hU₀ hU₀K hU₀r hF hFK hFr
 
 /-! ### Closed range -/
 

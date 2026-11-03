@@ -132,23 +132,13 @@ theorem dual_closedRangeAt {i j : Fin 3} (hij : ComplexShape.fin3.Rel i j) :
     complex.dual.ClosedRangeAt i :=
   Fourier.Torus.dual_closedRangeAt_of_gap hij (symCurl_m_zero _ _) fun _ hξ => symCurl_gap _ _ hξ
 
-theorem dual_closedRangeAt_two : complex.dual.ClosedRangeAt 2 := by
-  have hn : ComplexShape.fin3.next 2 = 2 := ComplexShape.fin3.next_eq_self' 2 fun k h => by
-    have : (2 : Fin 3).val + 1 = k.val := h
-    have := k.isLt; omega
-  have h0 : complex.d 2 (ComplexShape.fin3.next 2) = 0 := complex.shape _ _ (by
-    rw [hn]; intro h; have : (2 : Fin 3).val + 1 = (2 : Fin 3).val := h; omega)
-  rw [HilbertComplex.ClosedRangeAt, HilbertComplex.boundaries_dual, h0, LinearPMap.adjoint_zero]
-  convert (isClosed_singleton (x := (0 : Space 2))) using 1
-  ext y; constructor
-  · rintro ⟨x, rfl⟩; rfl
-  · rintro rfl; exact ⟨0, rfl⟩
-
 theorem dual_closedRangeAt' (i : Fin 3) : complex.dual.ClosedRangeAt i := by
   fin_cases i
   · exact dual_closedRangeAt (j := 1) rfl
   · exact dual_closedRangeAt (j := 2) rfl
-  · exact dual_closedRangeAt_two
+  · exact complex.dual_closedRangeAt_of_forall_not_rel fun k h => by
+      have : (2 : Fin 3).val + 1 = k.val := h
+      have := k.isLt; omega
 
 /-- **Hodge decomposition without closures** at every index (e.g. `L²(𝕋³; S)` is
 `R(grad grad) ⊕ ℌ ⊕ R(sym curl)`), pairwise orthogonal. -/
@@ -182,7 +172,7 @@ theorem real_tsd_propagates {a b : ℝ} {F U : ℝ → PiLp 2 Space}
     (hF : ∀ t ∈ Icc a b, F t ∈ HilbertComplex.totalSub constraint)
     (hFr : ∀ t ∈ Icc a b, realConj (F t) = F t) :
     ∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t :=
-  fun t ht => ⟨tsd_propagates hU h0 hF t ht, realStructure.conj_eq hU h0r hFr t ht⟩
+  realStructure.toConj.propagates_real reducingSubcomplex hU h0 h0r hF hFr
 
 /-- **Prop 4.19 for real fields, with existence and uniqueness.** [QuennevilleBelair2015], Prop 4.19 -/
 theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wave.domain)
@@ -194,10 +184,8 @@ theorem real_tsd_existsUnique {U₀ : PiLp 2 Space} (hU₀ : U₀ ∈ complex.wa
     ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution complex.wave (Icc a b) F U ∧
       (∀ t ∈ Icc a b, U t ∈ HilbertComplex.totalSub constraint ∧ realConj (U t) = U t) ∧
       ∀ V, V a = U₀ → Evolution.IsStrongSolution complex.wave (Icc a b) F V →
-        EqOn V U (Icc a b) := by
-  obtain ⟨U, hU0, hU, hUK, huniq⟩ := tsd_existsUnique hU₀ hU₀K hF hFK
-  exact ⟨U, hU0, hU, fun t ht => ⟨hUK t ht,
-    realStructure.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
+        EqOn V U (Icc a b) :=
+  realStructure.toConj.existsUnique_mem_real reducingSubcomplex hU₀ hU₀K hU₀r hF hFK hFr
 
 /-- **Real Hodge decomposition on `𝕋³`**: a real field (`C x = x`, i.e. `x̂(-ξ) = conj x̂(ξ)`) is
 `x = b + h + a` with `b ∈ R(d)`, `h` harmonic, `a ∈ R(d†)`, all three real. For `i = 1`:

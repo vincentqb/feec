@@ -96,4 +96,13 @@ theorem boundaries_dual (i : ι) :
     H.dual.boundaries i = LinearMap.range ((H.d i (c.next i))†).toFun := by
   rfl
 
+/-- At an index without successor the dual boundaries are `{0}`, so they are closed. -/
+theorem dual_closedRangeAt_of_forall_not_rel {i : ι} (h : ∀ j, ¬ c.Rel i j) :
+    H.dual.ClosedRangeAt i := by
+  rw [ClosedRangeAt, boundaries_dual, H.shape _ _ (h _), LinearPMap.adjoint_zero]
+  convert (isClosed_singleton (x := (0 : W i))) using 1
+  ext y; constructor
+  · rintro ⟨x, rfl⟩; rfl
+  · rintro rfl; exact ⟨0, rfl⟩
+
 end Feec.HilbertComplex

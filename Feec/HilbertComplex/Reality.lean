@@ -21,7 +21,8 @@ reality of solutions is a separate statement:
 For a Hilbert complex with conjugations commuting with the differentials
 (`HilbertComplex.Conj`), the conjugations commute with the adjoints (`Conj.adjoint_comm`), the
 total conjugation commutes with the wave operator (`Conj.wave_totalConj`), and the Hodge wave
-equation has real solutions for real data (`Conj.conj_eq`, `Conj.totalConj_waveGroup`).
+equation has real solutions for real data (`Conj.conj_eq`, `Conj.totalConj_waveGroup`), staying
+in every reducing subcomplex (`Conj.propagates_real`, `Conj.existsUnique_mem_real`).
 
 ## References
 
@@ -167,6 +168,35 @@ theorem conj_eq {a b : ℝ} {F U : ℝ → PiLp 2 W}
     (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : K.totalConj (U a) = U a)
     (hF : ∀ t ∈ Icc a b, K.totalConj (F t) = F t) : ∀ t ∈ Icc a b, K.totalConj (U t) = U t :=
   hU.conj_eq K.wave_totalConj H.isSkewAdjoint_wave.isDissipative h0 hF
+
+section Reducing
+
+variable {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection]
+
+/-- **Real solutions in a reducing subcomplex**: real data and forcing in `S` give a strong
+solution that stays real and in `S`. -/
+theorem propagates_real (hS : H.ReducingSubcomplex S) {a b : ℝ} {F U : ℝ → PiLp 2 W}
+    (hU : Evolution.IsStrongSolution H.wave (Icc a b) F U) (h0 : U a ∈ totalSub S)
+    (h0r : K.totalConj (U a) = U a) (hF : ∀ t ∈ Icc a b, F t ∈ totalSub S)
+    (hFr : ∀ t ∈ Icc a b, K.totalConj (F t) = F t) :
+    ∀ t ∈ Icc a b, U t ∈ totalSub S ∧ K.totalConj (U t) = U t :=
+  fun t ht => ⟨hS.propagates hU h0 hF t ht, K.conj_eq hU h0r hFr t ht⟩
+
+/-- **Real solutions in a reducing subcomplex, with existence and uniqueness**: for real
+`U₀ ∈ D(L) ∩ ∏ S i` and admissible real forcing in `∏ S i`, the classical solution of
+`U' = L U + F`, unique among strong solutions, stays real and in `S`. -/
+theorem existsUnique_mem_real (hS : H.ReducingSubcomplex S) {U₀ : PiLp 2 W}
+    (hU₀ : U₀ ∈ H.wave.domain) (hU₀S : U₀ ∈ totalSub S) (hU₀r : K.totalConj U₀ = U₀)
+    {F : ℝ → PiLp 2 W} {a b : ℝ} (hF : Evolution.ForcingClass.admissible H.wave a b F)
+    (hFS : ∀ t ∈ Icc a b, F t ∈ totalSub S) (hFr : ∀ t ∈ Icc a b, K.totalConj (F t) = F t) :
+    ∃ U, U a = U₀ ∧ Evolution.IsClassicalSolution H.wave (Icc a b) F U ∧
+      (∀ t ∈ Icc a b, U t ∈ totalSub S ∧ K.totalConj (U t) = U t) ∧
+      ∀ V, V a = U₀ → Evolution.IsStrongSolution H.wave (Icc a b) F V → EqOn V U (Icc a b) := by
+  obtain ⟨U, hU0, hU, hUS, huniq⟩ := hS.existsUnique_mem hU₀ hU₀S hF hFS
+  exact ⟨U, hU0, hU, fun t ht => ⟨hUS t ht,
+    K.conj_eq hU.toIsStrongSolution (hU0 ▸ hU₀r) hFr t ht⟩, huniq⟩
+
+end Reducing
 
 variable [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 

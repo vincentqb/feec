@@ -272,13 +272,6 @@ theorem inv_edgeMatrix_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h �
   rw [Matrix.smul_mul, Matrix.mul_smul, smul_smul, inv_mul_cancel₀ hh, one_smul,
     kuhnMatrixInv_mul]
 
-theorem isUnit_det_edgeMatrix_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0)
-    (m : Fin n → ℤ) (σ : Equiv.Perm (Fin n)) :
-    IsUnit (edgeMatrix (freudenthalPoints b h m σ)).det := by
-  refine Matrix.isUnit_det_of_left_inverse (B := h⁻¹ • kuhnMatrixInv σ) ?_
-  rw [edgeMatrix_freudenthalPoints, Matrix.smul_mul, Matrix.mul_smul, smul_smul,
-    inv_mul_cancel₀ hh, one_smul, kuhnMatrixInv_mul]
-
 /-- **The barycentric gradients of a Freudenthal simplex**: `∇λⱼ = h⁻¹ (s_j - s_{j+1})`, i.e.
 `∇λ₀ = -h⁻¹ e_{σ 0}`, `∇λⱼ = h⁻¹ (e_{σ(j-1)} - e_{σ j})`, `∇λₙ = h⁻¹ e_{σ(n-1)}`. -/
 theorem baryGrad_freudenthalPoints (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (m : Fin n → ℤ)

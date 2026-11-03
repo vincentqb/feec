@@ -244,14 +244,6 @@ theorem ext_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     have h2' : q j < (N : ℤ) + 1 := by exact_mod_cast h2
     omega
 
-/-- `s ↦ f(x + s eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t`. -/
-@[deprecated Feec.hasDerivAt_comp_add_smul_single (since := "2026-11-02")]
-theorem hasDerivAt_line {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f) (x : Fin n → ℝ)
-    (l : Fin n) (t : ℝ) :
-    HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
-      (partialDeriv l f (x + t • Pi.single l 1)) t :=
-  hasDerivAt_comp_add_smul_single hf x l t
-
 /-- **Consistency in the maximum norm**: for `u ∈ C⁴` vanishing on `∂Q` with `|∂ᵢ⁴ u| ≤ B` on
 `Q̄`, `|(Iₕ Δu)(p) - (Lₕ Iₕ u)(p)| ≤ n B h² / 12` at every interior node (the truncation error of
 the difference Laplacian, by Taylor's formula along the axes, `abs_secondDiff_sub_le`). -/
@@ -594,11 +586,8 @@ theorem hasDerivAt_sineDeriv (a c : ℝ) (k : ℕ) (hk : k ≤ 3) (y : ℝ) :
   · exact (hs.const_mul (-a ^ 2)).congr_deriv (by simp [sineDeriv]; ring)
   · exact (hc.const_mul (-a ^ 3)).congr_deriv (by simp [sineDeriv]; ring)
 
-theorem differentiable_sineDeriv (a c : ℝ) (k : ℕ) (hk : k ≤ 3) :
-    Differentiable ℝ (sineDeriv a c k) := fun y => (hasDerivAt_sineDeriv a c k hk y).differentiableAt
-
-theorem differentiable_sineDeriv_four (a c : ℝ) : Differentiable ℝ (sineDeriv a c 4) := by
-  simp only [sineDeriv]; fun_prop
+theorem differentiable_sineDeriv (a c : ℝ) (k : ℕ) : Differentiable ℝ (sineDeriv a c k) := by
+  rcases k with _ | _ | _ | _ | k <;> simp only [sineDeriv] <;> fun_prop
 
 /-- The factors of the eigenmode, the `i`-th differentiated `k` times. -/
 def sineFactors (b : Fin n → ℝ) (a : ℝ) (i : Fin n) (k : ℕ) : Fin n → ℝ → ℝ :=
@@ -619,11 +608,7 @@ theorem iterate_partialDeriv_sine (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) (k
   | succ k ih =>
     rw [Function.iterate_succ_apply', ih (by omega)]
     have hG : ∀ j, Differentiable ℝ (sineFactors b a i k j) := fun j => by
-      by_cases hj : j = i
-      · subst hj; simp only [sineFactors, Function.update_self]
-        exact differentiable_sineDeriv a _ k (by omega)
-      · simp only [sineFactors, Function.update_of_ne hj]
-        exact differentiable_sineDeriv a _ 0 (by omega)
+      rw [sineFactors, Function.update_apply]; split_ifs <;> exact differentiable_sineDeriv _ _ _
     rw [partialDeriv_const_mul_prod c hG (g := sineDeriv a (b i) (k + 1)) (fun y => by
       simpa [sineFactors] using hasDerivAt_sineDeriv a (b i) k (by omega) y)]
     simp only [sineFactors, Function.update_idem]
@@ -813,9 +798,6 @@ theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) �
   abs_sub_p1Interp_le_of_nodes hs N hu hD (fun q hq => by
     rw [nodal_node hs, ← ext_interp hs hbd hq, ← ext_sub]; exact abs_ext_le _ q) hK hx
 
-theorem differentiable_sineDeriv_all (a c : ℝ) (k : ℕ) : Differentiable ℝ (sineDeriv a c k) := by
-  rcases k with _ | _ | _ | _ | k <;> simp only [sineDeriv] <;> fun_prop
-
 theorem abs_sineDeriv_le {a : ℝ} (ha : 0 ≤ a) (c : ℝ) {k : ℕ} (hk : k ≤ 4) (y : ℝ) :
     |sineDeriv a c k y| ≤ a ^ k := by
   have hs := Real.abs_sin_le_one (a * (y - c))
@@ -829,7 +811,7 @@ theorem partialDeriv_sineProd (b : Fin n → ℝ) (a c : ℝ) (m : Fin n → ℕ
     partialDeriv k (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) (m j) (x j)) =
       fun x => c * ∏ j, sineDeriv a (b j) ((m + Pi.single k 1 : Fin n → ℕ) j) (x j) := by
   rw [partialDeriv_const_mul_prod c (G := fun j => sineDeriv a (b j) (m j))
-    (fun j => differentiable_sineDeriv_all a _ _) (g := sineDeriv a (b k) (m k + 1))
+    (fun j => differentiable_sineDeriv a _ _) (g := sineDeriv a (b k) (m k + 1))
     (fun y => hasDerivAt_sineDeriv a (b k) (m k) hk y)]
   funext x
   congr 1

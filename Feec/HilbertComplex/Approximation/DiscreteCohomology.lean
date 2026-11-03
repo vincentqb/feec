@@ -216,6 +216,18 @@ theorem norm_sub_π_le_infDist (P : S.CochainProjection) {i : ι} {C : ℝ} (hC 
     exact key v hv
   rwa [div_le_iff₀' h1] at h2
 
+/-- `x ↦ ‖x - π x‖` is `(1 + C)`-Lipschitz for a cochain projection bounded by `C` (in `W`). -/
+theorem norm_sub_π_le_add (P : S.CochainProjection) {i : ι} {C : ℝ}
+    (hπ : ∀ x, ‖P.π i x‖ ≤ C * ‖x‖) (x y : W i) :
+    ‖x - P.π i x‖ ≤ ‖y - P.π i y‖ + (1 + C) * dist x y := by
+  have e : x - P.π i x = (y - P.π i y) + ((x - y) - P.π i (x - y)) := by
+    rw [_root_.map_sub]; abel
+  rw [e, dist_eq_norm]
+  refine (norm_add_le _ _).trans (add_le_add_right ?_ _)
+  refine (norm_sub_le _ _).trans ?_
+  have := hπ (x - y)
+  linarith
+
 /-- **The harmonic gap tends to zero as soon as `πₕ q → q` on `ℌʲ`**, for a finite-dimensional
 harmonic space `ℌʲ`: in a basis `(bₖ)` of `ℌʲ`, `μₕ ≤ Σₖ ‖cₖ‖ ‖bₖ - πₕ bₖ‖`, `cₖ` the
 coordinate functionals. -/

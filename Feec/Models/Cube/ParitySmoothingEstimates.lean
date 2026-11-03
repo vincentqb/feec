@@ -1157,11 +1157,9 @@ include hE
 
 /-- **Uniform `L²` bound**: `‖π_N x‖ ≤ 2 C ‖x‖` for every `N`. -/
 theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
-    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ := by
-  have h := (paritySmoothed n S N J (ρ N)).norm_toCochainProjection_le (θ := 1 / 2)
-    (by norm_num) (hE.close N) (hE.bound N i) x
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
-  rwa [e] at h
+    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ :=
+  (paritySmoothed n S N J (ρ N)).norm_toCochainProjection_le_two_mul (hE.close N)
+    (hE.bound N i) x
 
 /-- **Uniform discrete Poincaré inequality** on `V_{h,Γ_J}`: `‖x‖ ≤ 2 C (2π)⁻¹ ‖d_J x‖` for
 `x ∈ V_{h,Γ_J}ⁱ ⊥ 𝔷ₕⁱ` ([AFW2010], Thm 3.6, with the Poincaré inequality of `HΛ_J(Q)`). -/

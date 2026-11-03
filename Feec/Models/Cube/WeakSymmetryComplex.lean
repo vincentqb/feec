@@ -859,4 +859,21 @@ theorem eventually_forall_le_of_isCompact {E : Type*} [PseudoMetricSpace E] {K :
     nlinarith
   linarith [hlip N x y, hN y hy]
 
+open scoped Topology in
+/-- **Uniform convergence of bounded cochain projections along a continuous trajectory**: if
+`‖π_N‖ ≤ C` and `π_N x → x` for every `x`, then `‖g(t) − π_N g(t)‖ ≤ ε` for all `t ∈ [0,T]` and
+all large `N` (`eventually_forall_le_of_isCompact` on the compact image of `g`). -/
+theorem eventually_norm_sub_π_le {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+    [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
+    {H : HilbertComplex ℝ c W} {S : ℕ → H.Subcomplex} (P : ∀ N, (S N).CochainProjection)
+    {i : ι} {C : ℝ} (hC : 0 ≤ C) (hπ : ∀ N x, ‖(P N).π i x‖ ≤ C * ‖x‖)
+    (hP : ∀ x, Tendsto (fun N => ‖x - (P N).π i x‖) atTop (𝓝 0)) {T : ℝ} {g : ℝ → W i}
+    (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (P N).π i (g t)‖ ≤ ε := by
+  have h := eventually_forall_le_of_isCompact (isCompact_Icc.image_of_continuousOn hg)
+    (F := fun N x => ‖x - (P N).π i x‖) (by linarith : 0 ≤ 1 + C)
+    (fun N x y => (P N).norm_sub_π_le_add (hπ N) x y) hP hε
+  filter_upwards [h] with N hN t ht
+  exact hN _ (mem_image_of_mem g ht)
+
 end Feec.Models.Cube.WeakSymmetry

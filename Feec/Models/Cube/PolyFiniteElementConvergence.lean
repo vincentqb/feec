@@ -665,11 +665,9 @@ include hE
 
 /-- **Uniform `L²` bound**: `‖π_N x‖ ≤ 2 C ‖x‖` for every `N`. -/
 theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
-    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ := by
-  have h := (polySmoothed n S N (p N) (hE.isMaximal N)).norm_toCochainProjection_le
-    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) x
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
-  rwa [e] at h
+    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ :=
+  (polySmoothed n S N (p N) (hE.isMaximal N)).norm_toCochainProjection_le_two_mul (hE.close N)
+    (hE.bound N i) x
 
 end PolySmoothingEstimates
 
@@ -691,11 +689,9 @@ include hE
 
 /-- **Uniform `L²` bound** `‖π̊_N x‖ ≤ 2 C ‖x‖`. -/
 theorem norm_proj_le (N : ℕ) (i : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n i)) :
-    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ := by
-  have h := (polySmoothedMin n S N (p N) (hE.isMinimal N)).norm_toCochainProjection_le
-    (θ := 1 / 2) (by norm_num) (hE.close N) (hE.bound N i) x
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * C = 2 * C := by norm_num
-  rwa [e] at h
+    ‖(hE.proj N).π i x‖ ≤ 2 * C * ‖x‖ :=
+  (polySmoothedMin n S N (p N) (hE.isMinimal N)).norm_toCochainProjection_le_two_mul
+    (hE.close N) (hE.bound N i) x
 
 end PolySmoothingEstimatesMin
 

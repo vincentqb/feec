@@ -202,6 +202,14 @@ theorem norm_toCochainProjection_le {θ : ℝ} (hθ : θ < 1)
   exact (Q.norm_toCochainProjection_le_norm_Q hθ hQ i x).trans
     (mul_le_mul_of_nonneg_left (hC x) (inv_nonneg.2 (by linarith)))
 
+/-- **`W`-bound of the smoothed projection for `θ = ½`**: `‖Q‖ ≤ C` gives `‖π‖ ≤ 2 C`. -/
+theorem norm_toCochainProjection_le_two_mul
+    (hQ : ∀ i, ∀ v ∈ S.V i, ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖) {i : ι} {C : ℝ}
+    (hC : ∀ x, ‖Q.Q i x‖ ≤ C * ‖x‖) (x : W i) :
+    ‖(Q.toCochainProjection (by norm_num) hQ).π i x‖ ≤ 2 * C * ‖x‖ := by
+  have h := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQ hC x
+  rwa [show (1 - 1 / 2 : ℝ)⁻¹ = 2 by norm_num] at h
+
 end CommutingMap
 
 /-! ### Smoother followed by an interpolant -/
@@ -264,10 +272,9 @@ theorem norm_toCochainProjection_le_half
     (hCI : 0 ≤ CI) (hR : ∀ x, ‖P.R i x‖ ≤ CR * ‖x‖) (hI : ∀ y, ‖P.interp i y‖ ≤ CI * ‖y‖)
     (x : W i) :
     ‖(P.toCommutingMap.toCochainProjection (by norm_num) hQ).π i x‖ ≤ 2 * CI * CR * ‖x‖ := by
-  have h := P.toCommutingMap.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQ
+  rw [mul_assoc 2]
+  exact P.toCommutingMap.norm_toCochainProjection_le_two_mul hQ
     (P.norm_toCommutingMap_le hCI hR hI) x
-  have e : (1 - 1 / 2 : ℝ)⁻¹ * (CI * CR) = 2 * CI * CR := by ring
-  rwa [e] at h
 
 /-- **Discrete Poincaré inequality from a smoothed projection**: with `‖v - Π_h R v‖ ≤ ½ ‖v‖` on
 `Vₕ`, `‖R‖ ≤ C_R`, `‖Π_h‖ ≤ C_Π` and the Poincaré inequality `‖z‖ ≤ c_P ‖d z‖` on `(𝔷ⁱ)ᗮ`,

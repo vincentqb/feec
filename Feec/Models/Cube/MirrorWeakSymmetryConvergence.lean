@@ -1711,33 +1711,14 @@ theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.tendsto_norm_sub_pr
   exact mul_le_mul_of_nonneg_left (Metric.infDist_le_infDist_of_subset
     (polyMin_V_le_polyPartial_V S N J k) ⟨0, Submodule.zero_mem _⟩) (by linarith)
 
-theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.norm_sub_proj_le_add
-    {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
-    {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (N : ℕ) (k : ℤ)
-    (x y : L2F ℝ (cubeDomain 3) (formIdx 3 k)) :
-    ‖x - (hE.proj N).π k x‖ ≤ ‖y - (hE.proj N).π k y‖ + (1 + 2 * C) * dist x y := by
-  have e : x - (hE.proj N).π k x =
-      (y - (hE.proj N).π k y) + ((x - y) - (hE.proj N).π k (x - y)) := by
-    rw [map_sub]; abel
-  rw [e, dist_eq_norm]
-  refine (norm_add_le _ _).trans (add_le_add_right ?_ _)
-  refine (norm_sub_le _ _).trans ?_
-  have := hE.norm_proj_le N k (x - y)
-  linarith
-
 /-- **Uniform convergence of the projections along a continuous trajectory** on `[0,T]`. -/
 theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.eventually_norm_sub_proj_le
     {J : Finset (Fin 3)} {S : PolySeq} {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3}
     {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (k : ℤ) {T : ℝ}
     {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
-    (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε := by
-  have hK := isCompact_Icc.image_of_continuousOn hg
-  have h := WeakSymmetry.eventually_forall_le_of_isCompact hK
-    (F := fun N x => ‖x - (hE.proj N).π k x‖)
-    (by linarith [hE.two_mul_nonneg] : 0 ≤ 1 + 2 * C)
-    (fun N x y => hE.norm_sub_proj_le_add N k x y) (fun x => hE.tendsto_norm_sub_proj k x) hε
-  filter_upwards [h] with N hN t ht
-  exact hN _ (mem_image_of_mem g ht)
+    (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε :=
+  WeakSymmetry.eventually_norm_sub_π_le hE.proj hE.two_mul_nonneg (fun N => hE.norm_proj_le N k)
+    (hE.tendsto_norm_sub_proj k) hg hε
 
 /-- **Dense multipliers**: on a compact set of `L²Λ²(Q)`, every point is `δ`-close to a point of
 `D(d_max*)` (here `|⟪z, d w⟫| ≤ c ‖w‖` on `HΛ¹(Q)`), with a common bound `c`. -/

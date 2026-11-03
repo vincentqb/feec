@@ -206,28 +206,12 @@ theorem tendsto_norm_sub_proj (k : ℤ) (x : L2F ℝ (cubeDomain 3) (formIdx 3 k
   refine squeeze_zero (fun _ => norm_nonneg _) (fun N => ?_) hlim
   exact (hE.proj N).norm_sub_π_le_infDist hC (hE.norm_proj_le N k) x
 
-theorem norm_sub_proj_le_add (N : ℕ) (k : ℤ) (x y : L2F ℝ (cubeDomain 3) (formIdx 3 k)) :
-    ‖x - (hE.proj N).π k x‖ ≤ ‖y - (hE.proj N).π k y‖ + (1 + 2 * C) * dist x y := by
-  have e : x - (hE.proj N).π k x =
-      (y - (hE.proj N).π k y) + ((x - y) - (hE.proj N).π k (x - y)) := by
-    rw [map_sub]; abel
-  rw [e, dist_eq_norm]
-  refine (norm_add_le _ _).trans (add_le_add_right ?_ _)
-  refine (norm_sub_le _ _).trans ?_
-  have := hE.norm_proj_le N k (x - y)
-  linarith
-
 /-- **Uniform convergence of the projections along a continuous trajectory** on `[0,T]`. -/
 theorem eventually_norm_sub_proj_le (k : ℤ) {T : ℝ}
     {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
-    (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε := by
-  have hK := isCompact_Icc.image_of_continuousOn hg
-  have h := WeakSymmetry.eventually_forall_le_of_isCompact hK
-    (F := fun N x => ‖x - (hE.proj N).π k x‖)
-    (by linarith [hE.two_mul_nonneg] : 0 ≤ 1 + 2 * C)
-    (fun N x y => hE.norm_sub_proj_le_add N k x y) (fun x => hE.tendsto_norm_sub_proj k x) hε
-  filter_upwards [h] with N hN t ht
-  exact hN _ (mem_image_of_mem g ht)
+    (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε :=
+  WeakSymmetry.eventually_norm_sub_π_le hE.proj hE.two_mul_nonneg (fun N => hE.norm_proj_le N k)
+    (hE.tendsto_norm_sub_proj k) hg hε
 
 end Feec.Models.Cube.FEM.PolySmoothingEstimatesMin
 

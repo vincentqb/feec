@@ -1265,11 +1265,9 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
         rw [Subsingleton.elim y 0, norm_zero]
       exact (h0 _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
-      max 1 (2 * K') * ‖x‖ := fun i x => by
-    have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
-    have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
-    rw [e] at h1
-    exact h1.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
+      max 1 (2 * K') * ‖x‖ := fun i x =>
+    (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans
+      (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
   exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 /-- **Uniformly bounded smoothed cochain projections onto the Whitney complexes with vanishing
@@ -1330,11 +1328,9 @@ theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤
         rw [Subsingleton.elim y 0, norm_zero]
       exact (h0 _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
-      max 1 (2 * K') * ‖x‖ := fun i x => by
-    have h1 := Q.norm_toCochainProjection_le (θ := 1 / 2) (by norm_num) hQc (hQb i) x
-    have e : (1 - 1 / 2 : ℝ)⁻¹ * K' = 2 * K' := by norm_num
-    rw [e] at h1
-    exact h1.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
+      max 1 (2 * K') * ‖x‖ := fun i x =>
+    (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans
+      (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
   exact ⟨_, hb, fun i j => (Q.toCochainProjection _ hQc).isGraphBounded_of_norm_le (hb i) (hb j)⟩
 
 end Estimates

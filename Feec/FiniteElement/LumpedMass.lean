@@ -31,8 +31,8 @@ Freudenthal meshes is exactly the classical `(2n + 1)`-point finite difference s
   `b + h (m + K_σ)`, with the difference quotients `Dₗu(q) = (u(q + eₗ) - u(q)) / h`: each
   simplex has volume `hⁿ / n!` and couples only the vertices of its path edges; so
   (**`p1Stiffness_freudenthalMesh`**) for `u` vanishing on the boundary,
-  `a(u, w) = hⁿ Σₗ Σ_{edges q → q + eₗ} Dₗu(q) Dₗw(q)`, every axis edge with an interior endpoint
-  being a path edge of exactly one simplex for each `σ`;
+  `a(u, w) = hⁿ Σₗ Σ_{edges q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges through the open box,
+  each a path edge of exactly one simplex for each `σ`;
 * **`p1Stiffness_nodalIndicator_eq`**, `lumpedMass_node_eq`: at every lattice node `p`, boundary
   nodes included, `a(φₚ, w) = hⁿ / n! Σ_σ Σₗ (α⁻ Dₗw(p - eₗ) - α⁺ Dₗw(p)) / h` with
   `α±_{σ,l}(p) ∈ {0, 1}` recording whether the path edge `p → p ± eₗ` of the Kuhn simplex `σ`
@@ -668,8 +668,8 @@ theorem p1Stiffness_freudenthalMesh_eq (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s
   simp_rw [sum_comm (s := (univ : Finset (Fin n → Fin N))) (t := (univ : Finset (Fin n)))]
   rfl
 
-/-- The base points `q` of the axis edges `q → q + eₗ` with an interior endpoint:
-`qₗ ∈ {0, …, N - 1}`, `qⱼ ∈ {1, …, N - 1}` for `j ≠ l`. -/
+/-- The base points `q` of the axis edges `q → q + eₗ` through the open box `(0, N)ⁿ` (not in its
+boundary): `qₗ ∈ {0, …, N - 1}`, `qⱼ ∈ {1, …, N - 1}` for `j ≠ l`. -/
 def edgeBases (n N : ℕ) (l : Fin n) : Finset (Fin n → ℤ) :=
   Fintype.piFinset fun j => if j = l then Ico 0 (N : ℤ) else Ioo 0 (N : ℤ)
 
@@ -678,10 +678,10 @@ def VanishesOnBoundary (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (u : (Fin n → �
   ∀ q : Fin n → ℤ, (∀ j, 0 ≤ q j ∧ q j ≤ (N : ℤ)) → (∃ j, q j = 0 ∨ q j = (N : ℤ)) →
     u (node b h q) = 0
 
-/-- **Each Kuhn simplex reaches every edge with an interior endpoint once**: for `u` vanishing on
-the boundary, the sum over the path edges `m + κ_{σ,l} → m + κ_{σ,l} + eₗ` of the cells is the
-sum over the axis edges `q → q + eₗ` with an interior endpoint; the other path edges lie in a
-boundary face, where `Dₗu = 0`. -/
+/-- **Each Kuhn simplex reaches every edge through the open box once**: for `u` vanishing on the
+boundary, the sum over the path edges `m + κ_{σ,l} → m + κ_{σ,l} + eₗ` of the cells is the sum
+over the axis edges `q → q + eₗ` of `edgeBases`; the other path edges lie in a boundary face,
+where `Dₗu = 0`. -/
 theorem sum_edgeTerm_edgeShift (b : Fin n → ℝ) (h : ℝ) {N : ℕ} {u : (Fin n → ℝ) → ℝ}
     (hu : VanishesOnBoundary b h N u) (w : (Fin n → ℝ) → ℝ) (σ : Equiv.Perm (Fin n))
     (l : Fin n) :
@@ -697,12 +697,12 @@ theorem sum_edgeTerm_edgeShift (b : Fin n → ℝ) (h : ℝ) {N : ℕ} {u : (Fin
     have := Fintype.mem_piFinset.1 hq i
     by_cases hi : i = l
     · subst hi; rw [ite_eq_left rfl, mem_Ico] at this; omega
-    · rw [ite_eq_right hi, mem_Ioo] at this; rcases ha i with h | h <;> rw [h] <;> omega
+    · rw [ite_eq_right hi, mem_Ioo] at this; rcases ha i with e | e <;> rw [e] <;> omega
   have hG : ∀ m : Fin n → Fin N, finLattice m + a ∉ edgeBases n N l →
       edgeTerm b h u w l (finLattice m + a) = 0 := fun m hm => by
     set q := finLattice m + a
     have hb : ∀ i, 0 ≤ q i ∧ q i ≤ N := fun i => by
-      have := (m i).2; simp only [q, Pi.add_apply, finLattice]; rcases ha i with h | h <;> omega
+      have := (m i).2; simp only [q, Pi.add_apply, finLattice]; rcases ha i with e | e <;> omega
     have hql : q l < N := by
       have := (m l).2; simp only [q, Pi.add_apply, finLattice, hal]; omega
     obtain ⟨j, hj⟩ := not_forall.1 (mt Fintype.mem_piFinset.2 hm)
@@ -730,7 +730,7 @@ theorem sum_edgeTerm_edgeShift (b : Fin n → ℝ) (h : ℝ) {N : ℕ} {u : (Fin
 
 /-- **The `P₁` stiffness form on the Freudenthal mesh** of the box `b + (0, s)ⁿ` at level `N`
 (`h = s / N`): for nodal values `u` vanishing on the boundary,
-`a(u, w) = hⁿ Σₗ Σ_{q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges with an interior endpoint.
+`a(u, w) = hⁿ Σₗ Σ_{q → q + eₗ} Dₗu(q) Dₗw(q)` over the axis edges through the open box.
 Every such edge is the path edge of exactly one simplex `b + h (m + K_σ)` for each `σ`
 (`p1Stiffness_freudenthalMesh_eq`, `sum_edgeTerm_edgeShift`). -/
 theorem p1Stiffness_freudenthalMesh (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N : ℕ) [NeZero N]

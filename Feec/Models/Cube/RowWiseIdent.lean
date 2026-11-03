@@ -39,14 +39,15 @@ test fields; the parities bound the cut-off error near the faces.
 ## Only stationary data propagate on `Q`
 
 The wave group on `Q` is the restriction of the torus wave group (`RowWise.waveGroup_J`), which
-has pure point spectrum, so forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces
-stationarity (`RowWise.forward_iff`), and the invariant core of the thesis' constraint consists of
-the data `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = 0` (`RowWise.mem_invariantCore_tsd_iff`).
+has pure point spectrum. That forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces
+stationarity on `Q` (`RowWise.forward_iff`, `RowWise.mem_invariantCore_tsd_iff`, in
+`Feec.Models.Cube.Ident`) is the case `ℓ = (½, ½, ½)` of the box results of
+`Feec.Models.Box.EigenDense`.
 
 ## Main definitions
 
 * `RowWise.X`, `RowWise.JR`, `RowWise.J` (slot by slot `J0`, `J1`, `J2`), `RowWise.Jr`;
-  `RowWise.cubeComplex`; `RowWise.scaledEmbedding`; `RowWise.torusSub`.
+  `RowWise.cubeComplex`; `RowWise.scaledEmbedding`.
 
 ## Main results
 
@@ -58,8 +59,8 @@ the data `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = 0` (`RowWis
   **`RowWise.mem_minimal_curl_of_J`**.
 * **`RowWise.cubeComplex_eq_compress`**: the complex on `Q` is the compression of the real torus
   grad–curl complex along `J`; `RowWise.waveGroup_J`.
-* `RowWise.inj₂_mem_stationary_iff` (any short complex), **`RowWise.forward_iff`**,
-  **`RowWise.mem_invariantCore_iff`**, **`RowWise.mem_invariantCore_tsd_iff`**.
+* `RowWise.inj₂_mem_stationary_iff` (any short complex), `RowWise.J_one_mem_of_tsd`,
+  `RowWise.J_two_mem_of_tsd`.
 
 ## References
 
@@ -2052,12 +2053,12 @@ theorem inj₂_mem_stationary_iff (B : W₂) :
 
 end Stationary
 
-/-! ### Only stationary data propagate on `Q` -/
+/-! ### The wave groups and the constraints under the extension -/
 
 section Invariance
 
 open Models.BoundedDomain (Ix tsd)
-open HilbertComplex (totalSub totalJ)
+open HilbertComplex (totalJ)
 
 theorem totalJ_injective : Function.Injective (totalJ J : PiLp 2 WQ →L[ℝ] PiLp 2 Space) :=
   fun _ _ h => PiLp.ext fun i => scaledEmbedding.J_injective i (congrArg (fun z => z i) h)
@@ -2067,12 +2068,6 @@ theorem waveGroup_J (t : ℝ) (y : PiLp 2 WQ) :
     totalJ J (cubeComplex.waveGroup.S t y) = RealTorus.gradCurl.waveGroup.S t (totalJ J y) := by
   rw [cubeComplex_eq_compress]
   exact HilbertComplex.waveGroup_compress _ _ _ t y
-
-theorem mem_stationary_iff_J (y : PiLp 2 WQ) :
-    y ∈ cubeComplex.waveGroup.stationary ↔
-      totalJ J y ∈ RealTorus.gradCurl.waveGroup.stationary := by
-  simp only [C0Group.mem_stationary, ← waveGroup_J]
-  exact forall_congr' fun t => totalJ_injective.eq_iff.symm
 
 /-- On `Q` the extension is the identity: `(J u)|_Q = u`. -/
 theorem resM_JR (pc : Ix → Fin 3 → ℂ) (u : Domain.L2F ℝ (Q (Fin 3)) Ix) :
@@ -2100,118 +2095,6 @@ theorem J_one_mem_of_tsd {u : WQ 1} (hu : u ∈ tsd (Q (Fin 3))) :
 theorem J_two_mem_of_tsd {u : WQ 2} (hu : u ∈ tsd (Q (Fin 3))) :
     J 2 u ∈ rowAction.fixed 2 ⊓ Parity.boxSym ⊓ Parity.boxTr :=
   ⟨⟨(Parity.mem_realFixed_iff.1 (J_mem 2 u)).2, JR_mem_boxSym hu.1⟩, JR_mem_boxTr hu.2.1⟩
-
-/-- The torus counterpart of a constraint `S` on `Q`: the real parity fields whose restriction to
-`Q` lies in the closure of `S`. -/
-def torusSub (i : Fin 3) (S : Submodule ℝ (WQ i)) : Submodule ℝ (Space i) :=
-  Parity.realAction.fixed i ⊓ S.topologicalClosure.comap (Jr i : Space i →ₗ[ℝ] WQ i)
-
-theorem isClosed_torusSub (i : Fin 3) (S : Submodule ℝ (WQ i)) :
-    IsClosed (torusSub i S : Set (Space i)) :=
-  (Parity.realAction.isClosed_fixed i).inter
-    (S.isClosed_topologicalClosure.preimage (Jr i).continuous)
-
-instance instHasOrthogonalProjectionTorusSub (i : Fin 3) (S : Submodule ℝ (WQ i)) :
-    (torusSub i S).HasOrthogonalProjection := by
-  have : CompleteSpace (torusSub i S) := (isClosed_torusSub i S).completeSpace_coe
-  infer_instance
-
-theorem J_mem_torusSub {i : Fin 3} {S : Submodule ℝ (WQ i)} {u : WQ i} (hu : u ∈ S) :
-    J i u ∈ torusSub i S :=
-  ⟨J_mem i u, by
-    change Jr i (J i u) ∈ S.topologicalClosure
-    rw [Jr_J]; exact S.le_topologicalClosure hu⟩
-
-theorem torusSub_one_le {S : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)} (h : S ≤ tsd (Q (Fin 3))) :
-    torusSub 1 S ≤ rowAction.fixed 1 ⊓ Parity.boxSym ⊓ Parity.boxTr := by
-  intro x hx
-  rw [← J_Jr 1 hx.1]
-  exact J_one_mem_of_tsd (S.topologicalClosure_minimal h Models.BoundedDomain.isClosed_tsd hx.2)
-
-theorem torusSub_two_le {S : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)} (h : S ≤ tsd (Q (Fin 3))) :
-    torusSub 2 S ≤ rowAction.fixed 2 ⊓ Parity.boxSym ⊓ Parity.boxTr := by
-  intro x hx
-  rw [← J_Jr 2 hx.1]
-  exact J_two_mem_of_tsd (S.topologicalClosure_minimal h Models.BoundedDomain.isClosed_tsd hx.2)
-
-/-- **On `Q` with the thesis' boundary conditions, forward invariance forces stationarity**: for
-`S₁, S₂ ⊆ L²(TSD)` (closed or not), the forward orbit (`t ≥ 0`) of `y` under the wave group of
-`H̊¹(Q) → H̊(curl, Q) → L²(Q)` stays in `{0} × S₁ × S₂` iff `y` lies there and is stationary.
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
-theorem forward_iff {S1 S2 : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)}
-    (h1 : S1 ≤ tsd (Q (Fin 3))) (h2 : S2 ≤ tsd (Q (Fin 3))) (y : PiLp 2 WQ) :
-    (∀ t, 0 ≤ t → cubeComplex.waveGroup.S t y ∈
-        totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3))) S1 S2)) ↔
-      y ∈ totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3))) S1 S2) ∧
-        y ∈ cubeComplex.waveGroup.stationary := by
-  have := instHasOrthogonalProjectionTorusSub 1 S1
-  have := instHasOrthogonalProjectionTorusSub 2 S2
-  constructor
-  · intro h
-    have hy := h 0 le_rfl
-    rw [C0Group.S_zero_apply] at hy
-    refine ⟨hy, ?_⟩
-    have hK : ∀ t, 0 ≤ t → RealTorus.gradCurl.waveGroup.S t (totalJ J y) ∈
-        totalSub (Parity.constraint (torusSub 1 S1) (torusSub 2 S2)) := by
-      intro t ht
-      rw [← waveGroup_J]
-      obtain ⟨e0, m1, m2⟩ := mem_totalSub_family3.1 (h t ht)
-      refine Parity.mem_totalSub_constraint.2 ⟨?_, J_mem_torusSub m1, J_mem_torusSub m2⟩
-      have e0' : ((cubeComplex.waveGroup.S t y) 0 : Domain.L2F ℝ (Q (Fin 3)) (Fin 3)) = 0 := e0
-      show J 0 ((cubeComplex.waveGroup.S t y) 0) = 0
-      rw [e0', _root_.map_zero]
-    have hc := RealTorus.gradCurl.isIsometric_waveGroup.mem_invariantCore_of_forward_invariant
-      Parity.isPurePoint_torus HilbertComplex.isClosed_totalSub hK
-    exact (mem_stationary_iff_J y).2
-      ((Parity.mem_invariantCore_torus_iff (torusSub_one_le h1) (torusSub_two_le h2) _).1 hc).2
-  · rintro ⟨hK, hst⟩ t _
-    rw [C0Group.mem_stationary.1 hst t]; exact hK
-
-/-- **`K*` on `Q` with the thesis' boundary conditions consists of the stationary data in `K`**,
-for every `S₁, S₂ ⊆ L²(TSD)`. See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
-theorem mem_invariantCore_iff {S1 S2 : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) Ix)}
-    (h1 : S1 ≤ tsd (Q (Fin 3))) (h2 : S2 ≤ tsd (Q (Fin 3))) (y : PiLp 2 WQ) :
-    y ∈ cubeComplex.waveGroup.invariantCore
-        (totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3))) S1 S2)) ↔
-      y ∈ totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3))) S1 S2) ∧
-        y ∈ cubeComplex.waveGroup.stationary := by
-  refine ⟨fun hy => (forward_iff h1 h2 y).1 fun t _ => C0Group.mem_invariantCore.1 hy t,
-    fun ⟨hK, hst⟩ => C0Group.mem_invariantCore.2 fun t => ?_⟩
-  rw [C0Group.mem_stationary.1 hst t]; exact hK
-
-/-- **`K*` on `Q` for the thesis' constraint, explicitly**: `y ∈ K*` iff `y = (0, 0, B₀)` with
-`B₀ ∈ L²(TSD)` and `d₁† B₀ = curl B₀ = 0` (no boundary condition on `B₀`).
-See [QuennevilleBelair2015], §4.10 (Prop 4.17, corrected). -/
-theorem mem_invariantCore_tsd_iff (y : PiLp 2 WQ) :
-    y ∈ cubeComplex.waveGroup.invariantCore
-        (totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3)))
-          (tsd (Q (Fin 3))) (tsd (Q (Fin 3))))) ↔
-      ∃ B ∈ tsd (Q (Fin 3)),
-        ∃ h : B ∈ ((Models.BoundedDomain.gradCurl ℝ Geometry.isOpen_Q).d₁†).domain,
-          (Models.BoundedDomain.gradCurl ℝ Geometry.isOpen_Q).d₁† ⟨B, h⟩ = 0 ∧
-            y = inj₂ (𝕜 := ℝ) (Domain.L2F ℝ (Q (Fin 3)) (Fin 3)) (Domain.L2F ℝ (Q (Fin 3)) Ix)
-              (Domain.L2F ℝ (Q (Fin 3)) Ix) B := by
-  rw [mem_invariantCore_iff le_rfl le_rfl, mem_totalSub_family3]
-  constructor
-  · rintro ⟨⟨h0, -, h2⟩, hst⟩
-    have h0' : (y 0 : WQ 0) = 0 := h0
-    have hz : ((totalJ J y) 0 : Space 0) = 0 := by
-      change J 0 (y 0) = 0
-      rw [h0', _root_.map_zero]
-    have e1 := ((Parity.mem_stationary_iff hz
-      (Parity.mem_realFixed_iff.1 (J_mem 1 (y 1))).2).1 ((mem_stationary_iff_J y).1 hst)).1
-    have hy1 : (y 1 : WQ 1) = 0 :=
-      scaledEmbedding.J_injective 1 (e1.trans (_root_.map_zero (J 1)).symm)
-    have hy : y = inj₂ (𝕜 := ℝ) (Domain.L2F ℝ (Q (Fin 3)) (Fin 3)) (Domain.L2F ℝ (Q (Fin 3)) Ix)
-        (Domain.L2F ℝ (Q (Fin 3)) Ix) (y 2 : WQ 2) := PiLp.ext fun i => by
-      fin_cases i
-      exacts [h0', hy1, rfl]
-    rw [hy] at hst
-    obtain ⟨hB, hB0⟩ := (inj₂_mem_stationary_iff _ _).1 hst
-    exact ⟨y 2, h2, hB, hB0, hy⟩
-  · rintro ⟨B, hB, hd, hd0, rfl⟩
-    exact ⟨⟨rfl, Submodule.zero_mem _, hB⟩,
-      (inj₂_mem_stationary_iff _ _).2 ⟨hd, hd0⟩⟩
 
 end Invariance
 

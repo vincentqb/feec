@@ -48,8 +48,13 @@ For the thesis' constraint `K = {0} × L²(TSD) × L²(TSD)` these are the data 
 
 ## Main results
 
-* `Parity.waveSym_apply_zero`, `Parity.waveSym_apply_one`, `Parity.waveSym_apply_two`,
-  `Parity.eq_zero_of_waveSym_sq`: the grad–curl wave symbol and its square.
+* `Parity.symAlong`: the grad–curl symbol complex along a frequency map `ξ : ℤ³ → ℝ³`;
+  `Parity.waveSym_symAlong_zero`, `Parity.waveSym_symAlong_one`, `Parity.waveSym_symAlong_two`,
+  `Parity.eq_zero_of_waveSym_symAlong_sq`, `Parity.eigenDense_symAlong`,
+  **`Parity.mem_invariantCore_symAlong_iff`**, `Parity.eq_zero_of_mem_stationary_symAlong`: the
+  spectral facts along `ξ`, of which the torus (`ξ = freq`) and the anisotropic torus of
+  `Feec.Models.Box` are instances.
+* `Parity.eq_zero_of_waveSym_sq`: the eigenvalues of the square of the grad–curl wave symbol.
 * `Parity.isPurePoint_torus`, `Parity.eigenDense_torus`.
 * `Parity.eq_zero_of_finite_of_parity`, `Parity.exists_finset_of_isEigenSq`,
   `Parity.mem_stationary_iff`.
@@ -403,64 +408,7 @@ theorem curl_curl_curl (ξ : Freq) (M : Mat) :
   have h := grad_div_add_curl_curl ξ (curl ξ M)
   rwa [div_curl, _root_.map_zero, zero_add] at h
 
-open Fourier.SymbolComplex in
-theorem waveSym_apply_zero (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :
-    (Fourier.Torus.symbolComplex gradCurl).waveSym n v 0 = -div (Fourier.Torus.freq n) (v 1) := by
-  rw [waveSym_apply, Fin.sum_univ_three, Fin.sum_univ_three]
-  change (0 : Vec →L[ℂ] Vec) (v 0) + (0 : Mat →L[ℂ] Vec) (v 1) + (0 : Mat →L[ℂ] Vec) (v 2) -
-    (ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Vec) (v 0) +
-      ContinuousLinearMap.adjoint (grad (Fourier.Torus.freq n)) (v 1) +
-      ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Mat) (v 2)) = _
-  have z0 : (0 : Vec →L[ℂ] Vec) (v 0) = 0 := rfl
-  have z1 : (0 : Mat →L[ℂ] Vec) (v 1) = 0 := rfl
-  have z2 : (0 : Mat →L[ℂ] Vec) (v 2) = 0 := rfl
-  have a0 : ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Vec) (v 0) = 0 := by
-    rw [_root_.map_zero]; rfl
-  have a2 : ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Mat) (v 2) = 0 := by
-    rw [_root_.map_zero]; rfl
-  rw [z0, z1, z2, a0, a2, adjoint_grad]
-  abel
-
-open Fourier.SymbolComplex in
-theorem waveSym_apply_one (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :
-    (Fourier.Torus.symbolComplex gradCurl).waveSym n v 1 =
-      grad (Fourier.Torus.freq n) (v 0) - curl (Fourier.Torus.freq n) (v 2) := by
-  rw [waveSym_apply, Fin.sum_univ_three, Fin.sum_univ_three]
-  change grad (Fourier.Torus.freq n) (v 0) + (0 : Mat →L[ℂ] Mat) (v 1) +
-      (0 : Mat →L[ℂ] Mat) (v 2) -
-    (ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) +
-      ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) +
-      ContinuousLinearMap.adjoint (curl (Fourier.Torus.freq n)) (v 2)) = _
-  have z1 : (0 : Mat →L[ℂ] Mat) (v 1) = 0 := rfl
-  have z2 : (0 : Mat →L[ℂ] Mat) (v 2) = 0 := rfl
-  have a0 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) = 0 := by
-    rw [_root_.map_zero]; rfl
-  have a1 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) = 0 := by
-    rw [_root_.map_zero]; rfl
-  rw [z1, z2, a0, a1, adjoint_curl]
-  abel
-
-open Fourier.SymbolComplex in
-theorem waveSym_apply_two (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :
-    (Fourier.Torus.symbolComplex gradCurl).waveSym n v 2 = curl (Fourier.Torus.freq n) (v 1) := by
-  rw [waveSym_apply, Fin.sum_univ_three, Fin.sum_univ_three]
-  change (0 : Vec →L[ℂ] Mat) (v 0) + curl (Fourier.Torus.freq n) (v 1) +
-      (0 : Mat →L[ℂ] Mat) (v 2) -
-    (ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) +
-      ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) +
-      ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 2)) = _
-  have z0 : (0 : Vec →L[ℂ] Mat) (v 0) = 0 := rfl
-  have z2 : (0 : Mat →L[ℂ] Mat) (v 2) = 0 := rfl
-  have a0 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) = 0 := by
-    rw [_root_.map_zero]; rfl
-  have a1 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) = 0 := by
-    rw [_root_.map_zero]; rfl
-  have a2 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 2) = 0 := by
-    rw [_root_.map_zero]; rfl
-  rw [z0, z2, a0, a1, a2]
-  abel
-
-/-- The slot form of `eq_zero_of_waveSym_sq`. -/
+/-- The slot form of `eq_zero_of_waveSym_symAlong_sq`. -/
 theorem eq_zero_of_slots {ξ : Freq} {ω : ℝ} (hω : 0 < ω) (hne : ‖ξ‖ ≠ ω) {a : Vec} {b c : Mat}
     (h0 : -div ξ (grad ξ a - curl ξ c) = ((-(ω ^ 2) : ℝ) : ℂ) • a)
     (h1 : grad ξ (-div ξ b) - curl ξ (curl ξ b) = ((-(ω ^ 2) : ℝ) : ℂ) • b)
@@ -490,58 +438,171 @@ theorem eq_zero_of_slots {ξ : Freq} {ω : ℝ} (hω : 0 < ω) (hne : ‖ξ‖ �
     rw [hc1, _root_.map_zero] at h2
     exact (smul_eq_zero.1 h2.symm).resolve_left hω2
 
+/-! ### The grad–curl symbol complex along a frequency map
+
+The spectral facts of the torus complex hold along every frequency map `ξ : ℤ³ → ℝ³`: the torus
+complex is the one along `Fourier.Torus.freq`, the anisotropic torus complex of
+`Feec.Models.Box` the one along `ξ_d(n) = d * 2πn`. -/
+
+/-- **The grad–curl symbol complex along a frequency map** `ξ : ℤ³ → ℝ³`: the symbols
+`gradCurl.m i j (ξ n)` on `ℓ²(ℤ³)`. Along `Fourier.Torus.freq` it is
+`Fourier.Torus.symbolComplex gradCurl`. -/
+abbrev symAlong (ξ : (Fin 3 → ℤ) → Freq) :
+    SymbolComplex ℂ (Measure.count : Measure (Fin 3 → ℤ)) ComplexShape.fin3 (W3 Vec Mat Mat) :=
+  gradCurl.toSymbolComplex _ ξ (Measurable.of_discrete).aemeasurable
+
+section SymAlong
+
+variable (ξ : (Fin 3 → ℤ) → Freq)
+
+open Fourier.SymbolComplex in
+theorem waveSym_symAlong_zero (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :
+    (symAlong ξ).waveSym n v 0 = -div (ξ n) (v 1) := by
+  rw [waveSym_apply, Fin.sum_univ_three, Fin.sum_univ_three]
+  change (0 : Vec →L[ℂ] Vec) (v 0) + (0 : Mat →L[ℂ] Vec) (v 1) + (0 : Mat →L[ℂ] Vec) (v 2) -
+    (ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Vec) (v 0) +
+      ContinuousLinearMap.adjoint (grad (ξ n)) (v 1) +
+      ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Mat) (v 2)) = _
+  have z0 : (0 : Vec →L[ℂ] Vec) (v 0) = 0 := rfl
+  have z1 : (0 : Mat →L[ℂ] Vec) (v 1) = 0 := rfl
+  have z2 : (0 : Mat →L[ℂ] Vec) (v 2) = 0 := rfl
+  have a0 : ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Vec) (v 0) = 0 := by
+    rw [_root_.map_zero]; rfl
+  have a2 : ContinuousLinearMap.adjoint (0 : Vec →L[ℂ] Mat) (v 2) = 0 := by
+    rw [_root_.map_zero]; rfl
+  rw [z0, z1, z2, a0, a2, adjoint_grad]
+  abel
+
+open Fourier.SymbolComplex in
+theorem waveSym_symAlong_one (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :
+    (symAlong ξ).waveSym n v 1 = grad (ξ n) (v 0) - curl (ξ n) (v 2) := by
+  rw [waveSym_apply, Fin.sum_univ_three, Fin.sum_univ_three]
+  change grad (ξ n) (v 0) + (0 : Mat →L[ℂ] Mat) (v 1) + (0 : Mat →L[ℂ] Mat) (v 2) -
+    (ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) +
+      ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) +
+      ContinuousLinearMap.adjoint (curl (ξ n)) (v 2)) = _
+  have z1 : (0 : Mat →L[ℂ] Mat) (v 1) = 0 := rfl
+  have z2 : (0 : Mat →L[ℂ] Mat) (v 2) = 0 := rfl
+  have a0 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) = 0 := by
+    rw [_root_.map_zero]; rfl
+  have a1 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) = 0 := by
+    rw [_root_.map_zero]; rfl
+  rw [z1, z2, a0, a1, adjoint_curl]
+  abel
+
+open Fourier.SymbolComplex in
+theorem waveSym_symAlong_two (n : Fin 3 → ℤ) (v : PiLp 2 (W3 Vec Mat Mat)) :
+    (symAlong ξ).waveSym n v 2 = curl (ξ n) (v 1) := by
+  rw [waveSym_apply, Fin.sum_univ_three, Fin.sum_univ_three]
+  change (0 : Vec →L[ℂ] Mat) (v 0) + curl (ξ n) (v 1) + (0 : Mat →L[ℂ] Mat) (v 2) -
+    (ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) +
+      ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) +
+      ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 2)) = _
+  have z0 : (0 : Vec →L[ℂ] Mat) (v 0) = 0 := rfl
+  have z2 : (0 : Mat →L[ℂ] Mat) (v 2) = 0 := rfl
+  have a0 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Vec) (v 0) = 0 := by
+    rw [_root_.map_zero]; rfl
+  have a1 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 1) = 0 := by
+    rw [_root_.map_zero]; rfl
+  have a2 : ContinuousLinearMap.adjoint (0 : Mat →L[ℂ] Mat) (v 2) = 0 := by
+    rw [_root_.map_zero]; rfl
+  rw [z0, z2, a0, a1, a2]
+  abel
+
 /-- **The eigenvalues of `-W_ξ²`**: the only nonzero one is `|ξ|²` (`W_ξ² = -|ξ|²` on the first two
 slots, `-curl_ξ²` on the last, and `curl_ξ³ = |ξ|² curl_ξ`). So an eigenvector of the wave
-symbol `W_ξ²` with eigenvalue `-ω²`, `ω > 0`, vanishes unless `|ξ| = ω`. -/
-theorem eq_zero_of_waveSym_sq {n : Fin 3 → ℤ} {ω : ℝ} (hω : 0 < ω)
-    (hne : ‖Fourier.Torus.freq n‖ ≠ ω) {v : PiLp 2 (W3 Vec Mat Mat)}
-    (h : (Fourier.Torus.symbolComplex gradCurl).waveSym n
-      ((Fourier.Torus.symbolComplex gradCurl).waveSym n v) = (-(ω ^ 2) : ℝ) • v) : v = 0 := by
+symbol `W_ξ²` with eigenvalue `-ω²`, `ω > 0`, at the mode `n` vanishes unless `|ξ(n)| = ω`. -/
+theorem eq_zero_of_waveSym_symAlong_sq {n : Fin 3 → ℤ} {ω : ℝ} (hω : 0 < ω) (hne : ‖ξ n‖ ≠ ω)
+    {v : PiLp 2 (W3 Vec Mat Mat)}
+    (h : (symAlong ξ).waveSym n ((symAlong ξ).waveSym n v) = (-(ω ^ 2) : ℝ) • v) : v = 0 := by
   have h0 := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 0) h
   have h1 := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 1) h
   have h2 := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 2) h
-  simp only [waveSym_apply_zero, waveSym_apply_one, waveSym_apply_two, PiLp.smul_apply] at h0 h1 h2
+  simp only [waveSym_symAlong_zero, waveSym_symAlong_one, waveSym_symAlong_two,
+    PiLp.smul_apply] at h0 h1 h2
   rw [RCLike.real_smul_eq_coe_smul (K := ℂ)] at h0 h1 h2
-  obtain ⟨e0, e1, e2⟩ := eq_zero_of_slots (ξ := Fourier.Torus.freq n) (a := v 0) (b := v 1)
-    (c := v 2) hω hne h0 h1 h2
+  obtain ⟨e0, e1, e2⟩ := eq_zero_of_slots (a := v 0) (b := v 1) (c := v 2) hω hne h0 h1 h2
   refine PiLp.ext fun i => ?_
   fin_cases i
   exacts [e0, e1, e2]
 
+/-- **The real wave group along `ξ` has an eigenbasis** (the Fourier modes;
+`Feec.HilbertComplex.eigenDense_restrictScalars_waveGroup_of_reducing`). -/
+theorem eigenDense_symAlong :
+    (symAlong ξ).toHilbertComplex.restrictScalars.waveGroup.EigenDense := by
+  have := fun N i => Fourier.hasOrthogonalProjection_band (symAlong ξ)
+    (Fourier.Torus.finite_bandN N).measurableSet i
+  have := fun N i => Fourier.finiteDimensional_band (symAlong ξ) (Fourier.Torus.finite_bandN N) i
+  exact HilbertComplex.eigenDense_restrictScalars_waveGroup_of_reducing RealTorus.real_inner_eq_re
+    (fun N => (symAlong ξ).band (Fourier.Torus.bandN N))
+    (fun N => Fourier.reducingSubcomplex_band (symAlong ξ)
+      (Fourier.Torus.finite_bandN N).measurableSet)
+    ((symAlong ξ).mem_closure_iUnion_band Fourier.Torus.finite_bandN Fourier.Torus.bandN_mono
+      Fourier.Torus.exists_mem_bandN)
+
+/-- Eigenvectors of `L²` with eigenvalue `-ω²`, `ω > 0`, along `ξ` have their Fourier modes on
+the sphere `|ξ(n)| = ω`. -/
+theorem fibre_eq_zero_of_isEigenSq_symAlong {ω : ℝ} (hω : 0 < ω) {v : PiLp 2 Space}
+    (h : (symAlong ξ).toHilbertComplex.restrictScalars.wave.IsEigenSq ω v) {n : Fin 3 → ℤ}
+    (hn : ‖ξ n‖ ≠ ω) : Fourier.SymbolComplex.fibre v n = 0 := by
+  rw [HilbertComplex.wave_restrictScalars RealTorus.real_inner_eq_re] at h
+  obtain ⟨h1, h2, e⟩ := h
+  exact eq_zero_of_waveSym_symAlong_sq ξ hω hn ((symAlong ξ).waveSym_sq_of_isEigenSq ⟨h1, h2, e⟩ n)
+
+/-- When the spheres `|ξ(n)| = ω` are finite, an eigenvector of `L²` with eigenvalue `-ω²`,
+`ω > 0`, along `ξ` is supported on finitely many modes. -/
+theorem exists_finset_of_isEigenSq_symAlong {ω : ℝ} (hfin : {n | ‖ξ n‖ = ω}.Finite) (hω : 0 < ω)
+    {v : PiLp 2 Space} (h : (symAlong ξ).toHilbertComplex.restrictScalars.wave.IsEigenSq ω v) :
+    ∃ S : Finset (Fin 3 → ℤ), ∀ i, ∀ n ∉ S, (v i : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = 0 :=
+  ⟨hfin.toFinset, fun i n hn => congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w i)
+    (fibre_eq_zero_of_isEigenSq_symAlong ξ hω h fun e => hn (hfin.mem_toFinset.2 e))⟩
+
+/-- Stationary data of the real complex along `ξ` are annihilated by the wave symbol, mode by
+mode. -/
+theorem waveSym_symAlong_fibre_eq_zero {y : PiLp 2 Space}
+    (hst : y ∈ (symAlong ξ).toHilbertComplex.restrictScalars.waveGroup.stationary)
+    (n : Fin 3 → ℤ) : (symAlong ξ).waveSym n (Fourier.SymbolComplex.fibre y n) = 0 := by
+  have hgen : (symAlong ξ).toHilbertComplex.restrictScalars.waveGroup.generator =
+      (symAlong ξ).toHilbertComplex.wave.restrictScalars :=
+    (HilbertComplex.generator_waveGroup _).trans
+      (HilbertComplex.wave_restrictScalars RealTorus.real_inner_eq_re)
+  obtain ⟨hD, hL⟩ := C0Group.mem_domain_generator_of_mem_stationary hst
+  have hD' : y ∈ (symAlong ξ).toHilbertComplex.wave.restrictScalars.domain := hgen ▸ hD
+  have hL' : (symAlong ξ).toHilbertComplex.wave ⟨y, hD'⟩ = 0 := by
+    have e := LinearPMap.apply_eq_of_eq hgen ⟨y, hD⟩ ⟨y, hD'⟩ rfl
+    rw [hL] at e
+    exact e.symm
+  rw [← (symAlong ξ).wave_apply_count ⟨y, hD'⟩ n, hL']
+  ext i
+  exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 _) n
+
+end SymAlong
+
 /-! ### The spectrum of the torus wave group -/
+
+/-- **The eigenvalues of `-W_ξ²`** on the torus: an eigenvector of the wave symbol `W_ξ²` with
+eigenvalue `-ω²`, `ω > 0`, vanishes unless `|ξ| = ω` (`eq_zero_of_waveSym_symAlong_sq`). -/
+theorem eq_zero_of_waveSym_sq {n : Fin 3 → ℤ} {ω : ℝ} (hω : 0 < ω)
+    (hne : ‖Fourier.Torus.freq n‖ ≠ ω) {v : PiLp 2 (W3 Vec Mat Mat)}
+    (h : (Fourier.Torus.symbolComplex gradCurl).waveSym n
+      ((Fourier.Torus.symbolComplex gradCurl).waveSym n v) = (-(ω ^ 2) : ℝ) • v) : v = 0 :=
+  eq_zero_of_waveSym_symAlong_sq Fourier.Torus.freq hω hne h
 
 /-- **The real torus wave group has an eigenbasis** (the Fourier modes;
 `Feec.HilbertComplex.eigenDense_restrictScalars_waveGroup_of_reducing`). -/
-theorem eigenDense_torus : RealTorus.gradCurl.waveGroup.EigenDense := by
-  have := fun N i => Fourier.hasOrthogonalProjection_band (Fourier.Torus.symbolComplex gradCurl)
-    (Fourier.Torus.finite_bandN N).measurableSet i
-  have := fun N i => Fourier.finiteDimensional_band (Fourier.Torus.symbolComplex gradCurl)
-    (Fourier.Torus.finite_bandN N) i
-  exact HilbertComplex.eigenDense_restrictScalars_waveGroup_of_reducing RealTorus.real_inner_eq_re
-    (fun N => (Fourier.Torus.symbolComplex gradCurl).band (Fourier.Torus.bandN N))
-    (fun N => Fourier.reducingSubcomplex_band (Fourier.Torus.symbolComplex gradCurl)
-      (Fourier.Torus.finite_bandN N).measurableSet)
-    ((Fourier.Torus.symbolComplex gradCurl).mem_closure_iUnion_band Fourier.Torus.finite_bandN
-      Fourier.Torus.bandN_mono Fourier.Torus.exists_mem_bandN)
+theorem eigenDense_torus : RealTorus.gradCurl.waveGroup.EigenDense :=
+  eigenDense_symAlong Fourier.Torus.freq
 
 /-- **The real torus wave group has pure point spectrum.** -/
 theorem isPurePoint_torus : RealTorus.gradCurl.waveGroup.IsPurePoint :=
   RealTorus.gradCurl.isIsometric_waveGroup.isPurePoint_of_eigenDense eigenDense_torus
-
-/-- Eigenvectors of the real wave operator are eigenvectors of the complex one. -/
-theorem isEigenSq_complex {ω : ℝ} {v : PiLp 2 Space} (h : RealTorus.gradCurl.wave.IsEigenSq ω v) :
-    Models.Torus.GradCurl.complex.wave.IsEigenSq ω v := by
-  rw [RealTorus.wave_gradCurl] at h
-  obtain ⟨h1, h2, e⟩ := h
-  exact ⟨h1, h2, e⟩
 
 /-- **Eigenvectors of `L²` with eigenvalue `-ω²`, `ω > 0`, are trigonometric polynomials**: their
 Fourier modes vanish off the sphere `|2πn| = ω`. -/
 theorem fibre_eq_zero_of_isEigenSq {ω : ℝ} (hω : 0 < ω) {v : PiLp 2 Space}
     (h : RealTorus.gradCurl.wave.IsEigenSq ω v) {n : Fin 3 → ℤ}
     (hn : ‖Fourier.Torus.freq n‖ ≠ ω) : Fourier.SymbolComplex.fibre v n = 0 :=
-  eq_zero_of_waveSym_sq hω hn
-    ((Fourier.Torus.symbolComplex gradCurl).waveSym_sq_of_isEigenSq (isEigenSq_complex h) n)
+  fibre_eq_zero_of_isEigenSq_symAlong Fourier.Torus.freq hω h hn
 
 /-- The frequencies on a sphere `|2πn| = ω` form a finite set. -/
 theorem finite_freq (ω : ℝ) : {n : Fin 3 → ℤ | ‖Fourier.Torus.freq n‖ = ω}.Finite := by
@@ -567,9 +628,7 @@ theorem finite_freq (ω : ℝ) : {n : Fin 3 → ℤ | ‖Fourier.Torus.freq n‖
 theorem exists_finset_of_isEigenSq {ω : ℝ} (hω : 0 < ω) {v : PiLp 2 Space}
     (h : RealTorus.gradCurl.wave.IsEigenSq ω v) :
     ∃ S : Finset (Fin 3 → ℤ), ∀ i, ∀ n ∉ S, (v i : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n = 0 :=
-  ⟨(finite_freq ω).toFinset, fun i n hn => by
-    have hn' : ‖Fourier.Torus.freq n‖ ≠ ω := fun e => hn ((finite_freq ω).mem_toFinset.2 e)
-    exact congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w i) (fibre_eq_zero_of_isEigenSq hω h hn')⟩
+  exists_finset_of_isEigenSq_symAlong Fourier.Torus.freq (finite_freq ω) hω h
 
 /-! ### The constraints on the cube -/
 
@@ -782,24 +841,26 @@ theorem mem_totalSub_constraint {S1 : Submodule ℝ (Space 1)} {S2 : Submodule �
     fin_cases i
     exacts [(Submodule.mem_bot ℝ).2 h0, h1, h2]
 
-/-- **`K*` on the torus side, with the thesis' boundary conditions on the cube**: for closed
-`S₁ ≤ Fix ∩ boxSym ∩ boxTr` (electric parities) and `S₂ ≤ Fix ∩ boxSym ∩ boxTr` (magnetic
-parities), a datum lies in the largest invariant subspace of `K = {0} × S₁ × S₂` for the torus wave
-group iff it lies in `K` and is stationary. See [QuennevilleBelair2015], §4.10 (Prop 4.17,
-corrected: only stationary data propagate). -/
-theorem mem_invariantCore_torus_iff {S1 : Submodule ℝ (Space 1)} {S2 : Submodule ℝ (Space 2)}
+/-- **`K*` along a frequency map with finite spheres, with the thesis' boundary conditions on the
+cube**: for closed `S₁ ≤ Fix ∩ boxSym ∩ boxTr` (electric parities) and
+`S₂ ≤ Fix ∩ boxSym ∩ boxTr` (magnetic parities), a datum lies in the largest invariant subspace of
+`K = {0} × S₁ × S₂` for the real wave group along `ξ` iff it lies in `K` and is stationary. -/
+theorem mem_invariantCore_symAlong_iff (ξ : (Fin 3 → ℤ) → Freq)
+    (hfin : ∀ ω, {n | ‖ξ n‖ = ω}.Finite) {S1 : Submodule ℝ (Space 1)} {S2 : Submodule ℝ (Space 2)}
     [S1.HasOrthogonalProjection] [S2.HasOrthogonalProjection]
     (hS1 : S1 ≤ rowAction.fixed 1 ⊓ boxSym ⊓ boxTr) (hS2 : S2 ≤ rowAction.fixed 2 ⊓ boxSym ⊓ boxTr)
     (y : PiLp 2 Space) :
-    y ∈ RealTorus.gradCurl.waveGroup.invariantCore (HilbertComplex.totalSub (constraint S1 S2)) ↔
+    y ∈ (symAlong ξ).toHilbertComplex.restrictScalars.waveGroup.invariantCore
+        (HilbertComplex.totalSub (constraint S1 S2)) ↔
       y ∈ HilbertComplex.totalSub (constraint S1 S2) ∧
-        y ∈ RealTorus.gradCurl.waveGroup.stationary := by
+        y ∈ (symAlong ξ).toHilbertComplex.restrictScalars.waveGroup.stationary := by
   refine ⟨fun hy => ⟨C0Group.invariantCore_le hy, ?_⟩, fun ⟨hK, hst⟩ =>
     C0Group.mem_invariantCore.2 fun t => by rw [C0Group.mem_stationary.1 hst t]; exact hK⟩
-  refine RealTorus.gradCurl.isIsometric_waveGroup.invariantCore_le_stationary_of_eigenDense
-    eigenDense_torus HilbertComplex.isClosed_totalSub (fun ω hω v hv hev => ?_) hy
+  refine (symAlong ξ).toHilbertComplex.restrictScalars.isIsometric_waveGroup
+    |>.invariantCore_le_stationary_of_eigenDense (eigenDense_symAlong ξ)
+      HilbertComplex.isClosed_totalSub (fun ω hω v hv hev => ?_) hy
   rw [HilbertComplex.generator_waveGroup] at hev
-  obtain ⟨S, hS⟩ := exists_finset_of_isEigenSq hω hev
+  obtain ⟨S, hS⟩ := exists_finset_of_isEigenSq_symAlong ξ (hfin ω) hω hev
   obtain ⟨h0, h1, h2⟩ := mem_totalSub_constraint.1 (C0Group.invariantCore_le hv)
   obtain ⟨⟨f1, s1⟩, t1⟩ := hS1 h1
   obtain ⟨⟨f2, s2⟩, t2⟩ := hS2 h2
@@ -812,6 +873,20 @@ theorem mem_invariantCore_torus_iff {S1 : Submodule ℝ (Space 1)} {S2 : Submodu
   refine PiLp.ext fun i => ?_
   fin_cases i
   exacts [h0, e1, e2]
+
+/-- **`K*` on the torus side, with the thesis' boundary conditions on the cube**: for closed
+`S₁ ≤ Fix ∩ boxSym ∩ boxTr` (electric parities) and `S₂ ≤ Fix ∩ boxSym ∩ boxTr` (magnetic
+parities), a datum lies in the largest invariant subspace of `K = {0} × S₁ × S₂` for the torus wave
+group iff it lies in `K` and is stationary. See [QuennevilleBelair2015], §4.10 (Prop 4.17,
+corrected: only stationary data propagate). -/
+theorem mem_invariantCore_torus_iff {S1 : Submodule ℝ (Space 1)} {S2 : Submodule ℝ (Space 2)}
+    [S1.HasOrthogonalProjection] [S2.HasOrthogonalProjection]
+    (hS1 : S1 ≤ rowAction.fixed 1 ⊓ boxSym ⊓ boxTr) (hS2 : S2 ≤ rowAction.fixed 2 ⊓ boxSym ⊓ boxTr)
+    (y : PiLp 2 Space) :
+    y ∈ RealTorus.gradCurl.waveGroup.invariantCore (HilbertComplex.totalSub (constraint S1 S2)) ↔
+      y ∈ HilbertComplex.totalSub (constraint S1 S2) ∧
+        y ∈ RealTorus.gradCurl.waveGroup.stationary :=
+  mem_invariantCore_symAlong_iff Fourier.Torus.freq finite_freq hS1 hS2 y
 
 /-- **`K*` on the cube with the thesis' boundary conditions**: for the cube complex and closed
 `S₁`, `S₂` as in `mem_invariantCore_torus_iff`, the largest invariant subspace of
@@ -852,21 +927,46 @@ instance : tsdB.HasOrthogonalProjection := by
   have : CompleteSpace tsdB := isClosed_tsdB.completeSpace_coe
   infer_instance
 
-/-- An electric parity field with `div_ξ Ê = 0` and `curl_ξ Ê = 0` mode by mode vanishes
-(`grad div + curl curl = |ξ|²`, and the constant mode vanishes by parity). -/
-theorem eq_zero_of_div_curl {E : MatL} (hE : (E : Space 1) ∈ rowAction.fixed 1)
-    (hd : ∀ n, div (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n) = 0)
-    (hc : ∀ n, curl (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n) = 0) : E = 0 := by
+/-- An electric parity field with `div_{ξ(n)} Ê(n) = 0` and `curl_{ξ(n)} Ê(n) = 0` mode by mode
+vanishes, along a frequency map `ξ` vanishing only at `0` (`grad div + curl curl = |ξ|²`, and the
+constant mode vanishes by parity). -/
+theorem eq_zero_of_div_curl_symAlong (ξ : (Fin 3 → ℤ) → Freq) (hξ : ∀ n, ξ n = 0 → n = 0)
+    {E : MatL} (hE : (E : Space 1) ∈ rowAction.fixed 1)
+    (hd : ∀ n, div (ξ n) ((E : (Fin 3 → ℤ) → Mat) n) = 0)
+    (hc : ∀ n, curl (ξ n) ((E : (Fin 3 → ℤ) → Mat) n) = 0) : E = 0 := by
   refine Lp.ext_count fun n => ?_
   rw [Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 _) n]
   by_cases hn : n = 0
   · subst hn; exact coeff_zero_of_mem_fixed_one hE
-  · have key := grad_div_add_curl_curl (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n)
+  · have key := grad_div_add_curl_curl (ξ n) ((E : (Fin 3 → ℤ) → Mat) n)
     rw [hd n, hc n, _root_.map_zero, _root_.map_zero, add_zero, eq_comm, smul_eq_zero] at key
     refine key.resolve_left ?_
-    have : ‖Fourier.Torus.freq n‖ ≠ 0 := by
-      rw [norm_ne_zero_iff]; exact fun h => hn (Fourier.Torus.freq_eq_zero_iff.1 h)
+    have : ‖ξ n‖ ≠ 0 := by
+      rw [norm_ne_zero_iff]; exact fun h => hn (hξ n h)
     exact_mod_cast pow_ne_zero 2 this
+
+/-- An electric parity field with `div_ξ Ê = 0` and `curl_ξ Ê = 0` mode by mode vanishes
+(`grad div + curl curl = |ξ|²`, and the constant mode vanishes by parity). -/
+theorem eq_zero_of_div_curl {E : MatL} (hE : (E : Space 1) ∈ rowAction.fixed 1)
+    (hd : ∀ n, div (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n) = 0)
+    (hc : ∀ n, curl (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n) = 0) : E = 0 :=
+  eq_zero_of_div_curl_symAlong Fourier.Torus.freq (fun _ => Fourier.Torus.freq_eq_zero_iff.1) hE hd
+    hc
+
+/-- **Stationary data with `E` of electric parity have `E = 0`** along a frequency map `ξ`
+vanishing only at `0` (the electric harmonic fields vanish). -/
+theorem eq_zero_of_mem_stationary_symAlong (ξ : (Fin 3 → ℤ) → Freq) (hξ : ∀ n, ξ n = 0 → n = 0)
+    {y : PiLp 2 Space} (h1 : (y 1 : Space 1) ∈ rowAction.fixed 1)
+    (hst : y ∈ (symAlong ξ).toHilbertComplex.restrictScalars.waveGroup.stationary) :
+    (y 1 : Space 1) = 0 := by
+  have hW := waveSym_symAlong_fibre_eq_zero ξ hst
+  refine eq_zero_of_div_curl_symAlong ξ hξ (E := y 1) h1 (fun n => ?_) (fun n => ?_)
+  · have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 0) (hW n)
+    simp only [waveSym_symAlong_zero, PiLp.zero_apply] at e
+    exact neg_eq_zero.1 e
+  · have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 2) (hW n)
+    simp only [waveSym_symAlong_two, PiLp.zero_apply] at e
+    exact e
 
 /-- **Stationary data of the torus complex in `{0} × S₁ × S₂`** (electric parities in the middle
 slot): `(0, E, B)` is stationary iff `E = 0` and `curl_ξ B̂ = 0` mode by mode. -/
@@ -881,33 +981,17 @@ theorem mem_stationary_iff {y : PiLp 2 Space} (h0 : (y 0 : Space 0) = 0)
     (HilbertComplex.generator_waveGroup RealTorus.gradCurl).trans RealTorus.wave_gradCurl
   constructor
   · intro hst
-    obtain ⟨hD, hL⟩ := C0Group.mem_domain_generator_of_mem_stationary hst
-    have hD' : y ∈ Models.Torus.GradCurl.complex.wave.restrictScalars.domain := hgen ▸ hD
-    have hL' : Models.Torus.GradCurl.complex.wave ⟨y, hD'⟩ = 0 := by
-      have e := LinearPMap.apply_eq_of_eq hgen ⟨y, hD⟩ ⟨y, hD'⟩ rfl
-      rw [hL] at e
-      exact e.symm
-    have hW : ∀ n, (Fourier.Torus.symbolComplex gradCurl).waveSym n
-        (Fourier.SymbolComplex.fibre y n) = 0 := fun n => by
-      rw [← (Fourier.Torus.symbolComplex gradCurl).wave_apply_count ⟨y, hD'⟩ n]
-      change Fourier.SymbolComplex.fibre (Models.Torus.GradCurl.complex.wave ⟨y, hD'⟩) n = 0
-      rw [hL']
-      ext i
-      exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 _) n
-    refine ⟨eq_zero_of_div_curl (E := y 1) h1 (fun n => ?_) (fun n => ?_), fun n => ?_⟩
-    · have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 0) (hW n)
-      simp only [waveSym_apply_zero, PiLp.zero_apply] at e
-      exact neg_eq_zero.1 e
-    · have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 2) (hW n)
-      simp only [waveSym_apply_two, PiLp.zero_apply] at e
-      exact e
-    · have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 1) (hW n)
-      simp only [waveSym_apply_one, PiLp.zero_apply] at e
-      have e' : grad (Fourier.Torus.freq n) (0 : Vec) -
-          curl (Fourier.Torus.freq n) ((y 2 : MatL) n) = 0 := by
-        rw [← hy0 n]; exact e
-      rw [_root_.map_zero, zero_sub, neg_eq_zero] at e'
-      exact e'
+    refine ⟨eq_zero_of_mem_stationary_symAlong Fourier.Torus.freq
+      (fun _ => Fourier.Torus.freq_eq_zero_iff.1) h1
+      hst, fun n => ?_⟩
+    have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 1)
+      (waveSym_symAlong_fibre_eq_zero Fourier.Torus.freq hst n)
+    simp only [waveSym_symAlong_one, PiLp.zero_apply] at e
+    have e' : grad (Fourier.Torus.freq n) (0 : Vec) -
+        curl (Fourier.Torus.freq n) ((y 2 : MatL) n) = 0 := by
+      rw [← hy0 n]; exact e
+    rw [_root_.map_zero, zero_sub, neg_eq_zero] at e'
+    exact e'
   · rintro ⟨e1, hc⟩
     have hy1 : ∀ n, (y 1 : Space 1) n = (0 : Mat) := fun n => by
       rw [e1]; exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 _) n

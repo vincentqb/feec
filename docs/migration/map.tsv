@@ -3091,8 +3091,8 @@ Feec.BoundedDomain.isTest_gradM	Feec.Models.BoundedDomain.isTestField_gradM	rena
 Feec.BoundedDomain.isTest_refl	Feec.Domain.isTest_comp_sub_of_closedBall_subset	generalize
 Feec.BoundedDomain.isTest_single	Feec.Domain.IsTestField.single	dedup
 Feec.BoundedDomain.isTest_wt	-	deleted-helper
-Feec.BoundedDomain.lap	Feec.Models.BoundedDomain.lap	rename
-Feec.BoundedDomain.lap_expCos	Feec.Models.BoundedDomain.lap_expCos	rename
+Feec.BoundedDomain.lap	laplacian	dedup
+Feec.BoundedDomain.lap_expCos	Feec.Models.BoundedDomain.laplacian_expCos	rename
 Feec.BoundedDomain.le_dist₂_of_notMem	-	deleted-helper
 Feec.BoundedDomain.linearIndependent_hessL2_expCos	Feec.Models.BoundedDomain.linearIndependent_hessL2_expCos	rename
 Feec.BoundedDomain.locallyIntegrable_ext0	Feec.Domain.FiniteSpeed.locallyIntegrable_indicator	dedup

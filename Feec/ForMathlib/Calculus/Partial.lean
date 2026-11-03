@@ -29,6 +29,8 @@ on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
   `HasCompactSupport.partialDeriv`, `tsupport_partialDeriv_subset`,
   `eq_zero_of_partialDeriv_eq_zero` (compact support and `∇f = 0` give `f = 0`);
 * **Schwarz**: `partialDeriv_comm` (partial derivatives of a `C²` function commute);
+* **The Laplacian** `laplacian f = Σᵢ ∂ᵢ∂ᵢ f` (`laplacian_apply`), linear on `C²` functions
+  (`laplacian_add`, `laplacian_const_smul`);
 * **Integration by parts**: `integral_partialDeriv_mul_eq_neg` (`∫ ∂ᵢ f · g = -∫ f · ∂ᵢ g` for
   `C¹` functions with `f` compactly supported).
 
@@ -268,6 +270,32 @@ theorem partialDeriv_comm {f : (ι → ℝ) → F} [NormedSpace ℝ F] (hf : Con
     fderiv ℝ (fun y => fderiv ℝ f y (Pi.single a 1)) x (Pi.single b 1)
   rw [e, e]
   exact (ContDiffAt.isSymmSndFDerivAt (hf.contDiffAt (x := x)) (by simp)) _ _
+
+/-! ### The Laplacian -/
+
+/-- The Laplacian `Δf = Σᵢ ∂ᵢ∂ᵢ f` of `f : (ι → 𝕜) → F`. -/
+def laplacian (f : (ι → 𝕜) → F) (x : ι → 𝕜) : F :=
+  ∑ i, partialDeriv i (partialDeriv i f) x
+
+theorem laplacian_apply (f : (ι → 𝕜) → F) (x : ι → 𝕜) :
+    laplacian f x = ∑ i, partialDeriv i (partialDeriv i f) x := rfl
+
+theorem laplacian_add {f g : (ι → 𝕜) → F} (hf : ContDiff 𝕜 2 f) (hg : ContDiff 𝕜 2 g) :
+    laplacian (f + g) = laplacian f + laplacian g := by
+  funext x
+  simp only [laplacian, Pi.add_apply, ← Finset.sum_add_distrib,
+    partialDeriv_add' (hf.differentiable two_ne_zero) (hg.differentiable two_ne_zero),
+    partialDeriv_add' (hf.differentiable_partialDeriv le_rfl _)
+      (hg.differentiable_partialDeriv le_rfl _)]
+
+theorem laplacian_const_smul {f : (ι → 𝕜) → F} (hf : ContDiff 𝕜 2 f) (c : 𝕜) :
+    laplacian (c • f) = c • laplacian f := by
+  have e : ∀ {g : (ι → 𝕜) → F}, Differentiable 𝕜 g → ∀ i,
+      partialDeriv i (c • g) = c • partialDeriv i g := fun hg i =>
+    funext fun x => partialDeriv_const_smul (hg x) c i
+  funext x
+  simp only [laplacian, Pi.smul_apply, Finset.smul_sum, e (hf.differentiable two_ne_zero),
+    e (hf.differentiable_partialDeriv le_rfl _)]
 
 /-! ### Integration by parts -/
 

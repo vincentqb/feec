@@ -175,7 +175,8 @@ theorem integral_pd_pd_mul_coord (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupp
 `Δf = -c f` with `c ≠ 0`, then `f = 0`. Testing the equation against `f` gives
 `‖∇f‖² = c ‖f‖²`, against the dilation field `x · ∇f` gives `½ ‖∇f‖² = (3/2) c ‖f‖²`. -/
 theorem eq_zero_of_laplacian_eq (hf : ContDiff ℝ ∞ f) (hfc : HasCompactSupport f) {c : ℝ}
-    (hc : c ≠ 0) (h : ∀ x, ∑ j, partialDeriv j (partialDeriv j f) x = -c * f x) : f = 0 := by
+    (hc : c ≠ 0) (h : ∀ x, laplacian f x = -c * f x) : f = 0 := by
+  simp only [laplacian_apply] at h
   have hint2 : ∀ j k, Integrable fun x => partialDeriv j (partialDeriv j f) x *
     (x k * partialDeriv k f x) := fun j k =>
     (((hf.partialDeriv_infty j).partialDeriv_infty j).continuous.mul
@@ -320,6 +321,7 @@ theorem eq_zero_of_curlM_curlM_eq (hV : ∀ ij, ContDiff ℝ ∞ (V ij))
   have e := curlM_curlM_eq (fun ij => (hV ij).of_le (by simp)) i k x
   rw [hdiv i, h] at e
   simp only [partialDeriv_zero] at e
+  rw [laplacian_apply]
   linarith
 
 end CurlCurl

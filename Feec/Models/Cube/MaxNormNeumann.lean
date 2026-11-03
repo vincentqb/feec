@@ -410,7 +410,7 @@ structure NeumannSolution (b : Fin n → ℝ) (s T : ℝ) where
   u₁ : ℝ → (Fin n → ℝ) → ℝ
   contDiff : ∀ t ∈ Icc 0 T, ContDiff ℝ 4 (u t)
   hasDerivAt : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, HasDerivAt (fun t => u t x) (u₁ t x) t
-  heat : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, u₁ t x = MaxNormHeat.laplacian (u t) x
+  heat : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, u₁ t x = laplacian (u t) x
   /-- the natural boundary condition `∂_ν u = 0` on the faces -/
   neumann : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s →
     partialDeriv i (u t) x = 0
@@ -524,11 +524,11 @@ theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     (hneu : ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s → partialDeriv i u x = 0)
     (p : Nodes n N) {l₀ : Fin n}
     (hl₀ : (p : Fin n → ℤ) l₀ = 0 ∨ (p : Fin n → ℤ) l₀ = N + 1) :
-    |MaxNormHeat.laplacian u (node b (meshSize s N) p) -
+    |laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * (1 + (n + 1).factorial) := by
   have hp := mem_closedNodes.1 p.2
   have hx := node_mem_closedCube (b := b) hs p
-  have hΔ : |MaxNormHeat.laplacian u (node b (meshSize s N) p)| ≤ n * B := by
+  have hΔ : |laplacian u (node b (meshSize s N) p)| ≤ n * B := by
     refine (abs_sum_le_sum_abs _ _).trans ?_
     calc ∑ i, |partialDeriv i (partialDeriv i u) (node b (meshSize s N) p)|
         ≤ ∑ _i : Fin n, B := sum_le_sum fun i _ => hB _ hx i
@@ -547,7 +547,7 @@ theorem abs_laplacian_sub_boundary_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
         ≤ (n + 1) * |stencilSum b s N u p| := div_le_self (by positivity) hC
       _ ≤ (n + 1) * (n.factorial * n * B) := mul_le_mul_of_nonneg_left hS (by positivity)
       _ = _ := by rw [Nat.factorial_succ]; push_cast; ring
-  calc _ ≤ |MaxNormHeat.laplacian u (node b (meshSize s N) p)| +
+  calc _ ≤ |laplacian u (node b (meshSize s N) p)| +
         |neumannLaplacian b hs N (interp b s N u) p| := abs_sub _ _
     _ ≤ n * B + (n + 1).factorial * n * B := add_le_add hΔ hL
     _ = _ := by ring
@@ -557,9 +557,9 @@ for `u ∈ C⁴` with `|∂ᵢ⁴u| ≤ B` on `Q̄`. -/
 theorem abs_laplacian_sub_interior_le (hs : 0 < s) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u)
     {B : ℝ} (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
-    |MaxNormHeat.laplacian u (node b (meshSize s N) p) -
+    |laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * meshSize s N ^ 2 / 12 := by
-  rw [neumannLaplacian_interp_interior hs u hp, MaxNormHeat.laplacian, ← sum_sub_distrib]
+  rw [neumannLaplacian_interp_interior hs u hp, laplacian_apply, ← sum_sub_distrib]
   refine (abs_sum_le_sum_abs _ _).trans ?_
   calc _ ≤ ∑ _l : Fin n, B * meshSize s N ^ 2 / 12 := sum_le_sum fun l _ =>
         abs_partialDeriv_sub_secondDiff_le hu (meshSize_pos hs N) _ l fun t ht =>
@@ -855,14 +855,14 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   consistency_interior (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
-    |MaxNormHeat.laplacian u (node b (meshSize s N) p) -
+    |laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * meshSize s N ^ 2 / 12
   /-- consistency `O(1)` at the boundary nodes, for `∂_ν u = 0` -/
   consistency_boundary (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 2 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |partialDeriv i (partialDeriv i u) x| ≤ B)
     (hneu : ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s → partialDeriv i u x = 0)
     (p : Nodes n N) {l : Fin n} (hl : (p : Fin n → ℤ) l = 0 ∨ (p : Fin n → ℤ) l = N + 1) :
-    |MaxNormHeat.laplacian u (node b (meshSize s N) p) -
+    |laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * (1 + (n + 1).factorial)
   /-- the barrier: `Lₕ χ ≤ -s / (2 h n!)` at the boundary nodes, `s / h ≥ K_n` -/
   barrier (N : ℕ) (p : Nodes n N) {l : Fin n}

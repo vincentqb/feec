@@ -15,7 +15,8 @@ non-vacuity statement and the earlier field `neumann` are stated verbatim and de
 new API. The counting functions `upCount`, `downCount` and `vertexCount` moved to
 `Feec.FiniteElement` (`Feec.FiniteElement.LumpedMass`) with the level of the mesh as argument
 (`vertexCount (N + 1)` for the earlier `vertexCount N`); the earlier `vertexCount` is stated
-verbatim as `vertexCount_old`, and the earlier verdict with it.
+verbatim as `vertexCount_old`, and the earlier verdict with it. `MaxNormHeat.laplacian` is now
+the general `laplacian` (`Feec.ForMathlib.Calculus.Partial`, the same definition).
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -54,14 +55,14 @@ structure Verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   consistency_interior (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 4 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |(partialDeriv i)^[4] u x| ≤ B) {p : Nodes n N}
     (hp : (p : Fin n → ℤ) ∈ interiorNodes n (N + 1)) :
-    |Feec.Models.Cube.MaxNormHeat.laplacian u (node b (meshSize s N) p) -
+    |laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * meshSize s N ^ 2 / 12
   /-- consistency `O(1)` at the boundary nodes, for `∂_ν u = 0` -/
   consistency_boundary (N : ℕ) {u : (Fin n → ℝ) → ℝ} (hu : ContDiff ℝ 2 u) {B : ℝ}
     (hB : ∀ x ∈ closedCube b s, ∀ i, |partialDeriv i (partialDeriv i u) x| ≤ B)
     (hneu : ∀ x ∈ closedCube b s, ∀ i, x i = b i ∨ x i = b i + s → partialDeriv i u x = 0)
     (p : Nodes n N) {l : Fin n} (hl : (p : Fin n → ℤ) l = 0 ∨ (p : Fin n → ℤ) l = N + 1) :
-    |Feec.Models.Cube.MaxNormHeat.laplacian u (node b (meshSize s N) p) -
+    |laplacian u (node b (meshSize s N) p) -
         neumannLaplacian b hs N (interp b s N u) p| ≤ n * B * (1 + (n + 1).factorial)
   /-- the barrier: `Lₕ χ ≤ -s / (2 h n!)` at the boundary nodes, `s / h ≥ K_n` -/
   barrier (N : ℕ) (p : Nodes n N) {l : Fin n}

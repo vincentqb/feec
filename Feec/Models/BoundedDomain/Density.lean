@@ -424,9 +424,6 @@ end Propagation
 /-- The Hessian `(∇²h)_{ij} = ∂_j ∂_i h`. -/
 def hessField (h : R3 → ℝ) : Ix → R3 → ℝ := fun ij => partialDeriv ij.2 (partialDeriv ij.1 h)
 
-/-- The Laplacian `Δh = Σᵢ ∂ᵢ ∂ᵢ h`. -/
-def lap (h : R3 → ℝ) (x : R3) : ℝ := ∑ i, partialDeriv i (partialDeriv i h) x
-
 theorem hessField_eq_gradM (h : R3 → ℝ) : hessField h = gradM fun i => partialDeriv i h := rfl
 
 theorem contDiff_hessField {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) (ij : Ix) :
@@ -446,7 +443,7 @@ theorem hessL2_eq_gradL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3
 /-- **Hessians of functions harmonic on `Ω` lie in `L²(TSD)`**: `∇²h` is symmetric (Schwarz),
 trace-free (`Δh = 0`) and divergence-free (`div ∇²h = ∇Δh = 0`) on `Ω`. -/
 theorem hessL2_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 → ℝ}
-    (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x ∈ Ω, lap h x = 0) : hessL2 hΩ hb hh ∈ tsd Ω := by
+    (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x ∈ Ω, laplacian h x = 0) : hessL2 hΩ hb hh ∈ tsd Ω := by
   have h2 : ContDiff ℝ 2 h := hh.of_le (by simp)
   refine smoothField_mem_tsd hΩ hb (fun ij => (contDiff_hessField hh ij).of_le (by simp))
     (fun i j x _ => (partialDeriv_comm h2 i j x).symm) (fun x hx => hΔ x hx) (fun i x hx => ?_)
@@ -459,10 +456,10 @@ theorem hessL2_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 �
     rw [e1]
     exact funext fun y => partialDeriv_comm h3 j i y
   simp only [fun j => congrFun (e j) x]
-  have hl : (fun y => ∑ j, partialDeriv j (partialDeriv j h) y) = lap h := rfl
+  have hl : (fun y => ∑ j, partialDeriv j (partialDeriv j h) y) = laplacian h := rfl
   rw [← partialDeriv_sum _ (fun j _ =>
     (((hh.partialDeriv_infty j).partialDeriv_infty j).differentiable (by simp)) x), hl]
-  have hev : lap h =ᶠ[𝓝 x] fun _ => (0 : ℝ) :=
+  have hev : laplacian h =ᶠ[𝓝 x] fun _ => (0 : ℝ) :=
     Filter.eventually_of_mem (hΩ.mem_nhds hx) fun y hy => hΔ y hy
   rw [partialDeriv, hev.fderiv_eq]
   simp
@@ -518,8 +515,8 @@ theorem pd0_expCos (t : ℝ) : partialDeriv 0 (expCos t) = fun x => -t * expCos 
   rw [pd_expCos_fun]; simp
 
 /-- `e^{-t x₁} cos(t x₂)` is harmonic. -/
-theorem lap_expCos (t : ℝ) (x : R3) : lap (expCos t) x = 0 := by
-  simp only [lap, Fin.sum_univ_three, pd_expCos_fun]
+theorem laplacian_expCos (t : ℝ) (x : R3) : laplacian (expCos t) x = 0 := by
+  simp only [laplacian, Fin.sum_univ_three, pd_expCos_fun]
   simp only [Fin.isValue, ↓reduceIte, Fin.reduceEq]
   rw [partialDeriv_const_mul' (differentiable_expCos t),
     partialDeriv_const_mul' (differentiable_expSin t), pd_expCos_fun, pd_expSin_fun]
@@ -663,7 +660,7 @@ theorem not_finiteDimensional_inf_orthogonal_tsd₀ (hΩ : IsOpen Ω) (hb : Born
     (hne : Ω.Nonempty) : ¬ FiniteDimensional ℝ (tsd Ω ⊓ (tsd₀ Ω hΩ hb)ᗮ : Submodule ℝ _) := by
   intro hfin
   let v : ℕ → (tsd Ω ⊓ (tsd₀ Ω hΩ hb)ᗮ : Submodule ℝ _) := fun n =>
-    ⟨_, hessL2_mem_tsd hΩ hb (contDiff_expCos ((n : ℝ) + 1)) (fun x _ => lap_expCos _ x), by
+    ⟨_, hessL2_mem_tsd hΩ hb (contDiff_expCos ((n : ℝ) + 1)) (fun x _ => laplacian_expCos _ x), by
       rw [hessL2_eq_gradL2]; exact gradL2_mem_orthogonal_tsd₀ hΩ hb _⟩
   have hli : LinearIndependent ℝ v :=
     LinearIndependent.of_comp (Submodule.subtype _) (linearIndependent_hessL2_expCos hΩ hb hne)
@@ -877,7 +874,8 @@ theorem mem_invariantCore₂_of_curl_eq_zero (hΩ : IsOpen Ω) (S₁ S₂ : Subm
 `S₂ = L²(TSD)` (`curl ∇²h = 0`). -/
 theorem hessL2_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (S₁ : Submodule ℝ (L2F ℝ Ω Ix)) {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h)
-    (hΔ : ∀ x ∈ Ω, lap h x = 0) : hessL2 hΩ hb hh ∈ (gradCurl ℝ hΩ).invariantCore₂ S₁ (tsd Ω) := by
+    (hΔ : ∀ x ∈ Ω, laplacian h x = 0) :
+    hessL2 hΩ hb hh ∈ (gradCurl ℝ hΩ).invariantCore₂ S₁ (tsd Ω) := by
   obtain ⟨hmem, e⟩ := smoothField_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl
     (fun ij => (contDiff_hessField hh ij).of_le (by simp))
   refine ShortHilbertComplex.mem_invariantCore₂_of_eq_zero (S := gradCurl ℝ hΩ) ⟨_, hmem⟩
@@ -896,7 +894,7 @@ theorem not_finiteDimensional_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology
   intro hfin
   let v : ℕ → (gradCurl ℝ hΩ).invariantCore₂ S₁ (tsd Ω) := fun n =>
     ⟨_, hessL2_mem_invariantCore₂ hΩ hb S₁ (contDiff_expCos ((n : ℝ) + 1))
-      (fun x _ => lap_expCos _ x)⟩
+      (fun x _ => laplacian_expCos _ x)⟩
   have hli : LinearIndependent ℝ v :=
     LinearIndependent.of_comp (Submodule.subtype _) (linearIndependent_hessL2_expCos hΩ hb hne)
   exact Module.Finite.not_linearIndependent_of_infinite v hli

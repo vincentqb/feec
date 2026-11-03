@@ -1147,7 +1147,7 @@ theorem isSphereTT_radDeriv {U : Ix → R3 → ℝ} (hU : ∀ ij, ContDiff ℝ 2
     (hsym : ∀ x ∈ ball3, ∀ i j, U (i, j) x = U (j, i) x)
     (htr : ∀ x ∈ ball3, ∑ i, U (i, i) x = 0)
     (hdiv : ∀ x ∈ ball3, ∀ i, ∑ j, partialDeriv j (U (i, j)) x = 0)
-    (hlap : ∀ x, rho x = 1 → ∀ ij, ∑ k, partialDeriv k (partialDeriv k (U ij)) x = 0)
+    (hlap : ∀ x, rho x = 1 → ∀ ij, laplacian (U ij) x = 0)
     (hU0 : ∀ x, rho x = 1 → ∀ ij, U ij x = 0) :
     IsSphereTT (radDeriv U) ∧
       ∀ x, rho x = 1 → ∀ ij k, partialDeriv k (U ij) x = x k * radDeriv U ij x := by
@@ -2111,8 +2111,9 @@ theorem eq_zero_of_isEigenfield_of_contDiff_two {ξ : ℝ} (hξ : ξ ≠ 0)
     have := congrFun (congrFun hM ij.1) ij.2
     simpa using this
   -- `ΔU = 0` on `S²`
-  have hlap : ∀ x, rho x = 1 → ∀ ij, ∑ k, partialDeriv k (partialDeriv k (U ij)) x = 0 := by
+  have hlap : ∀ x, rho x = 1 → ∀ ij, laplacian (U ij) x = 0 := by
     intro x hx ij
+    rw [laplacian_apply]
     obtain ⟨i, k⟩ := ij
     have hdivC : ContDiff ℝ 1 (fun y => ∑ l, partialDeriv l (U (i, l)) y) :=
       ContDiff.sum fun l _ => (hU _).partialDeriv (m := 1) (by norm_num) l

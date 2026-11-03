@@ -175,10 +175,6 @@ theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
 
 /-! ### Consistency -/
 
-/-- The Laplacian `Δu = Σᵢ ∂ᵢ∂ᵢ u`. -/
-def laplacian (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
-  ∑ i, partialDeriv i (partialDeriv i u) x
-
 /-- The nodal interpolant `(Iₕ u)(p) = u(b + h p)` at the interior nodes. -/
 def interp (b : Fin n → ℝ) (s : ℝ) (N : ℕ) (u : (Fin n → ℝ) → ℝ) : Space n N :=
   fun p => u (node b (meshSize s N) p)

@@ -441,7 +441,7 @@ theorem constT_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
 /-- **Hessians of harmonic functions are stationary magnetic data**: `∇²h ∈ S₂*`. -/
 theorem hessL2_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (S₁ : Submodule ℝ (symSub ℝ Ω)) [S₁.HasOrthogonalProjection] {h : R3 → ℝ}
-    (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x, lap h x = 0) :
+    (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x, laplacian h x = 0) :
     (⟨hessL2 hΩ hb hh, smoothField_mem_trSub hΩ hb _ hΔ⟩ : trSub ℝ Ω) ∈
       (hessCurl ℝ hΩ).invariantCore₂ S₁ (tsdT Ω) :=
   mem_invariantCore₂_of_curl_eq_zero hΩ hb S₁ (Ψ := hessField h)
@@ -458,7 +458,7 @@ theorem not_finiteDimensional_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology
     ¬ FiniteDimensional ℝ ((hessCurl ℝ hΩ).invariantCore₂ S₁ (tsdT Ω)) := by
   intro hfin
   let v : ℕ → (hessCurl ℝ hΩ).invariantCore₂ S₁ (tsdT Ω) := fun n =>
-    ⟨_, hessL2_mem_invariantCore₂ hΩ hb S₁ (contDiff_expCos ((n : ℝ) + 1)) (lap_expCos _)⟩
+    ⟨_, hessL2_mem_invariantCore₂ hΩ hb S₁ (contDiff_expCos ((n : ℝ) + 1)) (laplacian_expCos _)⟩
   have hli : LinearIndependent ℝ v :=
     LinearIndependent.of_comp ((trSub ℝ Ω).subtype ∘ₗ Submodule.subtype _)
       (linearIndependent_hessL2_expCos hΩ hb hne)
@@ -533,7 +533,7 @@ theorem not_finiteDimensional_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBo
   have hmem : ∀ n : ℕ, (⟨hessL2 hΩ hb (contDiff_expCos ((n : ℝ) + 1)),
       hessL2_mem_symSub hΩ hb (contDiff_expCos ((n : ℝ) + 1))⟩ : symSub ℝ Ω) ∈
       tsdS Ω ⊓ ((tsd₀ Ω hΩ hb).comap (symSub ℝ Ω).subtype)ᗮ := fun n => by
-    refine ⟨hessL2_mem_tsd hΩ hb (contDiff_expCos ((n : ℝ) + 1)) fun x _ => lap_expCos _ x,
+    refine ⟨hessL2_mem_tsd hΩ hb (contDiff_expCos ((n : ℝ) + 1)) fun x _ => laplacian_expCos _ x,
       (Submodule.mem_orthogonal' _ _).2 fun u hu => ?_⟩
     rw [Submodule.coe_inner]
     have ho := gradL2_mem_orthogonal_tsd₀ hΩ hb

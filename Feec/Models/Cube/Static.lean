@@ -220,7 +220,7 @@ theorem inj₂_hessQ_mem_invariantCore (t : ℝ) :
         (totalSub (family3 (⊥ : Submodule ℝ (Domain.L2F ℝ (Q (Fin 3)) (Fin 3)))
           (tsd (Q (Fin 3))) (tsd (Q (Fin 3))))) :=
   Models.BoundedDomain.hessL2_mem_invariantCore₂ Geometry.isOpen_Q RowWise.isBounded_Q _
-    (Models.BoundedDomain.contDiff_expCos t) fun x _ => Models.BoundedDomain.lap_expCos t x
+    (Models.BoundedDomain.contDiff_expCos t) fun x _ => Models.BoundedDomain.laplacian_expCos t x
 
 /-- The parity extension of the Hessian of `e^{-x₁} cos x₂`, a static magnetic datum. -/
 def staticB : Space 2 := J 2 (hessQ 1)

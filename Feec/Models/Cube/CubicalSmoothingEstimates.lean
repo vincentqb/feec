@@ -255,7 +255,7 @@ theorem formL2Sq_cellField_le {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) → 
   have hUK : U ⊆ K := fun t ht => hmK (by
     rw [closedCell_eq_pi]
     exact fun j _ => Ioo_subset_Icc_self (ht j (Set.mem_univ j)))
-  rw [formL2Sq, Models.Cube.FEM.sum_eq_sum_formIdx
+  rw [formL2Sq, Domain.sum_eq_sum_formIdx
     (f := fun s => ∫ x in closedCell L m, (cellField L ω m x s) ^ 2) fun s hs => by
       simp only [isDeg_cellField (hk m) _ s hs]; simp]
   refine Finset.sum_le_sum fun s _ => ?_

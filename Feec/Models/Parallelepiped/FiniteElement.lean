@@ -2,7 +2,7 @@ module
 
 public import Feec.Domain.FormPullback
 public import Feec.Models.Cube.FiniteElementConvergence
-public import Feec.Models.Cube.PolyRate
+public import Feec.Models.Cube.TangentialRate
 public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!

@@ -4067,7 +4067,7 @@ Feec.BoxIdent.reflE	Feec.Models.Cube.Geometry.reflBE	generalize
 Feec.BoxIdent.reflT	Feec.Models.Cube.Geometry.reflB	generalize
 Feec.BoxIdent.reflT_apply_ne	Feec.Models.Cube.Geometry.reflB	generalize
 Feec.BoxIdent.reflT_apply_self	Feec.Models.Cube.Geometry.reflB	generalize
-Feec.BoxIdent.reflT_proj_of_face	Feec.Models.Cube.RowWise.reflB_proj_of_face	generalize
+Feec.BoxIdent.reflT_proj_of_face	Feec.Models.Cube.Geometry.reflB_single_proj_of_face	generalize
 Feec.BoxIdent.reflT_reflT	Feec.Models.Cube.Geometry.reflB_reflB	generalize
 Feec.BoxIdent.refl_mem_boxFin_iff	Feec.Fourier.Torus.flipAt_mem_bandN	generalize
 Feec.BoxIdent.refl_neg'	-	deleted-helper

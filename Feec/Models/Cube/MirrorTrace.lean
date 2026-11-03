@@ -416,24 +416,21 @@ structure IsTraceTest (c : d → ℂ) (ψ : (d → ℝ) → ℂ) : Prop where
   contDiff : ContDiff ℝ 1 ψ
   vanish : ∀ j, c j = -1 → ∀ y ∈ Qc d, (y j = 0 ∨ y j = 1 / 2) → ψ y = 0
 
-private theorem sign_single (c : d → ℂ) (j : d) : sign c (fun i => decide (i = j)) = c j := by
-  rw [sign, Finset.prod_eq_single j (fun i _ hi => by simp [hi]) (by simp)]; simp
-
 /-- **Smooth parity functions vanish on the faces where they are odd.** -/
 theorem IsParSmooth.eq_zero {c : d → ℂ} {ψ : (d → ℝ) → ℂ} (hψ : IsParSmooth c ψ) {j : d}
     (hj : c j = -1) {y : d → ℝ} (hy : y j = 0 ∨ y j = 1 / 2) : ψ y = 0 := by
-  have h := hψ.parity (fun i => decide (i = j)) y
+  have h := hψ.parity (single j) y
   rw [sign_single, hj] at h
-  have e : ψ (reflR (fun i => decide (i = j)) y) = ψ y := by
+  have e : ψ (reflR (single j) y) = ψ y := by
     rcases hy with hy | hy
     · congr 1; funext i; by_cases hi : i = j
-      · subst hi; simp [reflR, hy]
-      · simp [reflR, hi]
-    · rw [show reflR (fun i => decide (i = j)) y =
+      · subst hi; simp [reflR, single, hy]
+      · simp [reflR, single, hi]
+    · rw [show reflR (single j) y =
           y + fun i => ((if i = j then (-1 : ℤ) else 0 : ℤ) : ℝ) by
         funext i; by_cases hi : i = j
-        · subst hi; simp [reflR, hy]; norm_num
-        · simp [reflR, hi], hψ.periodic]
+        · subst hi; simp [reflR, single, hy]; norm_num
+        · simp [reflR, single, hi], hψ.periodic]
   rw [e] at h
   linear_combination h / 2
 

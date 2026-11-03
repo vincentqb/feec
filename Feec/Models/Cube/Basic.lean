@@ -24,7 +24,8 @@ and does not depend on either.
 * `resQ`, `resQF`: restriction of torus fields to `Q`; `per`, `isSmooth_per`, `partialT_per`,
   `integral_mul_per`: periodization of test functions supported in `Q`; **`resQ_isWeakFO`**: weak
   first-order operators on `𝕋ᵈ` restrict to weak first-order operators on `Q`.
-* `reflB ε`, `piece ε`: the reflections of `𝕋ᵈ` and the `2ᵈ` reflected boxes;
+* `reflB ε`, `piece ε`: the reflections of `𝕋ᵈ` and the `2ᵈ` reflected boxes; `single j`: the
+  single reflection `R_j` (`reflB_single_proj_of_face`, `flipB_single`, `sign_single`);
   **`integral_eq_sum_box`** (the tiling, up to the null set `faceSet`);
   `mFourierCoeff_comp_reflB`: `(g ∘ R_ε)^ = ĝ ∘ flip_ε`.
 * **`norm_sq_eq_two_pow`**: `‖f‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖f|_Q‖²` for parity fields;
@@ -438,6 +439,24 @@ theorem reflB_comp (ε η : d → Bool) (x : UnitAddTorus d) :
   funext j
   by_cases h1 : ε j <;> by_cases h2 : η j <;> simp [reflB, h1, h2]
 
+omit [Fintype d] in
+/-- The single reflection `R_j`: only the variable `x_j` reflected. -/
+def single [DecidableEq d] (j : d) : d → Bool := fun i => decide (i = j)
+
+omit [Fintype d] in
+/-- **The single reflections fix the faces**: if `y_j ∈ {0, ½}` then `R_j (proj y) = proj y`. -/
+theorem reflB_single_proj_of_face [DecidableEq d] {j : d} {y : d → ℝ}
+    (h : y j = 0 ∨ y j = 1 / 2) : reflB (single j) (proj y) = proj y := by
+  funext i
+  by_cases hi : i = j
+  · subst hi
+    simp only [reflB, single, decide_true, ↓reduceIte, proj]
+    rcases h with h | h
+    · rw [h]; simp
+    · rw [h, ← AddCircle.coe_neg, show (-(1 / 2 : ℝ)) = 1 / 2 - 1 by norm_num,
+        AddCircle.coe_sub, AddCircle.coe_period, sub_zero]
+  · simp [reflB, single, hi]
+
 theorem measurePreserving_reflB (ε : d → Bool) :
     MeasurePreserving (reflB ε) (volume : Measure (UnitAddTorus d)) volume := by
   have h := measurePreserving_pi (fun _ : d => (volume : Measure UnitAddCircle))
@@ -578,10 +597,10 @@ theorem flipB_neg (ε : d → Bool) (n : d → ℤ) : flipB ε (-n) = -flipB ε 
   funext j; by_cases h : ε j <;> simp [flipB, h]
 
 omit [Fintype d] in
-/-- One variable reflected: `flipB (· = k) = flipAt k`. -/
-theorem flipB_eq_flipAt [DecidableEq d] (k : d) :
-    flipB (fun j => decide (j = k)) = Fourier.Torus.flipAt k := by
-  funext n j; by_cases h : j = k <;> simp [flipB, h]
+/-- One variable reflected: `flipB (single k) = flipAt k`. -/
+theorem flipB_single [DecidableEq d] (k : d) (n : d → ℤ) :
+    flipB (single k) n = Fourier.Torus.flipAt k n := by
+  funext j; by_cases h : j = k <;> simp [flipB, single, h]
 
 theorem fourier_neg_arg (m : ℤ) (t : UnitAddCircle) : fourier m (-t) = fourier (-m) t := by
   rw [fourier_apply, fourier_apply, smul_neg, neg_smul]
@@ -698,6 +717,10 @@ variable [DecidableEq d]
 
 /-- The sign `∏_{j, ε j} c_j` of the reflection `R_ε` for a parity vector `c` (`c_j = ±1`). -/
 def sign (c : d → ℂ) (ε : d → Bool) : ℂ := ∏ j, if ε j then c j else 1
+
+theorem sign_single (c : d → ℂ) (j : d) : sign c (single j) = c j := by
+  rw [sign, Finset.prod_eq_single j (fun i _ hi => by simp [single, hi]) (by simp)]
+  simp [single]
 
 omit [DecidableEq d] in
 theorem sign_xor {c : d → ℂ} (hc : ∀ j, c j * c j = 1) (ε η : d → Bool) :

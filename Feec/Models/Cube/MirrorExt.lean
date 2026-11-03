@@ -153,15 +153,11 @@ theorem norm_sq_of_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {f : T2 d}
 theorem toL2_ext_mem {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {Φ : (d → ℝ) → ℂ}
     (hΦ : Domain.IsTest (Q d) Φ) : toL2 (continuous_ext c hΦ) ∈ paritySub c := by
   refine mem_paritySub.2 fun k n => ?_
-  rw [mFourierCoeff_toL2, mFourierCoeff_toL2, ← flipB_eq_flipAt, ← mFourierCoeff_comp_reflB]
-  have e : (fun x => ext c Φ (reflB (fun j => decide (j = k)) x)) =
+  rw [mFourierCoeff_toL2, mFourierCoeff_toL2, ← flipB_single, ← mFourierCoeff_comp_reflB]
+  have e : (fun x => ext c Φ (reflB (single k) x)) =
       fun x => c k * ext c Φ x := by
     funext x
-    rw [ext_reflB hc]
-    congr 1
-    simp only [sign, decide_eq_true_eq]
-    rw [Finset.prod_ite_eq' Finset.univ k]
-    simp
+    rw [ext_reflB hc, sign_single]
   rw [e]
   simp only [mFourierCoeff, smul_eq_mul]
   rw [← integral_const_mul]

@@ -115,7 +115,8 @@ end Feec.Models.Cube.DeRhamIdent
 namespace Feec.Models.Cube.RowWise
 
 open Feec.Models.Torus.GradCurl (Space)
-open Feec.Models.Cube.Geometry (Q resQ resQF ext per reflB sign)
+open Feec.Models.Cube.Geometry (Q resQ resQF ext per reflB sign single flipB_single sign_single
+  reflB_single_proj_of_face)
 open Feec.Fourier.TorusWeak (toL2 toL2_ae_eq IsSmooth proj)
 open Feec.Fourier.Torus (flipAt flipAt_mem_bandN)
 
@@ -508,16 +509,6 @@ theorem mFourierCoeff_X_neg (hc : ∀ j, conj (c j) = c j)
     mFourierCoeff (X c (ofRealL _ u) : UnitAddTorus (Fin 3) → ℂ) (-n) =
       conj (mFourierCoeff (X c (ofRealL _ u) : UnitAddTorus (Fin 3) → ℂ) n) :=
   (TorusWeak.star_eq_self_iff _).1 (by rw [X_star hc, star_ofRealL]) n
-
-/-- The single reflection `R_k`. -/
-def single (k : Fin 3) : Fin 3 → Bool := fun j => decide (j = k)
-
-theorem flipB_single (k : Fin 3) (n : Fin 3 → ℤ) : flipB (single k) n = flipAt k n := by
-  funext j; simp [flipB, single]
-
-theorem sign_single (k : Fin 3) : sign c (single k) = c k := by
-  rw [sign, Finset.prod_eq_single k (fun j _ hj => by simp [single, hj]) (by simp)]
-  simp [single]
 
 theorem flipB_xor (ε η : Fin 3 → Bool) (n : Fin 3 → ℤ) :
     flipB (fun j => xor (ε j) (η j)) n = flipB ε (flipB η n) := by
@@ -1559,19 +1550,6 @@ theorem abs_pd_reLift_le {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c
     ((⟨partialT c g, TorusWeak.continuous_partialT hg.contDiff_one c⟩ :
       C(UnitAddTorus (Fin 3), ℂ)).norm_coe_le_norm _)
 
-/-- The reflection fixes the faces: if `y_c ∈ {0, ½}` then `R_c (proj y) = proj y`. -/
-theorem reflB_proj_of_face {c : Fin 3} {y : R3} (h : y c = 0 ∨ y c = 1 / 2) :
-    reflB (single c) (proj y) = proj y := by
-  funext j
-  by_cases hj : j = c
-  · subst hj
-    simp only [reflB, single, decide_true, ↓reduceIte, proj]
-    rcases h with h | h
-    · rw [h]; simp
-    · rw [h, ← AddCircle.coe_neg, show (-(1 / 2 : ℝ)) = 1 / 2 - 1 by norm_num,
-        AddCircle.coe_sub, AddCircle.coe_period, sub_zero]
-  · simp [reflB, single, hj]
-
 /-- **Parity of a trigonometric polynomial**: if `f(flip_ε k) = s f(k)` on a reflection-invariant
 support, then `P(R_ε x) = s P(x)`. -/
 theorem trigPoly_reflB {ε : Fin 3 → Bool} {f : lp (fun _ : Fin 3 → ℤ => ℂ) 2}
@@ -1594,7 +1572,7 @@ theorem reLift_eq_zero_of_odd {c : Fin 3} {f : lp (fun _ : Fin 3 → ℤ => ℂ)
   have h := trigPoly_reflB (ε := single c) (s := -1)
     (fun k hk => by rw [flipB_single]; exact hSr k hk)
     (fun k => by rw [flipB_single, hf]; ring) (proj y)
-  rw [reflB_proj_of_face hy] at h
+  rw [reflB_single_proj_of_face hy] at h
   have h0 : trigPoly f S (proj y) = 0 := by linear_combination h / 2
   simp [reLift, h0]
 

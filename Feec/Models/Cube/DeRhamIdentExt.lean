@@ -67,18 +67,7 @@ section Fold
 
 variable [DecidableEq d]
 
-/-! ### Single reflections and signs -/
-
-/-- The single reflection `R_j` as a Bool vector. -/
-def single (j : d) : d → Bool := fun i => decide (i = j)
-
-omit [Fintype d] in
-theorem flipB_single (j : d) (m : d → ℤ) : flipB (single j) m = flipAt j m :=
-  congrFun (flipB_eq_flipAt j) m
-
-theorem sign_single (c : d → ℂ) (j : d) : sign c (single j) = c j := by
-  rw [sign, Finset.prod_eq_single j (fun i _ hi => by simp [single, hi]) (by simp)]
-  simp [single]
+/-! ### Signs -/
 
 /-- Reversing the parity of `x_j` multiplies the sign of `R_ε` by `±1`. -/
 theorem sign_update (c : d → ℂ) (j : d) (ε : d → Bool) :
@@ -91,20 +80,6 @@ theorem sign_update (c : d → ℂ) (j : d) (ε : d → Bool) :
     Finset.prod_congr rfl fun i hi => by
       rw [Function.update_of_ne (Finset.ne_of_mem_erase hi)]]
   by_cases h : ε j <;> simp [h]
-
-omit [Fintype d] in
-/-- **The reflections fix the faces**: if `y_j ∈ {0, ½}` then `R_j (proj y) = proj y`. -/
-theorem reflB_single_proj_of_face {j : d} {y : d → ℝ} (h : y j = 0 ∨ y j = 1 / 2) :
-    reflB (fun i => decide (i = j)) (proj y) = proj y := by
-  funext i
-  by_cases hi : i = j
-  · subst hi
-    simp only [reflB, decide_true, ↓reduceIte, proj]
-    rcases h with h | h
-    · rw [h]; simp
-    · rw [h, ← AddCircle.coe_neg, show (-(1 / 2 : ℝ)) = 1 / 2 - 1 by norm_num,
-        AddCircle.coe_sub, AddCircle.coe_period, sub_zero]
-  · simp [reflB, hi]
 
 /-! ### Folding -/
 
@@ -127,9 +102,7 @@ theorem fold_eq_zero_of_face {c : d → ℂ} (hc : ∀ j, c j * c j = 1) {j : d}
       -(sign c ε * g (reflB ε (proj y))) := fun ε => by
     change sign c (fun i => xor (ε i) (single j i)) *
       g (reflB (fun i => xor (ε i) (single j i)) (proj y)) = _
-    rw [sign_xor hc, sign_single, hcj, ← reflB_comp]
-    change _ * g (reflB ε (reflB (fun i => decide (i = j)) (proj y))) = _
-    rw [reflB_single_proj_of_face hy]
+    rw [sign_xor hc, sign_single, hcj, ← reflB_comp, reflB_single_proj_of_face hy]
     ring
   simp only [hterm, Finset.sum_neg_distrib] at hS
   rw [fold] at hS ⊢

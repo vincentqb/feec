@@ -260,7 +260,7 @@ theorem closed_not_exact (i : Fin n) {m : ℕ} (hm : m + 1 = p) :
   refine ⟨⟨coeffForm_powSpan_le_homForm m 1 (powDx_mem_coeffForm i m), extDeriv_powDx i m⟩, ?_⟩
   rintro ⟨η, hη, hηd⟩
   have h := Koszul.extDeriv_koszul_add_koszul_extDeriv_of_isHomogeneous hη.2 hη.1
-  rw [PolynomialForms.koszul_eq_zero_of_isDeg_zero hη.1, Koszul.extDeriv_zero, zero_add,
+  rw [Koszul.IsDeg.koszul_eq_zero hη.1, Koszul.extDeriv_zero, zero_add,
     add_zero, hm, CharP.cast_eq_zero, zero_smul] at h
   exact koszul_powDx_ne_zero i m (by rw [← hηd, Koszul.extDerivₗ_apply, h])
 

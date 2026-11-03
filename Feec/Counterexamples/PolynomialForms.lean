@@ -41,13 +41,6 @@ open Feec.Koszul ExteriorFibre
 
 variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
 
-/-- The Koszul differential vanishes on `0`-forms. -/
-theorem koszul_eq_zero_of_isDeg_zero {ω : PolyForm K d} (hω : IsDeg 0 ω) : koszul ω = 0 := by
-  funext s
-  rw [koszul_apply]
-  refine sum_eq_zero fun j hj => ?_
-  rw [hω (insert j s) (by rw [card_insert_of_notMem (mem_compl.1 hj)]; omega), mul_zero]
-
 /-- `κ (P_r⁻Λ¹) ⊆ P_rΛ⁰`. -/
 theorem koszul_mem_polyForm_of_mem_polyFormMinus {r : ℕ} (hr : 1 ≤ r) {v : PolyForm K d}
     (hv : v ∈ polyFormMinus K d r 1) : koszul v ∈ polyForm K d r 0 := by
@@ -65,7 +58,7 @@ theorem extDeriv_not_mem_polyFormMinus [CharZero K] {r s : ℕ} (hr : 1 ≤ r) (
   intro hv
   have h1 := koszul_mem_polyForm_of_mem_polyFormMinus hr hv
   have h2 := extDeriv_koszul_add_koszul_extDeriv_of_mem hω
-  rw [koszul_eq_zero_of_isDeg_zero hω.1] at h2
+  rw [IsDeg.koszul_eq_zero hω.1] at h2
   have h0 : extDeriv (0 : PolyForm K d) = 0 := by
     funext t; simp [extDeriv_apply]
   rw [h0, zero_add, add_zero] at h2

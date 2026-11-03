@@ -60,6 +60,14 @@ variable {𝕜 : Type*} [RCLike 𝕜] {n : ℕ}
 /-- The index type of `k`-forms on `ℝⁿ`: the `k`-subsets of `Fin n` (empty unless `0 ≤ k ≤ n`). -/
 abbrev formIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (#s : ℤ) = k}
 
+/-- Sums over `Finset (Fin n)` of terms vanishing off degree `k` are sums over `formIdx n k`. -/
+theorem sum_eq_sum_formIdx {M : Type*} [AddCommMonoid M] {k : ℕ} {f : Finset (Fin n) → M}
+    (hf : ∀ s, #s ≠ k → f s = 0) : ∑ s, f s = ∑ s : formIdx n k, f s.1 := by
+  have h0 : ∑ s : {s : Finset (Fin n) // ¬ ((#s : ℤ) = (k : ℤ))}, f s = 0 :=
+    Finset.sum_eq_zero fun s _ => hf s.1 (fun h => s.2 (by rw [h]))
+  rw [← Fintype.sum_subtype_add_sum_subtype (fun s : Finset (Fin n) => (#s : ℤ) = (k : ℤ)) f, h0,
+    add_zero]
+
 /-- A `k`-form extended by zero to a family indexed by all subsets of `Fin n`. -/
 def formExt {k : ℤ} {F : Type*} [Zero F] (w : formIdx n k → F) (s : Finset (Fin n)) : F :=
   if h : (#s : ℤ) = k then w ⟨s, h⟩ else 0

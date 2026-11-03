@@ -1292,14 +1292,6 @@ theorem ae_glue_eq_local (E : LocalElement n) {M : SimplicialMesh n} {k : ℕ} (
   change E.extendPW M u T' t s.1 = _
   rw [E.extendPW_of_mem M u hT']
 
-/-- Sums over `Finset (Fin n)` of terms vanishing off degree `k`. -/
-theorem sum_eq_sum_formIdx {k : ℕ} {f : Finset (Fin n) → ℝ} (hf : ∀ s, #s ≠ k → f s = 0) :
-    ∑ s, f s = ∑ s : formIdx n k, f s.1 := by
-  have h0 : ∑ s : {s : Finset (Fin n) // ¬ ((#s : ℤ) = (k : ℤ))}, f s = 0 :=
-    Finset.sum_eq_zero fun s _ => hf s.1 (fun h => s.2 (by rw [h]))
-  rw [← Fintype.sum_subtype_add_sum_subtype (fun s : Finset (Fin n) => (#s : ℤ) = (k : ℤ)) f, h0,
-    add_zero]
-
 /-- **The local fields are controlled by the glued field** on any set containing their simplex
 (any element family and mesh with `interior T ⊆ Ω` for every simplex `T`). -/
 theorem sum_integral_sq_le_of_subset (E : LocalElement n) {M : SimplicialMesh n}

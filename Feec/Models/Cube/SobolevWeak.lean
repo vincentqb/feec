@@ -387,13 +387,6 @@ section Bernstein
 
 variable {k : ℕ}
 
-theorem sum_eq_sum_formIdx' {f : Finset (Fin n) → ℝ} (hf : ∀ s, #s ≠ k → f s = 0) :
-    ∑ s, f s = ∑ s : formIdx n k, f s.1 := by
-  have h0 : ∑ s : {s : Finset (Fin n) // ¬ ((#s : ℤ) = (k : ℤ))}, f s = 0 :=
-    Finset.sum_eq_zero fun s _ => hf s.1 (fun h => s.2 (by rw [h]))
-  rw [← Fintype.sum_subtype_add_sum_subtype (fun s : Finset (Fin n) => (#s : ℤ) = (k : ℤ)) f, h0,
-    add_zero]
-
 theorem integrable_sq_of_continuous {f : (Fin n → ℝ) → ℝ} (hf : Continuous f) :
     Integrable (fun y => f y ^ 2) (volume.restrict (Q (Fin n))) :=
   (Feec.Domain.memLp_of_continuous measurableSet_Q isBounded_Qn hf).integrable_sq
@@ -496,7 +489,7 @@ theorem integral_norm_iteratedFDeriv_truncField_sq_le (x : Seq n k) (M p : ℕ) 
     refine Finset.sum_eq_zero fun r _ => ?_
     have : (fun z => w z s) = fun _ => 0 := funext fun z => truncField_of_ne x M z hs
     simp [a, this, iterPartial_zero]
-  rw [sum_eq_sum_formIdx' h0]
+  rw [Feec.Domain.sum_eq_sum_formIdx h0]
   set c := fun (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) => cf (trunc M k x) m (idx k t)
   calc ∑ t : formIdx n (k : ℤ), ∑ r : Fin p → Fin n, ∫ y in Q (Fin n), (a t.1 r y) ^ 2
       ≤ ∑ t : formIdx n (k : ℤ), ∑ r : Fin p → Fin n, ∑ m ∈ bandS M,

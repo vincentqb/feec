@@ -409,7 +409,7 @@ theorem mem_stationary_torusD_of (hd : ∀ i, 0 < d i) {y : PiLp 2 Space}
     (hst : y ∈ (torusD hd).waveGroup.stationary) : (y 1 : Space 1) = 0 := by
   rw [← realD_eq_torusD hd] at hst
   exact Models.Cube.Parity.eq_zero_of_mem_stationary_symAlong _
-    (fun _ h => (dfreq_eq_zero_iff hd).1 h) h1 hst
+    (fun _ => (dfreq_eq_zero_iff hd).1) h1 hst
 
 end Spectral
 

@@ -71,7 +71,7 @@ namespace Feec.Models.Box.Mirror
 open Feec.Fourier Feec.Fourier.GradCurl Feec.ShortHilbertComplex Feec.Models.Cube.MirrorExt
 open Feec.HilbertComplex (ScaledEmbedding totalSub ReducingSubcomplex)
 open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self leviCivita3_sgn)
-open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_comm)
+open Feec.Fourier.Torus (flipAt flipAt_apply)
 open Feec.Models.Cube.Mirror (cV cE cB cV_sq cE_sq cB_sq fib
   symmetries action J SpaceQ VQ MQ inner_J eight_pos range_J complexQ k0 M0 M0_apply cosCoeff
   cosCoeff_eq_zero cosE coe_cosE cosE_mem_fixed cosState cosState_zero cosState_one cosState_two

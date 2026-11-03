@@ -947,8 +947,8 @@ theorem eq_zero_of_div_curl_symAlong (ξ : (Fin 3 → ℤ) → Freq) (hξ : ∀ 
 theorem eq_zero_of_div_curl {E : MatL} (hE : (E : Space 1) ∈ rowAction.fixed 1)
     (hd : ∀ n, div (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n) = 0)
     (hc : ∀ n, curl (Fourier.Torus.freq n) ((E : (Fin 3 → ℤ) → Mat) n) = 0) : E = 0 :=
-  eq_zero_of_div_curl_symAlong Fourier.Torus.freq (fun _ => Fourier.Torus.freq_eq_zero_iff.1) hE hd
-    hc
+  eq_zero_of_div_curl_symAlong Fourier.Torus.freq (fun _ => Fourier.Torus.freq_eq_zero_iff.1)
+    hE hd hc
 
 /-- **Stationary data with `E` of electric parity have `E = 0`** along a frequency map `ξ`
 vanishing only at `0` (the electric harmonic fields vanish). -/
@@ -979,8 +979,7 @@ theorem mem_stationary_iff {y : PiLp 2 Space} (h0 : (y 0 : Space 0) = 0)
   constructor
   · intro hst
     refine ⟨eq_zero_of_mem_stationary_symAlong Fourier.Torus.freq
-      (fun _ => Fourier.Torus.freq_eq_zero_iff.1) h1
-      hst, fun n => ?_⟩
+      (fun _ => Fourier.Torus.freq_eq_zero_iff.1) h1 hst, fun n => ?_⟩
     have e := congrArg (fun w : PiLp 2 (W3 Vec Mat Mat) => w 1)
       (waveSym_symAlong_fibre_eq_zero Fourier.Torus.freq hst n)
     simp only [waveSym_symAlong_one, PiLp.zero_apply] at e

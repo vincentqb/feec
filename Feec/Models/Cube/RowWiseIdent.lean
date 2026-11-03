@@ -39,10 +39,10 @@ test fields; the parities bound the cut-off error near the faces.
 ## Only stationary data propagate on `Q`
 
 The wave group on `Q` is the restriction of the torus wave group (`RowWise.waveGroup_J`), which
-has pure point spectrum. That forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces
-stationarity on `Q` (`RowWise.forward_iff`, `RowWise.mem_invariantCore_tsd_iff`, in
-`Feec.Models.Cube.Ident`) is the case `ℓ = (½, ½, ½)` of the box results of
-`Feec.Models.Box.EigenDense`.
+has pure point spectrum. Forward invariance of `{0} × S₁ × S₂`, `S₁, S₂ ⊆ L²(TSD)`, forces
+stationarity on `Q` (`RowWise.forward_iff`, `RowWise.mem_invariantCore_tsd_iff` in
+`Feec.Models.Cube.Ident`, the case `ℓ = (½, ½, ½)` of the box results of
+`Feec.Models.Box.EigenDense`).
 
 ## Main definitions
 

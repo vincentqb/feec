@@ -124,7 +124,8 @@ theorem act_mem_torusBand (hY : ∀ k n, (Y.R k).σ n = Fourier.Torus.flipAt k n
   rw [hY] at hv
   by_cases hn : n ∈ Fourier.Torus.bandN N
   · simp [bandFibre, hn]
-  · have hn' : Fourier.Torus.flipAt k n ∉ Fourier.Torus.bandN N := (Fourier.Torus.flipAt_mem_bandN k).not.2 hn
+  · have hn' : Fourier.Torus.flipAt k n ∉ Fourier.Torus.bandN N :=
+      (Fourier.Torus.flipAt_mem_bandN k).not.2 hn
     have hv0 : v = 0 := by simpa [bandFibre, hn'] using hv
     simp [bandFibre, hn, hv0]
 

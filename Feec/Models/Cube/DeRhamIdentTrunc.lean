@@ -321,7 +321,8 @@ theorem trunc_eq_zero_of_notMem {N k : ℕ}
 
 theorem flipAt_mem_bandS {N : ℕ} (j : Fin n) {m : Fin n → ℤ} (hm : m ∈ bandS N) :
     Fourier.Torus.flipAt j m ∈ bandS N :=
-  (Set.Finite.mem_toFinset _).2 ((Fourier.Torus.flipAt_mem_bandN j).2 ((Set.Finite.mem_toFinset _).1 hm))
+  (Set.Finite.mem_toFinset _).2
+    ((Fourier.Torus.flipAt_mem_bandN j).2 ((Set.Finite.mem_toFinset _).1 hm))
 
 /-- Bounds for the lifts of the truncations. -/
 theorem trigLift_bounds (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))

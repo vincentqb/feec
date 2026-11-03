@@ -53,7 +53,7 @@ open Set MeasureTheory Filter UnitAddTorus Feec.Fourier.TorusWeak
 namespace Feec.Models.Cube.MirrorExt
 
 open Geometry
-open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_flipAt flipAt_involutive)
+open Feec.Fourier.Torus (flipAt flipAt_apply flipAt_involutive)
 
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩

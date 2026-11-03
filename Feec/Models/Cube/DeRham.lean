@@ -55,8 +55,8 @@ the unitary exchange of the spaces and of the harmonic forms is.
 
 ## Main definitions
 
-* `reflFreq` (the frequency side of `Feec.Fourier.Torus.flipAt`), `reflSign`, `reflForm`, `parSign`; `symmetries`, `action`, `complex`,
-  `relative`, `absolute`.
+* `reflFreq` (the reflection of `ℝᵈ` matching `Feec.Fourier.Torus.flipAt`, `freq_flipAt`),
+  `reflSign`, `reflForm`, `parSign`; `symmetries`, `action`, `complex`, `relative`, `absolute`.
 * `complForm`, `starLp`, `hodgeStar`, `harmonicHodgeStar` (the Hodge star up to sign).
 
 ## Main results

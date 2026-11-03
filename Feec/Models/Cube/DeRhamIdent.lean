@@ -116,9 +116,7 @@ theorem refl_cnj (rel : Bool) (j : Fin n) (i : Fin (Fintype.card (Fin n) + 1)) (
     refl rel j i (cnj i u) = cnj i (refl rel j i u) := by
   refine Lp.ext_count fun m => ?_
   rw [coeFn_refl, coeFn_cnj, coeFn_cnj, coeFn_refl]
-  have e : Fourier.Torus.flipAt j (-m) = -Fourier.Torus.flipAt j m := by
-    funext a; by_cases h : a = j <;> simp [h]
-  rw [e]
+  rw [Fourier.Torus.flipAt_neg]
   ext t
   simp only [PiLp.smul_apply, DeRham.reflForm_apply, entryConj_apply, smul_eq_mul, map_mul]
   congr 1

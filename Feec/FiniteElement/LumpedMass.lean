@@ -75,14 +75,19 @@ theorem p1Grad_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) �
     p1Grad p u = ∑ j, u (p j) • baryGrad p j := by
   simp [p1Grad]
 
-/-- The `P₁` interpolant `Πₜu = Σⱼ u(pⱼ) λⱼ` of the nodal values `u` on the simplex `p`. -/
-def p1Interp (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
-  ∑ j, u (p j) * baryCoord p x j
+/-- The `P₁` interpolant `Πₜu = Σⱼ u(pⱼ) λⱼ` of the nodal values `u` on the simplex `p`, linear
+in `u`. -/
+def p1Interp (p : Fin (n + 1) → Fin n → ℝ) : ((Fin n → ℝ) → ℝ) →ₗ[ℝ] (Fin n → ℝ) → ℝ :=
+  ∑ j, (LinearMap.proj (p j)).smulRight fun x => baryCoord p x j
+
+theorem p1Interp_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
+    p1Interp p u x = ∑ j, u (p j) * baryCoord p x j := by
+  simp [p1Interp]
 
 /-- `Πₜu` is affine with gradient `p1Grad p u`. -/
 theorem p1Interp_sub (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x y : Fin n → ℝ) :
     p1Interp p u x - p1Interp p u y = p1Grad p u ⬝ᵥ (x - y) := by
-  simp only [p1Interp, p1Grad_apply, ← sum_sub_distrib, ← mul_sub, baryCoord_sub, dotProduct,
+  simp only [p1Interp_apply, p1Grad_apply, ← sum_sub_distrib, ← mul_sub, baryCoord_sub, dotProduct,
     Pi.sub_apply, mul_sum, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, sum_mul]
   rw [Finset.sum_comm]
   simp only [mul_assoc]
@@ -90,7 +95,7 @@ theorem p1Interp_sub (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) �
 /-- `Πₜu` interpolates `u` at the vertices. -/
 theorem p1Interp_vertex {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edgeMatrix p).det)
     (u : (Fin n → ℝ) → ℝ) (j : Fin (n + 1)) : p1Interp p u (p j) = u (p j) := by
-  simp [p1Interp, baryCoord_vertex hp]
+  simp [p1Interp_apply, baryCoord_vertex hp]
 
 /-- **The `P₁` stiffness form** `a(u, w) = Σ_T ∫_T ∇Πₜu · ∇Πₜw` of the mesh `M`, on nodal
 values `u, w : ℝⁿ → ℝ` (only the values at the vertices enter), assembled elementwise; it is

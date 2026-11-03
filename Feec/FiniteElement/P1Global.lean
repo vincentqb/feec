@@ -123,9 +123,13 @@ theorem integral_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (
 
 /-! ### The `P₁` interpolant as a Whitney `0`-form -/
 
-/-- The `0`-form `Πₜu dx_∅` of the `P₁` interpolant of the nodal values `u` on `p`. -/
-def p1Form (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) : FormField n :=
-  fun x => Pi.single ∅ (p1Interp p u x)
+/-- The `0`-form `Πₜu dx_∅` of the `P₁` interpolant of the nodal values `u` on `p`, linear in
+`u`. -/
+def p1Form (p : Fin (n + 1) → Fin n → ℝ) : ((Fin n → ℝ) → ℝ) →ₗ[ℝ] FormField n :=
+  (LinearMap.single ℝ (fun _ => ℝ) ∅).compLeft (Fin n → ℝ) ∘ₗ p1Interp p
+
+theorem p1Form_apply (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
+    p1Form p u x = Pi.single ∅ (p1Interp p u x) := rfl
 
 /-- The Whitney `0`-form of the vertex `j` is the barycentric coordinate `λⱼ`. -/
 theorem whitneyForm_singleton (p : Fin (n + 1) → Fin n → ℝ) (j : Fin (n + 1)) :
@@ -136,8 +140,8 @@ theorem whitneyForm_singleton (p : Fin (n + 1) → Fin n → ℝ) (j : Fin (n + 
 theorem p1Form_eq_sum (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) :
     p1Form p u = ∑ j, u (p j) • whitneyForm p {j} := by
   funext x s
-  simp only [p1Form, whitneyForm_singleton, Finset.sum_apply, Pi.smul_apply, smul_eq_mul,
-    p1Interp, Pi.single_apply]
+  simp only [p1Form_apply, whitneyForm_singleton, Finset.sum_apply, Pi.smul_apply, smul_eq_mul,
+    p1Interp_apply, Pi.single_apply]
   split_ifs <;> simp
 
 theorem p1Form_mem_whitneySpace (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) :
@@ -169,27 +173,13 @@ theorem whitneyFaceDof_singleton (x : Fin n → ℝ) (w : contForms n) :
 
 /-! ### The global `P₁` function -/
 
-/-- `Πₜ` is linear in the nodal values. -/
-theorem p1Form_add (p : Fin (n + 1) → Fin n → ℝ) (u w : (Fin n → ℝ) → ℝ) :
-    p1Form p (u + w) = p1Form p u + p1Form p w := by
-  funext x s
-  simp only [p1Form, p1Interp, Pi.add_apply, add_mul, sum_add_distrib, Pi.single_apply]
-  split_ifs <;> simp
-
-theorem p1Form_smul (p : Fin (n + 1) → Fin n → ℝ) (c : ℝ) (u : (Fin n → ℝ) → ℝ) :
-    p1Form p (c • u) = c • p1Form p u := by
-  funext x s
-  simp only [p1Form, p1Interp, Pi.smul_apply, smul_eq_mul, mul_assoc, ← mul_sum,
-    Pi.single_apply]
-  split_ifs <;> simp
-
 /-- The vertex values of the piece: `(Πₜu)(pⱼ) = u(pⱼ)`. -/
 theorem whitneyFaceDof_of_eq_p1Form (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ)
     {x : Fin n → ℝ} (hx : x ∈ vertexSet T) {w : contForms n}
     (hw : (w : FormField n) = p1Form T.points u) : whitneyFaceDof {x} 0 w = u x := by
   obtain ⟨j, rfl⟩ := mem_vertexSet.1 hx
   rw [whitneyFaceDof_singleton, hw]
-  simp [p1Form, p1Interp_vertex (isUnit_det_edgeMatrix T)]
+  simp [p1Form_apply, p1Interp_vertex (isUnit_det_edgeMatrix T)]
 
 /-- **The global `P₁` function** `u_h` with nodal values `u`: the `P₁` interpolants `Πₜu` on the
 simplices `T` of `M`, an element of the global Whitney `0`-form (Lagrange `P₁`) space. -/
@@ -203,8 +193,8 @@ def p1Global (M : SimplicialMesh n) :
         hg' (mem_singleton_self x)
       exact (whitneyFaceDof_of_eq_p1Form _ u hx rfl).trans
         (whitneyFaceDof_of_eq_p1Form _ u hx' rfl).symm⟩
-  map_add' u w := Subtype.ext (funext fun T => Subtype.ext (p1Form_add _ u w))
-  map_smul' c u := Subtype.ext (funext fun T => Subtype.ext (p1Form_smul _ c u))
+  map_add' u w := Subtype.ext (funext fun T => Subtype.ext (map_add (p1Form _) u w))
+  map_smul' c u := Subtype.ext (funext fun T => Subtype.ext (map_smul (p1Form _) c u))
 
 theorem p1Global_apply (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) (T : M.simplices) :
     (((p1Global M u : (whitneyElement n).Piecewise M 0) T : FormField n)) =
@@ -406,7 +396,7 @@ theorem extDeriv_p1Form_singleton (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin 
     (x : Fin n → ℝ) (j : Fin n) : extDeriv (p1Form p u) x {j} = p1Grad p u j := by
   rw [extDeriv_apply, Finset.sum_singleton, Finset.erase_singleton]
   simp only [sgn, Finset.filter_singleton, lt_irrefl, ite_false, card_empty, pow_zero, one_mul]
-  simpa [p1Form] using partialDeriv_p1Interp p u j x
+  simpa [p1Form_apply] using partialDeriv_p1Interp p u j x
 
 /-- **The global `P₁` functions in `L²(Ω)`**: `⟪u_h, w_h⟫ = Σ_T ∫_T Πₜu Πₜw`. -/
 theorem inner_glue_p1Global (M : SimplicialMesh n)
@@ -421,7 +411,7 @@ theorem inner_glue_p1Global (M : SimplicialMesh n)
   · refine integral_congr_ae (Filter.Eventually.of_forall fun x => ?_)
     simp only [formComp, LocalElement.extendPW_of_mem _ _ _ hT]
     refine (sum_formIdx_zero (fun s => p1Form T.points u x s * p1Form T.points w x s)).trans ?_
-    simp [p1Form]
+    simp [p1Form_apply]
   · exact ((continuous_formComp ((whitneyElement n).contDiff_extendPW M _ hT).continuous s).mul
       (continuous_formComp ((whitneyElement n).contDiff_extendPW M _ hT).continuous s)).continuousOn
       |>.integrableOn_compact T.isCompact_closedInterior
@@ -470,7 +460,7 @@ theorem continuous_baryCoord (p : Fin (n + 1) → Fin n → ℝ) (j : Fin (n + 1
 /-- `Πₜ 1 = 1`. -/
 theorem p1Interp_one (p : Fin (n + 1) → Fin n → ℝ) (x : Fin n → ℝ) :
     p1Interp p (fun _ => 1) x = 1 := by
-  simp [p1Interp, sum_baryCoord]
+  simp [p1Interp_apply, sum_baryCoord]
 
 /-- **The lumped mass is the integral of the hat function**: `m(x) = ⟪φₓ, 1⟫_{L²(Ω)} = ∫_Ω φₓ`,
 the row sum `Σ_y ⟪φₓ, φ_y⟫` of the consistent mass matrix (`1 = Σ_y φ_y` in `P₁`): the vertex
@@ -485,7 +475,7 @@ theorem inner_glue_p1Global_nodalIndicator_one (M : SimplicialMesh n)
   rw [inner_glue_p1Global M hM, lumpedMass]
   refine Finset.sum_congr rfl fun T _ => ?_
   simp only [p1Interp_one, mul_one]
-  simp only [p1Interp]
+  simp only [p1Interp_apply]
   rw [integral_finsetSum univ (f := fun j y => nodalIndicator x (T.points j) *
     baryCoord T.points y j) fun j _ => ((continuous_const.mul
     (continuous_baryCoord T.points j)).continuousOn.integrableOn_compact
@@ -506,8 +496,6 @@ theorem interior_subset_freudenthalMesh_domain (b : Fin n → ℝ) {s : ℝ} (hs
   simp only at this ⊢
   rwa [closure_Ioo (by linarith : b i ≠ b i + s), interior_Icc] at this
 
-/-! ### Linearity of the stiffness form -/
-
 section MaxNorm
 
 open Set
@@ -519,17 +507,13 @@ open Set
 theorem abs_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {u : (Fin n → ℝ) → ℝ} {B : ℝ}
     (hB : ∀ j, |u (T.points j)| ≤ B) {x : Fin n → ℝ} (hx : x ∈ T.closedInterior) :
     |p1Interp T.points u x| ≤ B := by
-  rw [p1Interp]
+  rw [p1Interp_apply]
   refine (abs_sum_le_sum_abs _ _).trans ?_
   calc ∑ j, |u (T.points j) * baryCoord T.points x j|
       ≤ ∑ j, B * baryCoord T.points x j := sum_le_sum fun j _ => by
         rw [abs_mul, abs_of_nonneg (baryCoord_mem_Icc T hx j).1]
         exact mul_le_mul_of_nonneg_right (hB j) (baryCoord_mem_Icc T hx j).1
     _ = B := by rw [← mul_sum, sum_baryCoord, mul_one]
-
-theorem p1Interp_sub_values (p : Fin (n + 1) → Fin n → ℝ) (u w : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
-    p1Interp p (u - w) x = p1Interp p u x - p1Interp p w x := by
-  simp [p1Interp, sub_mul, sum_sub_distrib]
 
 /-- **The `P₁` interpolation error in the maximum norm**: for `f ∈ C²` with
 `|∂ᵢ∂ₖ f| ≤ D` on `T` and `|y - z|_∞ ≤ δ` on `T`, `|f(x) - Πₜf(x)| ≤ n² D δ² / 2` on `T`
@@ -593,7 +577,7 @@ theorem abs_sub_p1Interp_le (T : Affine.Simplex ℝ (Fin n → ℝ) n) {f : (Fin
     rw [← sum_mul, h0, zero_mul]
   have e : f x - p1Interp T.points f x = -∑ j, baryCoord T.points x j *
       (f (T.points j) - f x - ∑ i, v j i * partialDeriv i f x) := by
-    simp only [p1Interp, mul_sub, sum_sub_distrib, hsum, ← sum_mul, sum_baryCoord, one_mul]
+    simp only [p1Interp_apply, mul_sub, sum_sub_distrib, hsum, ← sum_mul, sum_baryCoord, one_mul]
     simp_rw [mul_comm (baryCoord T.points x _)]
     ring
   rw [e, abs_neg]
@@ -615,7 +599,7 @@ theorem abs_sub_p1Interp_le_of_vertices (T : Affine.Simplex ℝ (Fin n → ℝ) 
     (hx : x ∈ T.closedInterior) : |f x - p1Interp T.points g x| ≤ ε + n ^ 2 * D * δ ^ 2 / 2 := by
   have h1 := abs_sub_p1Interp_le T hf hD hδ hx
   have h2 := abs_p1Interp_le T (u := f - g) hε hx
-  rw [p1Interp_sub_values] at h2
+  rw [map_sub, Pi.sub_apply] at h2
   calc |f x - p1Interp T.points g x|
       = |(p1Interp T.points f x - p1Interp T.points g x) + (f x - p1Interp T.points f x)| := by
         ring_nf

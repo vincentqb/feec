@@ -14,8 +14,9 @@ public import Feec.ForMathlib.Calculus.Partial
 * `abs_secondDiff_sub_le`: the truncation error of the centred second difference,
   `|g(h) - 2 g(0) + g(-h) - h² g''(0)| ≤ B h⁴ / 12` for `|g⁗| ≤ B` on `[-h, h]`;
 * `abs_taylor_one_le`: `|g(1) - g(0) - g'(0)| ≤ M / 2` for `|g''| ≤ M` on `[0, 1]`;
-* along the lines of `ℝⁿ` (`hasDerivAt_comp_line`, `hasDerivAt_comp_add_smul_single`): Taylor's
-  formula along an axis (`abs_axis_taylor_le`), the second difference along an axis
+* along the lines of `ℝⁿ` (`hasDerivAt_comp_line`;
+  `DifferentiableAt.hasDerivAt_comp_add_smul_single` in `Feec.ForMathlib.Calculus.Partial`):
+  Taylor's formula along an axis (`abs_axis_taylor_le`), the second difference along an axis
   (`abs_axis_secondDiff_le`) and its truncation error for `C⁴` functions
   (`abs_partialDeriv_sub_secondDiff_le`).
 
@@ -137,15 +138,6 @@ theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ}
     simpa using ((hasDerivAt_id t).smul_const v).const_add x
   have := hf.hasFDerivAt.comp_hasDerivAt t hl
   rwa [fderiv_apply_eq_sum_partialDeriv] at this
-
-/-- `r ↦ f(x + r eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t` (for differentiable `f`; the general
-statement is `DifferentiableAt.hasDerivAt_comp_add_smul_single`, used in this library; this form
-is kept as the target of the deprecated `MaxNormHeat.hasDerivAt_line`). -/
-theorem hasDerivAt_comp_add_smul_single {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f)
-    (x : Fin n → ℝ) (l : Fin n) (t : ℝ) :
-    HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
-      (partialDeriv l f (x + t • Pi.single l 1)) t :=
-  (hf _).hasDerivAt_comp_add_smul_single
 
 theorem sum_smul_single_mul (l : Fin n) (t : ℝ) (F : Fin n → ℝ) :
     ∑ i, (t • Pi.single l 1 : Fin n → ℝ) i * F i = t * F l := by

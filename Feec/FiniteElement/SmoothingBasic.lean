@@ -9,9 +9,10 @@ public import Feec.FiniteElement.SmoothedInterp
 
 The mesh-independent ingredients of the smoothed-projection estimates ([AFW2010], §5.5;
 [ChristiansenWinther2008]) for the smoother `smoothForm` of
-`Feec.FiniteElement.SmoothedInterp`, on any conforming simplicial mesh: Jensen's inequality for
-the mollifier and the pointwise bound of the smoothed form by the local mass
-(`sq_integral_mul_normed_le`, `abs_smoothForm_le`); the Whitney DOFs as face integrals and their
+`Feec.FiniteElement.SmoothedInterp`, on any conforming simplicial mesh: the local mass
+`locMass r x T` of `x` on the `r`-neighbourhood of `T`; Jensen's inequality for the mollifier and
+the pointwise bound of the smoothed form by the local mass (`sq_integral_mul_normed_le`,
+`abs_smoothForm_le`); the Whitney DOFs as face integrals and their
 agreement on shared faces (`simplexIntegral_globalInterp`, `simplexIntegral_eq_of_mem_globalSpace`,
 `sum_mul_minor_eq`); the boundary layer `nearBdry` of the reference simplex and its measure
 (`volume_real_nearBdry_le`, `mul_abs_integral_refSimplex_le`); glued fields almost everywhere
@@ -39,6 +40,31 @@ namespace Feec.FiniteElement
 open Feec.Domain Feec.Mesh Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
+
+/-! ### Local masses -/
+
+/-- The `L²` mass of `x` on the `r`-neighbourhood of `T`. -/
+def locMass {Ω : Set (Fin n → ℝ)} {k : ℤ} (r : ℝ) (x : L2F ℝ Ω (formIdx n k))
+    (T : Affine.Simplex ℝ (Fin n → ℝ) n) : ℝ :=
+  ∑ s : formIdx n k, ∫ t in Metric.cthickening r T.closedInterior,
+    (Ω.indicator ((x s : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) t) ^ 2
+
+theorem locMass_nonneg {Ω : Set (Fin n → ℝ)} {k : ℤ} (r : ℝ) (x : L2F ℝ Ω (formIdx n k))
+    (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 ≤ locMass r x T :=
+  Finset.sum_nonneg fun _ _ => setIntegral_nonneg Metric.isClosed_cthickening.measurableSet
+    fun _ _ => sq_nonneg _
+
+theorem integrable_sq_indicator {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (f : L2 ℝ Ω) :
+    Integrable fun t => (Ω.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2 :=
+  (memLp_indicator hΩ f).integrable_sq
+
+theorem integral_sq_indicator {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (f : L2 ℝ Ω) :
+    ∫ t, (Ω.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2 = ‖f‖ ^ 2 := by
+  rw [norm_sq_eq_integral_sq]
+  have e : (fun t => (Ω.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2) =
+      Ω.indicator fun t => ((f : (Fin n → ℝ) → ℝ) t) ^ 2 := by
+    funext t; by_cases ht : t ∈ Ω <;> simp [ht]
+  rw [e, integral_indicator hΩ]
 
 /-! ### The smoother at a point -/
 

@@ -628,14 +628,14 @@ theorem sum_integral_sq_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} {C :
       (cellField (1 / 2) (cubeFieldGlobalInterp (1 / 2) k hb
         (smoothForm p (isOpen_mesh_domain n N).measurableSet k x))
           (simplexCell (N := N + 1) (1 / 2) T) y s.1) ^ 2 ≤
-      2 ^ n * (C * 2 ^ k) ^ 2 * (32 / γ) ^ n * locMass x T := by
+      2 ^ n * (C * 2 ^ k) ^ 2 * (32 / γ) ^ n * locMass (2 * hN N) x T := by
   have hh := hN_pos N
   have hγ0 : 0 < γ := hp.gamma_pos
-  have hL := locMass_nonneg x T
+  have hL := locMass_nonneg (2 * hN N) x T
   set m := simplexCell (N := N + 1) (1 / 2) T
   have hTm : T.closedInterior ⊆ closedCell (1 / 2) m :=
     simplexCell_closedInterior_subset (L := 1 / 2) (N := N + 1) hT
-  set B := 2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T)
+  set B := 2 ^ k * √((32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T)
   have hB : ∀ z ∈ closedCell (1 / 2) m,
       ‖(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) z‖ ≤ B :=
     fun z hz => (pi_norm_le_iff_of_nonneg (by positivity)).2 fun s => by
@@ -651,7 +651,8 @@ theorem sum_integral_sq_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} {C :
     exact hC N m _ (fun z => isDeg_smoothForm _ _ k x z) B hB y (hTm hy)
   refine (sum_integral_sq_le_of_abs_le hT (contDiff_cellField _ _ (r := 0)).continuous hzb).trans
     (le_of_eq ?_)
-  have hr2 : √((32 / (γ * hN N)) ^ n * locMass x T) ^ 2 = (32 / (γ * hN N)) ^ n * locMass x T :=
+  have hr2 : √((32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T) ^ 2 =
+      (32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T :=
     Real.sq_sqrt (by positivity)
   rw [show (32 / γ) ^ n = hN N ^ n * (32 / (γ * hN N)) ^ n by rw [← mul_pow]; congr 1; field_simp]
   simp only [B]
@@ -672,10 +673,10 @@ theorem exists_norm_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) (hγ0 : 0 < γ) (h
   rw [show cubeSmoothedInterp n (1 / 2) (N + 1) hb p k x = _ from
     cubeSmoothedInterp_natCast hb p k x]
   refine (norm_sq_cubeGlue_le _ (fun T => 2 ^ n * (C k * 2 ^ k) ^ 2 * (32 / γ) ^ n *
-    locMass x T) fun T hT => sum_integral_sq_smoothedInterp_le hb
+    locMass (2 * hN N) x T) fun T hT => sum_integral_sq_smoothedInterp_le hb
       (fun N m w hw B hB y hy => hC k (1 / 2) (N + 1) m w hw B hB y hy) hp hγ1 x hT).trans ?_
   rw [← Finset.mul_sum]
-  calc 2 ^ n * (C k * 2 ^ k) ^ 2 * (32 / γ) ^ n * ∑ T ∈ (mesh n N).simplices, locMass x T
+  calc 2 ^ n * (C k * 2 ^ k) ^ 2 * (32 / γ) ^ n * ∑ T ∈ (mesh n N).simplices, locMass (2 * hN N) x T
       ≤ 2 ^ n * (C k * 2 ^ k) ^ 2 * (32 / γ) ^ n * ((6 ^ n * n.factorial : ℕ) * ‖x‖ ^ 2) :=
         mul_le_mul_of_nonneg_left (sum_locMass_le N x) (by positivity)
     _ = _ := (mul_assoc _ _ _).symm
@@ -744,7 +745,7 @@ theorem sqrt_mul_abs_fieldDof_sub_le {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
       (cellField (1 / 2) ω (simplexCell (1 / 2) T) -
         (smoothForm p (isOpen_mesh_domain n N).measurableSet k
           (cubeGlue n (1 / 2) (N + 1) k ω) : FormField n)))| ≤
-      hN N ^ k * (Cc * A * √(locMass (cubeGlue n (1 / 2) (N + 1) k ω) T) * 2 ^ (k + 1) *
+      hN N ^ k * (Cc * A * √(locMass (2 * hN N) (cubeGlue n (1 / 2) (N + 1) k ω) T) * 2 ^ (k + 1) *
         ((k + 1) * γ + 2 * n * (γ / 2))) := by
   set h := hN N
   have hh : 0 < h := hN_pos N
@@ -757,7 +758,7 @@ theorem sqrt_mul_abs_fieldDof_sub_le {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
   set η := dofTestForm i
   set t₀ : Fin n → ℝ := fun j => 1 / 2 / ((N + 1 : ℕ) : ℝ) * ((m j : ℕ) : ℝ)
   set X : (Fin n → ℝ) → Fin n → ℝ := fun y => h • planePoint g y + t₀
-  set Lm := locMass v T
+  set Lm := locMass (2 * hN N) v T
   have hω' := mem_cubeGlobalSpace.1 hω
   have hk : ∀ m, IsDeg k (ω m) := fun m => (hω'.2 m).1
   have hTm : T.closedInterior ⊆ closedCell (1 / 2) m :=
@@ -768,7 +769,7 @@ theorem sqrt_mul_abs_fieldDof_sub_le {k : ℕ} {A : ℝ} (hA0 : 0 ≤ A)
   have hmass : ∀ m', closedCell (1 / 2) m' ⊆ Metric.cthickening (2 * h) T.closedInterior →
       formL2Sq (closedCell (1 / 2) m') (cellField (1 / 2) ω m') ≤ Lm :=
     fun m' hsub => formL2Sq_cellField_le hk m' hsub
-  have hLm : 0 ≤ Lm := locMass_nonneg v T
+  have hLm : 0 ≤ Lm := locMass_nonneg _ v T
   have hH : 0 < √h ^ n := pow_pos (Real.sqrt_pos.2 hh) n
   -- the degree of freedom as an integral over the unit cube
   set F : (Fin n → ℝ) → ℝ := fun y => ∑ s, (u (X y) s - R (X y) s) * momentCoeff g η y s
@@ -898,15 +899,15 @@ theorem sum_integral_sq_sub_smoothedInterp_le (hb : ∀ j, 1 ≤ b j) {k : ℕ} 
         (smoothForm p (isOpen_mesh_domain n N).measurableSet k
           (cubeGlue n (1 / 2) (N + 1) k ω))) (simplexCell (N := N + 1) (1 / 2) T) y s.1) ^ 2 ≤
       2 ^ n * (AI * Fintype.card (CubeDofIdx b k) * (Cc * A * 2 ^ (k + 1) * ((k + 1) + n))) ^ 2 *
-        γ ^ 2 * locMass (cubeGlue n (1 / 2) (N + 1) k ω) T := by
+        γ ^ 2 * locMass (2 * hN N) (cubeGlue n (1 / 2) (N + 1) k ω) T := by
   set h := hN N
   have hh : 0 < h := hN_pos N
   have hγ0 : 0 < γ := hp.gamma_pos
   set m := simplexCell (N := N + 1) (1 / 2) T
   set v := cubeGlue n (1 / 2) (N + 1) k ω
   set R : FormField n := (smoothForm p (isOpen_mesh_domain n N).measurableSet k v : FormField n)
-  set Lm := locMass v T
-  have hLm : 0 ≤ Lm := locMass_nonneg v T
+  set Lm := locMass (2 * hN N) v T
+  have hLm : 0 ≤ Lm := locMass_nonneg _ v T
   have hω' := mem_cubeGlobalSpace.1 hω
   have hTm : T.closedInterior ⊆ closedCell (1 / 2) m :=
     simplexCell_closedInterior_subset (L := 1 / 2) (N := N + 1) hT
@@ -978,11 +979,13 @@ theorem exists_closeConst (k : ℕ) (hb : ∀ j, 1 ≤ b j) :
     (cubeFieldGlobalInterp (1 / 2) k hb (smoothForm p (isOpen_mesh_domain n N).measurableSet k
       (cubeGlue n (1 / 2) (N + 1) k ω)))‖ ^ 2 ≤ _
   rw [← map_sub]
-  refine (norm_sq_cubeGlue_le _ (fun T => K₀ * γ ^ 2 * locMass (cubeGlue n (1 / 2) (N + 1) k ω) T)
+  refine (norm_sq_cubeGlue_le _
+    (fun T => K₀ * γ ^ 2 * locMass (2 * hN N) (cubeGlue n (1 / 2) (N + 1) k ω) T)
     fun T hT => sum_integral_sq_sub_smoothedInterp_le hb hA0 hA hCc0 hCc hAI0 hAI hp hγ1 hin hω
       hT).trans ?_
   rw [← Finset.mul_sum]
-  calc K₀ * γ ^ 2 * ∑ T ∈ (mesh n N).simplices, locMass (cubeGlue n (1 / 2) (N + 1) k ω) T
+  calc K₀ * γ ^ 2 *
+        ∑ T ∈ (mesh n N).simplices, locMass (2 * hN N) (cubeGlue n (1 / 2) (N + 1) k ω) T
       ≤ K₀ * γ ^ 2 * ((6 ^ n * n.factorial : ℕ) * ‖cubeGlue n (1 / 2) (N + 1) k ω‖ ^ 2) :=
         mul_le_mul_of_nonneg_left (sum_locMass_le N _) (by positivity)
     _ = _ := by simp only [LinearMap.comp_apply, Submodule.subtype_apply]; ring

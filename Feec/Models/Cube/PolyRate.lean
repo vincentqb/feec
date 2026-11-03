@@ -1097,8 +1097,8 @@ theorem sq_norm_formL2_sub_smoothedInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBo
   set Ci := 1 + B * P * D
   have hCi : 0 ≤ Ci := by positivity
   -- the local masses of the gradients
-  set L : formIdx n k → Affine.Simplex ℝ (Fin n → ℝ) n → ℝ := fun s T => locMass (g s) T
-  have hL0 : ∀ s T, 0 ≤ L s T := fun s T => locMass_nonneg _ _
+  set L : formIdx n k → Affine.Simplex ℝ (Fin n → ℝ) n → ℝ := fun s T => locMass (2 * hN N) (g s) T
+  have hL0 : ∀ s T, 0 ≤ L s T := fun s T => locMass_nonneg _ _ _
   -- the derivative bound on a simplex
   have hder : ∀ T ∈ (mesh n N).simplices, ∀ x ∈ T.closedInterior,
       ‖iteratedFDeriv ℝ (0 + 1) (F : FormField n) x‖ ≤
@@ -1134,7 +1134,8 @@ theorem sq_norm_formL2_sub_smoothedInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBo
             refine mul_le_mul hfac1 (Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left ?_ hMρ0))
               (Real.sqrt_nonneg _) (by norm_num)
             refine Finset.sum_le_sum fun s' _ => ?_
-            refine setIntegral_mono_set (integrable_sq_indicator _).integrableOn
+            refine setIntegral_mono_set
+              (integrable_sq_indicator (isOpen_mesh_domain n N).measurableSet _).integrableOn
               (Eventually.of_forall fun _ => sq_nonneg _) (Eventually.of_forall fun t ht => ?_)
             have hxc' : x ∈ closure (cubeDomain n) := by rwa [← mesh_domain n N]
             have h1' := hp.norm_dil_sub_le hxc'

@@ -382,29 +382,6 @@ structure MeshData (M : SimplicialMesh n) (C c q : ℝ) : Prop where
   quasi : IsQuasiUniform M q
   meshSize_pos : 0 < M.meshSize
 
-/-- The `L²` mass of `x` on the `r`-neighbourhood of `T`. -/
-def locMass {Ω : Set (Fin n → ℝ)} {k : ℤ} (r : ℝ) (x : L2F ℝ Ω (formIdx n k))
-    (T : Affine.Simplex ℝ (Fin n → ℝ) n) : ℝ :=
-  ∑ s : formIdx n k, ∫ t in Metric.cthickening r T.closedInterior,
-    (Ω.indicator ((x s : L2 ℝ Ω) : (Fin n → ℝ) → ℝ) t) ^ 2
-
-theorem locMass_nonneg {Ω : Set (Fin n → ℝ)} {k : ℤ} (r : ℝ) (x : L2F ℝ Ω (formIdx n k))
-    (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 ≤ locMass r x T :=
-  Finset.sum_nonneg fun _ _ => setIntegral_nonneg Metric.isClosed_cthickening.measurableSet
-    fun _ _ => sq_nonneg _
-
-theorem integrable_sq_indicator {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (f : L2 ℝ Ω) :
-    Integrable fun t => (Ω.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2 :=
-  (memLp_indicator hΩ f).integrable_sq
-
-theorem integral_sq_indicator {Ω : Set (Fin n → ℝ)} (hΩ : MeasurableSet Ω) (f : L2 ℝ Ω) :
-    ∫ t, (Ω.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2 = ‖f‖ ^ 2 := by
-  rw [norm_sq_eq_integral_sq]
-  have e : (fun t => (Ω.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2) =
-      Ω.indicator fun t => ((f : (Fin n → ℝ) → ℝ) t) ^ 2 := by
-    funext t; by_cases ht : t ∈ Ω <;> simp [ht]
-  rw [e, integral_indicator hΩ]
-
 /-- The overlap constant `6ⁿ n! / (c qⁿ)`. -/
 def covConst (n : ℕ) (c q : ℝ) : ℝ := 6 ^ n * n.factorial / (c * q ^ n)
 

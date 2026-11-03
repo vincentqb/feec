@@ -354,7 +354,7 @@ theorem abs_paritySmoothForm_le (J : Finset (Fin n)) {γ : ℝ} (hγ : 0 < γ) (
     {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) {y : Fin n → ℝ}
     (hy : y ∈ T.closedInterior) (s : Finset (Fin n)) :
     |(paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k x : FormField n) y s| ≤
-      √(3 ^ n * (32 / (γ * hN N)) ^ n * locMass x T) := by
+      √(3 ^ n * (32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T) := by
   have hD : (mesh n N).domain = Geometry.Q (Fin n) := mesh_domain_eq_Q N
   have hyc : y ∈ closure (Geometry.Q (Fin n)) := by
     rw [← hD]; exact (mesh n N).closedInterior_subset_closure hT hy
@@ -368,7 +368,7 @@ theorem abs_paritySmoothForm_le (J : Finset (Fin n)) {γ : ℝ} (hγ : 0 < γ) (
       (integrableOn_Q_of_eq hD (x s')) (integrableOn_sq_Q_of_eq hD (x s')) hyI
       (parKernel_le hγ hγ1 N)
     have h2 : ∫ t in Metric.closedBall y (parKernel n γ hγ hγ1 N).radius,
-        (Geometry.Q (Fin n)).indicator f t ^ 2 ≤ locMass x T := by
+        (Geometry.Q (Fin n)).indicator f t ^ 2 ≤ locMass (2 * hN N) x T := by
       have hsub : Metric.closedBall y (parKernel n γ hγ hγ1 N).radius ⊆
           Metric.cthickening (2 * hN N) T.closedInterior := by
         refine (Metric.closedBall_subset_cthickening hy _).trans
@@ -378,7 +378,8 @@ theorem abs_paritySmoothForm_le (J : Finset (Fin n)) {γ : ℝ} (hγ : 0 < γ) (
         nlinarith
       have e : (Geometry.Q (Fin n)).indicator f = (mesh n N).domain.indicator f := by rw [hD]
       rw [e]
-      refine (setIntegral_mono_set (integrable_sq_indicator _).integrableOn
+      refine (setIntegral_mono_set
+        (integrable_sq_indicator (isOpen_mesh_domain n N).measurableSet _).integrableOn
         (Eventually.of_forall fun _ => sq_nonneg _) (Eventually.of_forall hsub)).trans ?_
       exact Finset.single_le_sum (f := fun s'' : formIdx n k =>
         ∫ t in Metric.cthickening (2 * hN N) T.closedInterior,
@@ -410,11 +411,11 @@ theorem exists_norm_paritySmoothedInterp_le (S : PolySeq) (J : Finset (Fin n)) {
   have hh := hN_pos N
   refine norm_sq_glue_le_locMass _ x _ (by have := hB0 k; have := hD0 k; positivity)
     fun T hT => ?_
-  have hL := locMass_nonneg x T
+  have hL := locMass_nonneg (2 * hN N) x T
   refine (Poly.sum_integral_sq_globalInterp_le S (hB k) (hB0 k) (hD k) hT (Real.sqrt_nonneg _)
     fun y hy s => abs_paritySmoothForm_le J hγ hγ1 x hT hy s).trans (le_of_eq ?_)
-  have hr2 : √(3 ^ n * (32 / (γ * hN N)) ^ n * locMass x T) ^ 2 =
-      3 ^ n * (32 / (γ * hN N)) ^ n * locMass x T := Real.sq_sqrt (by positivity)
+  have hr2 : √(3 ^ n * (32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T) ^ 2 =
+      3 ^ n * (32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T := Real.sq_sqrt (by positivity)
   rw [show (32 / γ) ^ n = hN N ^ n * (32 / (γ * hN N)) ^ n by rw [← mul_pow]; congr 1; field_simp]
   linear_combination (2 ^ n * hN N ^ n * (B k * Module.finrank ℝ (S.space n k) * D k) ^ 2) * hr2
 
@@ -591,7 +592,8 @@ theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : I
         ((polyElement n S).glue (mesh n N) k u) : FormField n)
         (simplexMap (lexEnum g m) ξ) s) * c s| ≤
       (∑ s, |c s|) * A *
-        √(locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)) *
+        √(locMass (2 * hN N) ((polyElement n S).glue (mesh n N) k u)
+          (T : Affine.Simplex ℝ (Fin n → ℝ) n)) *
         (if ξ ∈ nearBdry m γ then 2 else γ) := by
   classical
   set h := hN N
@@ -603,8 +605,8 @@ theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : I
   set x := simplexMap q ξ
   set uT : FormField n := ((u T : (polyElement n S).space T k) : FormField n)
   have huT : uT ∈ S.space n k := (u T).2
-  set L := locMass v (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-  have hL0 : 0 ≤ L := locMass_nonneg _ _
+  set L := locMass (2 * hN N) v (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+  have hL0 : 0 ≤ L := locMass_nonneg _ _ _
   set R := (∑ s, |c s|) * A * √L * (if ξ ∈ nearBdry m γ then 2 else γ)
   have hsq : 0 < √h ^ n := pow_pos (Real.sqrt_pos.2 hh) n
   have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
@@ -852,7 +854,8 @@ theorem sqrt_mul_abs_dof_err_par {N k : ℕ} {A D : ℝ} (hA0 : 0 ≤ A) (hA : I
         (paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
           ((polyElement n S).glue (mesh n N) k u)))| ≤
       3 * (n + 1) * D * A * γ * hN N ^ k *
-        √(locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)) := by
+        √(locMass (2 * hN N) ((polyElement n S).glue (mesh n N) k u)
+          (T : Affine.Simplex ℝ (Fin n → ℝ) n)) := by
   classical
   have hne := i.2
   set m := #g - 1
@@ -867,7 +870,8 @@ theorem sqrt_mul_abs_dof_err_par {N k : ℕ} {A D : ℝ} (hA0 : 0 ≤ A) (hA : I
   have huT : uT ∈ S.space n k := (u T).2
   set w : c1Forms n := paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
     ((polyElement n S).glue (mesh n N) k u)
-  set L := locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+  set L := locMass (2 * hN N) ((polyElement n S).glue (mesh n N) k u)
+    (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have huc : Continuous uT := (PolyKind.contDiff_of_mem_space huT).continuous
   have hwc : Continuous (w : FormField n) := (mem_c1Forms.1 w.2).continuous
   set F : (Fin m → ℝ) → ℝ := fun ξ =>
@@ -932,7 +936,8 @@ theorem sum_integral_sq_sub_interp_par {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
             (polyElement n S).Piecewise (mesh n N) k) T : (polyElement n S).space T k) :
               FormField n)) y s.1) ^ 2 ≤
       2 ^ n * (B * Module.finrank ℝ (S.space n k) * (3 * (n + 1) * D * A) * γ) ^ 2 *
-        locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n) := by
+        locMass (2 * hN N) ((polyElement n S).glue (mesh n N) k u)
+          (T : Affine.Simplex ℝ (Fin n → ℝ) n) := by
   set h := hN N
   have hh : 0 < h := hN_pos N
   set w := paritySmoothForm (parKernel n γ hγ hγ1 N) J (mesh_domain_eq_Q N) k
@@ -944,8 +949,9 @@ theorem sum_integral_sq_sub_interp_par {N k : ℕ} {A B D : ℝ} (hA0 : 0 ≤ A)
   have hPw : (Pw : FormField n) ∈ S.space n k := Pw.2
   set z : FormField n := uT - (Pw : FormField n)
   have hz : z ∈ S.space n k := Submodule.sub_mem _ huT hPw
-  set L := locMass ((polyElement n S).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-  have hL0 : 0 ≤ L := locMass_nonneg _ _
+  set L := locMass (2 * hN N) ((polyElement n S).glue (mesh n N) k u)
+    (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+  have hL0 : 0 ≤ L := locMass_nonneg _ _ _
   set C₁ := 3 * (n + 1) * D * A
   have hC₁ : 0 ≤ C₁ := by positivity
   have hsq : 0 < √h ^ n := pow_pos (Real.sqrt_pos.2 hh) n
@@ -1266,8 +1272,8 @@ theorem sq_norm_formL2_sub_paritySmoothedInterp_le {N k : ℕ} {B D : ℝ} (hB :
   set P := (Module.finrank ℝ (S.space n k) : ℝ)
   set Ci := 1 + B * P * D
   have hCi : 0 ≤ Ci := by positivity
-  set L : formIdx n k → Affine.Simplex ℝ (Fin n → ℝ) n → ℝ := fun s T => locMass (g s) T
-  have hL0 : ∀ s T, 0 ≤ L s T := fun s T => locMass_nonneg _ _
+  set L : formIdx n k → Affine.Simplex ℝ (Fin n → ℝ) n → ℝ := fun s T => locMass (2 * hN N) (g s) T
+  have hL0 : ∀ s T, 0 ≤ L s T := fun s T => locMass_nonneg _ _ _
   -- the derivative bound on a simplex
   have hder : ∀ T ∈ (mesh n N).simplices, ∀ x ∈ T.closedInterior,
       ‖iteratedFDeriv ℝ (0 + 1) (F : FormField n) x‖ ≤

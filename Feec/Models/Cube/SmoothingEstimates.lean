@@ -502,43 +502,21 @@ theorem integral_cubeSimplex_le {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equi
 
 /-! ### The uniform `L²` bound -/
 
-/-- The `L²` mass of `x` near `T`. -/
-def locMass {N : ℕ} {k : ℤ} (x : L2F ℝ (mesh n N).domain (formIdx n k))
-    (T : Affine.Simplex ℝ (Fin n → ℝ) n) : ℝ :=
-  ∑ s : formIdx n k, ∫ t in Metric.cthickening (2 * hN N) T.closedInterior,
-    ((mesh n N).domain.indicator ((x s : L2 ℝ (mesh n N).domain) : (Fin n → ℝ) → ℝ) t) ^ 2
-
-theorem locMass_nonneg {N : ℕ} {k : ℤ} (x : L2F ℝ (mesh n N).domain (formIdx n k))
-    (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 ≤ locMass x T :=
-  Finset.sum_nonneg fun _ _ => setIntegral_nonneg Metric.isClosed_cthickening.measurableSet
-    fun _ _ => sq_nonneg _
-
-theorem integrable_sq_indicator {N : ℕ} (f : L2 ℝ (mesh n N).domain) :
-    Integrable fun t => ((mesh n N).domain.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2 :=
-  (memLp_indicator (isOpen_mesh_domain n N).measurableSet f).integrable_sq
-
-theorem integral_sq_indicator {N : ℕ} (f : L2 ℝ (mesh n N).domain) :
-    ∫ t, ((mesh n N).domain.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2 = ‖f‖ ^ 2 := by
-  rw [norm_sq_eq_integral_sq]
-  have e : (fun t => ((mesh n N).domain.indicator (f : (Fin n → ℝ) → ℝ) t) ^ 2) =
-      (mesh n N).domain.indicator fun t => ((f : (Fin n → ℝ) → ℝ) t) ^ 2 := by
-    funext t; by_cases ht : t ∈ (mesh n N).domain <;> simp [ht]
-  rw [e, integral_indicator (isOpen_mesh_domain n N).measurableSet]
-
 /-- **Bounded overlap of the local masses**: `Σ_T m_T(x) ≤ 6ⁿ n! ‖x‖²`. -/
 theorem sum_locMass_le (N : ℕ) {k : ℤ} (x : L2F ℝ (mesh n N).domain (formIdx n k)) :
-    ∑ T ∈ (mesh n N).simplices, locMass x T ≤ (6 ^ n * n.factorial : ℕ) * ‖x‖ ^ 2 := by
+    ∑ T ∈ (mesh n N).simplices, locMass (2 * hN N) x T ≤ (6 ^ n * n.factorial : ℕ) * ‖x‖ ^ 2 := by
   set F : (Fin n → ℝ) → ℝ := fun t => ∑ s : formIdx n k,
     ((mesh n N).domain.indicator ((x s : L2 ℝ (mesh n N).domain) : (Fin n → ℝ) → ℝ) t) ^ 2
-  have hF : Integrable F := integrable_finsetSum _ fun s _ => integrable_sq_indicator _
+  have hΩ := (isOpen_mesh_domain n N).measurableSet
+  have hF : Integrable F := integrable_finsetSum _ fun s _ => integrable_sq_indicator hΩ _
   have hF0 : ∀ t, 0 ≤ F t := fun t => Finset.sum_nonneg fun _ _ => sq_nonneg _
-  have h1 : ∀ T : Affine.Simplex ℝ (Fin n → ℝ) n, locMass x T =
+  have h1 : ∀ T : Affine.Simplex ℝ (Fin n → ℝ) n, locMass (2 * hN N) x T =
       ∫ t in Metric.cthickening (2 * hN N) T.closedInterior, F t := fun T => by
-    rw [locMass, integral_finsetSum _ fun s _ => (integrable_sq_indicator _).integrableOn]
+    rw [locMass, integral_finsetSum _ fun s _ => (integrable_sq_indicator hΩ _).integrableOn]
   simp_rw [h1]
   refine (sum_integral_cthickening_le N hF hF0).trans (le_of_eq ?_)
-  rw [integral_finsetSum _ fun s _ => integrable_sq_indicator _, PiLp.norm_sq_eq_of_L2]
-  simp_rw [integral_sq_indicator]
+  rw [integral_finsetSum _ fun s _ => integrable_sq_indicator hΩ _, PiLp.norm_sq_eq_of_L2]
+  simp_rw [integral_sq_indicator hΩ]
 
 /-- `Σₛ ‖zₛ‖²_{L²(T)} ≤ 2ⁿ hⁿ K²` on a simplex of the cube mesh when `|z| ≤ K` there. -/
 theorem sum_integral_sq_le_of_abs_le {N k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
@@ -565,7 +543,7 @@ theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam 
     (T : Affine.Simplex ℝ (Fin n → ℝ) n) {y z : Fin n → ℝ} (hyc : y ∈ closure (cubeDomain n))
     (hz : z ∈ T.closedInterior) (hyz : dist y z ≤ hN N) (s : Finset (Fin n)) :
     |(smoothForm p (isOpen_mesh_domain n N).measurableSet k x : FormField n) y s| ≤
-      2 ^ k * √((32 / (γ * hN N)) ^ n * locMass x T) := by
+      2 ^ k * √((32 / (γ * hN N)) ^ n * locMass (2 * hN N) x T) := by
   have hh := hN_pos N
   have hγ0 := hp.gamma_pos
   have hMρ : 1 / volume.real (Metric.closedBall (0 : Fin n → ℝ) p.bump.rIn) =
@@ -579,7 +557,8 @@ theorem IsAdm.abs_smoothForm_le_locMass_of_near {N k : ℕ} {p : SmoothingParam 
   rw [hMρ]
   refine Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun s' _ => ?_)
     (by positivity))
-  refine setIntegral_mono_set (integrable_sq_indicator _).integrableOn
+  refine setIntegral_mono_set
+    (integrable_sq_indicator (isOpen_mesh_domain n N).measurableSet _).integrableOn
     (Eventually.of_forall fun _ => sq_nonneg _) (Eventually.of_forall fun t ht => ?_)
   have h1 := hp.norm_dil_sub_le hyc
   have h2 : dist t (p.center + p.factor • (y - p.center)) ≤ γ * hN N / 32 := by
@@ -597,7 +576,7 @@ theorem norm_sq_glue_le_locMass (E : LocalElement n) {N k : ℕ}
     (x : L2F ℝ (mesh n N).domain (formIdx n k)) (u : E.Piecewise (mesh n N) k) {K : ℝ}
     (hK : 0 ≤ K) (hloc : ∀ T (hT : T ∈ (mesh n N).simplices), ∑ s : formIdx n k,
       ∫ y in T.closedInterior, (((u ⟨T, hT⟩ : E.space T k) : FormField n) y s.1) ^ 2 ≤
-        K * locMass x T) :
+        K * locMass (2 * hN N) x T) :
     ‖E.glue (mesh n N) k u‖ ^ 2 ≤ K * ((6 ^ n * n.factorial : ℕ) * ‖x‖ ^ 2) := by
   refine (norm_sq_glue_le E (mesh n N) u _ hloc).trans ?_
   rw [← Finset.mul_sum]
@@ -617,7 +596,8 @@ theorem sum_integral_sq_le_locMass (E : LocalElement n) {N k : ℕ} (u : E.Piece
     (hsub : (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ⊆
       Metric.cthickening (2 * hN N) T.closedInterior) :
     ∑ s, ∫ y in (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
-      (((u T' : E.space T' k) : FormField n) y s) ^ 2 ≤ locMass (E.glue (mesh n N) k u) T :=
+      (((u T' : E.space T' k) : FormField n) y s) ^ 2 ≤
+        locMass (2 * hN N) (E.glue (mesh n N) k u) T :=
   sum_integral_sq_le_of_subset E (isOpen_mesh_domain n N).measurableSet
     (fun _ hT => by rw [mesh_domain]; exact interior_closedInterior_subset_cubeDomain hT) u T' hsub
 

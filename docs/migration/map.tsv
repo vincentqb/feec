@@ -4128,7 +4128,7 @@ Feec.BoxIdent.totMap	Feec.HilbertComplex.totalMap	generalize
 Feec.BoxIdent.tot_iota	-	deleted-helper
 Feec.BoxIdent.tot_pullX	-	deleted-helper
 Feec.BoxIdent.tot_totMap	-	deleted-helper
-Feec.BoxIdent.trigPoly_reflT	Feec.Models.Cube.RowWise.trigPoly_reflB	generalize
+Feec.BoxIdent.trigPoly_reflT	Feec.Models.Cube.Geometry.trigPoly_reflB	generalize
 Feec.BoxIdent.trig_mem_closure_curlGraph	Feec.Models.Cube.RowWise.trig_closure_curl	generalize
 Feec.BoxIdent.trig_mem_closure_gradGraph	Feec.Models.Cube.RowWise.trig_closure_grad	generalize
 Feec.BoxIdent.trunc	Feec.Models.Cube.RowWise.trunc	rename

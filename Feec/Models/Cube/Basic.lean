@@ -27,7 +27,8 @@ and does not depend on either.
 * `reflB ε`, `piece ε`: the reflections of `𝕋ᵈ` and the `2ᵈ` reflected boxes; `single j`: the
   single reflection `R_j` (`reflB_single_proj_of_face`, `flipB_single`, `sign_single`);
   **`integral_eq_sum_box`** (the tiling, up to the null set `faceSet`);
-  `mFourierCoeff_comp_reflB`: `(g ∘ R_ε)^ = ĝ ∘ flip_ε`.
+  `mFourierCoeff_comp_reflB`: `(g ∘ R_ε)^ = ĝ ∘ flip_ε`; `trigPoly_reflB`: parity of a
+  trigonometric polynomial with reflection-symmetric coefficients.
 * **`norm_sq_eq_two_pow`**: `‖f‖²_{L²(𝕋ᵈ)} = 2ᵈ ‖f|_Q‖²` for parity fields;
   **`eq_zero_of_resQ_eq_zero`**: parity fields are determined by their restriction to `Q`
   (`norm_comp_reflB_ae`: the Fourier-side parity criterion).
@@ -613,6 +614,20 @@ theorem mFourier_reflB (ε : d → Bool) (n : d → ℤ) (x : UnitAddTorus d) :
   · simp only [reflB, flipB, hj, ↓reduceIte]
     exact fourier_neg_arg _ _
   · simp only [reflB, flipB, hj, ↓reduceIte, Bool.false_eq_true]
+
+/-- **Parity of a trigonometric polynomial**: if `f(flip_ε m) = s f(m)` on a reflection-invariant
+support, then `P(R_ε x) = s P(x)`. -/
+theorem trigPoly_reflB [DecidableEq d] {ε : d → Bool} {f : lp (fun _ : d → ℤ => ℂ) 2}
+    {S : Finset (d → ℤ)} (hSr : ∀ m ∈ S, flipB ε m ∈ S) {s : ℂ}
+    (hf : ∀ m, f (flipB ε m) = s * f m) (x : UnitAddTorus d) :
+    trigPoly f S (reflB ε x) = s * trigPoly f S x := by
+  simp only [trigPoly, ContinuousMap.coe_sum, ContinuousMap.coe_smul, Finset.sum_apply,
+    Pi.smul_apply, smul_eq_mul, mFourier_reflB, Finset.mul_sum]
+  refine Finset.sum_nbij' (flipB ε) (flipB ε) (fun m hm => hSr m hm) (fun m hm => hSr m hm)
+    (fun m _ => flipB_flipB ε m) (fun m _ => flipB_flipB ε m) fun m _ => ?_
+  have e : f m = s * f (flipB ε m) := by rw [← hf, flipB_flipB]
+  rw [e]
+  ring
 
 /-- **Fourier coefficients of a reflected function**: `(g ∘ R_ε)^(n) = ĝ(flip_ε n)`; the
 physical reflections of `𝕋ᵈ` are the frequency reflections of the Fourier side

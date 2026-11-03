@@ -149,20 +149,6 @@ theorem isSmooth_trigPoly (f : lp (fun _ : Fin n → ℤ => ℂ) 2) (S : Finset 
   rw [e]
   exact ContDiff.sum fun m _ => contDiff_const.mul (isSmooth_mFourier m)
 
-/-- **Parity of a trigonometric polynomial**: if `f(flip_ε m) = s f(m)` on a reflection-invariant
-support, then `P(R_ε x) = s P(x)`. -/
-theorem trigPoly_reflB {ε : Fin n → Bool} {f : lp (fun _ : Fin n → ℤ => ℂ) 2}
-    {S : Finset (Fin n → ℤ)} (hSr : ∀ m ∈ S, flipB ε m ∈ S) {s : ℂ}
-    (hf : ∀ m, f (flipB ε m) = s * f m) (x : UnitAddTorus (Fin n)) :
-    trigPoly f S (reflB ε x) = s * trigPoly f S x := by
-  simp only [trigPoly, ContinuousMap.coe_sum, ContinuousMap.coe_smul, Finset.sum_apply,
-    Pi.smul_apply, smul_eq_mul, mFourier_reflB, Finset.mul_sum]
-  refine Finset.sum_nbij' (flipB ε) (flipB ε) (fun m hm => hSr m hm) (fun m hm => hSr m hm)
-    (fun m _ => flipB_flipB ε m) (fun m _ => flipB_flipB ε m) fun m _ => ?_
-  have e : f m = s * f (flipB ε m) := by rw [← hf, flipB_flipB]
-  rw [e]
-  ring
-
 /-- The real lift `y ↦ Re P_s(proj y)` of the trigonometric polynomial of a coefficient sequence on
 the finite set `S`, component `s`. -/
 def trigLift (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))

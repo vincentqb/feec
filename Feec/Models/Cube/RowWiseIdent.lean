@@ -116,7 +116,7 @@ namespace Feec.Models.Cube.RowWise
 
 open Feec.Models.Torus.GradCurl (Space)
 open Feec.Models.Cube.Geometry (Q resQ resQF ext per reflB sign single flipB_single sign_single
-  reflB_single_proj_of_face)
+  reflB_single_proj_of_face trigPoly_reflB)
 open Feec.Fourier.TorusWeak (toL2 toL2_ae_eq IsSmooth proj)
 open Feec.Fourier.Torus (flipAt flipAt_mem_bandN)
 
@@ -1549,20 +1549,6 @@ theorem abs_pd_reLift_le {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c
   exact (Complex.abs_re_le_norm _).trans
     ((⟨partialT c g, TorusWeak.continuous_partialT hg.contDiff_one c⟩ :
       C(UnitAddTorus (Fin 3), ℂ)).norm_coe_le_norm _)
-
-/-- **Parity of a trigonometric polynomial**: if `f(flip_ε k) = s f(k)` on a reflection-invariant
-support, then `P(R_ε x) = s P(x)`. -/
-theorem trigPoly_reflB {ε : Fin 3 → Bool} {f : lp (fun _ : Fin 3 → ℤ => ℂ) 2}
-    {S : Finset (Fin 3 → ℤ)} (hSr : ∀ k ∈ S, flipB ε k ∈ S) {s : ℂ}
-    (hf : ∀ k, f (flipB ε k) = s * f k) (x : UnitAddTorus (Fin 3)) :
-    trigPoly f S (reflB ε x) = s * trigPoly f S x := by
-  simp only [trigPoly, ContinuousMap.coe_sum, ContinuousMap.coe_smul, Finset.sum_apply,
-    Pi.smul_apply, smul_eq_mul, Geometry.mFourier_reflB, Finset.mul_sum]
-  refine Finset.sum_nbij' (flipB ε) (flipB ε) (fun k hk => hSr k hk) (fun k hk => hSr k hk)
-    (fun k _ => Geometry.flipB_flipB ε k) (fun k _ => Geometry.flipB_flipB ε k) fun k _ => ?_
-  have e : f k = s * f (flipB ε k) := by rw [← hf, Geometry.flipB_flipB]
-  rw [e]
-  ring
 
 /-- A trigonometric polynomial odd under `R_c` vanishes on the faces `y_c ∈ {0, ½}`. -/
 theorem reLift_eq_zero_of_odd {c : Fin 3} {f : lp (fun _ : Fin 3 → ℤ => ℂ) 2}

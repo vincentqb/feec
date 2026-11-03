@@ -41,7 +41,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 open Polynomial
 
-/-- The norm of a `Complexification`. -/
+/-- The choice of norm on a `Complexification`. -/
 inductive ComplexificationNorm where
   /-- The Taylor norm `sup_θ ‖cos θ x - sin θ y‖`, on normed spaces. -/
   | taylor
@@ -202,6 +202,8 @@ theorem continuous_mk : Continuous fun q : V × V => (mk q.1 q.2 : Complexificat
     have h2 : ‖q.2 - q'.2‖ ≤ ‖q - q'‖ := norm_snd_le (q - q')
     linarith).continuous
 
+section RealCLM
+
 variable [NormedSpace ℝ V] [IsScalarTower ℝ 𝕜 V]
 
 /-- The real part as a real continuous linear map. -/
@@ -242,13 +244,9 @@ def ofRealCLM : V →L[ℝ] Complexification n 𝕜 V :=
 
 @[simp] theorem imCLM_apply (p : Complexification n 𝕜 V) : imCLM p = p.im := rfl
 
-end Norm
+end RealCLM
 
 /-! ### Complexification of operators -/
-
-section Map
-
-variable [RCLike 𝕜] [NormedAddCommGroup V] [NormedSpace 𝕜 V] [NormCore n 𝕜 V]
 
 /-- The **complexification** `T_ℂ (x + i y) = T x + i T y` of a bounded operator. -/
 def map (T : V →L[𝕜] V) : Complexification n 𝕜 V →L[ℂ] Complexification n 𝕜 V :=
@@ -339,6 +337,6 @@ theorem map_ringInverse {T : V →L[𝕜] V} (h : IsUnit T) :
   rw [Ring.inverse_unit]
   exact (Ring.inverse_unit (Units.map (mapHom (n := n) (𝕜 := 𝕜) (V := V)).toMonoidHom u)).symm
 
-end Map
+end Norm
 
 end Complexification

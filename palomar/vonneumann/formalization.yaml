@@ -83,7 +83,8 @@ project:
     Feec.TimeStepping.Rational, Feec.TimeStepping.Theta, Feec.TimeStepping.RationalSemigroup,
     Feec.Semigroup.LumerPhillips, Feec.TimeStepping.RationalBanach, Feec.TimeStepping.RationalQuasi,
     Feec.Semigroup.Rescale, Feec.Semigroup.HilleYosida, Feec.Semigroup.Complexification,
-    Feec.ForMathlib.Analysis.NormedComplexification, Feec.TimeStepping.RationalHilleYosida,
+    Feec.ForMathlib.Analysis.Complexification, Feec.ForMathlib.Analysis.NormedComplexification,
+    Feec.TimeStepping.RationalHilleYosida,
     Feec.Semigroup.HillePhillips, Feec.TimeStepping.RationalHillePhillips,
     Feec.TimeStepping.RationalHillePhillipsReal, Feec.TimeStepping.RationalAStable,
     Feec.ForMathlib.Analysis.HalfLinePowers,
@@ -336,7 +337,7 @@ automation:
     factors over the roots zeta of q into (1 - zeta) R - 1 with the inverse
     -1 - (1 - zeta)(zeta - tau A)^(-1), bounded by 1 + |1 - zeta| M/(re zeta - omega tau);
     for real spaces on the complexification with the Taylor norm (an operator is invertible
-    when its complexification is, Feec.ForMathlib.Analysis.NormedComplexification). The
+    when its complexification is, Feec.ForMathlib.Analysis.Complexification). The
     remainder bound is ||P_rho(R)|| ||Q(R)^(-1)|| with ||R|| <= M/(1 - omega tau)
     (Feec.TimeStepping.RationalScheme.exists_norm_remainder_resolventStep_le).
 

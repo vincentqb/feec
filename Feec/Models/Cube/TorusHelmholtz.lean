@@ -567,8 +567,6 @@ end Sums
 
 section Lift
 
-open Feec.Models.Cube.ShellExtension (pd)
-
 /-- On the cell `(-¼, ¾]³` the periodization of a function supported in `Q` is the function. -/
 theorem per_proj_of_mem_cell {Φ : (Fin 3 → ℝ) → ℂ} (hΦ : Domain.IsTest (Q (Fin 3)) Φ)
     {y : Fin 3 → ℝ} (hy : y ∈ cell) : per Φ (proj y) = Φ y := by
@@ -605,10 +603,10 @@ theorem contDiff_re_comp {G : T3 → ℂ} (hG : IsSmooth G) :
   Complex.reCLM.contDiff.comp hG
 
 theorem pd_re_comp {G : T3 → ℂ} (hG : IsSmooth G) (j : Fin 3) (y : Fin 3 → ℝ) :
-    pd j (fun y => (G (proj y)).re) y = (partialT j G (proj y)).re := by
+    partialDeriv j (fun y => (G (proj y)).re) y = (partialT j G (proj y)).re := by
   have hd : Differentiable ℝ (G ∘ proj) := hG.contDiff_one.differentiable one_ne_zero
   have h := (Complex.reCLM.hasFDerivAt (x := (G ∘ proj) y)).comp y (hd y).hasFDerivAt
-  rw [pd, show (fun y => (G (proj y)).re) = Complex.reCLM ∘ (G ∘ proj) from rfl, h.fderiv,
+  rw [partialDeriv, show (fun y => (G (proj y)).re) = Complex.reCLM ∘ (G ∘ proj) from rfl, h.fderiv,
     partialT_proj hd]
   rfl
 
@@ -633,13 +631,13 @@ theorem contDiff_wR (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (F
   contDiff_re_comp (isSmooth_Wc hu F a)
 
 theorem pd_pR (F : Finset (Fin 3 → ℤ)) (a : Fin 3) (y : Fin 3 → ℝ) :
-    pd a (pR u F) y = (Gc u F a (proj y)).re := by
+    partialDeriv a (pR u F) y = (Gc u F a (proj y)).re := by
   unfold pR
   rw [pd_re_comp (G := Pc u F) (isSmooth_tpoly _ F), partialT_Pc]
 
 /-- **On the cell**, `w = u - ∇p - c`. -/
 theorem wR_eq (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (F : Finset (Fin 3 → ℤ)) (a : Fin 3)
-    {y : Fin 3 → ℝ} (hy : y ∈ cell) : wR u F a y = u a y - pd a (pR u F) y - cR u a := by
+    {y : Fin 3 → ℝ} (hy : y ∈ cell) : wR u F a y = u a y - partialDeriv a (pR u F) y - cR u a := by
   rw [wR, pd_pR, cR, Wc, U, per_proj_of_mem_cell (isTest_ofReal (hu a)) hy]
   simp
 
@@ -648,7 +646,7 @@ def NuQ (u : Fin 3 → (Fin 3 → ℝ) → ℝ) : ℝ := ∑ a, ∫ y in Q (Fin 
 
 /-- The component `(j, l)` of `curl u` on `ℝ³`. -/
 def curlR (u : Fin 3 → (Fin 3 → ℝ) → ℝ) (j l : Fin 3) (y : Fin 3 → ℝ) : ℝ :=
-  pd j (u l) y - pd l (u j) y
+  partialDeriv j (u l) y - partialDeriv l (u j) y
 
 /-- The `L²(Q)` norm of `curl u`. -/
 def NcurlQ (u : Fin 3 → (Fin 3 → ℝ) → ℝ) : ℝ :=
@@ -668,7 +666,7 @@ theorem Nu_eq (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) : Nu u = NuQ u := by
   simp only [Nu, NuQ, U, integral_norm_sq_per (hu _)]
 
 theorem partialT_U (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) (j l : Fin 3) :
-    partialT j (U u l) = per fun y => ((pd j (u l) y : ℝ) : ℂ) := by
+    partialT j (U u l) = per fun y => ((partialDeriv j (u l) y : ℝ) : ℂ) := by
   rw [U, partialT_per (isTest_ofReal (hu l))]
   congr 1; funext y
   have h := (Complex.ofRealCLM.hasFDerivAt (x := u l y)).comp y
@@ -700,11 +698,11 @@ with `w = u - ∇p - c` on the cell `(-¼, ¾]³ ⊇ Q̄`,
 theorem exists_helmholtz (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) :
     ∃ (p : (Fin 3 → ℝ) → ℝ) (c : Fin 3 → ℝ) (w : Fin 3 → (Fin 3 → ℝ) → ℝ),
       ContDiff ℝ (⊤ : ℕ∞) p ∧ (∀ a, ContDiff ℝ (⊤ : ℕ∞) (w a)) ∧
-      (∀ a, ∀ y ∈ cell, w a y = u a y - pd a p y - c a) ∧
+      (∀ a, ∀ y ∈ cell, w a y = u a y - partialDeriv a p y - c a) ∧
       eLpNorm p 2 (volume.restrict cell) ≤ ENNReal.ofReal (Real.sqrt (NuQ u)) ∧
       (∀ a, |c a| ≤ Real.sqrt (NuQ u)) ∧
       (∀ a, eLpNorm (w a) 2 (volume.restrict cell) ≤ ENNReal.ofReal (Real.sqrt (NuQ u))) ∧
-      (∀ j a, eLpNorm (pd j (w a)) 2 (volume.restrict cell) ≤
+      (∀ j a, eLpNorm (partialDeriv j (w a)) 2 (volume.restrict cell) ≤
         ENNReal.ofReal (Real.sqrt (NcurlQ u + NuQ u))) := by
   obtain ⟨F, hF⟩ := exists_tail_le hu
   refine ⟨pR u F, cR u, wR u F, contDiff_pR F, contDiff_wR hu F, fun a y hy => wR_eq hu F a hy,
@@ -723,7 +721,7 @@ theorem exists_helmholtz (hu : ∀ a, Domain.IsTest (Q (Fin 3)) (u a)) :
             (fun b _ => integral_nonneg fun x => by positivity) (Finset.mem_univ a)
       _ ≤ Nu u := sum_integral_Wc_le hu F
   · rw [← Nu_eq hu, ← Ncurl_eq hu]
-    have hpd : pd j (wR u F a) = fun y => (partialT j (Wc u F a) (proj y)).re :=
+    have hpd : partialDeriv j (wR u F a) = fun y => (partialT j (Wc u F a) (proj y)).re :=
       funext fun y => pd_re_comp (isSmooth_Wc hu F a) j y
     rw [hpd]
     refine eLpNorm_le_sqrt_of (continuous_partialT (isSmooth_Wc hu F a).contDiff_one j) ?_

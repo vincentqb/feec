@@ -111,12 +111,12 @@ theorem constField_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     simpa [Matrix.trace, Fin.sum_univ_three] using htrA
   · rw [inner_grad_testField _ hφ]
     refine Finset.sum_eq_zero fun ij _ => ?_
-    rw [integral_congr_ae (g := fun x => A ij.1 ij.2 * pd ij.2 (φ ij.1) x)
+    rw [integral_congr_ae (g := fun x => A ij.1 ij.2 * partialDeriv ij.2 (φ ij.1) x)
       ((hKc ij).mono fun x hx => by simp only; rw [hx]), integral_const_mul]
     have h0 := integral_pd_mul (hφ ij.1) (contDiff_const (c := (1 : ℝ))) ij.2
     simp only [mul_one] at h0
     rw [h0]
-    simp [pd]
+    simp [partialDeriv]
 
 /-- The matrix `diag(1, -1, 0)`. -/
 def diagA : Matrix (Fin 3) (Fin 3) ℝ := !![1, 0, 0; 0, -1, 0; 0, 0, 0]
@@ -314,7 +314,7 @@ theorem contDiff_betaField (ij : Ix) : ContDiff ℝ ∞ (betaField ij) := by
 /-- `curl β = -diag(1, -1, 0)`. -/
 theorem curlM_betaField (ij : Ix) (x : R3) : curlM betaField ij x = -diagA ij.1 ij.2 := by
   obtain ⟨i, k⟩ := ij
-  simp only [curlM, betaField, pd_ite_zero, pd_coord]
+  simp only [curlM, betaField, pd_ite_zero, partialDeriv_apply_coord]
   fin_cases i <;> fin_cases k <;> simp [diagA]
 
 /-- `β` as an element of `L²(Ω; ℝ³ˣ³)` (`Ω` bounded). -/
@@ -343,12 +343,12 @@ theorem betaL2_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : betaL2 
       Lp.coeFn_zero ℝ 2 (volume.restrict Ω)] with x h1 h2 h3 h4 h5 h6
     rw [h1, Pi.add_apply, h2, Pi.add_apply, h3, h4, h5, h6, hdiag, hdiag, hdiag]
     simp
-  · have hpd : ∀ ij : Ix, ∀ x, pd ij.2 (betaField ij) x = 0 := by
+  · have hpd : ∀ ij : Ix, ∀ x, partialDeriv ij.2 (betaField ij) x = 0 := by
       rintro ⟨i, j⟩ x
-      fin_cases i <;> fin_cases j <;> simp [betaField, pd_coord, pd_zero]
+      fin_cases i <;> fin_cases j <;> simp [betaField, partialDeriv_apply_coord, partialDeriv_zero]
     rw [inner_grad_testField _ hφ]
     refine Finset.sum_eq_zero fun ij _ => ?_
-    rw [integral_congr_ae (g := fun x => pd ij.2 (φ ij.1) x * betaField ij x)
+    rw [integral_congr_ae (g := fun x => partialDeriv ij.2 (φ ij.1) x * betaField ij x)
       ((hKc ij).mono fun x hx => by simp only; rw [hx, mul_comm]),
       integral_pd_mul (hφ ij.1) ((contDiff_betaField ij).of_le (by simp)) ij.2]
     simp [hpd]
@@ -552,7 +552,8 @@ theorem curlM_gradFld (t : ℝ) (ij : Ix) (x : R3) : curlM (gradFld t) ij x = 0 
   obtain ⟨i, k⟩ := ij
   simp only [curlM, gradFld]
   fin_cases i <;> fin_cases k <;>
-    simp [pd_neg, pd_const_mul (differentiable_expSin t), pd_const_mul (differentiable_expCos t),
+    simp [partialDeriv_neg, partialDeriv_const_mul (differentiable_expSin t _),
+      partialDeriv_const_mul (differentiable_expCos t _),
       pd_expSin, pd_expCos]
 
 theorem curlM_symFld (t : ℝ) (ij : Ix) (x : R3) : curlM (symFld t) ij x =
@@ -560,11 +561,11 @@ theorem curlM_symFld (t : ℝ) (ij : Ix) (x : R3) : curlM (symFld t) ij x =
     else if ij = (1, 0) then -t * expSin t x else if ij = (1, 1) then t * expCos t x else 0 := by
   obtain ⟨i, k⟩ := ij
   simp only [curlM, symFld]
-  fin_cases i <;> fin_cases k <;> simp [pd_neg, pd_expSin, pd_expCos]
+  fin_cases i <;> fin_cases k <;> simp [partialDeriv_neg, pd_expSin, pd_expCos]
 
-theorem div_symFld (t : ℝ) (i : Fin 3) (x : R3) : ∑ j, pd j (symFld t (i, j)) x = 0 := by
+theorem div_symFld (t : ℝ) (i : Fin 3) (x : R3) : ∑ j, partialDeriv j (symFld t (i, j)) x = 0 := by
   simp only [symFld, Fin.sum_univ_three]
-  fin_cases i <;> simp [pd_neg, pd_expSin, pd_expCos]
+  fin_cases i <;> simp [partialDeriv_neg, pd_expSin, pd_expCos]
 
 theorem symFld_symm (t : ℝ) (i j : Fin 3) : symFld t (i, j) = symFld t (j, i) := by
   fin_cases i <;> fin_cases j <;> simp [symFld]
@@ -838,7 +839,7 @@ theorem constField_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBoun
   refine ShortHilbertComplex.mem_invariantCore₂_of_eq_zero (S := gradCurl ℝ hΩ) ⟨_, hmem⟩
     (constField_mem_tsd hΩ hb hA htrA) ?_
   rw [e]
-  exact smoothField_eq_zero hΩ hb _ fun ij x _ => by simp [curlM, pd]
+  exact smoothField_eq_zero hΩ hb _ fun ij x _ => by simp [curlM, partialDeriv]
 
 /-- **Corrected Prop 4.17 on bounded domains** for the grad–curl complex
 `H̊¹ → H̊(curl) → L²` and `K = {0} × L²(TSD) × L²(TSD)`, with `K*` the invariant core of `K`

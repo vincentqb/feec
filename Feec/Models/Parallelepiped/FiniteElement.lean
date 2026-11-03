@@ -389,8 +389,8 @@ theorem norm_le_of_mem_orthogonal_cycles {i j : ι} (hij : c.Rel i j) {cP M M' :
   set p := (H'.cycles i).starProjection (e i z)
   have hp : p ∈ H'.cycles i := Submodule.starProjection_apply_mem _ _
   have hpk : p ∈ (H'.d i j).ker := by rw [← H'.cycles_eq hij]; exact hp
-  obtain ⟨pd, hpd, hp0⟩ := LinearPMap.mem_ker_iff.1 hpk
-  set w' : (H'.d i j).domain := ⟨e i z, hw⟩ - pd
+  obtain ⟨partialDeriv, hpd, hp0⟩ := LinearPMap.mem_ker_iff.1 hpk
+  set w' : (H'.d i j).domain := ⟨e i z, hw⟩ - partialDeriv
   have hw'v : (w' : W' i) = e i z - p := by simp [w', hpd]
   have hdw' : H'.d i j w' = e j (H.d i j z) := by
     rw [LinearPMap.map_sub, hp0, sub_zero, hI.comm]

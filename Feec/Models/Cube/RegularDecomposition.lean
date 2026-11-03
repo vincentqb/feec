@@ -143,8 +143,10 @@ def lin (c : Fin 3 → ℝ) (y : Fin 3 → ℝ) : ℝ := ∑ a, c a * y a
 theorem contDiff_lin (c : Fin 3 → ℝ) : ContDiff ℝ (⊤ : ℕ∞) (lin c) := by
   unfold lin; fun_prop
 
-theorem pd_lin (c : Fin 3 → ℝ) (j : Fin 3) (y : Fin 3 → ℝ) : pd j (lin c) y = c j := by
-  refine pd_eq_of_hasDerivAt ((contDiff_lin c).differentiable (by simp) y) ?_
+theorem pd_lin (c : Fin 3 → ℝ) (j : Fin 3) (y : Fin 3 → ℝ) : partialDeriv j (lin c) y = c j := by
+  have hl := ((contDiff_lin c).differentiable (by simp) (y + Pi.single j 0)).hasDerivAt_comp_add_single
+  rw [Pi.single_zero, add_zero] at hl
+  refine hl.unique ?_
   have : (fun s : ℝ => lin c (y + Pi.single j s)) = fun s => lin c y + c j * s := by
     funext s
     simp only [lin, Pi.add_apply, mul_add, Finset.sum_add_distrib]
@@ -202,10 +204,6 @@ theorem eLpNorm_congr_on {F G : (Fin 3 → ℝ) → ℝ} {B : Set (Fin 3 → ℝ
     (h : ∀ y ∈ B, F y = G y) : eLpNorm F 2 (volume.restrict B) = eLpNorm G 2 (volume.restrict B) :=
   eLpNorm_congr_ae ((ae_restrict_iff' hB).2 (Eventually.of_forall h))
 
-theorem pd_congr_of_eventuallyEq {F G : (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} (h : F =ᶠ[𝓝 y] G)
-    (j : Fin 3) : pd j F y = pd j G y := by
-  simp only [pd, h.fderiv_eq]
-
 /-- **The potential of a test field** (the analytic core of the regular decomposition): for
 test functions `uₐ` on `Q` there are smooth, compactly supported `Φₐ`, vanishing on the faces
 `xᵢ ∈ {0, ½}`, with `Φ = u - ∇r` near `Q̄` (so `curl Φ = curl u` on `Q`) and
@@ -222,10 +220,10 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
       (∀ a, ContDiff ℝ (⊤ : ℕ∞) (Φ a)) ∧ (∀ a, HasCompactSupport (Φ a)) ∧
       (∀ a y, OnFace y → Φ a y = 0) ∧
       (∃ r : (Fin 3 → ℝ) → ℝ, ContDiff ℝ (⊤ : ℕ∞) r ∧
-        ∀ y ∈ Q (Fin 3), ∀ a, Φ a =ᶠ[𝓝 y] fun z => u a z - pd a r z) ∧
+        ∀ y ∈ Q (Fin 3), ∀ a, Φ a =ᶠ[𝓝 y] fun z => u a z - partialDeriv a r z) ∧
       (∀ a, eLpNorm (Φ a) 2 (volume.restrict (Q (Fin 3))) ≤
         K * ENNReal.ofReal (Real.sqrt (NuQ u + NcurlQ u))) ∧
-      (∀ j a, eLpNorm (pd j (Φ a)) 2 (volume.restrict (Q (Fin 3))) ≤
+      (∀ j a, eLpNorm (partialDeriv j (Φ a)) 2 (volume.restrict (Q (Fin 3))) ≤
         K * ENNReal.ofReal (Real.sqrt (NuQ u + NcurlQ u))) := by
   obtain ⟨C, hC⟩ := exists_n2_lift_le
   refine ⟨1 + 16 * C, fun {u} hu => ?_⟩
@@ -239,22 +237,22 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
   -- the potential `q = p + c · x`
   set q : (Fin 3 → ℝ) → ℝ := p + lin c
   have hq : ContDiff ℝ (⊤ : ℕ∞) q := hp.add (contDiff_lin c)
-  have hpdq : ∀ j y, pd j q y = pd j p y + c j := fun j y => by
-    rw [pd_add (d1 hp) (d1 (contDiff_lin c)), Pi.add_apply, pd_lin]
-  have hsh1 : ∀ j, ∀ y ∈ shell, pd j q y = -w j y := fun j y hy => by
+  have hpdq : ∀ j y, partialDeriv j q y = partialDeriv j p y + c j := fun j y => by
+    rw [partialDeriv_add' (d1 hp) (d1 (contDiff_lin c)), Pi.add_apply, pd_lin]
+  have hsh1 : ∀ j, ∀ y ∈ shell, partialDeriv j q y = -w j y := fun j y hy => by
     rw [hweq j y (shell_subset_cell hy), (hu j).eq_zero_of_notMem (notMem_Q_of_shell hy), hpdq]
     ring
-  have hsh2 : ∀ j k, ∀ y ∈ shell, pd k (pd j q) y = -pd k (w j) y := fun j k y hy => by
-    have hev : pd j q =ᶠ[𝓝 y] fun z => -w j z :=
+  have hsh2 : ∀ j k, ∀ y ∈ shell, partialDeriv k (partialDeriv j q) y = -partialDeriv k (w j) y := fun j k y hy => by
+    have hev : partialDeriv j q =ᶠ[𝓝 y] fun z => -w j z :=
       Filter.eventually_of_mem (isOpen_shell.mem_nhds hy) fun z hz => hsh1 j z hz
-    rw [pd_congr_of_eventuallyEq hev, pd]
+    rw [hev.partialDeriv_eq, partialDeriv]
     change fderiv ℝ (-w j) y (Pi.single k 1) = _
     rw [fderiv_neg]
     rfl
   -- the bound of `q` on the shell
   have hwsh : ∀ a, eLpNorm (w a) 2 (volume.restrict shell) ≤ R := fun a =>
     (eLpNorm_restrict_mono shell_subset_cell).trans ((hwb a).trans hR1)
-  have hdwsh : ∀ j a, eLpNorm (pd j (w a)) 2 (volume.restrict shell) ≤ R := fun j a =>
+  have hdwsh : ∀ j a, eLpNorm (partialDeriv j (w a)) 2 (volume.restrict shell) ≤ R := fun j a =>
     (eLpNorm_restrict_mono shell_subset_cell).trans ((hdwb j a).trans hR2.le)
   have n2q : n2 q shell ≤ 16 * R := by
     have h0 : eLpNorm q 2 (volume.restrict shell) ≤ 4 * R := by
@@ -268,14 +266,14 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
               rw [ENNReal.ofReal_mul (by norm_num), ENNReal.ofReal_ofNat]
               gcongr
         _ = 4 * R := by ring
-    have h1 : ∀ j, eLpNorm (pd j q) 2 (volume.restrict shell) ≤ R := fun j => by
+    have h1 : ∀ j, eLpNorm (partialDeriv j q) 2 (volume.restrict shell) ≤ R := fun j => by
       rw [eLpNorm_congr_on isOpen_shell.measurableSet (hsh1 j)]
       change eLpNorm (-w j) 2 _ ≤ R
       rw [eLpNorm_neg]
       exact hwsh j
-    have h2 : ∀ j k, eLpNorm (pd k (pd j q)) 2 (volume.restrict shell) ≤ R := fun j k => by
+    have h2 : ∀ j k, eLpNorm (partialDeriv k (partialDeriv j q)) 2 (volume.restrict shell) ≤ R := fun j k => by
       rw [eLpNorm_congr_on isOpen_shell.measurableSet (hsh2 j k)]
-      rw [show (fun y => -pd k (w j) y) = -pd k (w j) from rfl, eLpNorm_neg]
+      rw [show (fun y => -partialDeriv k (w j) y) = -partialDeriv k (w j) from rfl, eLpNorm_neg]
       exact hdwsh k j
     unfold n2
     calc _ ≤ 4 * R + ∑ _j : Fin 3, R + ∑ _j : Fin 3, ∑ _k : Fin 3, R :=
@@ -288,23 +286,23 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
     rw [Q_eq_pi]
     exact (hC hq).trans (by gcongr)
   -- the fields
-  set Φ : Fin 3 → (Fin 3 → ℝ) → ℝ := fun a y => bump y * (u a y - pd a (rem q) y)
+  set Φ : Fin 3 → (Fin 3 → ℝ) → ℝ := fun a y => bump y * (u a y - partialDeriv a (rem q) y)
   have hrem : ContDiff ℝ (⊤ : ℕ∞) (rem q) := contDiff_rem hq
-  have hpdlift : ∀ a, pd a (lift q) = pd a q - pd a (rem q) := fun a =>
-    pd_sub (d1 hq) (d1 hrem) a
-  have hloc : ∀ a, ∀ y ∈ Metric.ball ctr (3 / 8), Φ a y = w a y + pd a (lift q) y := by
+  have hpdlift : ∀ a, partialDeriv a (lift q) = partialDeriv a q - partialDeriv a (rem q) := fun a =>
+    partialDeriv_sub' (d1 hq) (d1 hrem) a
+  have hloc : ∀ a, ∀ y ∈ Metric.ball ctr (3 / 8), Φ a y = w a y + partialDeriv a (lift q) y := by
     intro a y hy
     simp only [Φ, bump_eq_one hy, one_mul, hpdlift, Pi.sub_apply,
       hweq a y (ball_subset_cell (by norm_num) hy), hpdq]
     ring
-  have hlocW : ∀ a, ∀ y ∈ Q (Fin 3), Φ a =ᶠ[𝓝 y] fun z => w a z + pd a (lift q) z :=
+  have hlocW : ∀ a, ∀ y ∈ Q (Fin 3), Φ a =ᶠ[𝓝 y] fun z => w a z + partialDeriv a (lift q) z :=
     fun a y hy => Filter.eventually_of_mem (Metric.isOpen_ball.mem_nhds (Q_subset_ball hy))
       fun z hz => hloc a z hz
-  have hlocU : ∀ a, ∀ y ∈ Q (Fin 3), Φ a =ᶠ[𝓝 y] fun z => u a z - pd a (rem q) z :=
+  have hlocU : ∀ a, ∀ y ∈ Q (Fin 3), Φ a =ᶠ[𝓝 y] fun z => u a z - partialDeriv a (rem q) z :=
     fun a y hy => Filter.eventually_of_mem (Metric.isOpen_ball.mem_nhds (Q_subset_ball hy))
       fun z hz => by simp only [Φ, bump_eq_one hz, one_mul]
   have hΦs : ∀ a, ContDiff ℝ (⊤ : ℕ∞) (Φ a) := fun a =>
-    bump.contDiff.mul ((hu a).contDiff.sub (contDiff_pd hrem a))
+    bump.contDiff.mul ((hu a).contDiff.sub (ContDiff.partialDeriv_infty hrem a))
   have hlift' : ContDiff ℝ (⊤ : ℕ∞) (lift q) := contDiff_lift hq
   refine ⟨Φ, hΦs, fun a => ?_, fun a y hy => ?_, ?_, fun a => ?_, fun j a => ?_⟩
   · exact bump.hasCompactSupport.mul_right
@@ -312,26 +310,26 @@ theorem exists_fields : ∃ K : ℝ≥0, ∀ {u : Fin 3 → (Fin 3 → ℝ) → 
       (hq.of_le (by exact_mod_cast le_top)), sub_zero, mul_zero]
   · exact ⟨rem q, hrem, fun y hy a => hlocU a y hy⟩
   · rw [eLpNorm_congr_on measurableSet_Q fun y hy => hloc a y (Q_subset_ball hy)]
-    calc eLpNorm (fun y => w a y + pd a (lift q) y) 2 (volume.restrict (Q (Fin 3)))
+    calc eLpNorm (fun y => w a y + partialDeriv a (lift q) y) 2 (volume.restrict (Q (Fin 3)))
         ≤ eLpNorm (w a) 2 (volume.restrict (Q (Fin 3))) +
-            eLpNorm (pd a (lift q)) 2 (volume.restrict (Q (Fin 3))) :=
-          eLpNorm_add_le (f := w a) (g := pd a (lift q)) one_le_two
+            eLpNorm (partialDeriv a (lift q)) 2 (volume.restrict (Q (Fin 3))) :=
+          eLpNorm_add_le (f := w a) (g := partialDeriv a (lift q)) one_le_two
       _ ≤ R + C * (16 * R) := by
           gcongr
           · exact (eLpNorm_restrict_mono (fun y hy => (ball_subset_cell (by norm_num)
               (Q_subset_ball hy)))).trans ((hwb a).trans hR1)
           · exact (eLpNorm_pd_le_n2 _ _ a).trans hlift
       _ = (1 + 16 * C : ℝ≥0) * R := by push_cast; ring
-  · have hpdΦ : ∀ y ∈ Q (Fin 3), pd j (Φ a) y = pd j (w a) y + pd j (pd a (lift q)) y :=
+  · have hpdΦ : ∀ y ∈ Q (Fin 3), partialDeriv j (Φ a) y = partialDeriv j (w a) y + partialDeriv j (partialDeriv a (lift q)) y :=
       fun y hy => by
-        rw [pd_congr_of_eventuallyEq (hlocW a y hy),
-          show (fun z => w a z + pd a (lift q) z) = w a + pd a (lift q) from rfl,
-          pd_add (d1 (hw a)) (d1 (contDiff_pd hlift' a)), Pi.add_apply]
+        rw [(hlocW a y hy).partialDeriv_eq,
+          show (fun z => w a z + partialDeriv a (lift q) z) = w a + partialDeriv a (lift q) from rfl,
+          partialDeriv_add' (d1 (hw a)) (d1 (ContDiff.partialDeriv_infty hlift' a)), Pi.add_apply]
     rw [eLpNorm_congr_on measurableSet_Q hpdΦ]
-    calc eLpNorm (fun y => pd j (w a) y + pd j (pd a (lift q)) y) 2 (volume.restrict (Q (Fin 3)))
-        ≤ eLpNorm (pd j (w a)) 2 (volume.restrict (Q (Fin 3))) +
-            eLpNorm (pd j (pd a (lift q))) 2 (volume.restrict (Q (Fin 3))) :=
-          eLpNorm_add_le (f := pd j (w a)) (g := pd j (pd a (lift q))) one_le_two
+    calc eLpNorm (fun y => partialDeriv j (w a) y + partialDeriv j (partialDeriv a (lift q)) y) 2 (volume.restrict (Q (Fin 3)))
+        ≤ eLpNorm (partialDeriv j (w a)) 2 (volume.restrict (Q (Fin 3))) +
+            eLpNorm (partialDeriv j (partialDeriv a (lift q))) 2 (volume.restrict (Q (Fin 3))) :=
+          eLpNorm_add_le (f := partialDeriv j (w a)) (g := partialDeriv j (partialDeriv a (lift q))) one_le_two
       _ ≤ R + C * (16 * R) := by
           gcongr
           · exact (eLpNorm_restrict_mono (fun y hy => (ball_subset_cell (by norm_num)
@@ -445,7 +443,7 @@ theorem mem_graph_minimal {k : ℤ} {ψ : formIdx 3 k → (Fin 3 → ℝ) → �
   exact key _ (cubeDomain_eq_Q 3) _ _
 
 theorem extDerivOp_zero_const (f : (Fin 3 → ℝ) → ℝ) (j : Fin 3) (y : Fin 3 → ℝ) :
-    (extDerivOp ℝ 3 0).apply (fun _ => f) (sg j) y = pd j f y := by
+    (extDerivOp ℝ 3 0).apply (fun _ => f) (sg j) y = partialDeriv j f y := by
   rw [extDerivOp_zero_apply]; rfl
 
 theorem curlR_eq (φ : formIdx 3 1 → (Fin 3 → ℝ) → ℝ) {j l : Fin 3} (hjl : j < l)
@@ -537,7 +535,7 @@ theorem exists_potential_test : ∃ C : ℝ, 0 ≤ C ∧ ∀ (φ : formIdx 3 1 �
   -- the bound
   have hb0 : ∀ a, ‖(memLp_cube (hΦs a).continuous).toLp (Φ a)‖ ≤ K * Real.sqrt S := fun a => by
     rw [norm_toLp_cube]; exact toReal_le_of_eLpNorm_le (hΦb a)
-  have hb1 : ∀ j a, ‖(memLp_cube ((contDiff_pd (hΦs a) j).continuous)).toLp (pd j (Φ a))‖ ≤
+  have hb1 : ∀ j a, ‖(memLp_cube ((ContDiff.partialDeriv_infty (hΦs a) j).continuous)).toLp (partialDeriv j (Φ a))‖ ≤
       K * Real.sqrt S := fun j a => by
     rw [norm_toLp_cube]; exact toReal_le_of_eLpNorm_le (hdΦb j a)
   have hKS : 0 ≤ K * Real.sqrt S := by positivity
@@ -550,10 +548,10 @@ theorem exists_potential_test : ∃ C : ℝ, 0 ≤ C ∧ ∀ (φ : formIdx 3 1 �
     rw [Fin.sum_univ_three]
     have e : ∀ j, ‖(toL2F (fun t => memLp_cube ((ConstCoeffOp.contDiff_apply (extDerivOp ℝ 3 0)
         (fun _ => hΦs a) t).continuous)) : L2F ℝ (cubeDomain 3) (formIdx 3 1)) (sg j)‖ =
-        ‖(memLp_cube ((contDiff_pd (hΦs a) j).continuous)).toLp (pd j (Φ a))‖ := fun j =>
+        ‖(memLp_cube ((ContDiff.partialDeriv_infty (hΦs a) j).continuous)).toLp (partialDeriv j (Φ a))‖ := fun j =>
       congrArg norm (MemLp.toLp_congr (memLp_cube ((ConstCoeffOp.contDiff_apply
         (extDerivOp ℝ 3 0) (fun _ => hΦs a) (sg j)).continuous))
-        (memLp_cube ((contDiff_pd (hΦs a) j).continuous))
+        (memLp_cube ((ContDiff.partialDeriv_infty (hΦs a) j).continuous))
         (Eventually.of_forall fun y => extDerivOp_zero_const (Φ a) j y))
     rw [e, e, e]
     change ‖(memLp_cube (hΦs a).continuous).toLp (Φ a)‖ ^ 2 + _ ≤ _

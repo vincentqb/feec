@@ -75,12 +75,12 @@ theorem contDiff_linField (a b i : Fin 3) : ContDiff ℝ ∞ (linField a b i) :=
   exacts [contDiff_apply ℝ (fun _ : Fin 3 => ℝ) a, contDiff_const]
 
 theorem pd_linField (a b m i : Fin 3) (x : R3) :
-    pd m (linField a b i) x = if i = b ∧ m = a then 1 else 0 := by
+    partialDeriv m (linField a b i) x = if i = b ∧ m = a then 1 else 0 := by
   by_cases hi : i = b
   · simp only [linField, hi, ite_true, true_and]
-    exact pd_coord a m x
+    exact partialDeriv_apply_coord a m x
   · simp only [linField, hi, ite_false, false_and]
-    simp [pd]
+    simp [partialDeriv]
 
 /-- The skew field `skewOf (x_a e_b)` (rows `e_j × x_a e_b`), as an element of `L²(Ω; ℝ³ˣ³)`. -/
 def skewLin (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (a b : Fin 3) : L2F ℝ Ω Ix :=
@@ -104,7 +104,7 @@ theorem inner_curl_skewLin (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B C 
   simp only at hz1 hz2
   have hvd : ∀ i, ContDiff ℝ 1 (linField a b i) := fun i =>
     (contDiff_linField a b i).of_le (by simp)
-  have hdv : ∀ x, ∑ m, pd m (linField a b m) x = if a = b then 1 else 0 := by
+  have hdv : ∀ x, ∑ m, partialDeriv m (linField a b m) x = if a = b then 1 else 0 := by
     intro x
     simp only [pd_linField, Fin.sum_univ_three]
     fin_cases a <;> fin_cases b <;> simp

@@ -243,10 +243,10 @@ theorem isTestField_gradM {φ : Fin 3 → R3 → ℝ} (hφ : IsTestField Ω φ) 
     IsTestField Ω (gradM φ) := fun _ => (hφ _).fderiv_apply _
 
 theorem curlM_cT (c : Ix → ℝ) {ψ : R3 → ℝ} (hψ : Differentiable ℝ ψ) (ab : Ix) (x : R3) :
-    curlM (cT c ψ) ab x = c (ab.1, ab.2 + 2) * pd (ab.2 + 1) ψ x -
-      c (ab.1, ab.2 + 1) * pd (ab.2 + 2) ψ x := by
+    curlM (cT c ψ) ab x = c (ab.1, ab.2 + 2) * partialDeriv (ab.2 + 1) ψ x -
+      c (ab.1, ab.2 + 1) * partialDeriv (ab.2 + 2) ψ x := by
   unfold curlM cT
-  rw [pd_const_mul hψ, pd_const_mul hψ]
+  rw [partialDeriv_const_mul (hψ _), partialDeriv_const_mul (hψ _)]
 
 /-- `∫ Y (c f - d g) = c ∫ Y f - d ∫ Y g`. -/
 theorem integral_mul_sub_mul (Y : L2 ℝ Ω) {f g : R3 → ℝ} (hf : MemLp f 2 (volume.restrict Ω))
@@ -296,8 +296,8 @@ theorem integral_trV_mul (Y : L2F ℝ Ω Ix) {f : R3 → ℝ} (hf : MemLp f 2 (v
 /-- `⟨Y, curl (ψ I)⟩ = ⟨a(Y), ∇ψ⟩` (no condition on `Y`). -/
 theorem sum_integral_curlM_cTr (Y : L2F ℝ Ω Ix) {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     ∑ ab, ∫ x, Y ab x * curlM (cT cTr ψ) ab x ∂volume.restrict Ω =
-      ∑ c, ∫ x, axV Y c x * pd c ψ x ∂volume.restrict Ω := by
-  have hm : ∀ m, MemLp (pd m ψ) 2 (volume.restrict Ω) := fun m =>
+      ∑ c, ∫ x, axV Y c x * partialDeriv c ψ x ∂volume.restrict Ω := by
+  have hm : ∀ m, MemLp (partialDeriv m ψ) 2 (volume.restrict Ω) := fun m =>
     (hψ.fderiv_apply (Pi.single m 1)).memLp
   simp_rw [curlM_cT cTr hψ.differentiable]
   simp only [integral_mul_sub_mul _ (hm _) (hm _), integral_axV_mul _ _ (hm _)]
@@ -309,13 +309,13 @@ theorem sum_integral_curlM_cTr (Y : L2F ℝ Ω Ix) {ψ : R3 → ℝ} (hψ : IsTe
 `a(curl Y) = ∇ τ(Y) + curl a(Y)`, Lemma 3.5). -/
 theorem sum_integral_curlM_cAx (Y : L2F ℝ Ω Ix)
     (hdiv : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, Y ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0)
+      ∑ ij : Ix, ∫ x, Y ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0)
     (k : Fin 3) {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     ∑ ab, ∫ x, Y ab x * curlM (cT (cAx k) ψ) ab x ∂volume.restrict Ω =
-      -∫ x, trV Y x * pd k ψ x ∂volume.restrict Ω +
-        ∫ x, axV Y (k + 1) x * pd (k + 2) ψ x ∂volume.restrict Ω -
-        ∫ x, axV Y (k + 2) x * pd (k + 1) ψ x ∂volume.restrict Ω := by
-  have hm : ∀ m, MemLp (pd m ψ) 2 (volume.restrict Ω) := fun m =>
+      -∫ x, trV Y x * partialDeriv k ψ x ∂volume.restrict Ω +
+        ∫ x, axV Y (k + 1) x * partialDeriv (k + 2) ψ x ∂volume.restrict Ω -
+        ∫ x, axV Y (k + 2) x * partialDeriv (k + 1) ψ x ∂volume.restrict Ω := by
+  have hm : ∀ m, MemLp (partialDeriv m ψ) 2 (volume.restrict Ω) := fun m =>
     (hψ.fderiv_apply (Pi.single m 1)).memLp
   have hφ : IsTestField Ω (fun i => if i = k then ψ else 0) := fun i => by
     show IsTest Ω (if i = k then ψ else 0)
@@ -343,9 +343,9 @@ structure WeakEB (Ω : Set R3) (T : ℝ) (E B : ℝ → L2F ℝ Ω Ix) : Prop wh
   contE : ContinuousOn E (Icc 0 T)
   contB : ContinuousOn B (Icc 0 T)
   divE0 : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-    ∑ ij : Ix, ∫ x, E 0 ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0
+    ∑ ij : Ix, ∫ x, E 0 ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0
   divB0 : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-    ∑ ij : Ix, ∫ x, B 0 ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0
+    ∑ ij : Ix, ∫ x, B 0 ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0
   derivE : ∀ t ∈ Icc 0 T, ∀ Φ : Ix → R3 → ℝ, IsTestField Ω Φ →
     HasDerivWithinAt (fun s => ∑ ij, ∫ x, E s ij x * Φ ij x ∂volume.restrict Ω)
       (-∑ ij, ∫ x, B t ij x * curlM Φ ij x ∂volume.restrict Ω) (Icc 0 T) t
@@ -362,7 +362,7 @@ theorem eq_zero_sub_of_hasDerivWithinAt_zero {f : ℝ → ℝ} {T : ℝ}
 /-- `div E` is conserved: testing `Ė = -curl B` against `∇φ` and `curl ∇φ = 0`. -/
 theorem WeakEB.divE {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B) :
     ∀ t ∈ Icc 0 T, ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, E t ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
+      ∑ ij : Ix, ∫ x, E t ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
   intro t ht φ hφ
   have hc := eq_zero_sub_of_hasDerivWithinAt_zero (T := T)
     (f := fun s => ∑ ij, ∫ x, E s ij x * gradM φ ij x ∂volume.restrict Ω) (fun s hs => by
@@ -377,7 +377,7 @@ theorem WeakEB.divE {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B
 /-- `div B` is conserved: `∂ₜ ⟨B, ∇φ⟩ = ⟨E, curl ∇φ⟩ = 0`. -/
 theorem WeakEB.divB {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : WeakEB Ω T E B) :
     ∀ t ∈ Icc 0 T, ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, B t ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
+      ∑ ij : Ix, ∫ x, B t ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
   intro t ht φ hφ
   have hc := eq_zero_sub_of_hasDerivWithinAt_zero (T := T)
     (f := fun s => ∑ ij, ∫ x, B s ij x * gradM φ ij x ∂volume.restrict Ω) (fun s hs => by
@@ -395,9 +395,9 @@ variable {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix}
 theorem WeakEB.deriv_axE (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T) (k : Fin 3)
     {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     HasDerivWithinAt (fun s => ∫ x, axV (E s) k x * ψ x ∂volume.restrict Ω)
-      (∫ x, trV (B t) x * pd k ψ x ∂volume.restrict Ω -
-        ∫ x, axV (B t) (k + 1) x * pd (k + 2) ψ x ∂volume.restrict Ω +
-        ∫ x, axV (B t) (k + 2) x * pd (k + 1) ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
+      (∫ x, trV (B t) x * partialDeriv k ψ x ∂volume.restrict Ω -
+        ∫ x, axV (B t) (k + 1) x * partialDeriv (k + 2) ψ x ∂volume.restrict Ω +
+        ∫ x, axV (B t) (k + 2) x * partialDeriv (k + 1) ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
   simp_rw [integral_axV _ k hψ.memLp]
   refine (h.derivE t ht _ (isTestField_cT (cAx k) hψ)).congr_deriv ?_
   rw [sum_integral_curlM_cAx _ (h.divB t ht) k hψ]
@@ -406,7 +406,7 @@ theorem WeakEB.deriv_axE (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T) (k
 theorem WeakEB.deriv_trE (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T)
     {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     HasDerivWithinAt (fun s => ∫ x, trV (E s) x * ψ x ∂volume.restrict Ω)
-      (-∑ c, ∫ x, axV (B t) c x * pd c ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
+      (-∑ c, ∫ x, axV (B t) c x * partialDeriv c ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
   simp_rw [integral_trV _ hψ.memLp]
   refine (h.derivE t ht _ (isTestField_cT cTr hψ)).congr_deriv ?_
   rw [sum_integral_curlM_cTr _ hψ]
@@ -414,9 +414,9 @@ theorem WeakEB.deriv_trE (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T)
 theorem WeakEB.deriv_axB (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T) (k : Fin 3)
     {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     HasDerivWithinAt (fun s => ∫ x, axV (B s) k x * ψ x ∂volume.restrict Ω)
-      (-∫ x, trV (E t) x * pd k ψ x ∂volume.restrict Ω +
-        ∫ x, axV (E t) (k + 1) x * pd (k + 2) ψ x ∂volume.restrict Ω -
-        ∫ x, axV (E t) (k + 2) x * pd (k + 1) ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
+      (-∫ x, trV (E t) x * partialDeriv k ψ x ∂volume.restrict Ω +
+        ∫ x, axV (E t) (k + 1) x * partialDeriv (k + 2) ψ x ∂volume.restrict Ω -
+        ∫ x, axV (E t) (k + 2) x * partialDeriv (k + 1) ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
   simp_rw [integral_axV _ k hψ.memLp]
   refine (h.derivB t ht _ (isTestField_cT (cAx k) hψ)).congr_deriv ?_
   rw [sum_integral_curlM_cAx _ (h.divE t ht) k hψ]
@@ -424,7 +424,7 @@ theorem WeakEB.deriv_axB (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T) (k
 theorem WeakEB.deriv_trB (h : WeakEB Ω T E B) {t : ℝ} (ht : t ∈ Icc 0 T)
     {ψ : R3 → ℝ} (hψ : IsTest Ω ψ) :
     HasDerivWithinAt (fun s => ∫ x, trV (B s) x * ψ x ∂volume.restrict Ω)
-      (∑ c, ∫ x, axV (E t) c x * pd c ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
+      (∑ c, ∫ x, axV (E t) c x * partialDeriv c ψ x ∂volume.restrict Ω) (Icc 0 T) t := by
   simp_rw [integral_trV _ hψ.memLp]
   refine (h.derivB t ht _ (isTestField_cT cTr hψ)).congr_deriv ?_
   rw [sum_integral_curlM_cTr _ hψ]
@@ -467,30 +467,30 @@ theorem continuous_viol : Continuous fun p : L2F ℝ Ω Ix × L2F ℝ Ω Ix => v
 /-- Directional derivatives in the pairing: `∫ u ∂_v g = Σ_c v_c ∫ u ∂_c g`. -/
 theorem integral_mul_fderiv (u : L2 ℝ Ω) {g : R3 → ℝ} (hg : IsTest Ω g) (v : R3) :
     ∫ x, u x * fderiv ℝ g x v ∂volume.restrict Ω =
-      ∑ c, v c * ∫ x, u x * pd c g x ∂volume.restrict Ω := by
-  have hv : ∀ x, fderiv ℝ g x v = ∑ c, v c * pd c g x := fun x => by
+      ∑ c, v c * ∫ x, u x * partialDeriv c g x ∂volume.restrict Ω := by
+  have hv : ∀ x, fderiv ℝ g x v = ∑ c, v c * partialDeriv c g x := fun x => by
     have e : v = ∑ c, v c • (Pi.single c 1 : R3) := by
       funext i; simp [Finset.sum_apply, Pi.single_apply]
     conv_lhs => rw [e]
-    simp [map_sum, map_smul, pd]
+    simp [map_sum, map_smul, partialDeriv]
   simp only [hv, Finset.mul_sum]
   rw [integral_finsetSum _ fun c _ => ?_]
   · refine Finset.sum_congr rfl fun c _ => ?_
     rw [← integral_const_mul]
     congr 1; ext x; ring
   · exact (integrable_mul u (hg.fderiv_apply (Pi.single c 1)).memLp).const_mul (v c) |>.congr
-      (Eventually.of_forall fun x => by simp only [pd]; ring)
+      (Eventually.of_forall fun x => by simp only [partialDeriv]; ring)
 
 /-- The time derivative of `∫ Wⱼ ψⱼ` along the interior equations. -/
 def violDeriv (E B : L2F ℝ Ω Ix) (ψ : VIdx → R3 → ℝ) : VIdx → ℝ
-  | Sum.inl (Sum.inl k) => ∫ x, trV B x * pd k (ψ (.inl (.inl k))) x ∂volume.restrict Ω -
-      ∫ x, axV B (k + 1) x * pd (k + 2) (ψ (.inl (.inl k))) x ∂volume.restrict Ω +
-      ∫ x, axV B (k + 2) x * pd (k + 1) (ψ (.inl (.inl k))) x ∂volume.restrict Ω
-  | Sum.inl (Sum.inr u) => -∑ c, ∫ x, axV B c x * pd c (ψ (.inl (.inr u))) x ∂volume.restrict Ω
-  | Sum.inr (Sum.inl k) => -∫ x, trV E x * pd k (ψ (.inr (.inl k))) x ∂volume.restrict Ω +
-      ∫ x, axV E (k + 1) x * pd (k + 2) (ψ (.inr (.inl k))) x ∂volume.restrict Ω -
-      ∫ x, axV E (k + 2) x * pd (k + 1) (ψ (.inr (.inl k))) x ∂volume.restrict Ω
-  | Sum.inr (Sum.inr u) => ∑ c, ∫ x, axV E c x * pd c (ψ (.inr (.inr u))) x ∂volume.restrict Ω
+  | Sum.inl (Sum.inl k) => ∫ x, trV B x * partialDeriv k (ψ (.inl (.inl k))) x ∂volume.restrict Ω -
+      ∫ x, axV B (k + 1) x * partialDeriv (k + 2) (ψ (.inl (.inl k))) x ∂volume.restrict Ω +
+      ∫ x, axV B (k + 2) x * partialDeriv (k + 1) (ψ (.inl (.inl k))) x ∂volume.restrict Ω
+  | Sum.inl (Sum.inr u) => -∑ c, ∫ x, axV B c x * partialDeriv c (ψ (.inl (.inr u))) x ∂volume.restrict Ω
+  | Sum.inr (Sum.inl k) => -∫ x, trV E x * partialDeriv k (ψ (.inr (.inl k))) x ∂volume.restrict Ω +
+      ∫ x, axV E (k + 1) x * partialDeriv (k + 2) (ψ (.inr (.inl k))) x ∂volume.restrict Ω -
+      ∫ x, axV E (k + 2) x * partialDeriv (k + 1) (ψ (.inr (.inl k))) x ∂volume.restrict Ω
+  | Sum.inr (Sum.inr u) => ∑ c, ∫ x, axV E c x * partialDeriv c (ψ (.inr (.inr u))) x ∂volume.restrict Ω
 
 /-- **The violation solves the violation system weakly** (any open `Ω`, no boundary
 condition). -/
@@ -513,7 +513,7 @@ theorem WeakEB.isWeakSolution_viol {T : ℝ} {E B : ℝ → L2F ℝ Ω Ix} (h : 
     FiniteSpeed.hypOp_formalAdj_apply _ _ _ _
   have hsplit : ∀ i, ∫ x, viol (E t) (B t) i x *
       (FiniteSpeed.hypOp violDir).formalAdj.apply ψ i x ∂volume.restrict Ω =
-      -∑ j, ∑ c, violDir j i c * ∫ x, viol (E t) (B t) i x * pd c (ψ j) x ∂volume.restrict Ω := by
+      -∑ j, ∑ c, violDir j i c * ∫ x, viol (E t) (B t) i x * partialDeriv c (ψ j) x ∂volume.restrict Ω := by
     intro i
     simp only [hP, mul_neg, integral_neg, Finset.mul_sum]
     rw [integral_finsetSum _ fun j _ => integrable_mul _ ((hψ j).fderiv_apply _).memLp]
@@ -622,7 +622,7 @@ theorem ae_symTF_of_viol (X : L2F ℝ Ω Ix) {S : Set R3} (hSΩ : S ⊆ Ω)
 /-- A.e. symmetric and trace-free on `Ω` plus weakly divergence-free gives `L²(TSD)`. -/
 theorem mem_tsd_of_ae_symTF {X : L2F ℝ Ω Ix} (hX : ∀ᵐ y ∂volume.restrict Ω, SymTF X y)
     (hd : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, X ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) : X ∈ tsd Ω := by
+      ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) : X ∈ tsd Ω := by
   refine ⟨fun i j => Lp.ext ?_, ?_, fun φ hφ => by rw [inner_grad_testField _ hφ]; exact hd φ hφ⟩
   · filter_upwards [hX] with y hy using hy.1 i j
   · have e : ∑ i, X (i, i) = X (0, 0) + X (1, 1) + X (2, 2) := by simp [Fin.sum_univ_three]
@@ -687,7 +687,7 @@ variable {Ω : Set R3}
 /-- Weakly divergence-free fields are the kernel of `d₀†`. -/
 theorem weakDiv_eq_zero_of_mem_ker (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}
     (hX : X ∈ (gradCurl ℝ hΩ).d₀†.ker) (φ : Fin 3 → R3 → ℝ) (hφ : IsTestField Ω φ) :
-    ∑ ij : Ix, ∫ x, X ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
+    ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0 := by
   rw [← inner_grad_testField _ hφ]
   obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hX
   rw [← (gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).adjoint_minimal_inner_testField hΩ y hφ]
@@ -697,7 +697,7 @@ theorem weakDiv_eq_zero_of_mem_ker (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}
 /-- Conversely, weakly divergence-free fields lie in `N(d₀†)`. -/
 theorem mem_ker_of_weakDiv_eq_zero (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}
     (hX : ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, X ij x * pd ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) :
+      ∑ ij : Ix, ∫ x, X ij x * partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω = 0) :
     X ∈ (gradCurl ℝ hΩ).d₀†.ker := by
   have h : ∀ (φ : Fin 3 → R3 → ℝ) (hφ : IsTestField Ω φ),
       ⟪X, testField ((gradOp 3 3 : ConstCoeffOp R3 ℝ _ _).isTestField_apply hφ)⟫_ℝ = 0 :=

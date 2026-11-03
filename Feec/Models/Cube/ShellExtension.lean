@@ -12,6 +12,7 @@ public import Mathlib.Analysis.Calculus.FDeriv.Pi
 public import Mathlib.LinearAlgebra.Matrix.ToLin
 public import Mathlib.Topology.Algebra.Polynomial
 public import Mathlib.Analysis.Calculus.ContDiff.Polynomial
+public import Feec.ForMathlib.Calculus.Partial
 
 /-!
 # Extension from a shell into the cube `Q = (0, ½)³`
@@ -45,7 +46,7 @@ shell (`box`, `exists_n2_hest_le`). This is the extension step of the regular de
 
 ## Main definitions
 
-* `pd`, `refl`, `ext1`, `hest`, `tI`, `rem`, `lift`; `n2`, `In`, `Out`, `box`, `shell`.
+* `partialDeriv`, `refl`, `ext1`, `hest`, `tI`, `rem`, `lift`; `n2`, `In`, `Out`, `box`, `shell`.
 
 ## Main results
 
@@ -71,10 +72,6 @@ open scoped ENNReal NNReal Topology
 namespace Feec.Models.Cube.ShellExtension
 
 /-! ### Partial derivatives and one-coordinate affine maps -/
-
-/-- The partial derivative `∂_j F`. -/
-def pd (j : Fin 3) (F : (Fin 3 → ℝ) → ℝ) : (Fin 3 → ℝ) → ℝ :=
-  fun x => fderiv ℝ F x (Pi.single j 1)
 
 /-- The affine map `x ↦ x + ((a - 1) xᵢ + b) eᵢ`, acting by `t ↦ a t + b` in the coordinate `i`
 and by the identity in the others. -/
@@ -165,38 +162,6 @@ theorem eLpNorm_comp_refl_le (i : Fin 3) {a : ℝ} (ha : a ≠ 0) (b : ℝ) {G :
           hG.aestronglyMeasurable, smul_eq_mul]
         norm_num
 
-/-! ### Derivatives along coordinate lines -/
-
-theorem hasDerivAt_line {F : (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} (hF : DifferentiableAt ℝ F y)
-    (j : Fin 3) : HasDerivAt (fun s => F (y + Pi.single j s)) (pd j F y) 0 := by
-  have hl : HasDerivAt (fun s : ℝ => y + Pi.single j s) (Pi.single j 1) 0 := by
-    have : (fun s : ℝ => y + Pi.single j s) =
-        fun s => y + s • (Pi.single j (1 : ℝ) : Fin 3 → ℝ) := by
-      funext s; rw [← Pi.single_smul, smul_eq_mul, mul_one]
-    rw [this]
-    simpa using (HasDerivAt.smul_const (hasDerivAt_id (0 : ℝ))
-      (Pi.single j (1 : ℝ) : Fin 3 → ℝ)).const_add y
-  have h := (show HasFDerivAt F (fderiv ℝ F (y + Pi.single j 0)) (y + Pi.single j 0) by
-    rw [Pi.single_zero, add_zero]; exact hF.hasFDerivAt).comp_hasDerivAt (0 : ℝ) hl
-  simp only [Pi.single_zero, add_zero] at h
-  exact h
-
-theorem pd_eq_of_hasDerivAt {F : (Fin 3 → ℝ) → ℝ} {y : Fin 3 → ℝ} (hF : DifferentiableAt ℝ F y)
-    {j : Fin 3} {D : ℝ} (h : HasDerivAt (fun s => F (y + Pi.single j s)) D 0) : pd j F y = D :=
-  (hasDerivAt_line hF j).unique h
-
-theorem contDiff_pd {F : (Fin 3 → ℝ) → ℝ} (hF : ContDiff ℝ (⊤ : ℕ∞) F) (j : Fin 3) :
-    ContDiff ℝ (⊤ : ℕ∞) (pd j F) :=
-  (hF.fderiv_right (m := (⊤ : ℕ∞)) (by simp)).clm_apply contDiff_const
-
-theorem pd_add {F G : (Fin 3 → ℝ) → ℝ} (hF : Differentiable ℝ F) (hG : Differentiable ℝ G)
-    (j : Fin 3) : pd j (F + G) = pd j F + pd j G := by
-  funext x; simp [pd, fderiv_add (hF x) (hG x)]
-
-theorem pd_sub {F G : (Fin 3 → ℝ) → ℝ} (hF : Differentiable ℝ F) (hG : Differentiable ℝ G)
-    (j : Fin 3) : pd j (F - G) = pd j F - pd j G := by
-  funext x; simp [pd, fderiv_sub (hF x) (hG x)]
-
 /-! ### One-coordinate reflection operators with polynomial weights -/
 
 theorem contDiff_eval (P : ℝ[X]) {n : WithTop ℕ∞} : ContDiff ℝ n fun t : ℝ => P.eval t := by
@@ -235,20 +200,22 @@ def cω (j i : Fin 3) (ω : Fin 4 → ℝ[X]) : Fin 4 → ℝ[X] :=
 `∂ⱼ (R_ω F) = R_{dω} F + R_{cω} (∂ⱼ F)`. -/
 theorem pd_ext1 (i j : Fin 3) (ω : Fin 4 → ℝ[X]) {F : (Fin 3 → ℝ) → ℝ}
     (hF : Differentiable ℝ F) :
-    pd j (ext1 i ω F) = ext1 i (dω j i ω) F + ext1 i (cω j i ω) (pd j F) := by
+    partialDeriv j (ext1 i ω F) = ext1 i (dω j i ω) F + ext1 i (cω j i ω) (partialDeriv j F) := by
   funext x
   have hd : Differentiable ℝ (ext1 i ω F) := by
     unfold ext1
     exact Differentiable.fun_sum fun m _ =>
       (((ω m).differentiable).comp (differentiable_apply i)).mul (hF.comp
         ((contDiff_refl i _ _ (n := 1)).differentiable one_ne_zero))
-  refine pd_eq_of_hasDerivAt (hd x) ?_
+  have hl := (hd (x + Pi.single j 0)).hasDerivAt_comp_add_single
+  rw [Pi.single_zero, add_zero] at hl
+  refine hl.unique ?_
   have hsi : ∀ s : ℝ, (Pi.single j s : Fin 3 → ℝ) i = s * (Pi.single j (1 : ℝ) : Fin 3 → ℝ) i :=
     fun s => by rw [← smul_eq_mul, ← Pi.smul_apply, ← Pi.single_smul, smul_eq_mul, mul_one]
   have key : ∀ m, HasDerivAt (fun s : ℝ => (ω m).eval ((x + Pi.single j s : Fin 3 → ℝ) i) *
       F (refl i (lam m) (mu m) (x + Pi.single j s)))
       ((dω j i ω m).eval (x i) * F (refl i (lam m) (mu m) x) +
-        (cω j i ω m).eval (x i) * pd j F (refl i (lam m) (mu m) x)) 0 := by
+        (cω j i ω m).eval (x i) * partialDeriv j F (refl i (lam m) (mu m) x)) 0 := by
     intro m
     have h1 : HasDerivAt (fun s : ℝ => (ω m).eval ((x + Pi.single j s : Fin 3 → ℝ) i))
         ((derivative (ω m)).eval (x i) * (Pi.single j (1 : ℝ) : Fin 3 → ℝ) i) 0 := by
@@ -261,13 +228,14 @@ theorem pd_ext1 (i j : Fin 3) (ω : Fin 4 → ℝ[X]) {F : (Fin 3 → ℝ) → �
       refine this.congr_of_eventuallyEq (Eventually.of_forall fun s => ?_)
       simp [hsi s]
     have h2 : HasDerivAt (fun s : ℝ => F (refl i (lam m) (mu m) (x + Pi.single j s)))
-        ((if j = i then lam m else 1) * pd j F (refl i (lam m) (mu m) x)) 0 := by
-      have hl := hasDerivAt_line (hF (refl i (lam m) (mu m) x)) j
+        ((if j = i then lam m else 1) * partialDeriv j F (refl i (lam m) (mu m) x)) 0 := by
+      have hl := (hF (refl i (lam m) (mu m) x + Pi.single j 0)).hasDerivAt_comp_add_single
+      rw [Pi.single_zero, add_zero] at hl
       have hc : HasDerivAt (fun s : ℝ => (if j = i then lam m else 1) * s)
           (if j = i then lam m else 1) 0 := by
         simpa using HasDerivAt.const_mul (if j = i then lam m else 1) (hasDerivAt_id (0 : ℝ))
       have := (show HasDerivAt (fun s => F (refl i (lam m) (mu m) x + Pi.single j s))
-          (pd j F (refl i (lam m) (mu m) x)) ((if j = i then lam m else 1) * 0) by
+          (partialDeriv j F (refl i (lam m) (mu m) x)) ((if j = i then lam m else 1) * 0) by
         rw [mul_zero]; exact hl).comp (0 : ℝ) hc
       refine (this.congr_of_eventuallyEq (Eventually.of_forall fun s => ?_)).congr_deriv
         (by ring)
@@ -363,7 +331,7 @@ theorem hest_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 / 
 /-- **The Hestenes extension reproduces the first derivatives on the faces.** -/
 theorem pd_hest_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 / 2)
     {F : (Fin 3 → ℝ) → ℝ} (hF : Differentiable ℝ F) (j : Fin 3) :
-    pd j (hest i F) x = pd j F x := by
+    partialDeriv j (hest i F) x = partialDeriv j F x := by
   rw [hest, pd_ext1 i j ωE hF, Pi.add_apply]
   by_cases hji : j = i
   · subst hji
@@ -401,9 +369,9 @@ theorem tI_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 / 2)
   simp [tI, hest_of_face h]
 
 theorem pd_tI_of_face {i : Fin 3} {x : Fin 3 → ℝ} (h : x i = 0 ∨ x i = 1 / 2)
-    {F : (Fin 3 → ℝ) → ℝ} (hF : ContDiff ℝ 1 F) (j : Fin 3) : pd j (tI i F) x = 0 := by
+    {F : (Fin 3 → ℝ) → ℝ} (hF : ContDiff ℝ 1 F) (j : Fin 3) : partialDeriv j (tI i F) x = 0 := by
   have hd := hF.differentiable one_ne_zero
-  rw [tI, pd_sub hd ((contDiff_hest i hF).differentiable one_ne_zero), Pi.sub_apply,
+  rw [tI, partialDeriv_sub' hd ((contDiff_hest i hF).differentiable one_ne_zero), Pi.sub_apply,
     pd_hest_of_face h hd, sub_self]
 
 /-- The remainder `r = (I - E₀)(I - E₁)(I - E₂) q`. -/
@@ -439,7 +407,7 @@ theorem rem_of_face {x : Fin 3 → ℝ} (hx : OnFace x) (q : (Fin 3 → ℝ) →
 
 /-- **The first derivatives of the remainder vanish on the faces.** -/
 theorem pd_rem_of_face {x : Fin 3 → ℝ} (hx : OnFace x) {q : (Fin 3 → ℝ) → ℝ}
-    (hq : ContDiff ℝ 1 q) (j : Fin 3) : pd j (rem q) x = 0 := by
+    (hq : ContDiff ℝ 1 q) (j : Fin 3) : partialDeriv j (rem q) x = 0 := by
   obtain ⟨i, hi⟩ := hx
   fin_cases i
   · exact pd_tI_of_face hi (contDiff_tI 1 (contDiff_tI 2 hq)) j
@@ -450,8 +418,8 @@ theorem pd_rem_of_face {x : Fin 3 → ℝ} (hx : OnFace x) {q : (Fin 3 → ℝ) 
 
 /-- `‖F‖ + Σⱼ ‖∂ⱼF‖ + Σⱼₖ ‖∂ₖ∂ⱼF‖` in `L²(B)` (a quantity equivalent to the `H²(B)` norm). -/
 def n2 (F : (Fin 3 → ℝ) → ℝ) (B : Set (Fin 3 → ℝ)) : ℝ≥0∞ :=
-  eLpNorm F 2 (volume.restrict B) + ∑ j, eLpNorm (pd j F) 2 (volume.restrict B) +
-    ∑ j, ∑ k, eLpNorm (pd k (pd j F)) 2 (volume.restrict B)
+  eLpNorm F 2 (volume.restrict B) + ∑ j, eLpNorm (partialDeriv j F) 2 (volume.restrict B) +
+    ∑ j, ∑ k, eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B)
 
 theorem n2_mono (F : (Fin 3 → ℝ) → ℝ) {B B' : Set (Fin 3 → ℝ)} (h : B ⊆ B') :
     n2 F B ≤ n2 F B' := by
@@ -467,23 +435,23 @@ theorem eLpNorm_le_n2 (F : (Fin 3 → ℝ) → ℝ) (B : Set (Fin 3 → ℝ)) :
   unfold n2; rw [add_assoc]; exact le_self_add
 
 theorem eLpNorm_pd_le_n2 (F : (Fin 3 → ℝ) → ℝ) (B : Set (Fin 3 → ℝ)) (j : Fin 3) :
-    eLpNorm (pd j F) 2 (volume.restrict B) ≤ n2 F B := by
+    eLpNorm (partialDeriv j F) 2 (volume.restrict B) ≤ n2 F B := by
   unfold n2
-  calc eLpNorm (pd j F) 2 (volume.restrict B)
-      ≤ ∑ j, eLpNorm (pd j F) 2 (volume.restrict B) :=
-        Finset.single_le_sum (f := fun j => eLpNorm (pd j F) 2 (volume.restrict B))
+  calc eLpNorm (partialDeriv j F) 2 (volume.restrict B)
+      ≤ ∑ j, eLpNorm (partialDeriv j F) 2 (volume.restrict B) :=
+        Finset.single_le_sum (f := fun j => eLpNorm (partialDeriv j F) 2 (volume.restrict B))
           (fun _ _ => zero_le) (Finset.mem_univ j)
     _ ≤ _ := le_add_self.trans le_self_add
 
 theorem eLpNorm_pd_pd_le_n2 (F : (Fin 3 → ℝ) → ℝ) (B : Set (Fin 3 → ℝ)) (j k : Fin 3) :
-    eLpNorm (pd k (pd j F)) 2 (volume.restrict B) ≤ n2 F B := by
+    eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B) ≤ n2 F B := by
   unfold n2
-  calc eLpNorm (pd k (pd j F)) 2 (volume.restrict B)
-      ≤ ∑ k, eLpNorm (pd k (pd j F)) 2 (volume.restrict B) :=
-        Finset.single_le_sum (f := fun k => eLpNorm (pd k (pd j F)) 2 (volume.restrict B))
+  calc eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B)
+      ≤ ∑ k, eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B) :=
+        Finset.single_le_sum (f := fun k => eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B))
           (fun _ _ => zero_le) (Finset.mem_univ k)
-    _ ≤ ∑ j, ∑ k, eLpNorm (pd k (pd j F)) 2 (volume.restrict B) :=
-        Finset.single_le_sum (f := fun j => ∑ k, eLpNorm (pd k (pd j F)) 2 (volume.restrict B))
+    _ ≤ ∑ j, ∑ k, eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B) :=
+        Finset.single_le_sum (f := fun j => ∑ k, eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B))
           (fun _ _ => by positivity) (Finset.mem_univ j)
     _ ≤ _ := le_add_self
 
@@ -491,15 +459,15 @@ theorem n2_add_le {F G : (Fin 3 → ℝ) → ℝ} (hF : ContDiff ℝ (⊤ : ℕ�
     (hG : ContDiff ℝ (⊤ : ℕ∞) G) (B : Set (Fin 3 → ℝ)) : n2 (F + G) B ≤ n2 F B + n2 G B := by
   have d1 : ∀ {H : (Fin 3 → ℝ) → ℝ}, ContDiff ℝ (⊤ : ℕ∞) H → Differentiable ℝ H := fun h =>
     h.differentiable (by simp)
-  have e1 : ∀ j, pd j (F + G) = pd j F + pd j G := fun j => pd_add (d1 hF) (d1 hG) j
-  have e2 : ∀ j k, pd k (pd j F + pd j G) = pd k (pd j F) + pd k (pd j G) :=
-    fun j k => pd_add (d1 (contDiff_pd hF j)) (d1 (contDiff_pd hG j)) k
+  have e1 : ∀ j, partialDeriv j (F + G) = partialDeriv j F + partialDeriv j G := fun j => partialDeriv_add' (d1 hF) (d1 hG) j
+  have e2 : ∀ j k, partialDeriv k (partialDeriv j F + partialDeriv j G) = partialDeriv k (partialDeriv j F) + partialDeriv k (partialDeriv j G) :=
+    fun j k => partialDeriv_add' (d1 (ContDiff.partialDeriv_infty hF j)) (d1 (ContDiff.partialDeriv_infty hG j)) k
   unfold n2
   simp only [e1, e2]
   calc _ ≤ (eLpNorm F 2 (volume.restrict B) + eLpNorm G 2 (volume.restrict B)) +
-        ∑ j, (eLpNorm (pd j F) 2 (volume.restrict B) + eLpNorm (pd j G) 2 (volume.restrict B)) +
-        ∑ j, ∑ k, (eLpNorm (pd k (pd j F)) 2 (volume.restrict B) +
-          eLpNorm (pd k (pd j G)) 2 (volume.restrict B)) := by
+        ∑ j, (eLpNorm (partialDeriv j F) 2 (volume.restrict B) + eLpNorm (partialDeriv j G) 2 (volume.restrict B)) +
+        ∑ j, ∑ k, (eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B) +
+          eLpNorm (partialDeriv k (partialDeriv j G)) 2 (volume.restrict B)) := by
         gcongr with j _ j _ k _
         · exact eLpNorm_add_le one_le_two
         · exact eLpNorm_add_le one_le_two
@@ -512,15 +480,15 @@ theorem n2_sub_le {F G : (Fin 3 → ℝ) → ℝ} (hF : ContDiff ℝ (⊤ : ℕ�
     (hG : ContDiff ℝ (⊤ : ℕ∞) G) (B : Set (Fin 3 → ℝ)) : n2 (F - G) B ≤ n2 F B + n2 G B := by
   have d1 : ∀ {H : (Fin 3 → ℝ) → ℝ}, ContDiff ℝ (⊤ : ℕ∞) H → Differentiable ℝ H := fun h =>
     h.differentiable (by simp)
-  have e1 : ∀ j, pd j (F - G) = pd j F - pd j G := fun j => pd_sub (d1 hF) (d1 hG) j
-  have e2 : ∀ j k, pd k (pd j F - pd j G) = pd k (pd j F) - pd k (pd j G) :=
-    fun j k => pd_sub (d1 (contDiff_pd hF j)) (d1 (contDiff_pd hG j)) k
+  have e1 : ∀ j, partialDeriv j (F - G) = partialDeriv j F - partialDeriv j G := fun j => partialDeriv_sub' (d1 hF) (d1 hG) j
+  have e2 : ∀ j k, partialDeriv k (partialDeriv j F - partialDeriv j G) = partialDeriv k (partialDeriv j F) - partialDeriv k (partialDeriv j G) :=
+    fun j k => partialDeriv_sub' (d1 (ContDiff.partialDeriv_infty hF j)) (d1 (ContDiff.partialDeriv_infty hG j)) k
   unfold n2
   simp only [e1, e2]
   calc _ ≤ (eLpNorm F 2 (volume.restrict B) + eLpNorm G 2 (volume.restrict B)) +
-        ∑ j, (eLpNorm (pd j F) 2 (volume.restrict B) + eLpNorm (pd j G) 2 (volume.restrict B)) +
-        ∑ j, ∑ k, (eLpNorm (pd k (pd j F)) 2 (volume.restrict B) +
-          eLpNorm (pd k (pd j G)) 2 (volume.restrict B)) := by
+        ∑ j, (eLpNorm (partialDeriv j F) 2 (volume.restrict B) + eLpNorm (partialDeriv j G) 2 (volume.restrict B)) +
+        ∑ j, ∑ k, (eLpNorm (partialDeriv k (partialDeriv j F)) 2 (volume.restrict B) +
+          eLpNorm (partialDeriv k (partialDeriv j G)) 2 (volume.restrict B)) := by
         gcongr with j _ j _ k _
         · exact eLpNorm_sub_le one_le_two
         · exact eLpNorm_sub_le one_le_two
@@ -638,11 +606,11 @@ theorem n2_ext1_le (i : Fin 3) {ω : Fin 4 → ℝ[X]} {M : ℝ≥0} (h0 : Bd ω
   have est : ∀ {ρ : Fin 4 → ℝ[X]}, Bd ρ M → ∀ {H : (Fin 3 → ℝ) → ℝ}, ContDiff ℝ (⊤ : ℕ∞) H →
       eLpNorm (ext1 i ρ H) 2 (volume.restrict B) ≤ K * eLpNorm H 2 (volume.restrict B') :=
     fun hρ _ hH => eLpNorm_ext1_le i hρ hH.continuous hB hB' hBi hmaps
-  have hGj : ∀ j, ContDiff ℝ (⊤ : ℕ∞) (pd j G) := contDiff_pd hG
+  have hGj : ∀ j, ContDiff ℝ (⊤ : ℕ∞) (partialDeriv j G) := ContDiff.partialDeriv_infty hG
   set N := n2 G B'
   have T0 : eLpNorm (ext1 i ω G) 2 (volume.restrict B) ≤ K * N :=
     (est h0 hG).trans (by gcongr; exact eLpNorm_le_n2 G B')
-  have T1 : ∀ j, eLpNorm (pd j (ext1 i ω G)) 2 (volume.restrict B) ≤ 2 * K * N := by
+  have T1 : ∀ j, eLpNorm (partialDeriv j (ext1 i ω G)) 2 (volume.restrict B) ≤ 2 * K * N := by
     intro j
     rw [pd_ext1 i j ω (d1 hG)]
     refine (eLpNorm_add_le one_le_two).trans ?_
@@ -650,9 +618,9 @@ theorem n2_ext1_le (i : Fin 3) {ω : Fin 4 → ℝ[X]} {M : ℝ≥0} (h0 : Bd ω
           ((est (h1.dω j i) hG).trans (by gcongr; exact eLpNorm_le_n2 G B'))
           ((est (h0.cω j i) (hGj j)).trans (by gcongr; exact eLpNorm_pd_le_n2 G B' j))
       _ = 2 * K * N := by ring
-  have T2 : ∀ j k, eLpNorm (pd k (pd j (ext1 i ω G))) 2 (volume.restrict B) ≤ 4 * K * N := by
+  have T2 : ∀ j k, eLpNorm (partialDeriv k (partialDeriv j (ext1 i ω G))) 2 (volume.restrict B) ≤ 4 * K * N := by
     intro j k
-    rw [pd_ext1 i j ω (d1 hG), pd_add (d1 (contDiff_ext1 i _ hG)) (d1 (contDiff_ext1 i _ (hGj j))),
+    rw [pd_ext1 i j ω (d1 hG), partialDeriv_add' (d1 (contDiff_ext1 i _ hG)) (d1 (contDiff_ext1 i _ (hGj j))),
       pd_ext1 i k _ (d1 hG), pd_ext1 i k _ (d1 (hGj j))]
     have b1 : Bd (dω k i (dω j i ω)) M := by
       refine Bd.dω ?_ k i; rw [Dω_dω]; exact h2.dω j i
@@ -666,7 +634,7 @@ theorem n2_ext1_le (i : Fin 3) {ω : Fin 4 → ℝ[X]} {M : ℝ≥0} (h0 : Bd ω
           ((est b1 hG).trans (by gcongr; exact eLpNorm_le_n2 G B'))
           ((est b2 (hGj k)).trans (by gcongr; exact eLpNorm_pd_le_n2 G B' k)))
           (add_le_add ((est b3 (hGj j)).trans (by gcongr; exact eLpNorm_pd_le_n2 G B' j))
-          ((est b4 (contDiff_pd (hGj j) k)).trans
+          ((est b4 (ContDiff.partialDeriv_infty (hGj j) k)).trans
             (by gcongr; exact eLpNorm_pd_pd_le_n2 G B' j k)))
       _ = 4 * K * N := by ring
   unfold n2

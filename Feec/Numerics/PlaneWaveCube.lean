@@ -88,9 +88,9 @@ theorem planeWave_apply (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (x : R3) (a
 
 /-- `∂ₖ (P_{ab} sin ω(z − t)) = δ_{k2} ω cos ω(z − t) P_{ab}`. -/
 theorem pd_planeWave (P : Matrix (Fin 3) (Fin 3) ℝ) (w t : ℝ) (a b k : Fin 3) (x : R3) :
-    pd k (fun y => planeWave P w t y a b) x =
+    partialDeriv k (fun y => planeWave P w t y a b) x =
       if k = 2 then w * Real.cos (w * (x 2 - t)) * P a b else 0 := by
-  rw [pd, (hasFDerivAt_planeWave P w t x a b).fderiv]
+  rw [partialDeriv, (hasFDerivAt_planeWave P w t x a b).fderiv]
   simp only [smul_apply, ContinuousLinearMap.proj_apply, Pi.single_apply,
     smul_eq_mul]
   split_ifs with h1 h2 h2 <;> simp_all [eq_comm]

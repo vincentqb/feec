@@ -138,15 +138,13 @@ theorem hasDerivAt_comp_line {f : (Fin n → ℝ) → ℝ} {x v : Fin n → ℝ}
   have := hf.hasFDerivAt.comp_hasDerivAt t hl
   rwa [fderiv_apply_eq_sum_partialDeriv] at this
 
-/-- `r ↦ f(x + r eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t`. -/
+/-- `r ↦ f(x + r eₗ)` has derivative `∂ₗ f(x + t eₗ)` at `t` (for differentiable `f`; the general
+statement is `DifferentiableAt.hasDerivAt_comp_add_smul_single`). -/
 theorem hasDerivAt_comp_add_smul_single {f : (Fin n → ℝ) → ℝ} (hf : Differentiable ℝ f)
-    (x : Fin n → ℝ)
-    (l : Fin n) (t : ℝ) :
+    (x : Fin n → ℝ) (l : Fin n) (t : ℝ) :
     HasDerivAt (fun r : ℝ => f (x + r • Pi.single l 1))
-      (partialDeriv l f (x + t • Pi.single l 1)) t := by
-  have hl : HasDerivAt (fun r : ℝ => x + r • (Pi.single l 1 : Fin n → ℝ)) (Pi.single l 1) t := by
-    simpa using ((hasDerivAt_id t).smul_const (Pi.single l (1 : ℝ) : Fin n → ℝ)).const_add x
-  exact (hf _).hasFDerivAt.comp_hasDerivAt t hl
+      (partialDeriv l f (x + t • Pi.single l 1)) t :=
+  (hf _).hasDerivAt_comp_add_smul_single
 
 theorem sum_smul_single_mul (l : Fin n) (t : ℝ) (F : Fin n → ℝ) :
     ∑ i, (t • Pi.single l 1 : Fin n → ℝ) i * F i = t * F l := by

@@ -55,17 +55,17 @@ variable {Ω : Set R3}
 theorem sum_integral_mul_pd_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (B : ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) (hB : (B : L2F ℝ Ω Ix) ∈ tsd Ω)
     {φ : Fin 3 → R3 → ℝ} (hφ : ∀ i, ContDiff ℝ 1 (φ i)) :
-    ∑ jk : Ix, ∫ x, (B : L2F ℝ Ω Ix) jk x * pd jk.2 (φ jk.1) x ∂volume.restrict Ω = 0 := by
+    ∑ jk : Ix, ∫ x, (B : L2F ℝ Ω Ix) jk x * partialDeriv jk.2 (φ jk.1) x ∂volume.restrict Ω = 0 := by
   have hCs := curl_symm_of_mem_tsd hΩ B hB
   have e := minimal_curl_identity hΩ hb B (Ψ := skewOf φ) (contDiff_skewOf hφ)
   rw [sum_integral_mul_skewOf_eq_zero hCs] at e
   simp only [curlM_skewOf (fun i => (hφ i).differentiable one_ne_zero), mul_sub] at e
-  set d : R3 → ℝ := fun x => ∑ m, pd m (φ m) x
+  set d : R3 → ℝ := fun x => ∑ m, partialDeriv m (φ m) x
   have hdm : MemLp d 2 (volume.restrict Ω) :=
     memLp_of_continuous hΩ.measurableSet hb (continuous_finsetSum _ fun m _ =>
-      continuous_pd (hφ m) m)
-  have hpm : ∀ jk : Ix, MemLp (pd jk.1 (φ jk.2)) 2 (volume.restrict Ω) := fun jk =>
-    memLp_of_continuous hΩ.measurableSet hb (continuous_pd (hφ _) _)
+      ContDiff.continuous_partialDeriv (hφ m) m)
+  have hpm : ∀ jk : Ix, MemLp (partialDeriv jk.1 (φ jk.2)) 2 (volume.restrict Ω) := fun jk =>
+    memLp_of_continuous hΩ.measurableSet hb (ContDiff.continuous_partialDeriv (hφ _) _)
   rw [Finset.sum_congr rfl fun jk _ => integral_sub ?_ ?_] at e
   rotate_left
   · exact integrable_mul _ (by split_ifs; exacts [hdm, MemLp.zero])
@@ -89,11 +89,11 @@ theorem sum_integral_mul_pd_eq_zero (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
 /-- The gradient `∇φ` of a `C¹` field on `ℝ³`, as an element of `L²(Ω; ℝ³ˣ³)` (`Ω` bounded). -/
 def gradL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : Fin 3 → R3 → ℝ}
     (hφ : ∀ i, ContDiff ℝ 1 (φ i)) : L2F ℝ Ω Ix :=
-  toL2F fun jk : Ix => memLp_of_continuous hΩ.measurableSet hb (continuous_pd (hφ jk.1) jk.2)
+  toL2F fun jk : Ix => memLp_of_continuous hΩ.measurableSet hb (ContDiff.continuous_partialDeriv (hφ jk.1) jk.2)
 
 theorem inner_gradL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {φ : Fin 3 → R3 → ℝ}
     (hφ : ∀ i, ContDiff ℝ 1 (φ i)) (B : L2F ℝ Ω Ix) :
-    ⟪B, gradL2 hΩ hb hφ⟫_ℝ = ∑ jk : Ix, ∫ x, B jk x * pd jk.2 (φ jk.1) x ∂volume.restrict Ω :=
+    ⟪B, gradL2 hΩ hb hφ⟫_ℝ = ∑ jk : Ix, ∫ x, B jk x * partialDeriv jk.2 (φ jk.1) x ∂volume.restrict Ω :=
   inner_toL2F_eq B _
 
 variable (Ω) in
@@ -104,7 +104,7 @@ def tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) : Submodule ℝ (L2F 
 
 theorem mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {B : L2F ℝ Ω Ix} :
     B ∈ tsd₀ Ω hΩ hb ↔ B ∈ tsd Ω ∧ ∀ φ : Fin 3 → R3 → ℝ, (∀ i, ContDiff ℝ 1 (φ i)) →
-      ∑ jk : Ix, ∫ x, B jk x * pd jk.2 (φ jk.1) x ∂volume.restrict Ω = 0 := by
+      ∑ jk : Ix, ∫ x, B jk x * partialDeriv jk.2 (φ jk.1) x ∂volume.restrict Ω = 0 := by
   simp only [tsd₀, Submodule.mem_inf, Submodule.mem_iInf,
     Submodule.mem_orthogonal_singleton_iff_inner_right, real_inner_comm, inner_gradL2]
 
@@ -174,17 +174,17 @@ theorem tsdOp_apply_tr (φ : Ix → R3 → ℝ) (u : Unit) (x : R3) :
   simp
 
 theorem tsdOp_apply_div (φ : Ix → R3 → ℝ) (i : Fin 3) (x : R3) :
-    tsdOp.apply φ (Sum.inr (Sum.inr i)) x = ∑ j, pd j (φ (i, j)) x := by
+    tsdOp.apply φ (Sum.inr (Sum.inr i)) x = ∑ j, partialDeriv j (φ (i, j)) x := by
   simp only [ConstCoeffOp.apply, tsdOp, ConstCoeffOp.applyEntry_ite, ConstCoeffOp.applyEntry_singleton, ConstCoeffOp.applyEntry_nil',
     iterDeriv_singleton, one_mul]
   rw [Fintype.sum_prod_type]
-  simp [pd]
+  simp [partialDeriv]
 
 
 theorem tsdOp_formalAdj_apply (ψ : TsdRow → R3 → ℝ) (ij : Ix) (x : R3) :
     tsdOp.formalAdj.apply ψ ij x = ψ (Sum.inl ij) x - ψ (Sum.inl (ij.2, ij.1)) x +
       (if ij.1 = ij.2 then ψ (Sum.inr (Sum.inl ())) x else 0) -
-        pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x := by
+        partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x := by
   have hswap : ∀ ab : Ix, (ij = (ab.2, ab.1)) ↔ (ab = (ij.2, ij.1)) := fun ab => by
     obtain ⟨a, b⟩ := ab; obtain ⟨i, j⟩ := ij
     simp only [Prod.mk.injEq]; tauto
@@ -195,7 +195,7 @@ theorem tsdOp_formalAdj_apply (ψ : TsdRow → R3 → ℝ) (ij : Ix) (x : R3) :
     hswap, Finset.sum_ite_eq', Finset.mem_univ, ite_true, Finset.univ_unique,
     Finset.sum_singleton, List.reverse_nil, List.length_nil, List.reverse_singleton,
     List.length_singleton, iterDeriv_nil, iterDeriv_singleton]
-  simp [pd]
+  simp [partialDeriv]
   ring
 
 
@@ -217,7 +217,7 @@ theorem tsdOp_weak_of_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
       (Lp.memLp (B ij))).locallyIntegrable (by norm_num)
   set u : Ix → R3 → ℝ := fun ij => Ω.indicator (B ij : R3 → ℝ) with hu
   have hψtr : IsTest (univ : Set R3) (ψ (Sum.inr (Sum.inl ()))) := hψ _
-  have hψd : ∀ ij : Ix, IsTest (univ : Set R3) (fun x => pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) :=
+  have hψd : ∀ ij : Ix, IsTest (univ : Set R3) (fun x => partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) :=
     fun ij => (hψ _).fderiv_apply _
   have I : ∀ ij {g : R3 → ℝ}, IsTest (univ : Set R3) g → Integrable fun x => u ij x * g x :=
     fun ij g hg => integrable_mul_isTest (hli ij) hg
@@ -229,7 +229,7 @@ theorem tsdOp_weak_of_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
   have e : ∀ ij, ∫ x, u ij x * tsdOp.formalAdj.apply ψ ij x =
       (∫ x, u ij x * ψ (Sum.inl ij) x) - (∫ x, u ij x * ψ (Sum.inl (ij.2, ij.1)) x) +
         (∫ x, u ij x * (if ij.1 = ij.2 then ψ (Sum.inr (Sum.inl ())) x else 0)) -
-          (∫ x, u ij x * pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) := by
+          (∫ x, u ij x * partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) := by
     intro ij
     have i1 := I ij (hψ (Sum.inl ij))
     have i2 := I ij (hψ (Sum.inl (ij.2, ij.1)))
@@ -243,7 +243,7 @@ theorem tsdOp_weak_of_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     have hpt : (fun x => u ij x * tsdOp.formalAdj.apply ψ ij x) = fun x =>
         u ij x * ψ (Sum.inl ij) x - u ij x * ψ (Sum.inl (ij.2, ij.1)) x +
           u ij x * (if ij.1 = ij.2 then ψ (Sum.inr (Sum.inl ())) x else 0) -
-            u ij x * pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x := by
+            u ij x * partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x := by
       funext x; rw [tsdOp_formalAdj_apply]; ring
     rw [hpt, integral_sub j123 i4, integral_add j12 i3, integral_sub i1 i2]
   show ∑ ij, ∫ x, u ij x * tsdOp.formalAdj.apply ψ ij x = 0
@@ -279,7 +279,7 @@ theorem tsdOp_weak_of_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
       · simp [hu, indicator_of_notMem hxΩ]
     rw [this, zero_mul]; rfl
   -- the divergence rows
-  have h4 : ∑ ij : Ix, ∫ x, u ij x * pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x = 0 := by
+  have h4 : ∑ ij : Ix, ∫ x, u ij x * partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x = 0 := by
     simp only [hu, integral_indicator_mul hΩ]
     exact hB0 (fun i => ψ (Sum.inr (Sum.inr i))) fun i => (hψ _).contDiff.of_le (by simp)
   rw [h12, h3, h4]
@@ -297,7 +297,7 @@ theorem testField_mem_of_tsdOp_eq_zero (hΩ : IsOpen Ω) {φ : Ix → R3 → ℝ
   have htr : ∀ x, ∑ i, φ (i, i) x = 0 := fun x => by
     have := congrFun (congrFun hA (Sum.inr (Sum.inl ()))) x
     rwa [tsdOp_apply_tr] at this
-  have hdiv : ∀ i x, ∑ j, pd j (φ (i, j)) x = 0 := fun i x => by
+  have hdiv : ∀ i x, ∑ j, partialDeriv j (φ (i, j)) x = 0 := fun i x => by
     have := congrFun (congrFun hA (Sum.inr (Sum.inr i))) x
     rwa [tsdOp_apply_div] at this
   refine ⟨⟨fun a b => ?_, ?_, fun ψ hψ => ?_⟩,
@@ -313,8 +313,8 @@ theorem testField_mem_of_tsdOp_eq_zero (hΩ : IsOpen Ω) {φ : Ix → R3 → ℝ
     rw [Finset.sum_congr rfl fun i _ => h2 i]
     exact htr x
   · rw [inner_grad_testField _ hψ]
-    have e : ∀ ij : Ix, ∫ x, testField hφ ij x * pd ij.2 (ψ ij.1) x ∂volume.restrict Ω =
-        -∫ x, pd ij.2 (φ ij) x * ψ ij.1 x ∂volume.restrict Ω := fun ij => by
+    have e : ∀ ij : Ix, ∫ x, testField hφ ij x * partialDeriv ij.2 (ψ ij.1) x ∂volume.restrict Ω =
+        -∫ x, partialDeriv ij.2 (φ ij) x * ψ ij.1 x ∂volume.restrict Ω := fun ij => by
       rw [integral_pd_mul (hφ ij) ((hψ ij.1).contDiff.of_le (by simp)) ij.2, neg_neg]
       exact integral_congr_ae ((coeFn_testField hφ ij).mono fun x hx => by simp only; rw [hx])
     simp only [e, Finset.sum_neg_distrib, neg_eq_zero, Fintype.sum_prod_type]
@@ -367,12 +367,12 @@ theorem integral_eq_zero_of_mem_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBound
     simp only [hφd]
     split_ifs
     exacts [contDiff_apply ℝ (fun _ : Fin 3 => ℝ) b, contDiff_const]
-  have hpd : ∀ k i x, pd k (φ i) x = if i = a ∧ k = b then 1 else 0 := by
+  have hpd : ∀ k i x, partialDeriv k (φ i) x = if i = a ∧ k = b then 1 else 0 := by
     intro k i x
     by_cases hi : i = a
-    · simp [hφd, hi, pd_coord]
+    · simp [hφd, hi, partialDeriv_apply_coord]
     · simp only [hφd, hi, ite_false, false_and]
-      simp [pd]
+      simp [partialDeriv]
   have e := ((mem_tsd₀ hΩ hb).1 hB).2 φ hφ
   simp only [hpd, mul_ite, mul_one, mul_zero] at e
   rw [Finset.sum_eq_single (a, b) (fun jk _ hjk => by
@@ -418,16 +418,16 @@ end Propagation
 /-! ## Hessians of harmonic functions lie in the obstruction -/
 
 /-- The Hessian `(∇²h)_{ij} = ∂_j ∂_i h`. -/
-def hessField (h : R3 → ℝ) : Ix → R3 → ℝ := fun ij => pd ij.2 (pd ij.1 h)
+def hessField (h : R3 → ℝ) : Ix → R3 → ℝ := fun ij => partialDeriv ij.2 (partialDeriv ij.1 h)
 
 /-- The Laplacian `Δh = Σᵢ ∂ᵢ ∂ᵢ h`. -/
-def lap (h : R3 → ℝ) (x : R3) : ℝ := ∑ i, pd i (pd i h) x
+def lap (h : R3 → ℝ) (x : R3) : ℝ := ∑ i, partialDeriv i (partialDeriv i h) x
 
-theorem hessField_eq_gradM (h : R3 → ℝ) : hessField h = gradM fun i => pd i h := rfl
+theorem hessField_eq_gradM (h : R3 → ℝ) : hessField h = gradM fun i => partialDeriv i h := rfl
 
 theorem contDiff_hessField {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) (ij : Ix) :
     ContDiff ℝ ∞ (hessField h ij) :=
-  contDiff_pd_top (contDiff_pd_top hh _) _
+  ContDiff.partialDeriv_infty (ContDiff.partialDeriv_infty hh _) _
 
 /-- The `L²(Ω)` class of the Hessian of a smooth function. -/
 def hessL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) :
@@ -436,8 +436,8 @@ def hessL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 → ℝ} (hh 
 
 theorem hessL2_eq_gradL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 → ℝ}
     (hh : ContDiff ℝ ∞ h) :
-    hessL2 hΩ hb hh = gradL2 hΩ hb (φ := fun i => pd i h)
-      (fun i => (contDiff_pd_top hh i).of_le (by simp)) := rfl
+    hessL2 hΩ hb hh = gradL2 hΩ hb (φ := fun i => partialDeriv i h)
+      (fun i => (ContDiff.partialDeriv_infty hh i).of_le (by simp)) := rfl
 
 /-- **Hessians of functions harmonic on `Ω` lie in `L²(TSD)`**: `∇²h` is symmetric (Schwarz),
 trace-free (`Δh = 0`) and divergence-free (`div ∇²h = ∇Δh = 0`) on `Ω`. -/
@@ -445,20 +445,20 @@ theorem hessL2_mem_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {h : R3 �
     (hh : ContDiff ℝ ∞ h) (hΔ : ∀ x ∈ Ω, lap h x = 0) : hessL2 hΩ hb hh ∈ tsd Ω := by
   have h2 : ContDiff ℝ 2 h := hh.of_le (by simp)
   refine smoothField_mem_tsd hΩ hb (fun ij => (contDiff_hessField hh ij).of_le (by simp))
-    (fun i j x _ => (pd_pd_comm h2 i j x).symm) (fun x hx => hΔ x hx) (fun i x hx => ?_)
+    (fun i j x _ => (partialDeriv_comm h2 i j x).symm) (fun x hx => hΔ x hx) (fun i x hx => ?_)
   simp only [hessField]
-  have e : ∀ j, pd j (pd j (pd i h)) = pd i (pd j (pd j h)) := fun j => by
-    have e1 : pd j (pd i h) = pd i (pd j h) := funext fun z => pd_pd_comm h2 j i z
-    have h3 : ContDiff ℝ 2 (pd j h) := (contDiff_pd_top hh j).of_le (by simp)
+  have e : ∀ j, partialDeriv j (partialDeriv j (partialDeriv i h)) = partialDeriv i (partialDeriv j (partialDeriv j h)) := fun j => by
+    have e1 : partialDeriv j (partialDeriv i h) = partialDeriv i (partialDeriv j h) := funext fun z => partialDeriv_comm h2 j i z
+    have h3 : ContDiff ℝ 2 (partialDeriv j h) := (ContDiff.partialDeriv_infty hh j).of_le (by simp)
     rw [e1]
-    exact funext fun y => pd_pd_comm h3 j i y
+    exact funext fun y => partialDeriv_comm h3 j i y
   simp only [fun j => congrFun (e j) x]
-  have hl : (fun y => ∑ j, pd j (pd j h) y) = lap h := rfl
-  rw [← pd_sum _ (fun j _ => ((contDiff_pd_top (contDiff_pd_top hh j) j).differentiable
-    (by simp))), hl]
+  have hl : (fun y => ∑ j, partialDeriv j (partialDeriv j h) y) = lap h := rfl
+  rw [← partialDeriv_sum _ (fun j _ =>
+    (((hh.partialDeriv_infty j).partialDeriv_infty j).differentiable (by simp)) x), hl]
   have hev : lap h =ᶠ[𝓝 x] fun _ => (0 : ℝ) :=
     Filter.eventually_of_mem (hΩ.mem_nhds hx) fun y hy => hΔ y hy
-  rw [pd, hev.fderiv_eq]
+  rw [partialDeriv, hev.fderiv_eq]
   simp
 
 /-! ## The obstruction is infinite-dimensional -/
@@ -470,20 +470,20 @@ def expSin (t : ℝ) (x : R3) : ℝ := Real.exp (-t * x 0) * Real.sin (t * x 1)
 def expCos (t : ℝ) (x : R3) : ℝ := Real.exp (-t * x 0) * Real.cos (t * x 1)
 
 theorem pd_expSin (t : ℝ) (k : Fin 3) (x : R3) :
-    pd k (expSin t) x = if k = 0 then -t * expSin t x else if k = 1 then t * expCos t x else 0 := by
+    partialDeriv k (expSin t) x = if k = 0 then -t * expSin t x else if k = 1 then t * expCos t x else 0 := by
   have h0 := ((hasFDerivAt_apply (0 : Fin 3) x).const_mul (-t)).exp
   have h1 := ((hasFDerivAt_apply (1 : Fin 3) x).const_mul t).sin
   have h2 : HasFDerivAt (expSin t) _ x := h0.mul h1
-  rw [pd_of_hasFDerivAt h2]
+  rw [HasFDerivAt.partialDeriv_eq h2]
   fin_cases k <;> simp [expSin, expCos] <;> ring
 
 theorem pd_expCos (t : ℝ) (k : Fin 3) (x : R3) :
-    pd k (expCos t) x =
+    partialDeriv k (expCos t) x =
       if k = 0 then -t * expCos t x else if k = 1 then -t * expSin t x else 0 := by
   have h0 := ((hasFDerivAt_apply (0 : Fin 3) x).const_mul (-t)).exp
   have h1 := ((hasFDerivAt_apply (1 : Fin 3) x).const_mul t).cos
   have h2 : HasFDerivAt (expCos t) _ x := h0.mul h1
-  rw [pd_of_hasFDerivAt h2]
+  rw [HasFDerivAt.partialDeriv_eq h2]
   fin_cases k <;> simp [expSin, expCos] <;> ring
 
 theorem contDiff_expSin (t : ℝ) : ContDiff ℝ ∞ (expSin t) := by unfold expSin; fun_prop
@@ -497,21 +497,21 @@ theorem differentiable_expCos (t : ℝ) : Differentiable ℝ (expCos t) :=
   (contDiff_expCos t).differentiable (by simp)
 
 theorem pd_expCos_fun (t : ℝ) (k : Fin 3) :
-    pd k (expCos t) = fun x =>
+    partialDeriv k (expCos t) = fun x =>
       if k = 0 then -t * expCos t x else if k = 1 then -t * expSin t x else 0 :=
   funext (pd_expCos t k)
 
 theorem pd_expSin_fun (t : ℝ) (k : Fin 3) :
-    pd k (expSin t) = fun x =>
+    partialDeriv k (expSin t) = fun x =>
       if k = 0 then -t * expSin t x else if k = 1 then t * expCos t x else 0 :=
   funext (pd_expSin t k)
 
 theorem pd_const_mul_fun {f : R3 → ℝ} (hf : Differentiable ℝ f) (c : ℝ) (k : Fin 3) :
-    pd k (fun x => c * f x) = fun x => c * pd k f x :=
-  funext (pd_const_mul hf c k)
+    partialDeriv k (fun x => c * f x) = fun x => c * partialDeriv k f x :=
+  funext fun _ => partialDeriv_const_mul (hf _) c k
 
 /-- `∂₁ (e^{-t x₁} cos(t x₂)) = -t e^{-t x₁} cos(t x₂)`. -/
-theorem pd0_expCos (t : ℝ) : pd 0 (expCos t) = fun x => -t * expCos t x := by
+theorem pd0_expCos (t : ℝ) : partialDeriv 0 (expCos t) = fun x => -t * expCos t x := by
   rw [pd_expCos_fun]; simp
 
 /-- `e^{-t x₁} cos(t x₂)` is harmonic. -/
@@ -520,7 +520,7 @@ theorem lap_expCos (t : ℝ) (x : R3) : lap (expCos t) x = 0 := by
   simp only [Fin.isValue, ↓reduceIte, Fin.reduceEq]
   rw [pd_const_mul_fun (differentiable_expCos t), pd_const_mul_fun (differentiable_expSin t),
     pd_expCos_fun, pd_expSin_fun]
-  simp [pd]
+  simp [partialDeriv]
 
 /-- Smooth matrix fields on `ℝ³`. -/
 def smoothFields : Submodule ℝ (Ix → R3 → ℝ) where
@@ -558,13 +558,13 @@ theorem restrictL2_apply (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (Ψ : s
 
 /-- `∂₁` acting entrywise on smooth matrix fields. -/
 def pd0L : smoothFields →ₗ[ℝ] smoothFields where
-  toFun Ψ := ⟨fun ij => pd 0 (Ψ.1 ij), fun ij => contDiff_pd_top (Ψ.2 ij) 0⟩
+  toFun Ψ := ⟨fun ij => partialDeriv 0 (Ψ.1 ij), fun ij => ContDiff.partialDeriv_infty (Ψ.2 ij) 0⟩
   map_add' Ψ Φ := by
     refine Subtype.ext (funext fun ij => funext fun x => ?_)
-    exact pd_add ((Ψ.2 ij).differentiable (by simp)) ((Φ.2 ij).differentiable (by simp)) 0 x
+    exact partialDeriv_add ((Ψ.2 ij).differentiable (by simp) x) ((Φ.2 ij).differentiable (by simp) x) 0
   map_smul' c Ψ := by
     refine Subtype.ext (funext fun ij => funext fun x => ?_)
-    exact pd_const_mul ((Ψ.2 ij).differentiable (by simp)) c 0 x
+    exact partialDeriv_const_mul ((Ψ.2 ij).differentiable (by simp) x) c 0
 
 /-- `∂₁` preserves the kernel of the restriction (fields vanishing on the open `Ω`). -/
 theorem pd0L_mem_ker (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (Ψ : smoothFields)
@@ -575,24 +575,24 @@ theorem pd0L_mem_ker (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (Ψ : smoot
   have h0 := eqOn_zero_of_smoothField_eq_zero hΩ hb _ hΨ ij
   have hev : Ψ.1 ij =ᶠ[𝓝 x] fun _ => (0 : ℝ) :=
     Filter.eventually_of_mem (hΩ.mem_nhds hx) fun y hy => h0 y hy
-  change pd 0 (Ψ.1 ij) x = 0
-  rw [pd, hev.fderiv_eq]
+  change partialDeriv 0 (Ψ.1 ij) x = 0
+  rw [partialDeriv, hev.fderiv_eq]
   simp
 
 /-- `∂₁ ∇²h = ∇²(∂₁ h)` (Schwarz). -/
 theorem pd0_hessField {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) (ij : Ix) :
-    pd 0 (hessField h ij) = hessField (pd 0 h) ij := by
+    partialDeriv 0 (hessField h ij) = hessField (partialDeriv 0 h) ij := by
   simp only [hessField]
   funext x
-  have e1 : pd 0 (pd ij.1 h) = pd ij.1 (pd 0 h) :=
-    funext fun y => pd_pd_comm (hh.of_le (by simp)) 0 ij.1 y
-  rw [pd_pd_comm ((contDiff_pd_top hh _).of_le (by simp)) 0 ij.2 x, e1]
+  have e1 : partialDeriv 0 (partialDeriv ij.1 h) = partialDeriv ij.1 (partialDeriv 0 h) :=
+    funext fun y => partialDeriv_comm (hh.of_le (by simp)) 0 ij.1 y
+  rw [partialDeriv_comm ((ContDiff.partialDeriv_infty hh _).of_le (by simp)) 0 ij.2 x, e1]
 
 theorem hessField_const_mul {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h) (c : ℝ) (ij : Ix) :
     hessField (fun x => c * h x) ij = fun x => c * hessField h ij x := by
   simp only [hessField]
   rw [pd_const_mul_fun (hh.differentiable (by simp)),
-    pd_const_mul_fun ((contDiff_pd_top hh _).differentiable (by simp))]
+    pd_const_mul_fun ((ContDiff.partialDeriv_infty hh _).differentiable (by simp))]
 
 /-- `∇²(e^{-t x₁} cos(t x₂))` as a smooth field. -/
 def hessExp (t : ℝ) : smoothFields :=
@@ -600,7 +600,7 @@ def hessExp (t : ℝ) : smoothFields :=
 
 theorem pd0L_hessExp (t : ℝ) : pd0L (hessExp t) = (-t) • hessExp t := by
   refine Subtype.ext (funext fun ij => ?_)
-  change pd 0 (hessField (expCos t) ij) = fun x => -t * hessField (expCos t) ij x
+  change partialDeriv 0 (hessField (expCos t) ij) = fun x => -t * hessField (expCos t) ij x
   rw [pd0_hessField (contDiff_expCos t), pd0_expCos, hessField_const_mul (contDiff_expCos t)]
 
 theorem hessField_expCos_00 (t : ℝ) (x : R3) :
@@ -709,7 +709,7 @@ theorem tsdOp_weak_of_mem_tsd (hΩ : IsOpen Ω) {B : L2F ℝ Ω Ix} (hB : B ∈ 
   set u : Ix → R3 → ℝ := fun ij => Ω.indicator (B ij : R3 → ℝ) with hu
   have hψu : ∀ r, IsTest (univ : Set R3) (ψ r) := fun r => (hψ r).mono (subset_univ _)
   have hψtr : IsTest (univ : Set R3) (ψ (Sum.inr (Sum.inl ()))) := hψu _
-  have hψd : ∀ ij : Ix, IsTest (univ : Set R3) (fun x => pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) :=
+  have hψd : ∀ ij : Ix, IsTest (univ : Set R3) (fun x => partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) :=
     fun ij => (hψu _).fderiv_apply _
   have I : ∀ ij {g : R3 → ℝ}, IsTest (univ : Set R3) g → Integrable fun x => u ij x * g x :=
     fun ij g hg => integrable_mul_isTest (hli ij) hg
@@ -721,7 +721,7 @@ theorem tsdOp_weak_of_mem_tsd (hΩ : IsOpen Ω) {B : L2F ℝ Ω Ix} (hB : B ∈ 
   have e : ∀ ij, ∫ x, u ij x * tsdOp.formalAdj.apply ψ ij x =
       (∫ x, u ij x * ψ (Sum.inl ij) x) - (∫ x, u ij x * ψ (Sum.inl (ij.2, ij.1)) x) +
         (∫ x, u ij x * (if ij.1 = ij.2 then ψ (Sum.inr (Sum.inl ())) x else 0)) -
-          (∫ x, u ij x * pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) := by
+          (∫ x, u ij x * partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x) := by
     intro ij
     have i1 := I ij (hψu (Sum.inl ij))
     have i2 := I ij (hψu (Sum.inl (ij.2, ij.1)))
@@ -735,7 +735,7 @@ theorem tsdOp_weak_of_mem_tsd (hΩ : IsOpen Ω) {B : L2F ℝ Ω Ix} (hB : B ∈ 
     have hpt : (fun x => u ij x * tsdOp.formalAdj.apply ψ ij x) = fun x =>
         u ij x * ψ (Sum.inl ij) x - u ij x * ψ (Sum.inl (ij.2, ij.1)) x +
           u ij x * (if ij.1 = ij.2 then ψ (Sum.inr (Sum.inl ())) x else 0) -
-            u ij x * pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x := by
+            u ij x * partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x := by
       funext x; rw [tsdOp_formalAdj_apply]; ring
     rw [hpt, integral_sub j123 i4, integral_add j12 i3, integral_sub i1 i2]
   show ∑ ij, ∫ x, u ij x * tsdOp.formalAdj.apply ψ ij x = 0
@@ -769,7 +769,7 @@ theorem tsdOp_weak_of_mem_tsd (hΩ : IsOpen Ω) {B : L2F ℝ Ω Ix} (hB : B ∈ 
       · simp only [hu, indicator_of_mem hxΩ]; exact hx hxΩ
       · simp [hu, indicator_of_notMem hxΩ]
     rw [this, zero_mul]; rfl
-  have h4 : ∑ ij : Ix, ∫ x, u ij x * pd ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x = 0 := by
+  have h4 : ∑ ij : Ix, ∫ x, u ij x * partialDeriv ij.2 (ψ (Sum.inr (Sum.inr ij.1))) x = 0 := by
     simp only [hu, integral_indicator_mul hΩ]
     rw [← inner_grad_testField B (fun i => hψ (Sum.inr (Sum.inr i)))]
     exact hB.2.2 (fun i => ψ (Sum.inr (Sum.inr i))) (fun i => hψ (Sum.inr (Sum.inr i)))
@@ -797,7 +797,7 @@ theorem tsd_le_closure_curl_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   have htr : ∀ x ∈ Ω, ∑ i, φ (i, i) x = 0 := fun x hx => by
     have := hAφ (Sum.inr (Sum.inl ())) x hx
     rwa [tsdOp_apply_tr] at this
-  have hdiv : ∀ i, ∀ x ∈ Ω, ∑ j, pd j (φ (i, j)) x = 0 := fun i x hx => by
+  have hdiv : ∀ i, ∀ x ∈ Ω, ∑ j, partialDeriv j (φ (i, j)) x = 0 := fun i x hx => by
     have := hAφ (Sum.inr (Sum.inr i)) x hx
     rwa [tsdOp_apply_div] at this
   exact ⟨_, ⟨smoothField_mem_tsd hΩ hb hφ1 hsym htr hdiv,
@@ -880,7 +880,7 @@ theorem hessL2_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
   rw [e]
   refine smoothField_eq_zero hΩ hb _ fun ij x _ => ?_
   rw [hessField_eq_gradM]
-  exact curlM_gradM (fun i => (contDiff_pd_top hh i).of_le (by simp)) ij x
+  exact curlM_gradM (fun i => (ContDiff.partialDeriv_infty hh i).of_le (by simp)) ij x
 
 /-- **The stationary part of `K*` is infinite-dimensional**: for the grad–curl complex on a
 nonempty bounded open `Ω`, `S₂*` (with `S₂ = L²(TSD)`) contains the independent harmonic Hessians

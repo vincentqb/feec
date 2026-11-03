@@ -76,7 +76,7 @@ theorem Q_ae_eq_Icc {n : ℕ} :
 /-- **The divergence theorem on the cube**: for a `C¹` vector field `F` on `ℝ³`,
 `∫_Q Σ_m ∂_m F_m = Σ_m (∫_{x_m = ½} F_m - ∫_{x_m = 0} F_m)`. -/
 theorem integral_sum_pd_eq_faces {F : Fin 3 → R3 → ℝ} (hF : ∀ m, ContDiff ℝ 1 (F m)) :
-    ∫ x in Q (Fin 3), ∑ m, pd m (F m) x =
+    ∫ x in Q (Fin 3), ∑ m, partialDeriv m (F m) x =
       ∑ m, ((∫ y in Sq, F m (faceMap (m, true) y)) - ∫ y in Sq, F m (faceMap (m, false) y)) := by
   set a : Fin 3 → ℝ := 0
   set b : Fin 3 → ℝ := fun _ => 1 / 2
@@ -89,7 +89,7 @@ theorem integral_sum_pd_eq_faces {F : Fin 3 → R3 → ℝ} (hF : ∀ m, ContDif
   have key := integral_divergence_of_hasFDerivAt_off_countable' a b hle F
     (fun m x => fderiv ℝ (F m) x) (∅ : Set (Fin 3 → ℝ)) countable_empty
     (fun m => (hF m).continuous.continuousOn) (fun x _ m => hd m x) hcont.integrableOn_Icc
-  have hQ : ∫ x in Q (Fin 3), ∑ m, pd m (F m) x =
+  have hQ : ∫ x in Q (Fin 3), ∑ m, partialDeriv m (F m) x =
       ∫ x in Icc a b, ∑ m, fderiv ℝ (F m) x (Pi.single m 1) :=
     setIntegral_congr_set Q_ae_eq_Icc
   rw [hQ, key]
@@ -101,25 +101,6 @@ theorem integral_sum_pd_eq_faces {F : Fin 3 → R3 → ℝ} (hF : ∀ m, ContDif
   rfl
 
 /-! ### Green's formula for the row-wise curl -/
-
-theorem pd_fun_mul {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
-    (x : R3) : pd k (fun y => f y * g y) x = pd k f x * g x + f x * pd k g x := by
-  simp only [pd]
-  rw [fderiv_fun_mul (hf x) (hg x)]
-  simp
-  ring
-
-theorem pd_fun_sub {f g : R3 → ℝ} (hf : Differentiable ℝ f) (hg : Differentiable ℝ g) (k : Fin 3)
-    (x : R3) : pd k (fun y => f y - g y) x = pd k f x - pd k g x := by
-  simp only [pd]
-  rw [fderiv_fun_sub (hf x) (hg x)]
-  rfl
-
-theorem pd_fun_sum {ι : Type*} (s : Finset ι) {f : ι → R3 → ℝ} (hf : ∀ i, Differentiable ℝ (f i))
-    (k : Fin 3) (x : R3) : pd k (fun y => ∑ i ∈ s, f i y) x = ∑ i ∈ s, pd k (f i) x := by
-  simp only [pd]
-  rw [fderiv_fun_sum fun i _ => hf i x]
-  simp
 
 /-- The flux `F_m = Σᵢ (Φᵢ × Ψᵢ)_m` of Green's formula for the row-wise curl. -/
 def curlFlux (Φ Ψ : Ix → R3 → ℝ) (m : Fin 3) (x : R3) : ℝ :=
@@ -133,18 +114,18 @@ theorem contDiff_curlFlux {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, ContDiff �
 /-- **The pointwise Green identity**: `div (Σᵢ Φᵢ × Ψᵢ) = Σᵢ (curl Φᵢ · Ψᵢ - Φᵢ · curl Ψᵢ)`. -/
 theorem sum_pd_curlFlux {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, Differentiable ℝ (Φ ij))
     (hΨ : ∀ ij, Differentiable ℝ (Ψ ij)) (x : R3) :
-    ∑ m, pd m (curlFlux Φ Ψ m) x =
+    ∑ m, partialDeriv m (curlFlux Φ Ψ m) x =
       ∑ ij : Ix, (curlM Φ ij x * Ψ ij x - Φ ij x * curlM Ψ ij x) := by
-  have h1 : ∀ m, pd m (curlFlux Φ Ψ m) x = ∑ i, ((pd m (Φ (i, m + 1)) x * Ψ (i, m + 2) x +
-      Φ (i, m + 1) x * pd m (Ψ (i, m + 2)) x) - (pd m (Φ (i, m + 2)) x * Ψ (i, m + 1) x +
-      Φ (i, m + 2) x * pd m (Ψ (i, m + 1)) x)) := fun m => by
+  have h1 : ∀ m, partialDeriv m (curlFlux Φ Ψ m) x = ∑ i, ((partialDeriv m (Φ (i, m + 1)) x * Ψ (i, m + 2) x +
+      Φ (i, m + 1) x * partialDeriv m (Ψ (i, m + 2)) x) - (partialDeriv m (Φ (i, m + 2)) x * Ψ (i, m + 1) x +
+      Φ (i, m + 2) x * partialDeriv m (Ψ (i, m + 1)) x)) := fun m => by
     unfold curlFlux
-    rw [pd_fun_sum Finset.univ (f := fun i y => Φ (i, m + 1) y * Ψ (i, m + 2) y -
-      Φ (i, m + 2) y * Ψ (i, m + 1) y) (fun i => ((hΦ _).mul (hΨ _)).sub ((hΦ _).mul (hΨ _)))]
+    rw [partialDeriv_sum Finset.univ (f := fun i y => Φ (i, m + 1) y * Ψ (i, m + 2) y -
+      Φ (i, m + 2) y * Ψ (i, m + 1) y) (fun i _ => (((hΦ _).mul (hΨ _)).sub ((hΦ _).mul (hΨ _))) x)]
     refine Finset.sum_congr rfl fun i _ => ?_
-    rw [pd_fun_sub (f := fun y => Φ (i, m + 1) y * Ψ (i, m + 2) y)
-      (g := fun y => Φ (i, m + 2) y * Ψ (i, m + 1) y) ((hΦ _).mul (hΨ _)) ((hΦ _).mul (hΨ _)),
-      pd_fun_mul (hΦ _) (hΨ _), pd_fun_mul (hΦ _) (hΨ _)]
+    rw [partialDeriv_sub (f := fun y => Φ (i, m + 1) y * Ψ (i, m + 2) y)
+      (g := fun y => Φ (i, m + 2) y * Ψ (i, m + 1) y) ((hΦ _).mul (hΨ _) x) ((hΦ _).mul (hΨ _) x),
+      partialDeriv_mul (hΦ _ x) (hΨ _ x), partialDeriv_mul (hΦ _ x) (hΨ _ x)]
   simp only [h1, curlM, Fintype.sum_prod_type, Fin.sum_univ_three]
   simp only [show (0 : Fin 3) + 1 = 1 from rfl, show (0 : Fin 3) + 2 = 2 from rfl,
     show (1 : Fin 3) + 1 = 2 from rfl, show (1 : Fin 3) + 2 = 0 from rfl,
@@ -261,7 +242,7 @@ theorem integrableOn_Q {n : ℕ} {f : (Fin n → ℝ) → ℝ} (hf : Continuous 
 
 theorem continuous_curlM {Φ : Ix → R3 → ℝ} (hΦ : ∀ ij, ContDiff ℝ 1 (Φ ij)) (ij : Ix) :
     Continuous (curlM Φ ij) :=
-  (continuous_pd (hΦ _) _).sub (continuous_pd (hΦ _) _)
+  (ContDiff.continuous_partialDeriv (hΦ _) _).sub (ContDiff.continuous_partialDeriv (hΦ _) _)
 
 theorem inner_tanTrace_fluxTrace {Φ Ψ : Ix → R3 → ℝ} (hΦ : ∀ ij, Continuous (Φ ij))
     (hΨ : ∀ ij, Continuous (Ψ ij)) :

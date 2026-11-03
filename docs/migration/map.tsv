@@ -221,7 +221,6 @@ Feec.Evolution.Energy.norm_le_add_integral_of_re_inner_deriv_le	norm_le_add_inte
 Feec.Evolution.Energy.norm_le_of_re_inner_deriv_le	norm_le_of_re_inner_deriv_le	dedup
 Feec.Evolution.Energy.norm_le_add_integral_norm_deriv	-	deleted-helper
 Feec.BoundedDomain.pd	partialDeriv	generalize
-Feec.BoundedDomain.pd	Feec.Models.BoundedDomain.pd	rename
 Feec.BoundedDomain.continuous_pd	ContDiff.continuous_partialDeriv	generalize
 Feec.BoundedDomain.contDiff_pd	ContDiff.partialDeriv	generalize
 Feec.BoundedDomain.contDiff_pd_top	ContDiff.partialDeriv	generalize
@@ -233,7 +232,6 @@ Feec.BoundedDomain.pd_const_mul	partialDeriv_const_smul	generalize
 Feec.BoundedDomain.pd_zero	-	deleted-helper
 Feec.BoundedDomain.pd_ite_zero	-	deleted-helper
 Feec.BoundedDomain.pd_coord	partialDeriv_apply_coord	generalize
-Feec.BoundedDomain.pd_coord	Feec.Models.BoundedDomain.pd_coord	rename
 Feec.BoundedDomain.pd_pd_comm	partialDeriv_comm	generalize
 Feec.BoundedDomain.pd_pd_comm	Feec.Domain.fderiv_fderiv_comm	generalize
 Feec.BoundedDomain.pd_of_hasFDerivAt	HasFDerivAt.partialDeriv_eq	generalize
@@ -1779,7 +1777,7 @@ Feec.EB.fluxD	Feec.EinsteinBianchi.fluxD	rename
 Feec.EB.fluxD_apply	Feec.EinsteinBianchi.fluxD_apply	rename
 Feec.EB.fluxD_zero_left	Feec.EinsteinBianchi.fluxD_zero_left	rename
 Feec.EB.flux_apply	Feec.EinsteinBianchi.flux_apply	rename
-Feec.EB.hasDerivAt_line	Feec.EinsteinBianchi.hasDerivAt_line	rename
+Feec.EB.hasDerivAt_line	DifferentiableAt.hasDerivAt_partialDeriv	dedup
 Feec.EB.hd_cross	Feec.EinsteinBianchi.hd_cross	rename
 Feec.EB.hd_dot	Feec.EinsteinBianchi.hd_dot	rename
 Feec.EB.hd_energy	Feec.EinsteinBianchi.hd_energy	rename
@@ -2782,7 +2780,7 @@ Feec.BoundedSymDual.eF_trace	Feec.Counterexamples.BallSymTSD.eF_trace	rename
 Feec.BoundedSymDual.sum_pd_eF	Feec.Counterexamples.BallSymTSD.sum_pd_eF	rename
 Feec.BoundedSymDual.Mc	Feec.Counterexamples.BallSymTSD.Mc	rename
 Feec.BoundedSymDual.curlM_eF	Feec.Counterexamples.BallSymTSD.curlM_eF	rename
-Feec.BoundedSymDual.pd_const_fun	Feec.Counterexamples.BallSymTSD.pd_const_fun	rename
+Feec.BoundedSymDual.pd_const_fun	partialDeriv_const	dedup
 Feec.BoundedSymDual.pd_pd_chi	Feec.Counterexamples.BallSymTSD.pd_pd_chi	rename
 Feec.BoundedSymDual.pd_pd_chi_mul_linF	Feec.Counterexamples.BallSymTSD.pd_pd_chi_mul_linF	rename
 Feec.BoundedSymDual.divdivF_chi_eF	Feec.Counterexamples.BallSymTSD.divdivF_chi_eF	rename
@@ -3899,7 +3897,7 @@ Feec.BoxIdent.halfC_eq_zero_of	Feec.Models.Cube.RowWise.X	generalize
 Feec.BoxIdent.half_cField	Feec.Models.Cube.RowWise.X	generalize
 Feec.BoxIdent.half_vField	Feec.Models.Cube.RowWise.X	generalize
 Feec.BoxIdent.hasDerivAt_eta	Feec.Models.Cube.RowWise.hasDerivAt_eta	rename
-Feec.BoxIdent.hasDerivAt_line	Feec.Models.Cube.DeRhamIdent.hasDerivAt_line	generalize
+Feec.BoxIdent.hasDerivAt_line	DifferentiableAt.hasDerivAt_comp_add_single	generalize
 Feec.BoxIdent.hasFDerivAt_affH	Feec.Domain.hasFDerivAt_aff	dedup
 Feec.BoxIdent.iUnion_piece_ae_eq_univ	Feec.Models.Cube.Geometry.iUnion_piece_ae_eq_univ	rename
 Feec.BoxIdent.inner_cField	Feec.Models.Cube.RowWise.inner_J	generalize

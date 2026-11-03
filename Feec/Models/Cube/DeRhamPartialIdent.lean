@@ -567,8 +567,9 @@ theorem abs_fderiv_chiJ_le {J : Finset d} (m : ℕ) {c : d} (hc : c ∈ J) (y : 
     |fderiv ℝ (chiJ J m) y (Pi.single c 1)| ≤ |deriv (eta m) (y c)| := by
   have hd : ∀ s, HasDerivAt (eta m) (deriv (eta m) s) s := fun s =>
     ((contDiff_eta m).differentiable (by simp) s).hasDerivAt
-  have hl := hasDerivAt_line ((contDiff_chiJ (d := d) J m).differentiable (by simp)) y c 0
-  rw [Pi.single_zero, add_zero] at hl
+  have hl := ((contDiff_chiJ (d := d) J m).differentiable (by simp)
+    (y + Pi.single c 0)).hasDerivAt_comp_add_single
+  rw [Pi.single_zero, add_zero, partialDeriv] at hl
   set R : ℝ := ∏ i ∈ J.erase c, eta m (y i)
   have e : (fun s => chiJ J m (y + Pi.single c s)) = fun s => eta m (y c + s) * R := by
     funext s
@@ -593,8 +594,9 @@ theorem abs_fderiv_chiJ_le {J : Finset d} (m : ℕ) {c : d} (hc : c ∈ J) (y : 
 /-- **The cut-off is constant in the directions off `J`.** -/
 theorem fderiv_chiJ_of_notMem {J : Finset d} (m : ℕ) {c : d} (hc : c ∉ J) (y : d → ℝ) :
     fderiv ℝ (chiJ J m) y (Pi.single c 1) = 0 := by
-  have hl := hasDerivAt_line ((contDiff_chiJ (d := d) J m).differentiable (by simp)) y c 0
-  rw [Pi.single_zero, add_zero] at hl
+  have hl := ((contDiff_chiJ (d := d) J m).differentiable (by simp)
+    (y + Pi.single c 0)).hasDerivAt_comp_add_single
+  rw [Pi.single_zero, add_zero, partialDeriv] at hl
   have e : (fun s => chiJ J m (y + Pi.single c s)) = fun _ => chiJ J m y := by
     funext s
     refine Finset.prod_congr rfl fun i hi => ?_

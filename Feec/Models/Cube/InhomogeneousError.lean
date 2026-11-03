@@ -1672,7 +1672,7 @@ def twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) : FormField 3 := fun y s =>
   ∑ j, if s = {j}ᶜ then faceSign j * v j y else 0
 /-- The curl `(curl v)ₖ = ∂ₖ₊₁ vₖ₊₂ − ∂ₖ₊₂ vₖ₊₁` of a vector field. -/
 def curlV (v : Fin 3 → (Fin 3 → ℝ) → ℝ) (k : Fin 3) (y : Fin 3 → ℝ) : ℝ :=
-  pd (k + 1) (v (k + 2)) y - pd (k + 2) (v (k + 1)) y
+  partialDeriv (k + 1) (v (k + 2)) y - partialDeriv (k + 2) (v (k + 1)) y
 
 theorem finset_fin3_cases (s : Finset (Fin 3)) : s = ∅ ∨ s = {0} ∨ s = {1} ∨ s = {2} ∨
     s = {0, 1} ∨ s = {0, 2} ∨ s = {1, 2} ∨ s = {0, 1, 2} := by
@@ -1688,15 +1688,15 @@ theorem extDeriv_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
   funext y s
   simp only [extDeriv_apply, oneForm, twoForm, curlV]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, pd] <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, partialDeriv] <;>
     ring_nf
 
 theorem extDeriv_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
-    extDeriv (twoForm v) = fun y s => if s = Finset.univ then ∑ j, pd j (v j) y else 0 := by
+    extDeriv (twoForm v) = fun y s => if s = Finset.univ then ∑ j, partialDeriv j (v j) y else 0 := by
   funext y s
   simp only [extDeriv_apply, twoForm]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, pd]
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, partialDeriv]
   ring_nf
 
 theorem formalAdjD_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
@@ -1704,15 +1704,15 @@ theorem formalAdjD_twoForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
   funext y s
   simp only [formalAdjD, extDAdj, oneForm, twoForm, curlV]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, pd, compl_fin3] <;>
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, faceSign, partialDeriv, compl_fin3] <;>
     ring_nf
 
 theorem formalAdjD_oneForm (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
-    formalAdjD (oneForm v) = fun y s => if s = ∅ then -∑ j, pd j (v j) y else 0 := by
+    formalAdjD (oneForm v) = fun y s => if s = ∅ then -∑ j, partialDeriv j (v j) y else 0 := by
   funext y s
   simp only [formalAdjD, extDAdj, oneForm]
   rcases finset_fin3_cases s with rfl | rfl | rfl | rfl | rfl | rfl | rfl | rfl <;>
-    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, pd, compl_fin3]
+    simp (config := {decide := true}) [Fin.sum_univ_three, sgn, partialDeriv, compl_fin3]
 
 theorem oneForm_neg (v : Fin 3 → (Fin 3 → ℝ) → ℝ) :
     oneForm (fun j y => -v j y) = -oneForm v := by
@@ -1861,13 +1861,9 @@ namespace WholeSpaceTSD
 
 variable {W : WholeSpaceTSD} {T L : ℝ}
 
-theorem contDiff_pd {f : (Fin 3 → ℝ) → ℝ} (hf : ContDiff ℝ 2 f) (k : Fin 3) :
-    ContDiff ℝ 1 (pd k f) :=
-  (hf.fderiv_right (m := 1) (by norm_num)).clm_apply contDiff_const
-
 theorem contDiff_curlM {Φ : Ix → (Fin 3 → ℝ) → ℝ} (hΦ : ∀ ij, ContDiff ℝ 2 (Φ ij)) (ij : Ix) :
     ContDiff ℝ 1 (curlM Φ ij) :=
-  (contDiff_pd (hΦ _) _).sub (contDiff_pd (hΦ _) _)
+  ((hΦ _).partialDeriv (m := 1) (by norm_num) _).sub ((hΦ _).partialDeriv (m := 1) (by norm_num) _)
 
 /-- Row `r` of a whole-space TSD solution as forms `(0, E_r, B_r)`. -/
 def rowForms (E B : Ix → (Fin 3 → ℝ) → ℝ) (r : Fin 3) : Fin 3 → FormField 3 :=

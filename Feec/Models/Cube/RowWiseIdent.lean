@@ -52,7 +52,7 @@ the data `(0, 0, B₀)` with `B₀ ∈ L²(TSD)` and `d₁† B₀ = 0` (`RowWis
 
 * `RowWise.resQ_X`, `RowWise.X_reflB`, `RowWise.norm_sq_X`, `RowWise.X_toL2`; `RowWise.range_J`,
   `RowWise.inner_J`.
-* `DeRhamIdent.hasDerivAt_line`, `DeRhamIdent.abs_le_of_faces` (any dimension: a function vanishing
+* `DeRhamIdent.abs_le_of_faces` (any dimension: a function vanishing
   on two opposite faces of `Q` with a bounded normal derivative is `O(dist)`).
 * `RowWise.J_mem_graph_grad`, `RowWise.J_mem_graph_curl`, **`RowWise.mem_minimal_grad_of_J`**,
   **`RowWise.mem_minimal_curl_of_J`**.
@@ -82,17 +82,6 @@ namespace Feec.Models.Cube.DeRhamIdent
 
 variable {d : Type*} [Fintype d] [DecidableEq d]
 
-/-- Line derivative: `d/dt f(x + t e_k) = ∂_k f (x + t e_k)`. -/
-theorem hasDerivAt_line {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) (x : d → ℝ) (k : d) (t : ℝ) :
-    HasDerivAt (fun s => f (x + Pi.single k s))
-      (fderiv ℝ f (x + Pi.single k t) (Pi.single k 1)) t := by
-  have hl : HasDerivAt (fun s : ℝ => x + Pi.single k s) (Pi.single k 1) t := by
-    have : (fun s : ℝ => x + Pi.single k s) = fun s => x + s • (Pi.single k (1 : ℝ) : d → ℝ) := by
-      funext s; rw [Fourier.TorusWeak.single_eq_smul k s]
-    rw [this]
-    simpa using ((hasDerivAt_id t).smul_const (Pi.single k (1 : ℝ) : d → ℝ)).const_add x
-  exact (hf _).hasFDerivAt.comp_hasDerivAt t hl
-
 /-- **Vanishing on two opposite faces with a bounded normal derivative**: if `f = 0` on
 `{y_c = 0}` and `{y_c = ½}` and `|∂_c f| ≤ L`, then `|f(y)| ≤ L min(y_c, ½ - y_c)` on `Q`. -/
 theorem abs_le_of_faces {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) {c : d} {L : ℝ}
@@ -100,8 +89,8 @@ theorem abs_le_of_faces {f : (d → ℝ) → ℝ} (hf : Differentiable ℝ f) {c
     (h1 : ∀ y : d → ℝ, y c = 1 / 2 → f y = 0) {y : d → ℝ} (hy : y ∈ Geometry.Q d) :
     |f y| ≤ L * min (y c) (1 / 2 - y c) := by
   set g : ℝ → ℝ := fun s => f (y + Pi.single c s)
-  have hg : ∀ s, HasDerivAt g (fderiv ℝ f (y + Pi.single c s) (Pi.single c 1)) s :=
-    hasDerivAt_line hf y c
+  have hg : ∀ s, HasDerivAt g (fderiv ℝ f (y + Pi.single c s) (Pi.single c 1)) s := fun _ =>
+    (hf _).hasDerivAt_comp_add_single
   have hb : ∀ s ∈ (univ : Set ℝ), ‖deriv g s‖ ≤ L := fun s _ => by
     rw [(hg s).deriv, Real.norm_eq_abs]; exact hL _
   have hd : ∀ s ∈ (univ : Set ℝ), DifferentiableAt ℝ g s := fun s _ => (hg s).differentiableAt
@@ -953,7 +942,7 @@ end TestFields
 section Cutoff
 
 open Real
-open Models.BoundedDomain (R3 Ix pd curlM gradM smoothField)
+open Models.BoundedDomain (R3 Ix curlM gradM smoothField)
 
 /-- A bound for the derivative of `Real.smoothTransition`. -/
 theorem exists_bound_deriv_smoothTransition :
@@ -1197,19 +1186,15 @@ theorem eventually_chi_eq_one {y : R3} (hy : y ∈ Q (Fin 3)) :
 
 /-- `∂_k f = d/dt f(x + t e_k)|₀`. -/
 theorem pd_eq_deriv {f : R3 → ℝ} {x : R3} (hf : DifferentiableAt ℝ f x) (k : Fin 3) :
-    pd k f x = deriv (fun t => f (x + Pi.single k t)) 0 := by
-  have hl : HasDerivAt (fun t : ℝ => x + Pi.single k t) (Pi.single k 1) 0 := by
-    have : (fun t : ℝ => x + Pi.single k t) = fun t => x + t • (Pi.single k (1 : ℝ) : R3) := by
-      funext t; rw [Fourier.TorusWeak.single_eq_smul k t]
-    rw [this]
-    simpa using ((hasDerivAt_id (0 : ℝ)).smul_const (Pi.single k (1 : ℝ) : R3)).const_add x
-  have h := (show HasFDerivAt f (fderiv ℝ f x) (x + Pi.single k 0) by
-    simpa using hf.hasFDerivAt).comp_hasDerivAt (0 : ℝ) hl
-  exact h.deriv.symm
+    partialDeriv k f x = deriv (fun t => f (x + Pi.single k t)) 0 := by
+  have hl := (show DifferentiableAt ℝ f (x + Pi.single k 0) by simpa using hf
+    ).hasDerivAt_comp_add_single
+  rw [Pi.single_zero, add_zero] at hl
+  exact hl.deriv.symm
 
 /-- **The derivative of the cut-off**: `|∂_c χ_n(y)| ≤ |η_n'(y_c)|`. -/
 theorem abs_pd_chi_le (n : ℕ) (c : Fin 3) (y : R3) :
-    |pd c (chi n) y| ≤ |deriv (eta n) (y c)| := by
+    |partialDeriv c (chi n) y| ≤ |deriv (eta n) (y c)| := by
   have hd : ∀ s, HasDerivAt (eta n) (deriv (eta n) s) s := fun s =>
     ((contDiff_eta n).differentiable (by simp) s).hasDerivAt
   rw [pd_eq_deriv ((contDiff_chi n).differentiable (by simp) y)]
@@ -1297,7 +1282,7 @@ the commutator `∇χ_n × ψ` stays bounded because `ψ_tan = O(dist to the fac
 `0` pointwise in `Q`. -/
 theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
     (hψ : ∀ p, ContDiff ℝ (⊤ : ℕ∞) (ψ p)) {M L : ℝ} (hM : ∀ p y, |ψ p y| ≤ M)
-    (hMc : ∀ p y, |curlM ψ p y| ≤ M) (hL : ∀ p c y, |pd c (ψ p) y| ≤ L)
+    (hMc : ∀ p y, |curlM ψ p y| ≤ M) (hL : ∀ p c y, |partialDeriv c (ψ p) y| ≤ L)
     (hV : ∀ a c d, c ≠ d → ∀ y : R3, (y c = 0 ∨ y c = 1 / 2) → ψ (a, d) y = 0) :
     (smoothField Geometry.isOpen_Q isBounded_Q ψ fun p => (hψ p).continuous,
       smoothField Geometry.isOpen_Q isBounded_Q (curlM ψ)
@@ -1318,11 +1303,11 @@ theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
       (fun z hz => hV a c d hcd z (Or.inl hz))
       (fun z hz => hV a c d hcd z (Or.inr hz)) hy
   have hcross : ∀ n a c d, c ≠ d → ∀ y ∈ Q (Fin 3),
-      |pd c (chi n) y * ψ (a, d) y| ≤ 4 * M₀ * L := by
+      |partialDeriv c (chi n) y * ψ (a, d) y| ≤ 4 * M₀ * L := by
     intro n a c d hcd y hy
     have hL0 : 0 ≤ L := (abs_nonneg _).trans (hL (a, d) c y)
     rw [abs_mul]
-    calc |pd c (chi n) y| * |ψ (a, d) y| ≤
+    calc |partialDeriv c (chi n) y| * |ψ (a, d) y| ≤
           |deriv (eta n) (y c)| * (L * min (y c) (1 / 2 - y c)) :=
           mul_le_mul (abs_pd_chi_le n c y) (hface a c d hcd y hy) (abs_nonneg _) (abs_nonneg _)
       _ = L * (|deriv (eta n) (y c)| * min (y c) (1 / 2 - y c)) := by ring
@@ -1330,9 +1315,9 @@ theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
           mul_le_mul_of_nonneg_left (abs_deriv_eta_mul_le hM₀b n (Geometry.mem_Q.1 hy c)) hL0
       _ = 4 * M₀ * L := by ring
   have hcurlΦ : ∀ n a b y, curlM (Φ n) (a, b) y = chi n y * curlM ψ (a, b) y +
-      (pd (b + 1) (chi n) y * ψ (a, b + 2) y - pd (b + 2) (chi n) y * ψ (a, b + 1) y) := by
+      (partialDeriv (b + 1) (chi n) y * ψ (a, b + 2) y - partialDeriv (b + 2) (chi n) y * ψ (a, b + 1) y) := by
     intro n a b y
-    simp only [curlM, Φ, Models.BoundedDomain.pd_mul (hchid n y) (hdiff _ y)]
+    simp only [curlM, Φ, partialDeriv_mul (hchid n y) (hdiff _ y)]
     ring
   have happ : ∀ n, (Domain.curlOp 3 : Domain.ConstCoeffOp R3 ℝ Ix Ix).apply (Φ n) = curlM (Φ n) :=
     fun n => (Models.BoundedDomain.curlM_eq_apply (Φ n)).symm
@@ -1368,25 +1353,25 @@ theorem mem_closure_curl_of_smooth {ψ : Ix → R3 → ℝ}
       have h2 := hcross n a (b + 1) (b + 2) (by fin_cases b <;> decide) y hy
       have h3 := hcross n a (b + 2) (b + 1) (by fin_cases b <;> decide) y hy
       calc _ ≤ |chi n y * curlM ψ (a, b) y| +
-            |pd (b + 1) (chi n) y * ψ (a, b + 2) y - pd (b + 2) (chi n) y * ψ (a, b + 1) y| :=
+            |partialDeriv (b + 1) (chi n) y * ψ (a, b + 2) y - partialDeriv (b + 2) (chi n) y * ψ (a, b + 1) y| :=
             abs_add_le _ _
         _ ≤ M + (4 * M₀ * L + 4 * M₀ * L) := add_le_add h1 ((abs_sub _ _).trans (add_le_add h2 h3))
         _ = M + 2 * (4 * M₀ * L) := by ring
     · refine tendsto_const_nhds.congr' ?_
       filter_upwards [hev y hy] with n hn
       rw [happ]
-      simp only [curlM, Models.BoundedDomain.pd]
+      simp only [curlM, partialDeriv]
       rw [(hn _).fderiv_eq, (hn _).fderiv_eq]
 
 /-- **Cut-off approximation in `H¹`**: a smooth vector field on `ℝ³`, bounded with bounded first
 derivatives, vanishing on all faces of `Q`, restricts to an element of `H̊¹(Q; ℝ³)`. -/
 theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
     (hσ : ∀ a, ContDiff ℝ (⊤ : ℕ∞) (σ a)) {M L : ℝ} (hM : ∀ a y, |σ a y| ≤ M)
-    (hL : ∀ a c y, |pd c (σ a) y| ≤ L)
+    (hL : ∀ a c y, |partialDeriv c (σ a) y| ≤ L)
     (hV : ∀ a c, ∀ y : R3, (y c = 0 ∨ y c = 1 / 2) → σ a y = 0) :
     (smoothField Geometry.isOpen_Q isBounded_Q σ fun a => (hσ a).continuous,
       smoothField Geometry.isOpen_Q isBounded_Q (gradM σ)
-        fun p => Models.BoundedDomain.continuous_pd ((hσ p.1).of_le (by simp)) p.2) ∈
+        fun p => ContDiff.continuous_partialDeriv ((hσ p.1).of_le (by simp)) p.2) ∈
       closure ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).testGraph (Q (Fin 3)) :
         Set (Domain.L2F ℝ (Q (Fin 3)) (Fin 3) × Domain.L2F ℝ (Q (Fin 3)) Ix)) := by
   obtain ⟨M₀, hM₀, hM₀b⟩ := exists_bound_deriv_smoothTransition
@@ -1401,11 +1386,11 @@ theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
   have hface : ∀ a c, ∀ y ∈ Q (Fin 3), |σ a y| ≤ L * min (y c) (1 / 2 - y c) :=
     fun a c y hy => DeRhamIdent.abs_le_of_faces (hdiff _) (hL _ c)
       (fun z hz => hV a c z (Or.inl hz)) (fun z hz => hV a c z (Or.inr hz)) hy
-  have hcross : ∀ n a c, ∀ y ∈ Q (Fin 3), |pd c (chi n) y * σ a y| ≤ 4 * M₀ * L := by
+  have hcross : ∀ n a c, ∀ y ∈ Q (Fin 3), |partialDeriv c (chi n) y * σ a y| ≤ 4 * M₀ * L := by
     intro n a c y hy
     have hL0 : 0 ≤ L := (abs_nonneg _).trans (hL a c y)
     rw [abs_mul]
-    calc |pd c (chi n) y| * |σ a y| ≤
+    calc |partialDeriv c (chi n) y| * |σ a y| ≤
           |deriv (eta n) (y c)| * (L * min (y c) (1 / 2 - y c)) :=
           mul_le_mul (abs_pd_chi_le n c y) (hface a c y hy) (abs_nonneg _) (abs_nonneg _)
       _ = L * (|deriv (eta n) (y c)| * min (y c) (1 / 2 - y c)) := by ring
@@ -1413,7 +1398,7 @@ theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
           mul_le_mul_of_nonneg_left (abs_deriv_eta_mul_le hM₀b n (Geometry.mem_Q.1 hy c)) hL0
       _ = 4 * M₀ * L := by ring
   have happ : ∀ n p y, (Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).apply (φ n) p y =
-      pd p.2 (φ n p.1) y := fun n p y => Domain.gradOp_apply _ _ _
+      partialDeriv p.2 (φ n p.1) y := fun n p y => Domain.gradOp_apply _ _ _
   refine mem_closure_of_tendsto (b := (atTop : Filter ℕ))
     (f := fun n => (Domain.testField (hφ n),
       Domain.testField ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix).isTestField_apply
@@ -1434,22 +1419,21 @@ theorem mem_closure_grad_of_smooth {σ : Fin 3 → R3 → ℝ}
     refine tendsto_toLp_of_bdd (fun n => ((Domain.gradOp 3 3 : Domain.ConstCoeffOp R3 ℝ (Fin 3) Ix
         ).isTestField_apply (hφ n) (a, b)).memLp)
       (Domain.memLp_of_continuous Geometry.measurableSet_Q isBounded_Q
-        (Models.BoundedDomain.continuous_pd ((hσ a).of_le (by simp)) b))
+        (ContDiff.continuous_partialDeriv ((hσ a).of_le (by simp)) b))
       (K := 4 * M₀ * L + L) (fun n y hy => ?_) fun y hy => ?_
     · rw [happ]
-      simp only [φ, Models.BoundedDomain.pd_mul (hchid n y) (hdiff _ y)]
-      have h2 : |chi n y * pd b (σ a) y| ≤ L := by
+      simp only [φ, partialDeriv_mul (hchid n y) (hdiff _ y)]
+      have h2 : |chi n y * partialDeriv b (σ a) y| ≤ L := by
         rw [abs_mul]
-        calc |chi n y| * |pd b (σ a) y| ≤ 1 * L :=
+        calc |chi n y| * |partialDeriv b (σ a) y| ≤ 1 * L :=
               mul_le_mul (abs_chi_le_one n y) (hL a b y) (abs_nonneg _) zero_le_one
           _ = L := one_mul L
       have h3 := hcross n a b y hy
-      rw [mul_comm (σ a y)]
       exact (abs_add_le _ _).trans (by linarith)
     · refine tendsto_const_nhds.congr' ?_
       filter_upwards [hev y hy] with n hn
       rw [happ]
-      simp only [Models.BoundedDomain.pd]
+      simp only [partialDeriv]
       rw [(hn _).fderiv_eq]
 
 end Cutoff
@@ -1526,7 +1510,7 @@ section Trig
 open UnitAddTorus
 open TorusWeak (trigPoly partialT)
 open Fourier.GradCurl
-open Models.BoundedDomain (R3 Ix pd curlM gradM smoothField)
+open Models.BoundedDomain (R3 Ix curlM gradM smoothField)
 open Geometry (flipB)
 
 /-- The real part of the lift of a function on `𝕋³` to `ℝ³`. -/
@@ -1548,10 +1532,10 @@ theorem contDiff_reLift {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) :
 
 /-- `∂_c Re(g ∘ proj) = Re((∂_c g) ∘ proj)`. -/
 theorem pd_reLift {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c : Fin 3) (y : R3) :
-    pd c (reLift g) y = (partialT c g (proj y)).re := by
+    partialDeriv c (reLift g) y = (partialT c g (proj y)).re := by
   have hd : Differentiable ℝ (g ∘ proj) := hg.contDiff_one.differentiable one_ne_zero
   rw [TorusWeak.partialT_proj hd]
-  unfold pd reLift
+  unfold partialDeriv reLift
   have : HasFDerivAt (fun y => (g (proj y)).re)
       (Complex.reCLM.comp (fderiv ℝ (g ∘ proj) y)) y :=
     Complex.reCLM.hasFDerivAt.comp y (hd y).hasFDerivAt
@@ -1563,7 +1547,7 @@ theorem abs_reLift_le (g : C(UnitAddTorus (Fin 3), ℂ)) (y : R3) : |reLift g y|
 
 /-- A smooth function on `𝕋³` has bounded partial derivatives. -/
 theorem abs_pd_reLift_le {g : UnitAddTorus (Fin 3) → ℂ} (hg : IsSmooth g) (c : Fin 3) (y : R3) :
-    |pd c (reLift g) y| ≤
+    |partialDeriv c (reLift g) y| ≤
       ‖(⟨partialT c g, TorusWeak.continuous_partialT hg.contDiff_one c⟩ :
         C(UnitAddTorus (Fin 3), ℂ))‖ := by
   rw [pd_reLift hg]
@@ -1669,7 +1653,7 @@ theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
   set D : Ix → Fin 3 → C(UnitAddTorus (Fin 3), ℂ) := fun p c =>
     ⟨partialT c (Pp p), TorusWeak.continuous_partialT (hPs p).contDiff_one c⟩
   set L : ℝ := ∑ p, ∑ c, ‖D p c‖
-  have hL : ∀ p c y, |pd c (ψ p) y| ≤ L := fun p c y => by
+  have hL : ∀ p c y, |partialDeriv c (ψ p) y| ≤ L := fun p c y => by
     refine (abs_pd_reLift_le (hPs p) c y).trans ?_
     calc ‖D p c‖ ≤ ∑ c', ‖D p c'‖ := le_sum_norm (D p) c
       _ ≤ ∑ p', ∑ c', ‖D p' c'‖ := Finset.single_le_sum (f := fun p' => ∑ c', ‖D p' c'‖)
@@ -1683,7 +1667,7 @@ theorem trig_closure_curl {z : Space 1} (hz : z ∈ Parity.realAction.fixed 1)
     have h2 := hL (p.1, p.2 + 1) (p.2 + 2) y
     have h3 : 0 ≤ ∑ p, ‖Pp p‖ := Finset.sum_nonneg fun _ _ => norm_nonneg _
     calc |curlM ψ p y|
-        ≤ |pd (p.2 + 1) (ψ (p.1, p.2 + 2)) y| + |pd (p.2 + 2) (ψ (p.1, p.2 + 1)) y| :=
+        ≤ |partialDeriv (p.2 + 1) (ψ (p.1, p.2 + 2)) y| + |partialDeriv (p.2 + 2) (ψ (p.1, p.2 + 1)) y| :=
           abs_sub _ _
       _ ≤ M := by linarith
   have hpar := fixed_one_iff.1 (Parity.mem_realFixed_iff.1 hz).2
@@ -1727,7 +1711,7 @@ theorem trig_closure_grad {z : Space 0} (hz : z ∈ Parity.realAction.fixed 0)
   set D : Fin 3 → Fin 3 → C(UnitAddTorus (Fin 3), ℂ) := fun a c =>
     ⟨partialT c (Pp a), TorusWeak.continuous_partialT (hPs a).contDiff_one c⟩
   set L : ℝ := ∑ a, ∑ c, ‖D a c‖
-  have hL : ∀ a c y, |pd c (ψ a) y| ≤ L := fun a c y => by
+  have hL : ∀ a c y, |partialDeriv c (ψ a) y| ≤ L := fun a c y => by
     refine (abs_pd_reLift_le (hPs a) c y).trans ?_
     calc ‖D a c‖ ≤ ∑ c', ‖D a c'‖ := le_sum_norm (D a) c
       _ ≤ ∑ a', ∑ c', ‖D a' c'‖ := Finset.single_le_sum (f := fun a' => ∑ c', ‖D a' c'‖)
@@ -1755,7 +1739,7 @@ theorem trig_closure_grad {z : Space 0} (hz : z ∈ Parity.realAction.fixed 0)
   subst hyz
   have hdz : Jinv (P := Ix) (RealTorus.gradCurl.d 0 1 ⟨z, hd⟩) = smoothField Geometry.isOpen_Q
       isBounded_Q (gradM ψ)
-        fun p => Models.BoundedDomain.continuous_pd ((hψ p.1).of_le (by simp)) p.2 := by
+        fun p => ContDiff.continuous_partialDeriv ((hψ p.1).of_le (by simp)) p.2 := by
     rw [hy2]; exact Jr_J 1 _
   rw [hdz, heq]
   exact hcl

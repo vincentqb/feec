@@ -216,9 +216,9 @@ theorem ebVerdict_old_absorbingVerdict :
     -- 2. the constraint: Gauss laws and TSD on the domain of dependence, TSD not invariant
     ((∀ u₀ ∈ tsdPair, ∀ t, 0 ≤ t → ∀ φ : Fin 3 → R3 → ℝ, IsTestField (Q (Fin 3)) φ →
         (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x *
-          pd ij.2 (φ ij.1) x = 0) ∧
+          partialDeriv ij.2 (φ ij.1) x = 0) ∧
         ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x *
-          pd ij.2 (φ ij.1) x = 0) ∧
+          partialDeriv ij.2 (φ ij.1) x = 0) ∧
       (∀ u₀ ∈ tsdPair, ∀ t, 0 ≤ t → ∀ᵐ y ∂volume.restrict (depDomain (Q (Fin 3)) t),
         SymTF (absorbingSemigroup.S t u₀).fst y ∧ SymTF (absorbingSemigroup.S t u₀).snd y) ∧
       ¬ ∀ t, 0 ≤ t → ∀ x ∈ tsdPair, absorbingSemigroup.S t x ∈ tsdPair) ∧

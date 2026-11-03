@@ -212,14 +212,14 @@ theorem isTestField_skewE0 {f : R3 → ℝ} (hf : IsTest (Q (Fin 3)) f) :
 
 theorem curlM_skewE0 {f : R3 → ℝ} (hf : Differentiable ℝ f) (jk : Ix) (x : R3) :
     curlM (skewE0 f) jk x =
-      (if jk.1 = jk.2 then pd 0 f x else 0) - (if jk.2 = 0 then pd jk.1 f x else 0) := by
+      (if jk.1 = jk.2 then partialDeriv 0 f x else 0) - (if jk.2 = 0 then partialDeriv jk.1 f x else 0) := by
   rw [skewE0, curlM_skewOf (fun i => by split_ifs; exacts [hf, differentiable_const 0])]
   simp [pd_ite_zero]
 
 /-- **The normal–normal functional** `λ_f(E) = Σⱼ ∫_Q E_{0j} ∂ⱼ f = ⟪E₀, ∇f⟫`: for divergence-free
 `E` and `f` vanishing on the faces other than `{x₀ = ½}`, the weak normal–normal trace `∮ E₀₀ f`. -/
 def normalNormalFun (f : R3 → ℝ) (E : MQ) : ℝ :=
-  ∑ j : Fin 3, ∫ x in Q (Fin 3), E (0, j) x * pd j f x
+  ∑ j : Fin 3, ∫ x in Q (Fin 3), E (0, j) x * partialDeriv j f x
 
 /-- **Symmetry and trace-freeness turn the normal–normal functional into a curl pairing**:
 `λ_f(E) = -⟪E, curl Ψ_f⟫`. -/
@@ -228,7 +228,7 @@ theorem normalNormalFun_eq_neg_inner_curl {E : MQ} (hsym : ∀ i j, E (i, j) = E
     normalNormalFun f E =
       -∑ jk, ∫ x in Q (Fin 3), E jk x * curlM (skewE0 f) jk x := by
   have hd := hf.differentiable one_ne_zero
-  have hp : ∀ j, Continuous (pd j f) := fun j => continuous_pd hf j
+  have hp : ∀ j, Continuous (partialDeriv j f) := fun j => ContDiff.continuous_partialDeriv hf j
   have hint : ∀ jk (g : R3 → ℝ), Continuous g →
       Integrable (fun x => E jk x * g x) (volume.restrict (Q (Fin 3))) :=
     fun jk g hg => integrable_mul _ (memLp_Q hg)
@@ -237,12 +237,12 @@ theorem normalNormalFun_eq_neg_inner_curl {E : MQ} (hsym : ∀ i j, E (i, j) = E
       split_ifs; exacts [hp 0, continuous_const])) (hint jk _ (by
       split_ifs; exacts [hp _, continuous_const]))]
   rw [Finset.sum_sub_distrib]
-  have h1 : ∑ jk : Ix, ∫ x in Q (Fin 3), E jk x * (if jk.1 = jk.2 then pd 0 f x else 0) = 0 := by
+  have h1 : ∑ jk : Ix, ∫ x in Q (Fin 3), E jk x * (if jk.1 = jk.2 then partialDeriv 0 f x else 0) = 0 := by
     simp only [mul_ite, mul_zero, integral_ite_zero, Fintype.sum_prod_type, Finset.sum_ite_eq,
       Finset.mem_univ, ite_true]
     simp only [fun u : L2 ℝ (Q (Fin 3)) => integral_mul_eq_inner u (memLp_Q (hp 0)), ← sum_inner,
       htr, inner_zero_left]
-  have h2 : ∑ jk : Ix, ∫ x in Q (Fin 3), E jk x * (if jk.2 = 0 then pd jk.1 f x else 0) =
+  have h2 : ∑ jk : Ix, ∫ x in Q (Fin 3), E jk x * (if jk.2 = 0 then partialDeriv jk.1 f x else 0) =
       normalNormalFun f E := by
     rw [Fintype.sum_prod_type]
     refine Finset.sum_congr rfl fun a _ => ?_
@@ -302,8 +302,8 @@ theorem isTestField_diagPair {f : R3 → ℝ} (hf : IsTest (Q (Fin 3)) f) :
 
 theorem curlM_diagPair (f : R3 → ℝ) (jk : Ix) (x : R3) :
     curlM (diagPair f) jk x =
-      if jk = (1, 0) then -pd 2 f x else if jk = (1, 2) then pd 0 f x else
-      if jk = (2, 0) then pd 1 f x else if jk = (2, 1) then -pd 0 f x else 0 := by
+      if jk = (1, 0) then -partialDeriv 2 f x else if jk = (1, 2) then partialDeriv 0 f x else
+      if jk = (2, 0) then partialDeriv 1 f x else if jk = (2, 1) then -partialDeriv 0 f x else 0 := by
   obtain ⟨j, k⟩ := jk
   simp only [curlM, diagPair, pd_ite_zero]
   fin_cases j <;> fin_cases k <;> simp
@@ -313,8 +313,8 @@ theorem curlM_diagPair (f : R3 → ℝ) (jk : Ix) (x : R3) :
 theorem sum_integral_curlM_diagPair {B : MQ} (hB : B (1, 2) = B (2, 1)) {f : R3 → ℝ}
     (hf : ContDiff ℝ 1 f) :
     ∑ jk, ∫ x in Q (Fin 3), B jk x * curlM (diagPair f) jk x =
-      -(∫ x in Q (Fin 3), B (1, 0) x * pd 2 f x) + ∫ x in Q (Fin 3), B (2, 0) x * pd 1 f x := by
-  have hp : ∀ j, Continuous (pd j f) := fun j => continuous_pd hf j
+      -(∫ x in Q (Fin 3), B (1, 0) x * partialDeriv 2 f x) + ∫ x in Q (Fin 3), B (2, 0) x * partialDeriv 1 f x := by
+  have hp : ∀ j, Continuous (partialDeriv j f) := fun j => ContDiff.continuous_partialDeriv hf j
   simp only [curlM_diagPair, Fintype.sum_prod_type, Fin.sum_univ_three]
   simp only [Prod.mk.injEq, mul_ite, mul_zero, mul_neg]
   simp
@@ -427,18 +427,18 @@ theorem isTest_faceFunCut {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) (k
     exact mem_Q.1 (hψ.tsupport_subset hy) j
 
 theorem pd_faceFunCut {ψ : (Fin 2 → ℝ) → ℝ} (hψ : IsTest Sq ψ) (k : ℕ) {j : Fin 3} (hj : j ≠ 0)
-    (x : R3) : pd j (faceFunCut ψ k) x = pd j (faceFun ψ) x * cutoff k (x 0) := by
+    (x : R3) : partialDeriv j (faceFunCut ψ k) x = partialDeriv j (faceFun ψ) x * cutoff k (x 0) := by
   have hc : Differentiable ℝ fun x : R3 => cutoff k (x 0) :=
     ((contDiff_cutoff k).differentiable (by simp)).comp (differentiable_apply 0)
-  have hpc : pd j (fun x : R3 => cutoff k (x 0)) x = 0 := by
+  have hpc : partialDeriv j (fun x : R3 => cutoff k (x 0)) x = 0 := by
     have h1 : HasFDerivAt (cutoff k)
         (ContinuousLinearMap.smulRight (1 : ℝ →L[ℝ] ℝ) (deriv (cutoff k) (x 0))) (x 0) :=
       (((contDiff_cutoff k).differentiable (by simp)) (x 0)).hasDerivAt.hasFDerivAt
     have hd := h1.comp x (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) 0 x)
-    rw [pd, show (fun x : R3 => cutoff k (x 0)) = cutoff k ∘ (fun f : R3 => f 0) from rfl,
+    rw [partialDeriv, show (fun x : R3 => cutoff k (x 0)) = cutoff k ∘ (fun f : R3 => f 0) from rfl,
       hd.fderiv]
     simp [hj.symm]
-  have h := pd_fun_mul ((contDiff_faceFun hψ).differentiable (by simp)) hc j x
+  have h := partialDeriv_mul ((contDiff_faceFun hψ).differentiable (by simp) x) (hc x) j
   unfold faceFunCut
   rw [h, hpc, mul_zero, add_zero]
 
@@ -539,8 +539,8 @@ theorem weakEB_absorbingSemigroup {u₀ : State} (hu₀ : u₀ ∈ tsdPair) (T :
 stay weakly divergence-free in `Q`. -/
 theorem absorbingSemigroup_divFree {u₀ : State} (hu₀ : u₀ ∈ tsdPair) {t : ℝ} (ht : 0 ≤ t)
     (φ : Fin 3 → R3 → ℝ) (hφ : IsTestField (Q (Fin 3)) φ) :
-    (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x * pd ij.2 (φ ij.1) x = 0) ∧
-    ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x * pd ij.2 (φ ij.1) x = 0 :=
+    (∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).fst ij x * partialDeriv ij.2 (φ ij.1) x = 0) ∧
+    ∑ ij : Ix, ∫ x in Q (Fin 3), (absorbingSemigroup.S t u₀).snd ij x * partialDeriv ij.2 (φ ij.1) x = 0 :=
   ⟨(weakEB_absorbingSemigroup hu₀ t).divE t ⟨ht, le_rfl⟩ φ hφ,
     (weakEB_absorbingSemigroup hu₀ t).divB t ⟨ht, le_rfl⟩ φ hφ⟩
 
@@ -584,13 +584,13 @@ theorem inner_trace_diagC1_eq_zero (u : absorbing.domain)
   set B := (u : State).snd
   set φ := faceFun ψ
   have hφ : ContDiff ℝ 1 φ := (contDiff_faceFun hψ).of_le (by simp)
-  have hp1 : Continuous (pd 1 φ) := continuous_pd hφ 1
-  have hp2 : Continuous (pd 2 φ) := continuous_pd hφ 2
+  have hp1 : Continuous (partialDeriv 1 φ) := ContDiff.continuous_partialDeriv hφ 1
+  have hp2 : Continuous (partialDeriv 2 φ) := ContDiff.continuous_partialDeriv hφ 2
   -- the identity for the cut-off fields
   have hk : ∀ k : ℕ, (∫ x in Q (Fin 3), w (1, 1) x * (φ x * cutoff k (x 0))) +
       ∫ x in Q (Fin 3), w (2, 2) x * (φ x * cutoff k (x 0)) =
-      (∫ x in Q (Fin 3), B (1, 0) x * (pd 2 φ x * cutoff k (x 0))) -
-        ∫ x in Q (Fin 3), B (2, 0) x * (pd 1 φ x * cutoff k (x 0)) := by
+      (∫ x in Q (Fin 3), B (1, 0) x * (partialDeriv 2 φ x * cutoff k (x 0))) -
+        ∫ x in Q (Fin 3), B (2, 0) x * (partialDeriv 1 φ x * cutoff k (x 0)) := by
     intro k
     have hfk := isTest_faceFunCut hψ k
     have hfk1 : ContDiff ℝ 1 (faceFunCut ψ k) := (contDiff_faceFunCut hψ k).of_le (by simp)
@@ -688,7 +688,7 @@ theorem integral_constTSD_mul (ij : Ix) (g : R3 → ℝ) :
 
 /-- `∫_Q ∂ᵢ g = 0` for a test function `g` (no boundary terms). -/
 theorem integral_pd_eq_zero {g : R3 → ℝ} (hg : IsTest (Q (Fin 3)) g) (i : Fin 3) :
-    ∫ x in Q (Fin 3), pd i g x = 0 := by
+    ∫ x in Q (Fin 3), partialDeriv i g x = 0 := by
   have hF : ∀ m, ContDiff ℝ 1 (if m = i then g else 0) := fun m => by
     split_ifs; exacts [hg.contDiff.of_le (by simp), contDiff_const]
   have h := integral_sum_pd_eq_faces hF
@@ -756,7 +756,7 @@ theorem integral_sqBump_pos : 0 < ∫ y in Sq, (sqBump : (Fin 2 → ℝ) → ℝ
 /-- `λ_f` as a continuous linear functional on `L²(Q; ℝ^{3×3})`. -/
 theorem normalNormalFun_eq_inner {f : R3 → ℝ} (hf : ContDiff ℝ 1 f) (E : MQ) :
     normalNormalFun f E = ∑ j : Fin 3, ⟪E (0, j), cL2 measurableSet_Q isBounded_Q
-      (continuous_pd hf j)⟫_ℝ :=
+      (ContDiff.continuous_partialDeriv hf j)⟫_ℝ :=
   Finset.sum_congr rfl fun _ _ => (inner_cL2_right _ _ _ _).symm
 
 theorem continuous_normalNormalFun {f : R3 → ℝ} (hf : ContDiff ℝ 1 f) :

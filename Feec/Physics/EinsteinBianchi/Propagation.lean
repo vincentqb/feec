@@ -284,23 +284,16 @@ theorem div_const_field (hEc : ∀ i j, ContDiff ℝ 2 fun Y => E Y i j)
     simpa [div, sp, jet4] using this
   exact ⟨key E hEc fun Y hY => (prop Y hY).1, key B hBc fun Y hY => (prop Y hY).2⟩
 
-/-- Derivative along a coordinate line through `Y`. -/
-theorem hasDerivAt_line {φ : (Fin 4 → ℝ) → ℝ} {Y : (Fin 4 → ℝ)} (hφ : DifferentiableAt ℝ φ Y) (μ : Fin 4) :
-    HasDerivAt (fun r : ℝ => φ (Y + r • Pi.single μ 1)) (partialDeriv μ φ Y) (0 : ℝ) := by
-  have hl : HasDerivAt (fun r : ℝ => Y + r • Pi.single μ (1 : ℝ)) (Pi.single μ 1) 0 := by
-    simpa using ((hasDerivAt_id (0 : ℝ)).smul_const (Pi.single μ (1 : ℝ))).const_add Y
-  exact hφ.hasFDerivAt.comp_hasDerivAt_of_eq 0 hl (by simp)
-
 /-- The partial derivatives of the violation flux of `C¹` fields (product rule). -/
 theorem partialDeriv_flux (hE1 : ∀ i j, ContDiff ℝ 1 fun Y => E Y i j)
     (hB1 : ∀ i j, ContDiff ℝ 1 fun Y => B Y i j) (Y : (Fin 4 → ℝ)) (μ : Fin 4) (c : Fin 3) :
     partialDeriv μ (fun Y => flux (E Y) (B Y) c) Y =
       fluxD (E Y) (B Y) (jet4 E Y μ) (jet4 B Y μ) c := by
-  have h1 := hasDerivAt_line ((cd_flux hE1 hB1 c).differentiable (by norm_num) Y) μ
+  have h1 := ((cd_flux hE1 hB1 c).differentiable (by norm_num) Y).hasDerivAt_partialDeriv μ
   have h2 := hd_flux (m := fun r => E (Y + r • Pi.single μ 1))
     (n := fun r => B (Y + r • Pi.single μ 1))
-    (fun i j => hasDerivAt_line ((hE1 i j).differentiable (by norm_num) Y) μ)
-    (fun i j => hasDerivAt_line ((hB1 i j).differentiable (by norm_num) Y) μ) c
+    (fun i j => ((hE1 i j).differentiable (by norm_num) Y).hasDerivAt_partialDeriv μ)
+    (fun i j => ((hB1 i j).differentiable (by norm_num) Y).hasDerivAt_partialDeriv μ) c
   simp only [zero_smul, add_zero] at h2
   exact h1.unique h2
 

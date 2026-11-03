@@ -107,8 +107,9 @@ theorem abs_fderiv_chi_le (m : ℕ) (c : d) (y : d → ℝ) :
     |fderiv ℝ (chi m) y (Pi.single c 1)| ≤ |deriv (eta m) (y c)| := by
   have hd : ∀ s, HasDerivAt (eta m) (deriv (eta m) s) s := fun s =>
     ((contDiff_eta m).differentiable (by simp) s).hasDerivAt
-  have hl := hasDerivAt_line ((contDiff_chi (d := d) m).differentiable (by simp)) y c 0
-  rw [Pi.single_zero, add_zero] at hl
+  have hl := ((contDiff_chi (d := d) m).differentiable (by simp)
+    (y + Pi.single c 0)).hasDerivAt_comp_add_single
+  rw [Pi.single_zero, add_zero, partialDeriv] at hl
   set R : ℝ := ∏ i ∈ Finset.univ.erase c, eta m (y i)
   have e : (fun s => chi m (y + Pi.single c s)) = fun s => eta m (y c + s) * R := by
     funext s

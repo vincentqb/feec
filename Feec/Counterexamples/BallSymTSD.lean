@@ -95,16 +95,6 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
 
-/-- The product rule `∂_c (f g) = ∂_c f g + f ∂_c g`. -/
-protected theorem pd_mul {f g : R3 → ℝ} {y : R3} (hf : DifferentiableAt ℝ f y)
-    (hg : DifferentiableAt ℝ g y) (c : Fin 3) :
-    pd c (fun y => f y * g y) y =
-      pd c f y * g y + f y * pd c g y := by
-  have h : HasFDerivAt (fun y => f y * g y) _ y := hf.hasFDerivAt.mul hg.hasFDerivAt
-  rw [pd_of_hasFDerivAt h, pd, pd]
-  simp only [add_apply, smul_apply, smul_eq_mul]
-  ring
-
 /-! ## The unit ball and the radial cutoffs -/
 
 /-- `|x|² = x₀² + x₁² + x₂²`. -/
@@ -117,21 +107,21 @@ theorem contDiff_rho : ContDiff ℝ ∞ rho := by
   unfold rho; fun_prop
 
 /-- `∂_k |x|² = 2 x_k`. -/
-theorem pd_rho (k : Fin 3) (x : R3) : pd k rho x = 2 * x k := by
+theorem pd_rho (k : Fin 3) (x : R3) : partialDeriv k rho x = 2 * x k := by
   have h := fun a : Fin 3 => (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x).mul
     (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x)
   have h' : HasFDerivAt rho _ x := ((h 0).add (h 1)).add (h 2)
-  rw [pd_of_hasFDerivAt h']
+  rw [HasFDerivAt.partialDeriv_eq h']
   fin_cases k <;> simp <;> ring
 
 /-- Chain rule: `∂_k η(|x|²) = 2 η'(|x|²) x_k`. -/
 theorem pd_comp_rho {η : ℝ → ℝ} (hη : Differentiable ℝ η) (k : Fin 3) (x : R3) :
-    pd k (fun y => η (rho y)) x = deriv η (rho x) * (2 * x k) := by
+    partialDeriv k (fun y => η (rho y)) x = deriv η (rho x) * (2 * x k) := by
   have h1 := fun a : Fin 3 => (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x).mul
     (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x)
   have hr : HasFDerivAt rho _ x := ((h1 0).add (h1 1)).add (h1 2)
   have h : HasFDerivAt (fun y => η (rho y)) _ x := (hη (rho x)).hasDerivAt.comp_hasFDerivAt x hr
-  rw [pd_of_hasFDerivAt h, smul_apply, ← pd_of_hasFDerivAt hr, pd_rho,
+  rw [HasFDerivAt.partialDeriv_eq h, smul_apply, ← HasFDerivAt.partialDeriv_eq hr, pd_rho,
     smul_eq_mul]
 
 theorem continuous_rho : Continuous rho := differentiable_rho.continuous
@@ -257,7 +247,7 @@ theorem isTest_chi (n : ℕ) : IsTest ball3 (chi n) := by
   exact hx (hz x h)
 
 theorem pd_chi (n : ℕ) (k : Fin 3) (x : R3) :
-    pd k (chi n) x = deriv (eta n) (rho x) * (2 * x k) :=
+    partialDeriv k (chi n) x = deriv (eta n) (rho x) * (2 * x k) :=
   pd_comp_rho (differentiable_eta n) k x
 
 /-- On `B`, eventually `η_n = 1` and `η_n' = 0` near `|x|²`. -/
@@ -323,11 +313,11 @@ theorem contDiff_linF (c : Fin 3 → ℝ) : ContDiff ℝ ∞ (linF c) := by
 theorem differentiable_linF (c : Fin 3 → ℝ) : Differentiable ℝ (linF c) :=
   (contDiff_linF c).differentiable (by simp)
 
-theorem pd_linF (c : Fin 3 → ℝ) (k : Fin 3) (x : R3) : pd k (linF c) x = c k := by
+theorem pd_linF (c : Fin 3 → ℝ) (k : Fin 3) (x : R3) : partialDeriv k (linF c) x = c k := by
   have h := fun a : Fin 3 =>
     (hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x).const_mul (c a)
   have h' : HasFDerivAt (linF c) _ x := ((h 0).add (h 1)).add (h 2)
-  rw [pd_of_hasFDerivAt h']
+  rw [HasFDerivAt.partialDeriv_eq h']
   fin_cases k <;> simp
 
 /-- Coefficients of the electric datum `E₀ = e₃ uᵀ + u e₃ᵀ`, `u = e₃ × x = (-x₁, x₀, 0)`:
@@ -347,7 +337,7 @@ theorem eF_trace (x : R3) : ∑ i, eF (i, i) x = 0 := by
   simp [eF, ecoef, linF, Fin.sum_univ_three]
 
 /-- `E₀` is divergence-free: `Σ_j ∂_j E₀_{ij} = 0`. -/
-theorem sum_pd_eF (i : Fin 3) (x : R3) : ∑ j, pd j (eF (i, j)) x = 0 := by
+theorem sum_pd_eF (i : Fin 3) (x : R3) : ∑ j, partialDeriv j (eF (i, j)) x = 0 := by
   simp only [eF, pd_linF]
   fin_cases i <;> simp [ecoef, Fin.sum_univ_three]
 
@@ -362,40 +352,36 @@ theorem curlM_eF (ij : Ix) (x : R3) : curlM eF ij x = Mc ij := by
 
 /-! ## `E₀ ∈ H̊(div div, S)`: radial cutoffs commute with `div div` on `E₀` -/
 
-theorem pd_const_fun (c : ℝ) (k : Fin 3) (x : R3) :
-    pd k (fun _ : R3 => c) x = 0 := by
-  simp [pd]
-
 /-- The Hessian of the radial cutoff: `∂_i ∂_j η(|x|²) = 4 η''(|x|²) x_i x_j + 2 η'(|x|²) δ_ij`. -/
 theorem pd_pd_chi (n : ℕ) (i j : Fin 3) (x : R3) :
-    pd i (pd j (chi n)) x =
+    partialDeriv i (partialDeriv j (chi n)) x =
       deriv (deriv (eta n)) (rho x) * (2 * x i) * (2 * x j) +
         deriv (eta n) (rho x) * (2 * if i = j then 1 else 0) := by
-  have e : pd j (chi n) = fun y => deriv (eta n) (rho y) * (2 * y j) :=
+  have e : partialDeriv j (chi n) = fun y => deriv (eta n) (rho y) * (2 * y j) :=
     funext (pd_chi n j)
   have hf : DifferentiableAt ℝ (fun y => deriv (eta n) (rho y)) x :=
     ((differentiable_deriv_eta n).comp differentiable_rho) x
   have hg : DifferentiableAt ℝ (fun y : R3 => 2 * y j) x := by fun_prop
-  rw [e, BallSymTSD.pd_mul hf hg i, pd_comp_rho (differentiable_deriv_eta n),
-    pd_const_mul (by fun_prop) 2 i x, pd_coord]
+  rw [e, partialDeriv_mul hf hg i, pd_comp_rho (differentiable_deriv_eta n),
+    partialDeriv_const_mul (by fun_prop) 2 i, partialDeriv_apply_coord]
 
 /-- Product rule twice for `χ_n · (c · x)`. -/
 theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) :
-    pd i (pd j (fun y => chi n y * linF c y)) x =
-      pd i (pd j (chi n)) x * linF c x +
-        pd j (chi n) x * c i + pd i (chi n) x * c j := by
-  have hdj : Differentiable ℝ (pd j (chi n)) :=
-    (contDiff_pd_top (contDiff_chi n) j).differentiable (by simp)
-  have e : pd j (fun y => chi n y * linF c y) =
-      (fun y => pd j (chi n) y * linF c y) + (fun y => chi n y * c j) :=
+    partialDeriv i (partialDeriv j (fun y => chi n y * linF c y)) x =
+      partialDeriv i (partialDeriv j (chi n)) x * linF c x +
+        partialDeriv j (chi n) x * c i + partialDeriv i (chi n) x * c j := by
+  have hdj : Differentiable ℝ (partialDeriv j (chi n)) :=
+    (ContDiff.partialDeriv_infty (contDiff_chi n) j).differentiable (by simp)
+  have e : partialDeriv j (fun y => chi n y * linF c y) =
+      (fun y => partialDeriv j (chi n) y * linF c y) + (fun y => chi n y * c j) :=
     funext fun y => by
-      rw [BallSymTSD.pd_mul (differentiable_chi n y) (differentiable_linF c y), pd_linF]
+      rw [partialDeriv_mul (differentiable_chi n y) (differentiable_linF c y), pd_linF]
       rfl
-  rw [e, pd_add (f := fun y => pd j (chi n) y * linF c y)
+  rw [e, partialDeriv_add' (f := fun y => partialDeriv j (chi n) y * linF c y)
       (g := fun y => chi n y * c j) (fun y => (hdj y).mul (differentiable_linF c y))
-      (fun y => (differentiable_chi n y).mul (differentiableAt_const _)),
-    BallSymTSD.pd_mul (hdj x) (differentiable_linF c x),
-    BallSymTSD.pd_mul (differentiable_chi n x) (differentiableAt_const _), pd_linF, pd_const_fun]
+      (fun y => (differentiable_chi n y).mul (differentiableAt_const _)), Pi.add_apply,
+    partialDeriv_mul (hdj x) (differentiable_linF c x),
+    partialDeriv_mul (differentiable_chi n x) (differentiableAt_const _), pd_linF, partialDeriv_const]
   ring
 
 /-- **`div div (χ_n E₀) = 0`**: `div E₀ = 0`, and `E₀ : ∇²χ_n = 0` because `E₀` is trace-free and
@@ -403,7 +389,7 @@ theorem pd_pd_chi_mul_linF (n : ℕ) (c : Fin 3 → ℝ) (i j : Fin 3) (x : R3) 
 theorem divdivF_chi_eF (n : ℕ) (u : Unit) (x : R3) :
     (divdivOp 3 : ConstCoeffOp R3 ℝ Ix Unit).apply (fun ij y => chi n y * eF ij y) u x = 0 := by
   rw [divdivOp_apply]
-  change ∑ ij : Ix, pd ij.1 (pd ij.2 (fun y => chi n y * eF ij y)) x = 0
+  change ∑ ij : Ix, partialDeriv ij.1 (partialDeriv ij.2 (fun y => chi n y * eF ij y)) x = 0
   simp only [eF, pd_pd_chi_mul_linF, pd_pd_chi, pd_chi]
   simp [Fintype.sum_prod_type, Fin.sum_univ_three, ecoef, linF]
   ring
@@ -528,22 +514,22 @@ def gExp (ij : Ix) (x : R3) : ℝ :=
   else if ij = (1, 2) then -(x 0 * (x 0 * x 0 + x 1 * x 1 + 3 * (x 2 * x 2) - 1))
   else 0
 
-theorem pd_vF (i j : Fin 3) (x : R3) : pd j (vF i) x = gExp (i, j) x := by
+theorem pd_vF (i j : Fin 3) (x : R3) : partialDeriv j (vF i) x = gExp (i, j) x := by
   have X := fun a : Fin 3 => hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x
   have hr : HasFDerivAt rho _ x := (((X 0).mul (X 0)).add ((X 1).mul (X 1))).add ((X 2).mul (X 2))
   have h1 := (hasFDerivAt_const (1 : ℝ) x).sub hr
   fin_cases i
-  · show pd j (vF 0) x = gExp (0, j) x
+  · show partialDeriv j (vF 0) x = gExp (0, j) x
     have h : HasFDerivAt (vF 0) _ x := h1.mul ((X 1).mul (X 2)).neg
-    rw [pd_of_hasFDerivAt h]
+    rw [HasFDerivAt.partialDeriv_eq h]
     fin_cases j <;> simp [gExp, rho, pF] <;> ring
-  · show pd j (vF 1) x = gExp (1, j) x
+  · show partialDeriv j (vF 1) x = gExp (1, j) x
     have h : HasFDerivAt (vF 1) _ x := h1.mul ((X 0).mul (X 2))
-    rw [pd_of_hasFDerivAt h]
+    rw [HasFDerivAt.partialDeriv_eq h]
     fin_cases j <;> simp [gExp, rho, pF] <;> ring
-  · show pd j (vF 2) x = gExp (2, j) x
+  · show partialDeriv j (vF 2) x = gExp (2, j) x
     have h : HasFDerivAt (vF 2) _ x := h1.mul (hasFDerivAt_const (0 : ℝ) x)
-    rw [pd_of_hasFDerivAt h]
+    rw [HasFDerivAt.partialDeriv_eq h]
     fin_cases j <;> simp [gExp, pF]
 
 /-- `Q = sym ∇v`, explicitly. -/
@@ -564,11 +550,11 @@ theorem qExp_eq_symF : qExp = symF gExp := by
 theorem qExp_symm (i j : Fin 3) : qExp (i, j) = qExp (j, i) := by
   rw [qExp_eq_symF]; exact symF_swap _ i j
 
-theorem gExp_eq_pd (ij : Ix) : gExp ij = pd ij.2 (vF ij.1) :=
+theorem gExp_eq_pd (ij : Ix) : gExp ij = partialDeriv ij.2 (vF ij.1) :=
   funext fun x => (pd_vF ij.1 ij.2 x).symm
 
 theorem contDiff_gExp (ij : Ix) : ContDiff ℝ ∞ (gExp ij) := by
-  rw [gExp_eq_pd]; exact contDiff_pd_top (contDiff_vF _) _
+  rw [gExp_eq_pd]; exact ContDiff.partialDeriv_infty (contDiff_vF _) _
 
 theorem contDiff_qExp (ij : Ix) : ContDiff ℝ ∞ (qExp ij) := by
   rw [qExp_eq_symF]
@@ -577,42 +563,42 @@ theorem contDiff_qExp (ij : Ix) : ContDiff ℝ ∞ (qExp ij) := by
 theorem contDiff_one_qExp (ij : Ix) : ContDiff ℝ 1 (qExp ij) :=
   (contDiff_qExp ij).of_le (by simp)
 
-theorem pd2_q01 (x : R3) : pd 2 (qExp (0, 1)) x = x 1 * x 1 - x 0 * x 0 := by
+theorem pd2_q01 (x : R3) : partialDeriv 2 (qExp (0, 1)) x = x 1 * x 1 - x 0 * x 0 := by
   have X := fun a : Fin 3 => hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x
   have h := (X 2).mul (((X 1).mul (X 1)).sub ((X 0).mul (X 0)))
   have h' : HasFDerivAt (qExp (0, 1)) _ x :=
     h.congr_of_eventuallyEq (Eventually.of_forall fun y => by simp [qExp])
-  rw [pd_of_hasFDerivAt h']
+  rw [HasFDerivAt.partialDeriv_eq h']
   simp
 
-theorem pd2_q10 (x : R3) : pd 2 (qExp (1, 0)) x = x 1 * x 1 - x 0 * x 0 := by
+theorem pd2_q10 (x : R3) : partialDeriv 2 (qExp (1, 0)) x = x 1 * x 1 - x 0 * x 0 := by
   rw [← qExp_symm]; exact pd2_q01 x
 
-theorem pd1_q02 (x : R3) : pd 1 (qExp (0, 2)) x =
+theorem pd1_q02 (x : R3) : partialDeriv 1 (qExp (0, 2)) x =
     (x 0 * x 0 + 3 * (x 1 * x 1) + 3 * (x 2 * x 2) - 1) / 2 := by
   have X := fun a : Fin 3 => hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x
   have h := ((X 1).mul (((((X 0).mul (X 0)).add ((X 1).mul (X 1))).add
       (((X 2).mul (X 2)).const_mul 3)).sub_const 1)).const_mul (1 / 2)
   have h' : HasFDerivAt (qExp (0, 2)) _ x :=
     h.congr_of_eventuallyEq (Eventually.of_forall fun y => by simp [qExp]; ring)
-  rw [pd_of_hasFDerivAt h']
+  rw [HasFDerivAt.partialDeriv_eq h']
   simp; ring
 
-theorem pd1_q20 (x : R3) : pd 1 (qExp (2, 0)) x =
+theorem pd1_q20 (x : R3) : partialDeriv 1 (qExp (2, 0)) x =
     (x 0 * x 0 + 3 * (x 1 * x 1) + 3 * (x 2 * x 2) - 1) / 2 := by
   rw [← qExp_symm]; exact pd1_q02 x
 
-theorem pd0_q12 (x : R3) : pd 0 (qExp (1, 2)) x =
+theorem pd0_q12 (x : R3) : partialDeriv 0 (qExp (1, 2)) x =
     -(3 * (x 0 * x 0) + x 1 * x 1 + 3 * (x 2 * x 2) - 1) / 2 := by
   have X := fun a : Fin 3 => hasFDerivAt_apply (𝕜 := ℝ) (F' := fun _ : Fin 3 => ℝ) a x
   have h := ((X 0).mul (((((X 0).mul (X 0)).add ((X 1).mul (X 1))).add
       (((X 2).mul (X 2)).const_mul 3)).sub_const 1)).neg.const_mul (1 / 2)
   have h' : HasFDerivAt (qExp (1, 2)) _ x :=
     h.congr_of_eventuallyEq (Eventually.of_forall fun y => by simp [qExp]; ring)
-  rw [pd_of_hasFDerivAt h']
+  rw [HasFDerivAt.partialDeriv_eq h']
   simp; ring
 
-theorem pd0_q21 (x : R3) : pd 0 (qExp (2, 1)) x =
+theorem pd0_q21 (x : R3) : partialDeriv 0 (qExp (2, 1)) x =
     -(3 * (x 0 * x 0) + x 1 * x 1 + 3 * (x 2 * x 2) - 1) / 2 := by
   rw [← qExp_symm]; exact pd0_q12 x
 
@@ -635,8 +621,8 @@ theorem exists_bound_ball3 {g : R3 → ℝ} (hg : Continuous g) : ∃ C, ∀ x �
 `2 η_n'(|x|²) (1 - |x|²) x_j p_i` stays bounded. -/
 theorem tendsto_pd_chi_vF (i j : Fin 3) :
     Tendsto (fun n => (memLp_of_continuous isOpen_ball3.measurableSet isBounded_ball3
-      (continuous_pd ((isTest_chi_mul n (contDiff_vF i)).contDiff.of_le (by simp)) j)).toLp
-        (pd j (fun y => chi n y * vF i y))) atTop
+      (ContDiff.continuous_partialDeriv ((isTest_chi_mul n (contDiff_vF i)).contDiff.of_le (by simp)) j)).toLp
+        (partialDeriv j (fun y => chi n y * vF i y))) atTop
       (𝓝 ((memLp_of_continuous isOpen_ball3.measurableSet isBounded_ball3 (contDiff_gExp (i,
           j)).continuous).toLp
         (gExp (i, j)))) := by
@@ -645,10 +631,10 @@ theorem tendsto_pd_chi_vF (i j : Fin 3) :
   obtain ⟨Cp, hCp⟩ := exists_bound_ball3 (g := fun x => 2 * x j * pF i x)
     ((continuous_const.mul (continuous_apply j)).mul (contDiff_pF i).continuous)
   obtain ⟨Cg, hCg⟩ := exists_bound_ball3 (contDiff_gExp (i, j)).continuous
-  have hF : ∀ n x, pd j (fun y => chi n y * vF i y) x =
+  have hF : ∀ n x, partialDeriv j (fun y => chi n y * vF i y) x =
       (1 - rho x) * deriv (eta n) (rho x) * (2 * x j * pF i x) + chi n x * gExp (i, j) x := by
     intro n x
-    rw [BallSymTSD.pd_mul (differentiable_chi n x)
+    rw [partialDeriv_mul (differentiable_chi n x)
       ((contDiff_vF i).differentiable (by simp) x), pd_chi, pd_vF, vF]
     ring
   refine tendsto_toLp_of_bound isOpen_ball3.measurableSet isBounded_ball3.measure_lt_top.ne
@@ -671,7 +657,7 @@ theorem tendsto_pd_chi_vF (i j : Fin 3) :
           gcongr
       _ = 2 * D * Cp + Cg := by ring
   · refine tendsto_const_nhds.congr' ((eventually_eta_eq_one hx).mono fun n hn => ?_)
-    show gExp (i, j) x = pd j (fun y => chi n y * vF i y) x
+    show gExp (i, j) x = partialDeriv j (fun y => chi n y * vF i y) x
     rw [hF, chi, hn.1, hn.2]
     ring
 
@@ -682,7 +668,7 @@ theorem sum_integral_mul_qExp_eq_zero {C : L2F ℝ ball3 Ix} (hC : C ∈ tsd bal
   rw [qExp_eq_symF, sum_integral_mul_symF isOpen_ball3 isBounded_ball3 hC.1
     (fun ij => (contDiff_gExp ij).continuous)]
   have hlim : Tendsto (fun n => ∑ ij : Ix, ∫ x, C ij x *
-      pd ij.2 (fun y => chi n y * vF ij.1 y) x ∂volume.restrict ball3) atTop
+      partialDeriv ij.2 (fun y => chi n y * vF ij.1 y) x ∂volume.restrict ball3) atTop
       (𝓝 (∑ ij : Ix, ∫ x, C ij x * gExp ij x ∂volume.restrict ball3)) := by
     refine tendsto_finsetSum _ fun ij _ => ?_
     have h := (tendsto_const_nhds (x := (C ij : L2 ℝ ball3))).inner (𝕜 := ℝ)
@@ -690,7 +676,7 @@ theorem sum_integral_mul_qExp_eq_zero {C : L2F ℝ ball3 Ix} (hC : C ∈ tsd bal
     simp only [← integral_mul_eq_inner] at h
     exact h
   have h0 : ∀ n, ∑ ij : Ix, ∫ x, C ij x *
-      pd ij.2 (fun y => chi n y * vF ij.1 y) x ∂volume.restrict ball3 = 0 :=
+      partialDeriv ij.2 (fun y => chi n y * vF ij.1 y) x ∂volume.restrict ball3 = 0 :=
     fun n => by
       have hφ : IsTestField ball3 fun i y => chi n y * vF i y := fun i =>
         isTest_chi_mul n (contDiff_vF i)

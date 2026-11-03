@@ -444,8 +444,8 @@ structure WholeSpaceTSD where
   symm_B : ∀ t i j x, B t (i, j) x = B t (j, i) x
   trace_E : ∀ t x, ∑ i, E t (i, i) x = 0
   trace_B : ∀ t x, ∑ i, B t (i, i) x = 0
-  div_E : ∀ t j x, ∑ k, pd k (E t (j, k)) x = 0
-  div_B : ∀ t j x, ∑ k, pd k (B t (j, k)) x = 0
+  div_E : ∀ t j x, ∑ k, partialDeriv k (E t (j, k)) x = 0
+  div_B : ∀ t j x, ∑ k, partialDeriv k (B t (j, k)) x = 0
 
 namespace WholeSpaceTSD
 

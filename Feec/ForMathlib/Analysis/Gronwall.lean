@@ -1,8 +1,8 @@
 module
 
+public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Mathlib.Analysis.Calculus.MeanValue
 public import Mathlib.Analysis.SpecialFunctions.Sqrt
-public import Mathlib.MeasureTheory.Integral.IntervalIntegral.FundThmCalculus
 public import Mathlib.Analysis.InnerProductSpace.Calculus
 public import Mathlib.Analysis.SpecialFunctions.ExpDeriv
 
@@ -100,12 +100,7 @@ theorem ContinuousOn.intervalIntegral_primitive_Icc {F : ℝ → ℝ} {a b : ℝ
     (hFc : ContinuousOn F (Icc a b)) :
     ContinuousOn (fun t => ∫ s in a..t, F s) (Icc a b) ∧
       ∀ t ∈ Ico a b, HasDerivWithinAt (fun t => ∫ s in a..t, F s) (F t) (Ici t) t := by
-  have hd : ∀ t ∈ Icc a b,
-      HasDerivWithinAt (fun t => ∫ s in a..t, F s) (F t) (Icc a b) t := fun t ht => by
-    have : Fact (t ∈ Icc a b) := ⟨ht⟩
-    exact intervalIntegral.integral_hasDerivWithinAt_right
-      ((hFc.mono (Icc_subset_Icc_right ht.2)).intervalIntegrable_of_Icc ht.1)
-      (hFc.stronglyMeasurableAtFilter_nhdsWithin measurableSet_Icc t) (hFc t ht)
+  have hd := fun t (ht : t ∈ Icc a b) => hasDerivWithinAt_integral_of_continuousOn hFc ht
   refine ⟨fun t ht => (hd t ht).continuousWithinAt, fun t ht => ?_⟩
   exact (hd t (Ico_subset_Icc_self ht)).mono_of_mem_nhdsWithin
     (Filter.mem_of_superset (Icc_mem_nhdsGE ht.2) (Icc_subset_Icc_left ht.1))

@@ -16,6 +16,7 @@ public import FeecCheck.BGGVerdicts
 public import FeecCheck.InvariantForms
 public import FeecCheck.PolyFields
 public import FeecCheck.BanachSchemes
+public import FeecCheck.ThetaSchemes
 public import FeecCheck.TimeSchemes
 public import FeecCheck.StableFamilies
 public import FeecCheck.MaxNormHeat

@@ -28,6 +28,9 @@ Each tableau below gives a rational scheme of the same name in `RationalScheme`,
 * `radauIIA2`: `R(z) = (1 + z/3)/(1 - 2z/3 + z²/6)`, order `3`, L-stable (`IsLStable`);
 * `sdirk2` (`γ = 1 - √2/2`): `R(z) = (1 + (1 - 2γ) z)/(1 - γ z)²`, order `2`, L-stable.
 
+Implicit Euler, the one-stage Radau IIA method, is the θ-scheme `RationalScheme.theta 1`
+(`R(z) = 1/(1 - z)`, order `1`, A-stable).
+
 The symmetric (Gauss) methods are isometries for skew generators
 (`RationalScheme.IsSymmetric.norm_apply_apply`). Explicit methods (`A` strictly lower
 triangular, `R` a polynomial) are not bounded on the imaginary axis and are not rational schemes

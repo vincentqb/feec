@@ -498,7 +498,6 @@ theorem norm_step_le_one {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : �
     (hr : r.IsAStable) : ‖r.step A τ‖ ≤ 1 :=
   (r.norm_step_le hA hτ).2.trans (r.isAStable_iff.1 hr)
 
-omit [CompleteSpace V] in
 /-- `U n (U d)⁻¹ = n d⁻¹` for a unit `U` commuting with `n` and `d`. -/
 theorem _root_.Ring.mul_inverse_mul_of_commute {M : Type*} [MonoidWithZero M] {U n d : M}
     (hU : IsUnit U) (hn : Commute U n) (hd : Commute U d) :

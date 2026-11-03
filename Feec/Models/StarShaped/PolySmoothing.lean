@@ -1,7 +1,7 @@
 module
 
 public import Feec.Models.StarShaped.Smoothing
-public import Feec.Models.Cube.PolySmoothingBasic
+public import Feec.FiniteElement.PolySmoothingBasic
 
 /-!
 # Smoothed projections for the higher-order families on star-shaped domains
@@ -48,7 +48,7 @@ smoothers `pMax`, `pMin` of `Feec.Models.StarShaped.FiniteElement` at scale `γ 
   `v - Q v` at points of a face `g` (any dimension, lexicographic parametrization) with
   barycentric weights `≥ θ` is `O(γ)`, since every simplex sampled by the smoother contains `g`
   (`PolyGeomOK`, from the geometric lemma `StarGeom.subset_vertexSet_of_segments`), where the
-  traces of the local fields agree (`Feec.Models.Cube.FEM.Poly.pullback_eq_of_mem_globalSpace`),
+  traces of the local fields agree (`PolySeq.pullback_eq_of_mem_globalSpace`),
   and samples outside `Ω` are controlled by `PolySampleOK`; the boundary layer of the reference
   face has measure `O(θ)` (`sqrt_mul_abs_polyIntegrand_le`, `sqrt_mul_abs_polyDof_err_le`,
   `sum_integral_sq_sub_polyInterp_le`, `norm_sq_sub_polySmoothedInterp_le`). Both conditions hold
@@ -89,7 +89,7 @@ open scoped ContDiff
 
 namespace Feec.Models.StarShaped
 
-open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre Feec.Models.Cube
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
 
@@ -123,7 +123,7 @@ def PolyCoeffBound (n k : ℕ) (D : ℝ) : Prop :=
         ξ s| ≤ D * diam T ^ k
 
 theorem exists_polyCoeffBound (k : ℕ) : ∃ D, 0 ≤ D ∧ PolyCoeffBound S n k D := by
-  obtain ⟨D, hD0, hD⟩ := FEM.Poly.exists_coeffBound_of_le (n := n) S k
+  obtain ⟨D, hD0, hD⟩ := S.exists_coeffBound_of_le (n := n) k
   exact ⟨D, hD0, fun {T g} hgT i => hD hgT i (diam_nonneg T)
     (abs_simplexMatrix_lexEnum_le_diam hgT (Nat.succ_pred_eq_of_pos (card_pos.2 i.2)).symm)⟩
 
@@ -134,7 +134,7 @@ theorem abs_polyDof_le {k : ℕ} {D : ℝ} (hD : PolyCoeffBound S n k D)
     (i : S.DofIdx g k) (ψ : contForms n) {B : ℝ} (hB0 : 0 ≤ B)
     (hB : ∀ x ∈ T.closedInterior, ∀ s, |(ψ : FormField n) x s| ≤ B) :
     |S.dof g k i ψ| ≤ D * diam T ^ k * B :=
-  FEM.Poly.abs_dof_le_of_coeff_le S hgT i ψ (hD hgT i) hB0 hB
+  S.abs_dof_le_of_coeff_le hgT i ψ (hD hgT i) hB0 hB
 
 /-! #### The degrees of freedom under the reference map -/
 
@@ -468,7 +468,7 @@ theorem exists_norm_polySmoothedInterp_le [NeZero n] {C c q : ℝ} (hc : 0 < c) 
       covConst n c q := fun k => by
     have := hB0 k; have := hD0 k; simp only [covConst]; positivity
   refine ⟨_, Real.sqrt_nonneg _, fun M hM hΩ hR hRx hγh p hp k x =>
-    FEM.norm_le_sqrt_sum_of_sq_le hG fun _ => ?_⟩
+    norm_le_sqrt_sum_of_sq_le hG fun _ => ?_⟩
   rw [(polyElement n S).smoothedInterp_natCast, mul_assoc]
   exact norm_sq_glue_le_locMass _ hM hc hq hΩ x _ (by have := hB0 k; have := hD0 k; positivity)
     fun T hT => sum_integral_sq_polyInterp_le S hM hq (hB k) (hD0 k) (hD k) hR hRx hp hγ hγ1
@@ -488,7 +488,7 @@ interior contains a sample of the smoother contains `g`. -/
 def PolyGeomOK (M : SimplicialMesh n) (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) → ∀ {m : ℕ}, #g = m + 1 →
-    ∀ ξ ∈ FiniteElement.refSimplex m, ξ ∉ FEM.nearBdry m θ →
+    ∀ ξ ∈ FiniteElement.refSimplex m, ξ ∉ nearBdry m θ →
       ∀ t, dist t (p.center + p.factor • (simplexMap (lexEnum g m) ξ - p.center)) <
         p.bump.rOut → ∀ T' : M.simplices,
         t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior →
@@ -502,7 +502,7 @@ def PolySampleOK {M : SimplicialMesh n} {k : ℕ} (p : SmoothingParam (Fin n →
     (u : (polyElement n S).Piecewise M k) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) → ∀ {m : ℕ}, #g = m + 1 →
-    ∀ ξ ∈ FiniteElement.refSimplex m, ξ ∉ FEM.nearBdry m θ →
+    ∀ ξ ∈ FiniteElement.refSimplex m, ξ ∉ nearBdry m θ →
       ∀ t, dist t (p.center + p.factor • (simplexMap (lexEnum g m) ξ - p.center)) <
         p.bump.rOut → t ∉ M.domain →
         ∀ g' ⊆ g, ∀ i : S.DofIdx g' k, (polyElement n S).localDof T k g' i (u T) = 0
@@ -536,7 +536,7 @@ theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSe
       (∑ s, |c s|) * A *
         √(locMass (2 * M.meshSize) ((polyElement n S).glue M k u)
           (T : Affine.Simplex ℝ (Fin n → ℝ) n)) *
-        2 ^ (k + 1) * (if ξ ∈ FEM.nearBdry m θ then 1 else (k + 1) * (2 * γ)) := by
+        2 ^ (k + 1) * (if ξ ∈ nearBdry m θ then 1 else (k + 1) * (2 * γ)) := by
   set h := M.meshSize
   have hγ1 : γ ≤ 1 := by linarith
   have hγh : γ * h / R ≤ 1 := by
@@ -547,7 +547,7 @@ theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSe
   have huT : uT ∈ S.space n k := (u T).2
   set L := locMass (2 * h) ((polyElement n S).glue M k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
-    FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ
+    simplexMap_lexEnum_mem hgT hg hξ
   have hxc : x ∈ closure M.domain := M.closedInterior_subset_closure T.2 hxT
   -- the local fields near `x` obey the inverse estimates against the local mass of `T`
   have hinv : ∀ T' : M.simplices, (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior ⊆
@@ -559,18 +559,18 @@ theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSe
         √h ^ n * h * |((u T' : (polyElement n S).space T' k) : FormField n) y s -
           ((u T' : (polyElement n S).space T' k) : FormField n) y' s| ≤ A * ‖y - y'‖ * √L := by
     intro T' hsub
-    have hL' := Real.sqrt_le_sqrt (FEM.sum_integral_sq_le_of_subset (polyElement n S) hΩ hint u
+    have hL' := Real.sqrt_le_sqrt (sum_integral_sq_le_of_subset (polyElement n S) hΩ hint u
       T' hsub)
     obtain ⟨h1, h2⟩ := hA T' T'.2 _ (u T').2
     exact ⟨fun y hy s => (h1 y hy s).trans (mul_le_mul_of_nonneg_left hL' hA0),
       fun y hy y' hy' s => (h2 y hy y' hy' s).trans
         (mul_le_mul_of_nonneg_left hL' (by positivity))⟩
-  refine FEM.sqrt_mul_abs_sum_sub_smoothForm_le hΩ p _ x (uT x) c (ξ ∈ FEM.nearBdry m θ)
+  refine sqrt_mul_abs_sum_sub_smoothForm_le hΩ p _ x (uT x) c (ξ ∈ nearBdry m θ)
     (pow_pos (Real.sqrt_pos.2 hh) n) hA0 (by positivity) (hp.pow_factor_le hγh k)
     ((hp.abs_one_sub_pow_le hR hγh k).trans (mul_le_mul_of_nonneg_left
       (by rw [div_le_iff₀ hR]; nlinarith) (by positivity)))
-    (fun s => (hinv T (FEM.self_subset_cthickening _ (by positivity))).1 x hxT s) ?_ ?_
-  · filter_upwards [FEM.ae_extField_glue_eq (polyElement n S) u hΩ] with t ht hdist htΩ
+    (fun s => (hinv T (self_subset_cthickening _ (by positivity))).1 x hxT s) ?_ ?_
+  · filter_upwards [ae_extField_glue_eq (polyElement n S) u hΩ] with t ht hdist htΩ
     obtain ⟨T', htT', hext⟩ := ht htΩ
     set u' : FormField n := ((u T' : (polyElement n S).space T' k) : FormField n)
     have hu' : u' ∈ S.space n k := (u T').2
@@ -580,9 +580,9 @@ theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSe
     refine ⟨u', hext, fun s => hb1 t htT'c s, fun hbad => ?_⟩
     have hgT' : g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
       hgeom T g hgT hg ξ hξ hbad t hdist T' htT'
-    have hxT' := FEM.Poly.simplexMap_lexEnum_mem hgT' hg hξ
+    have hxT' := simplexMap_lexEnum_mem hgT' hg hξ
     refine ⟨hc _ _ (PolyKind.isDeg_of_mem_space huT x) (PolyKind.isDeg_of_mem_space hu' x)
-      (FEM.Poly.pullback_eq_of_mem_globalSpace hu T T' hgT hgT' hg ξ), fun s => hb1 x hxT' s,
+      (PolySeq.pullback_eq_of_mem_globalSpace hu T T' hgT hgT' hg ξ), fun s => hb1 x hxT' s,
       fun s => ?_⟩
     refine le_of_mul_le_mul_right ?_ hh
     calc √h ^ n * |u' x s - u' t s| * h = √h ^ n * h * |u' x s - u' t s| := by ring
@@ -626,7 +626,7 @@ theorem sqrt_mul_abs_polyDof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet 
   have hne := i.2
   set m := #g - 1
   have hg : #g = m + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
-  have hkm : k ≤ m := by have := FEM.Poly.card_le_of_dofIdx S i; omega
+  have hkm : k ≤ m := by have := S.card_le_of_dofIdx i; omega
   have hmn : m ≤ n := by
     have := Finset.card_le_card hgT
     rw [card_vertexSet] at this; omega
@@ -665,7 +665,7 @@ theorem sqrt_mul_abs_polyDof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet 
   set c := Mc * A * √L * 2 ^ (k + 1)
   have hc0 : 0 ≤ c := by positivity
   rw [herr]
-  refine (FEM.mul_abs_integral_refSimplex_le hFc (pow_nonneg (Real.sqrt_nonneg _) n) hc0
+  refine (mul_abs_integral_refSimplex_le hFc (pow_nonneg (Real.sqrt_nonneg _) n) hc0
     (by positivity) hθ0 hθ1 fun ξ hξ =>
       (sqrt_mul_abs_polyIntegrand_le S hΩ hint hA0 hA hp hR hRx hhR hh hγ hγ2 hσ1 hgeom hu
         hs T hgT hg hξ (dofCoeff q η k ξ)
@@ -794,7 +794,7 @@ variable (S : PolySeq) {x₀ : Fin n → ℝ} {s₀ R σ γ : ℝ}
 /-- Points of a face with barycentric weights `≥ θ` (lexicographic parametrization) are face
 points. -/
 theorem isFacePoint_lexEnum {M : SimplicialMesh n} {m : ℕ} {g : Finset (Fin n → ℝ)}
-    (hg : #g = m + 1) {θ : ℝ} {ξ : Fin m → ℝ} (hξ : ξ ∉ FEM.nearBdry m θ) :
+    (hg : #g = m + 1) {θ : ℝ} {ξ : Fin m → ℝ} (hξ : ξ ∉ nearBdry m θ) :
     StarGeom.IsFacePoint M g θ (simplexMap (lexEnum g m) ξ) := by
   rw [simplexMap_eq_sum]
   refine StarGeom.isFacePoint_sum_smul (lexEnum_injective hg) (range_lexEnum hg)
@@ -810,7 +810,7 @@ theorem polyGeomOK_of_isMaximal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) : PolyGeomOK M p θ := by
   intro T g hgT _ hg ξ hξ hξb _ ht _ htT'
   exact subset_vertexSet_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx hσ1 hγ hθ hgT
-    (isFacePoint_lexEnum hg hξb) (FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ) ht htT'
+    (isFacePoint_lexEnum hg hξb) (simplexMap_lexEnum_mem hgT hg hξ) ht htT'
 
 /-- **The geometric condition for the minimal family** (`σ ≤ s₀ / (8 R)`, `γ h / R < 1`), for
 the faces of all dimensions. -/
@@ -824,7 +824,7 @@ theorem polyGeomOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (hθ : 2 * (n * ((n + 1) * C)) / q * γ < θ) : PolyGeomOK M p θ := by
   intro T g hgT _ hg ξ hξ hξb _ ht _ htT'
   exact subset_vertexSet_of_isMinimal hM hq hC hstar hs₀ hint hp hpA hR hRx hσ1 hσ hγ hγh hθ hgT
-    (isFacePoint_lexEnum hg hξb) (FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ) ht htT'
+    (isFacePoint_lexEnum hg hξb) (simplexMap_lexEnum_mem hgT hg hξ) ht htT'
 
 /-- **The maximal family samples only inside `Ω`**, so the sampling condition holds for every
 field. -/
@@ -833,7 +833,7 @@ theorem polySampleOK_of_isMaximal {M : SimplicialMesh n} (hstar : StarBall M.dom
     (u : (polyElement n S).Piecewise M k) : PolySampleOK S p θ u := by
   intro T g hgT m hg ξ hξ _ t ht htΩ
   exfalso
-  have hxT := FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ
+  have hxT := simplexMap_lexEnum_mem hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   have := closedBall_dil_subset_of_starBall hstar p.half_le_factor hp.factor_lt_one hp.rOut_lt hxc
   rw [← hp.center_eq] at this
@@ -856,7 +856,7 @@ theorem polySampleOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ
   have hh := hM.meshSize_pos
   set x := simplexMap (lexEnum g m) ξ
   have hx := isFacePoint_lexEnum (M := M) hg hξb
-  have hxT := FEM.Poly.simplexMap_lexEnum_mem hgT hg hξ
+  have hxT := simplexMap_lexEnum_mem hgT hg hξ
   have hxc := M.closedInterior_subset_closure T.2 hxT
   have ht' : ‖t - x‖ ≤ 2 * (γ * M.meshSize) :=
     hpA.norm_sub_le_of_dist_le hR hσ1 (hRx x hxc) ht.le
@@ -923,7 +923,7 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
   have hγγ₀ : γ ≤ γ₁ := hγγ₀.trans (min_le_right _ _)
   intro M hM hΩ hint R σ hR hRx hhR hσ1 p hp hgeom k u hu hs
   by_cases hk : n < k
-  · have := FEM.subsingleton_L2F_of_lt (Ω := M.domain) hk
+  · have := subsingleton_L2F_of_lt (Ω := M.domain) hk
     rw [Subsingleton.elim ((polyElement n S).glue M k u) 0]; simp
   push Not at hk
   have hInv := invBoundV_of hM hq (hA0 k) (hA k)
@@ -945,7 +945,7 @@ theorem exists_polyGamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (h
         _ ≤ Kc * (x k * γ₁) ^ 2 := mul_le_mul (le_max_right _ _)
             (pow_le_pow_left₀ (by have := hx0 k; positivity)
               (mul_le_mul_of_nonneg_left hγγ₀ (hx0 k)) 2) (sq_nonneg _) (by linarith)
-    exact h1.trans (FEM.sq_le_quarter hS hKc (hx0 k) hxk)
+    exact h1.trans (sq_le_quarter hS hKc (hx0 k) hxk)
   refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) (h.trans ?_)
   calc 4 ^ n * (x k * γ) ^ 2 * (covConst n c q * ‖(polyElement n S).glue M k u‖ ^ 2)
       = (4 ^ n * (x k * γ) ^ 2 * covConst n c q) * ‖(polyElement n S).glue M k u‖ ^ 2 := by ring
@@ -993,7 +993,7 @@ theorem exists_uniform_polyCochainProjection [NeZero n] {C c q : ℝ} (hC : 0 �
     rw [hQ]
     rcases i with k | k
     · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((polyElement n S).subcomplex M hΩo).V i,
       ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖ := by
     intro i v hv
@@ -1003,7 +1003,7 @@ theorem exists_uniform_polyCochainProjection [NeZero n] {C c q : ℝ} (hC : 0 �
       exact hclose M hM hΩo.measurableSet hint hR hRx hhR (sigmaOf_le_one s₀ R) p hpA
         (polyGeomOK_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ)
         k u.1 u.2 (polySampleOK_of_isMaximal S hstar hp u.1)
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
       max 1 (2 * K') * ‖x‖ := fun i x =>
     (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans
@@ -1049,7 +1049,7 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
     rw [hQ]
     rcases i with k | k
     · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((polyElement n S).subcomplexMin M hΩo x₀
       (fun _ hx _ ht0 ht1 => hstar.strict hs₀ hx ht0 ht1)).V i,
       ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖ := by
@@ -1063,7 +1063,7 @@ theorem exists_uniform_polyCochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0
         k u.1 ((polyElement n S).globalSpace₀_le M k u.2)
         (polySampleOK_of_isMinimal S hM hq hC hstar hs₀ hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ
           u.2)
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
       max 1 (2 * K') * ‖x‖ := fun i x =>
     (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans

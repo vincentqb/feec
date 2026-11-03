@@ -43,8 +43,8 @@ The geometric and measure-theoretic ingredients of the smoothed-projection estim
   `|∫_g ω| ≤ 2ⁿ h_Tᵏ sup_T |ω|` (`abs_simplexIntegral_face_le'`), `∫_T f ≤ (2 h_T)ⁿ sup_T f`
   (`integral_closedInterior_le`).
 
-The estimates themselves need the smoother of `Feec.Models.Cube.FiniteElementMethod` and are in
-`Feec.Models.StarShaped.FiniteElement`.
+The estimates themselves need the smoother of `Feec.FiniteElement.SmoothedInterp` and are in
+`Feec.Models.StarShaped.Smoothing`.
 
 ## References
 

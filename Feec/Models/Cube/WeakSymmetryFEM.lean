@@ -746,7 +746,7 @@ theorem _root_.Feec.Models.Cube.FEM.IsCsFormMin.mono {n : ℕ} {s : ℕ} {j : �
 theorem norm_eq_zero_of_neg {j : ℤ} (hj : j < 0) (x : L2F ℝ (cubeDomain 3) (formIdx 3 j)) :
     ‖x‖ = 0 := by
   obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-  exact FEM.norm_eq_zero_negSucc k x
+  exact norm_eq_zero_negSucc k x
 
 /-- **`L²` bound from the sup bound**: `‖x‖ ≤ #(formIdx) L` for `IsCsFormTr s j L x` (`|Q| ≤ 1`). -/
 theorem _root_.Feec.Models.Cube.FEM.IsCsFormTr.norm_le {s : ℕ} {j : ℤ} {L : ℝ}

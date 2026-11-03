@@ -27,7 +27,7 @@ is the subcomplex `FEM.qMinus n b N ⊆ HΛ(Q)`, and for the admissible paramete
   cell interpolant is stable in its degrees of freedom (`exists_norm_cubeFieldInterp_le_sum_dof`),
   a degree of freedom is the integral of its tangential coefficients over the face
   (`fieldMoment_eq_integral`), and the error integrand of a degree of freedom is the pointwise
-  estimate `FEM.sqrt_mul_abs_sum_sub_smoothForm_le` of the simplicial families: at points of a
+  estimate `sqrt_mul_abs_sum_sub_smoothForm_le` of the simplicial families: at points of a
   face whose free coordinates are `γ/2`-interior, every cell sampled by the smoother contains the
   point, and the tangential components of the cell fields agree there
   (`cellField_apply_eq_of_free`); the cell fields are polynomials of degree `≤ Σⱼ b_j`
@@ -174,7 +174,7 @@ theorem ae_extField_cubeGlue_eq {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) �
     (hk : ∀ m, IsDeg k (ω m)) :
     ∀ᵐ t ∂volume, t ∈ (cubeRefinement n L N).domain → ∃ T' ∈ (cubeRefinement n L N).simplices,
       t ∈ interior T'.closedInterior ∧ ∀ s,
-        Models.Cube.FEM.extField (cubeGlue n L N k ω) t s =
+        FiniteElement.extField (cubeGlue n L N k ω) t s =
           cellField L ω (simplexCell L T') t s := by
   set M := cubeRefinement n L N
   have hΩ := (isOpen_cubeRefinement_domain (n := n) (L := L) (N := N)).measurableSet
@@ -188,11 +188,11 @@ theorem ae_extField_cubeGlue_eq {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) �
   filter_upwards [h1, ae_mem_interior M hΩ, ae_restrict_mem hΩ] with t ht1 ⟨T', hT', htT'⟩ htΩ
   refine ⟨T', hT', htT', fun s => ?_⟩
   by_cases hs : (#s : ℤ) = (k : ℤ)
-  · rw [Models.Cube.FEM.extField, formExt_of_card _ hs, Set.indicator_of_mem htΩ,
+  · rw [FiniteElement.extField, formExt_of_card _ hs, Set.indicator_of_mem htΩ,
       ht1 ⟨s, hs⟩, pieceFun_of_mem_interior M _ hT' htT']
     rfl
-  · have : Models.Cube.FEM.extField (cubeGlue n L N k ω) t s = 0 := by
-      simp [Models.Cube.FEM.extField, formExt, hs]
+  · have : FiniteElement.extField (cubeGlue n L N k ω) t s = 0 := by
+      simp [FiniteElement.extField, formExt, hs]
     rw [this, isDeg_cellField (hk _) t s (fun h => hs (by rw [h]))]
 
 /-- A point of the interior of a simplex of the refinement and of the open cell `m` lies in
@@ -268,7 +268,7 @@ theorem formL2Sq_cellField_le {k : ℕ} {ω : CubeCell (fun _ : Fin n => N) → 
         obtain ⟨T', hT', htT', hval⟩ := ht (hUΩ htU)
         have hcell := simplexCell_eq_of_mem hT' (interior_subset htT') (hUmem t htU)
         have := hval s.1
-        rw [Models.Cube.FEM.extField, formExt_of_card _ s.2, hcell] at this
+        rw [FiniteElement.extField, formExt_of_card _ s.2, hcell] at this
         rw [← this]
     _ ≤ _ := setIntegral_mono_set
         ((memLp_indicator (isOpen_cubeRefinement_domain (n := n) (L := L)

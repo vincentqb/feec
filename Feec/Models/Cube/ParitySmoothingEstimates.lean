@@ -790,7 +790,7 @@ theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : I
         rcases hσ with h1 | h1
         · have htr : ∑ s, uT x s * c s = ∑ s, u' x s * c s :=
             hc _ _ (PolyKind.isDeg_of_mem_space huT x) (PolyKind.isDeg_of_mem_space hu' x)
-              (pullback_eq_of_mem_globalSpace hu.1 T T' hgT hgT' hg ξ)
+              (PolySeq.pullback_eq_of_mem_globalSpace hu.1 T T' hgT hgT' hg ξ)
           rw [htr, h1, one_mul]
         · -- `σ = -1`: the face is normal to `J`, where the traces vanish
           obtain ⟨i, hpi, hiJ⟩ := exists_mem_of_pieceSign_ne_one (J := J) (p := p)
@@ -857,7 +857,7 @@ theorem sqrt_mul_abs_dof_err_par {N k : ℕ} {A D : ℝ} (hA0 : 0 ≤ A) (hA : I
   have hne := i.2
   set m := #g - 1
   have hg : #g = m + 1 := (Nat.succ_pred_eq_of_pos (card_pos.2 hne)).symm
-  have hkm : k ≤ m := by have := card_le_of_dofIdx S i; omega
+  have hkm : k ≤ m := by have := S.card_le_of_dofIdx i; omega
   have hmn : m ≤ n := by
     have := Finset.card_le_card hgT
     rw [card_vertexSet] at this; omega

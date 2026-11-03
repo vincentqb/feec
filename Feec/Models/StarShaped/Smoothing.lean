@@ -1,6 +1,6 @@
 module
 
-public import Feec.Models.Cube.SmoothingBasic
+public import Feec.FiniteElement.SmoothingBasic
 
 /-!
 # Smoothed projections on shape-regular meshes of star-shaped domains
@@ -18,7 +18,7 @@ with `σ ≤ s₀ / (8 R)` for the minimal family (`sigmaOf`).
 
 * **Uniform bound** (`exists_norm_smoothedInterp_le`): the local DOF estimate on shape-regular
   simplices (`Feec.FiniteElement.exists_dof_bound_p1MinusForms`), Jensen's inequality for the
-  mollifier (`FEM.abs_smoothForm_le`) and bounded overlap by volume (`sum_locMass_le`).
+  mollifier (`abs_smoothForm_le`) and bounded overlap by volume (`sum_locMass_le`).
 * **Closeness on `Vₕ`** (`exists_gamma`, for every `γ ≤ γ₀` with the threshold `θ = K₀ γ`): at
   points of a face `g` with barycentric weights `≥ θ` every simplex sampled by the smoother
   contains `g` (`GeomOK`; `subset_vertexSet_of_isMaximal`, `subset_vertexSet_of_isMinimal`, from
@@ -53,7 +53,7 @@ open MeasureTheory Set Finset Filter Topology
 
 namespace Feec.Models.StarShaped
 
-open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre Feec.Models.Cube
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
 
@@ -452,9 +452,9 @@ theorem IsAdm.abs_smoothForm_le_locMass {M : SimplicialMesh n} {p : SmoothingPar
   intro y hy s
   have hMρ : 1 / volume.real (Metric.closedBall (0 : Fin n → ℝ) p.bump.rIn) =
       (1 / (γ * M.meshSize * σ)) ^ n := by
-    rw [hp.rIn_eq, FEM.volume_real_closedBall_zero (by positivity), one_div_pow]
+    rw [hp.rIn_eq, volume_real_closedBall_zero (by positivity), one_div_pow]
     congr 2; ring
-  refine (FEM.abs_smoothForm_le hΩ p k x y s).trans (mul_le_mul (hp.pow_factor_le hγh k)
+  refine (abs_smoothForm_le hΩ p k x y s).trans (mul_le_mul (hp.pow_factor_le hγh k)
     ?_ (Real.sqrt_nonneg _) (by positivity))
   rw [hMρ]
   refine Real.sqrt_le_sqrt (mul_le_mul_of_nonneg_left (Finset.sum_le_sum fun s' _ => ?_)
@@ -484,7 +484,7 @@ theorem sum_integral_sq_le_of_abs_le {M : SimplicialMesh n} {k : ℕ}
     _ = Fintype.card (formIdx n k) * ((2 * M.meshSize) ^ n * K ^ 2) := by
         rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
     _ ≤ 2 ^ n * ((2 * M.meshSize) ^ n * K ^ 2) :=
-        mul_le_mul_of_nonneg_right (FEM.card_formIdx_le _)
+        mul_le_mul_of_nonneg_right (card_formIdx_le _)
           (mul_nonneg (pow_nonneg (by linarith [diam_nonneg T]) n) (sq_nonneg _))
 
 /-- **The `L²` norm of a glued field by local masses** (any element family on a quasi-uniform
@@ -495,7 +495,7 @@ theorem norm_sq_glue_le_locMass (E : LocalElement n) {M : SimplicialMesh n} {C c
     (hloc : ∀ T (hT : T ∈ M.simplices), ∑ s : formIdx n k, ∫ y in T.closedInterior,
       (((u ⟨T, hT⟩ : E.space T k) : FormField n) y s.1) ^ 2 ≤ K * locMass (2 * M.meshSize) x T) :
     ‖E.glue M k u‖ ^ 2 ≤ K * (covConst n c q * ‖x‖ ^ 2) := by
-  refine (FEM.norm_sq_glue_le E M u _ hloc).trans ?_
+  refine (norm_sq_glue_le E M u _ hloc).trans ?_
   rw [← Finset.mul_sum]
   exact mul_le_mul_of_nonneg_left (sum_locMass_le hM hc hq hΩ x) hK
 
@@ -525,7 +525,7 @@ theorem sum_integral_sq_interp_le {M : SimplicialMesh n} {C c q : ℝ} (hM : Mes
   set z : FormField n := ((((whitneyElement n).globalInterp M k
     (Submodule.inclusion c1Forms_le_contForms (smoothForm p hΩ k x)) :
       (whitneyElement n).Piecewise M k) ⟨T, hT⟩ : (whitneyElement n).space T k) : FormField n)
-  have hz : z ∈ p1MinusForms n k := FEM.mem_p1MinusForms_of_space _
+  have hz : z ∈ p1MinusForms n k := mem_p1MinusForms_of_space _
   set L := locMass (2 * h) x T
   have hL := locMass_nonneg (2 * h) x T
   set A := 2 ^ k * √((1 / (γ * h * σ)) ^ n * L)
@@ -534,7 +534,7 @@ theorem sum_integral_sq_interp_le {M : SimplicialMesh n} {C c q : ℝ} (hM : Mes
   have hdof : ∀ g ⊆ vertexSet T, g.card = k + 1 →
       |simplexIntegral (faceEnum g (k + 1)) z| ≤ 2 ^ n * diam T ^ k * A := by
     intro g hgT hg
-    rw [FEM.simplexIntegral_globalInterp k _ ⟨T, hT⟩ hgT hg]
+    rw [simplexIntegral_globalInterp k _ ⟨T, hT⟩ hgT hg]
     exact abs_simplexIntegral_face_le' hgT hg hA0
       (hp.abs_smoothForm_le_locMass hh hR hRx hγ hγ1 hσ hσ1 hγh hΩ x hT)
   have hzb : ∀ y ∈ T.closedInterior, ∀ s, |z y s| ≤ B * 2 ^ n * A := fun y hy s =>
@@ -564,7 +564,7 @@ theorem exists_norm_smoothedInterp_le [NeZero n] {C c q : ℝ} (hc : 0 < c) (hq 
   have hG : ∀ k, 0 ≤ 2 ^ n * (B k * 2 ^ n * 2 ^ k) ^ 2 * (2 / (γ * σ)) ^ n * covConst n c q :=
     fun k => by have := hB0 k; simp only [covConst]; positivity
   refine ⟨_, Real.sqrt_nonneg _, fun M hM hΩ hR hRx hγh p hp k x =>
-    FEM.norm_le_sqrt_sum_of_sq_le hG fun _ => ?_⟩
+    norm_le_sqrt_sum_of_sq_le hG fun _ => ?_⟩
   rw [(whitneyElement n).smoothedInterp_natCast, mul_assoc]
   exact norm_sq_glue_le_locMass _ hM hc hq hΩ x _ (by have := hB0 k; positivity)
     fun T hT => sum_integral_sq_interp_le hM (hB k) hR hRx hp hγ hγ1 hσ hσ1 hγh hΩ x hT
@@ -658,7 +658,7 @@ weights `≥ θ`, every simplex whose interior contains a sample contains `g`. -
 def GeomOK (M : SimplicialMesh n) (p : SmoothingParam (Fin n → ℝ)) (θ : ℝ) (k : ℕ) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) → g.card = k + 1 →
-    ∀ ξ ∈ FiniteElement.refSimplex k, ξ ∉ FEM.nearBdry k θ →
+    ∀ ξ ∈ FiniteElement.refSimplex k, ξ ∉ nearBdry k θ →
       ∀ t, dist t (p.center + p.factor • (simplexMap (faceEnum g (k + 1)) ξ - p.center)) <
         p.bump.rOut → ∀ T' : M.simplices,
         t ∈ interior (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior →
@@ -671,7 +671,7 @@ def SampleOK {M : SimplicialMesh n} {k : ℕ} (p : SmoothingParam (Fin n → ℝ
     (u : (whitneyElement n).Piecewise M k) : Prop :=
   ∀ (T : M.simplices) (g : Finset (Fin n → ℝ)),
     g ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) → g.card = k + 1 →
-    ∀ ξ ∈ FiniteElement.refSimplex k, ξ ∉ FEM.nearBdry k θ →
+    ∀ ξ ∈ FiniteElement.refSimplex k, ξ ∉ nearBdry k θ →
       ∀ t, dist t (p.center + p.factor • (simplexMap (faceEnum g (k + 1)) ξ - p.center)) <
         p.bump.rOut → t ∉ M.domain →
         simplexIntegral (faceEnum g (k + 1))
@@ -700,7 +700,7 @@ theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.
       (∑ s, |wedgeProd (simplexMatrix (faceEnum g (k + 1))) s univ|) * A *
         √(locMass (2 * M.meshSize) ((whitneyElement n).glue M k u)
           (T : Affine.Simplex ℝ (Fin n → ℝ) n)) *
-        2 ^ (k + 1) * (if ξ ∈ FEM.nearBdry k θ then 1 else (k + 1) * (2 * γ)) := by
+        2 ^ (k + 1) * (if ξ ∈ nearBdry k θ then 1 else (k + 1) * (2 * γ)) := by
   set h := M.meshSize
   have hγ1 : γ ≤ 1 := by linarith
   have hγh : γ * h / R ≤ 1 := by
@@ -722,18 +722,18 @@ theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.
         √h ^ n * h * |((u T' : (whitneyElement n).space T' k) : FormField n) y s -
           ((u T' : (whitneyElement n).space T' k) : FormField n) y' s| ≤ A * ‖y - y'‖ * √L := by
     intro T' hsub
-    have hL' := Real.sqrt_le_sqrt (FEM.sum_integral_sq_le_of_subset (whitneyElement n) hΩ hint u T'
+    have hL' := Real.sqrt_le_sqrt (sum_integral_sq_le_of_subset (whitneyElement n) hΩ hint u T'
       hsub)
-    obtain ⟨h1, h2⟩ := hA T' T'.2 _ (FEM.mem_p1MinusForms_of_space (u T'))
+    obtain ⟨h1, h2⟩ := hA T' T'.2 _ (mem_p1MinusForms_of_space (u T'))
     exact ⟨fun y hy s => (h1 y hy s).trans (mul_le_mul_of_nonneg_left hL' hA0),
       fun y hy y' hy' s => (h2 y hy y' hy' s).trans
         (mul_le_mul_of_nonneg_left hL' (by positivity))⟩
-  refine FEM.sqrt_mul_abs_sum_sub_smoothForm_le hΩ p _ x (uT x) _ (ξ ∈ FEM.nearBdry k θ)
+  refine sqrt_mul_abs_sum_sub_smoothForm_le hΩ p _ x (uT x) _ (ξ ∈ nearBdry k θ)
     (pow_pos (Real.sqrt_pos.2 hh) n) hA0 (by positivity) (hp.pow_factor_le hγh k)
     ((hp.abs_one_sub_pow_le hR hγh k).trans (mul_le_mul_of_nonneg_left
       (by rw [div_le_iff₀ hR]; nlinarith) (by positivity)))
-    (fun s => (hinv T (FEM.self_subset_cthickening _ (by positivity))).1 x hxT s) ?_ ?_
-  · filter_upwards [FEM.ae_extField_glue_eq (whitneyElement n) u hΩ] with t ht hdist htΩ
+    (fun s => (hinv T (self_subset_cthickening _ (by positivity))).1 x hxT s) ?_ ?_
+  · filter_upwards [ae_extField_glue_eq (whitneyElement n) u hΩ] with t ht hdist htΩ
     obtain ⟨T', htT', hext⟩ := ht htΩ
     set u' : FormField n := ((u T' : (whitneyElement n).space T' k) : FormField n)
     have htT'c : t ∈ (T' : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior := interior_subset htT'
@@ -744,16 +744,16 @@ theorem sqrt_mul_abs_integrand_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.
       hgeom T g hgT hg ξ hξ hbad t hdist T' htT'
     have hxT' := simplexMap_faceEnum_mem hgT' hg hξ
     refine ⟨?_, fun s => hb1 x hxT' s, fun s => ?_⟩
-    · rw [FEM.sum_mul_minor_eq (FEM.mem_p1MinusForms_of_space (u T)) q ξ,
-        FEM.sum_mul_minor_eq (FEM.mem_p1MinusForms_of_space (u T')) q ξ,
-        FEM.simplexIntegral_eq_of_mem_globalSpace hu T T' hgT hgT' hg]
+    · rw [sum_mul_minor_eq (mem_p1MinusForms_of_space (u T)) q ξ,
+        sum_mul_minor_eq (mem_p1MinusForms_of_space (u T')) q ξ,
+        simplexIntegral_eq_of_mem_globalSpace hu T T' hgT hgT' hg]
     · refine le_of_mul_le_mul_right ?_ hh
       calc √h ^ n * |u' x s - u' t s| * h = √h ^ n * h * |u' x s - u' t s| := by ring
         _ ≤ A * ‖x - t‖ * √L := hb2 x hxT' t htT'c s
         _ ≤ A * (2 * (γ * h)) * √L := by rw [norm_sub_rev]; gcongr
         _ = 2 * γ * (A * √L) * h := by ring
   · intro hbad t hdist htΩ
-    rw [FEM.sum_mul_minor_eq (FEM.mem_p1MinusForms_of_space (u T)) q ξ]
+    rw [sum_mul_minor_eq (mem_p1MinusForms_of_space (u T)) q ξ]
     change ↑k.factorial * simplexIntegral q uT = 0
     rw [hs T g hgT hg ξ hξ hbad t hdist htΩ, mul_zero]
 
@@ -788,7 +788,7 @@ theorem sqrt_mul_abs_dof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.do
       (pow_le_pow_left₀ (diam_nonneg _) (M.diam_le_meshSize T.2) k) (by positivity))
       (by positivity))
   have huc : Continuous uT :=
-    (isAffineField_of_mem_p1MinusForms (FEM.mem_p1MinusForms_of_space _)).continuous
+    (isAffineField_of_mem_p1MinusForms (mem_p1MinusForms_of_space _)).continuous
   have hwc : Continuous w := (mem_c1Forms.1 (smoothForm p hΩ k
     ((whitneyElement n).glue M k u)).2).continuous
   set F : (Fin k → ℝ) → ℝ := fun ξ => ∑ s, (uT (simplexMap q ξ) s - w (simplexMap q ξ) s) * m s
@@ -802,7 +802,7 @@ theorem sqrt_mul_abs_dof_err_le {M : SimplicialMesh n} (hΩ : MeasurableSet M.do
   set c := 2 ^ n * (k.factorial * h ^ k) * A * √L * 2 ^ (k + 1)
   have hc0 : 0 ≤ c := by positivity
   rw [herr]
-  refine (FEM.mul_abs_integral_refSimplex_le hFc (pow_nonneg (Real.sqrt_nonneg _) n) hc0
+  refine (mul_abs_integral_refSimplex_le hFc (pow_nonneg (Real.sqrt_nonneg _) n) hc0
     (by positivity) hθ0 hθ1 fun ξ hξ =>
       (sqrt_mul_abs_integrand_le hΩ hint hA0 hA hp hR hRx hhR hh hγ hγ2 hσ1 hgeom hu hs T
         hgT hg hξ).trans
@@ -846,8 +846,8 @@ theorem sum_integral_sq_sub_interp_le {M : SimplicialMesh n} [NeZero n] {C c q :
   set z : FormField n := ((u T : (whitneyElement n).space T k) : FormField n) -
     ((((whitneyElement n).globalInterp M k (Submodule.inclusion c1Forms_le_contForms w) :
       (whitneyElement n).Piecewise M k) T : (whitneyElement n).space T k) : FormField n)
-  have hz : z ∈ p1MinusForms n k := Submodule.sub_mem _ (FEM.mem_p1MinusForms_of_space _)
-    (FEM.mem_p1MinusForms_of_space _)
+  have hz : z ∈ p1MinusForms n k := Submodule.sub_mem _ (mem_p1MinusForms_of_space _)
+    (mem_p1MinusForms_of_space _)
   set L := locMass (2 * h) ((whitneyElement n).glue M k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hL0 : 0 ≤ L := locMass_nonneg _ _ _
   set C₁ := 2 * (k + 1) * 2 ^ n * k.factorial * 2 ^ (k + 1) * A
@@ -860,13 +860,13 @@ theorem sum_integral_sq_sub_interp_le {M : SimplicialMesh n} [NeZero n] {C c q :
       |simplexIntegral (faceEnum g (k + 1)) z| ≤ D := by
     intro g hgT hg
     have hc1 : Continuous ((u T : (whitneyElement n).space T k) : FormField n) :=
-      (isAffineField_of_mem_p1MinusForms (FEM.mem_p1MinusForms_of_space _)).continuous
+      (isAffineField_of_mem_p1MinusForms (mem_p1MinusForms_of_space _)).continuous
     have hc2 : Continuous ((((whitneyElement n).globalInterp M k
         (Submodule.inclusion c1Forms_le_contForms w) : (whitneyElement n).Piecewise M k) T :
           (whitneyElement n).space T k) : FormField n) :=
-      (isAffineField_of_mem_p1MinusForms (FEM.mem_p1MinusForms_of_space _)).continuous
+      (isAffineField_of_mem_p1MinusForms (mem_p1MinusForms_of_space _)).continuous
     rw [simplexIntegral_sub hc1.continuousOn hc2.continuousOn,
-      FEM.simplexIntegral_globalInterp k _ T hgT hg, le_div_iff₀ hsq, mul_comm]
+      simplexIntegral_globalInterp k _ T hgT hg, le_div_iff₀ hsq, mul_comm]
     exact sqrt_mul_abs_dof_err_le hΩ hint hA0 hA hp hR hRx hhR hh hγ hγ2 hσ1 hθ0 hθ1 hgeom hu hs
       T hgT hg
   have hTd := hM.diam_pos hq T.2
@@ -945,7 +945,7 @@ theorem coordLip_of {M : SimplicialMesh n} {C c q : ℝ} (hM : MeshData M C c q)
   gcongr
 
 theorem isFacePoint_of_notMem_nearBdry {M : SimplicialMesh n} {k : ℕ} {g : Finset (Fin n → ℝ)}
-    (hg : g.card = k + 1) {θ : ℝ} {ξ : Fin k → ℝ} (hξ : ξ ∉ FEM.nearBdry k θ) :
+    (hg : g.card = k + 1) {θ : ℝ} {ξ : Fin k → ℝ} (hξ : ξ ∉ nearBdry k θ) :
     StarGeom.IsFacePoint M g θ (simplexMap (faceEnum g (k + 1)) ξ) := by
   rw [simplexMap_eq_sum]
   refine StarGeom.isFacePoint_sum_smul (injective_faceEnum hg) (range_faceEnum hg)
@@ -1084,8 +1084,8 @@ theorem sampleOK_of_isMinimal [NeZero n] {M : SimplicialMesh n} {C c q : ℝ}
     (coordLip_of hM hq hC) hx T.2 hgT hxT htc (coord_near hq hC hh hγ hθ ht')
   obtain ⟨-, T'', hT'', hFT''⟩ := hF.1
   have h0 := hu.2 ⟨T'', hT''⟩ F hF hFT'' g hgF (⟨(), hg⟩ : WhitneyDofIdx g k)
-  rw [FEM.simplexIntegral_localDof ⟨T'', hT''⟩ hg] at h0
-  rw [FEM.simplexIntegral_eq_of_mem_globalSpace hu.1 T ⟨T'', hT''⟩ hgT (hgF.trans hFT'') hg]
+  rw [simplexIntegral_localDof ⟨T'', hT''⟩ hg] at h0
+  rw [simplexIntegral_eq_of_mem_globalSpace hu.1 T ⟨T'', hT''⟩ hgT (hgF.trans hFT'') hg]
   exact h0
 
 end Families
@@ -1138,7 +1138,7 @@ theorem exists_gamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (hq : 
   have hγγ₀ : γ ≤ γ₁ := hγγ₀.trans (min_le_right _ _)
   intro M hM hΩ hint R σ hR hRx hhR hσ1 p hp k hgeom u hu hs
   by_cases hk : n < k
-  · have := FEM.subsingleton_L2F_of_lt (Ω := M.domain) hk
+  · have := subsingleton_L2F_of_lt (Ω := M.domain) hk
     rw [Subsingleton.elim ((whitneyElement n).glue M k u) 0]; simp
   push Not at hk
   have hInv := invBoundM_of hM hq (hA0 k) (hA k)
@@ -1160,7 +1160,7 @@ theorem exists_gamma [NeZero n] {C c q : ℝ} (hC : 0 ≤ C) (hc : 0 < c) (hq : 
         _ ≤ Kc * (x k * γ₁) ^ 2 := mul_le_mul (le_max_right _ _)
             (pow_le_pow_left₀ (by have := hx0 k; positivity)
               (mul_le_mul_of_nonneg_left hγγ₀ (hx0 k)) 2) (sq_nonneg _) (by linarith)
-    exact h1.trans (FEM.sq_le_quarter hS hKc (hx0 k) hxk)
+    exact h1.trans (sq_le_quarter hS hKc (hx0 k) hxk)
   refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) (h.trans ?_)
   calc 4 ^ n * (x k * γ) ^ 2 * (covConst n c q * ‖(whitneyElement n).glue M k u‖ ^ 2)
       = (4 ^ n * (x k * γ) ^ 2 * covConst n c q) * ‖(whitneyElement n).glue M k u‖ ^ 2 := by ring
@@ -1234,7 +1234,7 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
     rw [hQ]
     rcases i with k | k
     · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((whitneyElement n).subcomplex M hΩo).V i,
       ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖ := by
     intro i v hv
@@ -1244,7 +1244,7 @@ theorem exists_uniform_cochainProjection [NeZero n] {C c q : ℝ} (hC : 0 ≤ C)
       exact hclose M hM hΩo.measurableSet hint hR hRx hhR (sigmaOf_le_one s₀ R) p hpA k
         (geomOK_of_isMaximal hM hq hC hstar hs₀ hp hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ k)
         u.1 u.2 (sampleOK_of_isMaximal hstar hp u.1)
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
       max 1 (2 * K') * ‖x‖ := fun i x =>
     (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans
@@ -1290,7 +1290,7 @@ theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤
     rw [hQ]
     rcases i with k | k
     · exact hbound M hM hΩo.measurableSet hR hRx (by linarith) p hpA k x
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hQc : ∀ i, ∀ v ∈ ((whitneyElement n).subcomplexMin M hΩo x₀
       (fun _ hx _ ht0 ht1 => hstar.strict hs₀ hx ht0 ht1)).V i,
       ‖v - Q.Q i v‖ ≤ 1 / 2 * ‖v‖ := by
@@ -1303,7 +1303,7 @@ theorem exists_uniform_cochainProjectionMin [NeZero n] {C c q : ℝ} (hC : 0 ≤
           (sigmaOf_le s₀ R) hγ (by linarith) hθ k)
         u.1 ((whitneyElement n).globalSpace₀_le M k u.2)
         (sampleOK_of_isMinimal hM hq hC hstar hs₀ hpA hR hRx (sigmaOf_le_one s₀ R) hγ hθ u.2)
-    · exact (FEM.norm_eq_zero_negSucc k _).le.trans (by positivity)
+    · exact (norm_eq_zero_negSucc k _).le.trans (by positivity)
   have hb : ∀ i x, ‖(Q.toCochainProjection (θ := 1 / 2) (by norm_num) hQc).π i x‖ ≤
       max 1 (2 * K') * ‖x‖ := fun i x =>
     (Q.norm_toCochainProjection_le_two_mul hQc (hQb i) x).trans

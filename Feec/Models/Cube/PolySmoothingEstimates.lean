@@ -85,7 +85,7 @@ def CoeffBound (n k : ℕ) (D : ℝ) : Prop :=
           ξ s| ≤ D * hN N ^ k
 
 theorem exists_coeffBound (k : ℕ) : ∃ D, 0 ≤ D ∧ CoeffBound S n k D := by
-  obtain ⟨D, hD0, hD⟩ := exists_coeffBound_of_le S k
+  obtain ⟨D, hD0, hD⟩ := S.exists_coeffBound_of_le k
   exact ⟨D, hD0, fun N T hT g hgT i => hD hgT i (hN_pos N).le
     (abs_simplexMatrix_lexEnum_le hT hgT (Nat.succ_pred_eq_of_pos (card_pos.2 i.2)).symm)⟩
 
@@ -96,7 +96,7 @@ theorem abs_dof_le {k : ℕ} {D : ℝ} (hD : CoeffBound S n k D) {N : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (i : S.DofIdx g k) (ω : contForms n)
     {B : ℝ} (hB0 : 0 ≤ B) (hB : ∀ x ∈ T.closedInterior, ∀ s, |(ω : FormField n) x s| ≤ B) :
     |S.dof g k i ω| ≤ D * hN N ^ k * B :=
-  abs_dof_le_of_coeff_le S hgT i ω (hD N hT hgT i) hB0 hB
+  S.abs_dof_le_of_coeff_le hgT i ω (hD N hT hgT i) hB0 hB
 
 /-- **The local DOF estimate on the mesh simplices**, with one constant:
 `h_Nᵏ ‖z(x)‖ ≤ B Σ_{g ⊆ T, i} |ℓ_{g,i}(z)|` for `z ∈ P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`). -/

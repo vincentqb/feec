@@ -1,6 +1,6 @@
 module
 
-public import Feec.Models.Cube.SmoothingBasic
+public import Feec.FiniteElement.SmoothingBasic
 public import Feec.FiniteElement.PolyInterpolation
 public import Feec.FiniteElement.PolyComplex
 
@@ -14,21 +14,21 @@ The mesh-independent ingredients of the smoothed-projection estimates for an adm
 
 * **Trace determination on every face** (`PolySeq.affinePullback_lexEnum_eq_of_dof_eq`, the
   facet case being `PolySeq.tangentialTraceEq_of_dof_eq`): fields of the global space have the
-  same trace on every common face of two simplices (`FEM.Poly.pullback_eq_of_mem_globalSpace`).
+  same trace on every common face of two simplices (`PolySeq.pullback_eq_of_mem_globalSpace`).
 * **Degrees of freedom as integrals of the values** (`PolySeq.dof_eq_integral`): the moment DOF
   `ℓ_{g,i}(ω) = ∫_{T̂_m} F_q^* ω_k ∧ ηᵢ` (`q` the lexicographic parametrization of the face `g`) is
   `∫_{T̂_m} Σₛ ω(F_q ξ)ₛ cₛ(ξ) dξ` with a coefficient vector `c = dofCoeff` bounded by the `k × k`
   minors of the edge matrix and the test forms (`sum_abs_dofCoeff_le`,
-  `FEM.Poly.exists_coeffBound_of_le`), which only sees the trace on `g`
+  `PolySeq.exists_coeffBound_of_le`), which only sees the trace on `g`
   (`sum_mul_dofCoeff_eq_of_pullback_eq`); hence `|ℓ_{g,i}(ω)| ≲ |edges|ᵏ sup_T |ω|`
-  (`FEM.Poly.abs_dof_le_of_coeff_le`).
+  (`PolySeq.abs_dof_le_of_coeff_le`).
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §4.5–4.6 (the moment degrees of freedom)
 
-Bibliography: [references.bib](../../../docs/references.bib)
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section
@@ -117,7 +117,7 @@ cₛ(ξ) dξ`. -/
 theorem vertexMoment_degField_eq {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
     (k : ℕ) (ω : FormField n) :
     vertexMoment q η (degField k ω) =
-      ∫ ξ in FiniteElement.refSimplex m, ∑ s, ω (simplexMap q ξ) s * dofCoeff q η k ξ s := by
+      ∫ ξ in refSimplex m, ∑ s, ω (simplexMap q ξ) s * dofCoeff q η k ξ s := by
   rw [vertexMoment_eq_integral]
   exact setIntegral_congr_fun (measurableSet_refSimplex m) fun ξ _ =>
     wedgeField_affinePullback_degField_eq q η k ω ξ
@@ -189,6 +189,15 @@ theorem sum_abs_dofCoeff_le {m : ℕ} {q : Fin (m + 1) → Fin n → ℝ} {a : �
         rw [Finset.sum_const, Finset.card_univ, Fintype.card_finset, Fintype.card_fin,
           nsmul_eq_mul]; push_cast; ring
 
+/-- The lexicographic parametrization of a face of `T` maps the reference simplex into `T`. -/
+theorem simplexMap_lexEnum_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)}
+    (hgT : g ⊆ vertexSet T) {m : ℕ} (hg : #g = m + 1) {ξ : Fin m → ℝ}
+    (hξ : ξ ∈ refSimplex m) :
+    simplexMap (lexEnum g m) ξ ∈ T.closedInterior := by
+  rw [← convexHull_vertexSet]
+  refine convexHull_mono ?_ (simplexMap_mem_convexHull _ hξ)
+  rw [range_lexEnum hg]; exact Finset.coe_subset.2 hgT
+
 namespace PolySeq
 
 variable (S : PolySeq)
@@ -196,39 +205,17 @@ variable (S : PolySeq)
 /-- **The degrees of freedom as integrals of the values**: `ℓ_{g,i}(ω) = ∫_{T̂_m} Σₛ ω(F_q ξ)ₛ
 cₛ(ξ) dξ`, `q = lexEnum g m`, `m = #g - 1`, `cₛ = dofCoeff q ηᵢ k`. -/
 theorem dof_eq_integral (g : Finset (Fin n → ℝ)) (k : ℕ) (i : S.DofIdx g k) (ω : contForms n) :
-    S.dof g k i ω = ∫ ξ in FiniteElement.refSimplex (#g - 1),
+    S.dof g k i ω = ∫ ξ in refSimplex (#g - 1),
       ∑ s, (ω : FormField n) (simplexMap (lexEnum g (#g - 1)) ξ) s *
         dofCoeff (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) k ξ s := by
   rw [dof_apply, vertexMoment_degField_eq]
 
-end PolySeq
-
-end Feec.FiniteElement
-
-namespace Feec.Models.Cube.FEM
-
-open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
-
-variable {n : ℕ}
-
-namespace Poly
-
-variable (S : PolySeq)
-
-theorem simplexMap_lexEnum_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)}
-    (hgT : g ⊆ vertexSet T) {m : ℕ} (hg : #g = m + 1) {ξ : Fin m → ℝ}
-    (hξ : ξ ∈ FiniteElement.refSimplex m) :
-    simplexMap (lexEnum g m) ξ ∈ T.closedInterior := by
-  rw [← convexHull_vertexSet]
-  refine convexHull_mono ?_ (simplexMap_mem_convexHull _ hξ)
-  rw [range_lexEnum hg]; exact Finset.coe_subset.2 hgT
-
 /-- A uniform bound of the test forms on the reference simplices. -/
 theorem exists_testBound (k : ℕ) : ∃ M, 0 ≤ M ∧ ∀ m ≤ n,
-    ∀ (i : Fin (Module.finrank ℝ (S.test k m))), ∀ ξ ∈ FiniteElement.refSimplex m,
+    ∀ (i : Fin (Module.finrank ℝ (S.test k m))), ∀ ξ ∈ refSimplex m,
       ‖(S.testBasis k m i : FormField m) ξ‖ ≤ M := by
   have hb : ∀ m (i : Fin (Module.finrank ℝ (S.test k m))), ∃ M, 0 ≤ M ∧
-      ∀ ξ ∈ FiniteElement.refSimplex m, ‖(S.testBasis k m i : FormField m) ξ‖ ≤ M := by
+      ∀ ξ ∈ refSimplex m, ‖(S.testBasis k m i : FormField m) ξ‖ ≤ M := by
     intro m i
     obtain ⟨M, hM⟩ := (isCompact_refSimplex m).exists_bound_of_continuousOn
       (S.continuous_testBasis k m i).continuousOn
@@ -247,7 +234,7 @@ theorem exists_coeffBound_of_le (k : ℕ) : ∃ D, 0 ≤ D ∧
     ∀ {T : Affine.Simplex ℝ (Fin n → ℝ) n} {g : Finset (Fin n → ℝ)}, g ⊆ vertexSet T →
       ∀ (i : S.DofIdx g k) {h : ℝ}, 0 ≤ h →
         (∀ j l, |simplexMatrix (lexEnum g (#g - 1)) j l| ≤ h) →
-        ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
+        ∀ ξ ∈ refSimplex (#g - 1),
           ∑ s, |dofCoeff (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 :
             FormField (#g - 1)) k ξ s| ≤ D * h ^ k := by
   obtain ⟨M, hM0, hM⟩ := exists_testBound S k
@@ -271,7 +258,7 @@ moment `ℓ_{g,i}` of a face `g` of `T` satisfy `Σₛ |cₛ| ≤ K` on the refe
 `|ℓ_{g,i}(ω)| ≤ K sup_T |ω|` for every continuous form `ω`. -/
 theorem abs_dof_le_of_coeff_le {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (i : S.DofIdx g k) (ω : contForms n)
-    {K B : ℝ} (hK : ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
+    {K B : ℝ} (hK : ∀ ξ ∈ refSimplex (#g - 1),
       ∑ s, |dofCoeff (lexEnum g (#g - 1)) (S.testBasis k (#g - 1) i.1 : FormField (#g - 1)) k
         ξ s| ≤ K) (hB0 : 0 ≤ B)
     (hB : ∀ x ∈ T.closedInterior, ∀ s, |(ω : FormField n) x s| ≤ B) :
@@ -281,12 +268,12 @@ theorem abs_dof_le_of_coeff_le {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ)
   set q := lexEnum g (#g - 1)
   set η := (S.testBasis k (#g - 1) i.1 : FormField (#g - 1))
   rw [S.dof_eq_integral]
-  have h0 : (0 : Fin (#g - 1) → ℝ) ∈ FiniteElement.refSimplex (#g - 1) := fun a => by
+  have h0 : (0 : Fin (#g - 1) → ℝ) ∈ refSimplex (#g - 1) := fun a => by
     refine Fin.cases ?_ (fun l => ?_) a
     · simp
     · simp [refBary]
   have hK0 : 0 ≤ K := (Finset.sum_nonneg fun s _ => abs_nonneg _).trans (hK 0 h0)
-  have hpt : ∀ ξ ∈ FiniteElement.refSimplex (#g - 1),
+  have hpt : ∀ ξ ∈ refSimplex (#g - 1),
       ‖∑ s, (ω : FormField n) (simplexMap q ξ) s * dofCoeff q η k ξ s‖ ≤ K * B := by
     intro ξ hξ
     rw [Real.norm_eq_abs]
@@ -301,7 +288,7 @@ theorem abs_dof_le_of_coeff_le {k : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ)
       _ = K * B := by ring
   rw [← Real.norm_eq_abs]
   refine (norm_setIntegral_le_of_norm_le_const (volume_refSimplex_lt_top _) hpt).trans ?_
-  calc K * B * volume.real (FiniteElement.refSimplex (#g - 1)) ≤ K * B * 1 :=
+  calc K * B * volume.real (refSimplex (#g - 1)) ≤ K * B * 1 :=
         mul_le_mul_of_nonneg_left (volume_real_refSimplex_le_one _) (mul_nonneg hK0 hB0)
     _ = _ := mul_one _
 
@@ -324,6 +311,6 @@ theorem card_le_of_dofIdx {g : Finset (Fin n → ℝ)} {k : ℕ} (i : S.DofIdx g
   by_contra h
   exact (S.isEmpty_dofIdx_of_card_lt (by omega)).false i
 
-end Poly
+end PolySeq
 
-end Feec.Models.Cube.FEM
+end Feec.FiniteElement

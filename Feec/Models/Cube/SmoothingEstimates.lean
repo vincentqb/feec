@@ -1,6 +1,7 @@
 module
 
 public import Feec.Models.StarShaped.Smoothing
+public import Feec.Models.Cube.FiniteElementMethod
 
 /-!
 # The smoothed-projection estimates on the Freudenthal meshes of the cube

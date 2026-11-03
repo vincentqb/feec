@@ -2,14 +2,14 @@ module
 
 public import Feec.FiniteElement.InverseEstimate
 public import Feec.FiniteElement.ShapeRegularSmoothing
-public import Feec.Models.Cube.FiniteElementMethod
+public import Feec.FiniteElement.SmoothedInterp
 
 /-!
 # Pointwise and local estimates of the smoother on simplicial meshes
 
 The mesh-independent ingredients of the smoothed-projection estimates ([AFW2010], §5.5;
 [ChristiansenWinther2008]) for the smoother `smoothForm` of
-`Feec.Models.Cube.FiniteElementMethod`, on any conforming simplicial mesh: Jensen's inequality for
+`Feec.FiniteElement.SmoothedInterp`, on any conforming simplicial mesh: Jensen's inequality for
 the mollifier and the pointwise bound of the smoothed form by the local mass
 (`sq_integral_mul_normed_le`, `abs_smoothForm_le`); the Whitney DOFs as face integrals and their
 agreement on shared faces (`simplexIntegral_globalInterp`, `simplexIntegral_eq_of_mem_globalSpace`,
@@ -27,16 +27,16 @@ on the cube (`Feec.Models.Cube.SmoothingEstimates`, `Feec.Models.Cube.ParitySmoo
   §5.5 (smoothed projections)
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 
-Bibliography: [references.bib](../../../docs/references.bib)
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section
 
 open MeasureTheory Set Finset Filter
 
-namespace Feec.Models.Cube.FEM
+namespace Feec.FiniteElement
 
-open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
+open Feec.Domain Feec.Mesh Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
 
@@ -694,4 +694,4 @@ theorem norm_eq_zero_negSucc {Ω : Set (Fin n → ℝ)} (k : ℕ)
   have := LocalElement.subsingleton_L2F_negSucc Ω (n := n) k
   rw [Subsingleton.elim y 0, norm_zero]
 
-end Feec.Models.Cube.FEM
+end Feec.FiniteElement

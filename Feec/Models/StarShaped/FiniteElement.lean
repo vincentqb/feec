@@ -1854,11 +1854,8 @@ theorem exists_mem_whitney_le_of_isC2Form {j : ℤ} {L : ℝ} {x : L2F ℝ D.Ω 
           F.interpBound j * L * (F.mesh N).meshSize := by
   have hB0 := mul_nonneg (mul_nonneg (F.interpBound_nonneg j) hL0) (F.meshSize_pos N).le
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc D.Ω (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg D.Ω (n := n) hj
+    exact (F.whitney N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_whitney_le N k hw hL0 hL0 hL hL'
   obtain ⟨hdom, hval⟩ := F.formL2_mem_domain k (hw.of_le (by norm_num)) hdeg
   have hh := (F.meshSize_pos N).le
@@ -1868,18 +1865,10 @@ theorem exists_mem_whitney_le_of_isC2Form {j : ℤ} {L : ℝ} {x : L2F ℝ D.Ω 
       F.interpConst k * ((F.mesh N).meshSize * L) +
         F.interpConst (k + 1) * ((F.mesh N).meshSize * L) := by
     simp only [interpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : D.complex.d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((F.whitney N).le_domain k (k + 1) hv)⟩ =
-        D.complex.d k (k + 1) ⟨_, hdom⟩ - D.complex.d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', hval, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact mul_nonneg (mul_nonneg (F.interpBound_nonneg _) hL0) hh
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [hval, e]
+  linarith
 
 /-- **Degreewise interpolation error for `C²` forms vanishing outside `Ω`**, in `H̊Λ(Ω)`. -/
 theorem exists_mem_whitneyMin_le_of_isC2FormMin {j : ℤ} {L : ℝ} {x : L2F ℝ D.Ω (formIdx n j)}
@@ -1892,11 +1881,8 @@ theorem exists_mem_whitneyMin_le_of_isC2FormMin {j : ℤ} {L : ℝ} {x : L2F ℝ
           F.interpBound j * L * (F.mesh N).meshSize := by
   have hB0 := mul_nonneg (mul_nonneg (F.interpBound_nonneg j) hL0) (F.meshSize_pos N).le
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc D.Ω (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg D.Ω (n := n) hj
+    exact (F.whitneyMin N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_whitneyMin_le N k hw hsupp hL0 hL0 hL hL'
   have hh := (F.meshSize_pos N).le
   have hA0 := mul_nonneg (F.interpConst_nonneg k) (mul_nonneg hh hL0)
@@ -1905,18 +1891,10 @@ theorem exists_mem_whitneyMin_le_of_isC2FormMin {j : ℤ} {L : ℝ} {x : L2F ℝ
       F.interpConst k * ((F.mesh N).meshSize * L) +
         F.interpConst (k + 1) * ((F.mesh N).meshSize * L) := by
     simp only [interpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : D.complexMin.d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((F.whitneyMin N).le_domain k (k + 1) hv)⟩ =
-        D.complexMin.d k (k + 1) ⟨_, hxj⟩ - D.complexMin.d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', F.complexMin_d_formL2 k (hw.of_le (by norm_num)) hdeg ⟨_, hxj⟩ rfl, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact mul_nonneg (mul_nonneg (F.interpBound_nonneg _) hL0) hh
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [F.complexMin_d_formL2 k (hw.of_le (by norm_num)) hdeg ⟨_, hxj⟩ rfl, e]
+  linarith
 
 end MeshFamily
 

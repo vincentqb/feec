@@ -195,11 +195,8 @@ theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
   have hh := pow_nonneg (meshSize_pos N).le (s + 1)
   have hB0 := mul_nonneg (mul_nonneg (polyInterpBound_nonneg (n := n) S j) hL0) hh
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg (cubeDomain n) (n := n) hj
+    exact (poly n S N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ :=
     FEM.exists_mem_poly_le S N k s (hS k rfl).1 (hS k rfl).2 hw hdeg hL hL'
   obtain ⟨hdom, hval⟩ := formL2_mem_domain k
@@ -210,18 +207,10 @@ theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
       polyInterpConst n S k * (meshSize N ^ (s + 1) * L) +
         polyInterpConst n S (k + 1) * (meshSize N ^ (s + 1) * L) := by
     simp only [polyInterpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : (complex n).d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((poly n S N).le_domain k (k + 1) hv)⟩ =
-        (complex n).d k (k + 1) ⟨_, hdom⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', hval, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact hB0
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [hval, e]
+  linarith
 
 /-- **Graph-norm distance of a smooth form to the higher-order space**:
 `dist_V(σ, Vₕʲ) ≤ 2 B_j L h_N^{s+1}`. -/
@@ -232,16 +221,7 @@ theorem IsCsForm.infDist_domainSub_poly_le {S : PolySeq} {s : ℕ} {j : ℤ}
     Metric.infDist σ ((poly n S N).domainSub j) ≤
       2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) := by
   obtain ⟨v, hv, h1, h2⟩ := hσ.exists_mem_poly_le hS hL0 N
-  refine (Subcomplex.infDist_domainSub_le (S := poly n S N)
-    (rfl : (ComplexShape.up ℤ).Rel j (j + 1)) σ hv).trans ?_
-  have e : (complex n).d j (j + 1) ((complex n).domainCoord j (j + 1) σ) -
-      (complex n).d j (j + 1) ⟨v, (poly n S N).le_domain j (j + 1) hv⟩ =
-      (complex n).d j (j + 1) ⟨(complex n).domainIncl j σ - v,
-        Submodule.sub_mem _ ((complex n).domainCoord j (j + 1) σ).2
-          ((poly n S N).le_domain j (j + 1) hv)⟩ := by
-    rw [← LinearPMap.map_sub]; rfl
-  rw [e, two_mul]
-  exact add_le_add h1 (h2 (j + 1) ((complex n).domainCoord j (j + 1) σ).2)
+  exact Subcomplex.infDist_domainSub_le_two_mul _ rfl σ hv h1 (h2 _)
 
 /-- **Degreewise interpolation error of order `s + 1` with vanishing boundary DOFs** in `H̊Λ(Q)`. -/
 theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
@@ -257,11 +237,8 @@ theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
   have hh := pow_nonneg (meshSize_pos N).le (s + 1)
   have hB0 := mul_nonneg (mul_nonneg (polyInterpBound_nonneg (n := n) S j) hL0) hh
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg (cubeDomain n) (n := n) hj
+    exact (polyMin n S N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ :=
     FEM.exists_mem_polyMin_le S N k s (hS k rfl).1 (hS k rfl).2 hw hdeg hsupp hL hL'
   have hA0 := mul_nonneg (polyInterpConst_nonneg (n := n) S k) (mul_nonneg hh hL0)
@@ -270,19 +247,11 @@ theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
       polyInterpConst n S k * (meshSize N ^ (s + 1) * L) +
         polyInterpConst n S (k + 1) * (meshSize N ^ (s + 1) * L) := by
     simp only [polyInterpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : (complexMin n).d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((polyMin n S N).le_domain k (k + 1) hv)⟩ =
-        (complexMin n).d k (k + 1) ⟨_, hxj⟩ - (complexMin n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', complexMin_d_formL2 k (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1))) hdeg
-      ⟨_, hxj⟩ rfl, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact hB0
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [complexMin_d_formL2 k (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1))) hdeg
+    ⟨_, hxj⟩ rfl, e]
+  linarith
 
 /-- **Graph-norm distance of a smooth form vanishing outside `Q` to `V̊ₕʲ`**:
 `dist_V(σ, V̊ₕʲ) ≤ 2 B_j L h_N^{s+1}`. -/
@@ -292,16 +261,7 @@ theorem IsCsFormMin.infDist_domainSub_polyMin_le {S : PolySeq} {s : ℕ} {j : �
     Metric.infDist σ ((polyMin n S N).domainSub j) ≤
       2 * (polyInterpBound n S j * L * meshSize N ^ (s + 1)) := by
   obtain ⟨v, hv, h1, h2⟩ := hσ.exists_mem_polyMin_le hS hL0 N
-  refine (Subcomplex.infDist_domainSub_le (S := polyMin n S N)
-    (rfl : (ComplexShape.up ℤ).Rel j (j + 1)) σ hv).trans ?_
-  have e : (complexMin n).d j (j + 1) ((complexMin n).domainCoord j (j + 1) σ) -
-      (complexMin n).d j (j + 1) ⟨v, (polyMin n S N).le_domain j (j + 1) hv⟩ =
-      (complexMin n).d j (j + 1) ⟨(complexMin n).domainIncl j σ - v,
-        Submodule.sub_mem _ ((complexMin n).domainCoord j (j + 1) σ).2
-          ((polyMin n S N).le_domain j (j + 1) hv)⟩ := by
-    rw [← LinearPMap.map_sub]; rfl
-  rw [e, two_mul]
-  exact add_le_add h1 (h2 (j + 1) ((complexMin n).domainCoord j (j + 1) σ).2)
+  exact Subcomplex.infDist_domainSub_le_two_mul _ rfl σ hv h1 (h2 _)
 
 /-! ### Rates for the mixed Hodge Laplacian -/
 

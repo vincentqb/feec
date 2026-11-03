@@ -110,11 +110,8 @@ theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDom
           interpBound n j * L * meshSize N := by
   have hB0 := mul_nonneg (mul_nonneg (interpBound_nonneg n j) hL0) (meshSize_pos N).le
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg (cubeDomain n) (n := n) hj
+    exact (whitney n N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := FEM.exists_mem_whitney_le N k hw hL0 hL0 hL hL'
   obtain ⟨hdom, hval⟩ := formL2_mem_domain k (hw.of_le (by norm_num)) hdeg
   have hh := (meshSize_pos N).le
@@ -123,18 +120,10 @@ theorem IsC2Form.exists_mem_whitney_le {j : ℤ} {L : ℝ} {x : L2F ℝ (cubeDom
   have e : interpBound n k * L * meshSize N =
       interpConst n k * (meshSize N * L) + interpConst n (k + 1) * (meshSize N * L) := by
     simp only [interpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : (complex n).d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((whitney n N).le_domain k (k + 1) hv)⟩ =
-        (complex n).d k (k + 1) ⟨_, hdom⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', hval, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact mul_nonneg (mul_nonneg (interpBound_nonneg n _) hL0) hh
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [hval, e]
+  linarith
 
 /-- **Graph-norm distance of a `C²` form to the Whitney space**: `dist_V(σ, Vₕʲ) ≤ B_j L h_N`. -/
 theorem IsC2Form.infDist_domainSub_whitney_le {j : ℤ} {L : ℝ} {σ : (complex n).domainSpace j}
@@ -248,11 +237,8 @@ theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
           interpBound n j * L * meshSize N := by
   have hB0 := mul_nonneg (mul_nonneg (interpBound_nonneg n j) hL0) (meshSize_pos N).le
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg (cubeDomain n) (n := n) hj
+    exact (whitneyMin n N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := FEM.exists_mem_whitneyMin_le N k hw hsupp hL0 hL0 hL hL'
   have hh := (meshSize_pos N).le
   have hA0 := mul_nonneg (interpConst_nonneg n k) (mul_nonneg hh hL0)
@@ -260,18 +246,10 @@ theorem IsC2FormMin.exists_mem_whitneyMin_le {j : ℤ} {L : ℝ}
   have e : interpBound n k * L * meshSize N =
       interpConst n k * (meshSize N * L) + interpConst n (k + 1) * (meshSize N * L) := by
     simp only [interpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : (complexMin n).d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((whitneyMin n N).le_domain k (k + 1) hv)⟩ =
-        (complexMin n).d k (k + 1) ⟨_, hxj⟩ - (complexMin n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', complexMin_d_formL2 k (hw.of_le (by norm_num)) hdeg ⟨_, hxj⟩ rfl, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact hB0
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [complexMin_d_formL2 k (hw.of_le (by norm_num)) hdeg ⟨_, hxj⟩ rfl, e]
+  linarith
 
 /-- **Graph-norm distance of a `C²` form vanishing outside `Q` to `V̊ₕʲ`**:
 `dist_V(σ, V̊ₕʲ) ≤ 2 B_j L h_N`. -/
@@ -280,16 +258,7 @@ theorem IsC2FormMin.infDist_domainSub_whitneyMin_le {j : ℤ} {L : ℝ}
     (hL0 : 0 ≤ L) (N : ℕ) :
     Metric.infDist σ ((whitneyMin n N).domainSub j) ≤ 2 * (interpBound n j * L * meshSize N) := by
   obtain ⟨v, hv, h1, h2⟩ := hσ.exists_mem_whitneyMin_le hL0 N
-  refine (Subcomplex.infDist_domainSub_le (S := whitneyMin n N)
-    (rfl : (ComplexShape.up ℤ).Rel j (j + 1)) σ hv).trans ?_
-  have e : (complexMin n).d j (j + 1) ((complexMin n).domainCoord j (j + 1) σ) -
-      (complexMin n).d j (j + 1) ⟨v, (whitneyMin n N).le_domain j (j + 1) hv⟩ =
-      (complexMin n).d j (j + 1) ⟨(complexMin n).domainIncl j σ - v,
-        Submodule.sub_mem _ ((complexMin n).domainCoord j (j + 1) σ).2
-          ((whitneyMin n N).le_domain j (j + 1) hv)⟩ := by
-    rw [← LinearPMap.map_sub]; rfl
-  rw [e, two_mul]
-  exact add_le_add h1 (h2 (j + 1) ((complexMin n).domainCoord j (j + 1) σ).2)
+  exact Subcomplex.infDist_domainSub_le_two_mul _ rfl σ hv h1 (h2 _)
 
 instance (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
     FiniteDimensional ℝ (((whitneyMin n N).window a m).V i) :=

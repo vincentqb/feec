@@ -549,6 +549,11 @@ theorem subsingleton_L2F_negSucc (S : Set (Fin n → ℝ)) (k : ℕ) :
   refine PiLp.ext fun s => ?_
   exact absurd s.2 (by have := Int.natCast_nonneg (#s.1); omega)
 
+theorem subsingleton_L2F_of_neg (S : Set (Fin n → ℝ)) {j : ℤ} (hj : j < 0) :
+    Subsingleton (L2F ℝ S (formIdx n j)) := by
+  obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
+  exact subsingleton_L2F_negSucc S k
+
 /-- **Conformity of the global spaces**: `Vₕᵏ ⊆ HΛᵏ(Ω)`, with `d_max` the elementwise `d`. -/
 theorem glue_mem_maximal [NeZero n] (hΩ : IsOpen M.domain) (k : ℕ) (u : E.globalSpace M k) :
     ∃ h : E.glue M k (u : E.Piecewise M k) ∈ ((extDerivOp ℝ n k).maximal M.domain).domain,

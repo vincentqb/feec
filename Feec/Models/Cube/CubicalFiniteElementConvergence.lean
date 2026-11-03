@@ -289,11 +289,8 @@ theorem IsCsForm.exists_mem_qMinus_le {s : ℕ} (hs : ∀ i, s + 1 ≤ b i) {j :
     mul_nonneg (add_nonneg (qMinusInterpConst_nonneg _ _ _) (qMinusInterpConst_nonneg _ _ _))
       (mul_nonneg hL0 hh)
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc (cubeDomain n) (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg (cubeDomain n) (n := n) hj
+    exact (qMinus n b N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ := FEM.exists_mem_qMinus_le hs N k hw hdeg hL hL'
   obtain ⟨hdom, hval⟩ := formL2_mem_domain k
     (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1))) hdeg
@@ -303,18 +300,10 @@ theorem IsCsForm.exists_mem_qMinus_le {s : ℕ} (hs : ∀ i, s + 1 ≤ b i) {j :
       qMinusInterpConst n b s k * (meshSize N ^ (s + 1) * L) +
         qMinusInterpConst n b s (k + 1) * (meshSize N ^ (s + 1) * L) := by
     simp only [qMinusInterpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : (complex n).d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((qMinus n b N).le_domain k (k + 1) hv)⟩ =
-        (complex n).d k (k + 1) ⟨_, hdom⟩ - (complex n).d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', hval, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact hB0
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [hval, e]
+  linarith
 
 variable (n) in
 /-- **The Jackson estimate of the cubical complexes**: forms of class `IsCsForm s` are

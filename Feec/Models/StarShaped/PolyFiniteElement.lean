@@ -387,11 +387,8 @@ theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt
   have hh := pow_nonneg (F.meshSize_pos N).le (s + 1)
   have hB0 := mul_nonneg (mul_nonneg (F.polyInterpBound_nonneg S j) hL0) hh
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc D.Ω (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg D.Ω (n := n) hj
+    exact (F.poly S N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ :=
     F.exists_mem_poly_le S N k s (hS k rfl).1 (hS k rfl).2 hw hdeg hL0 hL0 hL hL'
   obtain ⟨hdom, hval⟩ := F.formL2_mem_domain k
@@ -402,18 +399,10 @@ theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt
       F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L) +
         F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L) := by
     simp only [polyInterpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : D.complex.d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((F.poly S N).le_domain k (k + 1) hv)⟩ =
-        D.complex.d k (k + 1) ⟨_, hdom⟩ - D.complex.d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', hval, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact hB0
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [hval, e]
+  linarith
 
 /-- **Degreewise interpolation error of order `s + 1` with vanishing boundary DOFs**, in
 `H̊Λ(Ω)`. -/
@@ -428,11 +417,8 @@ theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : FEM.PolyO
   have hh := pow_nonneg (F.meshSize_pos N).le (s + 1)
   have hB0 := mul_nonneg (mul_nonneg (F.polyInterpBound_nonneg S j) hL0) hh
   rcases hx with hj | ⟨k, rfl, w, hw, hdeg, hsupp, hL, hL', rfl⟩
-  · obtain ⟨k, rfl⟩ : ∃ k : ℕ, j = Int.negSucc k := ⟨(-j - 1).toNat, by omega⟩
-    have := LocalElement.subsingleton_L2F_negSucc D.Ω (n := n) k
-    refine ⟨0, Submodule.zero_mem _, ?_, fun j' hxj => ?_⟩
-    · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hB0
-    · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hB0
+  · have := LocalElement.subsingleton_L2F_of_neg D.Ω (n := n) hj
+    exact (F.polyMin S N).exists_mem_le_of_subsingleton hB0
   obtain ⟨v, hv, hv1, hdv, hv2⟩ :=
     F.exists_mem_polyMin_le S N k s (hS k rfl).1 (hS k rfl).2 hw hdeg hsupp hL0 hL0 hL hL'
   have hA0 := mul_nonneg (F.polyInterpConst_nonneg S k) (mul_nonneg hh hL0)
@@ -441,19 +427,11 @@ theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : FEM.PolyO
       F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L) +
         F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L) := by
     simp only [polyInterpBound, Int.toNat_natCast]; ring
-  refine ⟨v, hv, ?_, fun j' hxj => ?_⟩
-  · rw [e]; linarith
-  by_cases hj : (k : ℤ) + 1 = j'
-  · subst hj
-    have e' : D.complexMin.d k (k + 1)
-        ⟨_ - v, Submodule.sub_mem _ hxj ((F.polyMin S N).le_domain k (k + 1) hv)⟩ =
-        D.complexMin.d k (k + 1) ⟨_, hxj⟩ - D.complexMin.d k (k + 1) ⟨v, hdv⟩ := by
-      rw [← LinearPMap.map_sub]; rfl
-    rw [e', F.complexMin_d_formL2 k (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1)))
-      hdeg ⟨_, hxj⟩ rfl, e]
-    linarith
-  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]
-    exact hB0
+  refine HilbertComplex.Subcomplex.exists_mem_le_of_succ _ hv hB0 (by rw [e]; linarith)
+    fun hxj => ?_
+  rw [F.complexMin_d_formL2 k (hw.of_le (by exact_mod_cast Nat.le_add_left 1 (s + 1)))
+    hdeg ⟨_, hxj⟩ rfl, e]
+  linarith
 
 /-! ### Density of the higher-order complexes -/
 

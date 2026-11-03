@@ -206,3 +206,43 @@ theorem exists_mem_graphSub_le_of_infDist [Fintype ι] (x : H.totalD.domain) {ε
     exact (H.norm_d_domainCoord_le i j _).trans hlt.le
 
 end Feec.HilbertComplex.Subcomplex
+
+/-! ### Degreewise approximation in a single degree -/
+
+namespace Feec.HilbertComplex.Subcomplex
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex 𝕜 c W} (S : H.Subcomplex)
+
+/-- **Degreewise approximation in a trivial degree**: if `Wⁱ = 0`, then `v = 0 ∈ Vₕⁱ` is within
+every `ε ≥ 0` of `x`, in every graph norm. -/
+theorem exists_mem_le_of_subsingleton {i : ι} [Subsingleton (W i)] {x : W i} {ε : ℝ}
+    (hε : 0 ≤ ε) :
+    ∃ v, ∃ hv : v ∈ S.V i, ‖x - v‖ ≤ ε ∧ ∀ j (hx : x ∈ (H.d i j).domain),
+      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx (S.le_domain i j hv)⟩‖ ≤ ε := by
+  refine ⟨0, Submodule.zero_mem _, ?_, fun j hx => ?_⟩
+  · rw [Subsingleton.elim (x - 0) 0, norm_zero]; exact hε
+  · rw [LinearPMap.apply_mk_eq_zero _ _ (Subsingleton.elim _ _), norm_zero]; exact hε
+
+/-- **Degreewise approximation on the cochain shape over `ℤ`**: the only differential out of
+degree `j` is `d j (j + 1)` (`d j j' = 0` for `j' ≠ j + 1`), so a `v ∈ Vₕʲ` with `‖x - v‖ ≤ ε`
+and `‖d x - d v‖ ≤ ε` approximates `x` within `ε` in every graph norm. -/
+theorem exists_mem_le_of_succ {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+    {H : HilbertComplex 𝕜 (ComplexShape.up ℤ) W} (S : H.Subcomplex) {j : ℤ} {x v : W j}
+    (hv : v ∈ S.V j) {ε : ℝ} (hε : 0 ≤ ε) (h1 : ‖x - v‖ ≤ ε)
+    (h2 : ∀ hx : x ∈ (H.d j (j + 1)).domain,
+      ‖H.d j (j + 1) ⟨x, hx⟩ - H.d j (j + 1) ⟨v, S.le_domain j (j + 1) hv⟩‖ ≤ ε) :
+    ∃ v, ∃ hv : v ∈ S.V j, ‖x - v‖ ≤ ε ∧ ∀ j' (hx : x ∈ (H.d j j').domain),
+      ‖H.d j j' ⟨x - v, Submodule.sub_mem _ hx (S.le_domain j j' hv)⟩‖ ≤ ε := by
+  refine ⟨v, hv, h1, fun j' hx => ?_⟩
+  by_cases hj : j + 1 = j'
+  · subst hj
+    have e : H.d j (j + 1) ⟨x - v, Submodule.sub_mem _ hx (S.le_domain j (j + 1) hv)⟩ =
+        H.d j (j + 1) ⟨x, hx⟩ - H.d j (j + 1) ⟨v, S.le_domain j (j + 1) hv⟩ := by
+      rw [← LinearPMap.map_sub]; rfl
+    rw [e]; exact h2 hx
+  · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+
+end Feec.HilbertComplex.Subcomplex

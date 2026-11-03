@@ -297,8 +297,8 @@ Feec.approxB_apply_domain	Feec.Stone.approxB_apply_domain	generalize
 Feec.norm_approxJ_apply_le	Feec.Stone.norm_approxJ_apply_le	generalize
 Feec.norm_approxB_apply_domain_le	Feec.Stone.norm_approxB_apply_domain_le	generalize
 Feec.norm_approxJ_sub_le	Feec.Stone.norm_approxJ_sub_le	generalize
-Feec.tendsto_apply_of_dense	Feec.Stone.tendsto_apply_of_dense	generalize
-Feec.cauchySeq_apply_of_dense	Feec.Stone.cauchySeq_apply_of_dense	generalize
+Feec.tendsto_apply_of_dense	ContinuousLinearMap.tendsto_apply_of_dense	generalize
+Feec.cauchySeq_apply_of_dense	ContinuousLinearMap.cauchySeq_apply_of_dense	generalize
 Feec.tendsto_approxJ	Feec.Stone.tendsto_approxJ	generalize
 Feec.tendsto_approxB	Feec.Stone.tendsto_approxB	generalize
 Feec.approxB_commute	Feec.Stone.approxB_commute	generalize

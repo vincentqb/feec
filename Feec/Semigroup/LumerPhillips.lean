@@ -46,7 +46,7 @@ Properties of the semigroup:
 
 * `C0Semigroup.IsContraction.isDissipative_generator`,
   `C0Semigroup.eqOn_of_generator_eq_of_isDissipative` (uniqueness by the energy method, in
-  `Feec.Semigroup.Stone`), `C0Semigroup.S_apply_of_mem_ker` (stationary points).
+  `Feec.Semigroup.Orbit`), `C0Semigroup.S_apply_of_mem_ker` (stationary points).
 * `C0Semigroup.inner_S_left_of_isSymmetric`, `C0Semigroup.isSelfAdjoint_S_of_isSymmetric`: a
   symmetric generator gives self-adjoint `S t`;
   `C0Semigroup.starProjection_S_of_isSymmetric`: then `S t` commutes with the projection onto a
@@ -453,7 +453,7 @@ theorem re_inner_yosida_le (hA : A.IsMDissipative) (n : ℕ) (y : E) :
 /-- `J_n y → y` for every `y`. -/
 theorem tendsto_approxJ (hA : A.IsMDissipative) (y : E) :
     Tendsto (fun n => approxJ A n y) atTop (𝓝 y) := by
-  refine Stone.tendsto_apply_of_dense (norm_approxJ_apply_le hA) hA.dense_domain ?_ y
+  refine ContinuousLinearMap.tendsto_apply_of_dense (norm_approxJ_apply_le hA) hA.dense_domain ?_ y
   intro x hx
   rw [tendsto_iff_norm_sub_tendsto_zero]
   refine squeeze_zero (fun _ => norm_nonneg _) (fun n => ?_)
@@ -557,7 +557,7 @@ theorem norm_approxS_sub_self_le (hA : A.IsMDissipative) (n : ℕ) {t : ℝ} (ht
 
 theorem cauchySeq_approxS (hA : A.IsMDissipative) {t : ℝ} (ht : 0 ≤ t) (x : E) :
     CauchySeq fun n => approxS A n t x :=
-  Stone.cauchySeq_exp_apply (norm_approxS_apply_le hA · ht)
+  ContinuousLinearMap.cauchySeq_exp_apply (norm_approxS_apply_le hA · ht)
     (fun n m y => by rw [abs_of_nonneg ht]; exact norm_approxS_sub_le hA n m ht y) hA.dense_domain
     (fun y hy => (tendsto_yosida hA ⟨y, hy⟩).cauchySeq) x
 
@@ -631,20 +631,22 @@ theorem norm_lpS_sub_le (hA : A.IsMDissipative) (x : A.domain) (t s : ℝ) :
 
 theorem continuous_lpS_apply (hA : A.IsMDissipative) (x : E) :
     Continuous fun t => lpS hA t x :=
-  Stone.continuous_apply_of_lipschitz hA.dense_domain (norm_lpS_apply_le hA) (norm_lpS_sub_le hA) x
+  ContinuousLinearMap.continuous_apply_of_lipschitz hA.dense_domain (norm_lpS_apply_le hA)
+    (norm_lpS_sub_le hA) x
 
 /-- `S(t) x - x = ∫₀ᵗ S(s) (A x) ds` on `D(A)`, `t ≥ 0`. -/
 theorem lpS_sub_eq_integral (hA : A.IsMDissipative) (x : A.domain) {t : ℝ} (ht : 0 ≤ t) :
     lpS hA t x - x = ∫ s in (0 : ℝ)..t, lpS hA s (A x) := by
   have h0 : ∀ s ∈ uIcc 0 t, 0 ≤ s := fun s hs => by rw [uIcc_of_le ht] at hs; exact hs.1
-  exact Stone.sub_eq_integral_of_tendsto_exp (fun s hs n => norm_approxS_le hA n (h0 s hs))
+  exact ContinuousLinearMap.sub_eq_integral_of_tendsto_exp
+    (fun s hs n => norm_approxS_le hA n (h0 s hs))
     (fun s hs => tendsto_approxS hA (h0 s hs)) (tendsto_yosida hA x)
     (norm_yosida_apply_domain_le hA · x)
 
 /-- On `D(A)`, `t ↦ S(t) x` has right derivative `A x` at `0`. -/
 theorem hasDerivWithinAt_lpS (hA : A.IsMDissipative) (x : A.domain) :
     HasDerivWithinAt (fun t => lpS hA t x) (A x) (Ici 0) 0 :=
-  Stone.hasDerivWithinAt_of_sub_eq_integral (continuous_lpS_apply hA _) (lpS_zero hA)
+  ContinuousLinearMap.hasDerivWithinAt_of_sub_eq_integral (continuous_lpS_apply hA _) (lpS_zero hA)
     (fun _ ht => lpS_sub_eq_integral hA x ht) self_mem_Ici
 
 end Limit

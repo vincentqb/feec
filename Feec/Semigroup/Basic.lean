@@ -394,10 +394,6 @@ end Isometric
 
 section Bounded
 
-/-- `ℚ`-algebra structure on operators, for `NormedSpace.exp_add_of_commute`. -/
-local instance instNormedAlgebraRatCLM : NormedAlgebra ℚ (E →L[𝕜] E) :=
-  NormedAlgebra.restrictScalars ℚ 𝕜 _
-
 variable [CompleteSpace E]
 
 /-- The uniformly continuous group `t ↦ exp(t B)` of a bounded operator `B`. -/
@@ -466,7 +462,8 @@ variable {F : Type*} [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] [Complete
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-local instance instNormedAlgebraRatCLM' : NormedAlgebra ℚ (F →L[𝕜] F) :=
+/-- `ℚ`-algebra structure on operators, for `NormedSpace.exp`. -/
+local instance instNormedAlgebraRatCLM : NormedAlgebra ℚ (F →L[𝕜] F) :=
   NormedAlgebra.restrictScalars ℚ 𝕜 _
 
 /-- A skew bounded operator satisfies `B† = -B`. -/

@@ -6,6 +6,7 @@ public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Mathlib.Analysis.Convex.Integral
 public import Mathlib.MeasureTheory.Integral.DominatedConvergence
 public import Mathlib.MeasureTheory.Integral.Prod
+public import Feec.ForMathlib.Analysis.Gronwall
 
 /-!
 # Orbit calculus for a strongly continuous semigroup
@@ -26,6 +27,8 @@ generator `A`:
 * `C0Semigroup.hasDerivWithinAt_extS_comp`: the product rule along the semigroup;
 * `C0Semigroup.dense_domain_generator`, `C0Group.dense_domain_generator`: generators are densely
   defined;
+* `C0Semigroup.eqOn_of_generator_eq_of_isDissipative`: on an inner product space, two semigroups
+  with the same dissipative generator agree for `t ≥ 0` (energy method);
 * `C0Semigroup.forall_nonneg_of_forall_Icc`, `C0Group.forall_of_forall_Icc_neg`: invariance on
   `[0, T]` (resp. `[-T, T]`), `T > 0`, is invariance for all `t ≥ 0` (resp. all `t`).
 
@@ -496,5 +499,59 @@ theorem forall_of_forall_Icc_neg (G : C0Group 𝕜 E) {P : Set E} {T : ℝ} (hT 
       (by linarith)
 
 end C0Group
+
+namespace C0Semigroup
+
+/-! ### Uniqueness for a dissipative generator -/
+
+variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+
+private theorem apply_eq_of_eq {T T' : E →ₗ.[𝕜] E} (e : T = T') {y : E} (hy : y ∈ T.domain)
+    (hy' : y ∈ T'.domain) : T ⟨y, hy⟩ = T' ⟨y, hy'⟩ := by
+  subst e; rfl
+
+variable [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+
+/-- **Uniqueness for a dissipative generator** (energy method): two strongly continuous
+semigroups with the same dissipative generator agree for `t ≥ 0`. -/
+theorem eqOn_of_generator_eq_of_isDissipative {G G' : C0Semigroup 𝕜 E}
+    (hA : G.generator.IsDissipative) (h : G'.generator = G.generator) :
+    EqOn G'.S G.S (Ici 0) := by
+  set A := G.generator
+  have hmem' : ∀ y, y ∈ A.domain → y ∈ G'.generator.domain := fun y hy => h ▸ hy
+  have hmem : ∀ y, y ∈ G'.generator.domain → y ∈ A.domain := fun y hy => h ▸ hy
+  have hD : ∀ x : A.domain, ∀ T, 0 ≤ T → G'.S T x = G.S T x := by
+    intro x T hT
+    set x' : G'.generator.domain := ⟨x, hmem' x x.2⟩
+    have hAx : G'.generator x' = A x := apply_eq_of_eq h _ _
+    set e : ℝ → E := fun s => G'.S s x - G.S s x
+    have hm : ∀ s, 0 ≤ s → e s ∈ A.domain := fun s hs =>
+      A.domain.sub_mem (hmem _ (G'.mapsTo_domain x' hs)) (G.mapsTo_domain x hs)
+    have hAe : ∀ s (hs : 0 ≤ s), A ⟨e s, hm s hs⟩ = G'.S s (A x) - G.S s (A x) := by
+      intro s hs
+      have e1 : (⟨e s, hm s hs⟩ : A.domain) =
+          ⟨G'.S s x, hmem _ (G'.mapsTo_domain x' hs)⟩ - ⟨G.S s x, G.mapsTo_domain x hs⟩ := rfl
+      rw [e1, LinearPMap.map_sub, G.generator_apply_S x hs, ← hAx,
+        ← G'.generator_apply_S x' hs]
+      congr 1
+      exact (apply_eq_of_eq h _ _).symm
+    have hec : ContinuousOn e (Icc 0 T) :=
+      ((G'.strongCont x).sub (G.strongCont x)).mono Icc_subset_Ici_self
+    have he : ∀ s ∈ Ico 0 T, HasDerivWithinAt e (G'.S s (A x) - G.S s (A x)) (Ici s) s := by
+      intro s hs
+      have h1 := G'.hasDerivWithinAt_Ici_apply x' hs.1
+      rw [hAx] at h1
+      exact h1.sub (G.hasDerivWithinAt_Ici_apply x hs.1)
+    have hle := _root_.norm_le_add_integral_of_re_inner_deriv_le (𝕜 := 𝕜) (g := fun _ => 0)
+      hec he continuousOn_const (fun _ _ => le_rfl) (fun s hs => by
+        rw [← hAe s hs.1, zero_mul]; exact hA _) T ⟨hT, le_rfl⟩
+    simp only [e, S_zero_apply, sub_self, norm_zero, intervalIntegral.integral_zero,
+      add_zero] at hle
+    exact sub_eq_zero.1 (norm_le_zero_iff.1 hle)
+  intro t (ht : 0 ≤ t)
+  exact DFunLike.coe_injective (Continuous.ext_on G.dense_domain_generator (G'.S t).continuous
+    (G.S t).continuous fun x hx => hD ⟨x, hx⟩ t ht)
+
+end C0Semigroup
 
 end Feec

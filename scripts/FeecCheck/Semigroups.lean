@@ -11,10 +11,13 @@ The exponential lemmas `Feec.C0Group.exp_ofReal_smul_add`, `C0Group.continuous_e
 `C0Group.commute_exp_ofReal_smul` and the aliases `C0Group.hasDerivAt_exp_ofReal_smul_apply`,
 `Feec.TimeStepping.hasDerivAt_exp_sub_smul_apply` are now the `ContinuousLinearMap` lemmas of
 `Feec.ForMathlib.Analysis.ExpFlow`; Stone's theorem and the Lumer–Phillips theorem share one limit
-argument (`Feec.Stone.cauchySeq_exp_apply`, `Stone.sub_eq_integral_of_tendsto_exp`, …), so
-`Feec.Stone.tendsto_approxU_of_tendsto` is `ContinuousLinearMap.tendsto_apply_of_tendsto`; the
-unused `LinearPMap.mem_partIn_domain` and
-`LinearPMap.IsMDissipative.hasDerivWithinAt_semigroup_Ici_zero` are gone. `C0Semigroup.rescale`
+argument (`Feec.ForMathlib.Analysis.ExpLimit`: `ContinuousLinearMap.cauchySeq_exp_apply`,
+`ContinuousLinearMap.sub_eq_integral_of_tendsto_exp`, …), so
+`Feec.Stone.tendsto_approxU_of_tendsto` is `ContinuousLinearMap.tendsto_apply_of_tendsto`, and
+`Feec.Stone.tendsto_apply_of_dense`, `Feec.Stone.cauchySeq_apply_of_dense` are the
+`ContinuousLinearMap` lemmas of `Feec.ForMathlib.Analysis.StrongConvergence`; the unused
+`LinearPMap.mem_partIn_domain` and `LinearPMap.IsMDissipative.hasDerivWithinAt_semigroup_Ici_zero`
+are gone. `C0Semigroup.rescale`
 now takes a scalar `w : 𝕜` (it was real, `ω : ℝ`, with the complex rescaling
 `C0Semigroup.complexRescale` on complex spaces), and `C0Semigroup.isResolvent_resolvent`,
 `C0Semigroup.norm_resolvent_pow_le` hold over `𝕜` (they were on complex spaces). Below, each is
@@ -32,6 +35,18 @@ open Set Filter Topology NormedSpace Feec
 section Bounded
 
 variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+
+/-- The earlier `Stone.tendsto_apply_of_dense`. -/
+theorem tendsto_apply_of_dense_old {T : ℕ → E →L[𝕜] E} (hT : ∀ n x, ‖T n x‖ ≤ ‖x‖)
+    {D : Set E} (hD : Dense D) (h : ∀ x ∈ D, Tendsto (fun n => T n x) atTop (𝓝 x)) (x : E) :
+    Tendsto (fun n => T n x) atTop (𝓝 x) :=
+  ContinuousLinearMap.tendsto_apply_of_dense hT hD h x
+
+/-- The earlier `Stone.cauchySeq_apply_of_dense`. -/
+theorem cauchySeq_apply_of_dense_old {T : ℕ → E →L[𝕜] E}
+    (hT : ∀ n x, ‖T n x‖ ≤ ‖x‖) {D : Set E} (hD : Dense D)
+    (h : ∀ x ∈ D, CauchySeq fun n => T n x) (x : E) : CauchySeq fun n => T n x :=
+  ContinuousLinearMap.cauchySeq_apply_of_dense hT hD h x
 
 /-- The earlier `C0Group.commute_exp_ofReal_smul`. -/
 theorem commute_exp_ofReal_smul_old (B : E →L[𝕜] E) (t : ℝ) : Commute B (exp ((t : 𝕜) • B)) :=

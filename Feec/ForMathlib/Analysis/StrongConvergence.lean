@@ -12,6 +12,8 @@ under uniform bounds:
 
 * `ContinuousLinearMap.tendsto_apply_of_tendsto`: if `‖Pᵢ‖ ≤ M`, `Pᵢ → P` strongly and `wᵢ → w`,
   then `Pᵢ wᵢ → P w`;
+* `ContinuousLinearMap.tendsto_apply_of_dense`, `ContinuousLinearMap.cauchySeq_apply_of_dense`:
+  for contractions, `Tₙ x → x` (resp. `(Tₙ x)ₙ` Cauchy) on a dense set holds everywhere;
 * `ContinuousLinearMap.tendsto_pow_apply`, `ContinuousLinearMap.tendsto_aeval_apply`: powers and
   polynomials of uniformly bounded, strongly convergent operators converge strongly;
 * `ContinuousLinearMap.tendsto_inverse_apply`: inverses with uniformly bounded inverses converge
@@ -59,6 +61,46 @@ theorem tendsto_apply_of_tendsto {P : ι → V →L[𝕜] V} {P₀ : V →L[𝕜
   have := h0.add (hP w₀)
   rw [zero_add] at this
   exact this.congr fun i => by rw [← _root_.map_add, sub_add_cancel]
+
+/-- Strong convergence on a dense set plus `‖T n x‖ ≤ ‖x‖` gives strong convergence. -/
+theorem tendsto_apply_of_dense {T : ℕ → V →L[𝕜] V} (hT : ∀ n x, ‖T n x‖ ≤ ‖x‖)
+    {D : Set V} (hD : Dense D) (h : ∀ x ∈ D, Tendsto (fun n => T n x) atTop (𝓝 x)) (x : V) :
+    Tendsto (fun n => T n x) atTop (𝓝 x) := by
+  rw [Metric.tendsto_atTop]
+  intro ε hε
+  obtain ⟨d, hd, hdD⟩ := Metric.dense_iff.1 hD x (ε / 3) (by positivity)
+  rw [Metric.mem_ball] at hd
+  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.1 (h d hdD) (ε / 3) (by positivity)
+  refine ⟨N, fun n hn => ?_⟩
+  have h1 : dist (T n x) (T n d) ≤ dist x d := by
+    rw [dist_eq_norm, dist_eq_norm, ← _root_.map_sub]; exact hT n _
+  have := hN n hn
+  calc dist (T n x) x ≤ dist (T n x) (T n d) + dist (T n d) d + dist d x :=
+        dist_triangle4 _ _ _ _
+    _ < ε / 3 + ε / 3 + ε / 3 := by
+        have hd' : dist x d < ε / 3 := by rwa [dist_comm]
+        linarith
+    _ = ε := by ring
+
+/-- Strong Cauchy-ness on a dense set plus `‖T n x‖ ≤ ‖x‖` gives strong Cauchy-ness. -/
+theorem cauchySeq_apply_of_dense {T : ℕ → V →L[𝕜] V}
+    (hT : ∀ n x, ‖T n x‖ ≤ ‖x‖) {D : Set V} (hD : Dense D)
+    (h : ∀ x ∈ D, CauchySeq fun n => T n x) (x : V) : CauchySeq fun n => T n x := by
+  rw [Metric.cauchySeq_iff]
+  intro ε hε
+  obtain ⟨d, hd, hdD⟩ := Metric.dense_iff.1 hD x (ε / 3) (by positivity)
+  rw [Metric.mem_ball, dist_comm] at hd
+  obtain ⟨N, hN⟩ := Metric.cauchySeq_iff.1 (h d hdD) (ε / 3) (by positivity)
+  refine ⟨N, fun m hm n hn => ?_⟩
+  have h1 : ∀ k, dist (T k x) (T k d) ≤ dist x d := fun k => by
+    rw [dist_eq_norm, dist_eq_norm, ← _root_.map_sub]; exact hT k _
+  have := hN m hm n hn
+  have h2 := h1 n
+  rw [dist_comm] at h2
+  calc dist (T m x) (T n x) ≤ dist (T m x) (T m d) + dist (T m d) (T n d) + dist (T n d) (T n x) :=
+        dist_triangle4 _ _ _ _
+    _ < ε / 3 + ε / 3 + ε / 3 := by linarith [h1 m]
+    _ = ε := by ring
 
 /-- Powers of uniformly bounded, strongly convergent operators converge strongly. -/
 theorem tendsto_pow_apply {P : ι → V →L[𝕜] V} {P₀ : V →L[𝕜] V} {M : ℝ} (hM : ∀ i, ‖P i‖ ≤ M)

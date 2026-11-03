@@ -1,5 +1,6 @@
 module
 
+public import Feec.HilbertComplex.Approximation.ConformingFamily
 public import Feec.HilbertComplex.Approximation.Convergence
 public import Feec.HilbertComplex.Approximation.QuasiOptimal
 public import Feec.ForMathlib.Analysis.Inequalities
@@ -14,8 +15,10 @@ approximation theory of subcomplexes.
 * **The total graph space** `Γ(𝐝)` of a finite complex (the space of the semi-discrete Hodge
   wave equation, [QuennevilleBelair2015], §4.6): degreewise approximation within `ε` gives a
   point of `graphSub` within `(m + m²) ε`, `m` the number of degrees
-  (`Subcomplex.exists_mem_graphSub_le`), and degreewise density gives density
-  (`Subcomplex.eventually_exists_graphSub_lt`, the hypothesis of `Subcomplex.isApproximating`).
+  (`Subcomplex.exists_mem_graphSub_le`; on a window `Wᵃ → ⋯ → W^{a+m-1}` with degreewise bounds
+  `bᵢ ε`, within `(m + m²) (Σᵢ bᵢ) ε`, `Subcomplex.exists_mem_window_graphSub_le`), and
+  degreewise density gives density (`Subcomplex.eventually_exists_graphSub_lt`, the hypothesis of
+  `Subcomplex.isApproximating`).
 * **The discrete domain spaces** `Vₕⁱ ⊆ HΛⁱ`, measured in the graph norm (the quantities of the
   quasi-optimal estimate [AFW2010], Thm 3.9): `dist(σ, Vₕⁱ) ≤ ‖σ - v‖ + ‖d σ - d v‖`
   (`Subcomplex.infDist_domainSub_le`), so `dist(σ, Vₕⁱ) ≤ 2 ε` from a degreewise approximation
@@ -23,7 +26,8 @@ approximation theory of subcomplexes.
 
 ## Main results
 
-* `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`
+* `Feec.HilbertComplex.Subcomplex.exists_mem_graphSub_le`,
+  `Feec.HilbertComplex.Subcomplex.exists_mem_window_graphSub_le`
 * `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`
 * `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le`,
   `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_two_mul`
@@ -137,6 +141,35 @@ theorem eventually_exists_graphSub_lt {κ : Type*} {l : Filter κ} (S : κ → H
   have : (m + m * m) / (m + m * m + 1) < 1 := by
     rw [div_lt_one (by positivity)]; linarith
   nlinarith
+
+section Window
+
+variable {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α] {V : α → Type*}
+  [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
+  {H : HilbertComplex 𝕜 (ComplexShape.up α) V}
+
+/-- **Degreewise approximation in the total space of a window, with degreewise rates**: if every
+component `ζᵢ` of `ζ ∈ Γ(𝐝)` (the window `Wᵃ → ⋯ → W^{a+m-1}`) has a `vᵢ ∈ Vₕ^{a+i}` with
+`‖ζᵢ - vᵢ‖ ≤ bᵢ ε` and `‖d (ζᵢ - vᵢ)‖ ≤ bᵢ ε` in every degree, then some point of the window of
+`Vₕ` is within `(m + m²) (Σᵢ bᵢ) ε` of `ζ` (`exists_mem_graphSub_le` with `ε Σᵢ bᵢ`). -/
+theorem exists_mem_window_graphSub_le (S : H.Subcomplex) {a : α} {m : ℕ}
+    (ζ : (H.window a m).totalD.GraphSpace) (b : Fin m → ℝ) (hb : ∀ i, 0 ≤ b i) {ε : ℝ}
+    (hε : 0 ≤ ε)
+    (hdeg : ∀ i : Fin m, ∃ v, ∃ hv : v ∈ S.V (a + i),
+      ‖(H.window a m).totalD.graphFst ζ i - v‖ ≤ b i * ε ∧
+        ∀ j (hx : (H.window a m).totalD.graphFst ζ i ∈ (H.d (a + i) j).domain),
+          ‖H.d (a + i) j ⟨_ - v, Submodule.sub_mem _ hx (S.le_domain _ j hv)⟩‖ ≤ b i * ε) :
+    ∃ w ∈ (S.window a m).graphSub, ‖ζ - w‖ ≤ ((m : ℝ) + m * m) * (∑ i, b i) * ε := by
+  obtain ⟨x, rfl, -, -⟩ := (H.window a m).totalD.exists_toGraphSpace_eq ζ
+  have hle : ∀ i, b i * ε ≤ (∑ i, b i) * ε := fun i =>
+    mul_le_mul_of_nonneg_right (Finset.single_le_sum (fun j _ => hb j) (Finset.mem_univ i)) hε
+  obtain ⟨w, hw, hlt⟩ := (S.window a m).exists_mem_graphSub_le x (ε := (∑ i, b i) * ε) fun i => by
+    obtain ⟨v, hv, h1, h2⟩ := hdeg i
+    exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
+  refine ⟨w, hw, hlt.trans_eq ?_⟩
+  rw [Fintype.card_fin]; ring
+
+end Window
 
 end Feec.HilbertComplex.Subcomplex
 

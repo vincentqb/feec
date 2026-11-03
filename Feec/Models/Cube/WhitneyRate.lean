@@ -151,21 +151,14 @@ theorem exists_mem_window_le (a : ℤ) (m : ℕ) (ζ : ((complex n).window a m).
     (hζ : ∀ i : Fin m, IsC2Form (a + i) L (((complex n).window a m).totalD.graphFst ζ i))
     (N : ℕ) :
     ∃ w ∈ ((whitney n N).window a m).graphSub, ‖ζ - w‖ ≤
-      ((m : ℝ) + m * m) * (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N := by
-  obtain ⟨x, rfl, -, -⟩ := ((complex n).window a m).totalD.exists_toGraphSpace_eq ζ
-  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-  have hh := (meshSize_pos N).le
-  have hle : ∀ i : Fin m, interpBound n (a + i) * L * meshSize N ≤
-      (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N := fun i =>
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-      (Finset.single_le_sum (f := fun i : Fin m => interpBound n (a + i))
-        (fun _ _ => interpBound_nonneg n _) (Finset.mem_univ i)) hL0) hh
-  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((whitney n N).window a m) x
-    (ε := (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N) fun i => by
+      ((m : ℝ) + m * m) * (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N :=
+  ((whitney n N).exists_mem_window_graphSub_le ζ (fun i => interpBound n (a + i))
+    (fun _ => interpBound_nonneg n _) (mul_nonneg hL0 (meshSize_pos N).le)
+    fun i => by
       obtain ⟨v, hv, h1, h2⟩ := (hζ i).exists_mem_whitney_le hL0 N
-      exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
-  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-  rw [Fintype.card_fin]; ring
+      exact ⟨v, hv, h1.trans_eq (mul_assoc _ _ _),
+        fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
+    fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
 /-- **`O(h)` convergence of the semi-discrete Hodge wave equation for smooth solutions**
 ([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7): if every component of `ξ(s)` and
@@ -276,21 +269,14 @@ theorem exists_mem_windowMin_le (a : ℤ) (m : ℕ)
     (hζ : ∀ i : Fin m, IsC2FormMin (a + i) L (((complexMin n).window a m).totalD.graphFst ζ i))
     (N : ℕ) :
     ∃ w ∈ ((whitneyMin n N).window a m).graphSub, ‖ζ - w‖ ≤
-      ((m : ℝ) + m * m) * (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N := by
-  obtain ⟨x, rfl, -, -⟩ := ((complexMin n).window a m).totalD.exists_toGraphSpace_eq ζ
-  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-  have hh := (meshSize_pos N).le
-  have hle : ∀ i : Fin m, interpBound n (a + i) * L * meshSize N ≤
-      (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N := fun i =>
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-      (Finset.single_le_sum (f := fun i : Fin m => interpBound n (a + i))
-        (fun _ _ => interpBound_nonneg n _) (Finset.mem_univ i)) hL0) hh
-  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((whitneyMin n N).window a m) x
-    (ε := (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N) fun i => by
+      ((m : ℝ) + m * m) * (∑ i : Fin m, interpBound n (a + i)) * L * meshSize N :=
+  ((whitneyMin n N).exists_mem_window_graphSub_le ζ (fun i => interpBound n (a + i))
+    (fun _ => interpBound_nonneg n _) (mul_nonneg hL0 (meshSize_pos N).le)
+    fun i => by
       obtain ⟨v, hv, h1, h2⟩ := (hζ i).exists_mem_whitneyMin_le hL0 N
-      exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
-  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-  rw [Fintype.card_fin]; ring
+      exact ⟨v, hv, h1.trans_eq (mul_assoc _ _ _),
+        fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
+    fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
 /-- **`O(h)` convergence of the semi-discrete Hodge wave equation with vanishing traces for
 smooth solutions** ([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7): as

@@ -2117,27 +2117,16 @@ theorem norm_sub_le_meshSize_window_smooth (a : ℤ) (m : ℕ) {t₀ t₁ : ℝ}
       (1 + ‖HodgeWave.shiftedForm ((complex A b).window a m).totalD‖ / ((1 / 2) / √3)) *
         (1 + (t - t₀)) ^ 2 *
           (((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N) := by
-  have hh := (FEM.meshSize_pos N).le
-  have hle : ∀ i : Fin m, rateBound A (a + i) * L * FEM.meshSize N ≤
-      (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N := fun i =>
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-      (Finset.single_le_sum (f := fun i : Fin m => rateBound A (a + i))
-        (fun _ _ => rateBound_nonneg A _) (Finset.mem_univ i)) hL0) hh
   have happ : ∀ ζ : ((complex A b).window a m).totalD.GraphSpace,
       (∀ i : Fin m, IsC2Form A hA b (a + i) L (((complex A b).window a m).totalD.graphFst ζ i)) →
       ∃ w ∈ ((whitney A hA b N).window a m).graphSub, ‖ζ - w‖ ≤
-        ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N := by
-    intro ζ hζ
-    obtain ⟨x, rfl, -, -⟩ := ((complex A b).window a m).totalD.exists_toGraphSpace_eq ζ
-    simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-    obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((whitney A hA b N).window a m) x
-      (ε := (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N) fun i => by
+        ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N :=
+    fun ζ hζ => ((whitney A hA b N).exists_mem_window_graphSub_le ζ (fun i => rateBound A (a + i))
+      (fun _ => rateBound_nonneg A _) (mul_nonneg hL0 (FEM.meshSize_pos N).le) fun i => by
         obtain ⟨v, hv, h1, h2⟩ := (hζ i).exists_mem_whitney_le A hA b hL0 N
-        exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
-    refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-    rw [Fintype.card_fin]; ring
-  have e : ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N =
-      ((m : ℝ) + m * m) * (∑ i : Fin m, rateBound A (a + i)) * L * FEM.meshSize N := rfl
+        exact ⟨v, hv, h1.trans_eq (mul_assoc _ _ _),
+          fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
+      fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
   exact ((whitney A hA b N).window a m).norm_sub_le_of_approx hξ (hξh N) (h0 N)
     (fun s hs => ⟨happ _ fun i => (hreg s hs i).1, happ _ fun i => (hreg s hs i).2⟩) ht
 

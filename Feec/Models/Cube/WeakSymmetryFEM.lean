@@ -54,9 +54,9 @@ are in `Feec.Models.Cube.WeakSymmetryEstimates`.
   `IsCsFormTr.exists_mem_polyMin_le`.
 * `cubeFEM_rate`, `cubeFEM_rate_C2`: the same rates for flat data (`IsCsFormMin 0`: `C²` forms
   vanishing outside `Q`), through `IsCsFormMin.isCsFormTr`.
-* `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle_tr`, `cubeFEM_rate_isSaddle`: the solution of Prop 5.2
-  (`bggHilb.IsSaddle`, graph spaces) with multiplier in `L²Λ¹(Q)` solves the domain form of (5.3),
-  so the rate applies to it.
+* `isSaddle_jW_domain_eqs`, `cubeFEM_rate_isSaddle_tr`, `cubeFEM_rate_isSaddle`: the solution of
+  Prop 5.2 (`bggHilb.IsSaddle`, graph spaces) with multiplier in `L²Λ¹(Q)` solves the domain form
+  of (5.3), so the rate applies to it.
 * `cubeFEM_existsUnique`: unique discrete solvability (thesis Prop 5.4).
 * `cubeFEM_ne_bot`: the discrete spaces are nonzero for all large `N`;
   `exists_manufactured_solution`, `manufacturedU_ne_zero`: a nontrivial smooth exact solution

@@ -47,6 +47,8 @@ The isomorphism criterion itself (`CochainProjection.cohomologyMap_injective`) n
 * `CochainProjection.norm_sub_π_lt_of_harmonicGap_lt_one`.
 * `CochainProjection.norm_sub_π_le_infDist`, `CochainProjection.tendsto_harmonicGap_of_tendsto`,
   **`CochainProjection.tendsto_harmonicGap`**.
+* `CochainProjection.norm_sub_π_le_add` (`x ↦ ‖x − π x‖` is `(1 + C)`-Lipschitz),
+  `CochainProjection.eventually_forall_norm_sub_π_le` (uniform convergence on compact sets).
 * **`CochainProjection.eventually_finrank_cohomology_eq`**,
   `CochainProjection.eventually_finrank_harmonicW_eq`: along any filter on which the harmonic gap
   tends to zero.
@@ -70,6 +72,28 @@ open scoped InnerProductSpace
 open LinearPMap Filter Topology
 
 @[expose] public noncomputable section
+
+/-- **Uniform convergence on compact sets**: a family `F h` of functions, Lipschitz in `x` with a
+common constant and tending to `0` pointwise along `l`, tends to `0` uniformly on every compact
+set. -/
+theorem IsCompact.eventually_forall_le_of_lipschitz {E κ : Type*} [PseudoMetricSpace E]
+    {K : Set E} (hK : IsCompact K) {l : Filter κ} {F : κ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
+    (hlip : ∀ h x y, F h x ≤ F h y + B * dist x y)
+    (hF : ∀ x, Tendsto (fun h => F h x) l (𝓝 0)) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in l, ∀ x ∈ K, F h x ≤ ε := by
+  have hδ : 0 < ε / (2 * (B + 1)) := by positivity
+  obtain ⟨t, -, htf, hcov⟩ := finite_cover_balls_of_compact hK hδ
+  have hev : ∀ᶠ h in l, ∀ y ∈ t, F h y < ε / 2 :=
+    (Filter.eventually_all_finite htf).2 fun y _ =>
+      (hF y).eventually (gt_mem_nhds (half_pos hε))
+  filter_upwards [hev] with h hh x hx
+  obtain ⟨y, hy, hxy⟩ := Set.mem_iUnion₂.1 (hcov hx)
+  have h3 : B * dist x y ≤ B * (ε / (2 * (B + 1))) :=
+    mul_le_mul_of_nonneg_left (Metric.mem_ball.1 hxy).le hB
+  have h4 : B * (ε / (2 * (B + 1))) ≤ ε / 2 := by
+    rw [mul_div_assoc', div_le_div_iff₀ (by positivity) (by norm_num)]
+    nlinarith
+  linarith [hlip h x y, hh y hy]
 
 namespace Feec.HilbertComplex
 
@@ -327,6 +351,19 @@ theorem eventually_finrank_harmonicW_eq (hi : H.ClosedRangeAt i) :
   (eventually_norm_sub_π_lt P hπ hgap).mono fun h hh => (P h).finrank_harmonicW_eq hi hh
 
 end Family
+
+/-! ### Uniform convergence on compact sets -/
+
+/-- **Uniform convergence of bounded cochain projections on compact sets**: if `‖πₕ‖ ≤ C` and
+`πₕ x → x` along `l` for every `x ∈ Wⁱ`, then `‖x − πₕ x‖ ≤ ε` for all `x ∈ K`, `K` compact,
+eventually along `l` (`x ↦ ‖x − πₕ x‖` is `(1 + C)`-Lipschitz, `norm_sub_π_le_add`). -/
+theorem eventually_forall_norm_sub_π_le {κ : Type*} {l : Filter κ} {S : κ → H.Subcomplex}
+    (P : ∀ h, (S h).CochainProjection) {i : ι} {C : ℝ} (hC : 0 ≤ C)
+    (hπ : ∀ h x, ‖(P h).π i x‖ ≤ C * ‖x‖)
+    (hP : ∀ x, Tendsto (fun h => ‖x - (P h).π i x‖) l (𝓝 0)) {K : Set (W i)} (hK : IsCompact K)
+    {ε : ℝ} (hε : 0 < ε) : ∀ᶠ h in l, ∀ x ∈ K, ‖x - (P h).π i x‖ ≤ ε :=
+  hK.eventually_forall_le_of_lipschitz (F := fun h x => ‖x - (P h).π i x‖)
+    (by linarith : 0 ≤ 1 + C) (fun h x y => (P h).norm_sub_π_le_add (hπ h) x y) hP hε
 
 end CochainProjection
 

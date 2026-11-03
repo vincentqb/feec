@@ -1104,21 +1104,14 @@ theorem exists_mem_windowTr_poly_le {S : PolySeq} {s : ℕ} {a : ℤ} {m : ℕ}
     (N : ℕ) :
     ∃ w ∈ ((polyMin n S N).window a m).graphSub, ‖ζ - w‖ ≤
       ((m : ℝ) + m * m) * (∑ i : Fin m, polyInterpBound n S (a + i)) * L *
-        meshSize N ^ (s + 1) := by
-  obtain ⟨x, rfl, -, -⟩ := ((complexMin n).window a m).totalD.exists_toGraphSpace_eq ζ
-  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-  have hh := pow_nonneg (meshSize_pos N).le (s + 1)
-  have hle : ∀ i : Fin m, polyInterpBound n S (a + i) * L * meshSize N ^ (s + 1) ≤
-      (∑ i : Fin m, polyInterpBound n S (a + i)) * L * meshSize N ^ (s + 1) := fun i =>
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-      (Finset.single_le_sum (f := fun i : Fin m => polyInterpBound n S (a + i))
-        (fun _ _ => polyInterpBound_nonneg _ _) (Finset.mem_univ i)) hL0) hh
-  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((polyMin n S N).window a m) x
-    (ε := (∑ i : Fin m, polyInterpBound n S (a + i)) * L * meshSize N ^ (s + 1)) fun i => by
+        meshSize N ^ (s + 1) :=
+  ((polyMin n S N).exists_mem_window_graphSub_le ζ (fun i => polyInterpBound n S (a + i))
+    (fun _ => polyInterpBound_nonneg _ _) (mul_nonneg hL0 (pow_nonneg (meshSize_pos N).le _))
+    fun i => by
       obtain ⟨v, hv, h1, h2⟩ := (hζ i).exists_mem_polyMin_le (hS i) hL0 N
-      exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
-  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-  rw [Fintype.card_fin]; ring
+      exact ⟨v, hv, h1.trans_eq (mul_assoc _ _ _),
+        fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
+    fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
 /-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation with vanishing
 traces** for the higher-order complexes, on every window of `H̊Λ(Q)` (components with vanishing

@@ -829,51 +829,12 @@ theorem bgg_existsUnique_isSaddle (hR : CurlPotential) :
       bggHilb.IsSaddle f x l → ‖x‖ + ‖l‖ ≤ C * ‖f‖ :=
   bggHilb.existsUnique_isSaddle (bggHyps hR)
 
-/-! ### Two elementary estimates -/
+/-! ### An elementary estimate -/
 
 /-- `∑ₐ fₐ² ≤ 3 B` when every `fₐ² ≤ B`. -/
 theorem sum_sq_le_three {f : Fin 3 → ℝ} {B : ℝ} (h : ∀ a, f a ^ 2 ≤ B) :
     ∑ a, f a ^ 2 ≤ 3 * B := by
   have := Finset.sum_le_sum (s := Finset.univ) fun a (_ : a ∈ Finset.univ) => h a
   simpa [Finset.sum_const, Finset.card_univ] using this
-
-open scoped Topology in
-/-- **Uniform convergence on compact sets**: a family `F N` of functions, Lipschitz in `x` with a
-common constant and tending to `0` pointwise, tends to `0` uniformly on every compact set. -/
-theorem eventually_forall_le_of_isCompact {E : Type*} [PseudoMetricSpace E] {K : Set E}
-    (hK : IsCompact K) {F : ℕ → E → ℝ} {B : ℝ} (hB : 0 ≤ B)
-    (hlip : ∀ N x y, F N x ≤ F N y + B * dist x y)
-    (hF : ∀ x, Tendsto (fun N => F N x) atTop (𝓝 0)) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ N in atTop, ∀ x ∈ K, F N x ≤ ε := by
-  have hδ : 0 < ε / (2 * (B + 1)) := by positivity
-  obtain ⟨t, htK, htf, hcov⟩ := finite_cover_balls_of_compact hK hδ
-  have hev : ∀ᶠ N in atTop, ∀ y ∈ t, F N y < ε / 2 :=
-    (Filter.eventually_all_finite htf).2 fun y _ =>
-      (hF y).eventually (gt_mem_nhds (half_pos hε))
-  filter_upwards [hev] with N hN x hx
-  obtain ⟨y, hy, hxy⟩ := mem_iUnion₂.1 (hcov hx)
-  have h3 : B * dist x y ≤ B * (ε / (2 * (B + 1))) :=
-    mul_le_mul_of_nonneg_left (Metric.mem_ball.1 hxy).le hB
-  have h4 : B * (ε / (2 * (B + 1))) ≤ ε / 2 := by
-    rw [mul_div_assoc', div_le_div_iff₀ (by positivity) (by norm_num)]
-    nlinarith
-  linarith [hlip N x y, hN y hy]
-
-open scoped Topology in
-/-- **Uniform convergence of bounded cochain projections along a continuous trajectory**: if
-`‖π_N‖ ≤ C` and `π_N x → x` for every `x`, then `‖g(t) − π_N g(t)‖ ≤ ε` for all `t ∈ [0,T]` and
-all large `N` (`eventually_forall_le_of_isCompact` on the compact image of `g`). -/
-theorem eventually_norm_sub_π_le {ι : Type*} {c : ComplexShape ι} {W : ι → Type*}
-    [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)] [∀ i, CompleteSpace (W i)]
-    {H : HilbertComplex ℝ c W} {S : ℕ → H.Subcomplex} (P : ∀ N, (S N).CochainProjection)
-    {i : ι} {C : ℝ} (hC : 0 ≤ C) (hπ : ∀ N x, ‖(P N).π i x‖ ≤ C * ‖x‖)
-    (hP : ∀ x, Tendsto (fun N => ‖x - (P N).π i x‖) atTop (𝓝 0)) {T : ℝ} {g : ℝ → W i}
-    (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (P N).π i (g t)‖ ≤ ε := by
-  have h := eventually_forall_le_of_isCompact (isCompact_Icc.image_of_continuousOn hg)
-    (F := fun N x => ‖x - (P N).π i x‖) (by linarith : 0 ≤ 1 + C)
-    (fun N x y => (P N).norm_sub_π_le_add (hπ N) x y) hP hε
-  filter_upwards [h] with N hN t ht
-  exact hN _ (mem_image_of_mem g ht)
 
 end Feec.Models.Cube.WeakSymmetry

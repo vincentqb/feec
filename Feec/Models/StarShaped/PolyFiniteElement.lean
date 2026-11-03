@@ -737,22 +737,14 @@ theorem exists_mem_window_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
     (N : ℕ) :
     ∃ w ∈ ((F.poly S N).window a m).graphSub, ‖ζ - w‖ ≤
       ((m : ℝ) + m * m) * (∑ i : Fin m, F.polyInterpBound S (a + i)) * L *
-        (F.mesh N).meshSize ^ (s + 1) := by
-  obtain ⟨x, rfl, -, -⟩ := (D.complex.window a m).totalD.exists_toGraphSpace_eq ζ
-  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-  have hh := pow_nonneg (F.meshSize_pos N).le (s + 1)
-  have hle : ∀ i : Fin m, F.polyInterpBound S (a + i) * L * (F.mesh N).meshSize ^ (s + 1) ≤
-      (∑ i : Fin m, F.polyInterpBound S (a + i)) * L * (F.mesh N).meshSize ^ (s + 1) := fun i =>
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-      (Finset.single_le_sum (f := fun i : Fin m => F.polyInterpBound S (a + i))
-        (fun _ _ => F.polyInterpBound_nonneg _ _) (Finset.mem_univ i)) hL0) hh
-  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((F.poly S N).window a m) x
-    (ε := (∑ i : Fin m, F.polyInterpBound S (a + i)) * L * (F.mesh N).meshSize ^ (s + 1))
+        (F.mesh N).meshSize ^ (s + 1) :=
+  ((F.poly S N).exists_mem_window_graphSub_le ζ (fun i => F.polyInterpBound S (a + i))
+    (fun _ => F.polyInterpBound_nonneg _ _) (mul_nonneg hL0 (pow_nonneg (F.meshSize_pos N).le _))
     fun i => by
       obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_poly_le_of_isCsForm S (hS i) (hζ i) hL0 N
-      exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
-  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-  rw [Fintype.card_fin]; ring
+      exact ⟨v, hv, h1.trans_eq (mul_assoc _ _ _),
+        fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
+    fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
 /-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation** for the
 complexes of `S` ([QuennevilleBelair2015], Thm 4.14; [Arnold2018], Ch. 7), degreewise form, on
@@ -872,22 +864,14 @@ theorem exists_mem_windowMin_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
     (N : ℕ) :
     ∃ w ∈ ((F.polyMin S N).window a m).graphSub, ‖ζ - w‖ ≤
       ((m : ℝ) + m * m) * (∑ i : Fin m, F.polyInterpBound S (a + i)) * L *
-        (F.mesh N).meshSize ^ (s + 1) := by
-  obtain ⟨x, rfl, -, -⟩ := (D.complexMin.window a m).totalD.exists_toGraphSpace_eq ζ
-  simp only [LinearPMap.graphFst_toGraphSpace] at hζ
-  have hh := pow_nonneg (F.meshSize_pos N).le (s + 1)
-  have hle : ∀ i : Fin m, F.polyInterpBound S (a + i) * L * (F.mesh N).meshSize ^ (s + 1) ≤
-      (∑ i : Fin m, F.polyInterpBound S (a + i)) * L * (F.mesh N).meshSize ^ (s + 1) := fun i =>
-    mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_right
-      (Finset.single_le_sum (f := fun i : Fin m => F.polyInterpBound S (a + i))
-        (fun _ _ => F.polyInterpBound_nonneg _ _) (Finset.mem_univ i)) hL0) hh
-  obtain ⟨w, hw, hlt⟩ := Subcomplex.exists_mem_graphSub_le ((F.polyMin S N).window a m) x
-    (ε := (∑ i : Fin m, F.polyInterpBound S (a + i)) * L * (F.mesh N).meshSize ^ (s + 1))
+        (F.mesh N).meshSize ^ (s + 1) :=
+  ((F.polyMin S N).exists_mem_window_graphSub_le ζ (fun i => F.polyInterpBound S (a + i))
+    (fun _ => F.polyInterpBound_nonneg _ _) (mul_nonneg hL0 (pow_nonneg (F.meshSize_pos N).le _))
     fun i => by
       obtain ⟨v, hv, h1, h2⟩ := F.exists_mem_polyMin_le_of_isCsFormMin S (hS i) (hζ i) hL0 N
-      exact ⟨v, hv, h1.trans (hle i), fun j hx => (h2 (a + j) hx).trans (hle i)⟩
-  refine ⟨w, hw, hlt.trans (le_of_eq ?_)⟩
-  rw [Fintype.card_fin]; ring
+      exact ⟨v, hv, h1.trans_eq (mul_assoc _ _ _),
+        fun j hx => (h2 j hx).trans_eq (mul_assoc _ _ _)⟩).imp
+    fun _ h => ⟨h.1, h.2.trans_eq (mul_assoc _ _ _).symm⟩
 
 /-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation with vanishing
 boundary DOFs** for the complexes of `S`, degreewise form, on every window of `H̊Λ(Ω)`. -/

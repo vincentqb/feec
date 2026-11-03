@@ -1717,8 +1717,10 @@ theorem _root_.Feec.Models.Cube.FEM.ParitySmoothingEstimates.eventually_norm_sub
     {C : ℝ} (hE : ParitySmoothingEstimates 3 J S ρ C) (k : ℤ) {T : ℝ}
     {g : ℝ → L2F ℝ (cubeDomain 3) (formIdx 3 k)} (hg : ContinuousOn g (Icc 0 T)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, ‖g t - (hE.proj N).π k (g t)‖ ≤ ε :=
-  WeakSymmetry.eventually_norm_sub_π_le hE.proj hE.two_mul_nonneg (fun N => hE.norm_proj_le N k)
-    (hE.tendsto_norm_sub_proj k) hg hε
+  (Subcomplex.CochainProjection.eventually_forall_norm_sub_π_le hE.proj hE.two_mul_nonneg
+    (fun N => hE.norm_proj_le N k) (hE.tendsto_norm_sub_proj k)
+    (isCompact_Icc.image_of_continuousOn hg) hε).mono fun _ hN _ ht =>
+      hN _ (mem_image_of_mem g ht)
 
 /-- **Dense multipliers**: on a compact set of `L²Λ²(Q)`, every point is `δ`-close to a point of
 `D(d_max*)` (here `|⟪z, d w⟫| ≤ c ‖w‖` on `HΛ¹(Q)`), with a common bound `c`. -/

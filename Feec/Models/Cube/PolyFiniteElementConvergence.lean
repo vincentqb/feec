@@ -103,7 +103,7 @@ theorem exists_polySpace_near {N k s : ℕ} {T : Affine.Simplex ℝ (Fin n → �
     (hM : ∀ y ∈ T.closedInterior, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ M) :
     ∃ P ∈ polySpace n s k, ∀ x ∈ T.closedInterior, ‖w x - P x‖ ≤ hN N ^ (s + 1) * M := by
   set x₀ := T.points 0
-  have hx₀ : x₀ ∈ T.closedInterior := vertexSet_subset_closedInterior' T (points_mem_vertexSet T 0)
+  have hx₀ : x₀ ∈ T.closedInterior := vertexSet_subset_closedInterior T (points_mem_vertexSet T 0)
   refine ⟨degPartField k (taylorPoly w x₀ (s + 1)), degPartField_taylorPoly_mem w x₀, ?_⟩
   intro x hx
   obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT

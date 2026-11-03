@@ -292,12 +292,14 @@ theorem norm_sub_le_of_mem_cubeSimplex {N : ℕ} {m : Fin n → Fin (N + 1)}
   rw [← smul_sub, norm_smul, Real.norm_of_nonneg (inv_nonneg.2 h.le)] at key
   rwa [inv_mul_le_iff₀ h, mul_one] at key
 
+/-- The simplices of the level-`(N + 1)` mesh have diameter at most `h_N`. -/
 theorem diam_le_hN {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) : diam T ≤ hN N := by
   obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
   exact Metric.diam_le_of_forall_dist_le (hN_pos N).le fun x hx y hy => by
     rw [dist_eq_norm]; exact norm_sub_le_of_mem_cubeSimplex hx hy
 
+/-- The simplices of the level-`(N + 1)` mesh have diameter `h_N` (`n ≠ 0`). -/
 theorem diam_eq_hN [NeZero n] {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) : diam T = hN N := by
   obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
@@ -734,7 +736,7 @@ theorem integral_cubeSimplex_le {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equi
   rw [cubeSimplex_eq, integral_closedInterior_mapEquiv_boxMap _ _ hh]
   refine mul_le_mul_of_nonneg_left ?_ (pow_nonneg hh.le n)
   have hA0 : 0 ≤ A := by
-    have := hA _ (vertexSet_subset_closedInterior' _ (points_mem_vertexSet _ 0))
+    have := hA _ (vertexSet_subset_closedInterior _ (points_mem_vertexSet _ 0))
     exact (hf0 _).trans this
   calc ∫ y in (kuhnSimplex σ).closedInterior, f (hN N • latticePoint (finLattice m) + hN N • y)
       ≤ ∫ _y in (kuhnSimplex σ).closedInterior, A := by
@@ -1586,7 +1588,7 @@ theorem sqrt_mul_abs_integrand_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : In
   set uT : FormField n := ((u T : (whitneyElement n).space T k) : FormField n)
   set L := locMass ((whitneyElement n).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hxT : x ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior :=
-    simplexMap_faceEnum_mem' hgT hg hξ
+    simplexMap_faceEnum_mem hgT hg hξ
   have hxc : x ∈ closure (cubeDomain n) := by
     rw [← mesh_domain n N]; exact (mesh n N).closedInterior_subset_closure T.2 hxT
   -- the local fields near `x` obey the inverse estimates against the local mass of `T`
@@ -1618,7 +1620,7 @@ theorem sqrt_mul_abs_integrand_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : In
     have hgT' : g ⊆ vertexSet (T' : Affine.Simplex ℝ (Fin n → ℝ) n) :=
       subset_vertexSet_of_near T.2 T'.2 hgT hg hγ hγ2 hμ (sum_refBary ξ) htT'c
         (by rw [← simplexMap_eq_sum q ξ]; exact hxt)
-    refine ⟨?_, fun s => hb1 x (simplexMap_faceEnum_mem' hgT' hg hξ) s, fun s => ?_⟩
+    refine ⟨?_, fun s => hb1 x (simplexMap_faceEnum_mem hgT' hg hξ) s, fun s => ?_⟩
     · rw [sum_mul_minor_eq (mem_p1MinusForms_of_space (u T)) q ξ,
         sum_mul_minor_eq (mem_p1MinusForms_of_space (u T')) q ξ,
         simplexIntegral_eq_of_mem_globalSpace hu T T' hgT hgT' hg]
@@ -1655,7 +1657,7 @@ theorem sqrt_mul_abs_dof_err_le {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : InvB
     ((whitneyElement n).glue (mesh n N) k u) : FormField n)
   set L := locMass ((whitneyElement n).glue (mesh n N) k u) (T : Affine.Simplex ℝ (Fin n → ℝ) n)
   have hMm : ∑ s, |wedgeProd (simplexMatrix q) s univ| ≤ 2 ^ n * (k.factorial * hN N ^ k) :=
-    (sum_abs_minor_face_le' hgT hg).trans (mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left
+    (sum_abs_minor_face_le hgT hg).trans (mul_le_mul_of_nonneg_left (mul_le_mul_of_nonneg_left
       (pow_le_pow_left₀ (diam_nonneg _) (diam_le_hN T.2) k) (by positivity)) (by positivity))
   have huc : Continuous uT :=
     (isAffineField_of_mem_p1MinusForms (mem_p1MinusForms_of_space _)).continuous
@@ -1870,7 +1872,7 @@ theorem sampleOK_pMax {N k : ℕ} (u : (whitneyElement n).Piecewise (mesh n N) k
     SampleOK γ (pMax (n := n) γ hγ hγ1 N) u := by
   intro T g hgT hg ξ hξ _ t ht htΩ
   exact absurd (pMax_samples_mem N _ ((mesh n N).closedInterior_subset_closure T.2
-    (simplexMap_faceEnum_mem' hgT hg hξ)) t ht) htΩ
+    (simplexMap_faceEnum_mem hgT hg hξ)) t ht) htΩ
 
 /-! ### The minimal family: boundary faces -/
 
@@ -1977,7 +1979,7 @@ theorem kuhnVertex_mul_swap {σ : Equiv.Perm (Fin n)} {a b : Fin n} {j : Fin (n 
 theorem apply_mem_Icc_of_mem_vertexSet {N : ℕ} {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     (hT : T ∈ (mesh n N).simplices) {v : Fin n → ℝ} (hv : v ∈ vertexSet T) (i : Fin n) :
     0 ≤ v i ∧ v i ≤ 1 / 2 := by
-  have h := (mesh n N).closedInterior_subset_closure hT (vertexSet_subset_closedInterior' T hv)
+  have h := (mesh n N).closedInterior_subset_closure hT (vertexSet_subset_closedInterior T hv)
   rw [mesh_domain, closure_cubeDomain] at h
   exact h i (Set.mem_univ i)
 
@@ -2292,7 +2294,7 @@ theorem sampleOK_pMin (hγ2 : γ ≤ 1 / 2) {N k : ℕ} {u : (whitneyElement n).
     intro a; by_contra hlt; push Not at hlt; exact hgood ⟨a, hlt⟩
   have hxc : simplexMap q ξ ∈ closure (cubeDomain n) := by
     rw [← mesh_domain n N]
-    exact (mesh n N).closedInterior_subset_closure T.2 (simplexMap_faceEnum_mem' hgT hg hξ)
+    exact (mesh n N).closedInterior_subset_closure T.2 (simplexMap_faceEnum_mem hgT hg hξ)
   obtain ⟨T'', hT'', F, hF, hFT'', hgF⟩ := exists_boundaryFacet_of_near T.2 hgT
     (Finset.card_pos.1 (by rw [hg]; omega)) (q := q)
     (fun a => hgT (by

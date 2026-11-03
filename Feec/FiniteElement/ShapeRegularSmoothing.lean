@@ -39,7 +39,7 @@ The geometric and measure-theoretic ingredients of the smoothed-projection estim
   `q h ≤ h_T`) a point lies in at most `(2 (r + h))ⁿ n! / (c (q h)ⁿ)` of the `r`-neighbourhoods
   of the simplices (`card_filter_mem_cthickening_le`), and the local masses add up
   (`sum_integral_le_of_card_le`).
-* **Faces and integrals**: `Σₛ |minorₛ| ≤ 2ⁿ k! h_Tᵏ` on a `k`-face (`sum_abs_minor_face_le'`),
+* **Faces and integrals**: `Σₛ |minorₛ| ≤ 2ⁿ k! h_Tᵏ` on a `k`-face (`sum_abs_minor_face_le`),
   `|∫_g ω| ≤ 2ⁿ h_Tᵏ sup_T |ω|` (`abs_simplexIntegral_face_le'`), `∫_T f ≤ (2 h_T)ⁿ sup_T f`
   (`integral_closedInterior_le`).
 
@@ -767,18 +767,18 @@ theorem sum_integral_le_of_card_le {ι : Type*} (S : Finset ι) (A : ι → Set 
 
 /-! ### Faces and integrals on a simplex -/
 
-theorem vertexSet_subset_closedInterior' (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
+theorem vertexSet_subset_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     (vertexSet T : Set (Fin n → ℝ)) ⊆ T.closedInterior := by
   rw [← convexHull_vertexSet]; exact subset_convexHull ℝ _
 
 theorem faceEnum_mem_closedInterior {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) (a : Fin (k + 1)) :
     faceEnum g (k + 1) a ∈ T.closedInterior := by
-  refine vertexSet_subset_closedInterior' T (hgT ?_)
+  refine vertexSet_subset_closedInterior T (hgT ?_)
   have : faceEnum g (k + 1) a ∈ Set.range (faceEnum g (k + 1)) := ⟨a, rfl⟩
   rwa [range_faceEnum hg] at this
 
-theorem simplexMap_faceEnum_mem' {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
+theorem simplexMap_faceEnum_mem {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) {x : Fin k → ℝ}
     (hx : x ∈ FiniteElement.refSimplex k) :
     simplexMap (faceEnum g (k + 1)) x ∈ T.closedInterior := by
@@ -787,7 +787,7 @@ theorem simplexMap_faceEnum_mem' {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k :
   rw [range_faceEnum hg]; exact Finset.coe_subset.2 hgT
 
 /-- The minors of a `k`-face of `T` are `O(h_Tᵏ)`: `Σₛ |minorₛ| ≤ 2ⁿ k! h_Tᵏ`. -/
-theorem sum_abs_minor_face_le' {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
+theorem sum_abs_minor_face_le {T : Affine.Simplex ℝ (Fin n → ℝ) n} {k : ℕ}
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) (hg : g.card = k + 1) :
     ∑ s, |wedgeProd (simplexMatrix (faceEnum g (k + 1))) s univ| ≤
       2 ^ n * (k.factorial * diam T ^ k) := by
@@ -805,8 +805,8 @@ theorem abs_simplexIntegral_face_le' {T : Affine.Simplex ℝ (Fin n → ℝ) n} 
     {A : ℝ} (hA0 : 0 ≤ A) (hA : ∀ x ∈ T.closedInterior, ∀ s, |ω x s| ≤ A) :
     |simplexIntegral (faceEnum g (k + 1)) ω| ≤ 2 ^ n * diam T ^ k * A := by
   have h := abs_simplexIntegral_le (p := faceEnum g (k + 1)) (ω := ω) (M := A)
-    fun x hx s => hA _ (simplexMap_faceEnum_mem' hgT hg hx) s
-  have hm := sum_abs_minor_face_le' hgT hg
+    fun x hx s => hA _ (simplexMap_faceEnum_mem hgT hg hx) s
+  have hm := sum_abs_minor_face_le hgT hg
   have hk : (0 : ℝ) < k.factorial := by positivity
   refine h.trans ?_
   rw [div_le_iff₀ hk]

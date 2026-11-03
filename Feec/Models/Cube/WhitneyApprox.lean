@@ -31,6 +31,9 @@ the approximation properties of the Whitney complexes `FEM.whitney N ⊆ HΛ(Q)`
 * **Density of the Whitney complexes**: every `x ∈ D(d)` is a graph-norm limit of the Whitney
   spaces (`eventually_exists_whitney_graph`, `eventually_exists_whitneyMin_graph`), every
   `x ∈ L²` an `L²` limit (`eventually_exists_whitney_lt`, `eventually_exists_whitneyMin_lt`).
+  On any bounded open `Ω` star-shaped with respect to a ball, graph-norm density of a family of
+  subcomplexes follows from the approximation of smooth forms
+  (`eventually_exists_graph_of_smooth`, `eventually_exists_graph_of_smooth_min`).
 
 **Consequences, with no remaining approximation hypothesis**: the Whitney windows are dense in the
 graph space of the total differential of every window (`dense_window`, `dense_windowMin`, from the

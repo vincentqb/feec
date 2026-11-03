@@ -261,7 +261,7 @@ theorem abs_simplexMatrix_lexEnum_le {N : ℕ} {T : Affine.Simplex ℝ (Fin n �
     |simplexMatrix (lexEnum g m) i l| ≤ hN N := by
   obtain ⟨m', σ, rfl⟩ := mem_mesh_simplices.1 hT
   have hmem : ∀ a, lexEnum g m a ∈ (cubeSimplex N m' σ).closedInterior := fun a =>
-    vertexSet_subset_closedInterior' _ (hgT (lexEnum_mem hg a))
+    vertexSet_subset_closedInterior _ (hgT (lexEnum_mem hg a))
   have := norm_sub_le_of_mem_cubeSimplex (hmem l.succ) (hmem 0)
   refine le_trans ?_ this
   have h := norm_le_pi_norm (lexEnum g m l.succ - lexEnum g m 0) i

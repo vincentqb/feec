@@ -2,6 +2,7 @@ module
 
 public import Feec.FiniteElement.SmoothedProjection
 public import Feec.FiniteElement.WhitneyInterpolation
+public import Feec.ForMathlib.LinearPMap.Basic
 
 /-!
 # The global interpolation error in `HΛ(Ω)` and `H̊Λ(Ω)`
@@ -114,12 +115,6 @@ abbrev minimalDeRham (hΩ : IsOpen Ω) :
   (deRham ℝ n).minimalComplex hΩ
 
 end Feec.Domain
-
-/-- Evaluating equal partial maps. -/
-theorem LinearPMap.apply_eq_of_eq' {V W : Type*} [AddCommGroup V] [Module ℝ V]
-    [AddCommGroup W] [Module ℝ W] {T T' : V →ₗ.[ℝ] W} (h : T = T') (x : T.domain) :
-    T x = T' ⟨x, h ▸ x.2⟩ := by
-  subst h; rfl
 
 /-- A point of the boundary `∂(cl Ω)` is not in the open set `Ω`. -/
 theorem Feec.Mesh.SimplicialMesh.notMem_domain_of_mem_frontier {n : ℕ}

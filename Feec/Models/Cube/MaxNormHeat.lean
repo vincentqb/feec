@@ -402,7 +402,7 @@ theorem isFreeVertexEnum (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
       rw [← interior_closure_freudenthalMesh_domain b hs N]
       by_contra h
       exact hyf ⟨subset_closure ((freudenthalMesh b s hs (N + 1)).closedInterior_subset_closure hT
-        (vertexSet_subset_closedInterior' T hy)), h⟩
+        (vertexSet_subset_closedInterior T hy)), h⟩
     exact ⟨⟨q, (node_mem_openCube_iff hs).1 hq⟩, rfl⟩
 
 /-- **The nodal values are a linear isomorphism `ℝ^{interior nodes} ≃ P̊₁⁻Λ⁰`**, `U ↦ U_h`: every

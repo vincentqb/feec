@@ -105,7 +105,7 @@ theorem abs_simplexMatrix_lexEnum_le_diam {T : Affine.Simplex ℝ (Fin n → ℝ
     {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet T) {m : ℕ} (hg : #g = m + 1) (i : Fin n)
     (l : Fin m) : |simplexMatrix (lexEnum g m) i l| ≤ diam T := by
   have hmem : ∀ a, lexEnum g m a ∈ T.closedInterior := fun a =>
-    vertexSet_subset_closedInterior' T (hgT (lexEnum_mem hg a))
+    vertexSet_subset_closedInterior T (hgT (lexEnum_mem hg a))
   have h1 := Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded (hmem l.succ)
     (hmem 0)
   rw [dist_eq_norm] at h1

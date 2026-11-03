@@ -67,7 +67,7 @@ add no order beyond backward Euler.
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open Set Finset Polynomial Feec.Operator NormedComplexification
+open Set Finset Polynomial Feec.Operator Complexification
 
 @[expose] public noncomputable section
 
@@ -296,9 +296,10 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 /-- Complexification commutes with `sᴺ f(1 - 1/s)` for real `f`. -/
-theorem map_resolventEval_map (N : ℕ) (f : ℝ[X]) (S : E →L[𝕜] E) :
-    map (resolventEval N (f.map (algebraMap ℝ 𝕜)) S) =
-      resolventEval N (f.map (algebraMap ℝ ℂ)) (map S) := by
+theorem map_resolventEval_map {n : ComplexificationNorm} [NormCore n 𝕜 E] (N : ℕ) (f : ℝ[X])
+    (S : E →L[𝕜] E) :
+    map (n := n) (resolventEval N (f.map (algebraMap ℝ 𝕜)) S) =
+      resolventEval N (f.map (algebraMap ℝ ℂ)) (map (n := n) S) := by
   rw [← mapHom_apply, resolventEval, resolventEval, map_sum]
   refine sum_congr rfl fun k _ => ?_
   rw [coeff_map, coeff_map, RCLike.algebraMap_eq_ofReal, Complex.coe_algebraMap, mapHom_apply,
@@ -359,15 +360,15 @@ theorem isUnit_resolventEval_of_generator {M ω τ : ℝ}
   have hSH : ∀ t, 0 ≤ t → ‖H.S t‖ ≤ M * Real.exp (ω * t) := fun t ht =>
     (G.norm_complexification_S t).trans_le (hS t ht)
   obtain ⟨hu, hb⟩ := isUnit_resolventEval_complex H hSH hτ hωτ hd
-  have hmapR : map R = (τ : ℂ)⁻¹ • resolvent H.generator (τ : ℂ)⁻¹ :=
+  have hmapR : map (n := .taylor) R = (τ : ℂ)⁻¹ • resolvent H.generator (τ : ℂ)⁻¹ :=
     eq_inv_smul_resolvent_of_generator H hSH hτ hωτ fun p q h => G.map_apply_sub_smul hR h
-  have hQ : map (resolventEval d.natDegree (d.map (algebraMap ℝ 𝕜)) R) =
+  have hQ : map (n := .taylor) (resolventEval d.natDegree (d.map (algebraMap ℝ 𝕜)) R) =
       resolventEval d.natDegree (d.map (algebraMap ℝ ℂ))
         ((τ : ℂ)⁻¹ • resolvent H.generator (τ : ℂ)⁻¹) := by
     rw [map_resolventEval_map, hmapR]
   have hu' := isUnit_of_isUnit_map (hQ ▸ hu)
   refine ⟨hu', ?_⟩
-  rw [← NormedComplexification.norm_map, map_ringInverse hu', hQ]
+  rw [← Complexification.norm_map (n := .taylor), Complexification.map_ringInverse hu', hQ]
   exact hb
 
 namespace RationalScheme

@@ -26,7 +26,7 @@ complex Hille–Yosida estimates, to real Banach spaces.
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open Set NormedComplexification
+open Set Complexification
 
 @[expose] public noncomputable section
 
@@ -37,8 +37,9 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜
 /-- **The complexification** `t ↦ S(t)_ℂ` of a strongly continuous semigroup. -/
 def complexification : C0Semigroup ℂ (NormedComplexification 𝕜 E) where
   S t := map (G.S t)
-  map_zero := by rw [G.map_zero]; exact (mapHom (𝕜 := 𝕜) (E := E)).map_one
-  map_add s t hs ht := by rw [G.map_add s t hs ht]; exact (mapHom (𝕜 := 𝕜) (E := E)).map_mul _ _
+  map_zero := by rw [G.map_zero]; exact (mapHom (n := .taylor) (𝕜 := 𝕜) (V := E)).map_one
+  map_add s t hs ht := by
+    rw [G.map_add s t hs ht]; exact (mapHom (n := .taylor) (𝕜 := 𝕜) (V := E)).map_mul _ _
   strongCont p := continuous_mk.comp_continuousOn ((G.strongCont p.re).prodMk (G.strongCont p.im))
 
 @[simp] theorem complexification_S (t : ℝ) : G.complexification.S t = map (G.S t) := rfl
@@ -55,24 +56,24 @@ theorem mem_graph_of_mem_graph_complexification {p q : NormedComplexification �
   obtain ⟨hp, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 h
   have d := G.complexification.hasDerivWithinAt_generator ⟨p, hp⟩
   have dre : HasDerivWithinAt (fun t => G.S t p.re) (G.complexification.generator ⟨p, hp⟩).re
-      (Ici 0) 0 := (reCLM (𝕜 := 𝕜) (E := E)).hasFDerivAt.comp_hasDerivWithinAt 0 d
+      (Ici 0) 0 := (reCLM (n := .taylor) (𝕜 := 𝕜) (V := E)).hasFDerivAt.comp_hasDerivWithinAt 0 d
   have dim : HasDerivWithinAt (fun t => G.S t p.im) (G.complexification.generator ⟨p, hp⟩).im
-      (Ici 0) 0 := (imCLM (𝕜 := 𝕜) (E := E)).hasFDerivAt.comp_hasDerivWithinAt 0 d
+      (Ici 0) 0 := (imCLM (n := .taylor) (𝕜 := 𝕜) (V := E)).hasFDerivAt.comp_hasDerivWithinAt 0 d
   exact ⟨LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, dre⟩, G.generator_apply_eq dre⟩,
     LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, dim⟩, G.generator_apply_eq dim⟩⟩
 
 /-- Conversely, `(x, y)` in the graph of the generator gives `(x + i 0, y + i 0)` in the graph of
 the generator of the complexification. -/
 theorem mk_mem_graph_complexification {x y : E} (h : (x, y) ∈ G.generator.graph) :
-    (NormedComplexification.mk x 0, NormedComplexification.mk y 0) ∈
+    (Complexification.mk x 0, Complexification.mk y 0) ∈
       G.complexification.generator.graph := by
   obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 h
-  have e : (fun t => G.complexification.S t (NormedComplexification.mk x 0)) =
+  have e : (fun t => G.complexification.S t (Complexification.mk x 0)) =
       ofRealCLM ∘ fun t => G.S t x :=
     funext fun t => by ext <;> simp [map_mk]
-  have d : HasDerivWithinAt (fun t => G.complexification.S t (NormedComplexification.mk x 0))
-      (NormedComplexification.mk (G.generator ⟨x, hx⟩) 0) (Ici 0) 0 :=
-    e ▸ (ofRealCLM (𝕜 := 𝕜) (E := E)).hasFDerivAt.comp_hasDerivWithinAt 0
+  have d : HasDerivWithinAt (fun t => G.complexification.S t (Complexification.mk x 0))
+      (Complexification.mk (G.generator ⟨x, hx⟩) 0) (Ici 0) 0 :=
+    e ▸ (ofRealCLM (n := .taylor) (𝕜 := 𝕜) (V := E)).hasFDerivAt.comp_hasDerivWithinAt 0
       (G.hasDerivWithinAt_generator ⟨x, hx⟩)
   exact LinearPMap.mem_graph_iff_exists.2 ⟨⟨_, d⟩, G.complexification.generator_apply_eq d⟩
 

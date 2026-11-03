@@ -49,7 +49,7 @@ is weaker by `√n` than the smooth-data estimate.
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open NormedComplexification
+open Complexification
 
 @[expose] public noncomputable section
 
@@ -81,7 +81,7 @@ theorem injective_of_apply_sub_smul {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] 
     (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) :
     Function.Injective R := fun a b hab => by
   have h := G.complexification.injective_laplaceResolvent (G.norm_complexification_S_le hM) hτ
-    (a₁ := NormedComplexification.mk a 0) (a₂ := NormedComplexification.mk b 0)
+    (a₁ := Complexification.mk a 0) (a₂ := Complexification.mk b 0)
     (by rw [← G.map_eq_laplaceResolvent hM hτ hR, map_mk, map_mk, hab])
   exact congrArg re h
 
@@ -107,8 +107,8 @@ theorem map_resolventStep_of_resolvent {τ : ℝ} (hτ : 0 < τ) {R : E →L[�
     map (r.resolventStep R) = r.resolventStep
       (G.complexification.laplaceResolvent (G.norm_complexification_S_le hM) τ hτ.le) := by
   rw [resolventStep, resolventStep, ← mapHom_apply, map_mul, mapHom_apply, mapHom_apply,
-    map_ringInverse (r.isUnit_resolventEval_den_of_resolvent G hM hτ hR), map_resolventEval_map,
-    map_resolventEval_map, G.map_eq_laplaceResolvent hM hτ hR]
+    Complexification.map_ringInverse (r.isUnit_resolventEval_den_of_resolvent G hM hτ hR),
+    map_resolventEval_map, map_resolventEval_map, G.map_eq_laplaceResolvent hM hτ hR]
 
 /-- `‖r(τA)ⁿ‖ = ‖r(τA_ℂ)ⁿ‖`. -/
 theorem norm_resolventStep_pow_eq_of_resolvent {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
@@ -116,14 +116,14 @@ theorem norm_resolventStep_pow_eq_of_resolvent {τ : ℝ} (hτ : 0 < τ) {R : E 
     ‖r.resolventStep R ^ n‖ = ‖r.resolventStep
       (G.complexification.laplaceResolvent (G.norm_complexification_S_le hM) τ hτ.le) ^ n‖ := by
   rw [← r.map_resolventStep_of_resolvent G hM hτ hR, ← mapHom_apply, ← map_pow, mapHom_apply,
-    NormedComplexification.norm_map]
+    Complexification.norm_map]
 
 /-- **The Hille–Phillips bound over `𝕜 = ℝ` or `ℂ`**: `‖r(τA)‖ ≤ M ‖μ_r‖` for every rational
 scheme and every bounded semigroup, `‖S(t)‖ ≤ M`, `τ > 0`. [HillePhillips1957] -/
 theorem norm_resolventStep_le_of_resolvent {τ : ℝ} (hτ : 0 < τ) {R : E →L[𝕜] E}
     (hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x) :
     ‖r.resolventStep R‖ ≤ M * r.hpMeasure.variation := by
-  rw [← NormedComplexification.norm_map, r.map_resolventStep_of_resolvent G hM hτ hR]
+  rw [← Complexification.norm_map (n := .taylor), r.map_resolventStep_of_resolvent G hM hτ hR]
   exact r.norm_resolventStep_le G.complexification (G.norm_complexification_S_le hM) hτ.le
 
 /-- **Brenner–Thomée's stability bound over `𝕜 = ℝ` or `ℂ`** [BrennerThomee1979]: for a strongly
@@ -240,12 +240,12 @@ theorem norm_resolventStep_pow_sub_S_le_sharp_of_resolvent {r : RationalScheme}
     ‖(r.resolventStep R ^ n) (u 0) - G.S (n * τ) (u 0)‖ ≤
       r.sharpConst p * M * (n * τ) * τ ^ p * ‖u (p + 1)‖ := by
   have h := norm_resolventStep_pow_sub_S_le_sharp G.complexification
-    (G.norm_complexification_S_le hM) hr hp hτ n (u := fun j => NormedComplexification.mk (u j) 0)
+    (G.norm_complexification_S_le hM) hr hp hτ n (u := fun j => Complexification.mk (u j) 0)
     fun j hj => G.mk_mem_graph_complexification (hu j hj)
   rw [← r.map_resolventStep_of_resolvent G hM hτ hR, ← mapHom_apply, ← map_pow, mapHom_apply,
     C0Semigroup.complexification_S, map_mk, map_mk, map_zero, map_zero, norm_mk_zero] at h
-  have e : ∀ a b : E, (NormedComplexification.mk a 0 - NormedComplexification.mk b 0 :
-      NormedComplexification 𝕜 E) = NormedComplexification.mk (a - b) 0 := fun a b => by
+  have e : ∀ a b : E, (Complexification.mk a 0 - Complexification.mk b 0 :
+      NormedComplexification 𝕜 E) = Complexification.mk (a - b) 0 := fun a b => by
     ext <;> simp
   rwa [e, norm_mk_zero] at h
 

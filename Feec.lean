@@ -124,6 +124,7 @@ public import Feec.ForMathlib.Analysis.HalfLineAlgebra
 public import Feec.ForMathlib.Analysis.HalfLinePowers
 public import Feec.ForMathlib.Analysis.HalfLineTranslate
 public import Feec.ForMathlib.Analysis.Inequalities
+public import Feec.ForMathlib.Analysis.Complexification
 public import Feec.ForMathlib.Analysis.NormedComplexification
 public import Feec.ForMathlib.Analysis.Polynomial
 public import Feec.ForMathlib.Analysis.SubMarkov

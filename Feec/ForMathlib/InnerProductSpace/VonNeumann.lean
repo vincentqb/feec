@@ -501,14 +501,14 @@ theorem norm_aeval_map_mul_inverse_le {T : V →L[𝕜] V} (hT : ‖T‖ ≤ 1) 
     (hC : ∀ ζ : ℂ, ‖ζ‖ = 1 → ζ ≠ -1 → ‖aeval ζ p / aeval ζ q‖ ≤ C) :
     IsUnit (aeval T (q.map (algebraMap ℝ 𝕜))) ∧
       ‖aeval T (p.map (algebraMap ℝ 𝕜)) * Ring.inverse (aeval T (q.map (algebraMap ℝ 𝕜)))‖ ≤ C := by
-  have h := norm_aeval_mul_inverse_le (T := T.complexification)
-    (by rwa [norm_complexification]) (p := p.map (algebraMap ℝ ℂ)) (q := q.map (algebraMap ℝ ℂ))
-    (by simpa only [eval_map_algebraMap] using hq) (by simpa only [eval_map_algebraMap] using hC)
-  rw [← complexification_aeval, ← complexification_aeval] at h
-  have hu := isUnit_of_isUnit_complexification h.1
-  refine ⟨hu, norm_le_of_norm_complexification_le ?_⟩
-  rw [← complexification_ringInverse hu, ← complexification_mul] at h
-  exact h.2
+  have h := norm_aeval_mul_inverse_le (T := Complexification.map (n := .hilbert) T)
+    (by rwa [Complexification.norm_map]) (p := p.map (algebraMap ℝ ℂ))
+    (q := q.map (algebraMap ℝ ℂ)) (by simpa only [eval_map_algebraMap] using hq)
+    (by simpa only [eval_map_algebraMap] using hC)
+  rw [← Complexification.map_aeval_map, ← Complexification.map_aeval_map] at h
+  have hu := Complexification.isUnit_of_isUnit_map h.1
+  rw [← Complexification.map_ringInverse hu] at h
+  exact ⟨hu, (Complexification.norm_map (n := .hilbert) _).symm.trans_le h.2⟩
 
 /-- **The inverses `q(T)⁻¹` are bounded uniformly over the contractions `T`** of a Hilbert space
 over `𝕜`, for a real `q` without zero in the closed unit disc. -/

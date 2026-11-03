@@ -2,6 +2,7 @@ module
 
 public import Feec.Fourier.ClosedRange
 public import Feec.Fourier.Reality
+public import Feec.Algebra.ExteriorFibre
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 
 /-!
@@ -47,77 +48,11 @@ namespace Feec.Fourier.Exterior
 
 variable {𝕜 : Type*} [RCLike 𝕜] {d : Type*} [Fintype d] [LinearOrder d]
 
-/-! ### Signs -/
-
-/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `s`. -/
-def sgn (j : d) (s : Finset d) : 𝕜 := (-1) ^ #({l ∈ s | l < j})
-
-omit [Fintype d] in
-theorem sgn_mul_self (j : d) (s : Finset d) : (sgn j s : 𝕜) * sgn j s = 1 := by
-  rw [sgn, ← pow_add, ← two_mul, pow_mul]; simp
+open ExteriorFibre (sgn sgn_insert_self wedge interior)
 
 omit [Fintype d] in
 theorem conj_sgn (j : d) (s : Finset d) : conj (sgn j s : 𝕜) = sgn j s := by
   simp [sgn]
-
-omit [Fintype d] in
-theorem sgn_erase_self (j : d) (s : Finset d) : (sgn j (s.erase j) : 𝕜) = sgn j s := by
-  rw [sgn, sgn, filter_erase, erase_eq_of_notMem (by simp)]
-
-omit [Fintype d] in
-theorem sgn_insert_self (j : d) (s : Finset d) : (sgn j (insert j s) : 𝕜) = sgn j s := by
-  rw [sgn, sgn, filter_insert]
-  simp
-
-omit [Fintype d] in
-theorem sgn_erase {j l : d} {s : Finset d} (hj : j ∈ s) :
-    (sgn l (s.erase j) : 𝕜) = (if j < l then -1 else 1) * sgn l s := by
-  rw [sgn, sgn, filter_erase]
-  split_ifs with h
-  · have hm : j ∈ {x ∈ s | x < l} := mem_filter.2 ⟨hj, h⟩
-    rw [card_erase_of_mem hm]
-    obtain ⟨n, hn⟩ : ∃ n, #({x ∈ s | x < l}) = n + 1 :=
-      ⟨_, (Nat.succ_pred_eq_of_pos (card_pos.2 ⟨j, hm⟩)).symm⟩
-    rw [hn, Nat.add_sub_cancel, pow_succ]; ring
-  · rw [Finset.erase_eq_of_notMem (s := {x ∈ s | x < l}) (fun hm => h (mem_filter.1 hm).2),
-      one_mul]
-
-omit [Fintype d] in
-theorem sgn_insert {j l : d} {s : Finset d} (hj : j ∉ s) :
-    (sgn l (insert j s) : 𝕜) = (if j < l then -1 else 1) * sgn l s := by
-  rw [sgn, sgn, filter_insert]
-  split_ifs with h
-  · rw [card_insert_of_notMem (fun hm => hj (mem_filter.1 hm).1), pow_succ]; ring
-  · rw [one_mul]
-
-omit [Fintype d] in
-theorem ite_lt_add_ite_lt {j l : d} (hjl : j ≠ l) :
-    ((if j < l then -1 else 1) + (if l < j then -1 else 1) : 𝕜) = 0 := by
-  rcases lt_or_gt_of_ne hjl with h | h
-  · simp only [h, not_lt.2 h.le, ↓reduceIte]; ring
-  · simp only [h, not_lt.2 h.le, ↓reduceIte]; ring
-
-/-! ### Two summation identities -/
-
-omit [Fintype d] in
-/-- A sum over ordered pairs of distinct elements of `s` of an antisymmetric function vanishes. -/
-theorem sum_sum_erase_eq_zero (s : Finset d) (F : d → d → 𝕜)
-    (hF : ∀ j ∈ s, ∀ l ∈ s, j ≠ l → F l j = -F j l) :
-    ∑ j ∈ s, ∑ l ∈ s.erase j, F j l = 0 := by
-  have hswap : ∑ j ∈ s, ∑ l ∈ s.erase j, F j l = ∑ l ∈ s, ∑ j ∈ s.erase l, F j l := by
-    rw [sum_congr rfl fun j hj => sum_erase_eq_sub (f := F j) hj,
-      sum_congr rfl fun l hl => sum_erase_eq_sub (f := fun j => F j l) hl, sum_sub_distrib,
-      sum_sub_distrib, sum_comm]
-  have hneg : ∑ l ∈ s, ∑ j ∈ s.erase l, F j l = -∑ j ∈ s, ∑ l ∈ s.erase j, F j l := by
-    rw [← sum_neg_distrib]
-    refine sum_congr rfl fun l hl => ?_
-    rw [← sum_neg_distrib]
-    refine sum_congr rfl fun j hj => ?_
-    rw [hF l hl j (mem_of_mem_erase hj) (ne_of_mem_erase hj).symm]
-  rw [hswap] at hneg ⊢
-  have h2 : (2 : 𝕜) * ∑ l ∈ s, ∑ j ∈ s.erase l, F j l = 0 := by
-    rw [two_mul]; nth_rewrite 1 [hneg]; ring
-  exact (mul_eq_zero.1 h2).resolve_left two_ne_zero
 
 /-- Reindexing pairs `(s, j)` with `j ∈ s` by `(t, j) = (s ∖ j, j)` with `j ∉ t`. -/
 theorem sum_sum_mem_eq (F : Finset d → d → 𝕜) :
@@ -141,31 +76,21 @@ variable (𝕜 d) in
 /-- The full exterior algebra `Λ = ⊕ₖ Λᵏ`, coefficients indexed by all subsets of `d`. -/
 abbrev Lam := EuclideanSpace 𝕜 (Finset d)
 
-/-- The Koszul differential `(κ_ξ ω)_s = Σ_{j ∈ s} ε(j, s) ξ_j ω_{s ∖ j}` (`ξ ∧ ω`). -/
-def koszulFun (ξ : EuclideanSpace ℝ d) (ω : Finset d → 𝕜) (s : Finset d) : 𝕜 :=
-  ∑ j ∈ s, sgn j s * (ξ j : 𝕜) * ω (s.erase j)
-
-/-- The contraction `(ι_ξ ω)_s = Σ_{j ∉ s} ε(j, s) ξ_j ω_{s ∪ j}`. -/
-def contrFun (ξ : EuclideanSpace ℝ d) (ω : Finset d → 𝕜) (s : Finset d) : 𝕜 :=
-  ∑ j ∈ sᶜ, sgn j s * (ξ j : 𝕜) * ω (insert j s)
-
-/-- `κ_ξ` as a continuous linear map on `Λ`. -/
+/-- The Koszul differential `(κ_ξ ω)_s = Σ_{j ∈ s} ε(j, s) ξ_j ω_{s ∖ j}`: exterior multiplication
+`ξ ∧ ·` by the real covector `ξ`, as a continuous linear map on `Λ`. -/
 def koszul (ξ : EuclideanSpace ℝ d) : Lam 𝕜 d →L[𝕜] Lam 𝕜 d :=
   LinearMap.toContinuousLinearMap
-    { toFun := fun ω => WithLp.toLp 2 (koszulFun ξ ω)
-      map_add' := fun ω η => by
-        ext s; simp [koszulFun, mul_add, sum_add_distrib]
-      map_smul' := fun a ω => by
-        ext s; simp [koszulFun, mul_sum]; refine sum_congr rfl fun j _ => by ring }
+    { toFun := fun ω => WithLp.toLp 2 (wedge (fun j => (ξ j : 𝕜)) ω)
+      map_add' := fun ω η => by simp [ExteriorFibre.wedge_add]
+      map_smul' := fun a ω => by simp [ExteriorFibre.wedge_smul] }
 
-/-- `ι_ξ` as a continuous linear map on `Λ`. -/
+/-- The contraction `(ι_ξ ω)_s = Σ_{j ∉ s} ε(j, s) ξ_j ω_{s ∪ j}` with `ξ`, as a continuous linear
+map on `Λ`. -/
 def contr (ξ : EuclideanSpace ℝ d) : Lam 𝕜 d →L[𝕜] Lam 𝕜 d :=
   LinearMap.toContinuousLinearMap
-    { toFun := fun ω => WithLp.toLp 2 (contrFun ξ ω)
-      map_add' := fun ω η => by
-        ext s; simp [contrFun, mul_add, sum_add_distrib]
-      map_smul' := fun a ω => by
-        ext s; simp [contrFun, mul_sum]; refine sum_congr rfl fun j _ => by ring }
+    { toFun := fun ω => WithLp.toLp 2 (interior (fun j => (ξ j : 𝕜)) ω)
+      map_add' := fun ω η => by simp [ExteriorFibre.interior_add]
+      map_smul' := fun a ω => by simp [ExteriorFibre.interior_smul] }
 
 theorem koszul_apply (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) (s : Finset d) :
     koszul ξ ω s = ∑ j ∈ s, sgn j s * (ξ j : 𝕜) * ω (s.erase j) := rfl
@@ -173,60 +98,19 @@ theorem koszul_apply (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) (s : Finset d
 theorem contr_apply (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) (s : Finset d) :
     contr ξ ω s = ∑ j ∈ sᶜ, sgn j s * (ξ j : 𝕜) * ω (insert j s) := rfl
 
-/-- **`κ_ξ κ_ξ = 0`.** -/
+/-- **`κ_ξ κ_ξ = 0`** (`ExteriorFibre.wedge_wedge_self`). -/
 theorem koszul_koszul (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) : koszul ξ (koszul ξ ω) = 0 := by
   ext s
-  simp only [koszul_apply, mul_sum, PiLp.zero_apply]
-  refine sum_sum_erase_eq_zero s
-    (fun j l => sgn j s * (ξ j : 𝕜) * (sgn l (s.erase j) * (ξ l : 𝕜) * ω ((s.erase j).erase l)))
-    fun j hj l hl hjl => ?_
-  simp only
-  rw [sgn_erase hj, sgn_erase hl, erase_right_comm]
-  have := ite_lt_add_ite_lt (𝕜 := 𝕜) hjl
-  linear_combination (sgn j s * sgn l s * (ξ j : 𝕜) * ξ l * ω ((s.erase j).erase l)) * this
+  exact congrFun (ExteriorFibre.wedge_wedge_self _ _) s
 
-/-- **The Cartan identity** `κ_ξ ι_ξ + ι_ξ κ_ξ = |ξ|²`. -/
+/-- **The Cartan identity** `κ_ξ ι_ξ + ι_ξ κ_ξ = |ξ|²` (`ExteriorFibre.wedge_interior_add_interior_wedge`). -/
 theorem koszul_contr_add_contr_koszul (ξ : EuclideanSpace ℝ d) (ω : Lam 𝕜 d) :
     koszul ξ (contr ξ ω) + contr ξ (koszul ξ ω) = ((∑ j, ξ j ^ 2 : ℝ) : 𝕜) • ω := by
   ext s
-  simp only [PiLp.add_apply, PiLp.smul_apply, smul_eq_mul, koszul_apply, contr_apply]
-  -- the diagonal terms
-  have hA : ∀ j ∈ s, sgn j s * (ξ j : 𝕜) * ∑ l ∈ (s.erase j)ᶜ, sgn l (s.erase j) * (ξ l : 𝕜) *
-      ω (insert l (s.erase j)) = (ξ j : 𝕜) ^ 2 * ω s + ∑ l ∈ sᶜ,
-        sgn j s * (ξ j : 𝕜) * (sgn l (s.erase j) * (ξ l : 𝕜) * ω (insert l (s.erase j))) := by
-    intro j hj
-    rw [compl_erase, sum_insert (by simp [hj]), mul_add, mul_sum, sgn_erase_self, insert_erase hj]
-    congr 1
-    have := sgn_mul_self (𝕜 := 𝕜) j s
-    linear_combination ((ξ j : 𝕜) ^ 2 * ω s) * this
-  have hB : ∀ l ∈ sᶜ, sgn l s * (ξ l : 𝕜) * ∑ j ∈ insert l s, sgn j (insert l s) * (ξ j : 𝕜) *
-      ω ((insert l s).erase j) = (ξ l : 𝕜) ^ 2 * ω s + ∑ j ∈ s,
-        sgn l s * (ξ l : 𝕜) * (sgn j (insert l s) * (ξ j : 𝕜) * ω ((insert l s).erase j)) := by
-    intro l hl
-    have hl' : l ∉ s := mem_compl.1 hl
-    rw [sum_insert hl', mul_add, mul_sum, sgn_insert_self, erase_insert hl']
-    congr 1
-    have := sgn_mul_self (𝕜 := 𝕜) l s
-    linear_combination ((ξ l : 𝕜) ^ 2 * ω s) * this
-  rw [sum_congr rfl hA, sum_congr rfl hB, sum_add_distrib, sum_add_distrib]
-  -- the cross terms cancel
-  have hcross : ∑ j ∈ s, ∑ l ∈ sᶜ, sgn j s * (ξ j : 𝕜) * (sgn l (s.erase j) * (ξ l : 𝕜) *
-      ω (insert l (s.erase j))) + ∑ l ∈ sᶜ, ∑ j ∈ s, sgn l s * (ξ l : 𝕜) *
-        (sgn j (insert l s) * (ξ j : 𝕜) * ω ((insert l s).erase j)) = 0 := by
-    rw [sum_comm (s := sᶜ), ← sum_add_distrib]
-    refine sum_eq_zero fun j hj => ?_
-    rw [← sum_add_distrib]
-    refine sum_eq_zero fun l hl => ?_
-    have hl' : l ∉ s := mem_compl.1 hl
-    have hjl : j ≠ l := fun h => hl' (h ▸ hj)
-    rw [sgn_erase hj, sgn_insert hl', erase_insert_of_ne hjl.symm]
-    have := ite_lt_add_ite_lt (𝕜 := 𝕜) hjl
-    linear_combination (sgn j s * sgn l s * (ξ j : 𝕜) * ξ l * ω (insert l (s.erase j))) * this
-  have hsum : ∑ j ∈ s, (ξ j : 𝕜) ^ 2 * ω s + ∑ l ∈ sᶜ, (ξ l : 𝕜) ^ 2 * ω s =
-      ((∑ j, ξ j ^ 2 : ℝ) : 𝕜) * ω s := by
-    rw [← sum_mul, ← sum_mul, ← add_mul, sum_add_sum_compl, RCLike.ofReal_sum]
-    simp
-  linear_combination hcross + hsum
+  convert congrFun (ExteriorFibre.wedge_interior_add_interior_wedge (fun j => (ξ j : 𝕜))
+    (fun j => (ξ j : 𝕜)) ω) s using 1
+  · rfl
+  · simp [sq]
 
 /-- **The contraction is the adjoint of the Koszul differential** (real `ξ`). -/
 theorem inner_koszul (ξ : EuclideanSpace ℝ d) (ω η : Lam 𝕜 d) :

@@ -206,8 +206,8 @@ theorem deRham_cjForm (v : Form ℂ (Fin n) k) :
     · rw [Feec.Fourier.Exterior.ext_apply_of_ne k _ h, Feec.Fourier.Exterior.ext_apply_of_ne k _ h,
         map_zero]
   rw [he]
-  have hs : conj (Feec.Fourier.Exterior.sgn l u.1 : ℂ) = Feec.Fourier.Exterior.sgn l u.1 := by
-    simp [Feec.Fourier.Exterior.sgn]
+  have hs : conj (Feec.ExteriorFibre.sgn l u.1 : ℂ) = Feec.ExteriorFibre.sgn l u.1 := by
+    simp [Feec.ExteriorFibre.sgn]
   rw [hs]
   simp only [RCLike.conj_ofReal]
 

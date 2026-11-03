@@ -104,7 +104,7 @@ def rowF2 (M : Mat) (a : Fin 3) : Form ℂ (Fin 3) 2 :=
     rowF2 M a t = (sg2 (e2.symm t) : ℂ) * M (a, e2.symm t) := rfl
 
 theorem sgn_val (j : Fin 3) (s : Finset (Fin 3)) :
-    (Feec.Fourier.Exterior.sgn j s : ℂ) = (-1) ^ #({l ∈ s | l < j}) := rfl
+    (Feec.ExteriorFibre.sgn j s : ℂ) = (-1) ^ #({l ∈ s | l < j}) := rfl
 
 theorem koszulDeg_sub2 (ξ : EuclideanSpace ℝ (Fin 3)) (x : Form ℂ (Fin 3) 1) {i j k : Fin 3}
     (hs : (univ : Finset (Fin 3)).erase i = {j, k}) (hjk : j ≠ k)

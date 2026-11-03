@@ -70,7 +70,7 @@ theorem deRham_m_ne_zero {k : ℕ} (hk : k < Fintype.card d) : (deRham d).m k (k
   rw [deRham_m_succ, _root_.smul_apply, PiLp.smul_apply, koszulDeg_apply, res_apply,
     koszul_apply, Finset.sum_eq_single j] at hval
   · rw [ext_apply k ω hsj] at hval
-    simp [ω, ξ, Exterior.sgn] at hval
+    simp [ω, ξ, ExteriorFibre.sgn] at hval
   · intro l hl hlj
     rw [show (ξ l : ℝ) = 0 by simp [ξ, hlj]]
     simp

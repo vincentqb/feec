@@ -208,7 +208,7 @@ abbrev uExt {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (r : Finset (Fin n
 theorem deRham_m_apply (k : ℕ) (ξ : EuclideanSpace ℝ (Fin n)) (v : Form ℂ (Fin n) k)
     (t : {s : Finset (Fin n) // #s = k + 1}) :
     (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ v t =
-      Complex.I * ∑ j ∈ t.1, (Feec.Fourier.Exterior.sgn j t.1 : ℂ) * (ξ j : ℂ) *
+      Complex.I * ∑ j ∈ t.1, (Feec.ExteriorFibre.sgn j t.1 : ℂ) * (ξ j : ℂ) *
         Feec.Fourier.Exterior.ext k v (t.1.erase j) := by
   rw [Feec.Fourier.Exterior.deRham_m_succ, smul_apply,
     Feec.Fourier.Exterior.koszulDeg_apply]
@@ -423,8 +423,8 @@ theorem greenFor_of_inner {rel : Bool} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (formI
 /-! ### The torus symbol on the extension -/
 
 theorem sgn_cast (j : Fin n) (s : Finset (Fin n)) :
-    ((ExteriorFibre.sgn j s : ℝ) : ℂ) = Feec.Fourier.Exterior.sgn j s := by
-  simp [ExteriorFibre.sgn, Feec.Fourier.Exterior.sgn]
+    ((ExteriorFibre.sgn j s : ℝ) : ℂ) = Feec.ExteriorFibre.sgn j s := by
+  simp [ExteriorFibre.sgn, Feec.ExteriorFibre.sgn]
 
 theorem fold_const_mul (c : Fin n → ℂ) (a : ℂ) (g : UnitAddTorus (Fin n) → ℂ) (y : Fin n → ℝ) :
     fold c (fun x => a * g x) y = a * fold c g y := by

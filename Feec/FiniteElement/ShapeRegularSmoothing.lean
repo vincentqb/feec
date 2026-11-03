@@ -28,7 +28,9 @@ The geometric and measure-theoretic ingredients of the smoothed-projection estim
   to a generic point outside `cl Ω` (avoiding the null set `badSet`, `volume_badSet`) leaves
   `cl Ω` at a point lying on exactly one facet of a simplex through `z`; that facet contains the
   support of `z` and is not interior, since relative interior points of interior facets are
-  interior points of `cl Ω` (`mem_interior_of_isInteriorFacet`). Consequently a point outside
+  interior points of `cl Ω` (`mem_interior_of_isInteriorFacet`); in particular every vertex on
+  the boundary of `cl Ω` is a vertex of a boundary facet
+  (`exists_isBoundaryFacet_of_mem_vertexSet`). Consequently a point outside
   `int cl Ω` near a face point of `g` forces `g` into a boundary facet
   (`exists_isBoundaryFacet_of_near`, using the first exit point `exists_mem_frontier_lineMap`).
 * **Bounded overlap by volume**: `|T| = |det B_T| / n!` (`volume_real_closedInterior`); simplices
@@ -581,6 +583,16 @@ theorem exists_isBoundaryFacet_of_mem_frontier {T₁ : Affine.Simplex ℝ (Fin n
   · obtain ⟨j, hj, hjpos⟩ := hpos i hi'
     have hji : j ≠ i₀ := fun h => by rw [h, hi₀] at hjpos; exact lt_irrefl _ hjpos
     rw [← hj]; exact hiF j hji
+
+/-- **Frontier vertices lie on boundary facets**: a vertex of `T ∈ M` in the topological
+boundary of `cl Ω` is a vertex of a boundary facet (`exists_isBoundaryFacet_of_mem_frontier`). -/
+theorem exists_isBoundaryFacet_of_mem_vertexSet {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ M.simplices) {x : Fin n → ℝ} (hx : x ∈ vertexSet T)
+    (hxf : x ∈ frontier (closure M.domain)) : ∃ F, M.IsBoundaryFacet F ∧ x ∈ F := by
+  obtain ⟨j, rfl⟩ := mem_vertexSet.1 hx
+  obtain ⟨F, hF, hjF⟩ := exists_isBoundaryFacet_of_mem_frontier hT
+    (by rw [← convexHull_vertexSet]; exact subset_convexHull ℝ _ (Finset.mem_coe.2 hx)) hxf
+  exact ⟨F, hF, hjF j (by rw [T.coord_points_self]; exact one_pos)⟩
 
 
 /-- **Boundary faces near outside points** (the geometric lemma for the vanishing-trace family):

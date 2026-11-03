@@ -1,6 +1,6 @@
 module
 
-public import Feec.FiniteElement.LumpedMass
+public import Feec.FiniteElement.LumpedLaplacian
 public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.MeshDivergence
 public import Feec.FiniteElement.ShapeRegularSmoothing
@@ -13,7 +13,10 @@ On a simplicial mesh `M`, the nodal values `u : ℝⁿ → ℝ` define the **glo
 `u_h = p1Global M u` of the global Whitney `0`-form space `P₁⁻Λ⁰(M)` (the Lagrange `P₁` space of
 `Feec.FiniteElement.WhitneyComplex`): on each simplex `T` it is the `P₁` interpolant `Πₜu`
 (`p1Form`), and the pieces agree at the shared vertices. Every element of `P₁⁻Λ⁰(M)` is of this
-form (`exists_p1Global_eq`). Then
+form (`exists_p1Global_eq`), and `u_h` has vanishing boundary DOFs iff `u` vanishes at the
+vertices on the boundary of `cl Ω` (`p1Global_mem_globalSpace₀_iff`, by the pseudo-manifold
+property `StarGeom.exists_isBoundaryFacet_of_mem_vertexSet`), so the values at the free vertices
+are a linear isomorphism onto `P̊₁⁻Λ⁰(M)` (`p1GlobalEquiv₀`). Then
 
 * **`inner_glue_dPiecewise_p1Global`**: the elementwise stiffness form of
   `Feec.FiniteElement.LumpedMass` is the `L²` inner product of the exterior derivatives of the
@@ -224,6 +227,100 @@ theorem exists_p1Global_eq (M : SimplicialMesh n) (v : (whitneyElement n).global
   obtain rfl : i = ⟨(), card_singleton x⟩ := Subtype.ext rfl
   rw [dite_eq_left_of_eq_true (eq_true hex), ← hval _ hex.choose_spec]
   exact v.2 _ _ _ (singleton_subset_iff.2 hex.choose_spec) (singleton_subset_iff.2 hx) _
+
+/-- `p1Global M u` depends only on the values of `u` at the vertices of `M`. -/
+theorem p1Global_congr (M : SimplicialMesh n) {u w : (Fin n → ℝ) → ℝ}
+    (h : ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, u x = w x) : p1Global M u = p1Global M w :=
+  Subtype.ext (funext fun T => Subtype.ext (by
+    change p1Form _ u = p1Form _ w
+    rw [p1Form_eq_sum, p1Form_eq_sum]
+    exact sum_congr rfl fun j _ => by rw [h _ T.2 _ (mem_vertexSet.2 ⟨j, rfl⟩)]))
+
+/-- The vertex values of `p1Global M u` are those of `u`. -/
+theorem apply_eq_of_p1Global_eq (M : SimplicialMesh n) {u w : (Fin n → ℝ) → ℝ}
+    (h : p1Global M u = p1Global M w) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    (hT : T ∈ M.simplices) {x : Fin n → ℝ} (hx : x ∈ vertexSet T) : u x = w x := by
+  have h1 := congrArg (fun v : (whitneyElement n).globalSpace M 0 =>
+    (whitneyElement n).localDof (⟨T, hT⟩ : M.simplices) 0 {x} ⟨(), card_singleton x⟩
+      ((v : (whitneyElement n).Piecewise M 0) ⟨T, hT⟩)) h
+  exact (whitneyFaceDof_of_eq_p1Form _ u hx rfl).symm.trans
+    (h1.trans (whitneyFaceDof_of_eq_p1Form _ w hx rfl))
+
+/-- **`u_h ∈ P̊₁⁻Λ⁰(M)` iff `u` vanishes at the vertices on the boundary** of `cl Ω`: the
+boundary vertices are the vertices of the boundary facets
+(`StarGeom.exists_isBoundaryFacet_of_mem_vertexSet`). -/
+theorem p1Global_mem_globalSpace₀_iff (M : SimplicialMesh n) (u : (Fin n → ℝ) → ℝ) :
+    (p1Global M u : (whitneyElement n).Piecewise M 0) ∈ (whitneyElement n).globalSpace₀ M 0 ↔
+      ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, x ∈ frontier (closure M.domain) → u x = 0 := by
+  constructor
+  · intro h T hT x hx hxf
+    obtain ⟨F, hF, hxF⟩ := StarGeom.exists_isBoundaryFacet_of_mem_vertexSet hT hx hxf
+    obtain ⟨T', hT', hFT'⟩ := hF.1.2
+    exact (whitneyFaceDof_of_eq_p1Form _ u (hFT' hxF) rfl).symm.trans
+      (h.2 ⟨T', hT'⟩ F hF hFT' {x} (singleton_subset_iff.2 hxF) ⟨(), card_singleton x⟩)
+  · refine fun h => ⟨(p1Global M u).2, fun T F hF hFT g hg i => ?_⟩
+    obtain ⟨x, rfl⟩ := Finset.card_eq_one.1 i.2
+    have hxF : x ∈ F := hg (mem_singleton_self x)
+    exact (whitneyFaceDof_of_eq_p1Form _ u (hFT hxF) rfl).trans
+      (h T T.2 x (hFT hxF) (hF.2.2 (subset_convexHull ℝ _ (Finset.mem_coe.2 hxF))))
+
+/-- `x` **enumerates the free vertices** of `M`: injectively, the vertices of `M` off the
+boundary of `cl Ω`. -/
+def IsFreeVertexEnum {ι : Type*} (M : SimplicialMesh n) (x : ι → Fin n → ℝ) : Prop :=
+  Function.Injective x ∧ ∀ y, y ∈ Set.range x ↔
+    (∃ T ∈ M.simplices, y ∈ vertexSet T) ∧ y ∉ frontier (closure M.domain)
+
+section Nodes
+
+variable {ι : Type*} [Fintype ι] (M : SimplicialMesh n) {x : ι → Fin n → ℝ}
+
+theorem nodalFun_eq_zero_of_mem_frontier (hx : IsFreeVertexEnum M x) (U : ι → ℝ)
+    {y : Fin n → ℝ} (hy : y ∈ frontier (closure M.domain)) : nodalFun x U y = 0 :=
+  sum_eq_zero fun i _ => ite_eq_right_iff.2 fun e => (((hx.2 y).1 ⟨i, e⟩).2 hy).elim
+
+/-- The global `P₁` function with the values `U` at the free vertices, `0` at the boundary
+vertices: an element of `P̊₁⁻Λ⁰(M)`. -/
+def p1Global₀ (hx : IsFreeVertexEnum M x) :
+    (ι → ℝ) →ₗ[ℝ] (whitneyElement n).globalSpace₀ M 0 where
+  toFun U := ⟨p1Global M (nodalFun x U), (p1Global_mem_globalSpace₀_iff M _).2
+    fun _ _ _ _ hy => nodalFun_eq_zero_of_mem_frontier M hx U hy⟩
+  map_add' U V := Subtype.ext (by
+    simp only [nodalFun_eq_sum, Pi.add_apply, add_smul, sum_add_distrib, map_add,
+      Submodule.coe_add])
+  map_smul' c U := Subtype.ext (by
+    simp only [nodalFun_eq_sum, Pi.smul_apply, smul_eq_mul, mul_smul, ← smul_sum, map_smul,
+      Submodule.coe_smul, RingHom.id_apply])
+
+theorem p1Global₀_apply (hx : IsFreeVertexEnum M x) (U : ι → ℝ) :
+    (p1Global₀ M hx U : (whitneyElement n).Piecewise M 0) = p1Global M (nodalFun x U) := rfl
+
+/-- **The nodal values at the free vertices are a linear isomorphism** `ℝ^ι ≃ P̊₁⁻Λ⁰(M)`: every
+`P₁` function with vanishing boundary DOFs is `p1Global` of its values at the free vertices,
+`0` at the boundary vertices. -/
+def p1GlobalEquiv₀ (hx : IsFreeVertexEnum M x) :
+    (ι → ℝ) ≃ₗ[ℝ] (whitneyElement n).globalSpace₀ M 0 := by
+  refine LinearEquiv.ofBijective (p1Global₀ M hx) ⟨fun U V hUV => funext fun i => ?_, fun v => ?_⟩
+  · obtain ⟨T, hT, hiT⟩ := ((hx.2 (x i)).1 ⟨i, rfl⟩).1
+    have := apply_eq_of_p1Global_eq M (Subtype.ext (show (p1Global M (nodalFun x U) :
+      (whitneyElement n).Piecewise M 0) = p1Global M (nodalFun x V) from
+        congrArg (fun v : (whitneyElement n).globalSpace₀ M 0 =>
+          (v : (whitneyElement n).Piecewise M 0)) hUV)) hT hiT
+    rwa [nodalFun_apply hx.1, nodalFun_apply hx.1] at this
+  · obtain ⟨u, hu⟩ := exists_p1Global_eq M ⟨v, v.2.1⟩
+    have h0 := (p1Global_mem_globalSpace₀_iff M u).1 (by rw [hu]; exact v.2)
+    refine ⟨fun i => u (x i), Subtype.ext ?_⟩
+    rw [p1Global₀_apply, ← congrArg Subtype.val hu]
+    refine congrArg Subtype.val (p1Global_congr M fun T hT y hy => ?_)
+    by_cases hyf : y ∈ frontier (closure M.domain)
+    · rw [nodalFun_eq_zero_of_mem_frontier M hx _ hyf, h0 T hT y hy hyf]
+    · obtain ⟨i, rfl⟩ := (hx.2 y).2 ⟨⟨T, hT, hy⟩, hyf⟩
+      exact nodalFun_apply hx.1 _ i
+
+theorem p1GlobalEquiv₀_apply (hx : IsFreeVertexEnum M x) (U : ι → ℝ) :
+    (p1GlobalEquiv₀ M hx U : (whitneyElement n).Piecewise M 0) = p1Global M (nodalFun x U) :=
+  rfl
+
+end Nodes
 
 /-! ### Inner products of glued piecewise fields -/
 

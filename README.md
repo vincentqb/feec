@@ -41,10 +41,9 @@ symmetric difference Laplacian); the direct Hilbert route reaches the maximum no
 `h^{-n/2}`; the Banach layer gives the maximum-norm errors `O(h²)` (semidiscrete), `O(τ + h²)`
 (backward Euler) and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every A-stable rational scheme, with the
 stability bound `1 + C'_r √n`) against every classical solution, with constants independent of
-`h`. The scheme is the lumped-mass Galerkin method on the `P₁` (Whitney `0`-form) functions
-vanishing at the boundary nodes (contained in `P̊₁⁻Λ⁰`,
-`Feec.Models.Cube.MaxNormHeat.feFun_mem_globalSpace₀`; equality not proved;
-`Feec.FiniteElement.P1Global`: stiffness `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the
+`h`. The scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰`, the `P₁` (Whitney
+`0`-form) functions with vanishing boundary DOFs (the interior nodal values are a linear
+isomorphism onto it, `Feec.Models.Cube.MaxNormHeat.feEquiv`; `Feec.FiniteElement.P1Global`: stiffness `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the
 stencil theorem exactly the classical finite difference scheme. The errors also hold in `L^∞(Q)` for
 the finite element function, with the interpolation term `n² D₂ h² / 2` (`|∂ᵢ∂ₖ u| ≤ D₂`; a `P₁`
 function attains its extrema at the vertices). With natural boundary conditions

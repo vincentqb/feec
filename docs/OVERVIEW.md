@@ -104,8 +104,9 @@ maximum norm at the nodes, with constants independent of `h`: `O(h²)`, `O(τ + 
 Euler and `O(h²) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, collected with a
 nonzero classical solution (the first eigenmode, `Feec.Models.Cube.MaxNormHeat.sineSolution`) in
 the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). The scheme is the
-lumped-mass Galerkin method on the `P₁` (Whitney `0`-form) functions vanishing at the boundary
-nodes (contained in `P̊₁⁻Λ⁰`; equality not proved; `Feec.FiniteElement.P1Global`), and the errors
+lumped-mass Galerkin method on `P̊₁⁻Λ⁰`, the `P₁` (Whitney `0`-form) functions with vanishing
+boundary DOFs (the interior nodal values are a linear isomorphism onto it;
+`Feec.FiniteElement.P1Global`), and the errors
 hold in `L^∞(Q)` for the finite element function (plus `n² D₂ h² / 2`). With natural boundary
 conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum principle holds and the
 semidiscrete error is `O(h)` in the maximum norm at the nodes; `O(h²)`, time stepping and

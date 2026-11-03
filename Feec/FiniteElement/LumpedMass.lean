@@ -156,6 +156,14 @@ theorem lumpedMass_nonneg (M : SimplicialMesh n) (x : Fin n → ℝ) : 0 ≤ lum
   sum_nonneg fun _ _ => mul_nonneg (div_nonneg measureReal_nonneg (by positivity))
     (Nat.cast_nonneg _)
 
+/-- A point of positive lumped mass is a vertex of the mesh. -/
+theorem exists_mem_vertexSet_of_lumpedMass_pos (M : SimplicialMesh n) {x : Fin n → ℝ}
+    (h : 0 < lumpedMass M x) : ∃ T ∈ M.simplices, x ∈ vertexSet T := by
+  by_contra! hc
+  refine h.ne' (sum_eq_zero fun T hT => ?_)
+  rw [card_eq_zero.2 (filter_eq_empty_iff.2 fun j _ hj => hc T hT (mem_vertexSet.2 ⟨j, hj⟩)),
+    Nat.cast_zero, mul_zero]
+
 /-- The nodal values of the hat function `φₓ`: `1` at `x`, `0` elsewhere. -/
 def nodalIndicator (x : Fin n → ℝ) : (Fin n → ℝ) → ℝ := fun y => if y = x then 1 else 0
 
@@ -477,6 +485,14 @@ theorem freudenthalMesh_simplices (b : Fin n → ℝ) {s : ℝ} (hs : 0 < s) (N 
   ext T
   rw [mem_freudenthalMesh_simplices, mem_image]
   simp
+
+/-- The vertices of the Freudenthal mesh are lattice nodes. -/
+theorem exists_eq_node_of_mem_vertexSet (b : Fin n → ℝ) {s : ℝ} {hs : 0 < s} {N : ℕ} [NeZero N]
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (freudenthalMesh b s hs N).simplices)
+    {y : Fin n → ℝ} (hy : y ∈ vertexSet T) : ∃ q, y = node b (s / N) q := by
+  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
+  obtain ⟨j, rfl⟩ := mem_vertexSet.1 hy
+  exact ⟨_, by rw [mapEquiv_boxMap_freudenthalSimplex_points, freudenthalPoints_eq_node]⟩
 
 theorem injective_freudenthalMesh_simplex (b : Fin n → ℝ) {h : ℝ} (hh : h ≠ 0) (N : ℕ) :
     Function.Injective fun p : (Fin n → Fin N) × Equiv.Perm (Fin n) =>

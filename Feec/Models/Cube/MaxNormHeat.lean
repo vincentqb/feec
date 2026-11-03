@@ -21,11 +21,12 @@ the direct Hilbert route reaches the maximum norm through the norm equivalence, 
 `h^{-n/2}`. The Banach layer (`Feec.TimeStepping.stableFamily`, the discrete half of
 `Feec.TimeStepping.banachFEEC`) gives the maximum-norm theory with constants independent of `h`.
 
-The scheme is the lumped-mass Galerkin method on the conforming `P₁` (Whitney `0`-form)
-functions of `Feec.FiniteElement.WhitneyComplex` vanishing at the boundary nodes (contained in
-`P̊₁⁻Λ⁰`, `feFun_mem_globalSpace₀`; equality not proved): for the global `P₁` functions `U_h`
-with nodal values `U` (`feFun`), `W = Lₕ U` iff `(W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all
-`V` (`lumpedLaplacian_eq_iff`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
+The scheme is the lumped-mass Galerkin method on the space `P̊₁⁻Λ⁰` of conforming `P₁` (Whitney
+`0`-form) functions of `Feec.FiniteElement.WhitneyComplex` with vanishing boundary DOFs: the
+global `P₁` functions `U_h` with values `U` at the interior nodes (`feFun`) are exactly
+`P̊₁⁻Λ⁰` (`feEquiv`, a linear isomorphism, since the interior nodes are the mesh vertices off
+`∂Q`), and `W = Lₕ U` iff `(W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V`
+(`lumpedLaplacian_eq_iff`, `lumpedLaplacian_eq_iff_globalSpace₀`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
 `m(p) = ∫_Q φₚ` (`Feec.FiniteElement.P1Global`). With the stencil theorem it is exactly the
 classical finite difference scheme for the heat equation.
 
@@ -57,7 +58,9 @@ stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`
    `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B₄ h² / 12 + C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`
    (the sharp smooth-data estimate; the factor `‖Lₕ^{p+1} v‖_∞` is that of the discrete datum);
 7. the full verdict of the Banach layer for the family (`StableFamily.Verdict`);
-8. (**the Galerkin form**) `m(x) = ⟪φₓ, 1⟫_{L²(Q)}` and `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫`;
+8. (**the Galerkin form**) `m(x) = ⟪φₓ, 1⟫_{L²(Q)}` and `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫`,
+   with `U ↦ U_h` a linear isomorphism onto `P̊₁⁻Λ⁰` (`feFun_bijective`, `galerkin₀`: the test
+   functions range over all of `P̊₁⁻Λ⁰`);
 9. (**the finite element function on `Q̄`**, `abs_sub_p1Interp_nodal_le`) a `P₁` function attains
    its extreme values at the vertices (`Feec.FiniteElement.abs_p1Interp_le`) and the `P₁`
    interpolation error is `≤ n² D₂ h² / 2` for `|∂ᵢ∂ₖ u| ≤ D₂`
@@ -314,7 +317,7 @@ theorem norm_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ)
   rw [Real.norm_eq_abs]
   exact abs_interp_laplacian_sub_le hs N hu hB hbd p
 
-/-! ### The lumped-mass Galerkin method on the `P₁` functions vanishing at the boundary nodes -/
+/-! ### The lumped-mass Galerkin method on `P̊₁⁻Λ⁰` -/
 
 /-- The **global `P₁` function** `U_h` of the discrete values `U` (`0` at the boundary nodes) on
 the level-`(N + 1)` Freudenthal mesh: an element of the global Whitney `0`-form (Lagrange `P₁`)
@@ -354,8 +357,7 @@ theorem lumpedInner_lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (U V : Spac
   have := (lumpedMass_node_pos b hs p).ne'
   field_simp
 
-/-- **The scheme is the lumped-mass Galerkin method on the `P₁` functions vanishing at the
-boundary nodes** (contained in `P̊₁⁻Λ⁰`, `feFun_mem_globalSpace₀`; equality not proved):
+/-- **The scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰`** (`feEquiv`):
 `(Lₕ U, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)} = -∫_Q ∇U_h · ∇V_h` for all discrete values `U, V`. -/
 theorem lumpedInner_lumpedLaplacian_eq_neg_inner (b : Fin n → ℝ) (hs : 0 < s) (U V : Space n N) :
     lumpedInner b hs (lumpedLaplacian b hs N U) V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ := by
@@ -384,23 +386,80 @@ theorem lumpedLaplacian_eq_iff (b : Fin n → ℝ) (hs : 0 < s) (U W : Space n N
     rw [lumpedInner_lumpedLaplacian_eq_neg_inner, ← h (Pi.single p 1), key] at h1
     exact (mul_left_cancel₀ (lumpedMass_node_pos b hs p).ne' h1).symm
 
+/-- A lattice node in the open cube is an interior node. -/
+theorem mem_interiorNodes_of_node_mem_openCube (hs : 0 < s) {q : Fin n → ℤ}
+    (h : node b (meshSize s N) q ∈ openCube b s) : q ∈ interiorNodes n (N + 1) := by
+  have hh := meshSize_pos hs N
+  have hm := meshSize_mul s N
+  push_cast at hm
+  refine mem_interiorNodes.2 fun j => ?_
+  have hj := h j (mem_univ j)
+  simp only [node, Pi.add_apply, Pi.smul_apply, latticePoint_apply, smul_eq_mul,
+    Set.mem_Ioo] at hj
+  have h1 : 0 < q j := by
+    exact_mod_cast pos_of_mul_pos_right (by linarith : 0 < meshSize s N * q j) hh.le
+  have h2 : q j < N + 1 := by
+    exact_mod_cast lt_of_mul_lt_mul_left (by linarith : meshSize s N * q j <
+      meshSize s N * (N + 1)) hh.le
+  omega
+
+theorem interior_closure_freudenthalMesh_domain (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
+    interior (closure (freudenthalMesh b s hs (N + 1)).domain) = openCube b s := by
+  rw [freudenthalMesh_domain, closure_pi_set, interior_pi_set Set.finite_univ]
+  refine Set.pi_congr rfl fun i _ => ?_
+  rw [closure_Ioo (by linarith : b i ≠ b i + s), interior_Icc]
+
+/-- **The interior nodes are the free vertices** of the mesh: the vertices off `∂Q`. -/
+theorem isFreeVertexEnum (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
+    IsFreeVertexEnum (freudenthalMesh b s hs (N + 1))
+      fun p : Nodes n N => node b (meshSize s N) p := by
+  refine ⟨node_injective_subtype b (meshSize_pos hs N).ne' _, fun y => ⟨?_, ?_⟩⟩
+  · rintro ⟨p, rfl⟩
+    refine ⟨exists_mem_vertexSet_of_lumpedMass_pos _ (lumpedMass_node_pos b hs p), fun h => ?_⟩
+    rw [frontier, interior_closure_freudenthalMesh_domain] at h
+    exact h.2 (node_mem_openCube hs p)
+  · rintro ⟨⟨T, hT, hy⟩, hyf⟩
+    obtain ⟨q, rfl⟩ : ∃ q, y = node b (meshSize s N) q := exists_eq_node_of_mem_vertexSet b hT hy
+    have hq : node b (meshSize s N) q ∈ openCube b s := by
+      rw [← interior_closure_freudenthalMesh_domain b hs N]
+      by_contra h
+      exact hyf ⟨subset_closure ((freudenthalMesh b s hs (N + 1)).closedInterior_subset_closure hT
+        (vertexSet_subset_closedInterior' T hy)), h⟩
+    exact ⟨⟨q, mem_interiorNodes_of_node_mem_openCube hs hq⟩, rfl⟩
+
+/-- **The nodal values are a linear isomorphism `ℝ^{interior nodes} ≃ P̊₁⁻Λ⁰`**, `U ↦ U_h`: every
+`P₁` function with vanishing boundary DOFs is `U_h` for its values `U` at the interior nodes
+(`Feec.FiniteElement.p1GlobalEquiv₀`). -/
+def feEquiv (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
+    Space n N ≃ₗ[ℝ] (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0 :=
+  p1GlobalEquiv₀ _ (isFreeVertexEnum b hs N)
+
+theorem feEquiv_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
+    (feEquiv b hs N U : (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0) =
+      feFun b hs U := rfl
+
 /-- `U_h` has vanishing boundary DOFs: it lies in the space `P̊₁⁻Λ⁰` of the minimal (`H̊¹`)
 complex. -/
 theorem feFun_mem_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) :
     (feFun b hs U : (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0) ∈
-      (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0 := by
-  refine ⟨(feFun b hs U).2, fun T F hF hFT g hg i => ?_⟩
-  obtain ⟨x, rfl⟩ := Finset.card_eq_one.1 i.2
-  have hxF : x ∈ F := hg (mem_singleton_self x)
-  refine (whitneyFaceDof_of_eq_p1Form _ (nodal b s U) (hFT hxF) rfl).trans ?_
-  refine sum_eq_zero fun q _ => ?_
-  rw [ite_eq_right]
-  intro hq
-  have hfr := hF.2.2 (subset_convexHull ℝ _ (Finset.mem_coe.2 hxF))
-  refine hfr.2 (interior_maximal subset_closure
-    (isOpen_freudenthalMesh_domain b s hs (N + 1)) ?_)
-  rw [← hq, freudenthalMesh_domain]
-  exact node_mem_openCube hs q
+      (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0 :=
+  (feEquiv b hs N U).2
+
+/-- **The scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰`**: `W = Lₕ U` iff
+`(W, v)_h = -⟪d U_h, d v⟫_{L²Λ¹(Q)}` for every test function `v ∈ P̊₁⁻Λ⁰`, `(W, v)_h` the
+vertex quadrature with the nodal values of `v` (`feEquiv`). [Thomee2006], Ch. 15 -/
+theorem lumpedLaplacian_eq_iff_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (U W : Space n N) :
+    lumpedLaplacian b hs N U = W ↔
+      ∀ v : (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0,
+        lumpedInner b hs W ((feEquiv b hs N).symm v) = -⟪dFeFun b hs U, (whitneyElement n).glue _
+          (((0 : ℕ) : ℤ) + 1) ((whitneyElement n).dPiecewise _ 0 v)⟫_ℝ := by
+  refine (lumpedLaplacian_eq_iff b hs U W).trans ⟨fun h v => ?_, fun h V => ?_⟩
+  · rw [h]
+    conv_rhs => rw [← (feEquiv b hs N).apply_symm_apply v]
+    rfl
+  · have := h (feEquiv b hs N V)
+    rw [LinearEquiv.symm_apply_apply] at this
+    exact this
 
 /-! ### The stable family and the heat equation -/
 
@@ -911,8 +970,7 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
         (p1Global (freudenthalMesh b s hs (N + 1)) (fun _ => 1) :
           (whitneyElement n).Piecewise (freudenthalMesh b s hs (N + 1)) 0)⟫_ℝ =
       lumpedMass (freudenthalMesh b s hs (N + 1)) x
-  /-- the scheme is the lumped-mass Galerkin method on the `P₁` functions vanishing at the
-  boundary nodes (contained in `P̊₁⁻Λ⁰`; equality not proved):
+  /-- the scheme is the lumped-mass Galerkin method on `P̊₁⁻Λ⁰` (`feFun_bijective`):
   `W = Lₕ U ⟺ (W, V)_h = -⟪d U_h, d V_h⟫_{L²Λ¹(Q)}` for all `V` -/
   galerkin (N : ℕ) (U W : Space n N) : lumpedLaplacian b hs N U = W ↔
     ∀ V : Space n N, lumpedInner b hs W V = -⟪dFeFun b hs U, dFeFun b hs V⟫_ℝ
@@ -954,6 +1012,15 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   simplex hold on all of `Q̄` -/
   covers (N : ℕ) {x : Fin n → ℝ} (hx : x ∈ closedCube b s) :
     ∃ K ∈ (freudenthalMesh b s hs (N + 1)).simplices, x ∈ K.closedInterior
+  /-- `U ↦ U_h` is a bijection of `ℝ^{interior nodes}` onto `P̊₁⁻Λ⁰` -/
+  feFun_bijective (N : ℕ) : Function.Bijective fun U : Space n N =>
+    (⟨feFun b hs U, feFun_mem_globalSpace₀ b hs U⟩ :
+      (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0)
+  /-- the lumped-mass Galerkin method with test functions ranging over all of `P̊₁⁻Λ⁰` -/
+  galerkin₀ (N : ℕ) (U W : Space n N) : lumpedLaplacian b hs N U = W ↔
+    ∀ v : (whitneyElement n).globalSpace₀ (freudenthalMesh b s hs (N + 1)) 0,
+      lumpedInner b hs W ((feEquiv b hs N).symm v) = -⟪dFeFun b hs U,
+        (whitneyElement n).glue _ (((0 : ℕ) : ℤ) + 1) ((whitneyElement n).dPiecewise _ 0 v)⟫_ℝ
 
 /-- **The heat equation in the maximum norm** (lumped-mass `P₁` elements on the Freudenthal
 meshes of the cube `b + (0, s)ⁿ`, Dirichlet data): see `Verdict`. [Thomee2006], Ch. 15;
@@ -978,6 +1045,8 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   rational_fe S _ hD₂ _ hr _ hp N _ hτ _ hk v _ hK _ hx :=
     abs_sub_p1Interp_step_pow_le hs S hD₂ hr hp N hτ hk v hK hx
   covers _ _ hx := exists_simplex_mem hs hx
+  feFun_bijective N := (feEquiv b hs N).bijective
+  galerkin₀ _ U W := lumpedLaplacian_eq_iff_globalSpace₀ b hs U W
 
 /-- The second time derivative of the first eigenmode: `uₜₜ = λ² u`, `λ = n (π/s)²`. -/
 theorem sineSolution_hasDerivAt₁ (b : Fin n → ℝ) (hs : 0 < s) (T t : ℝ) (x : Fin n → ℝ) :

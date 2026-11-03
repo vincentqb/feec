@@ -809,60 +809,9 @@ theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) �
     {K : Affine.Simplex ℝ (Fin n → ℝ) n} (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices)
     {x : Fin n → ℝ} (hx : x ∈ K.closedInterior) :
     |u x - p1Interp K.points (nodal b s U) x| ≤
-      ‖interp b s N u - U‖ + n ^ 2 * D * meshSize s N ^ 2 / 2 :=
+      ‖interp b s N u - U‖ + feDefect (s := s) (n := n) D N :=
   abs_sub_p1Interp_le_of_nodes hs N hu hD (fun q hq => by
     rw [nodal_node hs, ← ext_interp hs hbd hq, ← ext_sub]; exact abs_ext_le _ q) hK hx
-
-/-- **The semidiscrete error of the finite element function on `Q̄`**. -/
-theorem abs_sub_p1Interp_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
-    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
-      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T)
-    (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
-    (hx : x ∈ K.closedInterior) :
-    |S.u t x - p1Interp K.points (nodal b s (exp (t • lumpedLaplacian b hs N) v)) x| ≤
-      ‖interp b s N (S.u 0) - v‖ + t * S.defect N + feDefect (s := s) (n := n) D₂ N :=
-  (abs_sub_p1Interp_nodal_le hs N ((S.contDiff t ht).of_le (by norm_num)) (hD₂ t ht)
-    (S.boundary t ht) _ hK hx).trans (by
-      have := norm_interp_sub_exp_le hs S N ht v
-      simp only [feDefect]; linarith)
-
-/-- **Backward Euler: the error of the finite element function on `Q̄`**. -/
-theorem abs_sub_p1Interp_res_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
-    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
-      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
-    {u₂ : ℝ → (Fin n → ℝ) → ℝ} {B₂ : ℝ}
-    (hu₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, HasDerivAt (fun t => S.u₁ t x) (u₂ t x) t)
-    (hB₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂) (N : ℕ) {τ : ℝ} (hτ : 0 < τ)
-    {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
-    (hx : x ∈ K.closedInterior) :
-    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).res τ N ^ k) v)) x| ≤
-      ‖interp b s N (S.u 0) - v‖ + k * τ * (3 / 2 * τ * B₂ + S.defect N) +
-        feDefect (s := s) (n := n) D₂ N := by
-  have hkt : k * τ ∈ Icc 0 T := ⟨by positivity, hk⟩
-  refine (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt)
-    (S.boundary _ hkt) _ hK hx).trans ?_
-  have := norm_interp_sub_res_pow_le hs S hu₂ hB₂ N hτ hk v
-  simp only [feDefect]; linarith
-
-/-- **Every A-stable rational scheme: the error of the finite element function on `Q̄`**. -/
-theorem abs_sub_p1Interp_step_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {D₂ : ℝ}
-    (hD₂ : ∀ t ∈ Icc 0 T, ∀ x ∈ closedCube b s, ∀ i k,
-      |partialDeriv k (partialDeriv i (S.u t)) x| ≤ D₂)
-    {r : RationalScheme} (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (N : ℕ) {τ : ℝ}
-    (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) {K : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hK : K ∈ (freudenthalMesh b s hs (N + 1)).simplices) {x : Fin n → ℝ}
-    (hx : x ∈ K.closedInterior) :
-    |S.u (k * τ) x - p1Interp K.points (nodal b s (((family b hs).step r τ N ^ k) v)) x| ≤
-      ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
-        r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ +
-        feDefect (s := s) (n := n) D₂ N := by
-  have hkt : k * τ ∈ Icc 0 T := ⟨by positivity, hk⟩
-  refine (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt)
-    (S.boundary _ hkt) _ hK hx).trans ?_
-  have := norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
-  simp only [feDefect]; linarith
 
 theorem differentiable_sineDeriv_all (a c : ℝ) (k : ℕ) : Differentiable ℝ (sineDeriv a c k) := by
   rcases k with _ | _ | _ | _ | k <;> simp only [sineDeriv] <;> fun_prop
@@ -1040,11 +989,19 @@ theorem maxNormHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   lumpedMass_eq_inner N x := inner_glue_p1Global_nodalIndicator_one _
     (fun _ hT => interior_subset_freudenthalMesh_domain b hs (N + 1) hT) x
   galerkin _ U W := lumpedLaplacian_eq_iff b hs U W
-  semidiscrete_fe S _ hD₂ N _ ht v _ hK _ hx := abs_sub_p1Interp_exp_le hs S hD₂ N ht v hK hx
-  backwardEuler_fe S _ hD₂ _ _ hu₂ hB₂ N _ hτ _ hk v _ hK _ hx :=
-    abs_sub_p1Interp_res_pow_le hs S hD₂ hu₂ hB₂ N hτ hk v hK hx
-  rational_fe S _ hD₂ _ hr _ hp N _ hτ _ hk v _ hK _ hx :=
-    abs_sub_p1Interp_step_pow_le hs S hD₂ hr hp N hτ hk v hK hx
+  semidiscrete_fe S _ hD₂ N _ ht v _ hK _ hx :=
+    (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ ht).of_le (by norm_num)) (hD₂ _ ht)
+      (S.boundary _ ht) _ hK hx).trans (add_le_add (norm_interp_sub_exp_le hs S N ht v) le_rfl)
+  backwardEuler_fe S _ hD₂ _ _ hu₂ hB₂ N τ hτ k hk v _ hK _ hx :=
+    have hkt : (k : ℝ) * τ ∈ Set.Icc 0 _ := ⟨by positivity, hk⟩
+    (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt)
+      (S.boundary _ hkt) _ hK hx).trans
+      (add_le_add (norm_interp_sub_res_pow_le hs S hu₂ hB₂ N hτ hk v) le_rfl)
+  rational_fe S _ hD₂ _ hr _ hp N τ hτ k hk v _ hK _ hx :=
+    have hkt : (k : ℝ) * τ ∈ Set.Icc 0 _ := ⟨by positivity, hk⟩
+    (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt)
+      (S.boundary _ hkt) _ hK hx).trans
+      (add_le_add (norm_interp_sub_step_pow_le hs S hr hp N hτ hk v) le_rfl)
   covers _ _ hx := exists_simplex_mem hs hx
   feFun_bijective N := (feEquiv b hs N).bijective
 

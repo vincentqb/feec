@@ -49,15 +49,14 @@ finite difference scheme. The errors also hold in `L^∞(Q)` for the finite elem
 the interpolation term `n² D₂ h² / 2` (`|∂ᵢ∂ₖ u| ≤ D₂`; a `P₁` function attains its extrema at
 the vertices). With natural boundary conditions
 (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`, all nodes) the maximum principle holds
-(`Lₕ 𝟙 = 0`) and the errors are `O(h)` (semidiscrete), `O(τ + h)` (backward Euler, by the
-discrete comparison principle for `(1 - τLₕ)⁻¹`) and `O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every
-A-stable rational scheme) in the maximum norm at the nodes, and in `L^∞(Q)` for the finite
-element function (`O(h²)` consistency in the interior, `O(1)` at the boundary nodes, absorbed by
-the barrier `|x - c|²`); `O(h²)` is not proved (at nodes with two or more coordinates on the
-boundary the nodal consistency error does not tend to `0`: a hand computation, not formalized).
-Limitations: for rational schemes
-the factor `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route through the
-stability bound loses `√k`. Each field of the crown is the verdict of the layer theorem below.
+(`Lₕ 𝟙 = 0`) and, from `O(h²)` consistency in the interior and `O(1)` at the boundary nodes
+absorbed by the barrier `|x - c|²`, the errors are `O(h)` (semidiscrete), `O(τ + h)` (backward
+Euler, by the discrete comparison principle for `(1 - τLₕ)⁻¹`) and
+`O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` (every A-stable rational scheme) in the maximum norm at the
+nodes, and in `L^∞(Q)` for the finite element function; `O(h²)` is not proved (at nodes with two
+or more coordinates on the boundary the nodal consistency error does not tend to `0`: a hand
+computation, not formalized). Limitations: for rational schemes the factor `‖Lₕ^{p+1} v‖_∞` is
+not bounded uniformly in `h`, and the uniform route through the stability bound loses `√k`. Each field of the crown is the verdict of the layer theorem below.
 `Feec.HilbertComplex.ConformingFamily.feec_rated` adds the rates `O(hᵒʳᵈ)` of a Jackson
 estimate, and for the fully discrete schemes `O(hᵒʳᵈ + τᵖ)` along a smooth comparison of order
 `p + 1` (`DissipFEEC.Comparison.Smooth`; no such comparison is built here for the Jackson rate

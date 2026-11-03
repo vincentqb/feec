@@ -1023,7 +1023,7 @@ theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution b
   rw [Real.norm_eq_abs]
   have := hb (k * τ) (by positivity) p
   show |E k p| ≤ _
-  nlinarith
+  linarith
 
 /-- **Every A-stable rational scheme for the Neumann problem in the maximum norm at the nodes**:
 for `r` of order `p` (Crank–Nicolson, the Gauss and Radau methods), the semidiscrete error plus
@@ -1213,15 +1213,15 @@ theorem maxNormNeumann (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   rational S _ hr _ hp N _ hτ _ hk v := norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
   semidiscrete_fe S _ hD₂ N _ ht v _ hK _ hx :=
     (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ ht).of_le (by norm_num)) (hD₂ _ ht) _ hK
-      hx).trans (by linarith [norm_interp_sub_exp_le hs S N ht v])
+      hx).trans (add_le_add (norm_interp_sub_exp_le hs S N ht v) le_rfl)
   backwardEuler_fe S _ hD₂ _ _ hu₂ hBₜ N τ hτ k hk v _ hK _ hx :=
     have hkt : (k : ℝ) * τ ∈ Set.Icc 0 _ := ⟨by positivity, hk⟩
     (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt) _ hK
-      hx).trans (by linarith [norm_interp_sub_res_pow_le hs S hu₂ hBₜ N hτ hk v])
+      hx).trans (add_le_add (norm_interp_sub_res_pow_le hs S hu₂ hBₜ N hτ hk v) le_rfl)
   rational_fe S _ hD₂ _ hr _ hp N τ hτ k hk v _ hK _ hx :=
     have hkt : (k : ℝ) * τ ∈ Set.Icc 0 _ := ⟨by positivity, hk⟩
     (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ hkt).of_le (by norm_num)) (hD₂ _ hkt) _ hK
-      hx).trans (by linarith [norm_interp_sub_step_pow_le hs S hr hp N hτ hk v])
+      hx).trans (add_le_add (norm_interp_sub_step_pow_le hs S hr hp N hτ hk v) le_rfl)
 
 /-- **The Neumann verdict is not vacuous**: the first Neumann eigenmode `cosSolution` is a
 classical solution on every `[0, T] × Q̄`, nonzero at `t = 0`, with `uₜₜ = λ² u`, `|uₜₜ| ≤ λ²`

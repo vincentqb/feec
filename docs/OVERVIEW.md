@@ -109,10 +109,10 @@ boundary DOFs (the interior nodal values are a linear isomorphism onto it;
 `Feec.FiniteElement.P1Global`), and the errors hold in `L^∞(Q)` for the finite element function
 (plus `n² D₂ h² / 2`). With natural boundary conditions
 (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum principle holds and the
-errors are `O(h)`, `O(τ + h)` for backward Euler and `O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for
-every A-stable rational scheme, in the maximum norm at the nodes and in `L^∞(Q)`; `O(h²)` is not
-proved for Neumann. Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not
-bounded uniformly in `h`, and the uniform route loses `√k`.
+errors are `O(h)` (semidiscrete), `O(τ + h)` for backward Euler and
+`O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, in the maximum norm at the
+nodes and in `L^∞(Q)`; `O(h²)` is not proved for Neumann. Limitations: for rational schemes
+`‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of
 `dissipFEEC` and `approxFEEC` (convergence on the core from the comparison initial values, the

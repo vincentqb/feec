@@ -36,6 +36,14 @@ componentwise:
   `ConstCoeffOp.imCLM_mem_maximal_domain`; `ofRealCLM_mem_fieldH1`.
 * **`ConstCoeffComplex.HasRegularDecomposition.ofReal`**,
   **`ConstCoeffComplex.finiteDimensional_cohomology_ofReal`**; `deRhamVec_ofReal`.
+
+## References
+
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (regular decompositions)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1 (closed range, harmonic forms and cohomology)
+
+Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open MeasureTheory

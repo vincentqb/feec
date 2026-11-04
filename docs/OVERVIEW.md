@@ -257,7 +257,9 @@ bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖ ‖u‖`, `b = P_
 `‖p − iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p − iₕ πₕ p‖ + C C_π ‖1 − Jₕ‖ ‖p‖` on `ℌ`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`), the error
 estimate with no assumed defect
-(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`), convergence for every
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`; with the factor `μ`
+of Cor 3.11 for a bound `μ` of the gap `‖(1 − P_ℌ) iₕ q‖ ≤ μ ‖q‖` on `ℌₕ`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_gap`), convergence for every
 datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.tendsto_staticError`), and the
 isomorphism on cohomology under the strict gap on `ℌ`

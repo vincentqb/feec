@@ -73,7 +73,7 @@ abbrev family (n : ℕ) (s : ℝ) : StableFamily ℝ ℕ :=
 /-- Backward Euler for the finite difference family is backward Euler for the lumped-mass family. -/
 theorem family_res (b : Fin n → ℝ) (hs : 0 < s) (τ : ℝ) (N : ℕ) :
     (family n s).res τ N = (MaxNormHeat.family b hs).res τ N := by
-  simp only [StableFamily.res, StableFamily.discrete, fdLaplacian_eq b hs]
+  simp only [StableFamily.res, StableFamily.discrete, fdLaplacian_eq b hs]; rfl
 
 /-- Every rational scheme for the finite difference family is that of the lumped-mass family. -/
 theorem family_step (b : Fin n → ℝ) (hs : 0 < s) (r : RationalScheme) (τ : ℝ) (N : ℕ) :

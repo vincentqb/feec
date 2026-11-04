@@ -53,6 +53,10 @@ form and lumped mass of `Feec.FiniteElement.LumpedMass`.
    on every simplex, so 5, 7 and 8 bound the errors in `L^∞(Q)` (the simplices cover `Q̄`,
    `MaxNormHeat.exists_simplex_mem`).
 
+The meshes with all their nodes are a family of non-obtuse meshes in which every vertex is a node
+(`MaxNormNeumann.meshes`); the general estimates of `Feec.FiniteElement.NonobtuseMeshes.maxNormHeat`
+apply to it, but with the `O(1)` boundary consistency of 3 they give only an `O(1)` error, and the
+barrier of 4 is what gives `O(h)`.
 The proved order in `h` is `O(h)`; `O(h²)` is not proved. The boundary consistency is only bounded:
 at nodes with two or more coordinates on the boundary the edge weights `Σ_σ α±` are not those of
 the reflected interior stencil (the Freudenthal mesh is not reflection symmetric), and the nodal
@@ -160,11 +164,23 @@ theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Nodes n N) :
     nodal b s U (node b (meshSize s N) q) = U q :=
   nodalFun_apply (node_injective_subtype b (meshSize_pos hs N).ne' _) U q
 
+/-- **The Freudenthal meshes with all their nodes**, a family of non-obtuse meshes
+(`Feec.FiniteElement.NonobtuseMeshes`) in which every vertex is a node. -/
+abbrev meshes (b : Fin n → ℝ) (hs : 0 < s) : NonobtuseMeshes n ℕ where
+  mesh N := freudenthalMesh b s hs (N + 1)
+  Node N := Nodes n N
+  x N q := node b (meshSize s N) q
+  injective N := node_injective_subtype b (meshSize_pos hs N).ne' _
+  isNonobtuse N := isNonobtuse_freudenthalMesh b hs (N + 1)
+
 /-- **The lumped-mass `P₁` Laplacian with natural (Neumann) boundary conditions** on the
 level-`(N + 1)` Freudenthal mesh of `b + (0, s)ⁿ`: `(Lₕ U)(p) = -a(φₚ, U_h) / m(p)` at every node,
 boundary nodes included (`Feec.FiniteElement.lumpedLaplacianOn` on all nodes). -/
 def neumannLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
-  lumpedLaplacianOn (freudenthalMesh b s hs (N + 1)) fun q : Nodes n N => node b (meshSize s N) q
+  (meshes b hs).L N
+
+@[simp] theorem meshes_L (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
+    (meshes b hs).L N = neumannLaplacian b hs N := rfl
 
 theorem neumannLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
     neumannLaplacian b hs N U p =
@@ -185,13 +201,12 @@ non-obtuse, so `Lₕ` is a sub-Markov (indeed Markov, `Lₕ 𝟙 = 0`) generator
 positive and contractive in the maximum norm. [CiarletRaviart1973] -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsSubMarkovGenerator (neumannLaplacian b hs N) :=
-  isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
-    (node_injective_subtype b (meshSize_pos hs N).ne' _)
+  (meshes b hs).isSubMarkovGenerator N
 
 /-- **The maximum-norm Neumann family**: the lumped-mass Neumann Laplacians of the levels
 `N + 1`, a uniformly stable family with `M = 1` (`isSubMarkovGenerator`). -/
 abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
-  StableFamily.ofSubMarkov (fun N => Nodes n N) (neumannLaplacian b hs) (isSubMarkovGenerator b hs)
+  (meshes b hs).family
 
 @[simp] theorem family_M (b : Fin n → ℝ) (hs : 0 < s) : (family b hs).M = 1 := rfl
 
@@ -776,7 +791,7 @@ theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : NeumannSolution 
         r.sharpConst p * (k * τ) * τ ^ p * ‖(neumannLaplacian b hs N ^ (p + 1)) v‖ := by
   have := (family b hs).norm_sub_step_pow_le_norm_sub_exp_add hr hp hτ N
     (interp b s N (S.u (k * τ))) k v
-  simp only [mul_one, RCLike.ofReal_real_eq_id, id_eq] at this
+  simp only [mul_one, RCLike.ofReal_real_eq_id, id_eq, meshes_L] at this
   linarith [norm_interp_sub_exp_le hs S N ⟨by positivity, hk⟩ v]
 
 /-- **The finite element function in the maximum norm on `Q̄`** (Neumann): for `u ∈ C²` with
@@ -948,7 +963,7 @@ theorem maxNormNeumann (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   semidiscrete S N _ ht v := norm_interp_sub_exp_le hs S N ht v
   banach := stableFamily _
   backwardEuler S _ _ hu₂ hBₜ N _ hτ _ hk v := norm_interp_sub_res_pow_le hs S hu₂ hBₜ N hτ hk v
-  stable_rational hr N _ hτ k := by simpa using (family b hs).norm_step_pow_le hr hτ N k
+  stable_rational hr N _ hτ k := (meshes b hs).norm_step_pow_le hr hτ N k
   rational S _ hr _ hp N _ hτ _ hk v := norm_interp_sub_step_pow_le hs S hr hp N hτ hk v
   semidiscrete_fe S _ hD₂ N _ ht v _ hK _ hx :=
     (abs_sub_p1Interp_nodal_le hs N ((S.contDiff _ ht).of_le (by norm_num)) (hD₂ _ ht) _ hK

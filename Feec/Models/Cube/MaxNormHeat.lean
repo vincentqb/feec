@@ -1,8 +1,6 @@
 module
 
-public import Feec.FiniteElement.LumpedLaplacian
-public import Feec.FiniteElement.P1Global
-public import Feec.TimeStepping.StableFamily
+public import Feec.FiniteElement.MaxNormHeat
 public import Feec.ForMathlib.Analysis.FiniteDifference
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.SecondDifference
@@ -36,7 +34,11 @@ states the finite difference Laplacian `FiniteDifference.laplacian` on its own, 
 The discrete space is `ℝ^{interior nodes}` with the maximum norm (`MaxNormHeat.Space N`). The
 discrete Laplacian `Lₕ = -M_L⁻¹ K` (`MaxNormHeat.lumpedLaplacian`) is defined from the `P₁`
 stiffness form and the lumped mass of the mesh (`Feec.FiniteElement.p1Stiffness`,
-`Feec.FiniteElement.lumpedMass`), the nodal values extended by `0` to the boundary nodes.
+`Feec.FiniteElement.lumpedMass`), the nodal values extended by `0` to the boundary nodes. The
+meshes with their interior nodes are a family of non-obtuse meshes (`MaxNormHeat.meshes`), and the
+error estimates 4–6 below are the general ones of `Feec.FiniteElement.NonobtuseMeshes.maxNormHeat`
+with the nodal consistency error `n B₄ h² / 12` of 3: what is specific to the cube is the uniform
+stencil, hence the `O(h²)` consistency.
 
 ## Main results
 
@@ -140,11 +142,22 @@ theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Fin n → ℤ) :
     intro e
     exact absurd (node_injective b (meshSize_pos hs N).ne' e ▸ c.2) hq
 
+/-- **The Freudenthal meshes with their interior nodes**: the level-`(N + 1)` meshes of
+`b + (0, s)ⁿ` are non-obtuse (`Feec.FiniteElement.isNonobtuse_freudenthalMesh`), a family of
+non-obtuse meshes (`Feec.FiniteElement.NonobtuseMeshes`) with Dirichlet data at the boundary
+nodes. -/
+abbrev meshes (b : Fin n → ℝ) (hs : 0 < s) : NonobtuseMeshes n ℕ where
+  mesh N := freudenthalMesh b s hs (N + 1)
+  Node N := Nodes n N
+  x N q := node b (meshSize s N) q
+  injective N := node_injective_subtype b (meshSize_pos hs N).ne' _
+  isNonobtuse N := isNonobtuse_freudenthalMesh b hs (N + 1)
+
 /-- **The lumped-mass `P₁` Laplacian** `Lₕ = -M_L⁻¹ K` on the level-`(N + 1)` Freudenthal mesh of
 `b + (0, s)ⁿ`, with homogeneous Dirichlet data: `(Lₕ U)(p) = -a(φₚ, U) / m(p)` at the interior
 nodes (`Feec.FiniteElement.lumpedLaplacianOn`). -/
 def lumpedLaplacian (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) : Space n N →L[ℝ] Space n N :=
-  lumpedLaplacianOn (freudenthalMesh b s hs (N + 1)) fun q : Nodes n N => node b (meshSize s N) q
+  (meshes b hs).L N
 
 theorem lumpedLaplacian_apply_eq (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
     lumpedLaplacian b hs N U p =
@@ -169,8 +182,7 @@ sub-Markov generator (`Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn
 is positive and contractive in the maximum norm. [CiarletRaviart1973]; [Thomee2006], Ch. 15 -/
 theorem isSubMarkovGenerator (b : Fin n → ℝ) (hs : 0 < s) (N : ℕ) :
     IsSubMarkovGenerator (lumpedLaplacian b hs N) :=
-  isSubMarkovGenerator_lumpedLaplacianOn (isNonobtuse_freudenthalMesh b hs (N + 1))
-    (node_injective_subtype b (meshSize_pos hs N).ne' _)
+  (meshes b hs).isSubMarkovGenerator N
 
 /-! ### Consistency -/
 
@@ -436,9 +448,9 @@ theorem lumpedLaplacian_eq_iff_globalSpace₀ (b : Fin n → ℝ) (hs : 0 < s) (
 
 /-- **The maximum-norm family**: the lumped-mass `P₁` Laplacians `Lₕ` of the levels `N + 1` on
 `ℝ^{interior nodes}` with the maximum norm, a uniformly stable family with `M = 1`
-(`isSubMarkovGenerator`). -/
+(`isSubMarkovGenerator`), the family of `meshes` (`Feec.FiniteElement.NonobtuseMeshes.family`). -/
 abbrev family (b : Fin n → ℝ) (hs : 0 < s) : StableFamily ℝ ℕ :=
-  StableFamily.ofSubMarkov (fun N => Nodes n N) (lumpedLaplacian b hs) (isSubMarkovGenerator b hs)
+  (meshes b hs).family
 
 @[simp] theorem family_M (b : Fin n → ℝ) (hs : 0 < s) : (family b hs).M = 1 := rfl
 
@@ -468,10 +480,6 @@ variable {T : ℝ} (S : HeatSolution b s T)
 /-- The truncation error `n B₄ h² / 12` of the space discretization. -/
 def defect (N : ℕ) : ℝ := n * S.B₄ * meshSize s N ^ 2 / 12
 
-theorem hasDerivAt_interp (hs : 0 < s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
-    HasDerivAt (fun t => interp b s N (S.u t)) (interp b s N (S.u₁ t)) t :=
-  hasDerivAt_pi.2 fun p => S.hasDerivAt t ht _ (node_mem_openCube hs p)
-
 /-- **The defect of the interpolated solution**: `‖Iₕ uₜ - Lₕ Iₕ u‖_∞ ≤ n B₄ h² / 12`. -/
 theorem norm_defect_le (hs : 0 < s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖interp b s N (S.u₁ t) - lumpedLaplacian b hs N (interp b s N (S.u t))‖ ≤ S.defect N := by
@@ -483,16 +491,17 @@ theorem norm_defect_le (hs : 0 < s) (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
 end HeatSolution
 
 /-- **The semidiscrete error in the maximum norm**: `‖Iₕ u(t) - e^{tLₕ} v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞`
-`+ t n B₄ h² / 12` for `t ∈ [0, T]`, every discrete datum `v`. -/
+`+ t n B₄ h² / 12` for `t ∈ [0, T]`, every discrete datum `v`
+(`Feec.FiniteElement.NonobtuseMeshes.norm_interp_sub_exp_le` with the consistency error
+`n B₄ h² / 12`). -/
 theorem norm_interp_sub_exp_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) (v : Space n N) :
     ‖interp b s N (S.u t) - exp (t • lumpedLaplacian b hs N) v‖ ≤
       ‖interp b s N (S.u 0) - v‖ + t * S.defect N := by
   have hsub : Icc 0 t ⊆ Icc 0 T := Icc_subset_Icc le_rfl ht.2
-  have H := (family b hs).norm_sub_exp_le_of_defect N ht.1
-    (U := fun t => interp b s N (S.u t)) (fun r hr => S.hasDerivAt_interp hs N (hsub hr))
+  exact (meshes b hs).norm_interp_sub_exp_le N ht.1
+    (fun r hr q => S.hasDerivAt r (hsub hr) _ (node_mem_openCube hs q))
     (fun r hr => S.norm_defect_le hs N (hsub hr)) v
-  simpa using H
 
 /-- **Backward Euler in the maximum norm**: if moreover `uₜ` has time derivative `u₂` with
 `|u₂| ≤ B₂` in `Q`, then for `kτ ≤ T`
@@ -514,12 +523,10 @@ theorem norm_interp_sub_res_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s 
     refine (pi_norm_le_iff_of_nonneg h0).2 fun p => ?_
     rw [Real.norm_eq_abs]
     exact hB₂ r (hsub hr) _ (node_mem_openCube hs p)
-  have H := (family b hs).norm_sub_res_pow_le_of_traj hτ N
-    (U := fun t => interp b s N (S.u t)) (U₁ := fun t => interp b s N (S.u₁ t))
-    (U₂ := fun t => interp b s N (u₂ t)) (fun r hr => S.hasDerivAt_interp hs N (hsub hr))
-    (fun r hr => hasDerivAt_pi.2 fun p => hu₂ r (hsub hr) _ (node_mem_openCube hs p)) hB
+  exact (meshes b hs).norm_interp_sub_res_pow_le hτ N
+    (fun r hr q => S.hasDerivAt r (hsub hr) _ (node_mem_openCube hs q))
+    (fun r hr q => hu₂ r (hsub hr) _ (node_mem_openCube hs q)) hB
     (fun r hr => S.norm_defect_le hs N (hsub hr)) v
-  simpa using H
 
 /-- **Every A-stable rational scheme in the maximum norm**: for `r` of order `p` (Crank–Nicolson,
 the Gauss and Radau methods),
@@ -530,17 +537,17 @@ theorem norm_interp_sub_step_pow_le (hs : 0 < s) {T : ℝ} (S : HeatSolution b s
     (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) (v : Space n N) :
     ‖interp b s N (S.u (k * τ)) - ((family b hs).step r τ N ^ k) v‖ ≤
       ‖interp b s N (S.u 0) - v‖ + k * τ * S.defect N +
-        r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ := by
-  have := (family b hs).norm_sub_step_pow_le_norm_sub_exp_add hr hp hτ N
-    (interp b s N (S.u (k * τ))) k v
-  simp only [mul_one, RCLike.ofReal_real_eq_id, id_eq] at this
-  linarith [norm_interp_sub_exp_le hs S N ⟨by positivity, hk⟩ v]
+        r.sharpConst p * (k * τ) * τ ^ p * ‖(lumpedLaplacian b hs N ^ (p + 1)) v‖ :=
+  have hsub : Icc 0 (k * τ) ⊆ Icc 0 T := Icc_subset_Icc le_rfl hk
+  (meshes b hs).norm_interp_sub_step_pow_le hr hp hτ N
+    (fun t ht q => S.hasDerivAt t (hsub ht) _ (node_mem_openCube hs q))
+    (fun _ ht => S.norm_defect_le hs N (hsub ht)) v
 
 /-- **Brenner–Thomée's stability bound in the maximum norm**: `‖r(τLₕ)ᵏ‖_∞ ≤ 1 + C'_r √k` for
 every A-stable `r` (Crank–Nicolson included), uniformly in `h`. [BrennerThomee1979] -/
 theorem norm_step_pow_le (hs : 0 < s) {r : RationalScheme} (hr : r.IsAStable) (N : ℕ) {τ : ℝ}
-    (hτ : 0 < τ) (k : ℕ) : ‖(family b hs).step r τ N ^ k‖ ≤ 1 + r.sqrtConst * √k := by
-  simpa using (family b hs).norm_step_pow_le hr hτ N k
+    (hτ : 0 < τ) (k : ℕ) : ‖(family b hs).step r τ N ^ k‖ ≤ 1 + r.sqrtConst * √k :=
+  (meshes b hs).norm_step_pow_le hr hτ N k
 
 /-! ### A classical solution: the first eigenmode -/
 

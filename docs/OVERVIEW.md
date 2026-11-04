@@ -113,7 +113,12 @@ companion: its Laplacian is the lumped-mass one, so the iterates and the estimat
 natural boundary conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum
 principle holds and the errors are `O(h)` (semidiscrete), `O(τ + h)` for backward Euler and
 `O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, in the maximum norm at the
-nodes and in `L^∞(Q)`; `O(h²)` is not proved for Neumann. Limitations: for rational schemes
+nodes and in `L^∞(Q)`; `O(h²)` is not proved for Neumann. Both are instances of the maximum-norm
+theorem for every family of non-obtuse meshes (`Feec.FiniteElement.NonobtuseMeshes.maxNormHeat`:
+any domain, Dirichlet data at the vertices that are not nodes), whose semidiscrete, backward Euler
+and rational errors are stated in terms of a bound `ε` of the nodal consistency error
+`‖Iₕ uₜ - Lₕ Iₕ u‖_∞` (`t ε` added to the initial error); on general non-obtuse meshes that error
+is only `O(1)`, so the rates in `h` are those of the cube's uniform stencil. Limitations: for rational schemes
 `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`, and the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of

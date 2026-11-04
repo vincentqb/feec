@@ -21,7 +21,10 @@ The field `nonobtuse` now states `Feec.FiniteElement.IsNonobtuse` of the meshes;
 field (nonpositive off-diagonal stiffness) and the removed wrapper
 `Feec.FiniteElement.p1Stiffness_freudenthalMesh_indicator_nonpos` are derived from it with
 `Feec.FiniteElement.p1Stiffness_indicator_nonpos`. The extension by zero `MaxNormHeat.ext` is
-gone (now `FiniteDifference.zeroExt`, of any finite lattice grid); it is restated below.
+gone (now `FiniteDifference.zeroExt`, of any finite lattice grid); it is restated below. The
+error estimates are now those of the family of non-obtuse meshes `MaxNormHeat.meshes`
+(`Feec.FiniteElement.NonobtuseMeshes.maxNormHeat`), and `MaxNormHeat.HeatSolution.hasDerivAt_interp`
+is gone; it is restated below.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -146,5 +149,11 @@ theorem p1Stiffness_freudenthalMesh_indicator_nonpos_old (b : Fin n → ℝ) {s 
     (N : ℕ) [NeZero N] {x y : Fin n → ℝ} (hxy : x ≠ y) :
     p1Stiffness (freudenthalMesh b s hs N) (nodalIndicator x) (nodalIndicator y) ≤ 0 :=
   p1Stiffness_indicator_nonpos _ ((maxNormHeat b hs).nonobtuse N) hxy
+
+/-- The earlier `MaxNormHeat.HeatSolution.hasDerivAt_interp`, verbatim. -/
+theorem hasDerivAt_interp_old {b : Fin n → ℝ} {T : ℝ} (S : HeatSolution b s T) (hs : 0 < s)
+    (N : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    HasDerivAt (fun t => interp b s N (S.u t)) (interp b s N (S.u₁ t)) t :=
+  hasDerivAt_pi.2 fun p => S.hasDerivAt t ht _ (node_mem_openCube hs p)
 
 end FeecCheck.MaxNormHeat

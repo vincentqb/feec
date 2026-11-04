@@ -386,6 +386,7 @@ public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
 public import Feec.Models.Euclidean.SymCurl
+public import Feec.Models.Parallelepiped.BGGFEEC
 public import Feec.Models.Parallelepiped.FiniteElement
 public import Feec.Models.Parallelepiped.StarShaped
 public import Feec.Models.StarShaped.EigenDense

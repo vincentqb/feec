@@ -286,15 +286,24 @@ finite-dimensional harmonic forms the cochain projections eventually induce isom
 cohomology
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`,
 `Feec.HilbertComplex.ConformingFamily.windowCrime_eventually_bijective_cohomologyMap`; the fields
-`crime_static`, `crime_cohomology` of `Feec.HilbertComplex.ConformingFamily.Verdict`). With
+`crime_static`, `crime_cohomology` of `Feec.HilbertComplex.ConformingFamily.Verdict`). **Rates
+with crimes**: Jackson-type approximation of `σ, u, p, P_𝔷 u` in the graph norm and
+`‖1 − Jₕ‖ ‖X‖` within `ε` give `e(f) ≤ K ε`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`, at the
+projected approximants `staticError_le_projError`); so the conforming windows with a Jackson
+estimate have the static and heat rates `O(L hᵒʳᵈ⁽ˢ⁾)` read with crimes
+(`Feec.HilbertComplex.ConformingFamily.windowCrime_rate_static`, `windowCrime_rate_heat`, the
+fields `rate_crime_static`, `rate_crime_heat` of `ConformingFamily.Verdict.Rated`), the static-rate
+hypothesis of `rate_heat_of_static` discharged. With
 nonzero harmonic forms and reading maps that are not isometric, the shear family of
 `𝕜 --id--> 𝕜 --0--> 𝕜` (`iₙ = 1 + hₙ N`, `N² = 0`) exercises these results: static convergence
 for every datum, a positive static error and a positive harmonic gap at `(0, 0, 1)` (whose reading
 is not harmonic), and the eventual isomorphism on a nonzero cohomology
 (`Feec.HilbertComplex.ApproxComplexCrime.shear_nonvacuous`,
-`Feec.HilbertComplex.Approximation.StaticCochainWitness`). Not formalized: a static rate for a
-concrete family with crimes (the heat rate takes it as hypothesis), and cohomology for reading
-maps that are not cochain maps.
+`Feec.HilbertComplex.Approximation.StaticCochainWitness`); its static error is
+`O(‖f‖ hₙ)` and its heat error `O(L hₙ)`, carried by the inner-product defect alone
+(`Feec.HilbertComplex.ApproxComplexCrime.shear_staticError_le`, `shear_rate_heat`). Not
+formalized: cohomology for reading maps that are not cochain maps.
 
 **Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the
 README names (and others such as `Feec.Instances.Maxwell.maxwellFEEC` and

@@ -53,6 +53,12 @@ error estimate needs no assumed defect, and the method converges for every datum
   `staticError_le_inf`, `staticError_le_of_gap_inf`, `staticError_le_of_harmonic_inf`: the
   estimates with `(1 + C C_π) inf_v (‖b - iₕ v‖ + ‖iₕ 𝐝ₕ v‖)` (the graph-norm distance of `b`
   from `iₕ Xₕ`) for `‖b - iₕ πₕ b‖`, the infimum form `μ inf_v ‖P_𝔅 u - iₕ v‖_V` of Cor 3.11.
+* `ApproxComplexCrime.Family.IsCochain.staticError_le_projError`: **the error estimate at the
+  projected approximants** `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`, in terms of the approximation error of
+  `iₕ πₕ` at `σ, 𝐝 σ, u, 𝐝 u, p` (`CochainProj.projError`), `‖b - iₕ πₕ b‖` and
+  `‖1 - Jₕ‖ ‖X‖`; `staticError_le_of_approx`: **the static rate**, `e(f) ≤ K ε` with
+  `K = cochainRateConst C_π c_P` when `σ, u, p, b` are within `ε` of `iₕ Xₕ` in the graph norm
+  and `‖1 - Jₕ‖ ‖X‖ ≤ ε` (Jackson-type data, `ε = B L mᵅ`).
 * `ApproxComplexCrime.Family.IsCochain.tendsto_staticError`: **convergence for every datum**
   from `‖1 - Jₕ‖ → 0` and `‖x - iₕ πₕ x‖ → 0` for every `x ∈ D(𝐝)` (the approximants are
   `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`).
@@ -125,6 +131,30 @@ theorem mem_totalD_domain_of_mem_cycles {x : PiLp 2 W} (hx : x ∈ H.total.cycle
 /-- `𝐝 z` is a cycle. -/
 theorem totalD_mem_cycles (z : H.totalD.domain) : H.totalD z ∈ H.total.cycles () :=
   H.total.boundaries_le_cycles () ⟨z, rfl⟩
+
+omit [Fintype ι] in
+/-- **`P_𝔷 = P_{cl 𝔅}` on `ℌᗮ`**: for `u ⊥ ℌ`, the projections of `u` onto the cycles and onto the
+closure of the boundaries agree (`𝔷 = cl 𝔅 ⊕ ℌ`). -/
+theorem starProjection_cycles_eq_of_mem_orthogonal (E : HilbertComplex 𝕜 c W) (i : ι)
+    {u : W i} (hu : u ∈ (E.harmonic i)ᗮ) :
+    (E.cycles i).starProjection u = (E.boundaries i).topologicalClosure.starProjection u := by
+  set B := (E.boundaries i).topologicalClosure
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+    (E.closure_boundaries_le_cycles i (B.starProjection_apply_mem u)) fun w hw => ?_
+  have hq : w - B.starProjection w ∈ E.harmonic i := E.mem_harmonic_iff.2
+    ⟨(E.cycles i).sub_mem hw (E.closure_boundaries_le_cycles i (B.starProjection_apply_mem w)),
+      by rw [← E.orthogonal_closure_boundaries]; exact B.sub_starProjection_mem_orthogonal w⟩
+  have h1 : ⟪u - B.starProjection u, B.starProjection w⟫_𝕜 = 0 :=
+    Submodule.inner_left_of_mem_orthogonal (B.starProjection_apply_mem w)
+      (B.sub_starProjection_mem_orthogonal u)
+  have h2 : ⟪u, w - B.starProjection w⟫_𝕜 = 0 := Submodule.inner_left_of_mem_orthogonal hq hu
+  have h3 : ⟪B.starProjection u, w - B.starProjection w⟫_𝕜 = 0 :=
+    (E.isOrtho_closure_boundaries_harmonic i).inner_eq (B.starProjection_apply_mem u) hq
+  calc ⟪u - B.starProjection u, w⟫_𝕜 =
+        ⟪u - B.starProjection u, B.starProjection w⟫_𝕜 +
+          (⟪u, w - B.starProjection w⟫_𝕜 - ⟪B.starProjection u, w - B.starProjection w⟫_𝕜) := by
+        rw [← inner_sub_left, ← inner_add_right, add_sub_cancel]
+    _ = 0 := by rw [h1, h2, h3, sub_zero, add_zero]
 
 end Cycles
 
@@ -202,7 +232,31 @@ theorem mem_range_of_mem_closure (h : κ) {b : PiLp 2 W}
     exact Set.mem_inter (H.totalD_mem_cycles z) (Set.mem_preimage.2 ⟨P.π h z, (P.π_totalD h z).symm⟩)
   exact (closure_minimal hsub hA (by rwa [← Submodule.topologicalClosure_coe])).2
 
+/-- **The approximation error of `iₕ πₕ`** at a mixed triple `X = (σ, u, p)`: the sum of
+`‖z - iₕ πₕ z‖` over `z = σ, 𝐝 σ, u, 𝐝 u, p`. -/
+def projError (h : κ) (X : H.total.MixedSpace () ()) : ℝ :=
+  ‖H.total.mixedI0 () () X - S.incl h (P.π h (H.total.mixedI0 () () X))‖ +
+    ‖H.total.mixedD0 () () X - S.incl h (P.π h (H.total.mixedD0 () () X))‖ +
+    ‖H.total.mixedI1 () () X - S.incl h (P.π h (H.total.mixedI1 () () X))‖ +
+    ‖H.total.mixedD1 () () () X - S.incl h (P.π h (H.total.mixedD1 () () () X))‖ +
+    ‖H.total.mixedI2 () () X - S.incl h (P.π h (H.total.mixedI2 () () X))‖
+
 end CochainProj
+
+variable (S) in
+/-- **The constant of the static rate with cochain reading maps**
+(`IsCochain.staticError_le_of_approx`): `R₀ + 240 C c_P² (51 C_π + C R₀ + C (1 + C C_π))`,
+`R₀ = 5 (1 + C²) (1 + C C_π) + C C_π`, `C` the bound of the reading maps. -/
+def cochainRateConst (Cπ cP : ℝ) : ℝ :=
+  (5 * (1 + S.boundConst ^ 2) * (1 + S.boundConst * Cπ) + S.boundConst * Cπ) +
+    240 * S.boundConst * cP ^ 2 * (51 * Cπ +
+      S.boundConst * (5 * (1 + S.boundConst ^ 2) * (1 + S.boundConst * Cπ) + S.boundConst * Cπ) +
+      S.boundConst * (1 + S.boundConst * Cπ))
+
+theorem cochainRateConst_nonneg {Cπ : ℝ} (hCπ : 0 ≤ Cπ) (cP : ℝ) : 0 ≤ S.cochainRateConst Cπ cP := by
+  have := S.boundConst_nonneg
+  unfold cochainRateConst
+  positivity
 
 namespace IsCochain
 
@@ -622,62 +676,55 @@ theorem staticError_le_of_harmonic_inf {Cπ : ℝ} (P : S.CochainProj Cπ) {cP :
     (add_nonneg (mul_nonneg S.boundConst_nonneg hμ0) (mul_nonneg P.nonneg (norm_nonneg _)))
     (fun _ hq => hi.norm_incl_sub_harmonicProj_le_of_harmonic P h hμ0 hμ hq) f x v
 
-/-- **Convergence with cochain reading maps**: under the uniform discrete Poincaré inequality, if
-the inner-product defect tends to `0` and `iₕ πₕ x → x` for every `x ∈ D(𝐝)`, the static error
-tends to `0` for every datum. The approximants are `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`: their read error is the
-approximation error `‖x - iₕ πₕ x‖` at `σ`, `𝐝 σ`, `u`, `𝐝 u` (`𝐝ₕ πₕ = πₕ 𝐝`) plus the
-harmonic gap at `p` (`norm_sub_incl_harmonic_le`), and the harmonic defect is bounded by
-`norm_inner_incl_harmonic_le`. Cf. [HolstStern2012], Cor 3.11 -/
-theorem tendsto_staticError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
-    (hcP : 1 ≤ cP) {l : Filter κ} (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0))
-    (happ : ∀ x ∈ H.totalD.domain, Tendsto (fun h => ‖x - S.incl h (P.π h x)‖) l (𝓝 0))
-    (f : PiLp 2 W) : Tendsto (fun h => S.staticError hcr h f) l (𝓝 0) := by
+/-- **The error estimate with cochain reading maps at the projected approximants**: with the
+approximants `(πₕ σ, πₕ u, P_ℌₕ πₕ p)` of the mixed solution `X = (σ, u, p)`,
+`e(f) ≤ R + 240 C c_P² (51 C_π ‖1 - Jₕ‖ ‖X‖ + C R + C ‖b - iₕ πₕ b‖)`,
+`R = (1 + C²) ε_π + C C_π ‖1 - Jₕ‖ ‖X‖`, `ε_π` the approximation error of `iₕ πₕ` at
+`σ, 𝐝 σ, u, 𝐝 u, p` (`CochainProj.projError`) and `b = P_𝔷 u`: the read error of the
+approximants is at most `R` (`𝐝ₕ πₕ = πₕ 𝐝`; the harmonic gap `norm_sub_incl_harmonic_le` at
+`p`), their norm at most `10 C_π ‖X‖`, and `staticError_le` applies. Cf. [HolstStern2012],
+Cor 3.11 -/
+theorem staticError_le_projError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
+    (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) :
+    S.staticError hcr h f ≤ ((1 + S.boundConst ^ 2) * P.projError h (H.totalMixedSolution hcr f) +
+        S.boundConst * Cπ * ‖1 - S.J h‖ * ‖H.totalMixedSolution hcr f‖) +
+      240 * S.boundConst * cP ^ 2 * (51 * Cπ * ‖1 - S.J h‖ * ‖H.totalMixedSolution hcr f‖ +
+        S.boundConst * ((1 + S.boundConst ^ 2) * P.projError h (H.totalMixedSolution hcr f) +
+          S.boundConst * Cπ * ‖1 - S.J h‖ * ‖H.totalMixedSolution hcr f‖) +
+        S.boundConst * ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) -
+          S.incl h (P.π h ((H.total.cycles ()).starProjection (H.greenOp hcr f)))‖) := by
   set X := H.totalMixedSolution hcr f
   set σ : H.totalD.domain := H.total.domainCoord () () X.fst
   set υ : H.totalD.domain := H.total.domainCoord () () X.snd.fst
   set p : PiLp 2 W := (X.snd.snd : PiLp 2 W)
   have hp : p ∈ H.total.harmonic () := X.snd.snd.2
-  set b := (H.total.cycles ()).starProjection (H.greenOp hcr f)
-  set g : PiLp 2 W := H.greenOp hcr f
-  set C := S.boundConst
+  have hC := S.boundConst_nonneg
+  have hCπ := P.nonneg
+  obtain ⟨n0, n1, n2, n3, n4⟩ := norm_mixedComponents_le H.total X
   -- the approximants
-  let xa : ∀ h, (S.cpx h).MixedSpace () () := fun h =>
+  set x : (S.cpx h).MixedSpace () () :=
     MixedSpace.mk (toDom (S.D h) (S.D_D h) (P.π h σ)) (toDom (S.D h) (S.D_D h) (P.π h υ))
       ⟨((S.cpx h).harmonic ()).starProjection (P.π h p),
         ((S.cpx h).harmonic ()).starProjection_apply_mem _⟩
-  -- the bound of the read error and of the harmonic defect
-  set T : κ → ℝ := fun h => ‖(σ : PiLp 2 W) - S.incl h (P.π h σ)‖ +
-    ‖H.totalD σ - S.incl h (P.π h (H.totalD σ))‖ + ‖(υ : PiLp 2 W) - S.incl h (P.π h υ)‖ +
-    ‖H.totalD υ - S.incl h (P.π h (H.totalD υ))‖ +
-    ((1 + C ^ 2) * ‖p - S.incl h (P.π h p)‖ + C * Cπ * ‖1 - S.J h‖ * ‖p‖) +
-    (C * ‖b - S.incl h (P.π h b)‖ + Cπ * ‖1 - S.J h‖ * ‖g‖)
-  have hT : Tendsto T l (𝓝 0) := by
-    have hK : ∀ x ∈ H.total.cycles (), Tendsto (fun h => ‖x - S.incl h (P.π h x)‖) l (𝓝 0) :=
-      fun x hx => happ x (H.mem_totalD_domain_of_mem_cycles hx)
-    have := ((((happ σ σ.2).add (hK _ (H.totalD_mem_cycles σ))).add (happ υ υ.2)).add
-      (hK _ (H.totalD_mem_cycles υ))).add
-      ((((hK p (H.total.harmonic_le_cycles () hp)).const_mul (1 + C ^ 2)).add
-        (((hJ.const_mul (C * Cπ)).mul_const ‖p‖))).add
-        (((hK b ((H.total.cycles ()).starProjection_apply_mem _)).const_mul C).add
-          ((hJ.const_mul Cπ).mul_const ‖g‖)))
-    simp only [mul_zero, zero_mul, add_zero] at this
-    refine this.congr fun h => ?_
-    simp only [T, mul_assoc, add_assoc]
-  have hreadT : ∀ h, S.readError h X (xa h) ≤ T h := fun h => by
+  have hread : S.readError h X x ≤ (1 + S.boundConst ^ 2) * P.projError h X + S.boundConst * Cπ * ‖1 - S.J h‖ * ‖X‖ := by
     have hgap := hi.norm_sub_incl_harmonic_le P h hp
-    have e : S.readError h X (xa h) = ‖(σ : PiLp 2 W) - S.incl h (P.π h σ)‖ +
+    have e : S.readError h X x = ‖(σ : PiLp 2 W) - S.incl h (P.π h σ)‖ +
         ‖H.totalD σ - S.incl h (S.D h (P.π h σ))‖ + ‖(υ : PiLp 2 W) - S.incl h (P.π h υ)‖ +
         ‖H.totalD υ - S.incl h (S.D h (P.π h υ))‖ +
         ‖p - S.incl h (((S.cpx h).harmonic ()).starProjection (P.π h p))‖ := rfl
+    have e' : P.projError h X = ‖(σ : PiLp 2 W) - S.incl h (P.π h σ)‖ +
+        ‖H.totalD σ - S.incl h (P.π h (H.totalD σ))‖ + ‖(υ : PiLp 2 W) - S.incl h (P.π h υ)‖ +
+        ‖H.totalD υ - S.incl h (P.π h (H.totalD υ))‖ + ‖p - S.incl h (P.π h p)‖ := rfl
     rw [e, ← P.π_totalD, ← P.π_totalD]
-    have h0 : 0 ≤ C * ‖b - S.incl h (P.π h b)‖ + Cπ * ‖1 - S.J h‖ * ‖g‖ :=
-      add_nonneg (mul_nonneg S.boundConst_nonneg (norm_nonneg _))
-        (mul_nonneg (mul_nonneg P.nonneg (norm_nonneg _)) (norm_nonneg _))
-    simp only [T]
-    linarith
-  set M := ‖(σ : PiLp 2 W)‖ + ‖H.totalD σ‖ + (‖(υ : PiLp 2 W)‖ + ‖H.totalD υ‖) + ‖p‖
-  have hnorm : ∀ h, ‖xa h‖ ≤ 2 * Cπ * M := fun h => by
-    have hCπ := P.nonneg
+    rw [e'] at ⊢
+    have hp4 : ‖p‖ ≤ ‖X‖ := n4
+    have : 0 ≤ S.boundConst * Cπ * ‖1 - S.J h‖ := by positivity
+    have := mul_le_mul_of_nonneg_left hp4 this
+    nlinarith [norm_nonneg ((σ : PiLp 2 W) - S.incl h (P.π h σ)),
+      norm_nonneg (H.totalD σ - S.incl h (P.π h (H.totalD σ))),
+      norm_nonneg ((υ : PiLp 2 W) - S.incl h (P.π h υ)),
+      norm_nonneg (H.totalD υ - S.incl h (P.π h (H.totalD υ))), sq_nonneg S.boundConst]
+  have hnorm : ‖x‖ ≤ 10 * Cπ * ‖X‖ := by
     have hdom : ∀ z : H.totalD.domain,
         ‖toDom (S.D h) (S.D_D h) (P.π h z)‖ ≤ 2 * Cπ * (‖(z : PiLp 2 W)‖ + ‖H.totalD z‖) := by
       intro z
@@ -689,37 +736,142 @@ theorem tendsto_staticError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP :
       have h1 : ‖P.π h z‖ ≤ Cπ * (‖(z : PiLp 2 W)‖ + ‖H.totalD z‖) := P.norm_π_le h z z.2
       have h2 := P.norm_π_apply_le_of_mem_cycles h (H.totalD_mem_cycles z)
       nlinarith [norm_nonneg (z : PiLp 2 W), norm_nonneg (H.totalD z)]
-    have e := MixedSpace.norm_sq (xa h)
+    have e := MixedSpace.norm_sq x
     refine (le_add_add_of_sq_eq (norm_nonneg _) (norm_nonneg _) (norm_nonneg _) e).trans ?_
-    have h3 : ‖(((xa h).snd.snd : S.X h))‖ ≤ Cπ * ‖p‖ :=
+    have h3 : ‖((x.snd.snd : S.X h))‖ ≤ Cπ * ‖p‖ :=
       (Submodule.norm_starProjection_apply_le _ _).trans
         (P.norm_π_apply_le_of_mem_cycles h (H.total.harmonic_le_cycles () hp))
     have h1 := hdom σ
     have h2 := hdom υ
     change ‖toDom (S.D h) (S.D_D h) (P.π h σ)‖ + ‖toDom (S.D h) (S.D_D h) (P.π h υ)‖ +
-      ‖(((xa h).snd.snd : S.X h))‖ ≤ 2 * Cπ * M
-    simp only [M]
-    nlinarith [norm_nonneg p]
-  refine (S.staticConsistent_iff_tendsto hcr hP hcP l f).1
-    (S.staticConsistent_of_split hcr hJ (B := 2 * Cπ * M) f fun ε hε => ?_)
-  filter_upwards [(tendsto_order.1 hT).2 ε hε] with h hh
+      ‖((x.snd.snd : S.X h))‖ ≤ 10 * Cπ * ‖X‖
+    have m0 : ‖(σ : PiLp 2 W)‖ ≤ ‖X‖ := n0
+    have m1 : ‖H.totalD σ‖ ≤ ‖X‖ := n1
+    have m2 : ‖(υ : PiLp 2 W)‖ ≤ ‖X‖ := n2
+    have m3 : ‖H.totalD υ‖ ≤ ‖X‖ := n3
+    have m4 : ‖p‖ ≤ ‖X‖ := n4
+    nlinarith [mul_le_mul_of_nonneg_left m0 hCπ, mul_le_mul_of_nonneg_left m1 hCπ,
+      mul_le_mul_of_nonneg_left m2 hCπ, mul_le_mul_of_nonneg_left m3 hCπ,
+      mul_le_mul_of_nonneg_left m4 hCπ, mul_nonneg hCπ (norm_nonneg X)]
+  have hg : ‖H.greenOp hcr f‖ ≤ ‖X‖ := n2
+  have hJ0 := norm_nonneg (1 - S.J h)
+  refine (hi.staticError_le hcr P hP hcP h f x).trans ?_
+  have hK : 0 ≤ 240 * S.boundConst * cP ^ 2 := by positivity
+  refine add_le_add hread (mul_le_mul_of_nonneg_left ?_ hK)
+  have t1 : 5 * ‖1 - S.J h‖ * ‖x‖ ≤ 50 * Cπ * ‖1 - S.J h‖ * ‖X‖ := by
+    nlinarith [mul_le_mul_of_nonneg_left hnorm hJ0]
+  have t2 : Cπ * ‖1 - S.J h‖ * ‖H.greenOp hcr f‖ ≤ Cπ * ‖1 - S.J h‖ * ‖X‖ :=
+    mul_le_mul_of_nonneg_left hg (by positivity)
+  have t3 := mul_le_mul_of_nonneg_left hread hC
+  linarith
+
+/-- **The static rate with cochain reading maps**: if the components `σ, u, p` of the mixed
+solution `X` and `b = P_𝔷 u` are within `ε` of `iₕ Xₕ` in the graph norm (some `v` with
+`‖z - iₕ v‖ + ‖𝐝 z - iₕ 𝐝ₕ v‖ ≤ ε`, `𝐝 p = 𝐝 b = 0`: Jackson-type data) and
+`‖1 - Jₕ‖ ‖X‖ ≤ ε`, then `e(f) ≤ K ε` with `K = cochainRateConst C_π c_P`
+(`staticError_le_projError`, with `ε_π ≤ 5 (1 + C C_π) ε` and
+`‖b - iₕ πₕ b‖ ≤ (1 + C C_π) ε` by the quasi-optimality `norm_sub_incl_π_le`). For Jackson data
+`ε = B L mᵅ` this is the rate hypothesis of `HeatFamily.rate_heat_of_static`. Cf.
+[HolstStern2012], Cor 3.11 -/
+theorem staticError_le_of_approx {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
+    (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) {ε : ℝ}
+    (hσ : ∃ v, ‖H.total.mixedI0 () () (H.totalMixedSolution hcr f) - S.incl h v‖ +
+      ‖H.total.mixedD0 () () (H.totalMixedSolution hcr f) - S.incl h (S.D h v)‖ ≤ ε)
+    (hu : ∃ v, ‖H.total.mixedI1 () () (H.totalMixedSolution hcr f) - S.incl h v‖ +
+      ‖H.total.mixedD1 () () () (H.totalMixedSolution hcr f) - S.incl h (S.D h v)‖ ≤ ε)
+    (hp : ∃ v, ‖H.total.mixedI2 () () (H.totalMixedSolution hcr f) - S.incl h v‖ +
+      ‖S.incl h (S.D h v)‖ ≤ ε)
+    (hb : ∃ v, ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) - S.incl h v‖ +
+      ‖S.incl h (S.D h v)‖ ≤ ε)
+    (hJ : ‖1 - S.J h‖ * ‖H.totalMixedSolution hcr f‖ ≤ ε) :
+    S.staticError hcr h f ≤ S.cochainRateConst Cπ cP * ε := by
+  set X := H.totalMixedSolution hcr f
+  set σ : H.totalD.domain := H.total.domainCoord () () X.fst
+  set υ : H.totalD.domain := H.total.domainCoord () () X.snd.fst
+  have hC := S.boundConst_nonneg
   have hCπ := P.nonneg
-  have hη : C * ‖b - S.incl h (P.π h b)‖ + Cπ * ‖1 - S.J h‖ * ‖g‖ ≤ T h := by
-    have hC := S.boundConst_nonneg
-    have : 0 ≤ C * Cπ * ‖1 - S.J h‖ * ‖p‖ :=
-      mul_nonneg (mul_nonneg (mul_nonneg hC hCπ) (norm_nonneg _)) (norm_nonneg _)
-    have : 0 ≤ (1 + C ^ 2) * ‖p - S.incl h (P.π h p)‖ := by positivity
-    have := norm_nonneg ((σ : PiLp 2 W) - S.incl h (P.π h σ))
-    have := norm_nonneg (H.totalD σ - S.incl h (P.π h (H.totalD σ)))
-    have := norm_nonneg ((υ : PiLp 2 W) - S.incl h (P.π h υ))
-    have := norm_nonneg (H.totalD υ - S.incl h (P.π h (H.totalD υ)))
-    simp only [T]; linarith
-  refine ⟨xa h, hnorm h, (hreadT h).trans hh.le,
-    fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero]; positivity,
-    fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero]; positivity,
-    fun q hq => (hi.norm_inner_incl_harmonic_le P h
-      (H.greenOp_mem_orthogonal_harmonic hcr f) hq).trans
-      (mul_le_mul_of_nonneg_right (hη.trans hh.le) (norm_nonneg _))⟩
+  have hε : 0 ≤ ε := (by positivity : (0 : ℝ) ≤ ‖1 - S.J h‖ * ‖X‖).trans hJ
+  set Q := 1 + S.boundConst * Cπ
+  have hQ : 0 ≤ Q := by positivity
+  -- the quasi-optimality on `D(𝐝)` and on the cycles
+  have hdom : ∀ (z : H.totalD.domain) (v : S.X h),
+      ‖(z : PiLp 2 W) - S.incl h v‖ + ‖H.totalD z - S.incl h (S.D h v)‖ ≤ ε →
+      ‖(z : PiLp 2 W) - S.incl h (P.π h z)‖ +
+        ‖H.totalD z - S.incl h (P.π h (H.totalD z))‖ ≤ 2 * Q * ε := fun z v hv => by
+    have h1 := hi.norm_sub_incl_π_le P h z v
+    have h2 := hi.norm_sub_incl_π_le_of_mem_cycles P h (H.totalD_mem_cycles z) (S.D h v)
+    rw [S.D_D, _root_.map_zero, norm_zero, add_zero] at h2
+    have := norm_nonneg ((z : PiLp 2 W) - S.incl h v)
+    have := norm_nonneg (H.totalD z - S.incl h (S.D h v))
+    nlinarith [mul_le_mul_of_nonneg_left hv hQ]
+  have hcyc : ∀ x ∈ H.total.cycles (), ∀ v : S.X h, ‖x - S.incl h v‖ + ‖S.incl h (S.D h v)‖ ≤ ε →
+      ‖x - S.incl h (P.π h x)‖ ≤ Q * ε := fun x hx v hv =>
+    (hi.norm_sub_incl_π_le_of_mem_cycles P h hx v).trans (mul_le_mul_of_nonneg_left hv hQ)
+  obtain ⟨v₀, hv₀⟩ := hσ
+  obtain ⟨v₁, hv₁⟩ := hu
+  obtain ⟨v₂, hv₂⟩ := hp
+  obtain ⟨v₃, hv₃⟩ := hb
+  have hπ : P.projError h X ≤ 5 * Q * ε := by
+    have e : P.projError h X = (‖(σ : PiLp 2 W) - S.incl h (P.π h σ)‖ +
+        ‖H.totalD σ - S.incl h (P.π h (H.totalD σ))‖) + (‖(υ : PiLp 2 W) - S.incl h (P.π h υ)‖ +
+        ‖H.totalD υ - S.incl h (P.π h (H.totalD υ))‖) +
+        ‖H.total.mixedI2 () () X - S.incl h (P.π h (H.total.mixedI2 () () X))‖ := by
+      simp only [CochainProj.projError, add_assoc]; rfl
+    rw [e]
+    have := hdom σ v₀ hv₀
+    have := hdom υ v₁ hv₁
+    have := hcyc (H.total.mixedI2 () () X) (H.total.harmonic_le_cycles () (X.snd.snd.2)) v₂ hv₂
+    linarith
+  have hbε := hcyc _ ((H.total.cycles ()).starProjection_apply_mem _) v₃ hv₃
+  refine (hi.staticError_le_projError hcr P hP hcP h f).trans ?_
+  have hR : (1 + S.boundConst ^ 2) * P.projError h X + S.boundConst * Cπ * ‖1 - S.J h‖ * ‖X‖ ≤
+      (5 * (1 + S.boundConst ^ 2) * Q + S.boundConst * Cπ) * ε := by
+    have := mul_le_mul_of_nonneg_left hπ (by positivity : (0 : ℝ) ≤ 1 + S.boundConst ^ 2)
+    have := mul_le_mul_of_nonneg_left hJ (mul_nonneg hC hCπ)
+    nlinarith
+  have hK : 0 ≤ 240 * S.boundConst * cP ^ 2 := by positivity
+  have hJ' := mul_le_mul_of_nonneg_left hJ (by positivity : (0 : ℝ) ≤ 51 * Cπ)
+  have hR' := mul_le_mul_of_nonneg_left hR hC
+  have hb' := mul_le_mul_of_nonneg_left hbε hC
+  have := mul_le_mul_of_nonneg_left (show 51 * Cπ * ‖1 - S.J h‖ * ‖X‖ +
+      S.boundConst * ((1 + S.boundConst ^ 2) * P.projError h X +
+        S.boundConst * Cπ * ‖1 - S.J h‖ * ‖X‖) +
+      S.boundConst * ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) -
+        S.incl h (P.π h ((H.total.cycles ()).starProjection (H.greenOp hcr f)))‖ ≤
+      (51 * Cπ + S.boundConst * (5 * (1 + S.boundConst ^ 2) * Q + S.boundConst * Cπ) +
+        S.boundConst * Q) * ε by nlinarith) hK
+  simp only [cochainRateConst]
+  nlinarith
+
+/-- **Convergence with cochain reading maps**: under the uniform discrete Poincaré inequality, if
+the inner-product defect tends to `0` and `iₕ πₕ x → x` for every `x ∈ D(𝐝)`, the static error
+tends to `0` for every datum (`staticError_le_projError`). Cf. [HolstStern2012], Cor 3.11 -/
+theorem tendsto_staticError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
+    (hcP : 1 ≤ cP) {l : Filter κ} (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0))
+    (happ : ∀ x ∈ H.totalD.domain, Tendsto (fun h => ‖x - S.incl h (P.π h x)‖) l (𝓝 0))
+    (f : PiLp 2 W) : Tendsto (fun h => S.staticError hcr h f) l (𝓝 0) := by
+  set X := H.totalMixedSolution hcr f
+  set σ : H.totalD.domain := H.total.domainCoord () () X.fst
+  set υ : H.totalD.domain := H.total.domainCoord () () X.snd.fst
+  have hK : ∀ x ∈ H.total.cycles (), Tendsto (fun h => ‖x - S.incl h (P.π h x)‖) l (𝓝 0) :=
+    fun x hx => happ x (H.mem_totalD_domain_of_mem_cycles hx)
+  have hε : Tendsto (fun h => P.projError h X) l (𝓝 0) := by
+    have := ((((happ σ σ.2).add (hK _ (H.totalD_mem_cycles σ))).add (happ υ υ.2)).add
+      (hK _ (H.totalD_mem_cycles υ))).add
+      (hK _ (H.total.harmonic_le_cycles () X.snd.snd.2))
+    simp only [add_zero] at this
+    exact this
+  have hb := hK _ ((H.total.cycles ()).starProjection_apply_mem (H.greenOp hcr f))
+  set C := S.boundConst
+  have hR : Tendsto (fun h => (1 + C ^ 2) * P.projError h X + C * Cπ * ‖1 - S.J h‖ * ‖X‖) l
+      (𝓝 0) := by
+    simpa using (hε.const_mul (1 + C ^ 2)).add ((hJ.const_mul (C * Cπ)).mul_const ‖X‖)
+  have hT := hR.add ((((hJ.const_mul (51 * Cπ)).mul_const ‖X‖).add (hR.const_mul C)).add
+    (hb.const_mul C) |>.const_mul (240 * C * cP ^ 2))
+  simp only [mul_zero, add_zero, zero_mul] at hT
+  refine squeeze_zero (fun h => S.staticError_nonneg hcr h f) (fun h =>
+    (hi.staticError_le_projError hcr P hP hcP h f).trans_eq ?_) hT
+  ring
 
 end IsCochain
 

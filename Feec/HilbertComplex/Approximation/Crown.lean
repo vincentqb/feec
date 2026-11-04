@@ -110,7 +110,9 @@ the mixed method (`rate_static`, [AFW2010], Thm 3.9), the semidiscrete wave equa
 (`rate_heat`, `(2 + 3t) K L hᵒʳᵈ⁽ˢ⁾` with `K` the constant of the static rate), and the fully
 discrete schemes (`rate_full`, `O(hᵒʳᵈ⁽ˢ⁾ + τᵖ)` along smooth comparisons for schemes consistent
 along trajectories, and `O(hᵒʳᵈ⁽ˢ⁾ + τ^{p/(p+2)})` for every datum of the Jackson classes and every
-scheme, `FullRate.wave_uniform`, `FullRate.heat_uniform`).
+scheme, `FullRate.wave_uniform`, `FullRate.heat_uniform`); read with crimes, the windows have the
+static and heat rates with crimes (`rate_crime_static`, `rate_crime_heat`: the static-rate
+hypothesis of `heat_rate` discharged, `windowCrime_rate_static`, `windowCrime_rate_heat`).
 
 **Approximating families with variational crimes** (`ApproxComplexCrime.feec`, statement
 `ApproxComplexCrime.Verdict`; [HolstStern2012], §3). For discrete differential spaces `(Xₕ, 𝐝ₕ)`
@@ -888,9 +890,115 @@ theorem feec (F : ConformingFamily H κ) : F.Verdict :=
 
 variable {ρ : Type*}
 
+/-- **The static rate with crimes on the conforming windows**, under closed range of the window,
+from a Jackson estimate `J` of `F`: `e(f) ≤ C L hᵒʳᵈ⁽ˢ⁾` for the data whose mixed solution
+`(σ, u, p)` and `P_𝔅 u` are `s`-regular with bound `L` (`ConstrainedFEEC.RegMixed` of the total
+Jackson estimate of the window), in the language of crimes: `Jₕ = 1`, and the total Jackson
+estimate puts `σ`, `u`, `p` and `b = P_𝔷 u = P_𝔅 u` within `2 B L hᵒʳᵈ⁽ˢ⁾` of `Xₕ` in the graph
+norm (`ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`; [HolstStern2012],
+Cor 3.11 with [AFW2010], Thm 3.9). -/
+theorem windowCrime_rate_static (F : ConformingFamily H κ) (J : F.Jackson ρ) (a : α) (m : ℕ)
+    (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ) :
+    ∃ C, 0 ≤ C ∧ ∀ {L : ℝ} {f : PiLp 2 fun i : Fin m => V (a + i)}, 0 ≤ L →
+      (F.windowFEEC a m K hK).RegMixed hcr ((F.windowFEEC a m K hK).totalJackson (J.window a m))
+        s L f → ∀ h, (F.windowCrime a m K hK).toFamily.staticError hcr h f ≤
+          C * L * J.meshSize h ^ J.ord s := by
+  obtain ⟨cP, hcP, hP⟩ := F.windowCrime_isPoincare a m K hK hcr
+  set G := F.windowFEEC a m K hK
+  set S := (F.windowCrime a m K hK).toFamily
+  set JT := G.totalJackson (J.window a m)
+  have hB := JT.B_nonneg s ()
+  have hi : S.IsCochain := G.toComplex.toFamily.isCochain_toCrimeFamily
+  have hCπ := zero_le_one.trans (F.window a m).one_le_projBound
+  refine ⟨S.cochainRateConst (F.window a m).projBound cP * (2 * JT.B s ()),
+    mul_nonneg (S.cochainRateConst_nonneg hCπ cP) (by positivity), fun {L f} hL hf h => ?_⟩
+  set ε := 2 * JT.B s () * (L * J.meshSize h ^ J.ord s)
+  -- the total Jackson estimate in the language of crimes
+  have happ : ∀ x, (hx : JT.Reg s () L x) → ∃ v, ‖x - S.incl h v‖ +
+      ‖(H.window a m).totalD ⟨x, hx.1⟩ - S.incl h (S.D h v)‖ ≤ ε := fun x hx => by
+    obtain ⟨w, hw, h1, h2⟩ := JT.jackson s h () x hL hx
+    obtain ⟨v, hv⟩ := G.toXh_surjective h ⟨w, hw⟩
+    have hvw : G.toFamily.inclL h v = w := congrArg Subtype.val hv
+    have hD : S.incl h (S.D h v) = (H.window a m).totalD ⟨w, hvw ▸ G.toFamily.inclL_mem h v⟩ := by
+      change G.toFamily.inclL h (G.toFamily.D h v) = _
+      rw [G.toFamily.inclL_D]
+      congr 1
+      exact Subtype.ext hvw
+    have hd : (H.window a m).totalD ⟨x, hx.1⟩ - S.incl h (S.D h v) =
+        (H.window a m).total.d () () ⟨x - w, Submodule.sub_mem _ hx.1
+          (hvw ▸ G.toFamily.inclL_mem h v)⟩ := by
+      rw [hD, ← LinearPMap.map_sub]; rfl
+    refine ⟨v, ?_⟩
+    rw [hd, show S.incl h v = w from hvw]
+    have h1' : ‖x - w‖ ≤ JT.B s () * (L * J.meshSize h ^ J.ord s) := h1
+    have h2' : ‖(H.window a m).total.d () () ⟨x - w, Submodule.sub_mem _ hx.1
+        (hvw ▸ G.toFamily.inclL_mem h v)⟩‖ ≤ JT.B s () * (L * J.meshSize h ^ J.ord s) := h2 () hx.1
+    change _ ≤ 2 * JT.B s () * (L * J.meshSize h ^ J.ord s)
+    linarith
+  set X := (H.window a m).totalMixedSolution hcr f
+  have hcyc : ∀ x, (hx : JT.Reg s () L x) → x ∈ (H.window a m).total.cycles () →
+      ∃ v, ‖x - S.incl h v‖ + ‖S.incl h (S.D h v)‖ ≤ ε := fun x hx hz => by
+    obtain ⟨v, hv⟩ := happ x hx
+    obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hz
+    refine ⟨v, ?_⟩
+    rwa [show (H.window a m).totalD ⟨(y : PiLp 2 fun i : Fin m => V (a + i)), hx.1⟩ = 0 from hy,
+      zero_sub, norm_neg] at hv
+  have hb : ((H.window a m).total.cycles ()).starProjection ((H.window a m).greenOp hcr f) =
+      (H.window a m).total.domainIncl () ((H.window a m).total.boundaryPart ()
+        ((H.window a m).total.domainIncl () X.snd.fst)) := by
+    rw [HilbertComplex.boundaryPart, domainIncl_cyclesToDomainSpace]
+    exact (H.window a m).total.starProjection_cycles_eq_of_mem_orthogonal ()
+      ((H.window a m).greenOp_mem_orthogonal_harmonic hcr f)
+  have hJ : ‖1 - S.J h‖ * ‖X‖ ≤ ε := by
+    rw [show S.J h = 1 from G.toCrime_J h, sub_self, norm_zero, zero_mul]
+    have := Real.rpow_nonneg (J.meshSize_nonneg h) (J.ord s)
+    positivity
+  refine (hi.staticError_le_of_approx hcr (F.windowCochainProj a m K hK) hP hcP h f
+    (happ _ hf.1) (happ _ hf.2.1)
+    (hcyc _ hf.2.2.2 ((H.window a m).total.harmonic_le_cycles () X.snd.snd.2))
+    (by rw [hb]; exact hcyc _ hf.2.2.1 ((H.window a m).total.closure_boundaries_le_cycles ()
+      (Submodule.starProjection_apply_mem _ _))) hJ).trans
+    (le_of_eq ?_)
+  ring
+
+/-- **The heat rate with crimes on the conforming windows**, under closed range of the window,
+from a Jackson estimate `J` of `F`: the static-rate hypothesis of
+`ApproxComplexCrime.HeatFamily.rate_heat_of_static` holds for the regular data of
+`ConstrainedFEEC.RegMixed` (`windowCrime_rate_static`; `Jₕ = 1`), so
+`‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 C + C₀ (3 C₀ + 16 c_P² C₀) C t) L hᵒʳᵈ⁽ˢ⁾`, `C₀` the bound of
+the reading maps, on the orbits that stay in the regular states with bound `L`. -/
+theorem windowCrime_rate_heat (F : ConformingFamily H κ) (J : F.Jackson ρ) (a : α) (m : ℕ)
+    (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ) :
+    ∃ cP C : ℝ, 0 ≤ C ∧ ∀ {L : ℝ}, 0 ≤ L → ∀ {T : ℝ} {x : PiLp 2 fun i : Fin m => V (a + i)},
+      x ∈ (-(H.window a m).hodgeLaplacian).sqDomain →
+      (∀ t ∈ Icc 0 T, (F.windowCrime a m K hK).toHeat.S t x ∈ (H.window a m).heatReg
+        (fun L => {f | (F.windowFEEC a m K hK).RegMixed hcr
+          ((F.windowFEEC a m K hK).totalJackson (J.window a m)) s L f}) L) →
+      ∀ (h : κ), ∀ t ∈ Icc 0 T,
+      ‖(F.windowCrime a m K hK).toHeat.S t x - (F.windowCrime a m K hK).toHeat.sol h
+          ((F.windowCrime a m K hK).ritzR h
+            (x, DissipFEEC.genExt (-(H.window a m).hodgeLaplacian) x)) t‖ ≤
+        (2 * C + (F.windowCrime a m K hK).toFamily.boundConst *
+          ((3 * (F.windowCrime a m K hK).toFamily.boundConst +
+            16 * cP ^ 2 * (F.windowCrime a m K hK).toFamily.boundConst) * C) * t) *
+          L * J.meshSize h ^ J.ord s := by
+  obtain ⟨cP, hcP, hP⟩ := F.windowCrime_isPoincare a m K hK hcr
+  obtain ⟨C, hC0, hC⟩ := F.windowCrime_rate_static J a m K hK hcr s
+  refine ⟨cP, C, hC0, fun {L} hL {T x} hx hreg h t ht =>
+    (F.windowCrime a m K hK).rate_heat_of_static hcr hcP hP J.meshSize_nonneg hC0
+      (fun hL' hf h => hC hL' hf h) (fun h => ?_) hL hx hreg h ht⟩
+  rw [show (F.windowCrime a m K hK).toFamily.J h = 1 from (F.windowFEEC a m K hK).toCrime_J h,
+    sub_self, norm_zero]
+  exact mul_nonneg hC0 (Real.rpow_nonneg (J.meshSize_nonneg h) _)
+
 /-- **The rated conclusions of the FEEC theorem** (`feec_rated`) for a conforming family `F` with a
 Jackson estimate `J`: those of the FEEC theorem, and the rates `hᵒʳᵈ⁽ˢ⁾` of the mixed method, of the
-semidiscrete wave and heat equations and of the fully discrete schemes for `s`-regular data. -/
+semidiscrete wave and heat equations and of the fully discrete schemes for `s`-regular data, and
+the static and heat rates of the windows read with crimes. -/
 structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
     extends F.Verdict where
   /-- the rate of the mixed method, with closed range in the degrees of the problem
@@ -941,19 +1049,51 @@ structure Verdict.Rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
   rate_full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
     (F.windowFEEC a m K hK).FullRate (J.window a m)
+  /-- the static rate with crimes on every window with closed range, with every closed
+  constraint: `e(f) ≤ C L hᵒʳᵈ⁽ˢ⁾` for the window read with crimes (`windowCrime_rate_static`;
+  [HolstStern2012], Cor 3.11) -/
+  rate_crime_static (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ) :
+    ∃ C, 0 ≤ C ∧ ∀ {L : ℝ} {f : PiLp 2 fun i : Fin m => V (a + i)}, 0 ≤ L →
+      (F.windowFEEC a m K hK).RegMixed hcr ((F.windowFEEC a m K hK).totalJackson (J.window a m))
+        s L f → ∀ h, (F.windowCrime a m K hK).toFamily.staticError hcr h f ≤
+          C * L * J.meshSize h ^ J.ord s
+  /-- the heat rate with crimes on every window with closed range, with every closed constraint
+  (`windowCrime_rate_heat`: the field `heat_rate` of `crime` with its static rate discharged) -/
+  rate_crime_heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ) :
+    ∃ cP C : ℝ, 0 ≤ C ∧ ∀ {L : ℝ}, 0 ≤ L → ∀ {T : ℝ} {x : PiLp 2 fun i : Fin m => V (a + i)},
+      x ∈ (-(H.window a m).hodgeLaplacian).sqDomain →
+      (∀ t ∈ Icc 0 T, (F.windowCrime a m K hK).toHeat.S t x ∈ (H.window a m).heatReg
+        (fun L => {f | (F.windowFEEC a m K hK).RegMixed hcr
+          ((F.windowFEEC a m K hK).totalJackson (J.window a m)) s L f}) L) →
+      ∀ (h : κ), ∀ t ∈ Icc 0 T,
+      ‖(F.windowCrime a m K hK).toHeat.S t x - (F.windowCrime a m K hK).toHeat.sol h
+          ((F.windowCrime a m K hK).ritzR h
+            (x, DissipFEEC.genExt (-(H.window a m).hodgeLaplacian) x)) t‖ ≤
+        (2 * C + (F.windowCrime a m K hK).toFamily.boundConst *
+          ((3 * (F.windowCrime a m K hK).toFamily.boundConst +
+            16 * cP ^ 2 * (F.windowCrime a m K hK).toFamily.boundConst) * C) * t) *
+          L * J.meshSize h ^ J.ord s
 
 /-- **The FEEC theorem with rates.** For every conforming family `F` of a Hilbert complex on `ℕ`
 or `ℤ` with a Jackson estimate `J`: the FEEC theorem (`feec`), and for `s`-regular data with
 bound `L` the errors of the mixed method, of the semidiscrete wave and heat equations on every
 window and of the fully discrete schemes are `O(L hᵒʳᵈ⁽ˢ⁾)`, plus `O(τᵖ)` for the fully discrete
-ones along smooth comparisons and `O(τ^{p/(p+2)})` for every datum. [AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979] -/
+ones along smooth comparisons and `O(τ^{p/(p+2)})` for every datum; read with crimes, the static and
+heat errors on every window are `O(L hᵒʳᵈ⁽ˢ⁾)`. [AFW2010], Thm 3.9; [QuennevilleBelair2015],
+Thm 4.14; [BrennerThomee1979]; [HolstStern2012], Cor 3.11 -/
 theorem feec_rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Verdict.Rated F J :=
   ⟨F.feec, fun s _ _ _ hij hjk hj hk => F.rate J s hij hjk hj hk,
     fun a m K hK _ s _ hL _ hx h _ ht => (F.windowFEEC a m K hK).rate_le
       (ConstrainedFEEC.RateClass.ofJackson _ (J.window a m) _ s hL) hx h ht,
     fun a m K hK hcr s => (F.windowFEEC a m K hK).rate_heat hcr
       (F.isGraphBounded_windowFEEC a m K hK) _ s,
-    fun a m K hK => constrainedFEEC_fullRate (F.windowFEEC a m K hK) (J.window a m)⟩
+    fun a m K hK => constrainedFEEC_fullRate (F.windowFEEC a m K hK) (J.window a m),
+    fun a m K hK hcr s => F.windowCrime_rate_static J a m K hK hcr s,
+    fun a m K hK hcr s => F.windowCrime_rate_heat J a m K hK hcr s⟩
 
 end ConformingFamily
 

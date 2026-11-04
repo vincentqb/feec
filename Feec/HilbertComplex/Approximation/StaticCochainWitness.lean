@@ -21,7 +21,9 @@ the continuous ones.
   inequality holds, the static errors tend to `0` for every datum (`shear_tendsto_staticError`)
   and the maps on cohomology are eventually isomorphisms
   (`shear_eventually_bijective_cohomologyMap`), and the heat FEEC theorem with crimes applies
-  (`shearHeat`, `shear_heat`).
+  (`shearHeat`, `shear_heat`). With `iₙ πₙ = 1` only the inner-product defect enters the static
+  error: the static rate `e(f) ≤ K ‖f‖ hₙ` (`shear_staticError_le`) and the heat rate
+  `O(L hₙ)` on the orbits with `‖f‖ ≤ L` regular states (`shear_rate_heat`).
 * **The witness** on `𝕜 --id--> 𝕜 --0--> 𝕜` (`idZeroComplex`, `𝐝 (a, b, c) = (0, a, 0)`, harmonic
   forms `ℌ = 𝕜 (0, 0, 1)`, cohomology `≠ 0`) with `N (a, b, c) = (0, c, 0)` (`idZeroN`): `p =
   (0, 0, 1)` is harmonic, continuous and discrete, but `iₙ p = (0, hₙ, 1)` is not harmonic; the
@@ -209,6 +211,83 @@ theorem shear_heat : ∃ (cP : ℝ) (hcP : 1 ≤ cP) (hP : (shearFamily E N hNN)
       (closedRangeAt_of_finiteDimensional E) hcP hP (shear_tendsto_staticError E N hNN hND)) :=
   let ⟨cP, hcP, hP⟩ := shear_isPoincare E N hNN hND
   ⟨cP, hcP, hP, (shearHeat E N hNN).heatFEEC _ hcP hP _⟩
+
+/-- `iₙ πₙ = 1` for the cochain projections of a shear family (`iₙ = 1 + hₙ N`). -/
+theorem shear_incl_π (n : ℕ) (v : PiLp 2 V) :
+    (1 + (perturbMesh n : 𝕜) • N) ((shearCochainProj E N hNN hND).π n v) = v :=
+  shear_incl_proj E N hNN n v
+
+include hND in
+/-- **The static rate of a shear family**: `e(f) ≤ K ‖f‖ hₙ`. Since `iₙ πₙ = 1`, only the
+inner-product defect `‖1 - Jₙ‖ ≤ hₙ ‖N‖ (2 + ‖N‖)` enters the estimate at the projected
+approximants (`ApproxComplexCrime.Family.IsCochain.staticError_le_projError`). -/
+theorem shear_staticError_le : ∃ K, 0 ≤ K ∧ ∀ n f,
+    (shearFamily E N hNN).staticError (closedRangeAt_of_finiteDimensional E) n f ≤
+      K * ‖f‖ * perturbMesh n := by
+  obtain ⟨cP, hcP, hP⟩ := shear_isPoincare E N hNN hND
+  set C := (shearFamily E N hNN).boundConst
+  set Cπ := 1 + ‖N‖
+  set T := E.totalMixedSolution (closedRangeAt_of_finiteDimensional E)
+  have hC : 0 ≤ C := (shearFamily E N hNN).boundConst_nonneg
+  have hCπ : 0 ≤ Cπ := by positivity
+  set A := C * Cπ + 240 * C * cP ^ 2 * (51 * Cπ + C * (C * Cπ))
+  have hA : 0 ≤ A := by positivity
+  refine ⟨A * (‖N‖ * (2 + ‖N‖)) * ‖T‖, by positivity, fun n f => ?_⟩
+  have h := (shear_isCochain E N hNN hND).staticError_le_projError
+    (closedRangeAt_of_finiteDimensional E) (shearCochainProj E N hNN hND) hP hcP n f
+  have hz : ∀ v, ‖v - (shearFamily E N hNN).incl n ((shearCochainProj E N hNN hND).π n v)‖ = 0 :=
+    fun v => by rw [shear_incl_π, sub_self, norm_zero]
+  have hpe : (shearCochainProj E N hNN hND).projError n (T f) = 0 := by
+    rw [ApproxComplexCrime.Family.CochainProj.projError, hz, hz, hz, hz, hz]; norm_num
+  rw [hpe, hz] at h
+  simp only [mul_zero, zero_add, add_zero] at h
+  have hJ := norm_one_sub_shear_J_le E N hNN n
+  have hX : ‖T f‖ ≤ ‖T‖ * ‖f‖ := T.le_opNorm f
+  have hm := (perturbMesh_pos n).le
+  have h1 := mul_le_mul hJ hX (norm_nonneg _) (by positivity)
+  refine h.trans ?_
+  have e : C * Cπ * ‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖ + 240 * C * cP ^ 2 *
+      (51 * Cπ * ‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖ +
+        C * (C * Cπ * ‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖)) =
+      A * (‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖) := by ring
+  rw [e]
+  calc A * (‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖) ≤
+        A * (perturbMesh n * (‖N‖ * (2 + ‖N‖)) * (‖T‖ * ‖f‖)) := mul_le_mul_of_nonneg_left h1 hA
+    _ = _ := by ring
+
+include hND in
+/-- **The heat rate of a shear family**: the static-rate hypothesis of
+`ApproxComplexCrime.HeatFamily.rate_heat_of_static` holds with the regular data `‖f‖ ≤ L`, the
+mesh `hₙ` and the order `1` (`shear_staticError_le`, `norm_one_sub_shear_J_le`), so
+`‖S(t) x - iₙ e^{-tΔₙ} Rₙ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L hₙ` on the orbits that stay in
+the regular states with bound `L`. -/
+theorem shear_rate_heat : ∃ cP K : ℝ, 0 ≤ K ∧ ∀ {L : ℝ}, 0 ≤ L → ∀ {T : ℝ} {x : PiLp 2 V},
+    x ∈ (-E.hodgeLaplacian).sqDomain →
+    (∀ t ∈ Icc 0 T, (shearHeat E N hNN).toHeat.S t x ∈ E.heatReg (fun L => {f | ‖f‖ ≤ L}) L) →
+    ∀ (n : ℕ) {t : ℝ}, t ∈ Icc 0 T →
+    ‖(shearHeat E N hNN).toHeat.S t x - (shearHeat E N hNN).toHeat.sol n
+        ((shearHeat E N hNN).ritzR n (x, DissipFEEC.genExt (-E.hodgeLaplacian) x)) t‖ ≤
+      (2 * K + (shearFamily E N hNN).boundConst * ((3 * (shearFamily E N hNN).boundConst +
+        16 * cP ^ 2 * (shearFamily E N hNN).boundConst) * K) * t) * L * perturbMesh n := by
+  obtain ⟨cP, hcP, hP⟩ := shear_isPoincare E N hNN hND
+  obtain ⟨K, hK0, hK⟩ := shear_staticError_le E N hNN hND
+  set K' := max K (‖N‖ * (2 + ‖N‖))
+  refine ⟨cP, K', le_max_of_le_left hK0, fun {L} hL {T x} hx hreg n {t} ht => ?_⟩
+  have h := (shearHeat E N hNN).rate_heat_of_static (closedRangeAt_of_finiteDimensional E) hcP hP
+    (m := perturbMesh) (α := 1) (fun n => (perturbMesh_pos n).le) (le_max_of_le_left hK0)
+    (fun {L f} _ hf n => by
+      rw [Real.rpow_one]
+      refine (hK n f).trans ?_
+      have := (perturbMesh_pos n).le
+      have : K * ‖f‖ ≤ K' * L := mul_le_mul (le_max_left _ _) hf (norm_nonneg _)
+        (le_max_of_le_left hK0)
+      nlinarith)
+    (fun n => by
+      rw [Real.rpow_one]
+      exact (norm_one_sub_shear_J_le E N hNN n).trans_eq (by rw [mul_comm])
+        |>.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (perturbMesh_pos n).le))
+    hL hx hreg n ht
+  rwa [Real.rpow_one] at h
 
 end Shear
 

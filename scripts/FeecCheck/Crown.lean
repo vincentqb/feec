@@ -165,6 +165,11 @@ bounded in the graph norm of `D(𝐝)`, the `V`-bounds of [HolstStern2012], §3.
 (`nonneg`, `norm_π_apply_le`, `isPoincare_of_proj`, `IsCochain.isPoincare` with the constant
 `c₀ C_π C`, `IsCochain.tendsto_staticError` with `iₕ πₕ x → x` for every `x`) and derive them.
 
+The rated verdict gained the last fields `rate_crime_static` and `rate_crime_heat`, the static and
+heat rates with crimes on the conforming windows (by `type_of%`, the statements of
+`ConformingFamily.windowCrime_rate_static` and `windowCrime_rate_heat`). `OldRated` states the
+rated verdict before them verbatim, and `crown_old_rated` derives it from the new one.
+
 ## Spectral methods
 
 The time-uniform truncation rates of reducing families and of spectral families, the
@@ -4032,5 +4037,89 @@ theorem crime_old_tendsto_staticError (hi : S.IsCochain) (hcr : ∀ i, H.ClosedR
       (fun x _ => happ x) f
 
 end CochainProjGraph
+
+section RatedCrime
+
+/-! ### The rated verdict before the rates with crimes -/
+
+open scoped InnerProductSpace
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α]
+  {V : α → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
+  {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {κ : Type*} {ρ : Type*}
+
+/-- **The rated conclusions of the FEEC theorem before the fields `rate_crime_static` and
+`rate_crime_heat`** (`ConformingFamily.Verdict.Rated` of main `babcc45`), stated verbatim. -/
+structure OldRated (F : ConformingFamily H κ) (J : F.Jackson ρ) : Prop
+    extends F.Verdict where
+  /-- the rate of the mixed method, with closed range in the degrees of the problem
+  ([AFW2010], Thm 3.9) -/
+  rate_static (s : ρ) {i j k : α} (hij : (ComplexShape.up α).Rel i j)
+    (hjk : (ComplexShape.up α).Rel j k) (hj : H.ClosedRangeAt j) (hk : H.ClosedRangeAt k) :
+    ∃ K : ℝ, ∀ {f : V j} {σ : H.domainSpace i} {u : H.domainSpace j} {p : H.harmonic j},
+    H.IsMixedSolution i j k f σ u p → ∀ {L : ℝ}, 0 ≤ L →
+    J.Reg s i L (H.domainIncl i σ) → J.Reg s j L (H.domainIncl j u) →
+    J.Reg s j L (H.domainIncl j (H.boundaryPart j (H.domainIncl j u))) →
+    J.Reg s j L (p : V j) → ∀ h : κ,
+    (F.V h).mixedError hij hjk f σ u p ≤ K * L * J.meshSize h ^ J.ord s
+  /-- the rate `(1 + C_P)(1 + 2t) C L hᵒʳᵈ⁽ˢ⁾` of the semidiscrete wave equation on every window
+  ([QuennevilleBelair2015], Thm 4.14) -/
+  rate_wave (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) {T : ℝ} (s : ρ) {L : ℝ}
+    (hL : 0 ≤ L) {x : PiLp 2 fun i : Fin m => V (a + i)}
+    (hx : x ∈ (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+      hL).Data) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
+    ‖(H.window a m).waveGroup.S t x - (H.window a m).totalD.graphFst
+        ((F.windowFEEC a m K hK).discrete h (waveLift (H.window a m)
+          ⟨x, (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+            hL).mem_domain x hx⟩) t)‖ ≤
+      (1 + ellipticConst (H.window a m)) * (1 + 2 * t) *
+        ((ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s hL).C *
+          (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+            hL).meshSize h ^
+            (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s hL).α *
+          (ConstrainedFEEC.RateClass.ofJackson (F.windowFEEC a m K hK) (J.window a m) T s
+            hL).classNorm x)
+  /-- the rate `(2 + 3t) K L hᵒʳᵈ⁽ˢ⁾` of the semidiscrete heat equation on every window, `K` the
+  constant of the static rate ([AFW2010], Thm 3.9 along the heat flow) -/
+  rate_heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ) :
+    ∃ C, 0 ≤ C ∧ ∀ {L : ℝ}, 0 ≤ L →
+    ∀ {T : ℝ} {x : PiLp 2 fun i : Fin m => V (a + i)},
+      x ∈ (-(H.window a m).hodgeLaplacian).sqDomain →
+      (∀ t ∈ Icc 0 T, (F.windowFEEC a m K hK).toHeat.S t x ∈
+        (F.windowFEEC a m K hK).heatReg hcr ((F.windowFEEC a m K hK).totalJackson (J.window a m))
+          s L) → ∀ (h : κ), ∀ t ∈ Icc 0 T,
+    ‖(F.windowFEEC a m K hK).toHeat.S t x - (F.windowFEEC a m K hK).toHeat.sol h
+        ((F.windowFEEC a m K hK).ritzR h (x, DissipFEEC.genExt (-(H.window a m).hodgeLaplacian) x))
+          t‖ ≤
+      (2 + 3 * t) * C * L * J.meshSize h ^ J.ord s
+  /-- the fully discrete rates on every window: the spatial rate plus `O(τᵖ)` along smooth
+  comparisons, and plus `O(τ^{p/(p+2)})` for every Jackson datum -/
+  rate_full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).FullRate (J.window a m)
+
+/-- The old rated verdict is the new one without its last two fields. -/
+theorem crown_old_rated (F : ConformingFamily H κ) (J : F.Jackson ρ) : OldRated F J :=
+  ⟨(F.feec_rated J).toVerdict, (F.feec_rated J).rate_static, (F.feec_rated J).rate_wave,
+    (F.feec_rated J).rate_heat, (F.feec_rated J).rate_full⟩
+
+variable (F : ConformingFamily H κ) (J : F.Jackson ρ) (a : α) (m : ℕ)
+  (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+  (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+  (hcr : ∀ i, (H.window a m).ClosedRangeAt i) (s : ρ)
+
+/-- The field `rate_crime_static` is `windowCrime_rate_static`. -/
+example : type_of% (F.windowCrime_rate_static J a m K hK hcr s) :=
+  (F.feec_rated J).rate_crime_static a m K hK hcr s
+
+/-- The field `rate_crime_heat` is `windowCrime_rate_heat`. -/
+example : type_of% (F.windowCrime_rate_heat J a m K hK hcr s) :=
+  (F.feec_rated J).rate_crime_heat a m K hK hcr s
+
+end RatedCrime
 
 end FeecCheck.Crown

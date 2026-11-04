@@ -39,9 +39,11 @@ the **heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ 
 * **Rates** (`ApproxComplexCrime.HeatFamily.heatRateClass`, `rate_heat_of_static`): a static
   rate `e(f) ≤ K L mᵅ` on regular data and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` give
   `‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L mᵅ`. The static rate is a
-  hypothesis: for cochain reading maps it follows from rates of the read error of approximants,
-  of `‖b - iₕ πₕ b‖` (`b = P_𝔷 G f`) and of `‖1 - Jₕ‖`, through
-  `ApproxComplexCrime.Family.IsCochain.staticError_le`.
+  hypothesis: for cochain reading maps it follows from Jackson-type approximation of the mixed
+  solution and of `b = P_𝔷 G f` in the graph norm and from `‖1 - Jₕ‖ ‖X‖`
+  (`ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`); it is discharged on the
+  conforming windows (`ConformingFamily.windowCrime_rate_heat`) and the shear families
+  (`ApproxComplexCrime.shear_rate_heat`).
 
 ## References
 

@@ -543,6 +543,8 @@ def IsDIntertwining (C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ) : Pro
 
 variable {A}
 
+/-- In each degree `k`, `IsDIntertwining A C` is the classical intertwining of `d` on `k`-forms
+with the fibre matrices `C k` on the forms and `C (k + 1)` on the values. -/
 theorem IsDIntertwining.isPullIntertwining {C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ}
     (hC : IsDIntertwining A C) (k : ℤ) :
     IsPullIntertwining A (extDerivOp ℝ n k) (extDerivOp ℝ n k) (C k) (C (k + 1)) :=

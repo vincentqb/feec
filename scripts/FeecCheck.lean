@@ -22,6 +22,7 @@ public import FeecCheck.StableFamilies
 public import FeecCheck.MaxNormHeat
 public import FeecCheck.MaxNormNeumann
 public import FeecCheck.Semigroups
+public import FeecCheck.AffineTransport
 
 public section
 

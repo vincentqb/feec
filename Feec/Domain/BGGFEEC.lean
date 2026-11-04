@@ -22,17 +22,19 @@ hypotheses here: they follow from the `H¹`-regular decompositions of the rows
 theorem on the cube `Q = (0, ½)³` over every `RCLike 𝕜`, where the FEEC theorems hold without them
 (`Feec.Models.Cube.hessianFEEC_Q`, `Feec.Models.Cube.elasticityFEEC_Q`,
 `Feec.Models.Cube.divDivFEEC_Q`), and on its affine images, every open parallelepiped and box
-(`Feec.Models.Parallelepiped.hessianFEEC`, …, `Feec.Models.Parallelepiped.hessianFEEC_box`, …).
+(`Feec.Models.Parallelepiped.hessianFEEC_affine`, …,
+`Feec.Models.Parallelepiped.hessianFEEC_box`, …).
 The finite-dimensional cohomology of `deRhamVec m` is a hypothesis here too; over `ℝ` it follows
 from that of the forms `deRham ℝ 3` on every open `Ω ⊆ ℝ³`
 (`Feec.Domain.deRhamVec_finiteDimensional_cohomology`), over `𝕜` from that over `ℝ`
 (`Feec.Domain.ConstCoeffComplex.finiteDimensional_cohomology_ofReal`), and it is a theorem on `Q`
 (`Feec.Models.Cube.finiteDimensional_cohomology_deRhamVec_Q`) and on its affine images
-(`Feec.Models.Parallelepiped.finiteDimensional_cohomology_deRhamVec`), so the FEEC theorems there
-have no hypothesis. **No stacked family of the maximal data is known to exist here**: the theorems
-quantify over `G`, and no finite element family with `S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ` is constructed.
-The conditions are strong: the connecting maps `I`, `2 vskw`, `tr` of the Hessian data are onto,
-so they force `Vₕ¹ = Ṽₕ⁰`, `πₕ¹ = π̃ₕ⁰`, `Vₕ² = 2 vskw Ṽₕ¹`, `Vₕ³ = tr Ṽₕ²`, and `π̃ₕ¹` must
+(`Feec.Models.Parallelepiped.finiteDimensional_cohomology_deRhamVec_affine`), so the FEEC
+theorems there have no hypothesis. **No stacked family of the maximal data is known to exist
+here**: the theorems quantify over `G`, and no finite element family with `S Ṽₕ ⊆ Vₕ`,
+`πₕ S = S π̃ₕ` is constructed. The conditions are strong: the connecting maps `I`, `2 vskw`, `tr`
+of the Hessian data are onto, so they force `Vₕ¹ = Ṽₕ⁰`, `πₕ¹ = π̃ₕ⁰`, `Vₕ² = 2 vskw Ṽₕ¹`,
+`Vₕ³ = tr Ṽₕ²`, and `π̃ₕ¹` must
 preserve the symmetric matrix fields `ker (2 vskw)` (as for the tensor-product splines of
 [BonizzoniHuKanschatSap2024], not formalized). The non-vacuity witnesses
 of the abstract theorem are the full families of finite-dimensional data

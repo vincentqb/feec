@@ -17,19 +17,19 @@ from `ℝ` to `𝕜` through the real and imaginary parts). On `HΛ(Ω)` they ar
 cube along the pullback of forms `T^*` (the minors of `A`, `formPullData`):
 
 * **the `H¹`-regular decompositions** `HΛᵏ⁺¹(Ω) = d HΛᵏ(Ω) + H¹Λᵏ⁺¹(Ω)` ([ArnoldHu2021], §2,
-  Theorem 3; `deRham_hasRegularDecomposition`, from
+  Theorem 3; `deRham_hasRegularDecomposition_affine`, from
   `Feec.Domain.FormPullData.hasRegularDecomposition` and
   `Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`);
-* **the finite-dimensional cohomology** of `HΛ(Ω)` (`finiteDimensional_cohomology_deRham`, from
-  `Feec.Domain.FormPullData.finiteDimensional_cohomology` and the cube).
+* **the finite-dimensional cohomology** of `HΛ(Ω)` (`finiteDimensional_cohomology_deRham_affine`,
+  from `Feec.Domain.FormPullData.finiteDimensional_cohomology` and the cube).
 
 So **the FEEC theorem holds for every stacked conforming family of the discrete Hessian,
 elasticity and div-div complexes on every open parallelepiped and every open box `⊆ ℝ³`**, over
-every `RCLike 𝕜`, with no hypothesis (`hessianFEEC`, `elasticityFEEC`, `divDivFEEC`;
-`hessianFEEC_box`, …). The BGG data are the same constant-coefficient diagrams on every `Ω`
-(`hessianMaximalData 𝕜 hΩ`, …); nothing of them is transported, only the hypotheses on the rows.
-As on the cube, no stacked conforming family of these diagrams is constructed
-(`Feec.Domain.BGGFEEC`).
+every `RCLike 𝕜`, with no hypothesis (`hessianFEEC_affine`, `elasticityFEEC_affine`,
+`divDivFEEC_affine`; `hessianFEEC_box`, …). The BGG data are the same constant-coefficient
+diagrams on every `Ω` (`hessianMaximalData 𝕜 hΩ`, …); nothing of them is transported, only the
+hypotheses on the rows. As on the cube, no stacked conforming family of these diagrams is
+constructed (`Feec.Domain.BGGFEEC`): the theorems quantify over one.
 
 Not covered: bi-Lipschitz images of `Q`. `Feec.Domain.LipschitzPullback` carries `H̊(curl)` and
 `H(div)` (rows of `3 × 3` matrix fields), but not `H¹` nor the maximal domains in every degree,
@@ -38,10 +38,10 @@ which the transport of the regular decompositions needs.
 ## Main results
 
 * `preimage_Q_domain`, `preimage_Q_box`.
-* **`deRham_hasRegularDecomposition`**, **`finiteDimensional_cohomology_deRham`**;
-  `deRhamVec_hasRegularDecomposition`, `finiteDimensional_cohomology_deRhamVec`.
-* **`hessianFEEC`**, **`elasticityFEEC`**, **`divDivFEEC`**; `hessianFEEC_box`,
-  `elasticityFEEC_box`, `divDivFEEC_box`.
+* **`deRham_hasRegularDecomposition_affine`**, **`finiteDimensional_cohomology_deRham_affine`**;
+  `deRhamVec_hasRegularDecomposition_affine`, `finiteDimensional_cohomology_deRhamVec_affine`.
+* **`hessianFEEC_affine`**, **`elasticityFEEC_affine`**, **`divDivFEEC_affine`**;
+  `hessianFEEC_box`, `elasticityFEEC_box`, `divDivFEEC_box`.
 
 ## References
 
@@ -81,13 +81,13 @@ include hA hT
 /-- **The regular decompositions of `HΛ(Ω)`** on the preimage `Ω = T⁻¹(Q)` of the cube under an
 invertible affine map ([ArnoldHu2021], §2, Theorem 3): every `u ∈ HΛᵏ⁺¹(Ω)` is `d p + w` with
 `p ∈ HΛᵏ(Ω)` and `w` an `H¹` field (transported from `Q` along `T^*`). -/
-theorem deRham_hasRegularDecomposition : (deRham ℝ n).HasRegularDecomposition Ω 0 :=
+theorem deRham_hasRegularDecomposition_affine : (deRham ℝ n).HasRegularDecomposition Ω 0 :=
   (formPullData A hA).hasRegularDecomposition hA b (hT ▸ isOpen_Q.preimage (continuous_affMap _ _))
     isOpen_Q hT Cube.Sobolev.deRham_hasRegularDecomposition_Q
 
 /-- **The cohomology of `HΛ(Ω)` is finite-dimensional** in every degree on the preimage
 `Ω = T⁻¹(Q)` of the cube under an invertible affine map (transported from `Q` along `T^*`). -/
-theorem finiteDimensional_cohomology_deRham (i : ℤ) :
+theorem finiteDimensional_cohomology_deRham_affine (i : ℤ) :
     FiniteDimensional ℝ (((deRham ℝ n).maximalComplex hΩ).cohomology i) :=
   (formPullData A hA).finiteDimensional_cohomology hA b hΩ isOpen_Q hT i
 
@@ -101,17 +101,17 @@ include hA hT
 
 /-- **The regular decompositions of the de Rham complexes of `Ω = T⁻¹(Q) ⊆ ℝ³` with values in
 `𝕜ᵐ`** (from the forms, row by row, and from `ℝ` to `𝕜`). -/
-theorem deRhamVec_hasRegularDecomposition (m : ℕ) :
+theorem deRhamVec_hasRegularDecomposition_affine (m : ℕ) :
     (deRhamVec 𝕜 m).HasRegularDecomposition Ω 0 :=
   have hΩ : IsOpen Ω := hT ▸ isOpen_Q.preimage (continuous_affMap _ _)
   deRhamVec_ofReal (𝕜 := 𝕜) m ▸ (Feec.Domain.deRhamVec_hasRegularDecomposition hΩ
-    (deRham_hasRegularDecomposition hA b hT) m).ofReal hΩ
+    (deRham_hasRegularDecomposition_affine hA b hT) m).ofReal hΩ
 
 /-- **The de Rham complexes of `Ω = T⁻¹(Q) ⊆ ℝ³` with values in `𝕜ᵐ` have finite-dimensional
 cohomology** in every degree. -/
-theorem finiteDimensional_cohomology_deRhamVec (m : ℕ) (i : ℤ) :
+theorem finiteDimensional_cohomology_deRhamVec_affine (m : ℕ) (i : ℤ) :
     FiniteDimensional 𝕜 (((deRhamVec 𝕜 m).maximalComplex hΩ).cohomology i) :=
-  have := finiteDimensional_cohomology_deRham hA b hΩ hT i
+  have := finiteDimensional_cohomology_deRham_affine hA b hΩ hT i
   have := deRhamVec_finiteDimensional_cohomology hΩ m i
   deRhamVec_ofReal (𝕜 := 𝕜) m ▸ (deRhamVec ℝ m).finiteDimensional_cohomology_ofReal hΩ i
 
@@ -122,31 +122,31 @@ variable {κ : Type*}
 conforming family of the scalar and `𝕜³`-valued `L²` de Rham complexes of `Ω` linked by `I`,
 `2 vskw`, `tr`, the FEEC theorem holds for the discrete Hessian complexes `bgg 0`, with no
 hypothesis (`Feec.Domain.hessianFEEC`; the complexes of [ArnoldHu2021], §4.1). -/
-theorem hessianFEEC (G : (hessianMaximalData 𝕜 hΩ).StackedFamily κ) :
+theorem hessianFEEC_affine (G : (hessianMaximalData 𝕜 hΩ).StackedFamily κ) :
     G.Verdict (0 < ·) (· < 0) :=
-  have := finiteDimensional_cohomology_deRhamVec (𝕜 := 𝕜) hA b hΩ hT 1
-  have := finiteDimensional_cohomology_deRhamVec (𝕜 := 𝕜) hA b hΩ hT 3
-  Feec.Domain.hessianFEEC hΩ
-    (hessianMaximalData_regularDecomposition hΩ (deRhamVec_hasRegularDecomposition hA b hT 1)) G
+  have := finiteDimensional_cohomology_deRhamVec_affine (𝕜 := 𝕜) hA b hΩ hT 1
+  have := finiteDimensional_cohomology_deRhamVec_affine (𝕜 := 𝕜) hA b hΩ hT 3
+  Feec.Domain.hessianFEEC hΩ (hessianMaximalData_regularDecomposition hΩ
+    (deRhamVec_hasRegularDecomposition_affine hA b hT 1)) G
 
 /-- **The FEEC theorem for discrete elasticity complexes on parallelepipeds** `Ω = T⁻¹(Q)`
 (`bgg 1` of two `𝕜³`-valued de Rham complexes linked by `-mskw`, `T - tr`, `2 vskw`;
 [ArnoldHu2021], §4.1), with no hypothesis. -/
-theorem elasticityFEEC (G : (elasticityMaximalData 𝕜 hΩ).StackedFamily κ) :
+theorem elasticityFEEC_affine (G : (elasticityMaximalData 𝕜 hΩ).StackedFamily κ) :
     G.Verdict (1 < ·) (· < 1) :=
-  have := finiteDimensional_cohomology_deRhamVec (𝕜 := 𝕜) hA b hΩ hT 3
+  have := finiteDimensional_cohomology_deRhamVec_affine (𝕜 := 𝕜) hA b hΩ hT 3
   Feec.Domain.elasticityFEEC hΩ (elasticityMaximalData_regularDecomposition hΩ
-    ((deRhamVec_hasRegularDecomposition hA b hT 3).mono zero_le_one)) G
+    ((deRhamVec_hasRegularDecomposition_affine hA b hT 3).mono zero_le_one)) G
 
 /-- **The FEEC theorem for discrete div-div complexes on parallelepipeds** `Ω = T⁻¹(Q)` (`bgg 2`
 of the `𝕜³`-valued and scalar de Rham complexes linked by `· I`, `-mskw`, `I`; [ArnoldHu2021],
 §4.1), with no hypothesis. -/
-theorem divDivFEEC (G : (divDivMaximalData 𝕜 hΩ).StackedFamily κ) :
+theorem divDivFEEC_affine (G : (divDivMaximalData 𝕜 hΩ).StackedFamily κ) :
     G.Verdict (2 < ·) (· < 2) :=
-  have := finiteDimensional_cohomology_deRhamVec (𝕜 := 𝕜) hA b hΩ hT 1
-  have := finiteDimensional_cohomology_deRhamVec (𝕜 := 𝕜) hA b hΩ hT 3
+  have := finiteDimensional_cohomology_deRhamVec_affine (𝕜 := 𝕜) hA b hΩ hT 1
+  have := finiteDimensional_cohomology_deRhamVec_affine (𝕜 := 𝕜) hA b hΩ hT 3
   Feec.Domain.divDivFEEC hΩ (divDivMaximalData_regularDecomposition hΩ
-    ((deRhamVec_hasRegularDecomposition hA b hT 3).mono zero_le_two)) G
+    ((deRhamVec_hasRegularDecomposition_affine hA b hT 3).mono zero_le_two)) G
 
 end BGG
 
@@ -157,20 +157,20 @@ variable {𝕜 : Type*} [RCLike 𝕜] {a c : Fin 3 → ℝ} (h : ∀ i, a i < c 
 include h
 
 /-- **The FEEC theorem for discrete Hessian complexes on every open box** `∏ᵢ (aᵢ, cᵢ) ⊆ ℝ³`
-(`hessianFEEC` with `preimage_Q_box`). -/
+(`hessianFEEC_affine` with `preimage_Q_box`). -/
 theorem hessianFEEC_box (G : (hessianMaximalData 𝕜 hΩ).StackedFamily κ) :
     G.Verdict (0 < ·) (· < 0) :=
-  hessianFEEC (isUnit_det_inv (isUnit_det_boxMatrix h)) _ hΩ (preimage_Q_box h) G
+  hessianFEEC_affine (isUnit_det_inv (isUnit_det_boxMatrix h)) _ hΩ (preimage_Q_box h) G
 
 /-- **The FEEC theorem for discrete elasticity complexes on every open box** `∏ᵢ (aᵢ, cᵢ)`. -/
 theorem elasticityFEEC_box (G : (elasticityMaximalData 𝕜 hΩ).StackedFamily κ) :
     G.Verdict (1 < ·) (· < 1) :=
-  elasticityFEEC (isUnit_det_inv (isUnit_det_boxMatrix h)) _ hΩ (preimage_Q_box h) G
+  elasticityFEEC_affine (isUnit_det_inv (isUnit_det_boxMatrix h)) _ hΩ (preimage_Q_box h) G
 
 /-- **The FEEC theorem for discrete div-div complexes on every open box** `∏ᵢ (aᵢ, cᵢ)`. -/
 theorem divDivFEEC_box (G : (divDivMaximalData 𝕜 hΩ).StackedFamily κ) :
     G.Verdict (2 < ·) (· < 2) :=
-  divDivFEEC (isUnit_det_inv (isUnit_det_boxMatrix h)) _ hΩ (preimage_Q_box h) G
+  divDivFEEC_affine (isUnit_det_inv (isUnit_det_boxMatrix h)) _ hΩ (preimage_Q_box h) G
 
 end Box
 

@@ -125,11 +125,6 @@ theorem contDiff_of_mem_test {κ : PolyKind} {r k m : ℕ} {η : FormField m}
   · exact contDiff_of_mem_testSpace h
   · exact contDiff_of_mem_testSpaceMinus h
 
-theorem space_eq_bot_of_lt {κ : PolyKind} {r k : ℕ} (h : n < k) : κ.space n r k = ⊥ := by
-  cases κ
-  · exact polySpace_eq_bot_of_lt h
-  · exact polyMinusSpace_eq_bot_of_lt h
-
 theorem test_eq_bot {κ : PolyKind} {r k m : ℕ} (h : ¬(k ≤ m ∧ m < r + k)) : κ.test r k m = ⊥ := by
   cases κ
   · exact testSpace_eq_bot h

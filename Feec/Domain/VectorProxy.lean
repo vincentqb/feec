@@ -159,7 +159,7 @@ theorem ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm (hΩ : IsOpen Ω)
     ∃ hx : L2F.ofMatrixCLM (M j) (x : L2F 𝕜 Ω (C.ι j)) ∈ ((C'.maximalComplex hΩ).d j k).domain,
       (C'.maximalComplex hΩ).d j k ⟨_, hx⟩ =
         L2F.ofMatrixCLM (M k) ((C.maximalComplex hΩ).d j k x) :=
-  ConstCoeffComplex.maximalComplex_comm hΩ (T := fun k => L2F.ofMatrixCLM (M k))
+  ConstCoeffComplex.maximalComplex_comm hΩ hΩ (T := fun k => L2F.ofMatrixCLM (M k))
     (fun k x => ConstCoeffOp.maximal_ofMatrixCLM_of_comm hΩ (h k) x) j k hjk x
 
 namespace ConstCoeffComplex

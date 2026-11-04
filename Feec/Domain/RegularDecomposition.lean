@@ -34,19 +34,27 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
 * **Finite-dimensional cohomology passes from forms to vector proxies**, row by row
   (`deRhamVec_finiteDimensional_cohomology`): the rows and the row embeddings are cochain maps
   and a field is the sum of its rows.
+* **Both are invariant under invertible affine maps** `T x = A x + b` of `ℝⁿ`: the chain rule
+  `∇ (T^* u) = T^* (∇ u)` (`isPullIntertwining_fieldGradOp`) makes the field pullbacks map `H¹`
+  to `H¹` (`fieldPull_mem_fieldH1`), and with the pullback of forms (`Feec.Domain.FormPullData`)
+  the regular decompositions and the finite-dimensional cohomology of `HΛ(Ω')` pass to
+  `HΛ(T⁻¹ Ω')` (`FormPullData.hasRegularDecomposition`,
+  `FormPullData.finiteDimensional_cohomology`); on the affine images of the cube this removes the
+  hypotheses of the FEEC theorems (`Feec.Models.Parallelepiped.BGGFEEC`).
 
 ## Main definitions
 
-* `fieldGradOp`, `fieldH1`; `ConstCoeffComplex.HasRegularDecomposition`; `rowMat`,
-  `rowFormMat`, `formRowMat`.
+* `fieldGradOp`, `fieldH1`; `ConstCoeffComplex.HasRegularDecomposition`; `gradPullMat`;
+  `rowMat`, `rowFormMat`, `formRowMat`.
 
 ## Main results
 
 * `ConstCoeffOp.maximal_domain_le_of_apply_eq`, **`fieldH1_le_maximal_domain`**,
-  `ofMatrixCLM_mem_fieldH1`.
+  `ofMatrixCLM_mem_fieldH1`; `isPullIntertwining_fieldGradOp`, **`fieldPull_mem_fieldH1`**.
 * `vecOp_rowMat`, `vecOp_rowMat_transpose`, `sum_rowMat_transpose_mul`;
   `extDerivOp_rowFormMat`, `vecOp_formRowMat`, `sum_formRowMat_mul_rowFormMat`.
 * **`deRhamVec_hasRegularDecomposition`**, **`deRhamVec_finiteDimensional_cohomology`**.
+* **`FormPullData.hasRegularDecomposition`**, **`FormPullData.finiteDimensional_cohomology`**.
 * **`ConstCoeffBGG.maximalData_regularDecomposition`** (through
   `Feec.BGG.HilbertData.regularDecomposition_of_forall_exists`).
 * `hessianSMat_rightInv`, `elasticitySMat_rightInv`, `divDivSMat_rightInv`;
@@ -59,6 +67,8 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
   Theorem 3), §4 (the BGG construction)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
+* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
+  §9.2 (change of variables in Sobolev spaces)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §2 (vector proxies)
 
@@ -174,6 +184,56 @@ theorem ofMatrixCLM_mem_fieldH1 (hΩ : IsOpen Ω) (N : Matrix κ ι 𝕜) {u : L
 /-- Every field of `L²(Ω; 𝕜^ι)` with `ι` empty is `H¹`. -/
 theorem mem_fieldH1_of_isEmpty [IsEmpty ι] (u : L2F 𝕜 Ω ι) : u ∈ fieldH1 𝕜 Ω ι := by
   rw [Subsingleton.elim u 0]; exact Submodule.zero_mem _
+
+/-! ### `H¹` under affine changes of variables -/
+
+section AffinePull
+
+variable (A : Matrix (Fin n) (Fin n) ℝ) (C : κ → ι → ℝ)
+
+/-- The fibre matrix of the pullback of gradients, `((s, j), (t, i)) ↦ C_{st} A_{ij}`: for
+`T x = A x + b`, `∂ⱼ (Σ_t C_{st} u_t ∘ T) = Σ_{t,i} C_{st} A_{ij} (∂ᵢ u_t) ∘ T`. -/
+def gradPullMat : κ × Fin n → ι × Fin n → ℝ := fun sj ti => C sj.1 ti.1 * A ti.2 sj.2
+
+/-- **The chain rule for the componentwise gradient**: `∇ (T^* u) = T^* (∇ u)` with the fibre
+matrix `gradPullMat A C` on the gradients. -/
+theorem isPullIntertwining_fieldGradOp :
+    IsPullIntertwining A (fieldGradOp ℝ n κ) (fieldGradOp ℝ n ι) C (gradPullMat A C) := by
+  intro b φ hφ
+  funext sj x
+  have hd : ∀ t, HasFDerivAt (fun y => φ t (affMap A b y))
+      ((fderiv ℝ (φ t) (affMap A b x)).comp (Matrix.toLin' A).toContinuousLinearMap) x := fun t =>
+    (((hφ t).differentiable (by simp)) _).hasFDerivAt.comp x (hasFDerivAt_affMap A b x)
+  have hs := HasFDerivAt.fun_sum (u := Finset.univ) fun t _ => (hd t).const_mul (C sj.1 t)
+  rw [fieldGradOp_apply]
+  simp only [pullFun, fieldGradOp_apply, gradPullMat]
+  change fderiv ℝ (fun y => ∑ t, C sj.1 t * φ t (affMap A b y)) x (coordDir sj.2) = _
+  rw [hs.fderiv, Fintype.sum_prod_type]
+  simp only [_root_.sum_apply, _root_.smul_apply,
+    ContinuousLinearMap.comp_apply, LinearMap.coe_toContinuousLinearMap', smul_eq_mul]
+  refine Finset.sum_congr rfl fun t _ => ?_
+  have hv : Matrix.toLin' A (coordDir sj.2) = ∑ i, A i sj.2 • coordDir i := by
+    funext l
+    simp [Matrix.toLin'_apply, Finset.sum_apply, Pi.single_apply]
+  rw [hv, map_sum, Finset.mul_sum]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [map_smul, smul_eq_mul]
+  ring
+
+variable {A} (hA : IsUnit A.det) (b : Fin n → ℝ) {Ω' : Set (Fin n → ℝ)} (hΩo : IsOpen Ω)
+  (hΩo' : IsOpen Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
+
+include hΩo in
+/-- **`H¹` is invariant under affine changes of variables**: for `T x = A x + b`, `A`
+invertible, and every constant fibre matrix `C`, the field pullback
+`(T^* u)_s = Σ_t C_{st} u_t ∘ T` maps `H¹(Ω'; ℝ^ι)` into `H¹(T⁻¹ Ω'; ℝ^κ)` ([Brezis2011],
+§9.2). -/
+theorem fieldPull_mem_fieldH1 {u : L2F ℝ Ω' ι} (hu : u ∈ fieldH1 ℝ Ω' ι) :
+    fieldPull hA b hΩo'.measurableSet hT C u ∈ fieldH1 ℝ Ω κ :=
+  (fieldPull_mem_maximal_domain (isPullIntertwining_fieldGradOp A C) hA b hΩo hΩo' hT
+    ⟨u, hu⟩).1
+
+end AffinePull
 
 /-! ### `H¹`-regular decompositions -/
 
@@ -455,6 +515,64 @@ theorem deRhamVec_finiteDimensional_cohomology {Ω : Set (Fin 3 → ℝ)} (hΩ :
   change ∑ r, L2F.ofMatrixCLM (formRowMat r i) (L2F.ofMatrixCLM (rowFormMat r i) x) = x
   simp only [L2F.ofMatrixCLM_ofMatrixCLM]
   rw [← L2F.ofMatrixCLM_sum, sum_formRowMat_mul_rowFormMat, L2F.ofMatrixCLM_one]
+
+/-! ### Transport along invertible affine maps -/
+
+namespace FormPullData
+
+variable {A : Matrix (Fin n) (Fin n) ℝ} (D : FormPullData A) (hA : IsUnit A.det)
+  (b : Fin n → ℝ) {Ω Ω' : Set (Fin n → ℝ)} (hΩo : IsOpen Ω) (hΩo' : IsOpen Ω')
+  (hT : affMap A b ⁻¹' Ω' = Ω)
+include D hA hΩo hΩo' hT
+
+/-- **The `H¹`-regular decompositions are invariant under invertible affine maps**: if `HΛ(Ω')`
+has them from `J` on, so has `HΛ(T⁻¹ Ω')`, `T x = A x + b`. For `u ∈ HΛⁱ⁺¹(Ω)` split
+`(T^*)⁻¹ u = d p + w` on `Ω'`; then `u = d (T^* p) + T^* w`, and `T^* w ∈ H¹`
+(`fieldPull_mem_fieldH1`). [ArnoldHu2021], §2, Theorem 3 -/
+theorem hasRegularDecomposition {J : ℤ} (h : (deRham ℝ n).HasRegularDecomposition Ω' J) :
+    (deRham ℝ n).HasRegularDecomposition Ω J := by
+  have h' : ∀ i, J ≤ i → ∀ u ∈ ((extDerivOp ℝ n (i + 1)).maximal Ω').domain,
+      ∃ p : ((extDerivOp ℝ n i).maximal Ω').domain,
+        u - (extDerivOp ℝ n i).maximal Ω' p ∈ fieldH1 ℝ Ω' (formIdx n (i + 1)) := h
+  suffices ∀ i, J ≤ i → ∀ u ∈ ((extDerivOp ℝ n (i + 1)).maximal Ω).domain,
+      ∃ p : ((extDerivOp ℝ n i).maximal Ω).domain,
+        u - (extDerivOp ℝ n i).maximal Ω p ∈ fieldH1 ℝ Ω (formIdx n (i + 1)) from this
+  intro i hi u hu
+  have hv := (D.mem_maximal_domain_iff hA b hΩo hΩo' hT (i + 1)).1
+    (((D.equiv hA b hΩo' hT (i + 1)).apply_symm_apply u).symm ▸ hu)
+  obtain ⟨p, hp⟩ := h' i hi _ hv
+  obtain ⟨hq, hqe⟩ := fieldPull_mem_maximal_domain (D.isDIntertwining.isPullIntertwining i) hA b
+    hΩo hΩo' hT p
+  refine ⟨⟨_, hq⟩, ?_⟩
+  have hw := fieldPull_mem_fieldH1 (D.C (i + 1)) hA b hΩo hΩo' hT hp
+  rwa [map_sub, ← coe_equiv, ContinuousLinearEquiv.apply_symm_apply, coe_equiv, ← hqe] at hw
+
+/-- **Finite-dimensional cohomology is invariant under invertible affine maps**: `T^*` and
+`(T^*)⁻¹` are mutually inverse cochain maps between `HΛ(Ω')` and `HΛ(T⁻¹ Ω')`
+(`fieldPull_mem_maximal_domain`). -/
+theorem finiteDimensional_cohomology (i : ℤ)
+    [FiniteDimensional ℝ (((deRham ℝ n).maximalComplex hΩo').cohomology i)] :
+    FiniteDimensional ℝ (((deRham ℝ n).maximalComplex hΩo).cohomology i) := by
+  have hR := ConstCoeffComplex.maximalComplex_comm hΩo' hΩo (C := deRham ℝ n)
+    (C' := deRham ℝ n) (T := fun k => D.equiv hA b hΩo' hT k) fun k x =>
+      fieldPull_mem_maximal_domain (D.isDIntertwining.isPullIntertwining k) hA b hΩo hΩo' hT x
+  have hP := ConstCoeffComplex.maximalComplex_comm hΩo hΩo' (C := deRham ℝ n)
+    (C' := deRham ℝ n) (T := fun k => (D.equiv hA b hΩo' hT k).symm) fun k x =>
+      fieldPull_mem_maximal_domain (D.isDIntertwining_inv.isPullIntertwining k)
+        (isUnit_det_inv hA) (affInvShift A b) hΩo' hΩo (preimage_inv_of_affMap hA b hT) x
+  let e := fun k => ((D.equiv hA b hΩo' hT k).toLinearEquiv :
+    L2F ℝ Ω' ((deRham ℝ n).ι k) ≃ₗ[ℝ] L2F ℝ Ω ((deRham ℝ n).ι k))
+  refine HilbertComplex.finiteDimensional_cohomology_of_sum_eq_id
+    (H := (deRham ℝ n).maximalComplex hΩo') (α := Unit)
+    (fun _ => (e i).symm.toLinearMap) (fun _ => (e i).toLinearMap)
+    (fun _ _ hx => HilbertComplex.apply_mem_cycles (T := fun j => (e j).symm.toLinearMap) hP hx)
+    (fun _ _ hx => HilbertComplex.apply_mem_boundaries (T := fun j => (e j).symm.toLinearMap) hP
+      hx)
+    (fun _ _ hx => HilbertComplex.apply_mem_boundaries (T := fun j => (e j).toLinearMap) hR hx)
+    fun x _ => ?_
+  exact (Fintype.sum_unique _).trans ((e i).apply_symm_apply x)
+
+end FormPullData
 
 /-! ### The regular decompositions of BGG data -/
 

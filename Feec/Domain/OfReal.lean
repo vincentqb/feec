@@ -236,13 +236,13 @@ the cast are cochain maps of the maximal complexes and `u = re u + i im u`
 theorem finiteDimensional_cohomology_ofReal (C : ConstCoeffComplex E ℝ) (hΩ : IsOpen Ω) (i : ℤ)
     [FiniteDimensional ℝ ((C.maximalComplex hΩ).cohomology i)] :
     FiniteDimensional 𝕜 (((C.ofReal 𝕜).maximalComplex hΩ).cohomology i) := by
-  have hre := maximalComplex_comm hΩ (C := C.ofReal 𝕜) (C' := C)
+  have hre := maximalComplex_comm hΩ hΩ (C := C.ofReal 𝕜) (C' := C)
     (T := fun k => L2F.reCLM (𝕜 := 𝕜) (Ω := Ω) (ι := C.ι k))
     fun k x => ConstCoeffOp.reCLM_mem_maximal_domain hΩ (C.A k) x
-  have him := maximalComplex_comm hΩ (C := C.ofReal 𝕜) (C' := C)
+  have him := maximalComplex_comm hΩ hΩ (C := C.ofReal 𝕜) (C' := C)
     (T := fun k => L2F.imCLM (𝕜 := 𝕜) (Ω := Ω) (ι := C.ι k))
     fun k x => ConstCoeffOp.imCLM_mem_maximal_domain hΩ (C.A k) x
-  have hof := maximalComplex_comm hΩ (C := C) (C' := C.ofReal 𝕜)
+  have hof := maximalComplex_comm hΩ hΩ (C := C) (C' := C.ofReal 𝕜)
     (T := fun k => L2F.ofRealCLM 𝕜 (Ω := Ω) (ι := C.ι k))
     fun k x => ConstCoeffOp.ofRealCLM_mem_maximal_domain hΩ (C.A k) x
   let re := fun k => (L2F.reCLM (𝕜 := 𝕜) (Ω := Ω) (ι := C.ι k)).toLinearMap

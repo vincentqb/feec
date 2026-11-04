@@ -23,11 +23,11 @@ difference scheme. The discrete maximum principle is also proved directly on the
 ## Main results
 
 **`FiniteDifferenceHeat.finiteDifferenceHeat`** (statement `FiniteDifferenceHeat.Verdict`):
-`Δₕ` is the lumped-mass `P₁` Laplacian and every rational scheme gives the same iterates for both;
-`Δₕ` is a sub-Markov generator; consistency `‖Iₕ Δu - Δₕ Iₕ u‖_∞ ≤ n B h² / 12`; and, against every
-classical solution, the semidiscrete (method of lines) error `O(h²)`, backward Euler `O(τ + h²)`,
-Brenner–Thomée's stability bound `1 + C'_r √k` and the error of every A-stable rational scheme,
-all in the maximum norm at the nodes. `finiteDifferenceHeat_nonvacuous`: the first eigenmode
+`Δₕ` is the lumped-mass `P₁` Laplacian; `Δₕ` is a sub-Markov generator; consistency
+`‖Iₕ Δu - Δₕ Iₕ u‖_∞ ≤ n B h² / 12`; and, against every classical solution, the semidiscrete
+(method of lines) error `O(h²)`, backward Euler `O(τ + h²)`, Brenner–Thomée's stability bound
+`1 + C'_r √k` and the error of every A-stable rational scheme, all in the maximum norm at the
+nodes. `finiteDifferenceHeat_nonvacuous`: the first eigenmode
 satisfies the hypotheses.
 
 ## References
@@ -83,17 +83,13 @@ theorem family_step (b : Fin n → ℝ) (hs : 0 < s) (r : RationalScheme) (τ : 
 /-! ### The verdict -/
 
 /-- The conclusions of `finiteDifferenceHeat` for the cube `b + (0, s)ⁿ`: the finite difference
-Laplacian is the lumped-mass `P₁` Laplacian, with the same iterates of every rational scheme; the
-discrete maximum principle, consistency, and the semidiscrete, backward Euler and rational-scheme
-errors in the maximum norm against every classical solution; Brenner–Thomée's stability bound,
-and the verdict of the Banach layer for the family. -/
+Laplacian is the lumped-mass `P₁` Laplacian (so every rational scheme has the same iterates for
+both, `family_step`); the discrete maximum principle, consistency, and the semidiscrete, backward
+Euler and rational-scheme errors in the maximum norm against every classical solution;
+Brenner–Thomée's stability bound, and the verdict of the Banach layer for the family. -/
 structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   /-- the finite difference Laplacian is the lumped-mass `P₁` Laplacian of the Freudenthal mesh -/
   eq_lumpedLaplacian (N : ℕ) : fdLaplacian s N = lumpedLaplacian b hs N
-  /-- every rational scheme (backward Euler `RationalScheme.theta 1` among them) gives the same
-  iterates for the finite difference and the lumped-mass finite element methods -/
-  step_pow_apply (r : RationalScheme) (τ : ℝ) (N k : ℕ) (v : Space n N) :
-    ((family n s).step r τ N ^ k) v = ((MaxNormHeat.family b hs).step r τ N ^ k) v
   /-- the discrete maximum principle: `e^{tΔₕ}` is positive and contractive in the maximum norm -/
   maximumPrinciple (N : ℕ) : IsSubMarkovGenerator (fdLaplacian (n := n) s N)
   /-- consistency in the maximum norm, `‖Iₕ Δu - Δₕ Iₕ u‖_∞ ≤ n B h² / 12` -/
@@ -131,7 +127,6 @@ those of the lumped-mass `P₁` method (`MaxNormHeat.maxNormHeat`) through `fdLa
 [Thomee2006], Ch. 15; [BrennerThomee1979] -/
 theorem finiteDifferenceHeat (b : Fin n → ℝ) (hs : 0 < s) : Verdict b hs where
   eq_lumpedLaplacian := fdLaplacian_eq b hs
-  step_pow_apply r τ N k v := by rw [family_step b hs]
   maximumPrinciple N := FiniteDifference.isSubMarkovGenerator_laplacian _ _
   consistency N _ hu _ hB hbd := by
     rw [fdLaplacian_eq b hs]; exact (maxNormHeat b hs).consistency N hu hB hbd

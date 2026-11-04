@@ -3,7 +3,7 @@ module
 public import Feec.FiniteElement.LumpedLaplacian
 public import Feec.FiniteElement.P1Global
 public import Feec.TimeStepping.StableFamily
-public import Feec.ForMathlib.Analysis.SubMarkov
+public import Feec.ForMathlib.Analysis.FiniteDifference
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.SecondDifference
 public import Feec.Models.Cube.Basic
@@ -94,6 +94,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 open Set Finset NormedSpace Feec.Mesh Feec.FiniteElement Feec.TimeStepping
 open scoped InnerProductSpace
 open Feec.Models.Cube.Geometry (openCube closedCube)
+open FiniteDifference (zeroExt zeroExt_sub abs_zeroExt_le)
 
 @[expose] public noncomputable section
 
@@ -124,20 +125,16 @@ abbrev Space (n N : ℕ) := Nodes n N → ℝ
 
 variable {N : ℕ}
 
-/-- The extension of discrete values by `0` to the lattice. -/
-def ext (U : Space n N) (q : Fin n → ℤ) : ℝ :=
-  if h : q ∈ interiorNodes n (N + 1) then U ⟨q, h⟩ else 0
-
 /-- The nodal function on `ℝⁿ` with values `U` at the interior nodes and `0` elsewhere. -/
 def nodal (b : Fin n → ℝ) (s : ℝ) (U : Space n N) : (Fin n → ℝ) → ℝ :=
   nodalFun (fun q : Nodes n N => node b (meshSize s N) q) U
 
 theorem nodal_node (hs : 0 < s) (U : Space n N) (q : Fin n → ℤ) :
-    nodal b s U (node b (meshSize s N) q) = ext U q := by
+    nodal b s U (node b (meshSize s N) q) = zeroExt U q := by
   by_cases hq : q ∈ interiorNodes n (N + 1)
-  · simp only [ext, hq, ↓reduceDIte]
+  · simp only [zeroExt, hq, ↓reduceDIte]
     exact nodalFun_apply (node_injective_subtype b (meshSize_pos hs N).ne' _) U ⟨q, hq⟩
-  · simp only [ext, hq, ↓reduceDIte]
+  · simp only [zeroExt, hq, ↓reduceDIte]
     refine sum_eq_zero fun c _ => ?_
     rw [ite_eq_right_iff]
     intro e
@@ -157,15 +154,15 @@ theorem lumpedLaplacian_apply_eq (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N
 
 /-- **The stencil** (`Lₕ` is the difference Laplacian). [Thomee2006], Ch. 15 -/
 theorem lumpedLaplacian_apply (b : Fin n → ℝ) (hs : 0 < s) (U : Space n N) (p : Nodes n N) :
-    lumpedLaplacian b hs N U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
-      ext U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 := by
+    lumpedLaplacian b hs N U p = ∑ l, (zeroExt U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
+      zeroExt U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2 := by
   rw [lumpedLaplacian_apply_eq, meshSize, neg_p1Stiffness_div_lumpedMass b hs (N + 1) p.2]
   refine sum_congr rfl fun l _ => ?_
   have e := nodal_node (b := b) hs U
   simp only [meshSize] at e
   rw [e, e, e]
   congr 2
-  simp [ext, p.2]
+  simp [zeroExt, p.2]
 
 /-- **The discrete maximum principle**: the Freudenthal meshes are non-obtuse, so `Lₕ` is a
 sub-Markov generator (`Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn`) and `e^{tLₕ}`
@@ -240,10 +237,11 @@ theorem node_mem_openCube (hs : 0 < s) (p : Nodes n N) :
 
 /-- The extension by `0` of the interpolant of `u`, `u = 0` on `∂Q`, is `u` at every node of the
 closed lattice. -/
-theorem ext_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
+theorem zeroExt_interp (hs : 0 < s) {u : (Fin n → ℝ) → ℝ}
     (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → u x = 0) {q : Fin n → ℤ}
-    (hq : ∀ j, 0 ≤ q j ∧ q j ≤ N + 1) : ext (interp b s N u) q = u (node b (meshSize s N) q) := by
-  simp only [ext, interp]
+    (hq : ∀ j, 0 ≤ q j ∧ q j ≤ N + 1) :
+    zeroExt (interp b s N u) q = u (node b (meshSize s N) q) := by
+  simp only [zeroExt, interp]
   split_ifs with hq'
   · rfl
   · exact (hbd _ ((node_mem_closedCube_iff hs).2 hq) fun ho =>
@@ -269,16 +267,16 @@ theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) 
     rw [node_add_single_one, node_sub_single_one]
     exact abs_partialDeriv_sub_secondDiff_le hu hh x l fun t ht =>
       hB _ (node_add_smul_mem_closedCube hs p.2 l ht) l
-  have hplus : ∀ l, ext (interp b s N u) ((p : Fin n → ℤ) + Pi.single l 1) =
+  have hplus : ∀ l, zeroExt (interp b s N u) ((p : Fin n → ℤ) + Pi.single l 1) =
       u (node b h ((p : Fin n → ℤ) + Pi.single l 1)) := fun l =>
-    ext_interp hs hbd fun j => by
+    zeroExt_interp hs hbd fun j => by
       have := hp j
       by_cases hj : j = l
       · subst hj; simp only [Pi.add_apply, Pi.single_eq_same]; omega
       · simp only [Pi.add_apply, Pi.single_eq_of_ne hj, add_zero]; omega
-  have hminus : ∀ l, ext (interp b s N u) ((p : Fin n → ℤ) - Pi.single l 1) =
+  have hminus : ∀ l, zeroExt (interp b s N u) ((p : Fin n → ℤ) - Pi.single l 1) =
       u (node b h ((p : Fin n → ℤ) - Pi.single l 1)) := fun l =>
-    ext_interp hs hbd fun j => by
+    zeroExt_interp hs hbd fun j => by
       have := hp j
       by_cases hj : j = l
       · subst hj; simp only [Pi.sub_apply, Pi.single_eq_same]; omega
@@ -286,9 +284,9 @@ theorem abs_interp_laplacian_sub_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) 
   rw [lumpedLaplacian_apply, show interp b s N (laplacian u) p =
     ∑ l, partialDeriv l (partialDeriv l u) x from rfl, ← sum_sub_distrib]
   refine (abs_sum_le_sum_abs _ _).trans ?_
-  calc ∑ l, |partialDeriv l (partialDeriv l u) x - (ext (interp b s N u)
+  calc ∑ l, |partialDeriv l (partialDeriv l u) x - (zeroExt (interp b s N u)
           ((p : Fin n → ℤ) + Pi.single l 1) - 2 * interp b s N u p +
-          ext (interp b s N u) ((p : Fin n → ℤ) - Pi.single l 1)) / h ^ 2|
+          zeroExt (interp b s N u) ((p : Fin n → ℤ) - Pi.single l 1)) / h ^ 2|
       ≤ ∑ _l : Fin n, B * h ^ 2 / 12 := sum_le_sum fun l _ => by
         rw [hplus, hminus]; exact hterm l
     _ = n * B * h ^ 2 / 12 := by rw [sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]; ring
@@ -723,14 +721,6 @@ theorem exists_node_eq_points (hs : 0 < s) {K : Affine.Simplex ℝ (Fin n → �
   rcases kuhnLattice_mem σ j i with h | h <;>
     simp only [Pi.add_apply, h, finLattice] <;> omega
 
-theorem ext_sub (U V : Space n N) (q : Fin n → ℤ) : ext (U - V) q = ext U q - ext V q := by
-  simp only [ext, Pi.sub_apply]; split_ifs <;> simp
-
-theorem abs_ext_le (U : Space n N) (q : Fin n → ℤ) : |ext U q| ≤ ‖U‖ := by
-  simp only [ext]
-  split_ifs with h
-  · exact (Real.norm_eq_abs _).symm.le.trans (norm_le_pi_norm U ⟨q, h⟩)
-  · simp
 
 /-- **The simplices of the mesh cover `Q̄`** (`Feec.Mesh.SimplicialMesh.biUnion_closedInterior`,
 from `Feec.Mesh.iUnion_freudenthalSet`): the bounds below on every simplex hold on all of `Q̄`. -/
@@ -779,7 +769,8 @@ theorem abs_sub_p1Interp_nodal_le (hs : 0 < s) (N : ℕ) {u : (Fin n → ℝ) �
     |u x - p1Interp K.points (nodal b s U) x| ≤
       ‖interp b s N u - U‖ + feDefect (s := s) (n := n) D N :=
   abs_sub_p1Interp_le_of_nodes hs N hu hD (fun q hq => by
-    rw [nodal_node hs, ← ext_interp hs hbd hq, ← ext_sub]; exact abs_ext_le _ q) hK hx
+    rw [nodal_node hs, ← zeroExt_interp hs hbd hq, ← zeroExt_sub]
+    exact abs_zeroExt_le _ q) hK hx
 
 theorem abs_sineDeriv_le {a : ℝ} (ha : 0 ≤ a) (c : ℝ) {k : ℕ} (hk : k ≤ 4) (y : ℝ) :
     |sineDeriv a c k y| ≤ a ^ k := by
@@ -849,8 +840,8 @@ structure Verdict (b : Fin n → ℝ) (hs : 0 < s) : Prop where
   nonobtuse (N : ℕ) [NeZero N] : IsNonobtuse (freudenthalMesh b s hs N)
   /-- the lumped-mass `P₁` Laplacian is the `(2n + 1)`-point difference Laplacian -/
   stencil (N : ℕ) (U : Space n N) (p : Nodes n N) :
-    lumpedLaplacian b hs N U p = ∑ l, (ext U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
-      ext U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2
+    lumpedLaplacian b hs N U p = ∑ l, (zeroExt U ((p : Fin n → ℤ) + Pi.single l 1) - 2 * U p +
+      zeroExt U ((p : Fin n → ℤ) - Pi.single l 1)) / meshSize s N ^ 2
   /-- the discrete maximum principle: `e^{tLₕ}` is positive and contractive in the maximum norm -/
   maximumPrinciple (N : ℕ) : IsSubMarkovGenerator (lumpedLaplacian b hs N)
   /-- consistency in the maximum norm, `‖Iₕ Δu - Lₕ Iₕ u‖_∞ ≤ n B h² / 12` -/

@@ -20,7 +20,8 @@ the removed `Feec.FiniteElement.fderiv_apply_eq_sum_partialDeriv` (now at the ro
 The field `nonobtuse` now states `Feec.FiniteElement.IsNonobtuse` of the meshes; the earlier
 field (nonpositive off-diagonal stiffness) and the removed wrapper
 `Feec.FiniteElement.p1Stiffness_freudenthalMesh_indicator_nonpos` are derived from it with
-`Feec.FiniteElement.p1Stiffness_indicator_nonpos`.
+`Feec.FiniteElement.p1Stiffness_indicator_nonpos`. The extension by zero `MaxNormHeat.ext` is
+gone (now `FiniteDifference.zeroExt`, of any finite lattice grid); it is restated below.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 -/
@@ -34,6 +35,10 @@ open Feec.Models.Cube.Geometry (openCube closedCube)
 open Feec.Models.Cube.MaxNormHeat
 
 variable {n : ℕ} {s : ℝ}
+
+/-- The removed `MaxNormHeat.ext`, verbatim (now `FiniteDifference.zeroExt`). -/
+def ext {N : ℕ} (U : Space n N) (q : Fin n → ℤ) : ℝ :=
+  if h : q ∈ interiorNodes n (N + 1) then U ⟨q, h⟩ else 0
 
 /-- The earlier `MaxNormHeat.Verdict`, verbatim. -/
 structure Verdict_old (b : Fin n → ℝ) (hs : 0 < s) : Prop where

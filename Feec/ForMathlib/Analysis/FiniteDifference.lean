@@ -40,6 +40,16 @@ theorem zeroExt_nonneg {U : G → ℝ} (hU : 0 ≤ U) (q : ι → ℤ) : 0 ≤ z
 theorem zeroExt_one_le (q : ι → ℤ) : zeroExt (fun _ : G => (1 : ℝ)) q ≤ 1 := by
   unfold zeroExt; split_ifs <;> norm_num
 
+theorem zeroExt_sub (U V : G → ℝ) (q : ι → ℤ) :
+    zeroExt (U - V) q = zeroExt U q - zeroExt V q := by
+  unfold zeroExt; split_ifs <;> simp
+
+theorem abs_zeroExt_le (U : G → ℝ) (q : ι → ℤ) : |zeroExt U q| ≤ ‖U‖ := by
+  unfold zeroExt
+  split_ifs with h
+  · exact (Real.norm_eq_abs _).symm.le.trans (norm_le_pi_norm U ⟨q, h⟩)
+  · simp
+
 variable [DecidableEq ι]
 
 variable (G) in

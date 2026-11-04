@@ -4,7 +4,7 @@ public import Feec.HilbertComplex.Approximation.Crown
 public import Feec.HilbertComplex.Approximation.ApproxComplex
 public import Feec.Physics.Maxwell.Constraints
 public import Feec.Models.Torus.DeRhamGalerkin
-public import Feec.Models.StarShapedWitness
+public import Feec.Models.Parallelepiped.StarShaped
 public import Feec.Models.ConformingFamilies
 public import Feec.Domain.VectorProxy
 

@@ -42,7 +42,7 @@ satisfiable:
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 7 (rates for smooth
   solutions)
 
-Bibliography: [references.bib](../../docs/references.bib)
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 @[expose] public noncomputable section

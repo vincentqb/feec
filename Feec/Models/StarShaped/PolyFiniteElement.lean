@@ -47,11 +47,11 @@ use the finite-dimensionality of the harmonic forms; the rate theorems do not
 projections, the approximation results and the wave convergence and rates are proved with no
 hypothesis.
 
-**Parallelepipeds and non-vacuity** (`Feec.Models.StarShapedWitness`): on every parallelepiped,
-for every quasi-uniform shape-regular mesh family, the Poincaré inequalities are theorems and the
-rates hold unconditionally (`Parallelepiped.mixed_rate_poly_general`); the cube and the
-parallelepipeds with their (image) Freudenthal meshes satisfy all the hypotheses for the bottom
-row (`CubeWitness.mixed_rate_lagrangeP2`, `ParallelepipedWitness.mixed_rate_lagrangeP2`).
+**Parallelepipeds and non-vacuity** (`Feec.Models.Parallelepiped.StarShaped`): on every
+parallelepiped, for every quasi-uniform shape-regular mesh family, the Poincaré inequalities are
+theorems and the rates hold unconditionally (`Parallelepiped.mixed_rate_poly_general`); the cube
+and the parallelepipeds with their (image) Freudenthal meshes satisfy all the hypotheses for the
+bottom row (`CubeWitness.mixed_rate_lagrangeP2`, `ParallelepipedWitness.mixed_rate_lagrangeP2`).
 
 ## References
 

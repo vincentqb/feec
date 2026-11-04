@@ -44,7 +44,8 @@ open Feec.Domain Feec.Mesh Feec.HilbertComplex Feec.ExteriorFibre
 
 variable {n : ℕ}
 
-theorem exists_abs_pow_sub_one_lt (k : ℕ) {η : ℝ} (hη : 0 < η) :
+/-- `c ↦ cᵏ` is continuous at `1` (the factors `cᵏ` of the field smoothers tend to `1`). -/
+private theorem exists_abs_pow_sub_one_lt (k : ℕ) {η : ℝ} (hη : 0 < η) :
     ∃ δ > 0, ∀ c : ℝ, |c - 1| < δ → |c ^ k - 1| < η := by
   have h := Metric.continuousAt_iff.1 ((continuous_pow k).continuousAt (x := (1 : ℝ))) η hη
   simpa [Real.dist_eq] using h

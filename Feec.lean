@@ -374,12 +374,12 @@ public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
 public import Feec.Models.Euclidean.SymCurl
 public import Feec.Models.Parallelepiped.FiniteElement
+public import Feec.Models.Parallelepiped.StarShaped
 public import Feec.Models.StarShaped.EigenDense
 public import Feec.Models.StarShaped.FiniteElement
 public import Feec.Models.StarShaped.PolyFiniteElement
 public import Feec.Models.StarShaped.PolySmoothing
 public import Feec.Models.StarShaped.Smoothing
-public import Feec.Models.StarShapedWitness
 public import Feec.Models.Torus.BGG
 public import Feec.Models.Torus.DeRham
 public import Feec.Models.Torus.DeRhamGalerkin

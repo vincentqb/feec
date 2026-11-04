@@ -23,8 +23,9 @@ approximation theory of subcomplexes.
   quasi-optimal estimate [AFW2010], Thm 3.9): `dist(σ, Vₕⁱ) ≤ ‖σ - v‖ + ‖d σ - d v‖`
   (`Subcomplex.infDist_domainSub_le`), so `dist(σ, Vₕⁱ) ≤ 2 ε` from a degreewise approximation
   within `ε` (`Subcomplex.infDist_domainSub_le_two_mul`).
-* **Families `(S_N)` over `ℤ`**: graph-norm approximation of every `x ∈ D(d)` from approximants
-  `(y, z)` of `(x, d x)` with rates `b_N → 0` (`Subcomplex.eventually_exists_graph_of_near`);
+* **Families `(S_N)_{N ∈ ℕ}`** (complexes graded by `ℤ`): graph-norm approximation of every
+  `x ∈ D(d)` from approximants `(y, z)` of `(x, d x)` with rates `b_N → 0`
+  (`Subcomplex.eventually_exists_graph_of_near`);
   graph-norm density gives `L²` density (`Subcomplex.eventually_exists_lt_of_graph`, `D(d)` is
   dense), degreewise density in every graph norm (`Subcomplex.eventually_exists_near_of_graph`)
   and `dist(q, V_Nʲ) → 0` (`Subcomplex.tendsto_infDist_of_lt`); with degreewise density the

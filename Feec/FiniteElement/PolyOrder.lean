@@ -62,6 +62,7 @@ theorem polySpace_zero_le_space (k : ℕ) : polySpace n 0 k ≤ S.space n k :=
 
 end PolySeq
 
+/-- The degree-`k` part of the Taylor polynomial of order `s + 1` of a form is in `P_sΛᵏ`. -/
 theorem degPartField_taylorPoly_mem {k s : ℕ} (w : FormField n) (x₀ : Fin n → ℝ) :
     degPartField k (taylorPoly w x₀ (s + 1)) ∈ polySpace n s k :=
   degPartField_mem_polySpace (taylorPoly_mem_polyFunctions w x₀ s) k

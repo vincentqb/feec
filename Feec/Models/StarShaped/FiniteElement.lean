@@ -44,15 +44,16 @@ convergence are proved with no hypothesis. The Poincaré inequality of `HΛ(Ω)`
 (`ConformingFamily.quasiOptimal` and `ConformingFamily.rate` need it only in the degrees of the
 problem); it holds on every bounded Lipschitz domain (regularized Poincaré and Bogovskiĭ
 operators, [CostabelMcIntosh2010]), a theory absent from Mathlib, and is a theorem on the cube
-and on every parallelepiped (`Feec.Models.StarShapedWitness`). The finite-dimensionality of the
-harmonic forms is used only for the harmonic gap and the cohomology.
+and on every parallelepiped (`Feec.Models.Parallelepiped.StarShaped`). The finite-dimensionality
+of the harmonic forms is used only for the harmonic gap and the cohomology.
 **Affine images**: shape regularity, quasi-uniformity and star-shapedness with respect to a ball
 are preserved by affine equivalences (`StarDomain.map`, `MeshFamily.map`; `isShapeRegular_image`,
 `MeshData.map`). **Non-vacuity**: the cube with its Freudenthal meshes and every parallelepiped
 `A · Q + b` (every box) with its image Freudenthal meshes are `StarDomain`s with a `MeshFamily`
-satisfying all these hypotheses (`Feec.Models.StarShapedWitness`: `CubeWitness.meshFamily`,
-`CubeWitness.hasPoincare`, `ParallelepipedWitness.meshFamily`). The higher-order families
-`P_rΛᵏ`, `P_r⁻Λᵏ` (whose inverse and DOF estimates on shape-regular simplices are
+satisfying all these hypotheses (`Feec.Models.Parallelepiped.StarShaped`:
+`CubeWitness.meshFamily`, `CubeWitness.hasPoincare`, `ParallelepipedWitness.meshFamily`). The
+higher-order families `P_rΛᵏ`, `P_r⁻Λᵏ` (whose inverse and DOF estimates on shape-regular simplices
+are
 `Feec.FiniteElement.exists_inverse_bound_polySpace` and
 `Feec.FiniteElement.exists_dof_bound_of_le_polySpace`) are in
 `Feec.Models.StarShaped.PolyFiniteElement`.

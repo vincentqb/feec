@@ -587,15 +587,16 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
   `HΛ` and `H̊Λ` (`Feec.Models.Cube.DeRhamIdentFEM`) and the Whitney interpolation error
   (`Feec.FiniteElement.WhitneyInterpolation`; in the graph norm of `HΛ(Ω)`, `H̊Λ(Ω)` for any
   element family on any mesh of `Ω`, `Feec.FiniteElement.GlobalInterpolation`;
-  `Feec.Models.Cube.WhitneyApprox`,
-  `Feec.Models.Cube.WhitneyRate`). `Feec.Models.Cube.FiniteElementConvergence` states stability,
+  `Feec.Models.Cube.WhitneyApprox`, with the density of smooth forms
+  `Feec.FiniteElement.SmoothDensity`, `Feec.Models.Cube.WhitneyRate`). `Feec.Models.Cube.FiniteElementConvergence` states stability,
   quasi-optimality, `O(h)` rates and the semi-discrete Hodge wave equation with no hypothesis
   beyond the data and, for the rates, `C²` regularity of the solution; Maxwell (PMC and PEC) is
   `Feec.Instances.Maxwell.cubePMC`, `Feec.Instances.Maxwell.cubePEC`. The same holds for the
   higher-order families `P_rΛᵏ`,
   `P_r⁻Λᵏ` of every admissible sequence (`Feec.FiniteElement.PolyElement`,
   `Feec.Models.Cube.PolySmoothingEstimates`, `Feec.Models.Cube.PolyFiniteElementConvergence`,
-  `Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate`, with rates `h^{s+1}`), and for
+  `Feec.Models.Cube.PolyRate`, `Feec.Models.Cube.TangentialRate`, with rates `h^{s+1}` for the
+  polynomial order of `Feec.FiniteElement.PolyOrder`), and for
   the Einstein–Bianchi (BGG) pair of
   Tables 5.1/6.1 (vector-valued spaces, `S_h = πS` for smoothed projections of one smoother):
   (5.4), Props 5.7–5.9(1), the static estimate and the semi-discrete wave convergence
@@ -625,7 +626,8 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
   inequality as hypothesis (`Feec.FiniteElement.ShapeRegularInverse`,
   `Feec.FiniteElement.ShapeRegularSmoothing`, `Feec.Models.StarShaped.FiniteElement`,
   `Feec.Models.StarShaped.PolySmoothing`, `Feec.Models.StarShaped.PolyFiniteElement`; on
-  parallelepipeds every quasi-uniform shape-regular mesh family, with no hypothesis). Not built:
+  parallelepipeds every quasi-uniform shape-regular mesh family, with no hypothesis,
+  `Feec.Models.Parallelepiped.StarShaped`). Not built:
   domains not star-shaped with respect to a ball, the Poincaré inequality on star-shaped ones,
   mixed boundary conditions off the cube, Sobolev rates off the cube, discrete eigenvalue
   convergence.

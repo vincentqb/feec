@@ -686,6 +686,15 @@ def subcomplexMin [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
     ((deRham ℝ n).minimalComplex hΩ).Subcomplex :=
   (polyElement n S).subcomplexMin M hΩ x₀ hstar
 
+instance [NeZero n] (hΩ : IsOpen M.domain) (k : ℤ) :
+    FiniteDimensional ℝ ((S.subcomplex M hΩ).V k) :=
+  inferInstanceAs (FiniteDimensional ℝ ((polyElement n S).V M k))
+
+instance [NeZero n] (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
+    (k : ℤ) : FiniteDimensional ℝ ((S.subcomplexMin M hΩ x₀ hstar).V k) :=
+  inferInstanceAs (FiniteDimensional ℝ ((polyElement n S).V₀ M k))
+
 /-- **The finite element subcomplex with vanishing boundary degrees of freedom on the level-`N`
 Freudenthal mesh of a cube**, a subcomplex of `H̊Λ` of the cube. -/
 def freudenthalSubcomplexMin [NeZero n] (b : Fin n → ℝ) (s : ℝ) (hs : 0 < s) (N : ℕ)

@@ -68,7 +68,7 @@ transport**, with no hypothesis beyond the data and smoothness.
   `mixed_rate_polyMin`). The semi-discrete Hodge wave equation converges on every window
   (`exists_tendstoUniformlyOn_window_whitney`, `exists_tendstoUniformlyOn_window_poly`, `_min`),
   with the `O(h)` rate for `C²` solutions (`norm_sub_le_meshSize_window_smooth`), by
-  `exists_tendstoUniformlyOn_window_of`.
+  `Feec.HilbertComplex.Subcomplex.exists_tendstoUniformlyOn_window_of`.
 
 Not covered here: the mixed boundary conditions of `Feec.Models.Cube.DeRhamPartial`.
 
@@ -1633,40 +1633,6 @@ theorem hasCompactProperty_min : (complexMin A b).HasCompactProperty :=
 
 end Hodge
 
-/-! ### The semi-discrete Hodge wave equation for families approximating the graph spaces -/
-
-section Generic
-
-variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
-  [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ (ComplexShape.up ℤ) W}
-
-variable {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)]
-
-/-- **Convergence of the semi-discrete Hodge wave equation** on every window, for a family of
-subcomplexes approximating every point degreewise in the graph norm. -/
-theorem exists_tendstoUniformlyOn_window_of (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε →
-      ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V i, ‖x - v‖ < ε ∧
-        ∀ j (hx : x ∈ (H.d i j).domain),
-          ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain i j hv)⟩‖ < ε)
-    (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ) (x : (H.window a m).wave.domain) :
-    ∃ ξh ξh' : ℕ → ℝ → (H.window a m).totalD.GraphSpace,
-      (∀ N, HodgeWave.IsSemidiscreteSolution (((S N).window a m).graphSub)
-        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
-      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((S N).window a m).graphSub)
-        ((H.window a m).totalD.toGraphSpace ⟨x, ((H.window a m).mem_wave_domain.1 x.2).1⟩)) ∧
-      TendstoUniformlyOn (fun N t => (H.window a m).totalD.graphFst (ξh N t))
-        (fun t => (H.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) := by
-  have : ∀ N (i : Fin m), FiniteDimensional ℝ (((S N).window a m).V i) := fun N i =>
-    inferInstanceAs (FiniteDimensional ℝ ((S N).V (a + i)))
-  refine HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
-    (Subcomplex.isApproximating fun ζ _ hδ => ?_) t₀ t₁ x
-  exact Subcomplex.eventually_exists_graphSub_lt (fun N => (S N).window a m)
-    (fun i x _ hε => (hdeg (a + i) x _ hε).mono fun _ hN => by
-      obtain ⟨v, hv, h1, h2⟩ := hN
-      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
-
-end Generic
-
 /-! ### The Whitney finite element method on `Ω` -/
 
 section WhitneyFEM
@@ -2150,7 +2116,7 @@ theorem exists_tendstoUniformlyOn_window_poly (S : PolySeq) (a : ℤ) (m : ℕ) 
           ⟨x, (((complex A b).window a m).mem_wave_domain.1 x.2).1⟩)) ∧
       TendstoUniformlyOn (fun N t => ((complex A b).window a m).totalD.graphFst (ξh N t))
         (fun t => ((complex A b).window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  exists_tendstoUniformlyOn_window_of ((isChainIso A hA b).eventually_near_comapSub
+  Subcomplex.exists_tendstoUniformlyOn_window_of ((isChainIso A hA b).eventually_near_comapSub
     (poly A hA b S) (fun N i x => mem_poly_V_iff A hA b S N i x) (norm_pullEquiv_symm_le A hA b)
     fun i x' _ hε => FEM.eventually_exists_poly_near S i x' hε) a m t₀ t₁ x
 
@@ -2255,7 +2221,7 @@ variable [NeZero n]
 
 /-- **Interpolation error of order `h^{s+1}` on `Ω`** for a sequence of order `s` in degrees `j`,
 `j + 1`. -/
-theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt n S s j)
+theorem IsCsForm.exists_mem_poly_le {S : PolySeq} {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)} (hx : IsCsForm A hA b s j L x) (hL0 : 0 ≤ L)
     (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (poly A hA b S N).V j,
@@ -2308,7 +2274,7 @@ theorem IsCsFormMin.pullEquiv {s : ℕ} {j : ℤ} {L : ℝ} {x : L2F ℝ (domain
   · exact pullEquiv_formL2 A hA b hw.continuous hdeg
 
 theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
-    (hS : FEM.PolyOrderAt n S s j) {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
+    (hS : PolyOrderAt n S s j) {L : ℝ} {x : L2F ℝ (domain A b) (formIdx n j)}
     (hx : IsCsFormMin A hA b s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (polyMin A hA b S N).V j,
       ‖x - v‖ ≤ polyRateBound A S s j * (L * FEM.meshSize N ^ (s + 1)) ∧
@@ -2326,13 +2292,13 @@ theorem IsCsFormMin.exists_mem_polyMin_le {S : PolySeq} {s : ℕ} {j : ℤ}
   exact ⟨v, hv, e ▸ hv1, fun j' hxj => e ▸ hv2 j' hxj⟩
 
 /-- **The Jackson estimate of the complexes of `S` on `Ω`**: for `s : ℕ`, the `C^{s+2}` forms on
-`cl Ω` (`IsCsForm s`) of the degrees where `S` reproduces `P_s` (`FEM.PolyOrderAt`) at the order
+`cl Ω` (`IsCsForm s`) of the degrees where `S` reproduces `P_s` (`PolyOrderAt`) at the order
 `h_N^{s+1}` with the constants `polyRateBound` (`IsCsForm.exists_mem_poly_le`). -/
 def polyJackson (S : PolySeq) : (polyFamily A hA b S).Jackson ℕ where
   meshSize := FEM.meshSize
   meshSize_nonneg N := (FEM.meshSize_pos N).le
   tendsto_meshSize := FEM.tendsto_meshSize
-  Reg s j L x := FEM.PolyOrderAt n S s j ∧ IsCsForm A hA b s j L x
+  Reg s j L x := PolyOrderAt n S s j ∧ IsCsForm A hA b s j L x
   ord s := ((s + 1 : ℕ) : ℝ)
   B s := polyRateBound A S s
   B_nonneg s := polyRateBound_nonneg A S s
@@ -2345,7 +2311,7 @@ def polyJacksonMin (S : PolySeq) : (polyFamilyMin A hA b S).Jackson ℕ where
   meshSize := FEM.meshSize
   meshSize_nonneg N := (FEM.meshSize_pos N).le
   tendsto_meshSize := FEM.tendsto_meshSize
-  Reg s j L x := FEM.PolyOrderAt n S s j ∧ IsCsFormMin A hA b s j L x
+  Reg s j L x := PolyOrderAt n S s j ∧ IsCsFormMin A hA b s j L x
   ord s := ((s + 1 : ℕ) : ℝ)
   B s := polyRateBound A S s
   B_nonneg s := polyRateBound_nonneg A S s
@@ -2356,7 +2322,7 @@ def polyJacksonMin (S : PolySeq) : (polyFamilyMin A hA b S).Jackson ℕ where
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), with no hypothesis beyond the data: for a sequence of
 order `s` (`PolyOrder`) and a solution whose components, boundary part and harmonic part are
 `C^{s+2}` with `‖D^{s+1}‖ ≤ L` on `cl Ω`, the error on `T(M_N)` is `≤ K L h_N^{s+1}`. -/
-theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i j k : ℤ}
+theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complex A b).domainSpace i}
     {u : (complex A b).domainSpace j} {q : (complex A b).harmonic j},
@@ -2386,7 +2352,7 @@ theorem mixed_rate_poly (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i j 
 
 /-- **Convergence of order `h^{s+1}` with vanishing traces on `Ω`**, for solutions whose
 components are `C^{s+2}` forms vanishing outside `Ω`. -/
-theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) {i j k : ℤ}
+theorem mixed_rate_polyMin (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) {i j k : ℤ}
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ (domain A b) (formIdx n j)} {σ : (complexMin A b).domainSpace i}
     {u : (complexMin A b).domainSpace j} {q : (complexMin A b).harmonic j},

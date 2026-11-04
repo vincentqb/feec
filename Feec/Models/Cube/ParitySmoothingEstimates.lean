@@ -1314,7 +1314,7 @@ theorem sq_norm_formL2_sub_paritySmoothedInterp_le {N k : ℕ} {B D : ℝ} (hB :
           (u : (polyElement n S).Piecewise (mesh n N) k) T x t| ≤ Ci * (h ^ (0 + 1) * MT) := by
       intro x hx t
       rw [(polyElement n S).extendPW_of_mem (mesh n N) _ hT]
-      exact abs_sub_globalInterp_le S (polySpace_zero_le_space S k) hB hB0 hD ⟨T, hT⟩
+      exact abs_sub_globalInterp_le S (S.polySpace_zero_le_space k) hB hB0 hD ⟨T, hT⟩
         (s := 0) (hFc1.of_le le_rfl) (isDeg_paritySmoothForm ρ J (mesh_domain_eq_Q N) k y)
         (hder T hT) hx t
     obtain ⟨m, σ, hmσ⟩ := mem_mesh_simplices.1 hT
@@ -1578,7 +1578,7 @@ theorem exists_mem_polyPartial_le_smooth (S : PolySeq) (J : Finset (Fin n)) (N k
 Ch. 7): under `ParitySmoothingEstimates`, for a `C^{s+1}` degree-`k` form `w` whose tangential
 components vanish on the faces normal to `J` (e.g. coefficients `wₜ` symmetric of the parity
 `c(J, t)` on `ℝⁿ`), with `‖D^{s+1} w‖ ≤ L` on `cl Q` and
-`P_sΛᵏ ⊆ P(T)ᵏ` (e.g. `s + 1 ≤ r_k`, `polySpace_le_space`),
+`P_sΛᵏ ⊆ P(T)ᵏ` (e.g. `s + 1 ≤ r_k`, `PolySeq.polySpace_le_space`),
 `‖w - π_N w‖ ≤ (1 + 2C) A_k h_N^{s+1} L`: the order `m = s + 1` up to the polynomial order. -/
 theorem ParitySmoothingEstimates.norm_sub_proj_le_smooth {J : Finset (Fin n)} {S : PolySeq}
     {ρ : ℕ → ReflKernel n} {C : ℝ} (hE : ParitySmoothingEstimates n J S ρ C) (N k s : ℕ)

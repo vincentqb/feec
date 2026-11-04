@@ -23,6 +23,13 @@ approximation theory of subcomplexes.
   quasi-optimal estimate [AFW2010], Thm 3.9): `dist(σ, Vₕⁱ) ≤ ‖σ - v‖ + ‖d σ - d v‖`
   (`Subcomplex.infDist_domainSub_le`), so `dist(σ, Vₕⁱ) ≤ 2 ε` from a degreewise approximation
   within `ε` (`Subcomplex.infDist_domainSub_le_two_mul`).
+* **Families `(S_N)` over `ℤ`**: graph-norm approximation of every `x ∈ D(d)` from approximants
+  `(y, z)` of `(x, d x)` with rates `b_N → 0` (`Subcomplex.eventually_exists_graph_of_near`);
+  graph-norm density gives `L²` density (`Subcomplex.eventually_exists_lt_of_graph`, `D(d)` is
+  dense), degreewise density in every graph norm (`Subcomplex.eventually_exists_near_of_graph`)
+  and `dist(q, V_Nʲ) → 0` (`Subcomplex.tendsto_infDist_of_lt`); with degreewise density the
+  semi-discrete Hodge wave equation converges on every window
+  (`Subcomplex.exists_tendstoUniformlyOn_window_of`, [QuennevilleBelair2015], Thm 4.14).
 
 ## Main results
 
@@ -31,13 +38,16 @@ approximation theory of subcomplexes.
 * `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`
 * `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le`,
   `Feec.HilbertComplex.Subcomplex.infDist_domainSub_le_two_mul`
+* `Feec.HilbertComplex.Subcomplex.eventually_exists_near_of_graph`,
+  `Feec.HilbertComplex.Subcomplex.exists_tendstoUniformlyOn_window_of`
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   Thm 3.9 (quasi-optimality in the graph norm)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.6 (approximating subcomplexes)
+  §4.6 (approximating subcomplexes), Thm 4.14 (convergence of the semi-discrete Hodge wave
+  equation)
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -277,5 +287,134 @@ theorem exists_mem_le_of_succ {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W 
       rw [← LinearPMap.map_sub]; rfl
     rw [e]; exact h2 hx
   · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+
+end Feec.HilbertComplex.Subcomplex
+
+/-! ### Families of subcomplexes indexed by `ℕ`: from graph-norm to `L²` and degreewise density -/
+
+namespace Feec.HilbertComplex.Subcomplex
+
+open Filter Topology
+
+section Family
+
+variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
+  [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ (ComplexShape.up ℤ) W}
+  (S : ℕ → H.Subcomplex)
+
+/-- **Graph-norm approximation from approximants with rates**: if every
+`x ∈ D(d)` is within `ε` of some `y`, with `d x` within `ε` of some `z`, and `(y, z)` is
+approximated by `(v, d v)`, `v ∈ Vₕ`, up to `b_N → 0`, then `x` is eventually within `ε` of `Vₕ`
+in the graph norm. -/
+theorem eventually_exists_graph_of_near {k : ℤ} {x : W k} (hx : x ∈ (H.d k (k + 1)).domain)
+    (happ : ∀ ε > 0, ∃ (y : W k) (z : W (k + 1)) (b : ℕ → ℝ), ‖x - y‖ < ε ∧
+      ‖H.d k (k + 1) ⟨x, hx⟩ - z‖ < ε ∧ Tendsto b atTop (𝓝 0) ∧
+      ∀ N, ∃ v, ∃ hv : v ∈ (S N).V k, ‖y - v‖ ≤ b N ∧
+        ‖z - H.d k (k + 1) ⟨v, (S N).le_domain k (k + 1) hv⟩‖ ≤ b N)
+    {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V k, ‖x - v‖ < ε ∧
+      ‖H.d k (k + 1) ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain k (k + 1) hv)⟩‖ < ε := by
+  obtain ⟨y, z, b, h1, h2, hb, hv⟩ := happ (ε / 2) (half_pos hε)
+  filter_upwards [hb.eventually (gt_mem_nhds (half_pos hε))] with N hN
+  obtain ⟨v, hv, hv1, hv2⟩ := hv N
+  refine ⟨v, hv, ?_, ?_⟩
+  · calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h1 (hv1.trans hN.le)
+      _ = ε := add_halves ε
+  · rw [show (⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain k (k + 1) hv)⟩ :
+        (H.d k (k + 1)).domain) = ⟨x, hx⟩ - ⟨v, (S N).le_domain k (k + 1) hv⟩ from rfl,
+      LinearPMap.map_sub]
+    calc _ ≤ ‖H.d k (k + 1) ⟨x, hx⟩ - z‖ +
+          ‖z - H.d k (k + 1) ⟨v, (S N).le_domain k (k + 1) hv⟩‖ :=
+          norm_sub_le_norm_sub_add_norm_sub _ _ _
+      _ < ε / 2 + ε / 2 := add_lt_add_of_lt_of_le h2 (hv2.trans hN.le)
+      _ = ε := add_halves ε
+
+variable {S}
+
+/-- **`L²` density from graph-norm approximation** (`D(d)` is dense). -/
+theorem eventually_exists_lt_of_graph
+    (hgraph : ∀ (k : ℤ) (x : W k) (hx : x ∈ (H.d k (k + 1)).domain) (ε : ℝ), 0 < ε →
+      ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V k, ‖x - v‖ < ε ∧
+        ‖H.d k (k + 1) ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain k (k + 1) hv)⟩‖ < ε)
+    (k : ℤ) (x : W k) {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (S N).V k, ‖x - v‖ < ε := by
+  obtain ⟨y, hy, hxy⟩ := (H.dense k (k + 1)).exists_dist_lt x (half_pos hε)
+  filter_upwards [hgraph k y hy _ (half_pos hε)] with N hN
+  obtain ⟨v, hv, h1, -⟩ := hN
+  refine ⟨v, hv, ?_⟩
+  rw [dist_eq_norm] at hxy
+  calc ‖x - v‖ ≤ ‖x - y‖ + ‖y - v‖ := norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ < ε / 2 + ε / 2 := add_lt_add hxy h1
+    _ = ε := add_halves ε
+
+/-- **Degreewise approximation in every graph norm from graph-norm approximation in the next
+degree** (the hypothesis of `Feec.HilbertComplex.Subcomplex.eventually_exists_graphSub_lt`). -/
+theorem eventually_exists_near_of_graph
+    (hgraph : ∀ (k : ℤ) (x : W k) (hx : x ∈ (H.d k (k + 1)).domain) (ε : ℝ), 0 < ε →
+      ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V k, ‖x - v‖ < ε ∧
+        ‖H.d k (k + 1) ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain k (k + 1) hv)⟩‖ < ε)
+    (i : ℤ) (x : W i) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V i, ‖x - v‖ < ε ∧
+      ∀ j (hx : x ∈ (H.d i j).domain),
+        ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain i j hv)⟩‖ < ε := by
+  by_cases hx : x ∈ (H.d i (i + 1)).domain
+  · filter_upwards [hgraph i x hx ε hε] with N hN
+    obtain ⟨v, hv, h1, h2⟩ := hN
+    refine ⟨v, hv, h1, fun j hxj => ?_⟩
+    by_cases hj : i + 1 = j
+    · subst hj; exact h2
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+  · filter_upwards [eventually_exists_lt_of_graph hgraph i x hε] with N hN
+    obtain ⟨v, hv, h1⟩ := hN
+    refine ⟨v, hv, h1, fun j hxj => ?_⟩
+    by_cases hj : i + 1 = j
+    · subst hj; exact absurd hxj hx
+    · rw [HilbertComplex.apply_eq_zero_of_not_rel _ (by simpa using hj), norm_zero]; exact hε
+
+/-- `dist(q, Vₕʲ) → 0` from `L²` density. -/
+theorem tendsto_infDist_of_lt {j : ℤ} (q : W j)
+    (hlt : ∀ ε > 0, ∀ᶠ N in atTop, ∃ v ∈ (S N).V j, ‖q - v‖ < ε) :
+    Tendsto (fun N => Metric.infDist q ((S N).V j : Set (W j))) atTop (𝓝 0) := by
+  refine tendsto_order.2 ⟨fun a ha => Eventually.of_forall fun N =>
+    ha.trans_le Metric.infDist_nonneg, fun a ha => ?_⟩
+  filter_upwards [hlt a ha] with N hN
+  obtain ⟨v, hv, h⟩ := hN
+  exact (Metric.infDist_le_dist_of_mem hv).trans_lt (by rwa [dist_eq_norm])
+
+end Family
+
+/-! ### The semi-discrete Hodge wave equation for families approximating the graph spaces -/
+
+section Wave
+
+variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
+  [∀ i, CompleteSpace (W i)] {H : HilbertComplex ℝ (ComplexShape.up ℤ) W}
+
+variable {S : ℕ → H.Subcomplex} [∀ N k, FiniteDimensional ℝ ((S N).V k)]
+
+/-- **Convergence of the semi-discrete Hodge wave equation** on every window, for a family of
+subcomplexes approximating every point degreewise in the graph norm. -/
+theorem exists_tendstoUniformlyOn_window_of (hdeg : ∀ i (x : W i) (ε : ℝ), 0 < ε →
+      ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (S N).V i, ‖x - v‖ < ε ∧
+        ∀ j (hx : x ∈ (H.d i j).domain),
+          ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((S N).le_domain i j hv)⟩‖ < ε)
+    (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ) (x : (H.window a m).wave.domain) :
+    ∃ ξh ξh' : ℕ → ℝ → (H.window a m).totalD.GraphSpace,
+      (∀ N, HodgeWave.IsSemidiscreteSolution (((S N).window a m).graphSub)
+        (Set.Icc t₀ t₁) (ξh N) (ξh' N)) ∧
+      (∀ N, ξh N t₀ = HodgeWave.ellipticProjection (((S N).window a m).graphSub)
+        ((H.window a m).totalD.toGraphSpace ⟨x, ((H.window a m).mem_wave_domain.1 x.2).1⟩)) ∧
+      TendstoUniformlyOn (fun N t => (H.window a m).totalD.graphFst (ξh N t))
+        (fun t => (H.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) := by
+  have : ∀ N (i : Fin m), FiniteDimensional ℝ (((S N).window a m).V i) := fun N i =>
+    inferInstanceAs (FiniteDimensional ℝ ((S N).V (a + i)))
+  refine HilbertComplex.HodgeWave.exists_tendstoUniformlyOn_ellipticProjection _
+    (Subcomplex.isApproximating fun ζ _ hδ => ?_) t₀ t₁ x
+  exact Subcomplex.eventually_exists_graphSub_lt (fun N => (S N).window a m)
+    (fun i x _ hε => (hdeg (a + i) x _ hε).mono fun _ hN => by
+      obtain ⟨v, hv, h1, h2⟩ := hN
+      exact ⟨v, hv, h1, fun j hx => h2 (a + j) hx⟩) ζ hδ
+
+end Wave
 
 end Feec.HilbertComplex.Subcomplex

@@ -1,7 +1,8 @@
 module
 
-public import Feec.Models.Cube.SmoothingEstimates
-public import Feec.Models.Parallelepiped.FiniteElement
+public import Feec.Models.StarShaped.Smoothing
+public import Feec.FiniteElement.SmoothDensity
+public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!
 # The finite element method on domains star-shaped with respect to a ball
@@ -24,7 +25,7 @@ cochain projections onto `Vₕ ⊆ HΛ(Ω)` and `V̊ₕ ⊆ H̊Λ(Ω)`, in `L²`
 (`Feec.FiniteElement.norm_formL2_sub_glue_le_of_isShapeRegular`) gives the rate `h_N` for `C²`
 forms (`MeshFamily.exists_mem_whitney_le`, `MeshFamily.exists_mem_whitney_le_of_isC2Form`, and
 the `Min` versions for forms vanishing outside `Ω`), and with the density of smooth forms
-(`FEM.exists_smooth_near_of_starBall`, `FEM.exists_smooth_near_min_of_starBall`) graph-norm
+(`Feec.FiniteElement.exists_smooth_near_of_starBall`, `_min_of_starBall`) graph-norm
 density of the Whitney spaces (`MeshFamily.eventually_exists_whitney_near`, `..._whitneyMin_near`).
 
 **The finite element families** (`MeshFamily`, both families, `Min` for `H̊Λ(Ω)`): the Whitney
@@ -43,21 +44,18 @@ convergence are proved with no hypothesis. The Poincaré inequality of `HΛ(Ω)`
 (`ConformingFamily.quasiOptimal` and `ConformingFamily.rate` need it only in the degrees of the
 problem); it holds on every bounded Lipschitz domain (regularized Poincaré and Bogovskiĭ
 operators, [CostabelMcIntosh2010]), a theory absent from Mathlib, and is a theorem on the cube
-with `c_P = (2π)⁻¹` (`CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`) and on every
-parallelepiped (`Feec.Models.Parallelepiped.poincare`). The finite-dimensionality of the harmonic
-forms is used only for the harmonic gap and the cohomology.
-**Non-vacuity**: the cube with its Freudenthal meshes is a `StarDomain` with a `MeshFamily`
-satisfying all these hypotheses (`CubeWitness.starDomain`, `CubeWitness.meshFamily`,
-`CubeWitness.hasPoincare`, `CubeWitness.hasPoincareMin`), and so is every parallelepiped
-`A · Q + b` (every box) with its image
-Freudenthal meshes (`ParallelepipedWitness.starDomain`, `ParallelepipedWitness.meshFamily`,
-with `Feec.Models.Parallelepiped.poincare`; via the affine images
-`StarDomain.map`, `MeshFamily.map`: shape regularity, quasi-uniformity and star-shapedness with
-respect to a ball are preserved by affine equivalences, `isShapeRegular_image`,
-`MeshData.map`). The higher-order families `P_rΛᵏ`, `P_r⁻Λᵏ` on star-shaped domains
-(whose inverse and DOF estimates on shape-regular simplices are
+and on every parallelepiped (`Feec.Models.StarShapedWitness`). The finite-dimensionality of the
+harmonic forms is used only for the harmonic gap and the cohomology.
+**Affine images**: shape regularity, quasi-uniformity and star-shapedness with respect to a ball
+are preserved by affine equivalences (`StarDomain.map`, `MeshFamily.map`; `isShapeRegular_image`,
+`MeshData.map`). **Non-vacuity**: the cube with its Freudenthal meshes and every parallelepiped
+`A · Q + b` (every box) with its image Freudenthal meshes are `StarDomain`s with a `MeshFamily`
+satisfying all these hypotheses (`Feec.Models.StarShapedWitness`: `CubeWitness.meshFamily`,
+`CubeWitness.hasPoincare`, `ParallelepipedWitness.meshFamily`). The higher-order families
+`P_rΛᵏ`, `P_r⁻Λᵏ` (whose inverse and DOF estimates on shape-regular simplices are
 `Feec.FiniteElement.exists_inverse_bound_polySpace` and
-`Feec.FiniteElement.exists_dof_bound_of_le_polySpace`) are not treated here.
+`Feec.FiniteElement.exists_dof_bound_of_le_polySpace`) are in
+`Feec.Models.StarShaped.PolyFiniteElement`.
 
 ## References
 
@@ -83,7 +81,7 @@ open scoped ContDiff
 
 namespace Feec.Models.StarShaped
 
-open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre Feec.Models.Cube
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
 
@@ -308,13 +306,13 @@ variable {D : StarDomain n} (F : MeshFamily D) [NeZero n]
 
 /-- **Graph-norm density of the Whitney spaces in `HΛᵏ(Ω)`**: the canonical interpolants of
 smooth forms converge at rate `h_N` (`exists_mem_whitney_le`,
-`FEM.eventually_exists_graph_of_smooth`). -/
+`eventually_exists_graph_of_smooth`). -/
 theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complex.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitney N).V k, ‖x - v‖ < ε ∧
       ‖D.complex.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.whitney N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  refine FEM.eventually_exists_graph_of_smooth D.isOpen D.isBounded D.s₀_pos D.starBall
+  refine eventually_exists_graph_of_smooth D.isOpen D.isBounded D.s₀_pos D.starBall
     (fun N => F.whitney N) (fun k w hw _ => ?_) k x hx hε
   have hw2 : ContDiff ℝ 2 w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_fderiv (hw.of_le (by exact_mod_cast le_top))
@@ -333,7 +331,7 @@ theorem eventually_exists_whitney_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
 /-- **`L²` density of the Whitney spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitney_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitney N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph
+  Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) k x hε
 
 /-- **Degreewise approximation in every graph norm of `HΛ(Ω)`**. -/
@@ -343,25 +341,25 @@ theorem eventually_exists_whitney_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i)
       ∀ j (hx : x ∈ (D.complex.d i j).domain),
         ‖D.complex.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.whitney N).le_domain i j hv)⟩‖ <
           ε :=
-  FEM.eventually_exists_near_of_graph
+  Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitney_graph k x hx hε) i x hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitney (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.whitney N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
-  FEM.tendsto_infDist_of_lt (S := fun N => F.whitney N) q fun _ ha =>
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => F.whitney N) q fun _ ha =>
     F.eventually_exists_whitney_lt j q ha
 
 /-- **Graph-norm density of the Whitney spaces in `H̊Λᵏ(Ω)`**: the canonical interpolants of
 smooth forms vanishing outside `Ω` converge at rate `h_N` (`exists_mem_whitneyMin_le`,
-`FEM.eventually_exists_graph_of_smooth_min`). -/
+`eventually_exists_graph_of_smooth_min`). -/
 theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complexMin.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε ∧
       ‖D.complexMin.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.whitneyMin N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  refine FEM.eventually_exists_graph_of_smooth_min D.isOpen D.isBounded D.s₀_pos D.starBall
+  refine eventually_exists_graph_of_smooth_min D.isOpen D.isBounded D.s₀_pos D.starBall
     (fun N => F.whitneyMin N) (fun k w hw _ hsupp => ?_) k x hx hε
   have hw2 : ContDiff ℝ 2 w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_fderiv (hw.of_le (by exact_mod_cast le_top))
@@ -380,7 +378,7 @@ theorem eventually_exists_whitneyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx 
 /-- **`L²` density of the Whitney spaces with vanishing boundary DOFs** `V̊ₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_whitneyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.whitneyMin N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph
+  Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) k x hε
 
 /-- **Degreewise approximation in every graph norm of `H̊Λ(Ω)`**. -/
@@ -390,14 +388,14 @@ theorem eventually_exists_whitneyMin_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n
       ∀ j (hx : x ∈ (D.complexMin.d i j).domain),
         ‖D.complexMin.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.whitneyMin N).le_domain i j hv)⟩‖ <
           ε :=
-  FEM.eventually_exists_near_of_graph
+  Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => F.eventually_exists_whitneyMin_graph k x hx hε) i x hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)`. -/
 theorem tendsto_infDist_whitneyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.whitneyMin N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
-  FEM.tendsto_infDist_of_lt (S := fun N => F.whitneyMin N) q fun _ ha =>
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => F.whitneyMin N) q fun _ ha =>
     F.eventually_exists_whitneyMin_lt j q ha
 
 include F in
@@ -629,7 +627,7 @@ theorem exists_tendstoUniformlyOn_window (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ)
           ⟨x, ((D.complex.window a m).mem_wave_domain.1 x.2).1⟩)) ∧
       TendstoUniformlyOn (fun N t => (D.complex.window a m).totalD.graphFst (ξh N t))
         (fun t => (D.complex.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  Parallelepiped.exists_tendstoUniformlyOn_window_of
+  Subcomplex.exists_tendstoUniformlyOn_window_of
     (fun i x _ hε => F.eventually_exists_whitney_near i x hε) a m t₀ t₁ x
 
 /-- **Convergence of the semi-discrete Hodge wave equation** on every window of `H̊Λ(Ω)`
@@ -645,64 +643,10 @@ theorem exists_tendstoUniformlyOn_windowMin (a : ℤ) (m : ℕ) (t₀ t₁ : ℝ
           ⟨x, ((D.complexMin.window a m).mem_wave_domain.1 x.2).1⟩)) ∧
       TendstoUniformlyOn (fun N t => (D.complexMin.window a m).totalD.graphFst (ξh N t))
         (fun t => (D.complexMin.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  Parallelepiped.exists_tendstoUniformlyOn_window_of
+  Subcomplex.exists_tendstoUniformlyOn_window_of
     (fun i x _ hε => F.eventually_exists_whitneyMin_near i x hε) a m t₀ t₁ x
 
 end MeshFamily
-
-/-! ### Non-vacuity: the cube and its Freudenthal meshes -/
-
-namespace CubeWitness
-
-variable (n)
-
-/-- The cube `Q = (0, ½)ⁿ` as a domain star-shaped with respect to `B((¼, …, ¼), ¼)`, with
-`cl Q ⊆ B̄((¼, …, ¼), ¼)`. -/
-def starDomain : StarDomain n where
-  Ω := FEM.cubeDomain n
-  isOpen := FEM.isOpen_cubeDomain n
-  x₀ := FEM.center n
-  s₀ := 1 / 4
-  R := 1 / 4
-  s₀_pos := by norm_num
-  R_pos := by norm_num
-  starBall := FEM.starBall n
-  norm_sub_le := fun _ hy => FEM.norm_sub_center_le hy
-
-variable [NeZero n]
-
-/-- **The Freudenthal meshes of the cube** are uniformly shape regular (constants `max n 2`,
-`1`) and quasi-uniform (`q = 1`), with mesh size `h_N = 1 / (2 (N + 1)) → 0`. -/
-def meshFamily : MeshFamily (starDomain n) where
-  mesh := FEM.mesh n
-  C := ((max n 2 : ℕ) : ℝ)
-  c := 1
-  q := 1
-  C_nonneg := Nat.cast_nonneg _
-  c_pos := one_pos
-  q_pos := one_pos
-  domain_eq := FEM.mesh_domain n
-  data := FEM.meshData
-  tendsto_meshSize := by
-    simp only [FEM.meshSize_mesh, FEM.hN_eq_meshSize]; exact FEM.tendsto_meshSize
-
-omit [NeZero n] in
-/-- The Poincaré inequality of `HΛ(Q)`, `c_P = (2π)⁻¹` (`FEM.norm_le_of_mem_orthogonal_cycles`). -/
-theorem hasPoincare : HasPoincare (starDomain n).complex (2 * Real.pi)⁻¹ :=
-  fun _ _ hij z hz => FEM.norm_le_of_mem_orthogonal_cycles hij z hz
-
-omit [NeZero n] in
-/-- The Poincaré inequality of `H̊Λ(Q)`, `c_P = (2π)⁻¹`. -/
-theorem hasPoincareMin : HasPoincare (starDomain n).complexMin (2 * Real.pi)⁻¹ :=
-  fun _ _ hij z hz => FEM.norm_le_of_mem_orthogonal_cycles_min hij z hz
-
-instance (j : ℤ) : FiniteDimensional ℝ ((starDomain n).complex.harmonic j) :=
-  FEM.finiteDimensional_harmonic j
-
-instance (j : ℤ) : FiniteDimensional ℝ ((starDomain n).complexMin.harmonic j) :=
-  FEM.finiteDimensional_harmonic_min j
-
-end CubeWitness
 
 /-! ### Images under affine equivalences; non-vacuity on parallelepipeds -/
 
@@ -992,23 +936,5 @@ def map (Ω' : Set (Fin n → ℝ)) (hΩ' : Ω' = e '' D.Ω) : MeshFamily (D.map
     exact squeeze_zero (fun N => meshSize_nonneg' _) (fun N => meshSize_map_le e (F.mesh N)) h
 
 end MeshFamily
-
-namespace ParallelepipedWitness
-
-variable (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
-
-/-- The parallelepiped `Ω = A · (0, ½)ⁿ + b` as a star-shaped domain: the image of the cube
-(`CubeWitness.starDomain`) under `T x = A x + b`. -/
-def starDomain : StarDomain n :=
-  (CubeWitness.starDomain n).map (Parallelepiped.affEquiv A hA b) (Parallelepiped.domain A b)
-    (Parallelepiped.domain_eq_image A hA b)
-
-variable [NeZero n]
-
-/-- The image Freudenthal meshes `T(M_N)` of the parallelepiped as a mesh family. -/
-def meshFamily : MeshFamily (starDomain A hA b) :=
-  (CubeWitness.meshFamily n).map (Parallelepiped.affEquiv A hA b) _ _
-
-end ParallelepipedWitness
 
 end Feec.Models.StarShaped

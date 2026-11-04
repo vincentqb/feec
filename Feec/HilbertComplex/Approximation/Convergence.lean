@@ -30,6 +30,8 @@ finite-dimensional `K ⊆ Γ(T)` (e.g. the total space of a finite element subco
   rate, by stability plus density; `norm_sub_le_of_comparison`: the comparison-datum bound.
 * `HilbertComplex.Subcomplex.graphSub`: the total space of a subcomplex in `Γ(𝐝)`, finite
   dimensional and `d`-invariant.
+* `HilbertComplex.Subcomplex.norm_sub_le_of_approx`: the rate of Thm 4.14 on a subcomplex,
+  `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² η` when `ξ`, `ξ'` are within `η` of it in `Γ(𝐝)`.
 
 ## References
 
@@ -962,3 +964,71 @@ theorem exists_tendstoUniformlyOn_ellipticProjection {κ : Type*} {l : Filter κ
   exact ⟨ξh, ξh', hξh, hinit, hconv⟩
 
 end Feec.HilbertComplex.HodgeWave
+
+/-! ## Rate of the semi-discrete Hodge wave equation on a subcomplex -/
+
+namespace Feec.HilbertComplex.Subcomplex
+
+open _root_.Feec.HodgeWave
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+  {H : HilbertComplex 𝕜 c W}
+
+/-- **Rate of the semi-discrete Hodge wave equation on a finite-dimensional subcomplex**
+([QuennevilleBelair2015], Thm 4.14): if `ξ` is a weak solution in `C¹([t₀, t₁]; Γ(𝐝))`, `ξₕ` the
+semi-discrete solution in `S` started at the elliptic projection `Pₕ ξ(t₀)`, and `ξ(s)`, `ξ'(s)`
+are within `η` of `S` in the graph norm on `[t₀, t₁]`, then
+`‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² η` with `A = 1 + √12 ‖a + m‖` independent of `S`
+(`Feec.HodgeWave.norm_sub_ellipticProjection_le`, `Feec.HodgeWave.IsGraphSolution.norm_sub_le`). -/
+theorem norm_sub_le_of_approx (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
+    {t₀ t₁ : ℝ} {ξ ξ' ξh ξh' : ℝ → H.totalD.GraphSpace}
+    (hξ : IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
+    (hξh : IsSemidiscreteSolution S.graphSub (Set.Icc t₀ t₁) ξh ξh')
+    (h0 : ξh t₀ = ellipticProjection S.graphSub (ξ t₀)) {η : ℝ}
+    (happ : ∀ s ∈ Set.Icc t₀ t₁, (∃ w ∈ S.graphSub, ‖ξ s - w‖ ≤ η) ∧
+      (∃ w ∈ S.graphSub, ‖ξ' s - w‖ ≤ η))
+    {t : ℝ} (ht : t ∈ Set.Icc t₀ t₁) :
+    ‖H.totalD.graphFst (ξ t - ξh t)‖ ≤
+      (1 + ‖shiftedForm H.totalD‖ / ((1 / 2) / √3)) * (1 + (t - t₀)) ^ 2 * η := by
+  set A : ℝ := 1 + ‖shiftedForm H.totalD‖ / ((1 / 2) / √3) with hAdef
+  have hA : 0 ≤ A := by positivity
+  have hP : ∀ ζ : H.totalD.GraphSpace, (∃ w ∈ S.graphSub, ‖ζ - w‖ ≤ η) →
+      ‖H.totalD.graphFst (ellipticProjection S.graphSub ζ - ζ)‖ ≤ A * η := by
+    rintro ζ ⟨w, hw, hζw⟩
+    refine (norm_graphFst_le _).trans ?_
+    rw [norm_sub_rev]
+    exact (norm_sub_ellipticProjection_le H.totalD_mapsTo H.totalD_comp_totalD
+      S.graphSub (fun _ hv => S.graphD_mem_graphSub hv) ζ hw).trans
+      (mul_le_mul_of_nonneg_left hζw hA)
+  have hb := hξ.norm_sub_le hξh t ht
+  have hz : ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ t₀) - ξh t₀)‖ = 0 := by
+    rw [h0, sub_self (ellipticProjection S.graphSub (ξ t₀) : H.totalD.GraphSpace)]
+    exact norm_eq_zero.2 (H.totalD.graphFst.map_zero)
+  rw [hz, zero_add] at hb
+  have ht₀ : t₀ ∈ Set.Icc t₀ t₁ := ⟨le_rfl, ht.1.trans ht.2⟩
+  have e1 := hP _ (happ t ht).1
+  have e0 := hP _ (happ t₀ ht₀).1
+  have hτ : 0 ≤ t - t₀ := sub_nonneg.2 ht.1
+  have hint : ∫ s in t₀..t, ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ' s) - ξ' s)‖ ≤
+      (t - t₀) * (A * η) := by
+    have h := intervalIntegral.norm_integral_le_of_norm_le_const (a := t₀) (b := t)
+      (C := A * η)
+      (f := fun s => ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ' s) - ξ' s)‖)
+      fun s hs => by
+        rw [Set.uIoc_of_le ht.1] at hs
+        rw [norm_norm]
+        exact hP _ (happ s ⟨hs.1.le, hs.2.trans ht.2⟩).2
+    rw [abs_of_nonneg hτ, mul_comm] at h
+    exact (le_abs_self _).trans h
+  have i1 : (t - t₀) * ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ t₀) - ξ t₀)‖ ≤
+      (t - t₀) * (A * η) := mul_le_mul_of_nonneg_left e0 hτ
+  have i2 : (1 + (t - t₀)) *
+      ∫ s in t₀..t, ‖H.totalD.graphFst (ellipticProjection S.graphSub (ξ' s) - ξ' s)‖ ≤
+      (1 + (t - t₀)) * ((t - t₀) * (A * η)) := mul_le_mul_of_nonneg_left hint (by linarith)
+  calc _ ≤ _ := hb
+    _ ≤ A * η + (t - t₀) * (A * η) + (1 + (t - t₀)) * ((t - t₀) * (A * η)) := by linarith
+    _ = A * (1 + (t - t₀)) ^ 2 * η := by ring
+
+end Feec.HilbertComplex.Subcomplex

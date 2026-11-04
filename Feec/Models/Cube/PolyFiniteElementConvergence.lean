@@ -3,6 +3,7 @@ module
 public import Feec.Models.Cube.PolySmoothingEstimates
 public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.HilbertComplex.Approximation.DiscreteCohomology
+public import Feec.FiniteElement.PolyOrder
 
 /-!
 # The higher-order finite element methods on the cube as conforming families
@@ -73,25 +74,6 @@ namespace Poly
 variable (S : PolySeq)
 
 /-! ### The local interpolation error of the higher-order families -/
-
-/-- `P_sΛᵏ ⊆ P_{r_k}Λᵏ` and `⊆ P_{r_k}⁻Λᵏ` for `s + 1 ≤ r_k`. -/
-theorem polySpace_le_space {k s : ℕ} (hs : s + 1 ≤ S.deg k) :
-    polySpace n s k ≤ S.space n k := by
-  change polySpace n s k ≤ (S.kind k).space n (S.deg k) k
-  cases S.kind k
-  · exact polySpace_mono (by omega)
-  · exact (polySpace_mono (by omega)).trans (polySpace_le_polyMinusSpace (S.deg k) k)
-
-/-- `P_sΛᵏ ⊆ P_{r_k}Λᵏ` for `s ≤ r_k` when the sequence uses the full family in degree `k`. -/
-theorem polySpace_le_space_of_full {k s : ℕ} (hk : S.kind k = .full) (hs : s ≤ S.deg k) :
-    polySpace n s k ≤ S.space n k := by
-  change polySpace n s k ≤ (S.kind k).space n (S.deg k) k
-  rw [hk]
-  exact polySpace_mono hs
-
-theorem degPartField_taylorPoly_mem {k s : ℕ} (w : FormField n) (x₀ : Fin n → ℝ) :
-    degPartField k (taylorPoly w x₀ (s + 1)) ∈ polySpace n s k :=
-  degPartField_mem_polySpace (taylorPoly_mem_polyFunctions w x₀ s) k
 
 /-- **Taylor approximation on a mesh simplex**: for a `C^{s+1}` degree-`k` field `w` with
 `‖D^{s+1} w‖ ≤ M` on `T`, the degree-`k` part `P` of its Taylor polynomial of order `s` at a
@@ -175,40 +157,6 @@ theorem abs_sub_globalInterp_le {N k s : ℕ} (hs : polySpace n s k ≤ S.space 
     _ = (1 + B * Module.finrank ℝ (S.space n k) * D) * e := by ring
 
 end Poly
-
-/-! ### The global `L²` interpolation error -/
-
-/-- **A pointwise bound on the simplex interiors bounds the `L²` distance** between a continuous
-form and a glued piecewise field (any element family). -/
-theorem norm_formL2_sub_glue_le_of_forall (E : LocalElement n) (M : SimplicialMesh n)
-    (hΩ : MeasurableSet M.domain) (k : ℕ) (w : contForms n) (u : E.Piecewise M k) {B : ℝ}
-    (hB : 0 ≤ B)
-    (hpt : ∀ (T : M.simplices), ∀ x ∈ interior (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
-      ∀ s : Finset (Fin n), #s = k →
-        |(w : FormField n) x s - ((u T : E.space T k) : FormField n) x s| ≤ B) :
-    ‖formL2 hΩ M.isBounded_domain k w - E.glue M k u‖ ≤
-      Fintype.card (formIdx n k) * (volume.real M.domain ^ (1 / 2 : ℝ) * B) := by
-  have : IsFiniteMeasure (volume.restrict M.domain) :=
-    isFiniteMeasure_restrict.2 M.isBounded_domain.measure_lt_top.ne
-  rw [LocalElement.glue_apply]
-  refine L2F.norm_le_card_mul _ (by positivity) fun s => ?_
-  refine (Lp.norm_le_of_ae_bound hB ?_).trans (le_of_eq ?_)
-  · have hcont : ∀ T ∈ M.simplices, ∀ s : formIdx n k,
-        Continuous (formComp (k := (k : ℤ)) (E.extendPW M u T) s) :=
-      fun T hT s => continuous_formComp (E.contDiff_extendPW M u hT).continuous s
-    filter_upwards [Lp.coeFn_sub (formL2 hΩ M.isBounded_domain k w s)
-      (pieceL2 M M.domain (fun T => formComp (k := (k : ℤ)) (E.extendPW M u T))
-        hcont s), coeFn_formL2 hΩ M.isBounded_domain k w s,
-      coeFn_pieceL2 (𝕜 := ℝ) M M.domain _ hcont s, Feec.FiniteElement.ae_mem_interior M hΩ]
-      with x h1 h2 h3 hx
-    obtain ⟨T, hT, hxT⟩ := hx
-    rw [PiLp.sub_apply, h1, Pi.sub_apply, h2, h3, pieceFun_of_mem_interior M _ hT hxT]
-    change ‖(w : FormField n) x s.1 - E.extendPW M _ T x s.1‖ ≤ B
-    rw [LocalElement.extendPW_of_mem _ _ _ hT, Real.norm_eq_abs]
-    have hs : #s.1 = k := by exact_mod_cast s.2
-    exact hpt ⟨T, hT⟩ x hxT s.1 hs
-  · rw [measureUnivNNReal, Measure.restrict_apply_univ, ENNReal.toReal_ofNat, one_div]
-    rfl
 
 /-! ### Interpolation of smooth forms on the cube meshes -/
 
@@ -328,10 +276,6 @@ theorem exists_bound_iteratedFDeriv {m : ℕ} {w : FormField n} (hw : ContDiff �
     (hw.continuous_iteratedFDeriv le_rfl).continuousOn
   exact ⟨max L 0, le_max_right _ _, fun y hy => (hL y hy).trans (le_max_left _ _)⟩
 
-omit [NeZero n] in
-theorem polySpace_zero_le_space (S : PolySeq) (k : ℕ) : polySpace n 0 k ≤ S.space n k :=
-  Poly.polySpace_le_space S (by have := S.one_le_deg k; omega)
-
 /-- **Graph-norm density of the higher-order spaces in `HΛᵏ(Q)`**: every `x ∈ D(d)` is the limit,
 in the graph norm, of points of the spaces `Vₕᵏ` of `S` on the Freudenthal meshes. -/
 theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
@@ -352,8 +296,8 @@ theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeD
       simpa using (((tendsto_meshSize.pow 1).mul_const L).const_mul (polyInterpConst n S k)).add
         (((tendsto_meshSize.pow 1).mul_const L').const_mul (polyInterpConst n S (k + 1))),
     fun N => ?_⟩
-  obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_poly_le S N k 0 (polySpace_zero_le_space S k)
-    (polySpace_zero_le_space S (k + 1)) hw2 hdeg hL hL'
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := exists_mem_poly_le S N k 0 (S.polySpace_zero_le_space k)
+    (S.polySpace_zero_le_space (k + 1)) hw2 hdeg hL hL'
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right (mul_nonneg (polyInterpConst_nonneg S (k + 1))
     (mul_nonneg (pow_nonneg (meshSize_pos N).le _) hL'0))), hdv, hv2.trans (le_add_of_nonneg_left
       (mul_nonneg (polyInterpConst_nonneg S k) (mul_nonneg (pow_nonneg (meshSize_pos N).le _)
@@ -362,7 +306,7 @@ theorem eventually_exists_poly_graph (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeD
 /-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Q; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (S : PolySeq) (k : ℤ) (x : L2F ℝ (cubeDomain n) (formIdx n k))
     {ε : ℝ} (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (poly n S N).V k, ‖x - v‖ < ε :=
-  eventually_exists_lt_of_graph
+  Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) k x hε
 
 /-- Degreewise approximation in every graph norm of `HΛ(Q)` by the higher-order spaces. -/
@@ -372,14 +316,14 @@ theorem eventually_exists_poly_near (S : PolySeq) (i : ℤ) (x : L2F ℝ (cubeDo
       ∀ j (hx : x ∈ ((complex n).d i j).domain),
         ‖(complex n).d i j ⟨x - v, Submodule.sub_mem _ hx ((poly n S N).le_domain i j hv)⟩‖ <
           ε :=
-  eventually_exists_near_of_graph
+  Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => eventually_exists_poly_graph S k x hx hε) i x hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((poly n S N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
-  tendsto_infDist_of_lt (S := fun N => poly n S N) q fun _ ha =>
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => poly n S N) q fun _ ha =>
     eventually_exists_poly_lt S j q ha
 
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :
@@ -454,13 +398,13 @@ theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
     ((norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw1.continuous⟩
       ((polyElement n S).globalInterp (mesh n N) k ⟨w, hw1.continuous⟩ :
         (polyElement n S).Piecewise (mesh n N) k) (hB k hL0)
-      fun T x hx t _ => abs_sub_globalInterp_le_cube S (polySpace_zero_le_space S k) hw1 hdeg hL
+      fun T x hx t _ => abs_sub_globalInterp_le_cube S (S.polySpace_zero_le_space k) hw1 hdeg hL
         T (interior_subset hx) t).trans_eq (by
           rw [mesh_domain, polyInterpConst]; push_cast; ring))
     ((norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
       ((polyElement n S).globalInterp (mesh n N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
         (polyElement n S).Piecewise (mesh n N) (k + 1)) (hB (k + 1) hL'0)
-      fun T x hx t _ => abs_sub_globalInterp_le_cube S (polySpace_zero_le_space S (k + 1)) hdw
+      fun T x hx t _ => abs_sub_globalInterp_le_cube S (S.polySpace_zero_le_space (k + 1)) hdw
         (fun x => IsDeg.extDeriv hdeg x) hL' T (interior_subset hx) t).trans_eq (by
           rw [mesh_domain, polyInterpConst]; push_cast; ring))
   exact ⟨v, hv, hv1.trans (le_add_of_nonneg_right (mul_nonneg (polyInterpConst_nonneg S (k + 1))
@@ -472,14 +416,14 @@ theorem eventually_exists_polyMin_graph (S : PolySeq) (k : ℤ)
 theorem eventually_exists_polyMin_lt (S : PolySeq) (k : ℤ)
     (x : L2F ℝ (cubeDomain n) (formIdx n k)) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v ∈ (polyMin n S N).V k, ‖x - v‖ < ε :=
-  eventually_exists_lt_of_graph
+  Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => eventually_exists_polyMin_graph S k x hx hε) k x hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Q; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (S : PolySeq) (j : ℤ) (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((polyMin n S N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
-  tendsto_infDist_of_lt (S := fun N => polyMin n S N) q fun _ ha =>
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => polyMin n S N) q fun _ ha =>
     eventually_exists_polyMin_lt S j q ha
 
 instance (S : PolySeq) (N : ℕ) (a : ℤ) (m : ℕ) (i : Fin m) :

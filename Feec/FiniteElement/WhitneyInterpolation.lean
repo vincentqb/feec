@@ -57,7 +57,8 @@ of `Π_T` under affine maps).
 * `abs_sub_whitneyInterp_le`: the local interpolation error.
 * `isRefInterpolant_whitney`: the Whitney interpolant as a reference interpolant.
 * `whitney_globalInterp_apply`, `norm_formL2_sub_glue_le`,
-  `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error.
+  `norm_formL2_sub_glue_le_of_isShapeRegular`: the global `L²` error; for any element family, a
+  pointwise bound on the simplex interiors bounds it (`norm_formL2_sub_glue_le_of_forall`).
 * `formL2_mem_maximal`, `contDiff_extDeriv`: `d` on smooth forms.
 
 ## References
@@ -618,6 +619,38 @@ theorem _root_.Feec.FiniteElement.LocalElement.glue_apply (E : LocalElement n)
     (M : SimplicialMesh n) (k : ℤ) (u : E.Piecewise M k.toNat) :
     E.glue M k u = pieceL2 M M.domain (fun T => formComp (k := k) (E.extendPW M u T))
       (fun _ hT s => continuous_formComp (E.contDiff_extendPW M u hT).continuous s) := rfl
+
+/-- **A pointwise bound on the simplex interiors bounds the `L²` distance** between a continuous
+form and a glued piecewise field (any element family). -/
+theorem norm_formL2_sub_glue_le_of_forall (E : LocalElement n) (M : SimplicialMesh n)
+    (hΩ : MeasurableSet M.domain) (k : ℕ) (w : contForms n) (u : E.Piecewise M k) {B : ℝ}
+    (hB : 0 ≤ B)
+    (hpt : ∀ (T : M.simplices), ∀ x ∈ interior (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior,
+      ∀ s : Finset (Fin n), #s = k →
+        |(w : FormField n) x s - ((u T : E.space T k) : FormField n) x s| ≤ B) :
+    ‖formL2 hΩ M.isBounded_domain k w - E.glue M k u‖ ≤
+      Fintype.card (formIdx n k) * (volume.real M.domain ^ (1 / 2 : ℝ) * B) := by
+  have : IsFiniteMeasure (volume.restrict M.domain) :=
+    isFiniteMeasure_restrict.2 M.isBounded_domain.measure_lt_top.ne
+  rw [LocalElement.glue_apply]
+  refine L2F.norm_le_card_mul _ (by positivity) fun s => ?_
+  refine (Lp.norm_le_of_ae_bound hB ?_).trans (le_of_eq ?_)
+  · have hcont : ∀ T ∈ M.simplices, ∀ s : formIdx n k,
+        Continuous (formComp (k := (k : ℤ)) (E.extendPW M u T) s) :=
+      fun T hT s => continuous_formComp (E.contDiff_extendPW M u hT).continuous s
+    filter_upwards [Lp.coeFn_sub (formL2 hΩ M.isBounded_domain k w s)
+      (pieceL2 M M.domain (fun T => formComp (k := (k : ℤ)) (E.extendPW M u T))
+        hcont s), coeFn_formL2 hΩ M.isBounded_domain k w s,
+      coeFn_pieceL2 (𝕜 := ℝ) M M.domain _ hcont s, Feec.FiniteElement.ae_mem_interior M hΩ]
+      with x h1 h2 h3 hx
+    obtain ⟨T, hT, hxT⟩ := hx
+    rw [PiLp.sub_apply, h1, Pi.sub_apply, h2, h3, pieceFun_of_mem_interior M _ hT hxT]
+    change ‖(w : FormField n) x s.1 - E.extendPW M _ T x s.1‖ ≤ B
+    rw [LocalElement.extendPW_of_mem _ _ _ hT, Real.norm_eq_abs]
+    have hs : #s.1 = k := by exact_mod_cast s.2
+    exact hpt ⟨T, hT⟩ x hxT s.1 hs
+  · rw [measureUnivNNReal, Measure.restrict_apply_univ, ENNReal.toReal_ofNat, one_div]
+    rfl
 
 section Global
 

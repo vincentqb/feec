@@ -52,7 +52,7 @@ equation ([QuennevilleBelair2015], Thm 4.14).
 
 `r` is the polynomial degree; the optimal `L²` best-approximation rate for `Hˢ` data is
 `h^{min(s, r_eff)}`, `r_eff = s_S + 1` where `S` reproduces `P_{s_S}` in the degrees used
-(`FEM.PolyOrder`, `FEM.PolyOrderAt`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`).
+(`PolyOrder`, `PolyOrderAt`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`).
 
 | Setting | proved | optimal | what is missing |
 |---|---|---|---|

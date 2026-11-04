@@ -7,9 +7,10 @@ public import Mathlib.Algebra.Order.Chebyshev
 # Rates of convergence of the higher-order finite element methods on the cube
 
 For an admissible sequence `S` reproducing polynomial forms of degree `s` in every form degree
-(`FEM.PolyOrder n S s`: `P_sΛᵏ ⊆ P(T)ᵏ`; every sequence has order `0`, `polyOrder_zero`), the
-canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of order `h^{s+1}` for
-`C^{s+2}` forms (`FEM.exists_mem_poly_le`), and the rate passes to the finite element methods:
+(`Feec.FiniteElement.PolyOrder n S s`: `P_sΛᵏ ⊆ P(T)ᵏ`; every sequence has order `0`,
+`Feec.FiniteElement.polyOrder_zero`), the canonical interpolant of `S` on the Freudenthal
+meshes of `Q = (0, ½)ⁿ` is of order `h^{s+1}` for `C^{s+2}` forms (`FEM.exists_mem_poly_le`), and
+the rate passes to the finite element methods:
 
 * `FEM.IsCsForm s j L x` (resp. `FEM.IsCsFormMin`, vanishing outside `Q`): `x` is a `C^{s+2}`
   `j`-form whose `(s+1)`-st derivatives and those of `dx` are bounded by `L` on `cl Q`
@@ -19,7 +20,7 @@ canonical interpolant of `S` on the Freudenthal meshes of `Q = (0, ½)ⁿ` is of
   (`IsCsForm.infDist_domainSub_poly_le`).
 * **Mixed Hodge–Laplace problem** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7): error
   `≤ K L h_N^{s+1}` for solutions with `IsCsForm s` components (`mixed_rate_poly`,
-  unconditionally). Only the degrees used matter (`FEM.PolyOrderAt n S s j`: `P_s` in degrees `j`
+  unconditionally). Only the degrees used matter (`PolyOrderAt n S s j`: `P_s` in degrees `j`
   and `j + 1`; `mixed_rate_poly_of_polyOrderAt`): the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of
   Tables 5.1/6.1 has global order `h` only (because of `P₀Λ³`), but converges at order `h²` for
   the Hodge Laplacian on `1`-forms (`mixed_rate_lagrangeP2`).
@@ -68,46 +69,6 @@ namespace Feec.Models.Cube.FEM
 open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex Feec.ExteriorFibre
 
 variable {n : ℕ}
-
-/-! ### The approximation order of an admissible sequence -/
-
-variable (n) in
-/-- The sequence `S` **reproduces polynomial forms of degree `s`** in every form degree:
-`P_sΛᵏ ⊆ P(T)ᵏ` for all `k`, so that its canonical interpolant is of order `h^{s+1}`. -/
-def PolyOrder (S : PolySeq) (s : ℕ) : Prop := ∀ k, polySpace n s k ≤ S.space n k
-
-/-- Every admissible sequence has order `h` (`s = 0`). -/
-theorem polyOrder_zero (S : PolySeq) : PolyOrder n S 0 := fun k => polySpace_zero_le_space S k
-
-variable (n) in
-/-- **Degreewise order**: `S` reproduces polynomial forms of degree `s` in the form degrees `j`
-and `j + 1` (vacuous for `j < 0`), which is all the interpolation error in the graph norm of
-degree `j` uses. -/
-def PolyOrderAt (S : PolySeq) (s : ℕ) (j : ℤ) : Prop :=
-  ∀ k : ℕ, (k : ℤ) = j → polySpace n s k ≤ S.space n k ∧ polySpace n s (k + 1) ≤ S.space n (k + 1)
-
-/-- An order in every degree is an order in each degree. -/
-theorem PolyOrder.polyOrderAt {S : PolySeq} {s : ℕ} (h : PolyOrder n S s) (j : ℤ) :
-    PolyOrderAt n S s j := fun k _ => ⟨h k, h (k + 1)⟩
-
-/-- The bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` reproduces `P₁` in the form degrees `0, 1`. -/
-theorem lagrangeP2_polyOrderAt_zero : PolyOrderAt n PolySeq.lagrangeP2 1 0 := by
-  intro k hk
-  obtain rfl : k = 0 := by exact_mod_cast hk
-  exact ⟨Poly.polySpace_le_space_of_full _ (by simp) (by simp), Poly.polySpace_le_space _ (by simp)⟩
-
-/-- The bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` reproduces `P₁` in the form degrees `1, 2`. -/
-theorem lagrangeP2_polyOrderAt_one : PolyOrderAt n PolySeq.lagrangeP2 1 1 := by
-  intro k hk
-  obtain rfl : k = 1 := by exact_mod_cast hk
-  exact ⟨Poly.polySpace_le_space _ (by simp), Poly.polySpace_le_space_of_full _ (by simp) (by simp)⟩
-
-/-- The bottom row reproduces `P₁` on the window `0, 1` (form degrees `0, 1, 2`). -/
-theorem lagrangeP2_polyOrderAt_window : ∀ i : Fin 2, PolyOrderAt n PolySeq.lagrangeP2 1 (0 + i) :=
-  fun i => by
-    fin_cases i
-    · simpa using lagrangeP2_polyOrderAt_zero (n := n)
-    · simpa using lagrangeP2_polyOrderAt_one (n := n)
 
 /-! ### Smooth forms of order `s` -/
 
@@ -1171,7 +1132,7 @@ theorem sq_norm_formL2_sub_smoothedInterp_le {N k : ℕ} {B D : ℝ} (hB : DofBo
           (u : (polyElement n S).Piecewise (mesh n N) k) T x t| ≤ Ci * (h ^ (0 + 1) * MT) := by
       intro x hx t
       rw [(polyElement n S).extendPW_of_mem (mesh n N) _ hT]
-      exact abs_sub_globalInterp_le S (polySpace_zero_le_space S k) hB hB0 hD ⟨T, hT⟩
+      exact abs_sub_globalInterp_le S (S.polySpace_zero_le_space k) hB hB0 hD ⟨T, hT⟩
         (s := 0) (hFc1.of_le le_rfl) (isDeg_smoothForm p (isOpen_mesh_domain n N).measurableSet k y) (hder T hT) hx t
     obtain ⟨m, σ, hmσ⟩ := mem_mesh_simplices.1 hT
     have hcont : ∀ s : formIdx n k, Continuous fun x => ((F : FormField n) x s.1 -

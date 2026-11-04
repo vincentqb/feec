@@ -322,16 +322,6 @@ theorem Poly.exists_gamma₀ (S : PolySeq) :
       (StarShaped.polySampleOK_of_isMinimal S hM one_pos hC hstar (by norm_num) hpA (by norm_num)
         hRx (by norm_num) hγ4 hθ hu)
 
-
-instance (S : PolySeq) (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (k : ℤ) :
-    FiniteDimensional ℝ ((S.subcomplex M hΩ).V k) :=
-  inferInstanceAs (FiniteDimensional ℝ ((polyElement n S).V M k))
-
-instance (S : PolySeq) (M : SimplicialMesh n) (hΩ : IsOpen M.domain) (x₀ : Fin n → ℝ)
-    (hstar : ∀ x ∈ closure M.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ M.domain)
-    (k : ℤ) : FiniteDimensional ℝ ((S.subcomplexMin M hΩ x₀ hstar).V k) :=
-  inferInstanceAs (FiniteDimensional ℝ ((polyElement n S).V₀ M k))
-
 variable (n) in
 /-- **The finite element complex of the admissible sequence `S`** on the level-`(N + 1)`
 Freudenthal mesh of the cube (`P_{r_k}Λᵏ` / `P_{r_k}⁻Λᵏ` in degree `k`), as a subcomplex of

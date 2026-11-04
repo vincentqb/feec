@@ -11,8 +11,8 @@ public import Feec.FiniteElement.BrambleHilbertL2
 Rates `h^{min(s, r_eff)}` of the finite element methods of every admissible sequence `S` on the
 Freudenthal meshes of `Q = (0, ½)ⁿ` for data in the Sobolev spaces of
 `Feec.Models.Cube.Sobolev`, every real `s ≥ 0`, where `r_eff = p + 1` and `S` reproduces `P_p`
-in the degrees used (`polySpace n p k ≤ S.space n k`, e.g. `FEM.PolyOrder n S p`,
-`FEM.PolyOrderAt n S p j`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`), in **every dimension**
+in the degrees used (`polySpace n p k ≤ S.space n k`, e.g. `PolyOrder n S p`,
+`PolyOrderAt n S p j`; `r_eff = r + 1` for `P_rΛᵏ`, `r` for `P_r⁻Λᵏ`), in **every dimension**
 `n` and every order (no condition `2 r_eff > n`; for `r_eff = 1` also
 `Feec.Models.Cube.SobolevRate`).
 
@@ -1085,7 +1085,7 @@ theorem infDist_poly_le_sobolevQ_of_near [NeZero n] (S : PolySeq) {k N : ℕ} {C
 
 /-- **Best approximation of `Hˢ(Q)` forms at the optimal rate**
 (`infDist_poly_le_sobolevQ_high`; [AFW2010], §5; [Arnold2018], Ch. 7): for a sequence `S`
-reproducing `P_pΛᵏ` in degree `k` (`r_eff = p + 1`, e.g. `FEM.PolyOrder n S p`), in every
+reproducing `P_pΛᵏ` in degree `k` (`r_eff = p + 1`, e.g. `PolyOrder n S p`), in every
 dimension, and every real `s ≥ 0`,
 `dist(y, Vₕᵏ) ≤ C h_N^{min(s, r_eff)} ‖y‖_{Hˢ(Q)}`, `C = sobConstHigh n S k p` independent of
 `N` and `s`: `infDist_poly_le_sobolevQ_of_near` with the interpolation step

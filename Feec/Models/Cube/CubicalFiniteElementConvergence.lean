@@ -232,8 +232,8 @@ theorem tendsto_infDist_qMinus (hb : ∀ j, 1 ≤ b j) (j : ℤ)
     (q : L2F ℝ (cubeDomain n) (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((qMinus n b N).V j :
       Set (L2F ℝ (cubeDomain n) (formIdx n j)))) atTop (𝓝 0) :=
-  tendsto_infDist_of_lt (S := fun N => qMinus n b N) q fun _ ha =>
-    eventually_exists_lt_of_graph
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => qMinus n b N) q fun _ ha =>
+    Subcomplex.eventually_exists_lt_of_graph
       (fun k x hx _ hε => eventually_exists_qMinus_graph hb k x hx hε) j q ha
 
 /-! ### The cubical complexes as a conforming family -/

@@ -44,7 +44,7 @@ noncomputable section
 namespace FeecCheck.MaxwellInstances
 
 open Feec Feec.HilbertComplex Feec.Instances.Maxwell
-open Feec.FiniteElement (PolySeq)
+open Feec.FiniteElement (PolySeq PolyOrder)
 
 /-! ### The concrete instances -/
 
@@ -264,7 +264,7 @@ abbrev cubePECRate (a : ℤ) (T Λ : ℝ) (hΛ : 0 ≤ Λ) : (cubePEC n a).RateC
     fun N => (FEM.meshSize_pos N).le
 
 /-- The deleted `cubePolyPMCRate`, as it was defined. -/
-abbrev cubePolyPMCRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
+abbrev cubePolyPMCRate (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
     (hΛ : 0 ≤ Λ) : (cubePolyPMC n S a).RateClass T :=
   regRate (FEM.polyFamily n S) a T (fun k x => FEM.IsCsForm s k Λ x) (FEM.polyInterpBound n S)
     (fun N => FEM.meshSize N ^ (s + 1)) Λ
@@ -272,7 +272,7 @@ abbrev cubePolyPMCRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : �
     (FEM.polyInterpBound_nonneg S) hΛ fun N => pow_nonneg (FEM.meshSize_pos N).le _
 
 /-- The deleted `cubePolyPECRate`, as it was defined. -/
-abbrev cubePolyPECRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
+abbrev cubePolyPECRate (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
     (hΛ : 0 ≤ Λ) : (cubePolyPEC n S a).RateClass T :=
   regRate (FEM.polyFamilyMin n S) a T (fun k x => FEM.IsCsFormMin s k Λ x)
     (FEM.polyInterpBound n S) (fun N => FEM.meshSize N ^ (s + 1)) Λ
@@ -310,7 +310,7 @@ theorem cubePEC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   ring
 
 /-- `cubePolyPMC_rate`, verbatim. -/
-theorem cubePolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T Λ : ℝ}
+theorem cubePolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : PolyOrder n S s} {T Λ : ℝ}
     {hΛ : 0 ≤ Λ} {x} (hx : x ∈ (cubePolyPMCRate n S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖((FEM.complex n).window a 3).waveGroup.S t x -
@@ -326,7 +326,7 @@ theorem cubePolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   ring
 
 /-- `cubePolyPEC_rate`, verbatim. -/
-theorem cubePolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T Λ : ℝ}
+theorem cubePolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : PolyOrder n S s} {T Λ : ℝ}
     {hΛ : 0 ≤ Λ} {x} (hx : x ∈ (cubePolyPECRate n S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖((FEM.complexMin n).window a 3).waveGroup.S t x -
@@ -401,7 +401,7 @@ abbrev paraPECRate (a : ℤ) (T Λ : ℝ) (hΛ : 0 ≤ Λ) : (paraPEC A hA b a).
     hΛ fun N => (FEM.meshSize_pos N).le
 
 /-- The deleted `paraPolyPMCRate`, as it was defined. -/
-abbrev paraPolyPMCRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
+abbrev paraPolyPMCRate (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
     (hΛ : 0 ≤ Λ) : (paraPolyPMC A hA b S a).RateClass T :=
   regRate (polyFamily A hA b S) a T (fun k x => IsCsForm A hA b s k Λ x) (polyRateBound A S s)
     (fun N => FEM.meshSize N ^ (s + 1)) Λ
@@ -411,7 +411,7 @@ abbrev paraPolyPMCRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : �
     (polyRateBound_nonneg A S s) hΛ fun N => pow_nonneg (FEM.meshSize_pos N).le _
 
 /-- The deleted `paraPolyPECRate`, as it was defined. -/
-abbrev paraPolyPECRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
+abbrev paraPolyPECRate (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
     (hΛ : 0 ≤ Λ) : (paraPolyPEC A hA b S a).RateClass T :=
   regRate (polyFamilyMin A hA b S) a T (fun k x => IsCsFormMin A hA b s k Λ x)
     (polyRateBound A S s) (fun N => FEM.meshSize N ^ (s + 1)) Λ
@@ -451,7 +451,7 @@ theorem paraPEC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   ring
 
 /-- `paraPolyPMC_rate`, verbatim. -/
-theorem paraPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T Λ : ℝ}
+theorem paraPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : PolyOrder n S s} {T Λ : ℝ}
     {hΛ : 0 ≤ Λ} {x} (hx : x ∈ (paraPolyPMCRate A hA b S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖((complex A b).window a 3).waveGroup.S t x -
@@ -467,7 +467,7 @@ theorem paraPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   ring
 
 /-- `paraPolyPEC_rate`, verbatim. -/
-theorem paraPolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T Λ : ℝ}
+theorem paraPolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : PolyOrder n S s} {T Λ : ℝ}
     {hΛ : 0 ≤ Λ} {x} (hx : x ∈ (paraPolyPECRate A hA b S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖((complexMin A b).window a 3).waveGroup.S t x -
@@ -504,7 +504,7 @@ abbrev starPECRate (a : ℤ) (T Λ : ℝ) (hΛ : 0 ≤ Λ) : (starPEC M a).RateC
     fun N => (M.meshSize_pos N).le
 
 /-- The deleted `starPolyPMCRate`, as it was defined. -/
-abbrev starPolyPMCRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
+abbrev starPolyPMCRate (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
     (hΛ : 0 ≤ Λ) : (starPolyPMC M S a).RateClass T :=
   regRate (M.polyFamily S) a T (fun k x => D.IsCsForm s k Λ x) (M.polyInterpBound S)
     (fun N => (M.mesh N).meshSize ^ (s + 1)) Λ
@@ -512,7 +512,7 @@ abbrev starPolyPMCRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : �
     (M.polyInterpBound_nonneg S) hΛ fun N => pow_nonneg (M.meshSize_pos N).le _
 
 /-- The deleted `starPolyPECRate`, as it was defined. -/
-abbrev starPolyPECRate (S : PolySeq) {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
+abbrev starPolyPECRate (S : PolySeq) {s : ℕ} (hS : PolyOrder n S s) (a : ℤ) (T Λ : ℝ)
     (hΛ : 0 ≤ Λ) : (starPolyPEC M S a).RateClass T :=
   regRate (M.polyFamilyMin S) a T (fun k x => D.IsCsFormMin s k Λ x) (M.polyInterpBound S)
     (fun N => (M.mesh N).meshSize ^ (s + 1)) Λ
@@ -551,7 +551,7 @@ theorem starPEC_rate_old {T Λ : ℝ} {hΛ : 0 ≤ Λ} {x}
   ring
 
 /-- `starPolyPMC_rate`, verbatim. -/
-theorem starPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T Λ : ℝ}
+theorem starPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : PolyOrder n S s} {T Λ : ℝ}
     {hΛ : 0 ≤ Λ} {x} (hx : x ∈ (starPolyPMCRate M S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖(D.complex.window a 3).waveGroup.S t x -
@@ -567,7 +567,7 @@ theorem starPolyPMC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} 
   ring
 
 /-- `starPolyPEC_rate`, verbatim. -/
-theorem starPolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : FEM.PolyOrder n S s} {T Λ : ℝ}
+theorem starPolyPEC_rate_old {S : PolySeq} {s : ℕ} {hS : PolyOrder n S s} {T Λ : ℝ}
     {hΛ : 0 ≤ Λ} {x} (hx : x ∈ (starPolyPECRate M S hS a T Λ hΛ).Data) (N : ℕ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
     ‖(D.complexMin.window a 3).waveGroup.S t x -

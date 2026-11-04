@@ -6,8 +6,7 @@ public import Feec.Models.Cube.CubicalFiniteElementConvergence
 public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.Models.Cube.PolyFiniteElementConvergence
 public import Feec.Models.Parallelepiped.FiniteElement
-public import Feec.Models.StarShaped.FiniteElement
-public import Feec.Models.StarShaped.PolyFiniteElement
+public import Feec.Models.StarShapedWitness
 
 /-!
 # The discrete cohomology of the finite element families

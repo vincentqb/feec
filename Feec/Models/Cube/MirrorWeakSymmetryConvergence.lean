@@ -1043,7 +1043,7 @@ tangential trace on the faces normal to `eₐ`, and the interpolation of degree 
 theorem dxForm_mem_polyPartial (N : ℕ) (a : Fin 3) :
     dxForm a ∈ (polyPartial 3 PolySeq.lagrangeP2 N {a}).V 1 := by
   have hs : polySpace 3 0 1 ≤ PolySeq.lagrangeP2.space 3 1 :=
-    Poly.polySpace_le_space PolySeq.lagrangeP2 (by decide)
+    PolySeq.polySpace_le_space PolySeq.lagrangeP2 (by decide)
   obtain ⟨v, hv, hle⟩ := exists_mem_polyPartial_le_smooth (n := 3) PolySeq.lagrangeP2 {a} N 1 0
     hs (contDiff_dxField a) (fun x t ht => by
       simp only [dxField]
@@ -1371,10 +1371,10 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hB : ∀ a : Fin 3, ParitySmoothingEstimates 3 {a} PolySeq.lagrangeP2 ρ C)
 
 theorem hs_lowestOrder (k : ℕ) : polySpace 3 0 k ≤ PolySeq.lowestOrder.space 3 k :=
-  Poly.polySpace_le_space PolySeq.lowestOrder (by simp [PolySeq.lowestOrder])
+  PolySeq.polySpace_le_space PolySeq.lowestOrder (by simp [PolySeq.lowestOrder])
 
 theorem hs_lagrangeP2 (k : ℕ) : polySpace 3 0 k ≤ PolySeq.lagrangeP2.space 3 k :=
-  Poly.polySpace_le_space PolySeq.lagrangeP2 (PolySeq.lagrangeP2.one_le_deg k)
+  PolySeq.polySpace_le_space PolySeq.lagrangeP2 (PolySeq.lagrangeP2.one_le_deg k)
 
 /-- The interpolation constants of the two rows. -/
 abbrev cT (C : ℝ) (k : ℕ) : ℝ := (1 + 2 * C) * polyInterpConst 3 PolySeq.lowestOrder k

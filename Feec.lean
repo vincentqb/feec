@@ -103,10 +103,12 @@ public import Feec.FiniteElement.PolyElementMixed
 public import Feec.FiniteElement.PolyInterpolation
 public import Feec.FiniteElement.PolyInverseEstimate
 public import Feec.FiniteElement.PolyKind
+public import Feec.FiniteElement.PolyOrder
 public import Feec.FiniteElement.PolySmoothingBasic
 public import Feec.FiniteElement.ShapeRegularInverse
 public import Feec.FiniteElement.ShapeRegularSmoothing
 public import Feec.FiniteElement.SimplexIntegral
+public import Feec.FiniteElement.SmoothDensity
 public import Feec.FiniteElement.SmoothForm
 public import Feec.FiniteElement.SmoothedInterp
 public import Feec.FiniteElement.SmoothedProjection
@@ -377,6 +379,7 @@ public import Feec.Models.StarShaped.FiniteElement
 public import Feec.Models.StarShaped.PolyFiniteElement
 public import Feec.Models.StarShaped.PolySmoothing
 public import Feec.Models.StarShaped.Smoothing
+public import Feec.Models.StarShapedWitness
 public import Feec.Models.Torus.BGG
 public import Feec.Models.Torus.DeRham
 public import Feec.Models.Torus.DeRhamGalerkin

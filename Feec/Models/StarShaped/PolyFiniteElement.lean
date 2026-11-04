@@ -2,7 +2,7 @@ module
 
 public import Feec.Models.StarShaped.PolySmoothing
 public import Feec.Models.StarShaped.FiniteElement
-public import Feec.Models.Cube.PolyRate
+public import Feec.FiniteElement.PolyOrder
 
 /-!
 # The higher-order finite element method on star-shaped domains and parallelepipeds
@@ -28,10 +28,10 @@ outside `Ω`), and with the density of smooth forms the graph-norm density of th
   (`Feec.HilbertComplex.ConformingFamily.staticFEEC`: uniform discrete Poincaré inequality,
   well-posedness and stability, harmonic gap, cohomology, quasi-optimality, convergence) holds;
 * **`mixed_rate_poly`**: error `≤ K L h_N^{s+1}` for solutions of class `IsCsForm s` and `S` of
-  order `s` (`FEM.PolyOrder`), `K` independent of `N`, of the solution and of `L` ([AFW2010],
-  Thm 3.9; [Arnold2018], Ch. 7), and the degreewise form `mixed_rate_poly_of_polyOrderAt`
-  (`FEM.PolyOrderAt`: only the degrees of the problem matter, e.g. order `h²` of the bottom row
-  `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` on `1`-forms);
+  order `s` (`Feec.FiniteElement.PolyOrder`), `K` independent of `N`, of the solution and of `L`
+  ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), and the degreewise form
+  `mixed_rate_poly_of_polyOrderAt` (`Feec.FiniteElement.PolyOrderAt`: only the degrees of the
+  problem matter, e.g. order `h²` of the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` on `1`-forms);
 * `exists_tendstoUniformlyOn_window_poly`: convergence of the semi-discrete Hodge wave equation on
   every window ([QuennevilleBelair2015], Thm 4.14), and its rate `O(h_N^{s+1})` for smooth
   solutions (`norm_sub_le_window_poly_smooth`, `norm_sub_le_window_poly_smooth_of_polyOrderAt`);
@@ -47,22 +47,11 @@ use the finite-dimensionality of the harmonic forms; the rate theorems do not
 projections, the approximation results and the wave convergence and rates are proved with no
 hypothesis.
 
-**Parallelepipeds, with no hypothesis.** For every parallelepiped `Ω = A · Q + b` (every box) and
-**every** quasi-uniform shape-regular mesh family of it (not only the image Freudenthal meshes),
-the Poincaré inequalities are theorems (`Parallelepiped.hasPoincare`,
-`Parallelepiped.hasPoincareMin`, from `Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles`
-and `_min`), and so are the harmonic finite-dimensionality instances; hence the static FEEC
-theorem for `MeshFamily.polyFamily` and **`Parallelepiped.mixed_rate_poly_general`**
-(`Parallelepiped.mixed_rate_poly_general_of_polyOrderAt`, the instance
-`Parallelepiped.mixed_rate_lagrangeP2_general`: order `h²` of the bottom row on `1`-forms) hold
-unconditionally; with vanishing boundary DOFs `Parallelepiped.hasPoincareMin` discharges the
-hypothesis of the `Min` theorems. The discrete cohomology of these families is in
-`Feec.Models.ConformingFamilies`.
-
-**Non-vacuity.** The cube with its Freudenthal meshes (`CubeWitness.meshFamily`) and every
-parallelepiped with its image Freudenthal meshes (`ParallelepipedWitness.meshFamily`) satisfy all
-the hypotheses for the bottom row: `CubeWitness.mixed_rate_lagrangeP2`,
-`ParallelepipedWitness.mixed_rate_lagrangeP2`.
+**Parallelepipeds and non-vacuity** (`Feec.Models.StarShapedWitness`): on every parallelepiped,
+for every quasi-uniform shape-regular mesh family, the Poincaré inequalities are theorems and the
+rates hold unconditionally (`Parallelepiped.mixed_rate_poly_general`); the cube and the
+parallelepipeds with their (image) Freudenthal meshes satisfy all the hypotheses for the bottom
+row (`CubeWitness.mixed_rate_lagrangeP2`, `ParallelepipedWitness.mixed_rate_lagrangeP2`).
 
 ## References
 
@@ -88,7 +77,7 @@ open scoped ContDiff
 
 namespace Feec.Models.StarShaped
 
-open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre Feec.Models.Cube
+open Feec.Domain Feec.Mesh Feec.FiniteElement Feec.HilbertComplex ExteriorFibre
 
 variable {n : ℕ}
 
@@ -107,7 +96,7 @@ theorem exists_polySpace_near_diam {k s : ℕ} {T : Affine.Simplex ℝ (Fin n �
     ∃ P ∈ polySpace n s k, ∀ x ∈ T.closedInterior, ‖w x - P x‖ ≤ diam T ^ (s + 1) * M := by
   set x₀ := T.points 0
   have hx₀ : x₀ ∈ T.closedInterior := T.point_mem_closedInterior 0
-  refine ⟨degPartField k (taylorPoly w x₀ (s + 1)), FEM.Poly.degPartField_taylorPoly_mem w x₀,
+  refine ⟨degPartField k (taylorPoly w x₀ (s + 1)), degPartField_taylorPoly_mem w x₀,
     fun x hx => ?_⟩
   have htay := norm_iteratedFDeriv_sub_taylorPoly_le (k := s + 1) (f := w) (U := Set.univ)
     (K := T.closedInterior) (x₀ := x₀) (d := diam T) (M := M) isOpen_univ
@@ -408,12 +397,12 @@ theorem exists_mem_poly_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n k)
     (F.isOpen_domain N) D.isOpen D.isBounded k hw1
     (A := F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L))
     (A' := F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L'))
-    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
+    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
       ((polyElement n S).globalInterp (F.mesh N) k ⟨w, hw.continuous⟩ :
         (polyElement n S).Piecewise (F.mesh N) k) hB1
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs hws hdeg hL T (interior_subset hx) t
       ).trans_eq ?_)
-    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
+    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
       ((polyElement n S).globalInterp (F.mesh N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
         (polyElement n S).Piecewise (F.mesh N) (k + 1)) hB2
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs' hdw hdeg' hL' T (interior_subset hx) t
@@ -456,12 +445,12 @@ theorem exists_mem_polyMin_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n 
     (F.isOpen_domain N) D.isOpen D.isBounded D.x₀ (F.strict_mesh N) k hw1 hsupp
     (A := F.polyInterpConst S k * ((F.mesh N).meshSize ^ (s + 1) * L))
     (A' := F.polyInterpConst S (k + 1) * ((F.mesh N).meshSize ^ (s + 1) * L'))
-    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
+    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ k ⟨w, hw.continuous⟩
       ((polyElement n S).globalInterp (F.mesh N) k ⟨w, hw.continuous⟩ :
         (polyElement n S).Piecewise (F.mesh N) k) hB1
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs hws hdeg hL T (interior_subset hx) t
       ).trans_eq ?_)
-    ((FEM.norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
+    ((norm_formL2_sub_glue_le_of_forall _ _ hΩ (k + 1) ⟨extDeriv w, hdw.continuous⟩
       ((polyElement n S).globalInterp (F.mesh N) (k + 1) ⟨extDeriv w, hdw.continuous⟩ :
         (polyElement n S).Piecewise (F.mesh N) (k + 1)) hB2
       fun T x hx t _ => F.abs_sub_globalInterp_le S hs' hdw hdeg' hL' T (interior_subset hx) t
@@ -471,9 +460,9 @@ theorem exists_mem_polyMin_le (N k s : ℕ) (hs : polySpace n s k ≤ S.space n 
 /-! ### Degreewise rates -/
 
 /-- **Degreewise interpolation error of order `s + 1`**: for `x` with `IsCsForm s j L x` and a
-sequence reproducing `P_s` in the degrees `j, j + 1` (`FEM.PolyOrderAt`), some `v ∈ Vₕʲ` has
+sequence reproducing `P_s` in the degrees `j, j + 1` (`PolyOrderAt`), some `v ∈ Vₕʲ` has
 `‖x - v‖ ≤ B_j L h_N^{s+1}` and `‖d (x - v)‖ ≤ B_j L h_N^{s+1}`. -/
-theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt n S s j) {L : ℝ}
+theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S s j) {L : ℝ}
     {x : L2F ℝ D.Ω (formIdx n j)} (hx : D.IsCsForm s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (F.poly S N).V j,
       ‖x - v‖ ≤ F.polyInterpBound S j * L * (F.mesh N).meshSize ^ (s + 1) ∧
@@ -502,7 +491,7 @@ theorem exists_mem_poly_le_of_isCsForm {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt
 
 /-- **Degreewise interpolation error of order `s + 1` with vanishing boundary DOFs**, in
 `H̊Λ(Ω)`. -/
-theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : FEM.PolyOrderAt n S s j)
+theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : PolyOrderAt n S s j)
     {L : ℝ} {x : L2F ℝ D.Ω (formIdx n j)} (hx : D.IsCsFormMin s j L x) (hL0 : 0 ≤ L) (N : ℕ) :
     ∃ v, ∃ hv : v ∈ (F.polyMin S N).V j,
       ‖x - v‖ ≤ F.polyInterpBound S j * L * (F.mesh N).meshSize ^ (s + 1) ∧
@@ -533,13 +522,13 @@ theorem exists_mem_polyMin_le_of_isCsFormMin {s : ℕ} {j : ℤ} (hS : FEM.PolyO
 
 /-- **Graph-norm density of the higher-order spaces in `HΛᵏ(Ω)`**: the canonical interpolants of
 smooth forms converge at rate `h_N` (`exists_mem_poly_le` with `s = 0`,
-`FEM.eventually_exists_graph_of_smooth`). -/
+`eventually_exists_graph_of_smooth`). -/
 theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complex.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.poly S N).V k, ‖x - v‖ < ε ∧
       ‖D.complex.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.poly S N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  refine FEM.eventually_exists_graph_of_smooth D.isOpen D.isBounded D.s₀_pos D.starBall
+  refine eventually_exists_graph_of_smooth D.isOpen D.isBounded D.s₀_pos D.starBall
     (fun N => F.poly S N) (fun k w hw hdeg => ?_) k x hx hε
   have hw2 : ContDiff ℝ (0 + 2) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1)
@@ -552,8 +541,8 @@ theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     have := ((F.tendsto_meshSize.mul_const L).const_mul (F.polyInterpConst S k)).add
       ((F.tendsto_meshSize.mul_const L').const_mul (F.polyInterpConst S (k + 1)))
     simpa using this, fun N => ?_⟩
-  obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_poly_le S N k 0 (FEM.polySpace_zero_le_space S k)
-    (FEM.polySpace_zero_le_space S (k + 1)) hw2 hdeg hL0 hL'0 hL hL'
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_poly_le S N k 0 (S.polySpace_zero_le_space k)
+    (S.polySpace_zero_le_space (k + 1)) hw2 hdeg hL0 hL'0 hL hL'
   rw [zero_add, pow_one] at hv1 hv2
   have hb1 := mul_nonneg (F.polyInterpConst_nonneg S (k + 1))
     (mul_nonneg (F.meshSize_pos N).le hL'0)
@@ -565,7 +554,7 @@ theorem eventually_exists_poly_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
 /-- **`L²` density of the higher-order spaces** `Vₕᵏ` in `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_poly_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.poly S N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph
+  Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) k x hε
 
 /-- **Degreewise approximation in every graph norm of `HΛ(Ω)`** by the higher-order spaces. -/
@@ -575,25 +564,25 @@ theorem eventually_exists_poly_near (i : ℤ) (x : L2F ℝ D.Ω (formIdx n i))
       ∀ j (hx : x ∈ (D.complex.d i j).domain),
         ‖D.complex.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.poly S N).le_domain i j hv)⟩‖ <
           ε :=
-  FEM.eventually_exists_near_of_graph
+  Subcomplex.eventually_exists_near_of_graph
     (fun k x hx _ hε => F.eventually_exists_poly_graph S k x hx hε) i x hε
 
 /-- `dist(q, Vₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_poly (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.poly S N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
-  FEM.tendsto_infDist_of_lt (S := fun N => F.poly S N) q fun _ ha =>
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => F.poly S N) q fun _ ha =>
     F.eventually_exists_poly_lt S j q ha
 
 /-- **Graph-norm density of the higher-order spaces with vanishing boundary DOFs in
 `H̊Λᵏ(Ω)`**: the canonical interpolants of smooth forms vanishing outside `Ω` lie in `V̊ₕᵏ` and
-converge at rate `h_N` (`exists_mem_polyMin_le`, `FEM.eventually_exists_graph_of_smooth_min`). -/
+converge at rate `h_N` (`exists_mem_polyMin_le`, `eventually_exists_graph_of_smooth_min`). -/
 theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k))
     (hx : x ∈ (D.complexMin.d k (k + 1)).domain) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ N in atTop, ∃ v, ∃ hv : v ∈ (F.polyMin S N).V k, ‖x - v‖ < ε ∧
       ‖D.complexMin.d k (k + 1)
         ⟨x - v, Submodule.sub_mem _ hx ((F.polyMin S N).le_domain k (k + 1) hv)⟩‖ < ε := by
-  refine FEM.eventually_exists_graph_of_smooth_min D.isOpen D.isBounded D.s₀_pos D.starBall
+  refine eventually_exists_graph_of_smooth_min D.isOpen D.isBounded D.s₀_pos D.starBall
     (fun N => F.polyMin S N) (fun k w hw hdeg hsupp => ?_) k x hx hε
   have hw2 : ContDiff ℝ (0 + 2) w := hw.of_le (WithTop.coe_le_coe.2 le_top)
   obtain ⟨L, hL0, hL⟩ := D.exists_bound_iteratedFDeriv (m := 0 + 1)
@@ -606,8 +595,8 @@ theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
     have := ((F.tendsto_meshSize.mul_const L).const_mul (F.polyInterpConst S k)).add
       ((F.tendsto_meshSize.mul_const L').const_mul (F.polyInterpConst S (k + 1)))
     simpa using this, fun N => ?_⟩
-  obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_polyMin_le S N k 0 (FEM.polySpace_zero_le_space S k)
-    (FEM.polySpace_zero_le_space S (k + 1)) hw2 hdeg hsupp hL0 hL'0 hL hL'
+  obtain ⟨v, hv, hv1, hdv, hv2⟩ := F.exists_mem_polyMin_le S N k 0 (S.polySpace_zero_le_space k)
+    (S.polySpace_zero_le_space (k + 1)) hw2 hdeg hsupp hL0 hL'0 hL hL'
   rw [zero_add, pow_one] at hv1 hv2
   have hb1 := mul_nonneg (F.polyInterpConst_nonneg S (k + 1))
     (mul_nonneg (F.meshSize_pos N).le hL'0)
@@ -620,14 +609,14 @@ theorem eventually_exists_polyMin_graph (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k
 `L²(Ω; Λᵏ)`. -/
 theorem eventually_exists_polyMin_lt (k : ℤ) (x : L2F ℝ D.Ω (formIdx n k)) {ε : ℝ}
     (hε : 0 < ε) : ∀ᶠ N in atTop, ∃ v ∈ (F.polyMin S N).V k, ‖x - v‖ < ε :=
-  FEM.eventually_exists_lt_of_graph
+  Subcomplex.eventually_exists_lt_of_graph
     (fun k x hx _ hε => F.eventually_exists_polyMin_graph S k x hx hε) k x hε
 
 /-- `dist(q, V̊ₕʲ) → 0` for every `q ∈ L²(Ω; Λʲ)` (higher-order spaces). -/
 theorem tendsto_infDist_polyMin (j : ℤ) (q : L2F ℝ D.Ω (formIdx n j)) :
     Tendsto (fun N => Metric.infDist q ((F.polyMin S N).V j :
       Set (L2F ℝ D.Ω (formIdx n j)))) atTop (𝓝 0) :=
-  FEM.tendsto_infDist_of_lt (S := fun N => F.polyMin S N) q fun _ ha =>
+  Subcomplex.tendsto_infDist_of_lt (S := fun N => F.polyMin S N) q fun _ ha =>
     F.eventually_exists_polyMin_lt S j q ha
 
 end MeshFamily
@@ -672,12 +661,12 @@ def polyFamilyMin : ConformingFamily D.complexMin ℕ :=
 
 /-- **The Jackson estimate of the complexes of `S` on the mesh family**: for `s : ℕ`, the
 `C^{s+2}` forms on `cl Ω` (`StarDomain.IsCsForm s`) of the degrees where `S` reproduces `P_s`
-(`FEM.PolyOrderAt`) at the order `h_N^{s+1}` (`exists_mem_poly_le_of_isCsForm`). -/
+(`PolyOrderAt`) at the order `h_N^{s+1}` (`exists_mem_poly_le_of_isCsForm`). -/
 def polyJackson : (F.polyFamily S).Jackson ℕ where
   meshSize N := (F.mesh N).meshSize
   meshSize_nonneg N := (F.meshSize_pos N).le
   tendsto_meshSize := F.tendsto_meshSize
-  Reg s j L x := FEM.PolyOrderAt n S s j ∧ D.IsCsForm s j L x
+  Reg s j L x := PolyOrderAt n S s j ∧ D.IsCsForm s j L x
   ord s := ((s + 1 : ℕ) : ℝ)
   B _ := F.polyInterpBound S
   B_nonneg _ := F.polyInterpBound_nonneg S
@@ -690,7 +679,7 @@ def polyJacksonMin : (F.polyFamilyMin S).Jackson ℕ where
   meshSize N := (F.mesh N).meshSize
   meshSize_nonneg N := (F.meshSize_pos N).le
   tendsto_meshSize := F.tendsto_meshSize
-  Reg s j L x := FEM.PolyOrderAt n S s j ∧ D.IsCsFormMin s j L x
+  Reg s j L x := PolyOrderAt n S s j ∧ D.IsCsFormMin s j L x
   ord s := ((s + 1 : ℕ) : ℝ)
   B _ := F.polyInterpBound S
   B_nonneg _ := F.polyInterpBound_nonneg S
@@ -700,12 +689,12 @@ def polyJacksonMin : (F.polyFamilyMin S).Jackson ℕ where
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), degreewise form, under the Poincaré inequality of
-`HΛ(Ω)`: if `S` reproduces `P_s` in the degrees `i, i + 1, j, j + 1` (`FEM.PolyOrderAt`) and `σ`,
+`HΛ(Ω)`: if `S` reproduces `P_s` in the degrees `i, i + 1, j, j + 1` (`PolyOrderAt`) and `σ`,
 `u`, `P_𝔅 u` and the harmonic part `q` are `IsCsForm s` with bound `L` (`C^{s+2}` on `cl Ω`), the
 error of the discrete solutions is `≤ K L h_N^{s+1}`, with `K` independent of `N`, of the solution
 and of `L`. No finite-dimensionality of `ℌ` is needed. -/
 theorem mixed_rate_poly_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex cP) {s : ℕ}
-    {i j k : ℤ} (hSi : FEM.PolyOrderAt n S s i) (hSj : FEM.PolyOrderAt n S s j)
+    {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i}
     {u : D.complex.domainSpace j} {q : D.complex.harmonic j},
@@ -733,10 +722,10 @@ theorem mixed_rate_poly_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex cP
 
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method for smooth solutions**
 ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7), under the Poincaré inequality of `HΛ(Ω)`, for a
-sequence of order `s` in every degree (`FEM.PolyOrder`, e.g. `s + 1 ≤ r_k`): error
+sequence of order `s` in every degree (`PolyOrder`, e.g. `s + 1 ≤ r_k`): error
 `≤ K L h_N^{s+1}` for solutions of class `IsCsForm s`. -/
 theorem mixed_rate_poly {cP : ℝ} (hP : HasPoincare D.complex cP) {s : ℕ}
-    (hS : FEM.PolyOrder n S s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hS : PolyOrder n S s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complex.domainSpace i}
     {u : D.complex.domainSpace j} {q : D.complex.harmonic j},
@@ -768,14 +757,14 @@ theorem exists_tendstoUniformlyOn_window_poly (a : ℤ) (m : ℕ) (t₀ t₁ : �
           ⟨x, ((D.complex.window a m).mem_wave_domain.1 x.2).1⟩)) ∧
       TendstoUniformlyOn (fun N t => (D.complex.window a m).totalD.graphFst (ξh N t))
         (fun t => (D.complex.window a m).waveGroup.S (t - t₀) x) atTop (Set.Icc t₀ t₁) :=
-  Parallelepiped.exists_tendstoUniformlyOn_window_of
+  Subcomplex.exists_tendstoUniformlyOn_window_of
     (fun i x _ hε => F.eventually_exists_poly_near S i x hε) a m t₀ t₁ x
 
 /-- **Graph-norm rate in the total space of a window** for a sequence of order `s`: if every
 component of `ζ ∈ Γ(𝐝)` is `IsCsForm s` with bound `L`, some point of the window of `Vₕ` is
 within `(m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}` of `ζ`. -/
 theorem exists_mem_window_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
-    (hS : ∀ i : Fin m, FEM.PolyOrderAt n S s (a + i))
+    (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : (D.complex.window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
     (hζ : ∀ i : Fin m, D.IsCsForm s (a + i) L ((D.complex.window a m).totalD.graphFst ζ i))
     (N : ℕ) :
@@ -797,7 +786,7 @@ solution `ξ` in `C¹([t₀, t₁]; Γ(𝐝))` whose values and time derivatives
 components with bound `L`, and the semi-discrete solutions `ξₕ` started at the elliptic
 projection, `‖ξ(t) - ξₕ(t)‖ ≤ A (1 + (t - t₀))² (m + m²) (Σᵢ B_{a+i}) L h_N^{s+1}`. -/
 theorem norm_sub_le_window_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
-    {m : ℕ} (hS : ∀ i : Fin m, FEM.PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
+    {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → (D.complex.window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
     {ξh ξh' : ℕ → ℝ → (D.complex.window a m).totalD.GraphSpace}
@@ -819,9 +808,9 @@ theorem norm_sub_le_window_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
     ⟨F.exists_mem_window_poly_le S hS (ξ τ) hL0 (fun i => (hreg τ hτ i).1) N,
       F.exists_mem_window_poly_le S hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
 
-/-- The case of a sequence of order `s` in every degree (`FEM.PolyOrder`) of
+/-- The case of a sequence of order `s` in every degree (`PolyOrder`) of
 `norm_sub_le_window_poly_smooth_of_polyOrderAt`. -/
-theorem norm_sub_le_window_poly_smooth {s : ℕ} (hS : FEM.PolyOrder n S s) (a : ℤ)
+theorem norm_sub_le_window_poly_smooth {s : ℕ} (hS : PolyOrder n S s) (a : ℤ)
     (m : ℕ) {t₀ t₁ : ℝ} {ξ ξ' : ℝ → (D.complex.window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
     {ξh ξh' : ℕ → ℝ → (D.complex.window a m).totalD.GraphSpace}
@@ -848,7 +837,7 @@ theorem norm_sub_le_window_poly_smooth {s : ℕ} (hS : FEM.PolyOrder n S s) (a :
 DOFs for smooth solutions**, degreewise form, under the Poincaré inequality of `H̊Λ(Ω)`, for
 solutions of class `IsCsFormMin s` (`C^{s+2}`, vanishing outside `Ω`). -/
 theorem mixed_rate_polyMin_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complexMin cP) {s : ℕ}
-    {i j k : ℤ} (hSi : FEM.PolyOrderAt n S s i) (hSj : FEM.PolyOrderAt n S s j)
+    {i j k : ℤ} (hSi : PolyOrderAt n S s i) (hSj : PolyOrderAt n S s j)
     (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i}
     {u : D.complexMin.domainSpace j} {q : D.complexMin.harmonic j},
@@ -878,7 +867,7 @@ theorem mixed_rate_polyMin_of_polyOrderAt {cP : ℝ} (hP : HasPoincare D.complex
 /-- **Convergence of order `h^{s+1}` of the higher-order mixed method with vanishing boundary
 DOFs** for a sequence of order `s` in every degree. -/
 theorem mixed_rate_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {s : ℕ}
-    (hS : FEM.PolyOrder n S s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hS : PolyOrder n S s) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (hjk : (ComplexShape.up ℤ).Rel j k) :
     ∃ K : ℝ, ∀ {f : L2F ℝ D.Ω (formIdx n j)} {σ : D.complexMin.domainSpace i}
     {u : D.complexMin.domainSpace j} {q : D.complexMin.harmonic j},
@@ -901,7 +890,7 @@ theorem mixed_rate_polyMin {cP : ℝ} (hP : HasPoincare D.complexMin cP) {s : �
 /-- **Graph-norm rate in the total space of a window of `H̊Λ(Ω)`** for a sequence of order
 `s`. -/
 theorem exists_mem_windowMin_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
-    (hS : ∀ i : Fin m, FEM.PolyOrderAt n S s (a + i))
+    (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i))
     (ζ : (D.complexMin.window a m).totalD.GraphSpace) {L : ℝ} (hL0 : 0 ≤ L)
     (hζ : ∀ i : Fin m,
       D.IsCsFormMin s (a + i) L ((D.complexMin.window a m).totalD.graphFst ζ i))
@@ -920,7 +909,7 @@ theorem exists_mem_windowMin_poly_le {s : ℕ} {a : ℤ} {m : ℕ}
 /-- **Convergence of order `h^{s+1}` of the semi-discrete Hodge wave equation with vanishing
 boundary DOFs** for the complexes of `S`, degreewise form, on every window of `H̊Λ(Ω)`. -/
 theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
-    {m : ℕ} (hS : ∀ i : Fin m, FEM.PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
+    {m : ℕ} (hS : ∀ i : Fin m, PolyOrderAt n S s (a + i)) {t₀ t₁ : ℝ}
     {ξ ξ' : ℝ → (D.complexMin.window a m).totalD.GraphSpace}
     (hξ : HodgeWave.IsGraphSolution (Set.Icc t₀ t₁) ξ ξ')
     {ξh ξh' : ℕ → ℝ → (D.complexMin.window a m).totalD.GraphSpace}
@@ -943,214 +932,5 @@ theorem norm_sub_le_windowMin_poly_smooth_of_polyOrderAt {s : ℕ} {a : ℤ}
       F.exists_mem_windowMin_poly_le S hS (ξ' τ) hL0 (fun i => (hreg τ hτ i).2) N⟩) ht
 
 end MeshFamily
-
-/-! ### Parallelepipeds: every quasi-uniform shape-regular mesh family, with no hypothesis -/
-
-namespace Parallelepiped
-
-variable (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ)
-
-/-- **The Poincaré inequality of `HΛ(Ω)` on the parallelepiped** `Ω = A · Q + b`, with
-`c_P(A) = Feec.Models.Parallelepiped.poincareConst A`
-(`Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles`, by affine transport from the
-cube). -/
-theorem hasPoincare : HasPoincare (ParallelepipedWitness.starDomain A hA b).complex
-    (Feec.Models.Parallelepiped.poincareConst A) := fun _ _ hij z hz =>
-  (Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles A hA b hij z hz).trans
-    (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-
-/-- **The Poincaré inequality of `H̊Λ(Ω)` on the parallelepiped**
-(`Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles_min`). -/
-theorem hasPoincareMin : HasPoincare (ParallelepipedWitness.starDomain A hA b).complexMin
-    (Feec.Models.Parallelepiped.poincareConst A) := fun _ _ hij z hz =>
-  (Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles_min A hA b hij z hz).trans
-    (mul_le_mul_of_nonneg_right (le_max_right _ _) (norm_nonneg _))
-
-instance (j : ℤ) :
-    FiniteDimensional ℝ ((ParallelepipedWitness.starDomain A hA b).complex.harmonic j) :=
-  Feec.Models.Parallelepiped.finiteDimensional_harmonic A hA b j
-
-instance (j : ℤ) :
-    FiniteDimensional ℝ ((ParallelepipedWitness.starDomain A hA b).complexMin.harmonic j) :=
-  Feec.Models.Parallelepiped.finiteDimensional_harmonic_min A hA b j
-
-variable [NeZero n] (F : MeshFamily (ParallelepipedWitness.starDomain A hA b)) (S : PolySeq)
-
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method on every quasi-uniform
-shape-regular mesh family of a parallelepiped** ([AFW2010], Thm 3.9; [Arnold2018], Ch. 7),
-degreewise form, with no hypothesis beyond the regularity of the solution (`IsCsForm s`). -/
-theorem mixed_rate_poly_general_of_polyOrderAt {s : ℕ} {i j k : ℤ}
-    (hSi : FEM.PolyOrderAt n S s i) (hSj : FEM.PolyOrderAt n S s j)
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)}
-    {σ : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace i}
-    {u : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace j}
-    {q : (ParallelepipedWitness.starDomain A hA b).complex.harmonic j},
-    (ParallelepipedWitness.starDomain A hA b).complex.IsMixedSolution i j k f σ u q →
-    ∀ {L : ℝ}, 0 ≤ L →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s i L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl i σ) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s j L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j u) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s j L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j
-        ((ParallelepipedWitness.starDomain A hA b).complex.boundaryPart j
-          ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j u))) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s j L
-      (q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (F.poly S N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).fst‖ +
-      ‖u - (F.poly S N).embD j
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.fst‖ +
-      ‖(q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)) -
-        (((Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.snd :
-          (F.poly S N).V j) : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j))‖ ≤
-      K * L * (F.mesh N).meshSize ^ (s + 1) :=
-  F.mixed_rate_poly_of_polyOrderAt S (hasPoincare A hA b) hSi hSj hij hjk
-
-/-- **Convergence of order `h^{s+1}` of the higher-order mixed method on every quasi-uniform
-shape-regular mesh family of every parallelepiped `A · Q + b`** (not only the image Freudenthal
-meshes; [AFW2010], Thm 3.9; [Arnold2018], Ch. 7), for a sequence of order `s` and solutions of
-class `IsCsForm s`, with **no hypothesis**: the Poincaré inequality of `HΛ(Ω)` is discharged by
-`Feec.Models.Parallelepiped.norm_le_of_mem_orthogonal_cycles` (`hasPoincare`). -/
-theorem mixed_rate_poly_general {s : ℕ} (hS : FEM.PolyOrder n S s) {i j k : ℤ}
-    (hij : (ComplexShape.up ℤ).Rel i j) (hjk : (ComplexShape.up ℤ).Rel j k) :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)}
-    {σ : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace i}
-    {u : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace j}
-    {q : (ParallelepipedWitness.starDomain A hA b).complex.harmonic j},
-    (ParallelepipedWitness.starDomain A hA b).complex.IsMixedSolution i j k f σ u q →
-    ∀ {L : ℝ}, 0 ≤ L →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s i L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl i σ) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s j L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j u) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s j L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j
-        ((ParallelepipedWitness.starDomain A hA b).complex.boundaryPart j
-          ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl j u))) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm s j L
-      (q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)) → ∀ N : ℕ,
-    ‖σ - (F.poly S N).embD i
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).fst‖ +
-      ‖u - (F.poly S N).embD j
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.fst‖ +
-      ‖(q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j)) -
-        (((Subcomplex.CochainProjection.discreteMixedSolution (F.poly S N) hij hjk f).snd.snd :
-          (F.poly S N).V j) : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n j))‖ ≤
-      K * L * (F.mesh N).meshSize ^ (s + 1) :=
-  F.mixed_rate_poly S (hasPoincare A hA b) hS hij hjk
-
-/-- **Second-order convergence of the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` of Tables 5.1/6.1
-for the Hodge Laplacian on `1`-forms** on every quasi-uniform shape-regular mesh family of a
-parallelepiped (the problem in degree `1` only uses `P₂Λ⁰, P₂⁻Λ¹, P₁Λ²`, which contain `P₁`):
-error `≤ K L h_N²` for `C³` solutions, with no hypothesis. -/
-theorem mixed_rate_lagrangeP2_general :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n 1)}
-    {σ : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace 0}
-    {u : (ParallelepipedWitness.starDomain A hA b).complex.domainSpace 1}
-    {q : (ParallelepipedWitness.starDomain A hA b).complex.harmonic 1},
-    (ParallelepipedWitness.starDomain A hA b).complex.IsMixedSolution 0 1 2 f σ u q →
-    ∀ {L : ℝ}, 0 ≤ L →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm 1 0 L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl 0 σ) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm 1 1 L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl 1 u) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm 1 1 L
-      ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl 1
-        ((ParallelepipedWitness.starDomain A hA b).complex.boundaryPart 1
-          ((ParallelepipedWitness.starDomain A hA b).complex.domainIncl 1 u))) →
-    (ParallelepipedWitness.starDomain A hA b).IsCsForm 1 1 L
-      (q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n 1)) → ∀ N : ℕ,
-    ‖σ - (F.poly PolySeq.lagrangeP2 N).embD 0
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly PolySeq.lagrangeP2 N)
-          (i := 0) (j := 1) (k := 2) rfl rfl f).fst‖ +
-      ‖u - (F.poly PolySeq.lagrangeP2 N).embD 1
-        (Subcomplex.CochainProjection.discreteMixedSolution (F.poly PolySeq.lagrangeP2 N)
-          (i := 0) (j := 1) (k := 2) rfl rfl f).snd.fst‖ +
-      ‖(q : L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n 1)) -
-        (((Subcomplex.CochainProjection.discreteMixedSolution (F.poly PolySeq.lagrangeP2 N)
-          (i := 0) (j := 1) (k := 2) rfl rfl f).snd.snd : (F.poly PolySeq.lagrangeP2 N).V 1) :
-            L2F ℝ (ParallelepipedWitness.starDomain A hA b).Ω (formIdx n 1))‖ ≤
-      K * L * (F.mesh N).meshSize ^ (1 + 1) :=
-  F.mixed_rate_poly_of_polyOrderAt PolySeq.lagrangeP2 (hasPoincare A hA b)
-    FEM.lagrangeP2_polyOrderAt_zero FEM.lagrangeP2_polyOrderAt_one rfl rfl
-
-end Parallelepiped
-
-/-! ### Non-vacuity: the cube and the parallelepipeds -/
-
-namespace CubeWitness
-
-variable (n) [NeZero n]
-
-/-- **Second-order convergence of the bottom row `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₀Λ³` on the Freudenthal
-meshes of the cube, as a mesh family of a star-shaped domain** (`CubeWitness.meshFamily`): the
-star-shaped theory instantiated, with the Poincaré inequality `CubeWitness.hasPoincare`. -/
-theorem mixed_rate_lagrangeP2 :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (starDomain n).Ω (formIdx n 1)}
-    {σ : (starDomain n).complex.domainSpace 0} {u : (starDomain n).complex.domainSpace 1}
-    {q : (starDomain n).complex.harmonic 1},
-    (starDomain n).complex.IsMixedSolution 0 1 2 f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    (starDomain n).IsCsForm 1 0 L ((starDomain n).complex.domainIncl 0 σ) →
-    (starDomain n).IsCsForm 1 1 L ((starDomain n).complex.domainIncl 1 u) →
-    (starDomain n).IsCsForm 1 1 L ((starDomain n).complex.domainIncl 1
-      ((starDomain n).complex.boundaryPart 1 ((starDomain n).complex.domainIncl 1 u))) →
-    (starDomain n).IsCsForm 1 1 L (q : L2F ℝ (starDomain n).Ω (formIdx n 1)) → ∀ N : ℕ,
-    ‖σ - ((meshFamily n).poly PolySeq.lagrangeP2 N).embD 0
-        (Subcomplex.CochainProjection.discreteMixedSolution
-          ((meshFamily n).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl f).fst‖ +
-      ‖u - ((meshFamily n).poly PolySeq.lagrangeP2 N).embD 1
-        (Subcomplex.CochainProjection.discreteMixedSolution
-          ((meshFamily n).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
-            f).snd.fst‖ +
-      ‖(q : L2F ℝ (starDomain n).Ω (formIdx n 1)) -
-        (((Subcomplex.CochainProjection.discreteMixedSolution
-          ((meshFamily n).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
-            f).snd.snd : ((meshFamily n).poly PolySeq.lagrangeP2 N).V 1) :
-              L2F ℝ (starDomain n).Ω (formIdx n 1))‖ ≤
-      K * L * ((meshFamily n).mesh N).meshSize ^ (1 + 1) :=
-  (meshFamily n).mixed_rate_poly_of_polyOrderAt PolySeq.lagrangeP2 (hasPoincare n)
-    FEM.lagrangeP2_polyOrderAt_zero FEM.lagrangeP2_polyOrderAt_one rfl rfl
-
-end CubeWitness
-
-namespace ParallelepipedWitness
-
-variable (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det) (b : Fin n → ℝ) [NeZero n]
-
-/-- **Second-order convergence of the bottom row on the image Freudenthal meshes of a
-parallelepiped**, as an instance of `Parallelepiped.mixed_rate_lagrangeP2_general` for the mesh
-family `ParallelepipedWitness.meshFamily`. -/
-theorem mixed_rate_lagrangeP2 :
-    ∃ K : ℝ, ∀ {f : L2F ℝ (starDomain A hA b).Ω (formIdx n 1)}
-    {σ : (starDomain A hA b).complex.domainSpace 0}
-    {u : (starDomain A hA b).complex.domainSpace 1}
-    {q : (starDomain A hA b).complex.harmonic 1},
-    (starDomain A hA b).complex.IsMixedSolution 0 1 2 f σ u q → ∀ {L : ℝ}, 0 ≤ L →
-    (starDomain A hA b).IsCsForm 1 0 L ((starDomain A hA b).complex.domainIncl 0 σ) →
-    (starDomain A hA b).IsCsForm 1 1 L ((starDomain A hA b).complex.domainIncl 1 u) →
-    (starDomain A hA b).IsCsForm 1 1 L ((starDomain A hA b).complex.domainIncl 1
-      ((starDomain A hA b).complex.boundaryPart 1
-        ((starDomain A hA b).complex.domainIncl 1 u))) →
-    (starDomain A hA b).IsCsForm 1 1 L
-      (q : L2F ℝ (starDomain A hA b).Ω (formIdx n 1)) → ∀ N : ℕ,
-    ‖σ - ((meshFamily A hA b).poly PolySeq.lagrangeP2 N).embD 0
-        (Subcomplex.CochainProjection.discreteMixedSolution
-          ((meshFamily A hA b).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
-            f).fst‖ +
-      ‖u - ((meshFamily A hA b).poly PolySeq.lagrangeP2 N).embD 1
-        (Subcomplex.CochainProjection.discreteMixedSolution
-          ((meshFamily A hA b).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
-            f).snd.fst‖ +
-      ‖(q : L2F ℝ (starDomain A hA b).Ω (formIdx n 1)) -
-        (((Subcomplex.CochainProjection.discreteMixedSolution
-          ((meshFamily A hA b).poly PolySeq.lagrangeP2 N) (i := 0) (j := 1) (k := 2) rfl rfl
-            f).snd.snd : ((meshFamily A hA b).poly PolySeq.lagrangeP2 N).V 1) :
-              L2F ℝ (starDomain A hA b).Ω (formIdx n 1))‖ ≤
-      K * L * ((meshFamily A hA b).mesh N).meshSize ^ (1 + 1) :=
-  Parallelepiped.mixed_rate_lagrangeP2_general A hA b (meshFamily A hA b)
-
-end ParallelepipedWitness
 
 end Feec.Models.StarShaped

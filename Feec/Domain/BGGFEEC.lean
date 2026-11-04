@@ -22,7 +22,8 @@ hypotheses here: they follow from the `H¹`-regular decompositions of the rows
 theorem on the cube `Q = (0, ½)³` over `ℝ`, where the FEEC theorems hold without them
 (`Feec.Models.Cube.hessianFEEC_Q`, `Feec.Models.Cube.elasticityFEEC_Q`,
 `Feec.Models.Cube.divDivFEEC_Q`). The finite-dimensional cohomology of `deRhamVec m` is a
-hypothesis, formalized on no domain of `ℝ³`. **No stacked family of the maximal data is known to
+hypothesis here, a theorem on `Q` too (`Feec.Domain.deRhamVec_finiteDimensional_cohomology`,
+from `HΛ(Q)`), so the FEEC theorems on `Q` have no hypothesis. **No stacked family of the maximal data is known to
 exist here**: the theorems quantify over `G`, and no finite element family with `S Ṽₕ ⊆ Vₕ`,
 `πₕ S = S π̃ₕ` is constructed. The conditions are strong: the connecting maps `I`, `2 vskw`, `tr` of
 the Hessian data are onto, so they force `Vₕ¹ = Ṽₕ⁰`, `πₕ¹ = π̃ₕ⁰`, `Vₕ² = 2 vskw Ṽₕ¹`,

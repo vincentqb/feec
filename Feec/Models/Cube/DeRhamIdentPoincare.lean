@@ -19,7 +19,8 @@ degree:
 * **the harmonic forms**: `ℌᵏ(HΛ(Q)) = 0` for `k ≠ 0` and `ℌ⁰(HΛ(Q))` is the line of the constants
   (`Hmax_harmonic_eq_bot`, `Hmax_harmonic_zero`); `ℌᵏ(H̊Λ(Q)) = 0` for `k ≠ n` and `ℌⁿ(H̊Λ(Q))` is
   the line of the constant volume form `dx₁ ∧ ⋯ ∧ dxₙ` (`Hmin_harmonic_eq_bot`,
-  `Hmin_harmonic_top`).
+  `Hmin_harmonic_top`); so `HΛ(Q)` has closed range and finite-dimensional cohomology in every
+  degree (`Hmax_closedRangeAt`, instance `Hmax_finiteDimensional_cohomology`).
 
 The constant is the one of the torus, `(2π)⁻¹` (the first nonzero frequency `2π` of `𝕋ⁿ`); it is
 sharp, since `cos 2πx` on `(0, ½)` is a Neumann eigenfunction, but sharpness is not formalized. The transfer from the torus uses two abstract
@@ -809,5 +810,23 @@ theorem Hmin_harmonic_top : (Hmin n).harmonic n = ℝ ∙ volQ (card_univ_eq n) 
 /-- `j - 1 → j` is an arrow of `ComplexShape.up ℤ`. -/
 theorem rel_sub_one (j : ℤ) : (ComplexShape.up ℤ).Rel (j - 1) j := by
   change j - 1 + 1 = j; ring
+
+/-- **Closed range of `HΛ(Q)` in every degree** (the Poincaré inequality `Hmax_norm_le`). -/
+theorem Hmax_closedRangeAt (j : ℤ) : (Hmax n).ClosedRangeAt j :=
+  ((Hmax n).closedRangeAt_iff_poincare_of_rel (rel_sub_one j)).2
+    ⟨_, fun x hx => Hmax_norm_le (rel_sub_one j) x hx⟩
+
+/-- The harmonic forms of `HΛ(Q)` are finite-dimensional in every degree. -/
+instance Hmax_finiteDimensional_harmonic (k : ℤ) : FiniteDimensional ℝ ((Hmax n).harmonic k) := by
+  by_cases hk : k = 0
+  · subst hk; rw [Hmax_harmonic_zero]; infer_instance
+  · rw [Hmax_harmonic_eq_bot hk]; infer_instance
+
+/-- **The cohomology of `HΛ(Q)` is finite-dimensional in every degree** (harmonic forms represent
+it under closed range). -/
+instance Hmax_finiteDimensional_cohomology (k : ℤ) :
+    FiniteDimensional ℝ
+      (((Feec.Domain.deRham ℝ n).maximalComplex (isOpen_Q (d := Fin n))).cohomology k) :=
+  ((Hmax n).finiteDimensional_harmonic_iff (Hmax_closedRangeAt k)).1 inferInstance
 
 end Feec.Models.Cube.DeRhamIdent

@@ -31,11 +31,11 @@ Theorem 3; [CapHu2024]); they follow from the `H¹`-regular decompositions of th
 (`Feec.Domain.ConstCoeffBGG.maximalData_regularDecomposition`), which are formalized on the cube
 `Q = (0, ½)³` over `ℝ` (`Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`; for these
 diagrams `Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`, …) and not on other
-domains. The finite-dimensionality of the cohomology of `deRhamVec m` is not
-derived from the cube results on `deRham` either: over `ℝ`, the downstream module
-`Feec.Domain.VectorProxy` identifies the maximal complexes of `deRhamVec ℝ 1` and `deRham ℝ 3` on
-every open `Ω ⊆ ℝ³` (`deRhamVec_maximalComplex_eq_map`), but the cohomology is not transported,
-and the instances here are over a general `𝕜`.
+domains. The finite-dimensionality of the cohomology of `deRhamVec ℝ m` passes from that of
+`deRham ℝ 3` row by row through the vector proxies, on every open `Ω ⊆ ℝ³`
+(`Feec.Domain.deRhamVec_finiteDimensional_cohomology`), and holds on `Q`
+(`Feec.Models.Cube.finiteDimensional_cohomology_deRhamVec_Q`, from the harmonic forms of
+`HΛ(Q)`); the instances here are over a general `𝕜`.
 
 The explicit cochain map (30) of Theorem 7 in `HilbertData.BGGVerdict` assumes right inverses of
 the connecting maps between the domain complexes (`Feec.BGG.Data.InjSurjWith` for

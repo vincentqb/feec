@@ -23,7 +23,8 @@ and vector fields: `f = ω_∅`, `v_j = ω_{j}`, `u_k = ±ω_{{k}ᶜ}` (`u = (ω
   constant-coefficient operators intertwined by constant matrices with two-sided inverses
   (`C'.A k ∘ M_k = M_{k+1} ∘ C.A k` on smooth fields), the maximal complex of `C'` is the
   transport of that of `C` along the matrices (from `ConstCoeffOp.maximal_ofMatrixCLM` in both
-  directions).
+  directions); without inverses the matrices are cochain maps of the maximal complexes
+  (`ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm`).
 * **`deRhamVec_maximalComplex_eq_map`**: the maximal vector-proxy complex
   `H¹(Ω) --grad--> H(curl, Ω) --curl--> H(div, Ω) --div--> L²(Ω)` (`deRhamVec ℝ 1`) is the
   unitary transport of the maximal de Rham complex `HΛ⁰(Ω) → HΛ¹(Ω) → HΛ²(Ω) → L²Λ³(Ω)` along the
@@ -143,6 +144,30 @@ theorem apply_ofMatrix_inv [DecidableEq ι] [DecidableEq ι'] [DecidableEq κ]
 
 end ConstCoeffOp
 
+/-- **Constant matrices intertwining two complexes of constant-coefficient operators are cochain
+maps of their maximal complexes**: if `C'.A k ∘ M_k = M_{k+1} ∘ C.A k` on smooth fields, then
+`M_j D(d_max) ⊆ D(d'_max)` and `d'_max M_j = M_k d_max` (`ConstCoeffOp.maximal_ofMatrixCLM_of_comm`
+in each degree). -/
+theorem ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm (hΩ : IsOpen Ω)
+    {C C' : ConstCoeffComplex E 𝕜} {M : ∀ k, Matrix (C'.ι k) (C.ι k) 𝕜}
+    (h : ∀ k (f : C.ι k → E → 𝕜), (∀ i, ContDiff ℝ ∞ (f i)) →
+      (C'.A k).apply ((ConstCoeffOp.ofMatrix (M k)).apply f) =
+        (ConstCoeffOp.ofMatrix (M (k + 1))).apply ((C.A k).apply f))
+    (j k : ℤ) (hjk : (ComplexShape.up ℤ).Rel j k) (x : ((C.maximalComplex hΩ).d j k).domain) :
+    ∃ hx : L2F.ofMatrixCLM (M j) (x : L2F 𝕜 Ω (C.ι j)) ∈ ((C'.maximalComplex hΩ).d j k).domain,
+      (C'.maximalComplex hΩ).d j k ⟨_, hx⟩ =
+        L2F.ofMatrixCLM (M k) ((C.maximalComplex hΩ).d j k x) := by
+  obtain rfl : j + 1 = k := hjk
+  have hx : (x : L2F 𝕜 Ω (C.ι j)) ∈ ((C.A j).maximal Ω).domain := by
+    rw [← C.maximalComplex_d hΩ j]; exact x.2
+  obtain ⟨h', hv⟩ := ConstCoeffOp.maximal_ofMatrixCLM_of_comm hΩ (h j) ⟨_, hx⟩
+  have h'' : L2F.ofMatrixCLM (M j) (x : L2F 𝕜 Ω (C.ι j)) ∈
+      ((C'.maximalComplex hΩ).d j (j + 1)).domain := by
+    rw [C'.maximalComplex_d hΩ j]; exact h'
+  refine ⟨h'', ((LinearPMap.apply_eq_of_eq (C'.maximalComplex_d hΩ j) _ ⟨_, h'⟩ rfl).trans
+    hv).trans ?_⟩
+  exact congrArg _ (LinearPMap.apply_eq_of_eq (C.maximalComplex_d hΩ j) x ⟨_, hx⟩ rfl).symm
+
 namespace ConstCoeffComplex
 
 variable {E : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E] [BorelSpace E]
@@ -172,12 +197,7 @@ theorem maximalComplex_eq_transport_ofMatrix (hΩ : IsOpen Ω)
       have e : L2F.ofMatrixCLM (M i) (L2F.ofMatrixCLM (N i) y) = y := by
         rw [L2F.ofMatrixCLM_ofMatrixCLM, hMN, L2F.ofMatrixCLM_one]
       exact e ▸ (ConstCoeffOp.maximal_ofMatrixCLM_of_comm hΩ (h i) ⟨_, hy⟩).1
-    · have hx : x.1 ∈ ((C.A i).maximal Ω).domain := by
-        rw [← maximalComplex_d C hΩ i]; exact x.2
-      obtain ⟨h', hv⟩ := ConstCoeffOp.maximal_ofMatrixCLM_of_comm hΩ (h i) ⟨_, hx⟩
-      refine ((LinearPMap.apply_eq_of_eq (maximalComplex_d C' hΩ i) _ ⟨_, h'⟩ rfl).trans
-        hv).trans ?_
-      exact congrArg _ (LinearPMap.apply_eq_of_eq (maximalComplex_d C hΩ i) x ⟨_, hx⟩ rfl).symm
+    · exact (maximalComplex_ofMatrixCLM_comm hΩ h i (i + 1) rfl x).2
   · have hr : ¬ (ComplexShape.up ℤ).Rel i j := by simpa using hij
     exact ((C'.maximalComplex hΩ).shape i j hr).trans
       (((C.maximalComplex hΩ).transport (fun k => L2F.ofMatrixEquiv (M k) (N k) (hMN k) (hNM k))

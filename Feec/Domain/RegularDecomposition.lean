@@ -30,17 +30,22 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
   decompositions follow from those of the rows (`hessianMaximalData_regularDecomposition`, …).
   On the cube `Q = (0, ½)³` the rows have them (`Feec.Models.Cube.MaximalRegularDecomposition`),
   which removes the hypothesis from the FEEC theorems there (`Feec.Models.Cube.BGGFEEC`).
+* **Finite-dimensional cohomology passes from forms to vector proxies**, row by row
+  (`deRhamVec_finiteDimensional_cohomology`): the rows and the row embeddings are cochain maps
+  and a field is the sum of its rows.
 
 ## Main definitions
 
-* `fieldGradOp`, `fieldH1`; `ConstCoeffComplex.HasRegularDecomposition`; `rowMat`.
+* `fieldGradOp`, `fieldH1`; `ConstCoeffComplex.HasRegularDecomposition`; `rowMat`,
+  `rowFormMat`, `formRowMat`.
 
 ## Main results
 
 * `ConstCoeffOp.maximal_domain_le_of_apply_eq`, **`fieldH1_le_maximal_domain`**,
   `ofMatrixCLM_mem_fieldH1`.
-* `vecOp_rowMat`, `vecOp_rowMat_transpose`, `sum_rowMat_transpose_mul`.
-* **`deRhamVec_hasRegularDecomposition`**.
+* `vecOp_rowMat`, `vecOp_rowMat_transpose`, `sum_rowMat_transpose_mul`;
+  `extDerivOp_rowFormMat`, `vecOp_formRowMat`, `sum_formRowMat_mul_rowFormMat`.
+* **`deRhamVec_hasRegularDecomposition`**, **`deRhamVec_finiteDimensional_cohomology`**.
 * **`ConstCoeffBGG.maximalData_regularDecomposition`** (through
   `Feec.BGG.HilbertData.regularDecomposition_of_forall_exists`).
 * `hessianSMat_rightInv`, `elasticitySMat_rightInv`, `divDivSMat_rightInv`;
@@ -53,6 +58,8 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
   Theorem 3), §4 (the BGG construction)
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
   (regular decomposition)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §2 (vector proxies)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -354,10 +361,41 @@ theorem L2F.ofMatrixCLM_sum {α : Type*} (s : Finset α)
   simp only [L2F.ofMatrixCLM_apply, Matrix.sum_apply, Finset.sum_smul]
   exact Finset.sum_comm
 
+/-- **The `r`-th row of a field of `deRhamVec ℝ m` as a form**: `P_k⁻¹ rowᵣ`, through the
+proxies `proxyMat`. -/
+def rowFormMat (r : Fin m) (k : ℤ) : Matrix (formIdx 3 k) (vecIdx m k) ℝ :=
+  (proxyMat k).transpose * rowMat ℝ r k
+
+/-- **A form as the `r`-th row of a field of `deRhamVec ℝ m`**: `rowᵣᵀ P_k`. -/
+def formRowMat (r : Fin m) (k : ℤ) : Matrix (vecIdx m k) (formIdx 3 k) ℝ :=
+  (rowMat ℝ r k).transpose * proxyMat k
+
+/-- The rows of smooth fields commute with `d`. -/
+theorem extDerivOp_rowFormMat (r : Fin m) (k : ℤ) (f : vecIdx m k → (Fin 3 → ℝ) → ℝ)
+    (hf : ∀ i, ContDiff ℝ ∞ (f i)) :
+    (extDerivOp ℝ 3 k).apply ((ofMatrix (rowFormMat r k)).apply f) =
+      (ofMatrix (rowFormMat r (k + 1))).apply ((vecOp ℝ m k).apply f) := by
+  rw [rowFormMat, rowFormMat, ← ofMatrix_apply_ofMatrix, apply_ofMatrix_inv
+    (proxyMat_mul_transpose k) (transpose_mul_proxyMat (k + 1)) (fun g _ => vecOp_proxyMat k g) _
+    ((ofMatrix (rowMat ℝ r k)).contDiff_apply hf), vecOp_rowMat, ofMatrix_apply_ofMatrix]
+
+/-- Forms placed in a row commute with `d`. -/
+theorem vecOp_formRowMat (r : Fin m) (k : ℤ) (f : formIdx 3 k → (Fin 3 → ℝ) → ℝ) :
+    (vecOp ℝ m k).apply ((ofMatrix (formRowMat r k)).apply f) =
+      (ofMatrix (formRowMat r (k + 1))).apply ((extDerivOp ℝ 3 k).apply f) := by
+  rw [formRowMat, formRowMat, ← ofMatrix_apply_ofMatrix, vecOp_rowMat_transpose, vecOp_proxyMat,
+    ofMatrix_apply_ofMatrix]
+
+/-- **A field is the sum of its rows**: `Σ_r (rowᵣᵀ P_k) (P_k⁻¹ rowᵣ) = 1`. -/
+theorem sum_formRowMat_mul_rowFormMat (k : ℤ) :
+    ∑ r : Fin m, formRowMat r k * rowFormMat r k = 1 := by
+  simp only [formRowMat, rowFormMat, Matrix.mul_assoc]
+  simp only [← Matrix.mul_assoc (proxyMat k), proxyMat_mul_transpose, Matrix.one_mul]
+  exact sum_rowMat_transpose_mul k
+
 /-- **The `H¹`-regular decompositions pass from forms to vector proxies**: if the `L²` de Rham
 complex of `Ω ⊆ ℝ³` in forms has them from `J` on, so has the de Rham complex with values in
-`ℝᵐ` (row by row: the `r`-th row of a field is a form through the proxies, `rowMat`,
-`proxyMat`). -/
+`ℝᵐ` (row by row: the `r`-th row of a field is a form, `rowFormMat`, `formRowMat`). -/
 theorem deRhamVec_hasRegularDecomposition {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) {J : ℤ}
     (h : (deRham ℝ 3).HasRegularDecomposition Ω J) (m : ℕ) :
     (deRhamVec ℝ m).HasRegularDecomposition Ω J := by
@@ -365,44 +403,57 @@ theorem deRhamVec_hasRegularDecomposition {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOp
       ∃ p : ((extDerivOp ℝ 3 i).maximal Ω).domain,
         u - (extDerivOp ℝ 3 i).maximal Ω p ∈ fieldH1 ℝ Ω (formIdx 3 (i + 1)) := h
   intro i hi u hu
-  -- the `r`-th row as a form, and a form as the `r`-th row
-  let P : Fin m → ∀ k, Matrix (formIdx 3 k) (vecIdx m k) ℝ := fun r k =>
-    (proxyMat k).transpose * rowMat ℝ r k
-  let R : Fin m → ∀ k, Matrix (vecIdx m k) (formIdx 3 k) ℝ := fun r k =>
-    (rowMat ℝ r k).transpose * proxyMat k
-  have hP : ∀ r k (f : vecIdx m k → (Fin 3 → ℝ) → ℝ), (∀ i, ContDiff ℝ ∞ (f i)) →
-      (extDerivOp ℝ 3 k).apply ((ofMatrix (P r k)).apply f) =
-        (ofMatrix (P r (k + 1))).apply ((vecOp ℝ m k).apply f) := fun r k f hf => by
-    rw [← ofMatrix_apply_ofMatrix, apply_ofMatrix_inv (proxyMat_mul_transpose k)
-      (transpose_mul_proxyMat (k + 1)) (fun g _ => vecOp_proxyMat k g) _
-      ((ofMatrix (rowMat ℝ r k)).contDiff_apply hf), vecOp_rowMat, ofMatrix_apply_ofMatrix]
-  have hR : ∀ r k (f : formIdx 3 k → (Fin 3 → ℝ) → ℝ),
-      (vecOp ℝ m k).apply ((ofMatrix (R r k)).apply f) =
-        (ofMatrix (R r (k + 1))).apply ((extDerivOp ℝ 3 k).apply f) := fun r k f => by
-    rw [← ofMatrix_apply_ofMatrix, vecOp_rowMat_transpose, vecOp_proxyMat,
-      ofMatrix_apply_ofMatrix]
-  have hRP : ∑ r, R r (i + 1) * P r (i + 1) = 1 := by
-    simp only [R, P, Matrix.mul_assoc]
-    simp only [← Matrix.mul_assoc (proxyMat (i + 1)), proxyMat_mul_transpose, Matrix.one_mul]
-    exact sum_rowMat_transpose_mul (i + 1)
-  have hur : ∀ r, L2F.ofMatrixCLM (P r (i + 1)) u ∈
+  have hur : ∀ r : Fin m, L2F.ofMatrixCLM (rowFormMat r (i + 1)) u ∈
       ((extDerivOp ℝ 3 (i + 1)).maximal Ω).domain := fun r =>
-    (maximal_ofMatrixCLM_of_comm hΩ (hP r (i + 1)) ⟨u, hu⟩).1
+    (maximal_ofMatrixCLM_of_comm hΩ (extDerivOp_rowFormMat r (i + 1)) ⟨u, hu⟩).1
   choose p hp using fun r => h' i hi _ (hur r)
-  choose hq hqe using fun r => maximal_ofMatrixCLM_of_comm hΩ (fun f _ => hR r i f) (p r)
+  choose hq hqe using fun r =>
+    maximal_ofMatrixCLM_of_comm hΩ (fun f _ => vecOp_formRowMat r i f) (p r)
   refine ⟨∑ r, ⟨_, hq r⟩, ?_⟩
   have hsum : (vecOp ℝ m i).maximal Ω (∑ r, ⟨_, hq r⟩) =
-      ∑ r, L2F.ofMatrixCLM (R r (i + 1)) ((extDerivOp ℝ 3 i).maximal Ω (p r)) :=
+      ∑ r, L2F.ofMatrixCLM (formRowMat r (i + 1)) ((extDerivOp ℝ 3 i).maximal Ω (p r)) :=
     (map_sum ((vecOp ℝ m i).maximal Ω).toFun _ Finset.univ).trans
       (Finset.sum_congr rfl fun r _ => hqe r)
-  have hu' : u = ∑ r, L2F.ofMatrixCLM (R r (i + 1)) (L2F.ofMatrixCLM (P r (i + 1)) u) := by
+  have hu' : u = ∑ r, L2F.ofMatrixCLM (formRowMat r (i + 1))
+      (L2F.ofMatrixCLM (rowFormMat r (i + 1)) u) := by
     simp only [L2F.ofMatrixCLM_ofMatrixCLM]
-    rw [← L2F.ofMatrixCLM_sum, hRP, L2F.ofMatrixCLM_one]
+    rw [← L2F.ofMatrixCLM_sum, sum_formRowMat_mul_rowFormMat, L2F.ofMatrixCLM_one]
   change u - (vecOp ℝ m i).maximal Ω (∑ r, ⟨_, hq r⟩) ∈ fieldH1 ℝ Ω (vecIdx m (i + 1))
   rw [hsum, hu', ← Finset.sum_sub_distrib]
   refine Submodule.sum_mem _ fun r _ => ?_
   rw [← map_sub]
   exact ofMatrixCLM_mem_fieldH1 hΩ _ (hp r)
+
+/-! ### Finite-dimensional cohomology, row by row -/
+
+/-- **Finite-dimensional cohomology passes from forms to vector proxies**: if the maximal `L²`
+de Rham complex of `Ω ⊆ ℝ³` in forms has finite-dimensional cohomology in degree `i`, so has the
+de Rham complex with values in `ℝᵐ`. The rows `rowFormMat r` and the embeddings `formRowMat r`
+are cochain maps (`ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm`) and a field is the sum of
+its rows, so `[u] ↦ ([rowᵣ u])_r` is one-to-one
+(`HilbertComplex.finiteDimensional_cohomology_of_sum_eq_id`). -/
+theorem deRhamVec_finiteDimensional_cohomology {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) (m : ℕ)
+    (i : ℤ) [FiniteDimensional ℝ (((deRham ℝ 3).maximalComplex hΩ).cohomology i)] :
+    FiniteDimensional ℝ (((deRhamVec ℝ m).maximalComplex hΩ).cohomology i) := by
+  have hP := fun r : Fin m => ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm hΩ
+    (C := deRhamVec ℝ m) (C' := deRham ℝ 3) (M := rowFormMat r) (extDerivOp_rowFormMat r)
+  have hR := fun r : Fin m => ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm hΩ
+    (C := deRham ℝ 3) (C' := deRhamVec ℝ m) (M := formRowMat r)
+    fun k f _ => vecOp_formRowMat r k f
+  refine HilbertComplex.finiteDimensional_cohomology_of_sum_eq_id
+    (H := (deRham ℝ 3).maximalComplex hΩ) (H' := (deRhamVec ℝ m).maximalComplex hΩ)
+    (fun r => (L2F.ofMatrixCLM (rowFormMat r i) : _ →L[ℝ] _).toLinearMap)
+    (fun r => (L2F.ofMatrixCLM (formRowMat r i) : _ →L[ℝ] _).toLinearMap)
+    (fun r _ hx => HilbertComplex.apply_mem_cycles
+      (T := fun j => (L2F.ofMatrixCLM (rowFormMat r j) : _ →L[ℝ] _).toLinearMap) (hP r) hx)
+    (fun r _ hx => HilbertComplex.apply_mem_boundaries
+      (T := fun j => (L2F.ofMatrixCLM (rowFormMat r j) : _ →L[ℝ] _).toLinearMap) (hP r) hx)
+    (fun r _ hx => HilbertComplex.apply_mem_boundaries
+      (T := fun j => (L2F.ofMatrixCLM (formRowMat r j) : _ →L[ℝ] _).toLinearMap) (hR r) hx)
+    fun x => ?_
+  change ∑ r, L2F.ofMatrixCLM (formRowMat r i) (L2F.ofMatrixCLM (rowFormMat r i) x) = x
+  simp only [L2F.ofMatrixCLM_ofMatrixCLM]
+  rw [← L2F.ofMatrixCLM_sum, sum_formRowMat_mul_rowFormMat, L2F.ofMatrixCLM_one]
 
 /-! ### The regular decompositions of BGG data -/
 

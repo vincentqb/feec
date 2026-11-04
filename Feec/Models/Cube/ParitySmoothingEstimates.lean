@@ -616,7 +616,7 @@ theorem sqrt_mul_abs_integrand_par {N k : ℕ} {A : ℝ} (hA0 : 0 ≤ A) (hA : I
   have hxI := coord_mem_Icc_of_mem_closure hxQc
   have hTinv := hA N T.2 uT huT
   have hLT : formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior uT ≤ L :=
-    sum_integral_sq_le_locMass (polyElement n S) u T (self_subset_cthickening _ (by positivity))
+    sum_integral_sq_le_locMass (polyElement n S) u T (Metric.self_subset_cthickening _)
   have hsqLT : √(formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior uT) ≤ √L :=
     Real.sqrt_le_sqrt hLT
   have hTs : ∀ y ∈ (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior, ∀ s,

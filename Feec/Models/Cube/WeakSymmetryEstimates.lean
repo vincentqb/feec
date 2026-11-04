@@ -36,7 +36,7 @@ independent of `N`:
   field (`refZ_notMem`), so `‖(I − Π²) S¹ v_N‖²_{L²(T₀)} = h c₀`, `c₀ > 0` (`formL2Sq_simplex₀`,
   `refGap_pos`).
 * **`S` and the smoothing** (`smoothForm_wsL2`): `R S u = c S R̃ u` for the smoothing operators of
-  `Feec.Models.Cube.FEM.smoothForm` (extension by zero, mollification, dilation by `c`).
+  `Feec.FiniteElement.smoothForm` (extension by zero, mollification, dilation by `c`).
 * **`grad` is injective on `P₂Λ̊⁰ ⊗ ℝ³`** (`eq_zero_of_dPiecewise_tensor_eq_zero`; any family,
   `eq_zero_of_dPiecewise_eq_zero`), from `ℌ⁰(H̊Λ(Q)) = 0`.
 

@@ -697,10 +697,6 @@ theorem sqrt_mul_abs_sum_sub_smoothForm_le {Ω : Set (Fin n → ℝ)} (hΩ : Mea
   rw [le_div_iff₀ hH, mul_comm] at hmain
   exact hmain
 
-theorem self_subset_cthickening (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r : ℝ} (hr : 0 ≤ r) :
-    T.closedInterior ⊆ Metric.cthickening r T.closedInterior :=
-  Metric.self_subset_cthickening _ |>.trans (Metric.cthickening_mono hr _)
-
 /-- **Choice of the smoothing scale** `γ`: small against the constants of the local
 estimates. -/
 theorem sq_le_quarter {S K x : ℝ} (hS : 0 ≤ S) (hK : 1 ≤ K) (hx0 : 0 ≤ x) (hx : x ≤ S) :

@@ -569,7 +569,7 @@ theorem sqrt_mul_abs_polyIntegrand_le {M : SimplicialMesh n} (hΩ : MeasurableSe
     (pow_pos (Real.sqrt_pos.2 hh) n) hA0 (by positivity) (hp.pow_factor_le hγh k)
     ((hp.abs_one_sub_pow_le hR hγh k).trans (mul_le_mul_of_nonneg_left
       (by rw [div_le_iff₀ hR]; nlinarith) (by positivity)))
-    (fun s => (hinv T (self_subset_cthickening _ (by positivity))).1 x hxT s) ?_ ?_
+    (fun s => (hinv T (Metric.self_subset_cthickening _)).1 x hxT s) ?_ ?_
   · filter_upwards [ae_extField_glue_eq (polyElement n S) u hΩ] with t ht hdist htΩ
     obtain ⟨T', htT', hext⟩ := ht htΩ
     set u' : FormField n := ((u T' : (polyElement n S).space T' k) : FormField n)

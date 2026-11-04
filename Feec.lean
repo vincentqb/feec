@@ -97,6 +97,7 @@ public import Feec.FiniteElement.LocalDof
 public import Feec.FiniteElement.LocalSpace
 public import Feec.FiniteElement.LumpedLaplacian
 public import Feec.FiniteElement.LumpedMass
+public import Feec.FiniteElement.MaxNormHeat
 public import Feec.FiniteElement.MeshDivergence
 public import Feec.FiniteElement.P1Global
 public import Feec.FiniteElement.PolyComplex

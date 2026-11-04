@@ -101,6 +101,10 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   `ConstrainedFEEC.RateClass.toCrimeRate`: the conforming rate classes give rate classes of
   `ofComplex` (factor `C + C_ι C' t`, `ConstrainedFEEC.RateClass.norm_sub_ofComplex_le`).
 
+The static and heat FEEC theorems for these families (the mixed Hodge Laplacian with the load
+`iₕ* f`, and the heat equation with the heat Ritz projection) are in
+`Feec.HilbertComplex.Approximation.StaticCrime` and `Feec.HilbertComplex.Approximation.HeatCrime`.
+
 Non-vacuity, with a nonzero cochain defect and a non-cochain isometric reading map:
 `Feec.HilbertComplex.ApproxComplexCrime.shifted_nonvacuous`
 (`Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness`); with distinct orders in

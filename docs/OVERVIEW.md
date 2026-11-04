@@ -215,6 +215,36 @@ Whitney Maxwell on the cube, `O(h)`); the witness
 isometric, not a cochain map, `⟪κₙ(0, 1, 0), (1, 0, 0)⟫ = cₙ − 1 ≠ 0`, rate `O(cₙ − 1)`); and the scheme
 (6.5) with both boundary conditions (below).
 
+**Static and heat theory with crimes.** `Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC`
+(`Feec.HilbertComplex.Approximation.StaticCrime`) is the elliptic theory of these families: the
+discrete differential space `(Xₕ, 𝐝ₕ)` is a Hilbert complex on `ComplexShape.loop`
+(`Feec.HilbertComplex.diffComplex`), and its mixed Hodge Laplacian with the load `iₕ* f` is well
+posed for every `h` and, under a uniform discrete Poincaré inequality
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsPoincare`; it follows from projections mapping
+`ker 𝐝` into `ker 𝐝ₕ` when `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.isPoincare_of_proj`), uniformly stable. Against the
+mixed solution of the total complex, the error is at most best approximation plus `80 C c_P²` times
+the residual of any discrete triple (`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le`),
+and the residual splits into the inner-product defect, the read error, the cochain defects of
+`u = G f` and `𝐝 u`, and the harmonic defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.norm_staticResidual_le`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le_of_split`). Consistent approximation is
+again equivalent to convergence
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.staticConsistent_iff_tendsto`), and on a dense set
+of data it gives convergence for every datum
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.tendsto_staticError_of_dense`). The heat theorem
+(`Feec.HilbertComplex.ApproxComplexCrime.heatFEEC`, `Feec.HilbertComplex.Approximation.HeatCrime`)
+follows the conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
+projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static errors tend to `0` (the inner-product
+defect enters its consistency defect), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ`
+gives the heat rate `(2K + C (3C + 16 c_P² C) K t) L mᵅ`
+(`Feec.HilbertComplex.ApproxComplexCrime.rate_heat_of_static`). These are the fields `static`,
+`heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted family
+satisfies every hypothesis, converges for every datum and is inexact
+(`Feec.HilbertComplex.ApproxComplexCrime.shifted_static_nonvacuous`,
+`Feec.HilbertComplex.ApproxComplexCrime.shifted_heat`). Not formalized with crimes: the
+isomorphism on cohomology (the reading maps are not cochain maps).
+
 **Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the
 README names (and others such as `Feec.Instances.Maxwell.maxwellFEEC` and
 `Feec.Instances.EinsteinBianchi.einsteinBianchi_torus_constrainedFEEC`) depend on it. The

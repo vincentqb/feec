@@ -2,6 +2,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.StaticCochain
 public import Feec.HilbertComplex.Approximation.StaticCrimeWitness
+public import Feec.HilbertComplex.ReducedSystem
 
 /-!
 # Non-vacuity of the cochain case with harmonic forms
@@ -234,37 +235,26 @@ variable (𝕜) in
 abbrev idZeroComplex : HilbertComplex 𝕜 ComplexShape.fin3 (W3 𝕜 𝕜 𝕜) :=
   (idZeroShort 𝕜).toHilbertComplex
 
-/-- The point `(a, b, c)` of `𝕜 × 𝕜 × 𝕜`. -/
-def point3 (a b c : 𝕜) : PiLp 2 (W3 𝕜 𝕜 𝕜) :=
-  WithLp.toLp 2 fun i => match i with
-    | 0 => a
-    | 1 => b
-    | 2 => c
-
 /-- The degree-`0` component of a point of `𝕜 × 𝕜 × 𝕜`, in `𝕜`. -/
 abbrev coord0 (u : PiLp 2 (W3 𝕜 𝕜 𝕜)) : 𝕜 := u 0
 
 /-- The degree-`2` component of a point of `𝕜 × 𝕜 × 𝕜`, in `𝕜`. -/
 abbrev coord2 (u : PiLp 2 (W3 𝕜 𝕜 𝕜)) : 𝕜 := u 2
 
-theorem point3_zero : point3 (0 : 𝕜) 0 0 = 0 :=
+theorem mk3_zero_zero_zero : (mk3 (0 : 𝕜) (0 : 𝕜) (0 : 𝕜) : PiLp 2 (W3 𝕜 𝕜 𝕜)) = 0 :=
   PiLp.ext fun i => by fin_cases i <;> rfl
 
-theorem inner_point3 (a b c a' b' c' : 𝕜) :
-    ⟪point3 a b c, point3 a' b' c'⟫_𝕜 =
+theorem inner_mk3 (a b c a' b' c' : 𝕜) :
+    ⟪mk3 a b c, mk3 a' b' c'⟫_𝕜 =
       starRingEnd 𝕜 a * a' + starRingEnd 𝕜 b * b' + starRingEnd 𝕜 c * c' := by
   rw [PiLp.inner_apply, Fin.sum_univ_three]
   change ⟪a, a'⟫_𝕜 + ⟪b, b'⟫_𝕜 + ⟪c, c'⟫_𝕜 = _
   rw [RCLike.inner_apply', RCLike.inner_apply', RCLike.inner_apply']
 
-theorem norm_point3_zero (b : 𝕜) : ‖point3 0 b 0‖ = ‖b‖ := by
-  have h := PiLp.norm_sq_eq_of_L2 (W3 𝕜 𝕜 𝕜) (point3 0 b 0)
-  rw [Fin.sum_univ_three] at h
-  have h0 : ‖(point3 (0 : 𝕜) b 0) 0‖ = 0 := norm_zero (E := 𝕜)
-  have h2 : ‖(point3 (0 : 𝕜) b 0) 2‖ = 0 := norm_zero (E := 𝕜)
-  have h1 : ‖(point3 (0 : 𝕜) b 0) 1‖ = ‖b‖ := rfl
-  rw [h0, h1, h2] at h
-  have := norm_nonneg (point3 0 b 0)
+theorem norm_mk3_zero (b : 𝕜) : ‖(mk3 (0 : 𝕜) b (0 : 𝕜) : PiLp 2 (W3 𝕜 𝕜 𝕜))‖ = ‖b‖ := by
+  have h := norm_sq_mk3 (𝕜 := 𝕜) (0 : 𝕜) b (0 : 𝕜)
+  rw [norm_zero] at h
+  have := norm_nonneg (mk3 (0 : 𝕜) b (0 : 𝕜) : PiLp 2 (W3 𝕜 𝕜 𝕜))
   nlinarith [norm_nonneg b]
 
 theorem idZero_totalDL_zero (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : ((idZeroComplex 𝕜).totalDL v) 0 = 0 := by
@@ -291,7 +281,7 @@ theorem idZero_totalDL_two (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : ((idZeroComplex �
 
 /-- `𝐝 (a, b, c) = (0, a, 0)`. -/
 theorem idZero_totalDL (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) :
-    (idZeroComplex 𝕜).totalDL v = point3 0 (coord0 v) 0 := by
+    (idZeroComplex 𝕜).totalDL v = mk3 0 (coord0 v) 0 := by
   refine PiLp.ext fun j => ?_
   fin_cases j
   exacts [idZero_totalDL_zero v, idZero_totalDL_one v, idZero_totalDL_two v]
@@ -301,7 +291,7 @@ variable (𝕜) in
 harmonic form `(0, 0, 1)` to the boundary `(0, 1, 0) = 𝐝 (1, 0, 0)`. -/
 def idZeroN : PiLp 2 (W3 𝕜 𝕜 𝕜) →L[𝕜] PiLp 2 (W3 𝕜 𝕜 𝕜) :=
   LinearMap.toContinuousLinearMap
-    { toFun := fun v => point3 0 (coord2 v) 0
+    { toFun := fun v => mk3 0 (coord2 v) 0
       map_add' := fun v w => PiLp.ext fun i => by
         fin_cases i
         exacts [(add_zero (0 : 𝕜)).symm, rfl, (add_zero (0 : 𝕜)).symm]
@@ -309,11 +299,11 @@ def idZeroN : PiLp 2 (W3 𝕜 𝕜 𝕜) →L[𝕜] PiLp 2 (W3 𝕜 𝕜 𝕜) :
         fin_cases i
         exacts [(mul_zero a).symm, rfl, (mul_zero a).symm] }
 
-theorem idZeroN_apply (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : idZeroN 𝕜 v = point3 0 (coord2 v) 0 :=
+theorem idZeroN_apply (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : idZeroN 𝕜 v = mk3 0 (coord2 v) 0 :=
   rfl
 
 theorem idZeroN_idZeroN (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : idZeroN 𝕜 (idZeroN 𝕜 v) = 0 :=
-  point3_zero
+  mk3_zero_zero_zero
 
 theorem idZeroN_totalDL (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) :
     idZeroN 𝕜 ((idZeroComplex 𝕜).totalDL v) = (idZeroComplex 𝕜).totalDL (idZeroN 𝕜 v) := by
@@ -332,17 +322,17 @@ abbrev shearIdZeroProj : (shearIdZero 𝕜).CochainProj (1 + ‖idZeroN 𝕜‖)
 
 variable (𝕜) in
 /-- The harmonic form `p = (0, 0, 1)`. -/
-abbrev harmonicDatum : PiLp 2 (W3 𝕜 𝕜 𝕜) := point3 0 0 1
+abbrev harmonicDatum : PiLp 2 (W3 𝕜 𝕜 𝕜) := mk3 0 0 1
 
 theorem idZeroN_harmonicDatum :
-    idZeroN 𝕜 (harmonicDatum 𝕜) = (idZeroComplex 𝕜).totalDL (point3 1 0 0) := by
+    idZeroN 𝕜 (harmonicDatum 𝕜) = (idZeroComplex 𝕜).totalDL (mk3 1 0 0) := by
   rw [idZero_totalDL]
   rfl
 
 /-- The boundaries of `𝕜 --id--> 𝕜 --0--> 𝕜` are orthogonal to `(0, 0, 1)`. -/
 theorem inner_totalDL_harmonicDatum (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) :
     ⟪(idZeroComplex 𝕜).totalDL v, harmonicDatum 𝕜⟫_𝕜 = 0 := by
-  rw [idZero_totalDL, inner_point3]
+  rw [idZero_totalDL, inner_mk3]
   simp
 
 /-- **`(0, 0, 1)` is harmonic.** -/
@@ -353,7 +343,7 @@ theorem harmonicDatum_mem_harmonic :
     (Submodule.mem_orthogonal _ _).2 ?_⟩
   · change (idZeroComplex 𝕜).totalDL (harmonicDatum 𝕜) = 0
     rw [idZero_totalDL]
-    exact point3_zero
+    exact mk3_zero_zero_zero
   · rintro _ ⟨y, rfl⟩
     change ⟪(idZeroComplex 𝕜).totalDL y, harmonicDatum 𝕜⟫_𝕜 = 0
     exact inner_totalDL_harmonicDatum _
@@ -364,7 +354,7 @@ theorem harmonicDatum_mem_cpx_harmonic (n : ℕ) :
   refine (mem_diffComplex_harmonic _ _).2 ⟨?_, ext_inner_left 𝕜 fun w => ?_⟩
   · change (idZeroComplex 𝕜).totalDL (harmonicDatum 𝕜) = 0
     rw [idZero_totalDL]
-    exact point3_zero
+    exact mk3_zero_zero_zero
   · rw [ContinuousLinearMap.adjoint_inner_right, inner_zero_right]
     exact inner_totalDL_harmonicDatum w
 
@@ -373,17 +363,17 @@ theorem adjoint_shear_incl_harmonicDatum (n : ℕ) :
     ((shearIdZero 𝕜).incl n).adjoint (harmonicDatum 𝕜) = harmonicDatum 𝕜 :=
   ext_inner_left 𝕜 fun w => by
     rw [ContinuousLinearMap.adjoint_inner_right, shear_incl_apply, inner_add_left,
-      inner_smul_left, idZeroN_apply, inner_point3]
+      inner_smul_left, idZeroN_apply, inner_mk3]
     simp
 
 /-- `P_ℌₙ πₙ p = p`: `πₙ p = p - hₙ 𝐝 (1, 0, 0)` and `𝐝ₙ = 𝐝`. -/
 theorem harmonicProj_shear_proj_harmonicDatum (n : ℕ) :
     (((shearIdZero 𝕜).cpx n).harmonic ()).starProjection
       ((shearIdZero 𝕜).proj n (harmonicDatum 𝕜)) = harmonicDatum 𝕜 := by
-  have hb : (idZeroComplex 𝕜).totalDL (point3 1 0 0) ∈ (((shearIdZero 𝕜).cpx n).harmonic ())ᗮ :=
+  have hb : (idZeroComplex 𝕜).totalDL (mk3 1 0 0) ∈ (((shearIdZero 𝕜).cpx n).harmonic ())ᗮ :=
     (Submodule.mem_orthogonal _ _).2 fun q hq => by
       obtain ⟨-, hq0⟩ := (mem_diffComplex_harmonic _ _).1 hq
-      change ⟪q, (shearIdZero 𝕜).D n (point3 1 0 0)⟫_𝕜 = 0
+      change ⟪q, (shearIdZero 𝕜).D n (mk3 1 0 0)⟫_𝕜 = 0
       rw [← ContinuousLinearMap.adjoint_inner_left, hq0, inner_zero_left]
   rw [shear_proj_apply, idZeroN_harmonicDatum, _root_.map_sub, _root_.map_smul,
     (Submodule.starProjection_apply_eq_zero_iff _).2 hb, smul_zero, sub_zero,
@@ -392,7 +382,7 @@ theorem harmonicProj_shear_proj_harmonicDatum (n : ℕ) :
 theorem norm_harmonicDatum_sub_shear_incl (n : ℕ) :
     ‖harmonicDatum 𝕜 - (shearIdZero 𝕜).incl n (harmonicDatum 𝕜)‖ = perturbMesh n := by
   rw [shear_incl_apply, sub_add_cancel_left, norm_neg, norm_smul, idZeroN_apply,
-    norm_point3_zero]
+    norm_mk3_zero]
   change ‖((perturbMesh n : ℝ) : 𝕜)‖ * ‖(1 : 𝕜)‖ = _
   rw [norm_one, mul_one, RCLike.norm_ofReal, abs_of_pos (perturbMesh_pos n)]
 
@@ -408,14 +398,14 @@ to the boundary `𝐝 (1, 0, 0) = (0, 1, 0)`. -/
 theorem shear_incl_harmonicDatum_not_mem_harmonic (n : ℕ) :
     (shearIdZero 𝕜).incl n (harmonicDatum 𝕜) ∉ (idZeroComplex 𝕜).total.harmonic () := by
   intro h
-  have hb : (idZeroComplex 𝕜).totalDL (point3 1 0 0) ∈ (idZeroComplex 𝕜).total.boundaries () :=
-    ⟨⟨point3 1 0 0, (idZeroComplex 𝕜).mem_totalD_domain_of_finiteDimensional _⟩, rfl⟩
+  have hb : (idZeroComplex 𝕜).totalDL (mk3 1 0 0) ∈ (idZeroComplex 𝕜).total.boundaries () :=
+    ⟨⟨mk3 1 0 0, (idZeroComplex 𝕜).mem_totalD_domain_of_finiteDimensional _⟩, rfl⟩
   have h0 := Submodule.inner_right_of_mem_orthogonal hb
     ((idZeroComplex 𝕜).total.mem_harmonic_iff.1 h).2
   rw [shear_incl_apply, idZeroN_harmonicDatum, inner_add_right, inner_smul_right,
-    inner_totalDL_harmonicDatum, zero_add, idZero_totalDL, inner_point3] at h0
+    inner_totalDL_harmonicDatum, zero_add, idZero_totalDL, inner_mk3] at h0
   simp only [_root_.map_zero, zero_mul, zero_add, add_zero] at h0
-  rw [show coord0 (point3 (1 : 𝕜) 0 0) = 1 from rfl, _root_.map_one, mul_one, mul_one] at h0
+  rw [show coord0 (mk3 (1 : 𝕜) 0 0) = 1 from rfl, _root_.map_one, mul_one, mul_one] at h0
   exact (perturbMesh_pos n).ne' (by exact_mod_cast h0)
 
 /-- **The method is not exact**: the static error at the harmonic datum is at least `hₙ`

@@ -1592,7 +1592,7 @@ def ApproxComplexCrime.Family.ofApproxFEEC (F : ApproxFEEC.{u} H κ)
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 /-- Orthogonal reading maps have no inner-product defect: `Jₕ = 1`. -/
 theorem ApproxComplexCrime.Family.ofApproxFEEC_J (F : ApproxFEEC.{u} H κ)
-    [∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
+    [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
     (hDD : ∀ h v, D h (D h v) = 0) (hF : F.IsOrthogonal) (h : κ) :
     (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).J h = 1 :=
   ContinuousLinearMap.ext fun v => ext_inner_right 𝕜 fun w => by

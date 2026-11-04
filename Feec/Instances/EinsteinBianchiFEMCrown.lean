@@ -103,13 +103,12 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hB : ∀ a : Fin 3,
     Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
 
-set_option maxHeartbeats 400000 in
 /-- **The inner-product defect of the mirror scheme vanishes**: the reading maps are isometric
 (`mirrorFEMApprox_isOrthogonal`), `Jₙ = ιₙ* ιₙ = 1`. -/
 theorem mirrorComplex_J (N : ℕ) : (mirrorComplex hT hB).toFamily.J N = 1 :=
-  ContinuousLinearMap.ext fun v => ext_inner_right ℝ fun w => by
-    rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
-    exact (mirrorFEMApprox_isOrthogonal hT hB).inner_incl N v w
+  ApproxComplexCrime.Family.ofApproxFEEC_J (mirrorFEMApprox hT hB)
+    (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorD hT hB)
+    (mirrorD_D hT hB) (mirrorFEMApprox_isOrthogonal hT hB) N
 
 /-- **The verdict of the scheme (6.5) with mirror boundary conditions**: the verdict of the crime
 theorem for `mirrorComplex`, with both Holst–Stern defects zero on TSD states, the rates of its two
@@ -396,12 +395,11 @@ theorem mem_cubeSobData_of_mem_domain {T Λ L : ℝ} {x : MS}
 
 /-! #### The verdict -/
 
-set_option maxHeartbeats 400000 in
 /-- **The inner-product defect of the thesis' scheme vanishes**: `cubeEmb` is isometric. -/
 theorem standardCubeComplex_J (N : ℕ) : (standardCubeComplex hT hB).toFamily.J N = 1 :=
-  ContinuousLinearMap.ext fun v => ext_inner_right ℝ fun w => by
-    rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
-    exact (standardCubeApprox_isOrthogonal hT hB).inner_incl N v w
+  ApproxComplexCrime.Family.ofApproxFEEC_J (standardCubeApprox hT hB)
+    (hfd := standardCubeApprox_finiteDimensional hT hB) (cubeD hT hB)
+    (cubeD_D hT hB) (standardCubeApprox_isOrthogonal hT hB) N
 
 /-- **The verdict of the scheme (6.5) with the thesis' boundary conditions**: the verdict of the
 crime theorem for `standardCubeComplex`, the inner-product defect `0`, the residual at the exact

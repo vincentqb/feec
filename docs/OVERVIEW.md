@@ -242,9 +242,9 @@ projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static erro
 inner-product defect enters its consistency defect; in the crown, from static consistency on a
 dense set), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ` gives the heat rate
 `(2K + C (3C + 16 c_P² C) K t) L mᵅ`
-(`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static`). These are the fields `static`,
-`heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted family
-satisfies every hypothesis, converges for every datum and is inexact
+(`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static`). These are the fields
+`static`, `heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted
+family satisfies every hypothesis, converges for every datum and is inexact
 (`Feec.HilbertComplex.ApproxComplexCrime.shifted_static_nonvacuous`,
 `Feec.HilbertComplex.ApproxComplexCrime.shifted_heat`). **The cochain case** of [HolstStern2012],
 §3 (`Feec.HilbertComplex.Approximation.StaticCochain`): reading maps that are cochain maps
@@ -257,10 +257,12 @@ bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖ ‖u‖`, `b = P_
 `‖p − iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p − iₕ πₕ p‖ + C C_π ‖1 − Jₕ‖ ‖p‖` on `ℌ`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`), the error
 estimate with no assumed defect
-(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`; with the factor `μ`
-of Cor 3.11 for a bound `μ` of the gap `‖(1 − P_ℌ) iₕ q‖ ≤ μ ‖q‖` on `ℌₕ`,
-`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_gap`), convergence for every
-datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`; with the factor
+`μ = sup ‖(1 − iₕ πₕ) r‖` over the unit harmonic forms of Cor 3.11, which bounds the gap
+`‖(1 − P_ℌ) iₕ q‖ ≤ (C μ + C_π ‖1 − Jₕ‖) ‖q‖` on `ℌₕ`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_incl_sub_harmonicProj_le`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic`),
+convergence for every datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.tendsto_staticError`), and the
 isomorphism on cohomology under the strict gap on `ℌ`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`, Thm 3.3, Cor 3.4).
@@ -278,8 +280,9 @@ nonzero harmonic forms and reading maps that are not isometric, the shear family
 for every datum, a positive static error and a positive harmonic gap at `(0, 0, 1)` (whose reading
 is not harmonic), and the eventual isomorphism on a nonzero cohomology
 (`Feec.HilbertComplex.ApproxComplexCrime.shear_nonvacuous`,
-`Feec.HilbertComplex.Approximation.StaticCochainWitness`). Not formalized: a static rate for a concrete family with crimes (the heat rate takes it as
-hypothesis), and cohomology for reading maps that are not cochain maps.
+`Feec.HilbertComplex.Approximation.StaticCochainWitness`). Not formalized: a static rate for a
+concrete family with crimes (the heat rate takes it as hypothesis), and cohomology for reading
+maps that are not cochain maps.
 
 **Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the
 README names (and others such as `Feec.Instances.Maxwell.maxwellFEEC` and

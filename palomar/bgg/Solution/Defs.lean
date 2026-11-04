@@ -9,6 +9,7 @@ public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Topology.MetricSpace.Antilipschitz
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
 public import Mathlib.Analysis.Normed.Operator.Banach
 
 /-!
@@ -365,7 +366,7 @@ abbrev ofBounded (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) 
   CochainComplex.of (fun i => ModuleCat.of 𝕜 (H i)) (fun i => ModuleCat.ofHom (d i))
     fun i => ModuleCat.hom_ext (LinearMap.ext (hd i))
 
-/-- **Non-vacuity** of `FEEC.bggClosedRange`: `H̃ⁱ = Hⁱ⁺¹`, `d̃ⁱ = -dⁱ⁺¹` and `sⁱ = id` form a
+/-- **Non-vacuity** of `FEEC.bggHilbert`: `H̃ⁱ = Hⁱ⁺¹`, `d̃ⁱ = -dⁱ⁺¹` and `sⁱ = id` form a
 complex and connecting maps with `d s = -s d̃`, bounded below and onto at every `J`. -/
 theorem hypotheses_bounded_id (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
     (J : ℤ) :
@@ -424,6 +425,25 @@ def Υ (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) =
   if i ≤ J then
     Submodule.prod (rangeS (ofBoundedHom (hd := hd) (hdt := hdt) s hs) i : Submodule 𝕜 (H i))ᗮ ⊥
   else Submodule.prod ⊥ (s i).ker
+
+/-- `Γⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`, of norm `(‖σ‖² + ‖φ‖²)^½`. -/
+def ΓL (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Γ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- `Δⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`. -/
+def ΔL (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Δ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- **The space `Γⁱ / Δⁱ` of the BGG complex with the quotient norm** of the `ℓ²` norm,
+`‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖`. -/
+abbrev QuotL (s : ∀ i, Ht i →L[𝕜] H (i + 1))
+    (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x)) (J i : ℤ) : Type v :=
+  ΓL (hd := hd) (hdt := hdt) s hs J i ⧸
+    (ΔL (hd := hd) (hdt := hdt) s hs J i).comap (ΓL (hd := hd) (hdt := hdt) s hs J i).subtype
 
 end BGG
 

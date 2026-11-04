@@ -439,16 +439,17 @@ def boundedData : Feec.BGG.BoundedData 𝕜 (ComplexShape.up ℤ) H Ht where
     · change Continuous (conn (ofBoundedHom (hd := hd) (hdt := hdt) s hs) i j)
       simp only [conn, h, dite_false]; exact continuous_const
 
-theorem closedRange [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (J : ℤ)
-    (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
+theorem eliminates_boundedData {J : ℤ} (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
     (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
-      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) (i : ℤ) :
+      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
+    (toData (ofBoundedHom (hd := hd) (hdt := hdt) s hs)).Eliminates (J < ·) (· < J) :=
+  eliminates_toData _ (fun i hi => (hinj i hi).choose_spec.injective) fun i hi => by
+    rw [conn_ofBoundedHom, ofBounded_d_succ]; exact hsurj i hi
+
+theorem closedRange [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (J : ℤ)
+    (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i)) (i : ℤ) :
     let S := ofBoundedHom (hd := hd) (hdt := hdt) s hs
-    IsClosed (Γ S J i : Set (H i × Ht i)) ∧ IsClosed (Δ S J i : Set (H i × Ht i)) ∧
-      ([FiniteDimensional 𝕜 ((ofBounded d hd).homology i)] →
-        [FiniteDimensional 𝕜 ((ofBounded dt hdt).homology i)] →
-        IsClosed ((Δ S J i ⊔ (Γ S J (i - 1)).map (twist S (i - 1) i) :
-          Submodule 𝕜 _) : Set (H i × Ht i))) := by
+    IsClosed (Γ S J i : Set (H i × Ht i)) ∧ IsClosed (Δ S J i : Set (H i × Ht i)) := by
   intro S
   set D := boundedData (hd := hd) (hdt := hdt) s hs
   have hΓ : D.Γ (J < ·) = Γ S J := Γ_toData S J
@@ -458,25 +459,108 @@ theorem closedRange [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (
     refine ⟨C, ?_⟩
     change AntilipschitzWith C (conn S i (i + 1))
     rw [conn_ofBoundedHom]; exact hC
-  have hΔ := D.isClosed_bgg_Δ hS
-  refine ⟨?_, ?_, ?_⟩
+  refine ⟨?_, ?_⟩
   · have := D.isClosed_Γ (J < ·) i
     rwa [hΓ] at this
-  · have := hΔ i
+  · have := D.isClosed_bgg_Δ hS i
     rwa [hΔ'] at this
-  · intro hV hVt
-    have hel : D.Eliminates (J < ·) (· < J) := eliminates_toData S
-      (fun i hi => (hinj i hi).choose_spec.injective) fun i hi => by
-        rw [conn_ofBoundedHom, ofBounded_d_succ]; exact hsurj i hi
-    have : FiniteDimensional 𝕜 (D.rowTop.homology i) := hV
-    have : FiniteDimensional 𝕜 (D.rowBot.homology i) := hVt
-    have : FiniteDimensional 𝕜 (D.rowTopComplex.cohomology i) :=
-      (D.rowTopCohomologyEquiv i).symm.finiteDimensional
-    have : FiniteDimensional 𝕜 (D.rowBotComplex.cohomology i) :=
-      (D.rowBotCohomologyEquiv i).symm.finiteDimensional
-    have := D.isClosed_Δ_sup_map_twist hΔ hel i
-    rw [hΓ, hΔ', CochainComplex.prev] at this
-    exact this
+
+/-- `Γ / Δ` on the `ℓ²` products as a subquotient of the twisted complex (`Feec`). -/
+def subquot (J : ℤ)
+    (hle : ∀ i, Δ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i ≤
+      Γ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i)
+    (hΓ : ∀ i, IsClosed (Γ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i : Set (H i × Ht i))) :
+    Feec.HilbertComplex.Subquotient 𝕜 (ComplexShape.up ℤ) fun i => WithLp 2 (H i × Ht i) where
+  d := (boundedData (hd := hd) (hdt := hdt) s hs).twistL
+  shape _ _ h := (boundedData (hd := hd) (hdt := hdt) s hs).twistL_eq_zero h
+  d_comp_d := (boundedData (hd := hd) (hdt := hdt) s hs).twistL_twistL
+  Γ := ΓL (hd := hd) (hdt := hdt) s hs J
+  Δ := ΔL (hd := hd) (hdt := hdt) s hs J
+  Δ_le_Γ i _ hx := hle i hx
+  isClosed_Γ i := (hΓ i).preimage (WithLp.prodContinuousLinearEquiv 2 𝕜 (H i) (Ht i)).continuous
+  d_mem_Γ i j _ hx := twist_mem_Γ _ J i j hx
+  d_mem_Δ i j _ hx := twist_mem_Δ _ J i j hx
+
+/-- **The BGG complex with the quotient norm is a bounded Hilbert complex with closed ranges**
+(`FEEC.bggHilbert`), from `Feec.HilbertComplex.Subquotient.toQuotEquiv`, `quotD_toQuot`,
+`cohomologyEquiv` and `Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`. -/
+theorem hilbert [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (J : ℤ)
+    (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
+    (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
+      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
+    let S := ofBoundedHom (hd := hd) (hdt := hdt) s hs
+    let ΓL := ΓL (hd := hd) (hdt := hdt) s hs J
+    let ΔL := ΔL (hd := hd) (hdt := hdt) s hs J
+    let Q := QuotL (hd := hd) (hdt := hdt) s hs J
+    (∀ i, IsClosed (Γ S J i : Set (H i × Ht i)) ∧ IsClosed (Δ S J i : Set (H i × Ht i))) ∧
+      (∀ i, ∃ e : ↥(ΓL i ⊓ (ΔL i)ᗮ) ≃ₗᵢ[𝕜] Q i, ∀ y, e y = Submodule.Quotient.mk ⟨y, y.2.1⟩) ∧
+      ∃ D : ∀ i, Q i →L[𝕜] Q (i + 1),
+        (∀ i (x : ΓL i) (x' : ΓL (i + 1)), (x' : WithLp 2 (H (i + 1) × Ht (i + 1))).ofLp =
+          twist S i (i + 1) (x : WithLp 2 (H i × Ht i)).ofLp →
+            D i (Submodule.Quotient.mk x) = Submodule.Quotient.mk x') ∧
+        ∀ i, [FiniteDimensional 𝕜 ((ofBounded d hd).homology (i + 1))] →
+          [FiniteDimensional 𝕜 ((ofBounded dt hdt).homology (i + 1))] →
+          IsClosed (Set.range (D i)) := by
+  intro S ΓL' ΔL' Q
+  have hel := eliminates_boundedData (hd := hd) (hdt := hdt) s hs hinj hsurj
+  have hcl := closedRange (hd := hd) (hdt := hdt) s hs J hinj
+  have hle : ∀ i, Δ S J i ≤ Γ S J i := fun i => by
+    have := hel.Δ_le_Γ i
+    rwa [Γ_toData, Δ_toData] at this
+  let q := subquot s hs J hle fun i => (hcl i).1
+  have hΔ : ∀ i, IsClosed (q.Δ i : Set (WithLp 2 (H i × Ht i))) := fun i =>
+    (hcl i).2.preimage (WithLp.prodContinuousLinearEquiv 2 𝕜 (H i) (Ht i)).continuous
+  refine ⟨hcl, fun i => ⟨Feec.HilbertComplex.Subquotient.toQuotEquiv hΔ i, fun y => rfl⟩,
+    fun i => q.quotD i (i + 1), fun i x x' hx => ?_, fun i _ _ => ?_⟩
+  · refine (q.quotD_mk i (i + 1) x).trans (congrArg _ (Subtype.ext ?_))
+    exact WithLp.ofLp_injective 2 hx.symm
+  · -- `Γ / Δ` with the quotient norm is the BGG complex as a complex of modules
+    let f : ∀ j, q.Γ j ≃ₗ[𝕜] ↥(Γ S J j) := fun j =>
+      { toFun x := ⟨(x : WithLp 2 (H j × Ht j)).ofLp, x.2⟩
+        invFun x := ⟨WithLp.toLp 2 (x : H j × Ht j), x.2⟩
+        map_add' _ _ := rfl
+        map_smul' _ _ := rfl
+        left_inv _ := rfl
+        right_inv _ := rfl }
+    let eX : ∀ j, q.QuotSpace j ≃ₗ[𝕜] (bgg S J).X j := fun j =>
+      Submodule.Quotient.equiv _ ((Δ S J j).comap (Γ S J j).subtype) (f j) <|
+        Submodule.ext fun x => ⟨by rintro ⟨y, hy, rfl⟩; exact hy, fun h =>
+          ⟨(f j).symm x, h, (f j).apply_symm_apply x⟩⟩
+    let iso : q.quotModuleCat ≅ bgg S J :=
+      HomologicalComplex.Hom.isoOfComponents (fun j => (eX j).toModuleIso) fun _ _ _ => by
+        ext x
+        obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ x
+        rfl
+    have hfd := (finiteDimensional_and_finrank_le (S := S) (fun i hi =>
+      (hinj i hi).choose_spec.injective) (fun i hi => by
+        rw [conn_ofBoundedHom, ofBounded_d_succ]; exact hsurj i hi) (i + 1)).1
+    have : FiniteDimensional 𝕜
+        ((HomologicalComplex.homologyFunctor (ModuleCat 𝕜) _ (i + 1)).obj (bgg S J)) := hfd
+    have : ∀ j, CompleteSpace (WithLp 2 (H j × Ht j)) := fun _ => inferInstance
+    have : ∀ j, CompleteSpace (q.space j) := fun j =>
+      ((q.isClosed_Γ j).inter (q.Δ j).isClosed_orthogonal).completeSpace_coe
+    have : FiniteDimensional 𝕜 (q.quotModuleCat.homology (i + 1)) :=
+      ((HomologicalComplex.homologyFunctor _ _ (i + 1)).mapIso iso).toLinearEquiv.symm
+        |>.finiteDimensional
+    have : FiniteDimensional 𝕜 (q.complex.cohomology (i + 1)) :=
+      (Feec.HilbertComplex.Subquotient.cohomologyEquiv hΔ (i + 1)).symm.finiteDimensional
+    have hc := Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology q.complex (i + 1)
+    rw [Feec.HilbertComplex.ClosedRangeAt,
+      Feec.HilbertComplex.boundaries_eq (c := ComplexShape.up ℤ) q.complex rfl] at hc
+    set e := Feec.HilbertComplex.Subquotient.toQuotEquiv hΔ (i + 1)
+    have hr : Set.range (q.quotD i (i + 1)) =
+        e '' (LinearMap.range (q.complex.d i (i + 1)).toFun : Set _) := by
+      ext z
+      constructor
+      · rintro ⟨w, rfl⟩
+        obtain ⟨y, rfl⟩ := (Feec.HilbertComplex.Subquotient.toQuotEquiv hΔ i).surjective w
+        exact ⟨q.spaceD i (i + 1) y, ⟨⟨y, trivial⟩, rfl⟩,
+          (Feec.HilbertComplex.Subquotient.quotD_toQuot hΔ i (i + 1) y).symm⟩
+      · rintro ⟨_, ⟨⟨y, _⟩, rfl⟩, rfl⟩
+        exact ⟨q.toQuot i y, Feec.HilbertComplex.Subquotient.quotD_toQuot hΔ i (i + 1) y⟩
+    change IsClosed (Set.range (q.quotD i (i + 1)))
+    rw [hr]
+    exact e.toHomeomorph.isClosedMap _ hc
 
 /-- The challenge's Moore–Penrose inverse is that of `Feec`. -/
 theorem moorePenrose_eq {E F : Type v} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
@@ -513,8 +597,9 @@ theorem Υ_boundedData (J i : ℤ) :
 
 variable [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)]
 
-/-- **The orthogonal form of (30)** (`FEEC.bggOrthogonal`), from
-`Feec.BGG.BoundedData.quasiIso_orthSumMap` and `Feec.BGG.BoundedData.isIso_toOrth`. -/
+/-- **The orthogonal form of (30) and Corollary 1** (`FEEC.bggOrthogonal`), from
+`Feec.BGG.BoundedData.quasiIso_orthSumMap`, `Feec.BGG.BoundedData.isIso_toOrth` and
+`Feec.BGG.BoundedData.orth_represents`. -/
 theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
     (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
     (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
@@ -537,7 +622,10 @@ theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1
         (e (i + 1) ((κ.f (i + 1)).hom x) : H (i + 1) × Ht (i + 1)) =
           (0, (s (i + 1)).ker.starProjection (dt i (moorePenrose (s i) x.1) +
             (x.2 + dt i (moorePenrose (s i) (K (i + 1) x.2)))))) ∧
-      QuasiIso κ ∧ Nonempty (Y ≅ bgg S J) := by
+      QuasiIso κ ∧ Nonempty (Y ≅ bgg S J) ∧
+      ∀ i (A : Submodule 𝕜 (H i)) (At : Submodule 𝕜 (Ht i)),
+        Represents (ofBounded d hd) i A → Represents (ofBounded dt hdt) i At →
+          Represents Y i ((A.prod At).map (κ.f i).hom) := by
   intro S P
   set D := boundedData (hd := hd) (hdt := hdt) s hs
   have hS (i : ℤ) (φ : Ht i) : D.S i (i + 1) φ = s i φ := by
@@ -573,7 +661,8 @@ theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1
     erw [HomologicalComplex.comp_f, HomologicalComplex.eqToHom_f]
     exact Category.id_comp _
   refine ⟨D.orthComplex J hJb, fun i => LinearEquiv.ofEq _ _ (Υ_boundedData s hs J i), κ,
-    fun i hi y => ?_, fun y => ?_, fun i hi y => ?_, fun i hi x => ?_, fun i hi x => ?_, ?_, ?_⟩
+    fun i hi y => ?_, fun y => ?_, fun i hi y => ?_, fun i hi x => ?_, fun i hi x => ?_, ?_, ?_,
+    fun i A At hA hAt => ?_⟩
   · refine (Feec.BGG.BoundedData.coe_orthComplex_d hJb i y).trans ?_
     rw [Feec.BGG.BoundedData.orthDMap_of_lt hi, hdD]
     rfl
@@ -595,6 +684,11 @@ theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1
     exact quasiIso_eqToHom_comp e₀ _
   · have := Feec.BGG.BoundedData.isIso_toOrth hJb hR'
     exact ⟨(asIso (D.toOrth J hJb)).symm ≪≫ eqToIso (bgg_toData S J)⟩
+  · refine represents_iff.2 ?_
+    rw [hκ]
+    exact Feec.BGG.BoundedData.orth_represents hK' hinj' hsurj' hR'
+      ⟨(represents_iff.1 hA).1, (represents_iff.1 hA).2⟩
+      ⟨(represents_iff.1 hAt).1, (represents_iff.1 hAt).2⟩
 
 end Hilbert
 

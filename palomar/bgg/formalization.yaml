@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
-# formalization.yaml v0.4 for the Palomar submission of the algebraic BGG construction (`palomar/bgg/`).
+# formalization.yaml v0.4 for the Palomar submission of the BGG complexes of Arnold and Hu (`palomar/bgg/`).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
-  name: "The BGG construction of Arnold and Hu: the output complex, its cohomology and dimension, the sum complex, and closed ranges for Hilbert complexes"
+  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, and the output Hilbert complex with the quotient norm"
   description: >-
     A Lean 4 formalization of the Bernstein-Gelfand-Gelfand construction of Arnold and Hu (2021),
     §3 and §5: two cochain complexes of modules (V, d) and (V~, d~) over any ring, on Z and of any
@@ -33,24 +33,33 @@ project:
     (omega, mu) -> P(d~ t omega + (I + d~ t K) mu) after J with P = 1 - tS, is a cochain map from
     the sum complex to the BGG complex inducing an isomorphism on cohomology, and it carries
     cohomology representatives H x H~ of the rows to cohomology representatives of the BGG
-    complex (31). FEEC.bggClosedRange, for bounded Hilbert complexes with S^i
-    bounded below for i < J: Gamma^i and Delta^i are closed in V^i x V~^i, and the BGG
-    differentials have closed range where both rows have finite-dimensional cohomology.
+    complex (31). FEEC.bggHilbert, Theorem 6 for bounded Hilbert complexes with S^i bounded below
+    for i < J and onto modulo d for i >= J: Gamma^i and Delta^i are closed in V^i x V~^i; for the
+    quotient norm of the l2 norm of V^i (+) V~^i, y -> [y] is an isometry of the closed subspace
+    Gamma^i (-) Delta^i = Gamma^i ∩ (Delta^i)^perp onto Gamma^i / Delta^i (so the quotient norm
+    is a Hilbert norm), the differentials [(sigma, phi)] -> [(d sigma - s phi, d~ phi)] are
+    bounded for it, and they have closed range where both rows have finite-dimensional
+    cohomology: the output complex is a bounded Hilbert complex.
     FEEC.bggOrthogonal, (24)-(26), (29)-(30) and Theorem 7 in the orthogonal form of the paper,
     for bounded Hilbert complexes under (23) with S^i of closed range for i < J: with the
     Moore-Penrose inverses t = s^dagger (FEEC.BGG.moorePenrose), the output complex on
     R(S^(i-1))^perp (i <= J) and N(S^i) (i > J) with differentials P_(R^perp) d, d~ (S^J)^dagger d,
     d~ is a complex isomorphic to the BGG complex, and the map (30), (omega, mu) ->
     P_(R^perp)(omega + K mu) up to J and P_N(d~ t omega + (I + d~ t K) mu) after J, is a
-    quasi-isomorphism from the sum complex to it.
+    quasi-isomorphism from the sum complex to it which carries cohomology representatives H x H~
+    of the rows to cohomology representatives of the output complex (Corollary 1, (31)).
     The statement is self-contained over Mathlib (ModuleCat, CochainComplex, QuasiIso,
     ShortComplex.ShortExact, Module.finrank, IsIso, ContinuousLinearMap, AntilipschitzWith,
-    IsClosed, Submodule.orthogonal, Submodule.starProjection, ContinuousLinearEquiv.ofBijective);
+    IsClosed, WithLp, the quotient norm of Submodule quotients, LinearIsometryEquiv,
+    Submodule.orthogonal, Submodule.starProjection, ContinuousLinearEquiv.ofBijective);
     the proof is the library Feec of this repository (Feec.BGG.Data.quasiIso_Γ,
     Feec.BGG.Data.quasiIso_derived, Feec.BGG.Data.finrank_twistComplex_homology_eq_iff,
     Feec.BGG.Data.bggProj, Feec.BGG.Data.quasiIso_of_Γι_comp,
-    HomologicalComplex.Represents.map, Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist,
-    Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth).
+    HomologicalComplex.Represents.map, Feec.BGG.BoundedData.isClosed_bgg_Δ,
+    Feec.HilbertComplex.Subquotient.toQuotEquiv, quotD_toQuot, cohomologyEquiv,
+    Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology,
+    Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth,
+    Feec.BGG.BoundedData.orth_represents).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -80,8 +89,8 @@ sources:
       (FEEC.bggFinrank), the cohomology isomorphism with the sum complex of Theorem 7 under (28)
       (FEEC.bggSum), the explicit cochain map (30) of Theorem 7 with Corollary 1 (FEEC.bggExplicit),
       its orthogonal form with the Moore-Penrose inverse (29) into the output complex (24)-(26)
-      (FEEC.bggOrthogonal), and the Hilbert-complex conclusions of Theorem 6 and of the remark after it
-      (FEEC.bggClosedRange). The equation and section numbers were checked against the arXiv
+      with Corollary 1 (FEEC.bggOrthogonal), and the Hilbert-complex conclusions of Theorem 6 and
+      of the paragraph after it, with the quotient norm (FEEC.bggHilbert). The equation and section numbers were checked against the arXiv
       preprint; their agreement with the published article is not verified.
     author_endorsement: "not-contacted"
   - title: "Bernstein-Gelfand-Gelfand sequences"
@@ -125,74 +134,58 @@ status:
     Formalized and compared: FEEC.bggCohomology, FEEC.bggIdentification and FEEC.bggSum for every
     ring R, every pair of Z-indexed cochain complexes of R-modules, every morphism S : V~ -> V[1]
     and every index J; FEEC.bggExplicit for every ring, every null-homotopy K of S, every J and
-    every choice of right inverses t; FEEC.bggOrthogonal for every pair of Z-indexed complexes
-    of bounded operators on Hilbert spaces over R or C, every bounded s with d s = -s d~, every
-    null-homotopy K (linear) and every J under (23) with closed ranges of s^i for i < J;
-    FEEC.bggFinrank, over a field, for every degree i where both rows have
-    finite-dimensional cohomology; FEEC.bggClosedRange for every pair of Z-indexed complexes of
-    bounded operators on Hilbert spaces over R or C with bounded connecting maps, every J and
-    every degree. Not compared (proved in Feec, outside the statement): the general elimination
-    theorem on any complex shape with arbitrary eliminated index sets
-    (Feec.BGG.Data.derivedHomologyIso); the connecting map of 0 -> V -> T -> V~ -> 0 as the map
-    induced by -S, delta[phi] = [-S phi] (Feec.BGG.Data.δ_twistShortComplex), from which the
-    criterion (27) is proved; the orthogonal model Gamma ⊖ Delta of the derived complex as a
-    Hilbert complex with its cohomology isomorphism and dimension bound
-    (Feec.BGG.BoundedData.derivedComplex, derivedComplexCohomologyEquiv,
-    finrank_derivedComplex_cohomology_le); the Hilbert quotient norm of Gamma / Delta: for the
-    quotient norm of the l2 norm of V^i x V~^i, y -> [y] is an isometry from the orthogonal model
-    onto Gamma^i / Delta^i when Delta is closed, intertwining the differentials with the bounded
-    differentials [x] -> [T x] of the quotient (Feec.BGG.BoundedData.toDerivedQuotL,
-    derivedQuotLEquiv, derivedQuotD, derivedQuotD_toDerivedQuotL, instances of the same facts for
-    every subquotient Gamma / Delta of a complex of bounded operators,
-    Feec.HilbertComplex.Subquotient.norm_toQuot, toQuotEquiv, quotD_toQuot, complexIso;
-    fields quotient_surjective and quotient_d of Feec.BGG.HilbertData.DerivedVerdict); the
-    explicit cochain retraction Pi : T -> Gamma of the inclusion ((67) in the subquotient model,
-    Feec.BGG.Data.bggProj, Γι_bggProj, quasiIso_bggProj) and Theorem 7 and Corollary 1 for every
-    complex shape and every elimination (Feec.BGG.Data.quasiIso_sumIso_comp,
-    Feec.BGG.Data.derived_represents; fields quasiIso_sum and represents of
-    Feec.BGG.HilbertData.DerivedVerdict), and the explicit map (30) for bgg J
-    (Feec.BGG.Data.bggSumMap, quasiIso_bggSumMap, bgg_represents; fields quasiIso_bggSumMap and
-    bgg_represents of Feec.BGG.HilbertData.BGGVerdict, the conclusion of
-    Feec.BGG.HilbertData.bggVerdict); the Moore-Penrose inverse of a bounded operator with closed
-    range and the Penrose equations (Feec.ForMathlib.InnerProductSpace.MoorePenrose:
-    ContinuousLinearMap.moorePenrose,
-    apply_moorePenrose, moorePenrose_apply, sub_moorePenrose_apply, comp_moorePenrose_comp,
-    moorePenrose_comp_comp_moorePenrose, isSelfAdjoint_comp_moorePenrose,
-    isSelfAdjoint_moorePenrose_comp), the orthogonal Corollary 1 (Feec.BGG.BoundedData.orth_represents)
-    and the orthogonal (30) between domain complexes (fields injective_domainData_S and
-    quasiIso_orthSumMap of Feec.BGG.HilbertData.BGGVerdict: S bounded below up to J gives the
-    injectivity and the closed ranges between the domains, and the surjectivity after J is a
-    hypothesis);
-    non-vacuity instances (connecting maps the identity,
-    Feec.BGG.Data.injSurj_idShift and Feec.BGG.BoundedData.idShift_derivedComplex_closedRangeAt;
-    for Theorem 7 and Corollary 1 with nonzero d, d~ and S = dK - Kd~, Feec.BGG.Data.altShift,
-    altShift_quasiIso_bggSumMap, altShift_bgg_represents, and for the orthogonal form
+    every choice of right inverses t; FEEC.bggOrthogonal (with Corollary 1) for every pair of
+    Z-indexed complexes of bounded operators on Hilbert spaces over R or C, every bounded s with
+    d s = -s d~, every null-homotopy K (linear) and every J under (23) with closed ranges of s^i
+    for i < J; FEEC.bggFinrank, over a field, for every degree i where both rows have
+    finite-dimensional cohomology; FEEC.bggHilbert for every pair of Z-indexed complexes of
+    bounded operators on Hilbert spaces over R or C with bounded connecting maps, bounded below
+    before J and onto modulo d from J on, every J and every degree, including the quotient norm
+    of Gamma / Delta (an isometry with the Hilbert space Gamma (-) Delta, bounded quotient
+    differentials, closed range).
+    Proved in Feec, not compared: the general elimination theorem on any complex shape with
+    arbitrary eliminated index sets (Feec.BGG.Data.derivedHomologyIso) and the general
+    subquotient of a complex of bounded operators as a Hilbert complex
+    (Feec.HilbertComplex.Subquotient.complex, complexIso, cohomologyEquiv), of which
+    FEEC.bggHilbert is the instance Gamma / Delta; the connecting map of 0 -> V -> T -> V~ -> 0
+    as the map induced by -S, delta[phi] = [-S phi] (Feec.BGG.Data.δ_twistShortComplex), from
+    which the criterion (27) is proved; the explicit cochain retraction Pi : T -> Gamma of the
+    inclusion ((67) in the subquotient model, Feec.BGG.Data.bggProj, Γι_bggProj,
+    quasiIso_bggProj) and Theorem 7 and Corollary 1 for every complex shape and every elimination
+    (Feec.BGG.Data.quasiIso_sumIso_comp, Feec.BGG.Data.derived_represents); the Moore-Penrose
+    inverse of a bounded operator with closed range and the Penrose equations
+    (Feec.ForMathlib.InnerProductSpace.MoorePenrose); the orthogonal (30) between domain
+    complexes (fields injective_domainData_S and quasiIso_orthSumMap of
+    Feec.BGG.HilbertData.BGGVerdict); non-vacuity instances with nonzero d, d~ and S = dK - Kd~
+    (Feec.BGG.Data.altShift, altShift_quasiIso_bggSumMap, altShift_bgg_represents,
     Feec.BGG.BoundedData.planeAltShift_quasiIso_orthSumMap, with nonzero output spaces
-    R(S^(-1))^perp and N(S^1), S^(-1) not onto and S^1 not one-to-one;
-    the Hessian diagram on smooth fields, Feec.Domain.injSurj_hessianBGG); and, proved in Feec but
-    not compared (the challenge has no differential operators), the explicit map (30) on the
-    smooth Hessian, elasticity and div-div complexes of R^3 with no hypothesis: right inverses
-    from right-inverse matrices (Feec.Domain.injSurjWith_hessianBGG, injSurjWith_elasticityBGG,
-    injSurjWith_divDivBGG), the Koszul null-homotopies S = dK - Kd~ with K multiplication by
-    k(x) = sum_l c_l x_l (Feec.Domain.koszul_isNullHomotopy), Theorem 7
-    (Feec.Domain.quasiIso_hessianSumMap, quasiIso_elasticitySumMap, quasiIso_divDivSumMap) and
-    Corollary 1 in degree 0, where the image of the constant pairs under (30) represents the
-    cohomology (Feec.Domain.smoothBGGVerdict); that image is [c + K^0 c~], informally the affine
-    functions, the infinitesimal rigid motions and the lowest-order Raviart-Thomas fields (the
-    identification is not formalized). Between the L^2 domain complexes S^J is not onto, on every
-    nonempty open set of R^3 (proved in Feec, not compared: Feec.Domain.hessianMaximalData_not_surjective,
-    S^0 = I : H^1(Omega; K^3) -> H(curl; Omega), elasticityMaximalData_not_surjective,
-    S^1 = T - tr : H(curl; Omega; M) -> H(div; Omega; M), divDivMaximalData_not_surjective,
-    S^2 = I : H(div; Omega) -> L^2(Omega; K^3); the general criterion
-    Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS, by open mapping and rescaled test
-    fields, Feec.Domain.ConstCoeffOp.exists_lt_norm_testField_comp_aff), so (23) (Feec.BGG.Data.InjSurj,
-    surjectivity of S^i for i >= J) fails from every J <= 0, 1, 2 by these *_not_surjective
-    theorems, hence so does its version with a choice of right inverses, Feec.BGG.Data.InjSurjWith
-    (Feec.Domain.hessianMaximalData_not_injSurjWith, elasticityMaximalData_not_injSurjWith,
-    divDivMaximalData_not_injSurjWith), and the explicit-map fields of
-    Feec.BGG.HilbertData.BGGVerdict, including quasiIso_orthSumMap (its surjectivity hypothesis
-    fails at J), are vacuous for these three complexes on L^2 domains. The challenge itself
-    proves that S = 𝟙 : V[1] -> V[1] satisfies the hypotheses at every J (FEEC.BGG.hypotheses_id).
+    R(S^(-1))^perp and N(S^1), S^(-1) not onto and S^1 not one-to-one). The challenge itself
+    proves that S = 𝟙 : V[1] -> V[1] satisfies the hypotheses at every J
+    (FEEC.BGG.hypotheses_id) and that s = id, d~ = -d satisfy those of FEEC.bggHilbert
+    (FEEC.BGG.hypotheses_bounded_id).
+    Proved in Feec, not compared (the challenge has no differential operators; stating the
+    L^2 de Rham rows with values in K^m, their maximal domains H^1, H(curl), H(div), the H^1
+    fields and the connecting matrices of the three diagrams over Mathlib alone would not fit
+    the length budget of the challenge): the H^1-regular decompositions of [ArnoldHu2021], §2,
+    Theorem 3, of the L^2 de Rham complexes HΛ(Omega) on the cube (0, 1/2)^n
+    (Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q, by Gaffney's identity on the
+    torus), transported to every open parallelepiped and every open box by invertible affine
+    maps (Feec.Models.Parallelepiped.deRham_hasRegularDecomposition_affine), and in three
+    dimensions for the de Rham complexes with values in K^m over every RCLike K
+    (deRhamVec_hasRegularDecomposition_affine, deRhamVec_hasRegularDecomposition_Q), with their
+    finite-dimensional cohomology (finiteDimensional_cohomology_deRhamVec_affine); these give the
+    onto-modulo-d hypothesis R(d) + R(S) = D(d) of the Hessian, elasticity and div-div diagrams
+    between the L^2 domain complexes (Feec.Domain.hessianMaximalData_regularDecomposition,
+    elasticityMaximalData_regularDecomposition, divDivMaximalData_regularDecomposition), while
+    (23) itself fails there: S^J is not onto between the L^2 domains on any nonempty open set
+    (Feec.Domain.hessianMaximalData_not_surjective, elasticityMaximalData_not_surjective,
+    divDivMaximalData_not_surjective). The finite element (FEEC) theorems for these complexes on
+    boxes and parallelepipeds (Feec.Models.Parallelepiped.hessianFEEC_affine, ...) are outside
+    this entry: they quantify over stacked conforming families that are not constructed on any
+    domain. Also proved in Feec and not compared: the explicit map (30) on the smooth Hessian,
+    elasticity and div-div complexes of R^3 with no hypothesis (Feec.Domain.quasiIso_hessianSumMap,
+    quasiIso_elasticitySumMap, quasiIso_divDivSumMap, with the Koszul null-homotopies
+    Feec.Domain.koszul_isNullHomotopy).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -231,8 +224,10 @@ automation:
     Feec.BGG.BoundedData) and applies Feec.BGG.Data.quasiIso_Γ, Feec.BGG.Data.quasiIso_derived,
     the BGG space lemmas of Feec.HilbertComplex.BGG.Derived,
     Feec.BGG.Data.finrank_twistComplex_homology_eq_iff, Feec.BGG.Data.bggProj,
-    Feec.BGG.Data.quasiIso_of_Γι_comp, HomologicalComplex.Represents.map and
-    Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist.
+    Feec.BGG.Data.quasiIso_of_Γι_comp, HomologicalComplex.Represents.map, the general
+    subquotient of Feec.HilbertComplex.Quotient (Gamma / Delta on the l2 products as a
+    Feec.HilbertComplex.Subquotient), Feec.BGG.BoundedData.isClosed_bgg_Δ,
+    Feec.BGG.BoundedData.quasiIso_orthSumMap, isIso_toOrth and orth_represents.
 
 fidelity:
   divergences: >-
@@ -243,13 +238,16 @@ fidelity:
     J, N(S) after J, d~ (S^J)^(-1) d at J). (2) The anticommutation d S = -S d~ is a morphism of
     cochain complexes V~ -> V[1], with Mathlib's sign convention for the shift (differential -d on
     V[1]); for Hilbert rows it is built from the bounded maps (FEEC.BGG.ofBoundedHom). (3) Bounded
-    Hilbert complex (Theorem 6): the challenge states that Gamma^i and Delta^i are closed in the
-    Hilbert space V^i x V~^i (so Gamma^i / Delta^i is a Hilbert space, the differentials, induced by
-    the bounded twisted differential, bounded) and closed range as closedness of the preimage
-    Delta^i + T(Gamma^(i-1)) of the range in V^i x V~^i. The quotient norm of Gamma^i / Delta^i (of
-    the l2 norm), its isometry with the orthogonal model and the bounded quotient differentials are
-    Lean objects of Feec (see status.scope), not compared: the challenge's rows carry the product
-    (sup) norm of Mathlib, not the l2 norm. (4) Theorem 7's map (30) is built with the
+    Hilbert complex (Theorem 6): Arnold-Hu give the output complex the norm of the subspaces
+    Upsilon^i (orthogonal complements); FEEC.bggHilbert gives Gamma^i / Delta^i the quotient norm
+    of the l2 norm of V^i (+) V~^i (WithLp 2, the rows Gamma, Delta transported to it as
+    FEEC.BGG.ΓL, FEEC.BGG.ΔL, the quotient FEEC.BGG.QuotL) and proves that y -> [y] is an
+    isometry of Gamma^i ∩ (Delta^i)^perp onto it, so the quotient norm is a Hilbert norm; the
+    bounded differentials are stated by existence, D^i [x] = [x'] whenever x' is the twisted
+    differential of x, and closed range as IsClosed (range D^i) where both rows have
+    finite-dimensional cohomology in degree i + 1 (the paper derives closed range from finite
+    cohomology in the paragraph after Theorem 6). FEEC.bggOrthogonal identifies the BGG complex
+    with the orthogonal output complex of the paper as complexes of modules. (4) Theorem 7's map (30) is built with the
     Moore-Penrose inverse t of s and the orthogonal projections P_(R^perp), P_N into the
     orthogonal output complex; FEEC.bggOrthogonal states exactly this form for Hilbert rows (the
     output complex as a complex Y with isomorphisms Y^i = Upsilon^i carrying its differential to
@@ -282,17 +280,17 @@ fidelity:
     all-degree form. Theorem 6's dimension bound is stated where both rows have finite-dimensional
     cohomology; Arnold-Hu's inequality is vacuous otherwise.
     Scope. (9) Every claim of (24)-(31), Theorems 6 and 7, Proposition 1 and Corollary 1 is
-    stated, in the encodings (1)-(4): the Hilbert structure of Theorem 6 only as closedness of
-    Gamma and Delta, per (3) (the quotient norm is proved in Feec, not compared), and (30) only in
-    the quotient model for modules, per (4), and in its orthogonal form with P_(R⊥) and the
-    Moore-Penrose inverse for Hilbert rows (FEEC.bggOrthogonal; the orthogonal Corollary 1 is proved
-    in Feec, Feec.BGG.BoundedData.orth_represents, not compared; it follows from QuasiIso kappa
-    and the representatives H x H~ of the sum complex, not from the compared statements, since
-    FEEC.bggOrthogonal does not relate kappa to BGG.sumMap through the isomorphism Y = BGG); Corollary 1 as: if N(d^i) = R(d^(i-1)) (+) H^i and
-    N(d~^i) = R(d~^(i-1)) (+) H~^i (BGG.Represents), then N(D^i) = R(D^(i-1)) (+) kappa(H^i x H~^i)
-    in the BGG complex, kappa(H x H~) being the image under (30) as in (31). Outside the submission: the applications of §4 (elasticity, Hessian and div div complexes; Feec proves the
-    Hessian diagram, Feec.Domain.injSurj_hessianBGG, not compared) and the uniform representation of
-    cohomology of §2 (Costabel-McIntosh) are not part of this submission.
+    stated, in the encodings (1)-(4): Theorem 6's bounded Hilbert complex by FEEC.bggHilbert,
+    its dimension statements by FEEC.bggFinrank; (30) in the quotient model for modules
+    (FEEC.bggExplicit) and in its orthogonal form with P_(R⊥) and the Moore-Penrose inverse for
+    Hilbert rows (FEEC.bggOrthogonal); Corollary 1 in both models as: if
+    N(d^i) = R(d^(i-1)) (+) H^i and N(d~^i) = R(d~^(i-1)) (+) H~^i (BGG.Represents), then
+    N(D^i) = R(D^(i-1)) (+) kappa(H^i x H~^i) in the output complex, kappa(H x H~) being the image
+    under (30) as in (31). Outside the submission: the applications of §4 (elasticity, Hessian
+    and div div complexes) and the uniform representation of cohomology of §2
+    (Costabel-McIntosh); the regular decompositions of the L^2 de Rham rows on boxes and
+    parallelepipeds (Theorem 3 of §2 there) are proved in Feec but not stated in the challenge,
+    which has no differential operators (see status.scope); no finite element discretization.
     (10) The name BGG follows Arnold-Hu; the representation-theoretic BGG resolution
     [BernsteinGelfandGelfand1975] and the BGG sequences of Čap-Slovák-Souček are background only.
 
@@ -304,8 +302,9 @@ review:
     Every merge of the library was gated by a full build (zero warnings), an axiom audit
     (propext, Classical.choice, Quot.sound only), regression snapshots and an independent AI
     review. No external mathematical review; the author has yet to review this challenge, in
-    particular the new statement FEEC.bggOrthogonal and its definitions FEEC.BGG.moorePenrose
-    and FEEC.BGG.Υ.
+    particular the statements FEEC.bggOrthogonal (with its new Corollary 1 conclusion) and
+    FEEC.bggHilbert (new: the quotient norm) and their definitions FEEC.BGG.moorePenrose,
+    FEEC.BGG.Υ, FEEC.BGG.ΓL, FEEC.BGG.ΔL and FEEC.BGG.QuotL.
 
 alignment:
   namespace: "FEEC"
@@ -340,15 +339,15 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Proved through FEEC.BGG.explicit from Feec.BGG.Data.bggProj, Feec.BGG.Data.quasiIso_of_Γι_comp and HomologicalComplex.Represents.map."
-    - source: "[ArnoldHu2021], Theorem 6 (bounded Hilbert complex) and the remark after it (closed range)"
-      lean: "FEEC.bggClosedRange"
+    - source: "[ArnoldHu2021], Theorem 6 (the output complex is a bounded Hilbert complex) and the paragraph after it (closed range)"
+      lean: "FEEC.bggHilbert"
       module: "Challenge"
       status: "proved"
-      note: "Proved through FEEC.BGG.closedRange from Feec.BGG.BoundedData.isClosed_bgg_Δ and Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist."
-    - source: "[ArnoldHu2021], (24)-(26) (the output complex), (29) (the Moore-Penrose inverse), (30) and Theorem 7 in the orthogonal form"
+      note: "New (replaces FEEC.bggClosedRange, whose closedness of Gamma and Delta it contains); statement and FEEC.BGG.ΓL, FEEC.BGG.ΔL, FEEC.BGG.QuotL not yet reviewed by the author. Proved through FEEC.BGG.hilbert from Feec.HilbertComplex.Subquotient.toQuotEquiv, quotD_toQuot, cohomologyEquiv and Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology."
+    - source: "[ArnoldHu2021], (24)-(26) (the output complex), (29) (the Moore-Penrose inverse), (30), Theorem 7 and Corollary 1 in the orthogonal form"
       lean: "FEEC.bggOrthogonal"
       module: "Challenge"
       status: "proved"
-      note: "New; statement (and FEEC.BGG.moorePenrose, FEEC.BGG.Υ) not yet reviewed by the author. Proved through FEEC.BGG.orthogonal from Feec.BGG.BoundedData.quasiIso_orthSumMap and Feec.BGG.BoundedData.isIso_toOrth."
+      note: "New; statement (and FEEC.BGG.moorePenrose, FEEC.BGG.Υ) not yet reviewed by the author. Proved through FEEC.BGG.orthogonal from Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth and Feec.BGG.BoundedData.orth_represents."
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

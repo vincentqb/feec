@@ -6,14 +6,16 @@ public import Solution.Bridge
 # The BGG construction (solution)
 
 `FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum`,
-`FEEC.bggExplicit`, `FEEC.bggClosedRange` and `FEEC.bggOrthogonal` of
+`FEEC.bggExplicit`, `FEEC.bggHilbert` and `FEEC.bggOrthogonal` of
 `Challenge.lean`, proved through the bridge `Solution.Bridge` (`FEEC.BGG.verdict`,
 `FEEC.BGG.identification`, `FEEC.BGG.finiteDimensional_and_finrank_le`, `FEEC.BGG.sum`,
-`FEEC.BGG.explicit`, `FEEC.BGG.closedRange`, `FEEC.BGG.orthogonal`)
+`FEEC.BGG.explicit`, `FEEC.BGG.hilbert`, `FEEC.BGG.orthogonal`)
 from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
 `Feec.BGG.Data.finrank_twistComplex_homology_eq_iff`, `Feec.BGG.Data.bggProj`,
-`Feec.BGG.Data.quasiIso_of_Γι_comp`, `HomologicalComplex.Represents.map` and
-`Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist`.
+`Feec.BGG.Data.quasiIso_of_Γι_comp`, `HomologicalComplex.Represents.map`,
+`Feec.HilbertComplex.Subquotient.toQuotEquiv`, `Feec.HilbertComplex.Subquotient.quotD_toQuot`,
+`Feec.HilbertComplex.Subquotient.cohomologyEquiv`, `Feec.BGG.BoundedData.quasiIso_orthSumMap` and
+`Feec.BGG.BoundedData.orth_represents`.
 
 ## References
 
@@ -100,14 +102,16 @@ theorem bggExplicit {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} 
         BGG.Represents Vt i Ht → BGG.Represents (BGG.bgg S J) i ((H.prod Ht).map (κ.f i).hom) :=
   BGG.explicit S K hK J t hinj ht
 
-/-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed
-ranges** ([ArnoldHu2021], Theorem 6 and the remark after it). Let `d`, `d̃` be complexes of
-bounded operators on Hilbert spaces and `s` bounded connecting maps with `d s = -s d̃`, bounded
-below for `i < J` and onto modulo `d` for `i ≥ J`. Then `Γⁱ` and `Δⁱ` are closed in `Hⁱ × H̃ⁱ`, so
-`Γⁱ / Δⁱ` is a Hilbert space and the differentials, induced by the bounded twisted differential,
-are bounded; and where both rows have finite-dimensional cohomology, the range of the BGG
-differential into `Γⁱ / Δⁱ` is closed: its preimage `Δⁱ + T(Γⁱ⁻¹)` in `Hⁱ × H̃ⁱ` is closed. -/
-theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
+/-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex, with the
+quotient norm, and has closed ranges** ([ArnoldHu2021], Theorem 6 and the remark after it). Let
+`d`, `d̃` be complexes of bounded operators on Hilbert spaces and `s` bounded connecting maps with
+`d s = -s d̃`, bounded below for `i < J` and onto modulo `d` for `i ≥ J`. Then `Γⁱ` and `Δⁱ` are
+closed in `Hⁱ × H̃ⁱ`; for the quotient norm of the `ℓ²` norm, `y ↦ [y]` is an isometry of the
+closed subspace `Γⁱ ⊖ Δⁱ = Γⁱ ∩ (Δⁱ)ᗮ` of the Hilbert space `Hⁱ ⊕ H̃ⁱ` onto `Γⁱ / Δⁱ` (so the
+quotient norm is a Hilbert norm); the differentials `[(σ, φ)] ↦ [(dσ - sφ, d̃φ)]` of the BGG
+complex are bounded for it; and where both rows have finite-dimensional cohomology in degree
+`i + 1`, the differential into `Γⁱ⁺¹ / Δⁱ⁺¹` has closed range. -/
+theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
     [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
     [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
     [∀ i, CompleteSpace (Ht i)]
@@ -116,14 +120,21 @@ theorem bggClosedRange {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
     (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
     (J : ℤ) (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
     (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
-      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) (i : ℤ) :
+      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
     let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
-    IsClosed (BGG.Γ S J i : Set (H i × Ht i)) ∧ IsClosed (BGG.Δ S J i : Set (H i × Ht i)) ∧
-      ([FiniteDimensional 𝕜 ((BGG.ofBounded d hd).homology i)] →
-        [FiniteDimensional 𝕜 ((BGG.ofBounded dt hdt).homology i)] →
-        IsClosed ((BGG.Δ S J i ⊔ (BGG.Γ S J (i - 1)).map (BGG.twist S (i - 1) i) :
-          Submodule 𝕜 _) : Set (H i × Ht i))) :=
-  BGG.closedRange s hs J hinj hsurj i
+    let ΓL := BGG.ΓL (hd := hd) (hdt := hdt) s hs J
+    let ΔL := BGG.ΔL (hd := hd) (hdt := hdt) s hs J
+    let Q := BGG.QuotL (hd := hd) (hdt := hdt) s hs J
+    (∀ i, IsClosed (BGG.Γ S J i : Set (H i × Ht i)) ∧ IsClosed (BGG.Δ S J i : Set (H i × Ht i))) ∧
+      (∀ i, ∃ e : ↥(ΓL i ⊓ (ΔL i)ᗮ) ≃ₗᵢ[𝕜] Q i, ∀ y, e y = Submodule.Quotient.mk ⟨y, y.2.1⟩) ∧
+      ∃ D : ∀ i, Q i →L[𝕜] Q (i + 1),
+        (∀ i (x : ΓL i) (x' : ΓL (i + 1)), (x' : WithLp 2 (H (i + 1) × Ht (i + 1))).ofLp =
+          BGG.twist S i (i + 1) (x : WithLp 2 (H i × Ht i)).ofLp →
+            D i (Submodule.Quotient.mk x) = Submodule.Quotient.mk x') ∧
+        ∀ i, [FiniteDimensional 𝕜 ((BGG.ofBounded d hd).homology (i + 1))] →
+          [FiniteDimensional 𝕜 ((BGG.ofBounded dt hdt).homology (i + 1))] →
+          IsClosed (Set.range (D i)) :=
+  BGG.hilbert s hs J hinj hsurj
 
 /-- **The orthogonal form of Theorem 7: the cochain map (30) with Moore–Penrose inverses**
 ([ArnoldHu2021], (24)–(26), (23), (28)–(30), Theorem 7). Let `d`, `d̃` be complexes of bounded
@@ -134,7 +145,9 @@ with isomorphisms `Yⁱ ≅ Υⁱ` onto the output spaces (`BGG.Υ`: `R(sⁱ⁻�
 carrying its differential to the output differentials (26), `P_{R(sⁱ)ᗮ} d` before `J`,
 `d̃ (sᴶ)† d` at `J`, `d̃` after `J`, and a quasi-isomorphism `κ` from the sum complex to `Y` which
 is the map (30): `(ω, μ) ↦ P_{R(sⁱ⁻¹)ᗮ}(ω + Kμ)` up to `J`, and in degree `i + 1 > J`,
-`(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; and `Y` is isomorphic to the BGG complex. -/
+`(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; `Y` is isomorphic to the BGG complex; and
+(Corollary 1, (31)) if `A`, `Ã` represent the cohomology of the rows in degree `i`, then `κ(A × Ã)`
+represents that of `Y`. -/
 theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
     [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
     [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
@@ -161,7 +174,10 @@ theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
         (e (i + 1) ((κ.f (i + 1)).hom x) : H (i + 1) × Ht (i + 1)) =
           (0, (s (i + 1)).ker.starProjection (dt i (BGG.moorePenrose (s i) x.1) +
             (x.2 + dt i (BGG.moorePenrose (s i) (K (i + 1) x.2)))))) ∧
-      QuasiIso κ ∧ Nonempty (Y ≅ BGG.bgg S J) :=
+      QuasiIso κ ∧ Nonempty (Y ≅ BGG.bgg S J) ∧
+      ∀ i (A : Submodule 𝕜 (H i)) (At : Submodule 𝕜 (Ht i)),
+        BGG.Represents (BGG.ofBounded d hd) i A → BGG.Represents (BGG.ofBounded dt hdt) i At →
+          BGG.Represents Y i ((A.prod At).map (κ.f i).hom) :=
   BGG.orthogonal d hd dt hdt s hs K hK J hinj hsurj hR
 
 end FEEC

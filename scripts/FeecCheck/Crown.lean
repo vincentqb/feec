@@ -158,6 +158,13 @@ The crown then gained the last fields `crime_static` and `crime_cohomology`, the
 `windowCrime_eventually_bijective_cohomologyMap`). `OldCrimeVerdict` states the verdict before
 them verbatim, and `crown_old_crime_verdict` derives it from the new one.
 
+The cochain projections of the cochain case (`ApproxComplexCrime.Family.CochainProj`) are now
+bounded in the graph norm of `D(𝐝)`, the `V`-bounds of [HolstStern2012], §3.3, instead of in `W`.
+`OldCochainProj` is the old structure verbatim, a new one through `CochainProj.ofNormLe`
+(`OldCochainProj.toCochainProj`); the theorems `crime_old_*` state the changed results verbatim
+(`nonneg`, `norm_π_apply_le`, `isPoincare_of_proj`, `IsCochain.isPoincare` with the constant
+`c₀ C_π C`, `IsCochain.tendsto_staticError` with `iₕ πₕ x → x` for every `x`) and derive them.
+
 ## Spectral methods
 
 The time-uniform truncation rates of reducing families and of spectral families, the
@@ -3953,5 +3960,77 @@ example [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
   F.feec.crime_cohomology a m K hK hcr
 
 end CrownCochain
+
+section CochainProjGraph
+
+/-! ### Cochain projections bounded in the graph norm: the statements before -/
+
+open scoped InnerProductSpace
+
+variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}
+  [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+  {H : HilbertComplex 𝕜 c W} {κ : Type*} {S : ApproxComplexCrime.Family H κ}
+
+variable (S) in
+/-- The old `ApproxComplexCrime.Family.CochainProj` (projections bounded in `W`), verbatim. -/
+structure OldCochainProj (Cπ : ℝ) where
+  /-- the projections -/
+  π : ∀ h, PiLp 2 W →L[𝕜] S.X h
+  π_incl : ∀ h v, π h (S.incl h v) = v
+  norm_π_le : ∀ h, ‖π h‖ ≤ Cπ
+  π_totalD : ∀ h (z : H.totalD.domain), π h (H.totalD z) = S.D h (π h z)
+
+variable {Cπ : ℝ}
+
+/-- The old `ApproxComplexCrime.Family.CochainProj.nonneg`. -/
+theorem crime_old_nonneg (P : OldCochainProj S Cπ) (h : κ) : 0 ≤ Cπ :=
+  (norm_nonneg _).trans (P.norm_π_le h)
+
+/-- An old cochain projection is a new one (`CochainProj.ofNormLe`), as soon as there is a
+level. -/
+noncomputable def OldCochainProj.toCochainProj (P : OldCochainProj S Cπ) (h₀ : κ) :
+    S.CochainProj Cπ :=
+  .ofNormLe P.π P.π_incl (crime_old_nonneg P h₀) P.norm_π_le P.π_totalD
+
+/-- The old `ApproxComplexCrime.Family.CochainProj.norm_π_apply_le` (every `x`, not only the
+cycles). -/
+theorem crime_old_norm_π_apply_le (P : OldCochainProj S Cπ) (h : κ) (x : PiLp 2 W) :
+    ‖P.π h x‖ ≤ Cπ * ‖x‖ :=
+  ((P.π h).le_opNorm x).trans (mul_le_mul_of_nonneg_right (P.norm_π_le h) (norm_nonneg _))
+
+/-- The old `ApproxComplexCrime.Family.isPoincare_of_proj` (with the unused `0 ≤ c₀`). -/
+theorem crime_old_isPoincare_of_proj {c₀ C' : ℝ} (_hc₀ : 0 ≤ c₀)
+    (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
+      ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖)
+    (hmem : ∀ h v, S.incl h v ∈ H.totalD.domain)
+    (hd : ∀ h v, ‖H.totalD ⟨S.incl h v, hmem h v⟩‖ ≤ C' * ‖S.D h v‖)
+    {Cπ : ℝ} (p : ∀ h, PiLp 2 W →L[𝕜] S.X h) (hp : ∀ h v, p h (S.incl h v) = v)
+    (hpC : ∀ h, ‖p h‖ ≤ Cπ) (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (p h z) = 0) :
+    S.IsPoincare (c₀ * Cπ * C') :=
+  S.isPoincare_of_proj hc hmem hd p hp hpC hπ
+
+/-- The old `ApproxComplexCrime.Family.IsCochain.isPoincare` (projections bounded in `W`, constant
+`c₀ C_π C`), from `isPoincare_of_proj`. -/
+theorem crime_old_isPoincare (hi : S.IsCochain) (P : OldCochainProj S Cπ) {c₀ : ℝ}
+    (hc₀ : 0 ≤ c₀) (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
+      ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖) :
+    S.IsPoincare (c₀ * Cπ * S.boundConst) :=
+  crime_old_isPoincare_of_proj hc₀ hc hi.incl_mem
+    (fun h v => by rw [hi.totalD_incl]; exact S.norm_incl_apply_le h _) P.π P.π_incl P.norm_π_le
+    fun h z hz => by rw [← P.π_totalD, hz, _root_.map_zero]
+
+/-- The old `ApproxComplexCrime.Family.IsCochain.tendsto_staticError` (`iₕ πₕ x → x` for every
+`x`). -/
+theorem crime_old_tendsto_staticError (hi : S.IsCochain) (hcr : ∀ i, H.ClosedRangeAt i)
+    (P : OldCochainProj S Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
+    (hcP : 1 ≤ cP) {l : Filter κ} (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0))
+    (happ : ∀ x, Tendsto (fun h => ‖x - S.incl h (P.π h x)‖) l (𝓝 0)) (f : PiLp 2 W) :
+    Tendsto (fun h => S.staticError hcr h f) l (𝓝 0) := by
+  cases isEmpty_or_nonempty κ
+  · exact tendsto_of_isEmpty
+  · exact hi.tendsto_staticError hcr (P.toCochainProj (Classical.arbitrary κ)) hP hcP hJ
+      (fun x _ => happ x) f
+
+end CochainProjGraph
 
 end FeecCheck.Crown

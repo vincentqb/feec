@@ -760,20 +760,21 @@ theorem tendsto_staticError_of_dense {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
 
 /-! #### The discrete Poincaré inequality from the projections -/
 
-/-- **The uniform discrete Poincaré inequality from projections** ([HolstStern2012], Thm 3.5, there
-for cochain maps): if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `iₕ Xₕ ⊆ D(𝐝)` with
-`‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain map), and linear left inverses `pₕ` of
-`iₕ` with `‖pₕ‖ ≤ C_π` map `ker 𝐝` into `ker 𝐝ₕ` (e.g. cochain projections), then
-`‖v‖ ≤ c₀ C_π C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part and the rest, and
-project back with `pₕ`. -/
-theorem isPoincare_of_proj {c₀ C' : ℝ} (hc₀ : 0 ≤ c₀)
-    (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
-      ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖)
+/-- **The uniform discrete Poincaré inequality from projections bounded by `𝐝`**: if
+`iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain map), and linear left
+inverses `pₕ` of `iₕ` map `ker 𝐝` into `ker 𝐝ₕ` and satisfy `‖pₕ z‖ ≤ M ‖𝐝 z‖` on
+`(ker 𝐝)ᗮ ∩ D(𝐝)`, then `‖v‖ ≤ M C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part
+and the rest, and project back with `pₕ`. The bound `M` combines a Poincaré constant of `𝐝` with
+the bound of `pₕ`, in `W` (`isPoincare_of_proj`) or in the graph norm
+(`IsCochain.isPoincare`). [HolstStern2012], Thm 3.5 -/
+theorem isPoincare_of_norm_proj_le {M C' : ℝ}
     (hmem : ∀ h v, S.incl h v ∈ H.totalD.domain)
     (hd : ∀ h v, ‖H.totalD ⟨S.incl h v, hmem h v⟩‖ ≤ C' * ‖S.D h v‖)
-    {Cπ : ℝ} (p : ∀ h, PiLp 2 W →L[𝕜] S.X h) (hp : ∀ h v, p h (S.incl h v) = v)
-    (hpC : ∀ h, ‖p h‖ ≤ Cπ) (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (p h z) = 0) :
-    S.IsPoincare (c₀ * Cπ * C') := by
+    (p : ∀ h, PiLp 2 W →ₗ[𝕜] S.X h) (hp : ∀ h v, p h (S.incl h v) = v)
+    (hpM : ∀ h (z : H.totalD.domain), (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
+      ‖p h z‖ ≤ M * ‖H.totalD z‖)
+    (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (p h z) = 0) :
+    S.IsPoincare (M * C') := by
   intro h v hv
   by_cases hv0 : v = 0
   · rw [hv0, norm_zero, _root_.map_zero, norm_zero, mul_zero]
@@ -784,8 +785,6 @@ theorem isPoincare_of_proj {c₀ C' : ℝ} (hc₀ : 0 ≤ c₀)
   have hperp : ((z - y₀ : H.totalD.domain) : PiLp 2 W) ∈ H.totalD.kerᗮ := by
     rw [Submodule.coe_sub, ← hy₀]; exact K.sub_starProjection_mem_orthogonal _
   have hd' : H.totalD (z - y₀) = H.totalD z := by rw [LinearPMap.map_sub, hy₀0, sub_zero]
-  have h1 := hc _ hperp
-  rw [hd'] at h1
   have hker : p h y₀ ∈ LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h) := hπ h y₀ hy₀0
   set b := p h ((z - y₀ : H.totalD.domain) : PiLp 2 W)
   have hv' : v = p h y₀ + b := by
@@ -794,15 +793,35 @@ theorem isPoincare_of_proj {c₀ C' : ℝ} (hc₀ : 0 ≤ c₀)
   rw [← hv', Submodule.inner_left_of_mem_orthogonal hker hv, zero_add] at e
   have hsq : ‖v‖ ^ 2 ≤ ‖v‖ * ‖b‖ := by
     rw [@norm_sq_eq_re_inner 𝕜, e]; exact re_inner_le_norm _ _
-  have hb : ‖b‖ ≤ Cπ * (c₀ * (C' * ‖S.D h v‖)) := by
-    have hC : 0 ≤ Cπ := (norm_nonneg _).trans (hpC h)
-    refine ((p h).le_opNorm _).trans (mul_le_mul (hpC h) (h1.trans ?_)
-      (norm_nonneg _) hC)
-    exact mul_le_mul_of_nonneg_left (hd h v) hc₀
   have hpos : 0 < ‖v‖ := norm_pos_iff.2 hv0
-  have : ‖v‖ ≤ ‖b‖ := le_of_mul_le_mul_left (by nlinarith) hpos
-  calc ‖v‖ ≤ _ := this.trans hb
+  have hvb : ‖v‖ ≤ ‖b‖ := le_of_mul_le_mul_left (by nlinarith) hpos
+  have hb : ‖b‖ ≤ M * ‖H.totalD z‖ := by rw [← hd']; exact hpM h _ hperp
+  have hM : 0 < M := by
+    by_contra hM
+    nlinarith [norm_nonneg (H.totalD z), mul_nonpos_of_nonpos_of_nonneg (not_lt.1 hM)
+      (norm_nonneg (H.totalD z))]
+  calc ‖v‖ ≤ M * ‖H.totalD z‖ := hvb.trans hb
+    _ ≤ M * (C' * ‖S.D h v‖) := mul_le_mul_of_nonneg_left (hd h v) hM.le
     _ = _ := by ring
+
+/-- **The uniform discrete Poincaré inequality from projections bounded in `W`**
+([HolstStern2012], Thm 3.5, there for cochain maps and the `V`-norm of the projections): if `𝐝`
+has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖`, and
+linear left inverses `pₕ` of `iₕ` with `‖pₕ‖ ≤ C_π` map `ker 𝐝` into `ker 𝐝ₕ` (e.g. cochain
+projections), then `‖v‖ ≤ c₀ C_π C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ` (`isPoincare_of_norm_proj_le` with
+`M = C_π c₀`). -/
+theorem isPoincare_of_proj {c₀ C' : ℝ}
+    (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
+      ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖)
+    (hmem : ∀ h v, S.incl h v ∈ H.totalD.domain)
+    (hd : ∀ h v, ‖H.totalD ⟨S.incl h v, hmem h v⟩‖ ≤ C' * ‖S.D h v‖)
+    {Cπ : ℝ} (p : ∀ h, PiLp 2 W →L[𝕜] S.X h) (hp : ∀ h v, p h (S.incl h v) = v)
+    (hpC : ∀ h, ‖p h‖ ≤ Cπ) (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (p h z) = 0) :
+    S.IsPoincare (c₀ * Cπ * C') :=
+  (S.isPoincare_of_norm_proj_le (M := Cπ * c₀) hmem hd (fun h => p h) hp
+    (fun h z hz => ((p h).le_opNorm _).trans (mul_le_mul (hpC h) (hc z hz) (norm_nonneg _)
+      ((norm_nonneg _).trans (hpC h)) |>.trans_eq (mul_assoc _ _ _).symm)) hπ).mono
+    (le_of_eq (by ring))
 
 /-! #### The static verdict -/
 

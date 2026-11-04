@@ -780,7 +780,7 @@ theorem windowCrime_tendsto_staticError (F : ConformingFamily H κ) (a : α) (m 
   set G := F.windowFEEC a m K hK
   have hJ : ∀ h, G.toComplex.toFamily.toCrimeFamily.J h = 1 := G.toCrime_J
   refine (G.toComplex.toFamily.isCochain_toCrimeFamily).tendsto_staticError hcr
-    (F.windowCochainProj a m K hK) hP hcP ?_ (F.windowCrime_tendsto_incl_π a m K hK) f
+    (F.windowCochainProj a m K hK) hP hcP ?_ (fun x _ => F.windowCrime_tendsto_incl_π a m K hK x) f
   simp only [hJ, sub_self, norm_zero]
   exact tendsto_const_nhds
 

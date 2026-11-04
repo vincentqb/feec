@@ -87,7 +87,7 @@ theorem closedRangeAt_idComplex (i : Fin 3) : (idComplex 𝕜).ClosedRangeAt i :
 criterion `Family.isPoincare_of_proj` (`πₙ = 1`, `‖𝐝 v‖ ≤ ‖𝐝ₙ v‖`). -/
 theorem shifted_isPoincare : ∃ cP, 1 ≤ cP ∧ (shiftedFamily 𝕜).IsPoincare cP := by
   obtain ⟨C, hC⟩ := (idComplex 𝕜).exists_poincare_totalD closedRangeAt_idComplex
-  have h := (shiftedFamily 𝕜).isPoincare_of_proj (c₀ := max C 0) (C' := 1) (le_max_right _ _)
+  have h := (shiftedFamily 𝕜).isPoincare_of_proj (c₀ := max C 0) (C' := 1)
     (fun z hz => (hC z hz).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)))
     (fun _ v => mem_idComplex_totalD_domain v)
     (fun n v => by

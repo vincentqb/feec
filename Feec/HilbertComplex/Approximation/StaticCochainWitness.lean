@@ -112,12 +112,10 @@ theorem shear_isCochain : (shearFamily E N hNN).IsCochain :=
     rw [_root_.map_add, _root_.map_smul, hND]⟩
 
 /-- **The cochain projections of a shear family**: `πₙ = 1 - hₙ N`, bounded by `1 + ‖N‖`. -/
-def shearCochainProj : (shearFamily E N hNN).CochainProj (1 + ‖N‖) where
-  π := (shearFamily E N hNN).proj
-  π_incl := (shearFamily E N hNN).proj_incl
-  norm_π_le n := (norm_sub_le _ _).trans (add_le_add ContinuousLinearMap.norm_id_le
-    (norm_perturbMesh_smul_le N n))
-  π_totalD n z := by
+def shearCochainProj : (shearFamily E N hNN).CochainProj (1 + ‖N‖) :=
+  .ofNormLe (shearFamily E N hNN).proj (shearFamily E N hNN).proj_incl (by positivity)
+    (fun n => (norm_sub_le _ _).trans (add_le_add ContinuousLinearMap.norm_id_le
+      (norm_perturbMesh_smul_le N n))) fun n z => by
     rw [← E.totalDL_apply]
     change E.totalDL z - (perturbMesh n : 𝕜) • N (E.totalDL z) =
       E.totalDL (z - (perturbMesh n : 𝕜) • N z)
@@ -167,8 +165,7 @@ include hND in
 theorem shear_isPoincare : ∃ cP, 1 ≤ cP ∧ (shearFamily E N hNN).IsPoincare cP := by
   obtain ⟨c₀, hc₀⟩ := E.exists_poincare_totalD (closedRangeAt_of_finiteDimensional E)
   have h := (shear_isCochain E N hNN hND).isPoincare (shearCochainProj E N hNN hND)
-    (le_max_right c₀ 0)
-    (fun z hz => (hc₀ z hz).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)))
+    hc₀
   exact ⟨_, le_max_right _ 1, h.mono (le_max_left _ _)⟩
 
 include hND in
@@ -180,7 +177,7 @@ theorem shear_tendsto_staticError (f : PiLp 2 V) :
   let ⟨_, hcP, hP⟩ := shear_isPoincare E N hNN hND
   (shear_isCochain E N hNN hND).tendsto_staticError _ (shearCochainProj E N hNN hND) hP hcP
     (shear_tendsto_innerDefect E N hNN)
-    (fun x => tendsto_const_nhds.congr fun n => by
+    (fun x _ => tendsto_const_nhds.congr fun n => by
       change (0 : ℝ) = ‖x - (shearFamily E N hNN).incl n
         ((shearFamily E N hNN).proj n x)‖
       rw [shear_incl_proj, sub_self, norm_zero]) f

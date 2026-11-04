@@ -1,7 +1,7 @@
 module
 
 public import Feec.HilbertComplex.BGG.Derived
-public import Feec.HilbertComplex.Homology
+public import Feec.HilbertComplex.Quotient
 public import Mathlib.Analysis.InnerProductSpace.ProdL2
 
 /-!
@@ -12,16 +12,17 @@ differentials `d`, `d̃` and connecting maps `S` are bounded: the setting of the
 complexes (domain complexes) and bounded linking maps of [ArnoldHu2021], §3, (19), and of the
 Sobolev BGG sequences of [CapHu2024]. The algebraic eliminations `Γ E ⊇ Δ F` of
 `Feec.HilbertComplex.BGG.Derived` are then subspaces of `Vⁱ ⊕ Ṽⁱ` (`ℓ²` product), `Γ E` closed,
-and the derived complex `Γ E / Δ F` is
-realized as the Hilbert complex (`BoundedData.derivedComplex`) of the spaces
-`Υⁱ = Γⁱ ⊖ Δⁱ` with the compressed differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. The quotient
-norm of `Γⁱ / Δⁱ`, from the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ`, is the norm of `Υⁱ`: `y ↦ [y]` is an
-isometry `Υⁱ → Γⁱ / Δⁱ` (`BoundedData.toDerivedQuotL`), onto when `Δ F` is closed
-(`BoundedData.derivedQuotLEquiv`), and it carries the compressed differentials to the bounded
-differentials `[x] ↦ [dσ - Sφ, d̃φ]` of the quotient (`BoundedData.derivedQuotD`); this is the
-Hilbert-space structure of the subquotient model of the output complex. It exists for
-all data, as a complex of bounded operators; when `Δ F` is closed it is isomorphic, as a complex,
-to `derived E F` (`BoundedData.derivedComplexIso`). Hence, **for closed `Δ F` and under the
+and `Γ E ⊇ Δ F ∩ Γ E` is a subquotient of the twisted complex (`BoundedData.subquotient`, a
+`Feec.HilbertComplex.Subquotient`). The derived complex `Γ E / Δ F` is therefore realized as the
+Hilbert complex (`BoundedData.derivedComplex`) of the spaces `Υⁱ = Γⁱ ⊖ Δⁱ` with the compressed
+differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`, and the general theory of subquotients gives the
+quotient norm: the quotient norm of `Γⁱ / Δⁱ`, from the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ`, is the norm of
+`Υⁱ`, `y ↦ [y]` is an isometry `Υⁱ → Γⁱ / Δⁱ` (`BoundedData.toDerivedQuotL`), onto when `Δ F` is
+closed (`BoundedData.derivedQuotLEquiv`), and it carries the compressed differentials to the
+bounded differentials `[x] ↦ [dσ - Sφ, d̃φ]` of the quotient (`BoundedData.derivedQuotD`); this is
+the Hilbert-space structure of the subquotient model of the output complex. It exists for all
+data, as a complex of bounded operators; when `Δ F` is closed it is isomorphic, as a complex, to
+`derived E F` (`BoundedData.derivedComplexIso`). Hence, **for closed `Δ F` and under the
 elimination hypotheses `Data.Eliminates E F`**:
 
 * **the cohomology of the derived Hilbert complex is that of the twisted complex** under the
@@ -53,16 +54,17 @@ for instance under the compactness property
 * `Feec.BGG.BoundedData 𝕜 c V Vt`: BGG data on Hilbert spaces with bounded maps.
 * `BoundedData.rowTopComplex`, `BoundedData.rowBotComplex`: the two rows as Hilbert complexes.
 * `BoundedData.twistL`: the twisted differential on `Vⁱ ⊕ Ṽⁱ`; `BoundedData.ΓL`, `BoundedData.ΔL`.
+* `BoundedData.subquotient E F`: `Γ E ⊇ Δ F ∩ Γ E` as a subquotient of the twisted complex.
 * `BoundedData.derivedSpace E F i = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)`, `BoundedData.derivedD`,
   `BoundedData.derivedComplex`: the derived complex as a Hilbert complex.
 * `BoundedData.derivedQuotL E F i = Γⁱ / Δⁱ` with the quotient norm of the `ℓ²` norm,
-  `BoundedData.toDerivedQuotL : Υⁱ →ₗᵢ Γⁱ / Δⁱ`, `BoundedData.twistΓL`, `BoundedData.derivedQuotD`:
-  the bounded differentials of `Γ / Δ` for the quotient norm.
+  `BoundedData.toDerivedQuotL : Υⁱ →ₗᵢ Γⁱ / Δⁱ`, `BoundedData.derivedQuotD`: the bounded
+  differentials of `Γ / Δ` for the quotient norm.
 
 ## Main results
 
 * `BoundedData.derivedComplexIso`: `derivedComplex` is `derived E F` (closed `Δ F`).
-* `BoundedData.norm_toDerivedQuotLinear`, `BoundedData.derivedQuotLEquiv`,
+* `BoundedData.toDerivedQuotL`, `BoundedData.derivedQuotLEquiv`,
   `BoundedData.derivedQuotD_toDerivedQuotL`: **the quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm
   of `Υⁱ`** (`‖[y]‖ = ‖y‖` on `Γⁱ ⊖ Δⁱ`), so for closed `Δ F` the quotient is a Hilbert space
   isometric to `Υⁱ`, with bounded differentials intertwined with those of `derivedComplex`.
@@ -207,22 +209,30 @@ theorem twistL_mem_ΔL (i j : ι) {x : WithLp 2 (V i × Vt i)} (hx : x ∈ D.ΔL
     D.twistL i j x ∈ D.ΔL E F j :=
   ⟨D.twist_mem_Δ F i j hx.1, D.twist_mem_Γ E i j hx.2⟩
 
+/-- **The subquotient `Γ E / (Δ F ∩ Γ E)`** of the twisted complex on `Vⁱ ⊕ Ṽⁱ`. -/
+def subquotient : HilbertComplex.Subquotient 𝕜 c fun i => WithLp 2 (V i × Vt i) where
+  d := D.twistL
+  shape _ _ h := D.twistL_eq_zero h
+  d_comp_d := D.twistL_twistL
+  Γ := D.ΓL E
+  Δ := D.ΔL E F
+  Δ_le_Γ := D.ΔL_le_ΓL E F
+  isClosed_Γ := D.isClosed_ΓL E
+  d_mem_Γ := D.twistL_mem_ΓL E
+  d_mem_Δ := D.twistL_mem_ΔL E F
+
 /-- The twisted differential maps the closure of `Δ ∩ Γ` into itself. -/
 theorem twistL_mem_closure_ΔL (i j : ι) {x : WithLp 2 (V i × Vt i)}
     (hx : x ∈ (D.ΔL E F i).topologicalClosure) :
     D.twistL i j x ∈ (D.ΔL E F j).topologicalClosure :=
-  Submodule.topologicalClosure_minimal (s := D.ΔL E F i)
-    (t := (D.ΔL E F j).topologicalClosure.comap (D.twistL i j).toLinearMap)
-    (fun _ hy => (D.ΔL E F j).le_topologicalClosure (D.twistL_mem_ΔL E F i j hy))
-    ((Submodule.isClosed_topologicalClosure _).preimage (D.twistL i j).continuous) hx
+  (D.subquotient E F).d_mem_closure_Δ i j hx
 
 /-! ### The derived complex as a Hilbert complex -/
 
 variable [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)]
 
 /-- **The derived space** `Υⁱ = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)`, the orthogonal model of `Γⁱ / Δⁱ`. -/
-def derivedSpace (i : ι) : Submodule 𝕜 (WithLp 2 (V i × Vt i)) :=
-  D.ΓL E i ⊓ (D.ΔL E F i)ᗮ
+def derivedSpace (i : ι) : Submodule 𝕜 (WithLp 2 (V i × Vt i)) := (D.subquotient E F).space i
 
 /-- The norm of `Υⁱ`, declared on `derivedSpace` itself (with its inner product and completeness)
 so that instances of the data (e.g. on graph spaces of `L²` fields) find these instances
@@ -237,73 +247,22 @@ instance (i : ι) : CompleteSpace (D.derivedSpace E F i) :=
 
 /-- The projection onto `(Δ ∩ Γ)ᗮ` keeps `Γ`. -/
 theorem starProjection_mem_ΓL {i : ι} {t : WithLp 2 (V i × Vt i)} (ht : t ∈ D.ΓL E i) :
-    (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΓL E i := by
-  have hr : t - (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΓL E i := by
-    have := Submodule.sub_starProjection_mem_orthogonal (K := (D.ΔL E F i)ᗮ) t
-    rw [Submodule.orthogonal_orthogonal_eq_closure] at this
-    exact Submodule.topologicalClosure_minimal _ (D.ΔL_le_ΓL E F i) (D.isClosed_ΓL E i) this
-  simpa using sub_mem ht hr
+    (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΓL E i :=
+  (D.subquotient E F).starProjection_mem_Γ ht
 
 /-- The differentials of the derived complex, `y ↦ P_{(Δʲ)ᗮ} (twist y)`. -/
 def derivedD (i j : ι) : D.derivedSpace E F i →L[𝕜] D.derivedSpace E F j :=
-  ((D.ΔL E F j)ᗮ.starProjection ∘L D.twistL i j ∘L (D.derivedSpace E F i).subtypeL).codRestrict
-    (D.derivedSpace E F j) fun y =>
-      ⟨D.starProjection_mem_ΓL E F (D.twistL_mem_ΓL E i j y.2.1),
-        Submodule.starProjection_apply_mem _ _⟩
+  (D.subquotient E F).spaceD i j
 
 theorem coe_derivedD (i j : ι) (y : D.derivedSpace E F i) :
     (D.derivedD E F i j y : WithLp 2 (V j × Vt j)) =
       (D.ΔL E F j)ᗮ.starProjection (D.twistL i j y) := rfl
 
-/-- `twist y - P_{(Δʲ)ᗮ} (twist y)` lies in the closure of `Δʲ ∩ Γʲ`. -/
-theorem twistL_sub_derivedD_mem (i j : ι) (y : D.derivedSpace E F i) :
-    D.twistL i j y - D.derivedD E F i j y ∈ (D.ΔL E F j).topologicalClosure := by
-  rw [coe_derivedD, ← Submodule.orthogonal_orthogonal_eq_closure]
-  exact Submodule.sub_starProjection_mem_orthogonal _
-
-theorem derivedD_eq_zero {i j : ι} (h : ¬ c.Rel i j) : D.derivedD E F i j = 0 := by
-  ext y : 2
-  rw [coe_derivedD, D.twistL_eq_zero h]
-  simp
-
-theorem derivedD_derivedD (i j k : ι) (y : D.derivedSpace E F i) :
-    D.derivedD E F j k (D.derivedD E F i j y) = 0 := by
-  ext : 1
-  rw [coe_derivedD, Submodule.coe_zero, Submodule.starProjection_apply_eq_zero_iff,
-    Submodule.orthogonal_orthogonal_eq_closure]
-  have h := D.twistL_mem_closure_ΔL E F j k (D.twistL_sub_derivedD_mem E F i j y)
-  rwa [map_sub, D.twistL_twistL, zero_sub, neg_mem_iff] at h
-
 /-- **The derived complex as a Hilbert complex**: the spaces `Υⁱ = Γⁱ ⊖ (Δⁱ ∩ Γⁱ)` with the
-bounded differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)`. [ArnoldHu2021], Theorem 6 -/
+bounded differentials `y ↦ P_{(Δʲ)ᗮ} (dσ - Sφ, d̃φ)` (`HilbertComplex.Subquotient.complex`).
+[ArnoldHu2021], Theorem 6 -/
 def derivedComplex : HilbertComplex 𝕜 c (fun i => D.derivedSpace E F i) :=
-  HilbertComplex.ofBounded (D.derivedD E F) (fun _ _ h => D.derivedD_eq_zero E F h)
-    (D.derivedD_derivedD E F)
-
-/-! ### The derived Hilbert complex is the derived complex -/
-
-/-- The space `Γⁱ / Δⁱ` of the derived complex `derived E F`. -/
-abbrev derivedQuot (i : ι) : Type u := D.Γ E i ⧸ (D.Δ F i).comap (D.Γ E i).subtype
-
-/-- `Υⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`. -/
-def toDerived (i : ι) : D.derivedSpace E F i →ₗ[𝕜] D.derivedQuot E F i :=
-  ((D.Δ F i).comap (D.Γ E i).subtype).mkQ ∘ₗ
-    LinearMap.codRestrict (D.Γ E i)
-      ((WithLp.linearEquiv 2 𝕜 (V i × Vt i)).toLinearMap ∘ₗ (D.derivedSpace E F i).subtype)
-      fun y => y.2.1
-
-omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-theorem toDerived_apply (i : ι) (y : D.derivedSpace E F i) :
-    D.toDerived E F i y = Submodule.Quotient.mk ⟨(y : WithLp 2 (V i × Vt i)).ofLp, y.2.1⟩ := rfl
-
-omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-theorem toDerived_injective (i : ι) : Function.Injective (D.toDerived E F i) := by
-  rw [← LinearMap.ker_eq_bot, eq_bot_iff]
-  intro y hy
-  rw [LinearMap.mem_ker, toDerived_apply, Submodule.Quotient.mk_eq_zero] at hy
-  have : (y : WithLp 2 (V i × Vt i)) ∈ D.ΔL E F i ⊓ (D.ΔL E F i)ᗮ := ⟨⟨hy, y.2.1⟩, y.2.2⟩
-  rw [Submodule.inf_orthogonal_eq_bot, Submodule.mem_bot] at this
-  exact (Submodule.mem_bot 𝕜).2 (Subtype.ext this)
+  (D.subquotient E F).complex
 
 /-! ### The quotient norm of `Γⁱ / Δⁱ` -/
 
@@ -311,61 +270,28 @@ theorem toDerived_injective (i : ι) : Function.Injective (D.toDerived E F i) :=
 space `Υⁱ` up to an isometry when `Δ` is closed, `derivedQuotLEquiv`). -/
 abbrev derivedQuotL (i : ι) : Type u := D.ΓL E i ⧸ (D.ΔL E F i).comap (D.ΓL E i).subtype
 
-/-- `Υⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`, as a linear map. -/
-def toDerivedQuotLinear (i : ι) : D.derivedSpace E F i →ₗ[𝕜] D.derivedQuotL E F i :=
-  ((D.ΔL E F i).comap (D.ΓL E i).subtype).mkQ ∘ₗ
-    LinearMap.codRestrict (D.ΓL E i) (D.derivedSpace E F i).subtype fun y => y.2.1
-
-omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-/-- `y ⊥ Δ`: `‖y‖ ≤ ‖y - δ‖` for `δ ∈ Δ`. -/
-theorem norm_le_norm_sub {i : ι} (y : D.derivedSpace E F i) {δ : WithLp 2 (V i × Vt i)}
-    (hδ : δ ∈ D.ΔL E F i) : ‖(y : WithLp 2 (V i × Vt i))‖ ≤ ‖(y : WithLp 2 (V i × Vt i)) - δ‖ := by
-  have h0 : inner 𝕜 (y : WithLp 2 (V i × Vt i)) (-δ) = 0 := by
-    rw [inner_neg_right, Submodule.inner_left_of_mem_orthogonal hδ y.2.2, neg_zero]
-  have h := norm_add_sq_eq_norm_sq_add_norm_sq_of_inner_eq_zero _ _ h0
-  rw [← sub_eq_add_neg] at h
-  nlinarith [norm_nonneg ((y : WithLp 2 (V i × Vt i)) - δ), norm_nonneg (y : WithLp 2 (V i × Vt i)),
-    norm_nonneg (-δ)]
-
-omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-/-- **The quotient norm of `Γⁱ / Δⁱ` is the Hilbert norm of `Υⁱ = Γⁱ ⊖ Δⁱ`**: `‖[y]‖ = ‖y‖`. -/
-theorem norm_toDerivedQuotLinear {i : ι} (y : D.derivedSpace E F i) :
-    ‖D.toDerivedQuotLinear E F i y‖ = ‖y‖ := by
-  refine le_antisymm (Submodule.Quotient.norm_mk_le ((D.ΔL E F i).comap (D.ΓL E i).subtype)
-    (⟨y, y.2.1⟩ : D.ΓL E i)) (le_of_forall_pos_lt_add fun ε hε => ?_)
-  obtain ⟨m, hm, hlt⟩ := Submodule.Quotient.norm_mk_lt (D.toDerivedQuotLinear E F i y) hε
-  have hm' : Submodule.Quotient.mk (⟨y, y.2.1⟩ : D.ΓL E i) = Submodule.Quotient.mk m := hm.symm
-  have hδ : (y : WithLp 2 (V i × Vt i)) - m ∈ D.ΔL E F i :=
-    (Submodule.Quotient.eq ((D.ΔL E F i).comap (D.ΓL E i).subtype)).1 hm'
-  calc ‖y‖ = ‖(y : WithLp 2 (V i × Vt i))‖ := rfl
-    _ ≤ ‖(y : WithLp 2 (V i × Vt i)) - ((y : WithLp 2 (V i × Vt i)) - m)‖ :=
-      D.norm_le_norm_sub E F y hδ
-    _ = ‖m‖ := by rw [sub_sub_cancel]; rfl
-    _ < _ := hlt
-
-/-- **`Υⁱ → Γⁱ / Δⁱ` is an isometry** for the quotient norm. -/
+/-- **`Υⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`, is an isometry** for the quotient norm
+(`HilbertComplex.Subquotient.norm_toQuot`). -/
 def toDerivedQuotL (i : ι) : D.derivedSpace E F i →ₗᵢ[𝕜] D.derivedQuotL E F i :=
-  ⟨D.toDerivedQuotLinear E F i, D.norm_toDerivedQuotLinear E F⟩
-
-omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-theorem toDerivedQuotL_apply (i : ι) (y : D.derivedSpace E F i) :
-    D.toDerivedQuotL E F i y = Submodule.Quotient.mk ⟨y, y.2.1⟩ := rfl
-
-/-- The twisted differential `Γⁱ → Γʲ`, a bounded operator. -/
-def twistΓL (i j : ι) : D.ΓL E i →L[𝕜] D.ΓL E j :=
-  (D.twistL i j ∘L (D.ΓL E i).subtypeL).codRestrict (D.ΓL E j) fun x =>
-    D.twistL_mem_ΓL E i j x.2
+  (D.subquotient E F).toQuot i
 
 /-- **The bounded differentials of `Γ / Δ` for the quotient norm**, `[x] ↦ [twist x]`. -/
 def derivedQuotD (i j : ι) : D.derivedQuotL E F i →L[𝕜] D.derivedQuotL E F j :=
-  ((D.ΔL E F i).comap (D.ΓL E i).subtype).liftQL
-    (((D.ΔL E F j).comap (D.ΓL E j).subtype).mkQL ∘L D.twistΓL E i j) fun _ hx =>
-      (Submodule.Quotient.mk_eq_zero _).2 (D.twistL_mem_ΔL E F i j hx)
+  (D.subquotient E F).quotD i j
 
 omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
-theorem derivedQuotD_mk (i j : ι) (x : D.ΓL E i) :
-    D.derivedQuotD E F i j (Submodule.Quotient.mk x) =
-      Submodule.Quotient.mk (D.twistΓL E i j x) := rfl
+/-- `Γⁱ / Δⁱ` in `Vⁱ ⊕ Ṽⁱ` is `Γⁱ / Δⁱ` in `Vⁱ × Ṽⁱ`, the space of `derived E F`. -/
+def derivedQuotLEquivDerived (i : ι) :
+    D.derivedQuotL E F i ≃ₗ[𝕜] D.Γ E i ⧸ (D.Δ F i).comap (D.Γ E i).subtype :=
+  Submodule.Quotient.equiv _ _
+    { toFun x := ⟨(x : WithLp 2 (V i × Vt i)).ofLp, x.2⟩
+      invFun x := ⟨WithLp.toLp 2 (x : V i × Vt i), x.2⟩
+      map_add' _ _ := rfl
+      map_smul' _ _ := rfl
+      left_inv _ := rfl
+      right_inv _ := rfl } <|
+    Submodule.ext fun x => ⟨by rintro ⟨y, hy, rfl⟩; exact hy.1, fun h =>
+      ⟨⟨WithLp.toLp 2 (x : V i × Vt i), x.2⟩, ⟨h, x.2⟩, rfl⟩⟩
 
 omit [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)] in
 variable {F} in
@@ -379,70 +305,40 @@ include hΔ
 
 /-- With `Δ` closed, `t - P_{(Δⁱ)ᗮ} t ∈ Δⁱ ∩ Γⁱ`. -/
 theorem sub_starProjection_mem_ΔL {i : ι} (t : WithLp 2 (V i × Vt i)) :
-    t - (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΔL E F i := by
-  have := Submodule.sub_starProjection_mem_orthogonal (K := (D.ΔL E F i)ᗮ) t
-  rwa [Submodule.orthogonal_orthogonal_eq_closure,
-    IsClosed.submodule_topologicalClosure_eq (D.isClosed_ΔL E hΔ i)] at this
+    t - (D.ΔL E F i)ᗮ.starProjection t ∈ D.ΔL E F i :=
+  HilbertComplex.Subquotient.sub_starProjection_mem_Δ (Q := D.subquotient E F)
+    (D.isClosed_ΔL E hΔ) t
 
-theorem toDerived_surjective (i : ι) : Function.Surjective (D.toDerived E F i) := by
-  intro q
-  obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
-  set x' : WithLp 2 (V i × Vt i) := WithLp.toLp 2 (x : V i × Vt i)
-  have hx' : x' ∈ D.ΓL E i := x.2
-  refine ⟨⟨(D.ΔL E F i)ᗮ.starProjection x', D.starProjection_mem_ΓL E F hx',
-    Submodule.starProjection_apply_mem _ _⟩, ?_⟩
-  rw [toDerived_apply, Submodule.Quotient.eq]
-  have h := neg_mem (D.sub_starProjection_mem_ΔL E hΔ x').1
-  rw [← map_neg, neg_sub] at h
-  exact h
-
-/-- `Υⁱ ≃ Γⁱ / Δⁱ` for closed `Δ`. -/
-def derivedSpaceEquiv (i : ι) : D.derivedSpace E F i ≃ₗ[𝕜] D.derivedQuot E F i :=
-  LinearEquiv.ofBijective _ ⟨D.toDerived_injective E F i, D.toDerived_surjective E hΔ i⟩
-
-theorem toDerived_derivedD (i j : ι) (y : D.derivedSpace E F i) :
-    D.toDerived E F j (D.derivedD E F i j y) =
-      Submodule.Quotient.mk ⟨D.twist i j (y : WithLp 2 (V i × Vt i)).ofLp,
-        D.twist_mem_Γ E i j y.2.1⟩ := by
-  rw [toDerived_apply, Submodule.Quotient.eq]
-  have h := neg_mem (D.sub_starProjection_mem_ΔL E hΔ (D.twistL i j y)).1
-  rw [← map_neg, neg_sub] at h
-  exact h
-
-/-- **The derived Hilbert complex is the derived complex** `Γ E / Δ F` when `Δ F` is closed. -/
-def derivedComplexIso : (D.derivedComplex E F).toModuleCat ≅ D.derived E F :=
-  HilbertComplex.toModuleCatIso (D.derivedComplex E F) (D.derived E F)
-    (fun i => (LinearEquiv.ofTop _ rfl).trans (D.derivedSpaceEquiv E hΔ i))
-    fun i j y => D.toDerived_derivedD E hΔ i j y
-
-/-- The cohomology of the derived Hilbert complex is the homology of `derived E F`. -/
-def derivedComplexCohomologyEquivDerived (i : ι) :
-    (D.derivedComplex E F).cohomology i ≃ₗ[𝕜] (D.derived E F).homology i :=
-  HilbertComplex.cohomologyEquivOfIso (D.derivedComplexIso E hΔ) i
-
-theorem toDerivedQuotL_surjective (i : ι) : Function.Surjective (D.toDerivedQuotL E F i) := by
-  intro q
-  obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ q
-  refine ⟨⟨(D.ΔL E F i)ᗮ.starProjection x, D.starProjection_mem_ΓL E F x.2,
-    Submodule.starProjection_apply_mem _ _⟩, ?_⟩
-  rw [toDerivedQuotL_apply, Submodule.Quotient.eq]
-  have h := neg_mem (D.sub_starProjection_mem_ΔL E hΔ (x : WithLp 2 (V i × Vt i)))
-  rw [neg_sub] at h
-  exact h
+theorem toDerivedQuotL_surjective (i : ι) : Function.Surjective (D.toDerivedQuotL E F i) :=
+  HilbertComplex.Subquotient.toQuot_surjective (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) i
 
 /-- **`Γⁱ / Δⁱ` with the quotient norm is isometric to the Hilbert space `Υⁱ`** when `Δ` is
-closed: the quotient norm is a Hilbert norm. -/
+closed: the quotient norm is a Hilbert norm (`HilbertComplex.Subquotient.toQuotEquiv`).
+[ArnoldHu2021], Theorem 6 -/
 def derivedQuotLEquiv (i : ι) : D.derivedSpace E F i ≃ₗᵢ[𝕜] D.derivedQuotL E F i :=
-  LinearIsometryEquiv.ofSurjective _ (D.toDerivedQuotL_surjective E hΔ i)
+  HilbertComplex.Subquotient.toQuotEquiv (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) i
 
 /-- **The isometry intertwines the differentials**: `[·]` carries the compressed differentials of
 `Υ` to the bounded differentials of `Γ / Δ`. -/
 theorem derivedQuotD_toDerivedQuotL (i j : ι) (y : D.derivedSpace E F i) :
     D.derivedQuotD E F i j (D.toDerivedQuotL E F i y) =
-      D.toDerivedQuotL E F j (D.derivedD E F i j y) := by
-  rw [toDerivedQuotL_apply, derivedQuotD_mk, toDerivedQuotL_apply, Submodule.Quotient.eq]
-  have := D.twistL_sub_derivedD_mem E F i j y
-  rwa [IsClosed.submodule_topologicalClosure_eq (D.isClosed_ΔL E hΔ j)] at this
+      D.toDerivedQuotL E F j (D.derivedD E F i j y) :=
+  HilbertComplex.Subquotient.quotD_toQuot (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) i j y
+
+/-- **The derived Hilbert complex is the derived complex** `Γ E / Δ F` when `Δ F` is closed
+(`HilbertComplex.Subquotient.complexIso`). -/
+def derivedComplexIso : (D.derivedComplex E F).toModuleCat ≅ D.derived E F :=
+  HilbertComplex.Subquotient.complexIso (Q := D.subquotient E F) (D.isClosed_ΔL E hΔ) ≪≫
+    HomologicalComplex.Hom.isoOfComponents (fun i => (D.derivedQuotLEquivDerived E F i).toModuleIso)
+      fun _ _ _ => by
+        ext x
+        obtain ⟨x, rfl⟩ := Submodule.Quotient.mk_surjective _ x
+        rfl
+
+/-- The cohomology of the derived Hilbert complex is the homology of `derived E F`. -/
+def derivedComplexCohomologyEquivDerived (i : ι) :
+    (D.derivedComplex E F).cohomology i ≃ₗ[𝕜] (D.derived E F).homology i :=
+  HilbertComplex.cohomologyEquivOfIso (D.derivedComplexIso E hΔ) i
 
 variable {E} (h : D.Eliminates E F)
 include h
@@ -511,7 +407,7 @@ theorem isClosed_Δ_sup_map_twist :
       let u : D.derivedSpace E F (c.prev i) :=
         ⟨(D.ΔL E F (c.prev i))ᗮ.starProjection y', D.starProjection_mem_ΓL E F hy,
           Submodule.starProjection_apply_mem _ _⟩
-      refine ⟨D.derivedD E F (c.prev i) i u, ⟨⟨u, Submodule.mem_top⟩, rfl⟩, ?_⟩
+      refine ⟨D.derivedD E F (c.prev i) i u, ⟨⟨u, trivial⟩, rfl⟩, ?_⟩
       have h1 : P (toL δ) = 0 := hP0 _ ⟨hδ, h.Δ_le_Γ i hδ⟩
       have h2 : P (D.twistL (c.prev i) i (y' - u)) = 0 :=
         hP0 _ (D.twistL_mem_ΔL E F _ i (D.sub_starProjection_mem_ΔL E hΔ y'))

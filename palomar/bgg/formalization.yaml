@@ -142,7 +142,9 @@ status:
     quotient norm of the l2 norm of V^i x V~^i, y -> [y] is an isometry from the orthogonal model
     onto Gamma^i / Delta^i when Delta is closed, intertwining the differentials with the bounded
     differentials [x] -> [T x] of the quotient (Feec.BGG.BoundedData.toDerivedQuotL,
-    norm_toDerivedQuotLinear, derivedQuotLEquiv, derivedQuotD, derivedQuotD_toDerivedQuotL;
+    derivedQuotLEquiv, derivedQuotD, derivedQuotD_toDerivedQuotL, instances of the same facts for
+    every subquotient Gamma / Delta of a complex of bounded operators,
+    Feec.HilbertComplex.Subquotient.norm_toQuot, toQuotEquiv, quotD_toQuot, complexIso;
     fields quotient_surjective and quotient_d of Feec.BGG.HilbertData.DerivedVerdict); the
     explicit cochain retraction Pi : T -> Gamma of the inclusion ((67) in the subquotient model,
     Feec.BGG.Data.bggProj, Γι_bggProj, quasiIso_bggProj) and Theorem 7 and Corollary 1 for every

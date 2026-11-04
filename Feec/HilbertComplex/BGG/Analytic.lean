@@ -221,12 +221,6 @@ def subquotient : HilbertComplex.Subquotient 𝕜 c fun i => WithLp 2 (V i × Vt
   d_mem_Γ := D.twistL_mem_ΓL E
   d_mem_Δ := D.twistL_mem_ΔL E F
 
-/-- The twisted differential maps the closure of `Δ ∩ Γ` into itself. -/
-theorem twistL_mem_closure_ΔL (i j : ι) {x : WithLp 2 (V i × Vt i)}
-    (hx : x ∈ (D.ΔL E F i).topologicalClosure) :
-    D.twistL i j x ∈ (D.ΔL E F j).topologicalClosure :=
-  (D.subquotient E F).d_mem_closure_Δ i j hx
-
 /-! ### The derived complex as a Hilbert complex -/
 
 variable [∀ i, CompleteSpace (V i)] [∀ i, CompleteSpace (Vt i)]

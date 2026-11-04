@@ -364,64 +364,26 @@ theorem twistπL_mem_ΔL (h : κ) {i : ι} {x : WithLp 2 (V i × Vt i)} (hx : x 
     G.twistπL h i x ∈ D.ΔL E F i :=
   ⟨G.twistπ_mem_Δ F h hx.1, G.twistπ_mem_Γ E h hx.2⟩
 
-/-- `πₕ × π̃ₕ` maps the closure of the exact part into itself. -/
-theorem twistπL_mem_closure_ΔL (h : κ) {i : ι} {x : WithLp 2 (V i × Vt i)}
-    (hx : x ∈ (D.ΔL E F i).topologicalClosure) :
-    G.twistπL h i x ∈ (D.ΔL E F i).topologicalClosure :=
-  Submodule.topologicalClosure_minimal (s := D.ΔL E F i)
-    (t := (D.ΔL E F i).topologicalClosure.comap (G.twistπL h i).toLinearMap)
-    (fun _ hy => (D.ΔL E F i).le_topologicalClosure (G.twistπL_mem_ΔL E F h hy))
-    ((Submodule.isClosed_topologicalClosure _).preimage (G.twistπL h i).continuous) hx
-
 /-! #### The derived subcomplex -/
 
-omit G in
-/-- `P_{(Δⁱ)ᗮ}` identifies points that differ by the closure of `Δⁱ`. -/
-theorem starProjection_eq_of_sub_mem {i : ι} {u w : WithLp 2 (V i × Vt i)}
-    (h : u - w ∈ (D.ΔL E F i).topologicalClosure) :
-    (D.ΔL E F i)ᗮ.starProjection u = (D.ΔL E F i)ᗮ.starProjection w := by
-  rw [← sub_eq_zero, ← map_sub, Submodule.starProjection_apply_eq_zero_iff,
-    Submodule.orthogonal_orthogonal_eq_closure]
-  exact h
-
-omit G in
-theorem sub_starProjection_mem_closure {i : ι} (u : WithLp 2 (V i × Vt i)) :
-    u - (D.ΔL E F i)ᗮ.starProjection u ∈ (D.ΔL E F i).topologicalClosure := by
-  rw [← Submodule.orthogonal_orthogonal_eq_closure]
-  exact Submodule.sub_starProjection_mem_orthogonal _
-
-theorem starProjection_twistπL_starProjection (h : κ) {i : ι} (u : WithLp 2 (V i × Vt i)) :
-    (D.ΔL E F i)ᗮ.starProjection (G.twistπL h i ((D.ΔL E F i)ᗮ.starProjection u)) =
-      (D.ΔL E F i)ᗮ.starProjection (G.twistπL h i u) := by
-  refine starProjection_eq_of_sub_mem E F ?_
-  rw [← map_sub, ← neg_sub, map_neg, neg_mem_iff]
-  exact G.twistπL_mem_closure_ΔL E F h (sub_starProjection_mem_closure E F u)
-
-/-- **The derived cochain projection** `y ↦ P_{(Δⁱ)ᗮ} (πₕ × π̃ₕ) y` on `Υⁱ = Γⁱ ⊖ Δⁱ`. -/
+/-- **The derived cochain projection** `y ↦ P_{(Δⁱ)ᗮ} (πₕ × π̃ₕ) y` on `Υⁱ = Γⁱ ⊖ Δⁱ`, the
+compression of `πₕ × π̃ₕ` (`HilbertComplex.Subquotient.compress`). -/
 def derivedπ (h : κ) (i : ι) : D.derivedSpace E F i →L[𝕜] D.derivedSpace E F i :=
-  ((D.ΔL E F i)ᗮ.starProjection ∘L G.twistπL h i ∘L (D.derivedSpace E F i).subtypeL).codRestrict
-    (D.derivedSpace E F i) fun y =>
-      ⟨D.starProjection_mem_ΓL E F (G.twistπL_mem_ΓL E h y.2.1),
-        Submodule.starProjection_apply_mem _ _⟩
+  (D.subquotient E F).compress (G.twistπL h i) (G.twistπL_mem_ΓL E h)
 
 theorem coe_derivedπ (h : κ) (i : ι) (y : D.derivedSpace E F i) :
     (G.derivedπ E F h i y : WithLp 2 (V i × Vt i)) =
       (D.ΔL E F i)ᗮ.starProjection (G.twistπL h i y) := rfl
 
 theorem derivedπ_derivedπ (h : κ) (i : ι) (y : D.derivedSpace E F i) :
-    G.derivedπ E F h i (G.derivedπ E F h i y) = G.derivedπ E F h i y := by
-  ext : 1
-  rw [coe_derivedπ, coe_derivedπ, G.starProjection_twistπL_starProjection, G.twistπL_twistπL]
+    G.derivedπ E F h i (G.derivedπ E F h i y) = G.derivedπ E F h i y :=
+  Subtype.ext <| ((D.subquotient E F).coe_compress_compress _ _ (G.twistπL_mem_ΔL E F h) y).trans
+    (congrArg _ (G.twistπL_twistπL h i y))
 
 /-- **The derived projection commutes with the derived differential.** -/
 theorem derivedD_derivedπ (h : κ) (i j : ι) (y : D.derivedSpace E F i) :
-    D.derivedD E F i j (G.derivedπ E F h i y) = G.derivedπ E F h j (D.derivedD E F i j y) := by
-  ext : 1
-  rw [coe_derivedD, coe_derivedπ, coe_derivedπ, coe_derivedD,
-    G.starProjection_twistπL_starProjection, ← G.twistL_twistπL]
-  refine starProjection_eq_of_sub_mem E F ?_
-  rw [← map_sub, ← neg_sub, map_neg, neg_mem_iff]
-  exact D.twistL_mem_closure_ΔL E F i j (sub_starProjection_mem_closure E F _)
+    D.derivedD E F i j (G.derivedπ E F h i y) = G.derivedπ E F h j (D.derivedD E F i j y) :=
+  (D.subquotient E F).spaceD_compress _ _ (G.twistπL_mem_ΔL E F h) (G.twistL_twistπL h i j) y
 
 /-- The discrete twisted space `Vₕⁱ × Ṽₕⁱ ⊆ Vⁱ ⊕ Ṽⁱ`. -/
 def twistV (h : κ) (i : ι) : Submodule 𝕜 (WithLp 2 (V i × Vt i)) :=
@@ -457,7 +419,9 @@ theorem mem_derivedSubcomplex_iff (h : κ) {i : ι} {y : D.derivedSpace E F i} :
   · rintro ⟨x, ⟨-, hx⟩, hy⟩
     refine ⟨y, Subtype.ext ?_⟩
     change (G.derivedπ E F h i y : WithLp 2 (V i × Vt i)) = y
-    rw [coe_derivedπ, hy, G.starProjection_twistπL_starProjection, G.twistπL_of_mem_twistV h hx]
+    rw [coe_derivedπ, hy]
+    exact ((D.subquotient E F).starProjection_map_starProjection (G.twistπL_mem_ΔL E F h) x).trans
+      (congrArg _ (G.twistπL_of_mem_twistV h hx))
 
 instance (h : κ) (i : ι) : FiniteDimensional 𝕜 ((G.derivedSubcomplex E F h).V i) := by
   have : FiniteDimensional 𝕜 (((G.twistV h i).map

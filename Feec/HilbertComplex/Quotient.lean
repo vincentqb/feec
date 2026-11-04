@@ -11,29 +11,34 @@ with `Γ` closed. Its quotient `Γ / Δ`, with the quotient norm and the differe
 `[x] ↦ [d x]` (`Subquotient.quotD`), is realized as the Hilbert complex
 (`Subquotient.complex`) of the orthogonal complements `Γⁱ ⊖ Δⁱ = Γⁱ ∩ (Δⁱ)ᗮ`
 (`Subquotient.space`) with the compressed differentials `y ↦ P_{(Δʲ)ᗮ} (d y)`
-(`Subquotient.spaceD`); it exists for every `Δ`, and `d d = 0` holds on it since `d` maps the
-closure of `Δ` into itself. The quotient norm of `Γⁱ / Δⁱ` is the norm of `Γⁱ ⊖ Δⁱ`: `y ↦ [y]` is
-an isometry (`Subquotient.toQuot`); when `Δ` is closed it is onto (`Subquotient.toQuotEquiv`), so
-the quotient norm is a Hilbert norm, and it carries the compressed differentials to those of the
-quotient (`Subquotient.quotD_toQuot`): `Γ / Δ` with the quotient norm is, as a complex, the
-Hilbert complex `Subquotient.complex`, with the same cohomology (`Subquotient.cohomologyEquiv`).
+(`Subquotient.spaceD`); it exists for every `Δ`, and `d d = 0` holds on it since compressions of
+maps keeping `Δ` compose (`Subquotient.coe_compress_compress`). The quotient norm of `Γⁱ / Δⁱ` is
+the norm of `Γⁱ ⊖ Δⁱ`: `y ↦ [y]` is an isometry (`Subquotient.toQuot`); when `Δ` is closed it is
+onto (`Subquotient.toQuotEquiv`), so the quotient norm is a Hilbert norm, and it carries the
+compressed differentials to those of the quotient (`Subquotient.quotD_toQuot`): `Γ / Δ` with the
+quotient norm is, as a complex, the Hilbert complex `Subquotient.complex`, with the same cohomology
+(`Subquotient.cohomologyEquiv`).
 
-Every bounded Hilbert complex is of this form, and so is every domain complex of a Hilbert complex
-(`Feec.HilbertComplex.domainComplex`, the graph norms). For the output complex of the BGG
-construction (`Feec.BGG.BoundedData.derivedComplex`) this is the Hilbert-space structure of
-[ArnoldHu2021], Theorem 6.
+The same compression `y ↦ P_{(Δʲ)ᗮ} (f y)` (`Subquotient.compress`) carries a bounded map keeping
+`Γ` and `Δ` and commuting with `d`, e.g. a cochain projection, to one commuting with the
+compressed differentials (`Subquotient.spaceD_compress`). For the output complex of the
+BGG construction (`Feec.BGG.BoundedData.derivedComplex`) this is the Hilbert-space structure of
+[ArnoldHu2021], Theorem 6, whose argument is the one given here for every subquotient.
 
 ## Main definitions
 
 * `Feec.HilbertComplex.Subquotient 𝕜 c W`: bounded differentials and subcomplexes `Δ ≤ Γ`,
   `Γ` closed.
-* `Subquotient.space`, `Subquotient.spaceD`, `Subquotient.complex`: `Γ ⊖ Δ` as a Hilbert complex.
+* `Subquotient.space`, `Subquotient.spaceD`, `Subquotient.complex`: `Γ ⊖ Δ` as a Hilbert complex;
+  `Subquotient.compress`: the compression `y ↦ P_{(Δʲ)ᗮ} (f y)` of a bounded map keeping `Γ`.
 * `Subquotient.QuotSpace i = Γⁱ / Δⁱ` with the quotient norm, `Subquotient.quotD`: its bounded
   differentials; `Subquotient.quotModuleCat`: `Γ / Δ` as a complex of modules.
 * `Subquotient.toQuot : Γⁱ ⊖ Δⁱ →ₗᵢ Γⁱ / Δⁱ`, `y ↦ [y]`.
 
 ## Main results
 
+* `Subquotient.coe_compress_compress`, `Subquotient.spaceD_compress`: compressions of maps keeping
+  `Δ` compose; those of maps commuting with `d` commute with the compressed differentials.
 * `Subquotient.norm_toQuot`: **the quotient norm is the norm of `Γ ⊖ Δ`**, `‖[y]‖ = ‖y‖`.
 * `Subquotient.toQuotEquiv`, `Subquotient.quotD_toQuot`: for closed `Δ`, `Γ ⊖ Δ ≃ Γ / Δ`
   isometrically, intertwining the differentials.
@@ -43,7 +48,7 @@ construction (`Feec.BGG.BoundedData.derivedComplex`) this is the Hilbert-space s
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, Theorem 6 (the output
-  complex of bounded Hilbert complexes is a Hilbert complex)
+  complex of bounded Hilbert complexes is a Hilbert complex with the quotient norm)
 * [J. Brüning, M. Lesch, *Hilbert complexes*][BruningLesch1992] (Hilbert complexes)
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -80,13 +85,13 @@ namespace Subquotient
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} {c : ComplexShape ι} {W : ι → Type u}
   [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] (Q : Subquotient 𝕜 c W)
 
-/-- `d` maps the closure of `Δ` into itself. -/
-theorem d_mem_closure_Δ (i j : ι) {x : W i} (hx : x ∈ (Q.Δ i).topologicalClosure) :
-    Q.d i j x ∈ (Q.Δ j).topologicalClosure :=
+/-- A bounded map keeping `Δ` keeps its closure. -/
+theorem map_mem_closure_Δ {i j : ι} {f : W i →L[𝕜] W j} (hf : ∀ {x}, x ∈ Q.Δ i → f x ∈ Q.Δ j)
+    {x : W i} (hx : x ∈ (Q.Δ i).topologicalClosure) : f x ∈ (Q.Δ j).topologicalClosure :=
   Submodule.topologicalClosure_minimal (s := Q.Δ i)
-    (t := (Q.Δ j).topologicalClosure.comap (Q.d i j).toLinearMap)
-    (fun _ hy => (Q.Δ j).le_topologicalClosure (Q.d_mem_Δ i j hy))
-    ((Submodule.isClosed_topologicalClosure _).preimage (Q.d i j).continuous) hx
+    (t := (Q.Δ j).topologicalClosure.comap f.toLinearMap)
+    (fun _ hy => (Q.Δ j).le_topologicalClosure (hf hy))
+    ((Submodule.isClosed_topologicalClosure _).preimage f.continuous) hx
 
 /-! ### The Hilbert complex `Γ ⊖ Δ` -/
 
@@ -100,7 +105,7 @@ when `Δ` is closed, `toQuotEquiv`). -/
 abbrev QuotSpace (i : ι) : Type _ := Q.Γ i ⧸ (Q.Δ i).comap (Q.Γ i).subtype
 
 /-- **`Γⁱ ⊖ Δⁱ → Γⁱ / Δⁱ`, `y ↦ [y]`, is an isometry** for the quotient norm: `‖y‖ ≤ ‖y - δ‖`
-for `y ⊥ Δ ∋ δ`. [ArnoldHu2021], Theorem 6 -/
+for `y ⊥ Δ ∋ δ`. The argument of [ArnoldHu2021], Theorem 6 -/
 def toQuot (i : ι) : Q.space i →ₗᵢ[𝕜] Q.QuotSpace i where
   toLinearMap := ((Q.Δ i).comap (Q.Γ i).subtype).mkQ ∘ₗ
     LinearMap.codRestrict (Q.Γ i) (Q.space i).subtype fun y => y.2.1
@@ -119,7 +124,7 @@ def toQuot (i : ι) : Q.space i →ₗᵢ[𝕜] Q.QuotSpace i where
     exact this.trans_lt hlt
 
 /-- **The quotient norm of `Γⁱ / Δⁱ` is the norm of `Γⁱ ⊖ Δⁱ`**: `‖[y]‖ = ‖y‖`.
-[ArnoldHu2021], Theorem 6 -/
+The argument of [ArnoldHu2021], Theorem 6 -/
 theorem norm_toQuot {i : ι} (y : Q.space i) : ‖Q.toQuot i y‖ = ‖y‖ := (Q.toQuot i).norm_map y
 
 theorem toQuot_apply (i : ι) (y : Q.space i) :
@@ -164,34 +169,71 @@ theorem starProjection_mem_Γ {i : ι} {x : W i} (hx : x ∈ Q.Γ i) :
     exact Submodule.topologicalClosure_minimal _ (Q.Δ_le_Γ i) (Q.isClosed_Γ i) this
   simpa using sub_mem hx hr
 
+/-- `P_{(Δⁱ)ᗮ}` identifies points that differ by the closure of `Δⁱ`. -/
+theorem starProjection_eq_of_sub_mem {i : ι} {u w : W i}
+    (h : u - w ∈ (Q.Δ i).topologicalClosure) :
+    (Q.Δ i)ᗮ.starProjection u = (Q.Δ i)ᗮ.starProjection w := by
+  rw [← sub_eq_zero, ← map_sub, Submodule.starProjection_apply_eq_zero_iff,
+    Submodule.orthogonal_orthogonal_eq_closure]
+  exact h
+
+theorem sub_starProjection_mem_closure {i : ι} (u : W i) :
+    u - (Q.Δ i)ᗮ.starProjection u ∈ (Q.Δ i).topologicalClosure := by
+  rw [← Submodule.orthogonal_orthogonal_eq_closure]
+  exact Submodule.sub_starProjection_mem_orthogonal _
+
+/-- For `f` keeping `Δ`, `P_{(Δʲ)ᗮ} (f (P_{(Δⁱ)ᗮ} u)) = P_{(Δʲ)ᗮ} (f u)`. -/
+theorem starProjection_map_starProjection {i j : ι} {f : W i →L[𝕜] W j}
+    (hf : ∀ {x}, x ∈ Q.Δ i → f x ∈ Q.Δ j) (u : W i) :
+    (Q.Δ j)ᗮ.starProjection (f ((Q.Δ i)ᗮ.starProjection u)) = (Q.Δ j)ᗮ.starProjection (f u) := by
+  refine Q.starProjection_eq_of_sub_mem ?_
+  rw [← map_sub, ← neg_sub, map_neg, neg_mem_iff]
+  exact Q.map_mem_closure_Δ hf (Q.sub_starProjection_mem_closure u)
+
+/-- **The compression** `y ↦ P_{(Δʲ)ᗮ} (f y)` to `Γ ⊖ Δ` of a bounded map `f` keeping `Γ`. -/
+def compress {i j : ι} (f : W i →L[𝕜] W j) (hf : ∀ {x}, x ∈ Q.Γ i → f x ∈ Q.Γ j) :
+    Q.space i →L[𝕜] Q.space j :=
+  ((Q.Δ j)ᗮ.starProjection ∘L f ∘L (Q.space i).subtypeL).codRestrict (Q.space j) fun y =>
+    ⟨Q.starProjection_mem_Γ (hf y.2.1), Submodule.starProjection_apply_mem _ _⟩
+
+theorem coe_compress {i j : ι} (f : W i →L[𝕜] W j) (hf : ∀ {x}, x ∈ Q.Γ i → f x ∈ Q.Γ j)
+    (y : Q.space i) : (Q.compress f hf y : W j) = (Q.Δ j)ᗮ.starProjection (f y) := rfl
+
+/-- **Compressions compose** when the second map keeps `Δ`:
+`P_{(Δᵏ)ᗮ} (g (P_{(Δʲ)ᗮ} (f y))) = P_{(Δᵏ)ᗮ} (g (f y))`. -/
+theorem coe_compress_compress {i j k : ι} {f : W i →L[𝕜] W j} {g : W j →L[𝕜] W k}
+    (hf : ∀ {x}, x ∈ Q.Γ i → f x ∈ Q.Γ j) (hg : ∀ {x}, x ∈ Q.Γ j → g x ∈ Q.Γ k)
+    (hgΔ : ∀ {x}, x ∈ Q.Δ j → g x ∈ Q.Δ k) (y : Q.space i) :
+    (Q.compress g hg (Q.compress f hf y) : W k) = (Q.Δ k)ᗮ.starProjection (g (f y)) :=
+  Q.starProjection_map_starProjection hgΔ (f y)
+
 /-- **The compressed differentials** `y ↦ P_{(Δʲ)ᗮ} (d y)` of `Γ ⊖ Δ`. -/
-def spaceD (i j : ι) : Q.space i →L[𝕜] Q.space j :=
-  ((Q.Δ j)ᗮ.starProjection ∘L Q.d i j ∘L (Q.space i).subtypeL).codRestrict (Q.space j) fun y =>
-    ⟨Q.starProjection_mem_Γ (Q.d_mem_Γ i j y.2.1), Submodule.starProjection_apply_mem _ _⟩
+def spaceD (i j : ι) : Q.space i →L[𝕜] Q.space j := Q.compress (Q.d i j) (Q.d_mem_Γ i j)
 
 theorem coe_spaceD (i j : ι) (y : Q.space i) :
     (Q.spaceD i j y : W j) = (Q.Δ j)ᗮ.starProjection (Q.d i j y) := rfl
-
-/-- `d y - P_{(Δʲ)ᗮ} (d y)` lies in the closure of `Δʲ`. -/
-theorem d_sub_spaceD_mem (i j : ι) (y : Q.space i) :
-    Q.d i j y - Q.spaceD i j y ∈ (Q.Δ j).topologicalClosure := by
-  rw [coe_spaceD, ← Submodule.orthogonal_orthogonal_eq_closure]
-  exact Submodule.sub_starProjection_mem_orthogonal _
 
 theorem spaceD_eq_zero {i j : ι} (h : ¬ c.Rel i j) : Q.spaceD i j = 0 := by
   ext y : 2
   rw [coe_spaceD, Q.shape i j h]
   simp
 
+/-- **Compressions of maps commuting with `d` commute with the compressed differentials.** -/
+theorem spaceD_compress {i j : ι} {f : W i →L[𝕜] W i} {g : W j →L[𝕜] W j}
+    (hf : ∀ {x}, x ∈ Q.Γ i → f x ∈ Q.Γ i) (hg : ∀ {x}, x ∈ Q.Γ j → g x ∈ Q.Γ j)
+    (hgΔ : ∀ {x}, x ∈ Q.Δ j → g x ∈ Q.Δ j) (hfg : ∀ x, Q.d i j (f x) = g (Q.d i j x))
+    (y : Q.space i) : Q.spaceD i j (Q.compress f hf y) = Q.compress g hg (Q.spaceD i j y) :=
+  Subtype.ext <| (Q.coe_compress_compress hf (Q.d_mem_Γ i j) (Q.d_mem_Δ i j) y).trans <|
+    (congrArg _ (hfg y)).trans (Q.coe_compress_compress (Q.d_mem_Γ i j) hg hgΔ y).symm
+
 theorem spaceD_spaceD (i j k : ι) (y : Q.space i) : Q.spaceD j k (Q.spaceD i j y) = 0 := by
-  ext : 1
-  rw [coe_spaceD, Submodule.coe_zero, Submodule.starProjection_apply_eq_zero_iff,
-    Submodule.orthogonal_orthogonal_eq_closure]
-  have h := Q.d_mem_closure_Δ j k (Q.d_sub_spaceD_mem i j y)
-  rwa [map_sub, Q.d_comp_d, zero_sub, neg_mem_iff] at h
+  refine Subtype.ext ((Q.coe_compress_compress (Q.d_mem_Γ i j) (Q.d_mem_Γ j k) (Q.d_mem_Δ j k)
+    y).trans ?_)
+  rw [Q.d_comp_d, map_zero]
+  rfl
 
 /-- **`Γ ⊖ Δ` as a Hilbert complex**: the spaces `Γⁱ ∩ (Δⁱ)ᗮ` with the bounded compressed
-differentials `y ↦ P_{(Δʲ)ᗮ} (d y)`. [ArnoldHu2021], Theorem 6 -/
+differentials `y ↦ P_{(Δʲ)ᗮ} (d y)`. The argument of [ArnoldHu2021], Theorem 6 -/
 def complex : HilbertComplex 𝕜 c fun i => Q.space i :=
   ofBounded Q.spaceD (fun _ _ h => Q.spaceD_eq_zero h) Q.spaceD_spaceD
 
@@ -202,9 +244,8 @@ include hΔ
 
 /-- With `Δ` closed, `x - P_{(Δⁱ)ᗮ} x ∈ Δⁱ`. -/
 theorem sub_starProjection_mem_Δ {i : ι} (x : W i) : x - (Q.Δ i)ᗮ.starProjection x ∈ Q.Δ i := by
-  have := Submodule.sub_starProjection_mem_orthogonal (K := (Q.Δ i)ᗮ) x
-  rwa [Submodule.orthogonal_orthogonal_eq_closure,
-    IsClosed.submodule_topologicalClosure_eq (hΔ i)] at this
+  have := Q.sub_starProjection_mem_closure x
+  rwa [IsClosed.submodule_topologicalClosure_eq (hΔ i)] at this
 
 theorem toQuot_surjective (i : ι) : Function.Surjective (Q.toQuot i) := by
   intro q
@@ -217,7 +258,7 @@ theorem toQuot_surjective (i : ι) : Function.Surjective (Q.toQuot i) := by
   exact h
 
 /-- **`Γⁱ / Δⁱ` with the quotient norm is isometric to the Hilbert space `Γⁱ ⊖ Δⁱ`** when `Δ` is
-closed: the quotient norm is a Hilbert norm. [ArnoldHu2021], Theorem 6 -/
+closed: the quotient norm is a Hilbert norm. The argument of [ArnoldHu2021], Theorem 6 -/
 def toQuotEquiv (i : ι) : Q.space i ≃ₗᵢ[𝕜] Q.QuotSpace i :=
   LinearIsometryEquiv.ofSurjective _ (toQuot_surjective hΔ i)
 
@@ -229,11 +270,10 @@ def toQuotEquiv (i : ι) : Q.space i ≃ₗᵢ[𝕜] Q.QuotSpace i :=
 theorem quotD_toQuot (i j : ι) (y : Q.space i) :
     Q.quotD i j (Q.toQuot i y) = Q.toQuot j (Q.spaceD i j y) := by
   rw [toQuot_apply, quotD_mk, toQuot_apply, Submodule.Quotient.eq]
-  have := Q.d_sub_spaceD_mem i j y
-  rwa [IsClosed.submodule_topologicalClosure_eq (hΔ j)] at this
+  exact sub_starProjection_mem_Δ hΔ _
 
 /-- **The Hilbert complex `Γ ⊖ Δ` is the quotient complex `Γ / Δ`** when `Δ` is closed.
-[ArnoldHu2021], Theorem 6 -/
+The argument of [ArnoldHu2021], Theorem 6 -/
 def complexIso : Q.complex.toModuleCat ≅ Q.quotModuleCat :=
   toModuleCatIso Q.complex Q.quotModuleCat
     (fun i => (LinearEquiv.ofTop _ rfl).trans (toQuotEquiv hΔ i).toLinearEquiv)

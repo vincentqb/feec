@@ -105,17 +105,11 @@ homogeneous Dirichlet data: `(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - 
 off `G` taken to be `0`. -/
 def fdLaplacian {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ) :
     (G → ℝ) →L[ℝ] (G → ℝ) :=
-  LinearMap.toContinuousLinearMap
-    { toFun := fun U p => ∑ i, ((if hq : (p : ι → ℤ) + Pi.single i 1 ∈ G then U ⟨_, hq⟩ else 0) -
-        2 * U p + (if hq : (p : ι → ℤ) - Pi.single i 1 ∈ G then U ⟨_, hq⟩ else 0)) / h ^ 2
-      map_add' := fun U V => funext fun p => by
-        simp only [Pi.add_apply, ← Finset.sum_add_distrib]
-        refine Finset.sum_congr rfl fun i _ => ?_
-        split_ifs <;> ring
-      map_smul' := fun c U => funext fun p => by
-        simp only [Pi.smul_apply, smul_eq_mul, RingHom.id_apply, Finset.mul_sum]
-        refine Finset.sum_congr rfl fun i _ => ?_
-        split_ifs <;> ring }
+  LinearMap.toContinuousLinearMap <| LinearMap.pi fun p : G => ∑ i, (h ^ 2)⁻¹ •
+    ((if hq : (p : ι → ℤ) + Pi.single i 1 ∈ G then LinearMap.proj (R := ℝ) (φ := fun _ : G => ℝ)
+        ⟨_, hq⟩ else 0) - (2 : ℝ) • LinearMap.proj (R := ℝ) (φ := fun _ : G => ℝ) p +
+      (if hq : (p : ι → ℤ) - Pi.single i 1 ∈ G then LinearMap.proj (R := ℝ) (φ := fun _ : G => ℝ)
+        ⟨_, hq⟩ else 0))
 
 /-- The `Nⁿ` interior nodes `q ∈ {1, …, N}ⁿ` of the uniform grid of a cube. -/
 def gridNodes (n N : ℕ) : Finset (Fin n → ℤ) :=

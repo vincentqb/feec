@@ -250,7 +250,12 @@ theorem IsSubMarkovGenerator.toFeec {ι : Type*} [Fintype ι] {L : (ι → ℝ) 
 
 /-- The finite difference Laplacian of the challenge is `FiniteDifference.laplacian`. -/
 theorem fdLaplacian_eq {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ) :
-    fdLaplacian G h = FiniteDifference.laplacian G h :=
-  rfl
+    fdLaplacian G h = FiniteDifference.laplacian G h := by
+  ext U p
+  simp only [fdLaplacian, FiniteDifference.laplacian_apply, FiniteDifference.zeroExt,
+    LinearMap.coe_toContinuousLinearMap', LinearMap.pi_apply, LinearMap.sum_apply,
+    LinearMap.smul_apply, LinearMap.add_apply, LinearMap.sub_apply, smul_eq_mul]
+  refine Finset.sum_congr rfl fun i _ => ?_
+  split_ifs <;> simp <;> ring
 
 end TimeStepping

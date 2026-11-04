@@ -405,7 +405,8 @@ theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q 
     hr.scheme_isAStable (hr.scheme_hasOrder hm) N hτ hk v
   have e := (step_eq (Feec.Models.Cube.FiniteDifferenceHeat.family n s) hτ N hr.scheme).2
   simp only [RCLike.ofReal_real_eq_id, id] at e
-  rw [e] at H
+  rw [e, show Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian s N =
+    fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ)) from (fdLaplacian_eq _ _).symm] at H
   exact H
 
 /-! ### The hypotheses on `r` are met -/

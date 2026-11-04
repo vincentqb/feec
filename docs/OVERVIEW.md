@@ -269,7 +269,11 @@ estimate with no assumed defect
 `μ = sup ‖(1 − iₕ πₕ) r‖` over the unit harmonic forms of Cor 3.11, through the gap bound
 `‖(1 − P_ℌ) iₕ q‖ ≤ (C μ + C_π ‖1 − Jₕ‖) ‖q‖` on `ℌₕ`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_incl_sub_harmonicProj_le`,
-`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic`),
+`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic`; in the
+infimum form `μ inf_v ‖P_𝔅 u − iₕ v‖_V` of Cor 3.11, from the quasi-optimality
+`‖x − iₕ πₕ x‖ ≤ (1 + C C_π) (‖x − iₕ v‖ + ‖𝐝 x − iₕ 𝐝ₕ v‖)` on `D(𝐝)`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_π_le`,
+`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic_inf`),
 convergence for every datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.tendsto_staticError`), and the
 isomorphism on cohomology under the strict gap on `ℌ`

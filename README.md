@@ -45,7 +45,8 @@ stability bound `1 + C'_r √n`) against every classical solution, with constant
 functions with vanishing boundary DOFs (the interior nodal values are a linear isomorphism onto
 it, `Feec.Models.Cube.MaxNormHeat.feEquiv`; `Feec.FiniteElement.P1Global`: stiffness
 `⟪d u_h, d w_h⟫_{L²Λ¹}`, lumped mass `∫ φₓ`), and by the stencil theorem exactly the classical
-finite difference scheme. The errors also hold in `L^∞(Q)` for the finite element function, with
+`(2n + 1)`-point finite difference scheme, with the same iterates and estimates
+(`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat`, field `finiteDifference`). The errors also hold in `L^∞(Q)` for the finite element function, with
 the interpolation term `n² D₂ h² / 2` (`|∂ᵢ∂ₖ u| ≤ D₂`; a `P₁` function attains its extrema at
 the vertices). With natural boundary conditions
 (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`, all nodes) the maximum principle holds

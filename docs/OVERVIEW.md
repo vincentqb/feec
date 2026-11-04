@@ -107,7 +107,9 @@ the companion `Feec.Instances.CrownNonVacuity` (field `maxNorm`). The scheme is 
 lumped-mass Galerkin method on `P̊₁⁻Λ⁰`, the `P₁` (Whitney `0`-form) functions with vanishing
 boundary DOFs (the interior nodal values are a linear isomorphism onto it;
 `Feec.FiniteElement.P1Global`), and the errors hold in `L^∞(Q)` for the finite element function
-(plus `n² D₂ h² / 2`). With natural boundary conditions
+(plus `n² D₂ h² / 2`). The classical `(2n + 1)`-point finite difference scheme is the same scheme
+(`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat`, field `finiteDifference`: its
+Laplacian is the lumped-mass one, so the iterates and the estimates coincide). With natural boundary conditions
 (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum principle holds and the
 errors are `O(h)` (semidiscrete), `O(τ + h)` for backward Euler and
 `O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, in the maximum norm at the

@@ -29,7 +29,9 @@ global `P₁` functions `U_h` with values `U` at the interior nodes (`feFun`) ar
 (`lumpedLaplacian_eq_iff`; for all test functions `V_h ∈ P̊₁⁻Λ⁰`,
 `lumpedLaplacian_eq_iff_globalSpace₀`), with the vertex quadrature `(U, V)_h = Σ m(p) U(p) V(p)`,
 `m(p) = ∫_Q φₚ` (`Feec.FiniteElement.P1Global`). With the stencil theorem it is exactly the
-classical finite difference scheme for the heat equation.
+classical finite difference scheme for the heat equation: `Feec.Models.Cube.FiniteDifferenceHeat`
+states the finite difference Laplacian `FiniteDifference.laplacian` on its own, proves it equal to
+`Lₕ` (`FiniteDifferenceHeat.fdLaplacian_eq`), and reads the results below for it.
 
 The discrete space is `ℝ^{interior nodes}` with the maximum norm (`MaxNormHeat.Space N`). The
 discrete Laplacian `Lₕ = -M_L⁻¹ K` (`MaxNormHeat.lumpedLaplacian`) is defined from the `P₁`

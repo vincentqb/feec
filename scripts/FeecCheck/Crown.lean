@@ -145,7 +145,9 @@ heat verdict of `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the c
 
 The crown gained a last field, `crime`: the FEEC theorem for approximating families with
 variational crimes (`ApproxComplexCrime.feec`, whose fields are, by `type_of%`, the verdicts of
-`approxFEEC_ofComplexCrime`, `dissipFEEC_fullyDiscrete` and `perturbFEEC`) on every conforming
+`approxFEEC_ofComplexCrime`, `dissipFEEC_fullyDiscrete`, `perturbFEEC`, and of the static and heat
+theorems with crimes `ApproxComplexCrime.Family.staticFEEC`, `ApproxComplexCrime.heatFEEC`,
+`ApproxComplexCrime.rate_heat_of_static`) on every conforming
 window, read as the family with zero inner-product and cochain defects
 (`ConformingFamily.windowCrime`, `ConstrainedFEEC.toCrime`). `OldVerdict` states the verdict
 before it verbatim, and `crown_old_verdict` derives it from the new one.
@@ -3779,6 +3781,27 @@ example (hZ : (ApproxFEEC.ofComplexCrimeCore G).Data.topologicalClosure = ⊤)
     (P : (ApproxFEEC.ofComplexCrime G).Perturbation) :
     type_of% (perturbFEEC _ hZ P) :=
   G.feec.perturbed hZ P
+
+example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hP : G.toFamily.IsPoincare cP) :
+    type_of% (G.toFamily.staticFEEC hcr G.l hcP hP) :=
+  G.feec.static hcr hcP hP
+
+example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : G.toFamily.IsPoincare cP)
+    (hconv : ∀ f, Tendsto (fun h => G.toFamily.staticError hcr h f) G.l (𝓝 0)) :
+    type_of% (G.heatFEEC hcr hcP hP hconv) :=
+  G.feec.heat hcr hcP hP hconv
+
+example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : G.toFamily.IsPoincare cP)
+    {Reg : ℝ → Set (PiLp 2 W)} {m : κ → ℝ} (hm : ∀ h, 0 ≤ m h) {α K : ℝ} (hK0 : 0 ≤ K)
+    (hK : ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L → f ∈ Reg L → ∀ h,
+      G.toFamily.staticError hcr h f ≤ K * L * m h ^ α)
+    (hJ : ∀ h, ‖1 - G.toFamily.J h‖ ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L) {T : ℝ}
+    {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
+    (hreg : ∀ t ∈ Icc 0 T, G.toHeat.S t x ∈ H.heatReg Reg L) (h : κ) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    type_of% (G.rate_heat_of_static hcr hcP hP hm hK0 hK hJ hL hx hreg h ht) :=
+  G.feec.heat_rate hcr hcP hP hm hK0 hK hJ hL hx hreg h ht
 
 end Crime
 

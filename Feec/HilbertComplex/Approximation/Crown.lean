@@ -617,7 +617,7 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
   banach : (ofComplexCrime F).toBanachFEEC.Verdict
   /-- the static FEEC theorem with variational crimes for the mixed Hodge Laplacian of the total
   complex, under closed range and the uniform discrete Poincaré inequality
-  (`ApproxComplexCrime.Family.staticFEEC`; [HolstStern2012], §3.3) -/
+  (`ApproxComplexCrime.Family.staticFEEC`; [HolstStern2012], §3) -/
   static (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
     (hP : F.toFamily.IsPoincare cP) : F.toFamily.StaticVerdict hcr cP F.l
   /-- the heat FEEC theorem with variational crimes, with the heat Ritz projection

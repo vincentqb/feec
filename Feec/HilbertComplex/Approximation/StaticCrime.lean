@@ -10,7 +10,7 @@ The mixed Hodge Laplacian of the total complex (`Feec.HilbertComplex.Total`), di
 approximating family of discrete differential spaces (`ApproxComplexCrime.Family`: `Xₕ` with its
 own inner product, a differential `𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be
 cochain maps nor isometric), with the load `iₕ* f`. This is the elliptic theory of
-[HolstStern2012], §3.3 (Thms 3.9, 3.10, there for cochain reading maps) for the families of
+[HolstStern2012], §3 (Thms 3.9, 3.10, there for cochain reading maps) for the families of
 `Feec.HilbertComplex.Approximation.ApproxComplexCrime`, where the failure of `iₕ` to commute with
 the differentials enters as a cochain defect.
 
@@ -40,28 +40,28 @@ the differentials enters as a cochain defect.
 * `ApproxComplexCrime.Family.staticError_le`: **the Strang lemma**, for every discrete triple
   `x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖`.
 * `ApproxComplexCrime.Family.inner_staticResidual_eq`, `norm_staticResidual_le`: **the residual
-  splits** into
-  the inner-product defect `‖1 - Jₕ‖`, the read error of `x̃`, the cochain defects
+  splits** into the inner-product defect `‖1 - Jₕ‖`, the read error of `x̃`, the cochain defects
   `κₕ(u)`, `κₕ(𝐝 u)` (`ApproxComplexCrime.Family.cochainDefect`) in the dual discrete graph norm,
   and the **harmonic defect** `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms `q`;
   `staticError_le_of_split`: the error estimate
-  `e(f) ≤ E + 240 C c_P² (‖1 - Jₕ‖ N + C E + δ₁ + δ₂ + η)`, `E` the read error and `N` the size of
-  `x̃` (the crime analogue of [HolstStern2012], Thm 3.10).
+  `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`, `δ₁`,
+  `δ₂` bounds of the cochain defects and `η` of the harmonic defect (the crime analogue of
+  [HolstStern2012], Thm 3.10, where the reading maps are cochain maps and `δ₁ = δ₂ = 0`).
 * `ApproxComplexCrime.Family.staticConsistent_iff_tendsto`: consistent approximation at `f`
   (approximants with read error and residual tending to `0`) is equivalent to `e(f) → 0`;
   `staticConsistent_of_split` derives it from vanishing defects; `tendsto_staticError_of_dense`:
   on a dense set of data it gives `e(f) → 0` for every `f`.
 * `ApproxComplexCrime.Family.isPoincare_of_proj`: **the discrete Poincaré inequality from the
-  projections** ([HolstStern2012], §3.3 for cochain maps): if `πₕ` maps `ker 𝐝` into `ker 𝐝ₕ`,
+  projections** (for cochain maps, [HolstStern2012], §3): if `πₕ` maps `ker 𝐝` into `ker 𝐝ₕ`,
   `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` for cochain maps), then
-  `c_P = c C C'`, `c` a Poincaré constant of `𝐝`.
+  `c_P = c₀ C C'`, `c₀` a Poincaré constant of `𝐝`.
 * `ApproxComplexCrime.Family.StaticVerdict`, **`ApproxComplexCrime.Family.staticFEEC`**: the
   conclusions together.
 
 ## References
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3.3 (Thm 3.9, Thm 3.10)
+  §3 (Thm 3.9, Thm 3.10)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.2, §3.4 (Thm 3.8)
 
@@ -746,7 +746,7 @@ theorem tendsto_staticError_of_dense {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
 /-! #### The discrete Poincaré inequality from the projections -/
 
 /-- **The uniform discrete Poincaré inequality from the projections** (for cochain maps,
-[HolstStern2012], §3.3): if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `πₕ` maps `ker 𝐝`
+[HolstStern2012], §3): if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `πₕ` maps `ker 𝐝`
 into `ker 𝐝ₕ`, and `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain
 map), then `‖v‖ ≤ c₀ C C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part and the
 rest, and project back. -/
@@ -796,7 +796,7 @@ variable (cP : ℝ) (l : Filter κ)
 under closed range of `H` and the uniform discrete Poincaré inequality with constant `c_P`:
 well-posedness, uniform stability, the Strang lemma, the splitting of the residual into the
 crimes, the resulting error estimate, consistency as convergence, and convergence for every
-datum from consistency on a dense set. [HolstStern2012], §3.3 -/
+datum from consistency on a dense set. [HolstStern2012], §3 -/
 structure StaticVerdict : Prop where
   /-- the discrete mixed problem with the load `iₕ* f` is well posed -/
   wellPosed (h : κ) (f : PiLp 2 W) : ∃! x : (S.cpx h).MixedSpace () (),

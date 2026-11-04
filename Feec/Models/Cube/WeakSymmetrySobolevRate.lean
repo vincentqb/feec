@@ -28,8 +28,8 @@ standard and not formalized.
 
 **Gaffney on the cube.** Through `HQmin_eq_compress` (minimal complex of `Q` = compression of the
 torus window along the relative parity), `x ∈ D(d) ∩ D(d*)` in degree `k` gives `x ∈ H¹_univ`
-with `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d*x‖²` (`gaffney_RT`, `gaffney_HQmin`, `sobRel_zero_of_mem`,
-`sobRel_one_of_mem`, `sobRel_two_of_mem`), and conversely `H¹_univ ⊆ D(d) ∩ D(d*)`
+with `‖x‖²_{1,univ} = ‖x‖² + ‖dx‖² + ‖d*x‖²` (`Feec.Models.Cube.Sobolev.gaffney_RT`,
+`gaffney_HQmin`, `sobRel_zero_of_mem`, `sobRel_one_of_mem`, `sobRel_two_of_mem`), and conversely `H¹_univ ⊆ D(d) ∩ D(d*)`
 (`mem_HQmin_of_sobolevPar_one`, `mem_D2min_D1adj_of_sobRel_one`): the relative class `H¹_univ`
 is exactly `D(d) ∩ D(d*)`.
 

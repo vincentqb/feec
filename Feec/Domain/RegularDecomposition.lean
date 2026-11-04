@@ -41,8 +41,8 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
   `ofMatrixCLM_mem_fieldH1`.
 * `vecOp_rowMat`, `vecOp_rowMat_transpose`, `sum_rowMat_transpose_mul`.
 * **`deRhamVec_hasRegularDecomposition`**.
-* `Feec.BGG.HilbertData.regularDecomposition_of_forall_exists`,
-  **`ConstCoeffBGG.maximalData_regularDecomposition`**.
+* **`ConstCoeffBGG.maximalData_regularDecomposition`** (through
+  `Feec.BGG.HilbertData.regularDecomposition_of_forall_exists`).
 * `hessianSMat_rightInv`, `elasticitySMat_rightInv`, `divDivSMat_rightInv`;
   **`hessianMaximalData_regularDecomposition`**, `elasticityMaximalData_regularDecomposition`,
   `divDivMaximalData_regularDecomposition`.
@@ -399,59 +399,12 @@ theorem deRhamVec_hasRegularDecomposition {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOp
     simp only [L2F.ofMatrixCLM_ofMatrixCLM]
     rw [← L2F.ofMatrixCLM_sum, hRP, L2F.ofMatrixCLM_one]
   change u - (vecOp ℝ m i).maximal Ω (∑ r, ⟨_, hq r⟩) ∈ fieldH1 ℝ Ω (vecIdx m (i + 1))
-  rw [hsum]
-  rw [hu']
-  rw [← Finset.sum_sub_distrib]
+  rw [hsum, hu', ← Finset.sum_sub_distrib]
   refine Submodule.sum_mem _ fun r _ => ?_
   rw [← map_sub]
   exact ofMatrixCLM_mem_fieldH1 hΩ _ (hp r)
 
 /-! ### The regular decompositions of BGG data -/
-
-end Feec.Domain
-
-namespace Feec.BGG.HilbertData
-
-universe v
-
-variable {𝕜 : Type*} [RCLike 𝕜] {W Wt : ℤ → Type v} [∀ i, NormedAddCommGroup (W i)]
-  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] [∀ i, NormedAddCommGroup (Wt i)]
-  [∀ i, InnerProductSpace 𝕜 (Wt i)] [∀ i, CompleteSpace (Wt i)]
-  (D : HilbertData 𝕜 (ComplexShape.up ℤ) W Wt)
-
-/-- **The regular decompositions from splittings in `L²`**: if every `u ∈ D(dⁱ⁺¹)`, `i ≥ J`, is
-`dⁱ p + Sⁱ φ` with `p ∈ D(dⁱ)`, `φ ∈ D(d̃ⁱ)`, then `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` between the
-domains for `j > J`. -/
-theorem regularDecomposition_of_forall_exists {J : ℤ}
-    (h : ∀ i, J ≤ i → ∀ u ∈ (D.H.d (i + 1) (i + 1 + 1)).domain,
-      ∃ (p : (D.H.d i (i + 1)).domain) (φ : (D.Ht.d i (i + 1)).domain),
-        D.H.d i (i + 1) p + D.S i (i + 1) φ = u) :
-    D.RegularDecomposition J := by
-  intro j hj
-  obtain ⟨i, rfl⟩ : ∃ i, j = i + 1 := ⟨j - 1, by ring⟩
-  rw [show i + 1 - 1 = i by ring]
-  refine eq_top_iff.2 fun u _ => ?_
-  have hnext : (ComplexShape.up ℤ).next i = i + 1 := (ComplexShape.up ℤ).next_eq' rfl
-  obtain ⟨p, φ, e⟩ := h i (by omega) _
-    (D.H.domain_next_le (i + 1) (i + 1 + 1) (D.H.domainIncl_mem (i + 1) u))
-  have hp : (p : W i) ∈ (D.H.d i ((ComplexShape.up ℤ).next i)).domain := by
-    rw [hnext]; exact p.2
-  have hφ : (φ : Wt i) ∈ (D.Ht.d i ((ComplexShape.up ℤ).next i)).domain := by
-    rw [hnext]; exact φ.2
-  let pv : D.H.domainSpace i := LinearPMap.toGraphSpace _ ⟨_, hp⟩
-  let φv : D.Ht.domainSpace i := LinearPMap.toGraphSpace _ ⟨_, hφ⟩
-  have hmem := Submodule.add_mem_sup (LinearMap.mem_range_self (D.domainData.d i (i + 1)) pv)
-    (LinearMap.mem_range_self (D.domainData.S i (i + 1)) φv)
-  convert hmem using 1
-  refine D.H.domainIncl_injective (i + 1) ?_
-  rw [map_add, ← e]
-  rfl
-
-end Feec.BGG.HilbertData
-
-namespace Feec.Domain
-
-variable {𝕜 : Type*} [RCLike 𝕜] {n : ℕ} {Ω : Set (Fin n → ℝ)}
 
 /-- **The regular decompositions of BGG data of maximal realizations**
 (`Feec.BGG.HilbertData.RegularDecomposition`, the hypothesis of the analytic BGG theorem for

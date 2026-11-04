@@ -35,7 +35,8 @@ domain complexes are.
 * `HilbertData.isClosed_Δ_and_eliminates_bgg`, `HilbertData.BGGVerdict`,
   **`HilbertData.bggVerdict`**: the analytic BGG theorem for the BGG complex `bgg J`, from the
   connecting maps up to `J` bounded below and the regular decompositions after `J`
-  (`HilbertData.RegularDecomposition`), with the explicit map (30) of Theorem 7
+  (`HilbertData.RegularDecomposition`; from splittings `u = dⁱ p + Sⁱ φ` in the full spaces,
+  `HilbertData.regularDecomposition_of_forall_exists`), with the explicit map (30) of Theorem 7
   (`Data.quasiIso_bggSumMap`, `Data.bgg_represents`), also in its orthogonal form with the
   Moore–Penrose inverses into the output complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)`
   (`BoundedData.quasiIso_orthSumMap`; the closed ranges up to `J` from `S` bounded below).
@@ -245,6 +246,34 @@ Theorem 3. -/
 def RegularDecomposition (J : ℤ) : Prop :=
   ∀ j, J < j → LinearMap.range (D.domainData.d (j - 1) j) ⊔
     LinearMap.range (D.domainData.S (j - 1) j) = ⊤
+
+/-- **The regular decompositions from splittings in `L²`**: if every `u ∈ D(dⁱ⁺¹)`, `i ≥ J`, is
+`dⁱ p + Sⁱ φ` with `p ∈ D(dⁱ)`, `φ ∈ D(d̃ⁱ)`, then `R(dʲ⁻¹) + R(Sʲ⁻¹) = D(dʲ)` between the
+domains for `j > J`. -/
+theorem regularDecomposition_of_forall_exists {J : ℤ}
+    (h : ∀ i, J ≤ i → ∀ u ∈ (D.H.d (i + 1) (i + 1 + 1)).domain,
+      ∃ (p : (D.H.d i (i + 1)).domain) (φ : (D.Ht.d i (i + 1)).domain),
+        D.H.d i (i + 1) p + D.S i (i + 1) φ = u) :
+    D.RegularDecomposition J := by
+  intro j hj
+  obtain ⟨i, rfl⟩ : ∃ i, j = i + 1 := ⟨j - 1, by ring⟩
+  rw [show i + 1 - 1 = i by ring]
+  refine eq_top_iff.2 fun u _ => ?_
+  have hnext : (ComplexShape.up ℤ).next i = i + 1 := (ComplexShape.up ℤ).next_eq' rfl
+  obtain ⟨p, φ, e⟩ := h i (by omega) _
+    (D.H.domain_next_le (i + 1) (i + 1 + 1) (D.H.domainIncl_mem (i + 1) u))
+  have hp : (p : W i) ∈ (D.H.d i ((ComplexShape.up ℤ).next i)).domain := by
+    rw [hnext]; exact p.2
+  have hφ : (φ : Wt i) ∈ (D.Ht.d i ((ComplexShape.up ℤ).next i)).domain := by
+    rw [hnext]; exact φ.2
+  let pv : D.H.domainSpace i := LinearPMap.toGraphSpace _ ⟨_, hp⟩
+  let φv : D.Ht.domainSpace i := LinearPMap.toGraphSpace _ ⟨_, hφ⟩
+  have hmem := Submodule.add_mem_sup (LinearMap.mem_range_self (D.domainData.d i (i + 1)) pv)
+    (LinearMap.mem_range_self (D.domainData.S i (i + 1)) φv)
+  convert hmem using 1
+  refine D.H.domainIncl_injective (i + 1) ?_
+  rw [map_add, ← e]
+  rfl
 
 /-- `S` bounded below up to `J` is bounded below between the domains before `J`
 (`antilipschitz_domainS`). -/

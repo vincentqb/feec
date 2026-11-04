@@ -34,8 +34,7 @@ index, `𝕜 = ℝ` or `ℂ`), at every index `i`:
 * `HilbertComplex.cohomologyEquivHarmonic`,
   `HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`,
   `HilbertComplex.exact_iff_harmonic_eq_bot`.
-* `HilbertComplex.apply_mem_cycles`, `HilbertComplex.apply_mem_boundaries`,
-  `HilbertComplex.finiteDimensional_cohomology_of_sum_eq_id`.
+* `HilbertComplex.finiteDimensional_cohomology_of_sum_eq_id`.
 
 ## References
 
@@ -482,51 +481,25 @@ theorem exact_iff_harmonic_eq_bot {i : ι} (hi : H.ClosedRangeAt i) :
 theorem boundaries_ne_cycles_of_not_closedRangeAt {i : ι} (h : ¬ H.ClosedRangeAt i) :
     H.boundaries i ≠ H.cycles i := fun he => h (by rw [ClosedRangeAt, he]; exact H.isClosed_cycles i)
 
-/-! ### Cochain maps and finite-dimensional cohomology -/
+/-! ### Finite-dimensional cohomology along cochain maps -/
 
 section CochainMap
 
 variable {H} {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
-  [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜 c W'} {T : ∀ j, W' j →ₗ[𝕜] W j}
-
-/-- **Cochain maps preserve cycles**: linear maps `T` with `T D(d') ⊆ D(d)` and `d T = T d'` map
-`𝔷ⁱ(H')` into `𝔷ⁱ(H)`. -/
-theorem apply_mem_cycles
-    (hT : ∀ j k, c.Rel j k → ∀ x : (H'.d j k).domain,
-      ∃ hx : T j x ∈ (H.d j k).domain, H.d j k ⟨_, hx⟩ = T k (H'.d j k x))
-    {i : ι} {x : W' i} (hx : x ∈ H'.cycles i) : T i x ∈ H.cycles i := by
-  by_cases h : c.Rel i (c.next i)
-  · obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hx
-    obtain ⟨hTy, e⟩ := hT _ _ h y
-    exact LinearPMap.mem_ker_iff.2 ⟨⟨_, hTy⟩, rfl, by rw [e, hy, _root_.map_zero]⟩
-  · rw [cycles, H.shape _ _ h]
-    exact LinearPMap.mem_ker_iff.2 ⟨⟨T i x, Submodule.mem_top⟩, rfl, rfl⟩
-
-/-- **Cochain maps preserve boundaries**: linear maps `T` with `T D(d') ⊆ D(d)` and `d T = T d'`
-map `𝔅ⁱ(H')` into `𝔅ⁱ(H)`. -/
-theorem apply_mem_boundaries
-    (hT : ∀ j k, c.Rel j k → ∀ x : (H'.d j k).domain,
-      ∃ hx : T j x ∈ (H.d j k).domain, H.d j k ⟨_, hx⟩ = T k (H'.d j k x))
-    {i : ι} {x : W' i} (hx : x ∈ H'.boundaries i) : T i x ∈ H.boundaries i := by
-  obtain ⟨y, rfl⟩ := hx
-  by_cases h : c.Rel (c.prev i) i
-  · obtain ⟨hTy, e⟩ := hT _ _ h y
-    exact ⟨⟨_, hTy⟩, e⟩
-  · change T i (H'.d (c.prev i) i y) ∈ _
-    rw [H'.apply_eq_zero_of_not_rel h, _root_.map_zero]
-    exact Submodule.zero_mem _
+  [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜 c W'}
 
 /-- **Finite-dimensional cohomology passes to a finite sum of retracts**: if linear maps
-`P a : W'ⁱ → Wⁱ` and `R a : Wⁱ → W'ⁱ` (`a` in a finite type) with `Σ_a R a ∘ P a = 1` map the
-cycles and boundaries of `H'` into those of `H` and the boundaries of `H` into those of `H'`
-(e.g. restrictions of cochain maps, `apply_mem_cycles`, `apply_mem_boundaries`), then `Hⁱ(H')`
-is finite-dimensional when `Hⁱ(H)` is: `[z] ↦ ([P a z])_a` is one-to-one. -/
+`P a : W'ⁱ → Wⁱ` and `R a : Wⁱ → W'ⁱ` (`a` in a finite type) with `Σ_a R a ∘ P a = 1` on the
+cycles of `H'` map the cycles and boundaries of `H'` into those of `H` and the boundaries of `H`
+into those of `H'` (e.g. restrictions of cochain maps, `apply_mem_cycles`,
+`apply_mem_boundaries`), then `Hⁱ(H')` is finite-dimensional when `Hⁱ(H)` is:
+`[z] ↦ ([P a z])_a` is one-to-one. -/
 theorem finiteDimensional_cohomology_of_sum_eq_id {α : Type*} [Fintype α] {i : ι}
     (P : α → W' i →ₗ[𝕜] W i) (R : α → W i →ₗ[𝕜] W' i)
     (hPz : ∀ a, ∀ x ∈ H'.cycles i, P a x ∈ H.cycles i)
     (hPb : ∀ a, ∀ x ∈ H'.boundaries i, P a x ∈ H.boundaries i)
     (hRb : ∀ a, ∀ x ∈ H.boundaries i, R a x ∈ H'.boundaries i)
-    (hRP : ∀ x, ∑ a, R a (P a x) = x) [FiniteDimensional 𝕜 (H.cohomology i)] :
+    (hRP : ∀ x ∈ H'.cycles i, ∑ a, R a (P a x) = x) [FiniteDimensional 𝕜 (H.cohomology i)] :
     FiniteDimensional 𝕜 (H'.cohomology i) := by
   let Φ : H'.cohomology i →ₗ[𝕜] α → H.cohomology i := LinearMap.pi fun a =>
     Submodule.mapQ _ _ ((P a).restrict (hPz a)) fun x hx => hPb a _ hx
@@ -536,7 +509,7 @@ theorem finiteDimensional_cohomology_of_sum_eq_id {α : Type*} [Fintype α] {i :
     have : (Submodule.Quotient.mk ((P a).restrict (hPz a) z) : H.cohomology i) = 0 :=
       congrFun hq a
     rwa [Submodule.Quotient.mk_eq_zero] at this
-  rw [Submodule.Quotient.mk_eq_zero, Submodule.mem_comap, Submodule.coe_subtype, ← hRP z]
+  rw [Submodule.Quotient.mk_eq_zero, Submodule.mem_comap, Submodule.coe_subtype, ← hRP z z.2]
   exact Submodule.sum_mem _ fun a _ => hRb a _ (hz a)
 
 end CochainMap

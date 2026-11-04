@@ -450,7 +450,7 @@ theorem deRhamVec_finiteDimensional_cohomology {Ω : Set (Fin 3 → ℝ)} (hΩ :
       (T := fun j => (L2F.ofMatrixCLM (rowFormMat r j) : _ →L[ℝ] _).toLinearMap) (hP r) hx)
     (fun r _ hx => HilbertComplex.apply_mem_boundaries
       (T := fun j => (L2F.ofMatrixCLM (formRowMat r j) : _ →L[ℝ] _).toLinearMap) (hR r) hx)
-    fun x => ?_
+    fun x _ => ?_
   change ∑ r, L2F.ofMatrixCLM (formRowMat r i) (L2F.ofMatrixCLM (rowFormMat r i) x) = x
   simp only [L2F.ofMatrixCLM_ofMatrixCLM]
   rw [← L2F.ofMatrixCLM_sum, sum_formRowMat_mul_rowFormMat, L2F.ofMatrixCLM_one]

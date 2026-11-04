@@ -32,6 +32,8 @@ complex (`Feec.HilbertComplex.Dual`), which then needs no index transport.
 * `HilbertComplex.cycles_eq_iInf`: `cycles i` is the joint kernel of all `d i j`.
 * `HilbertComplex.cycles_eq`, `HilbertComplex.boundaries_eq`: at a related pair `i → j`,
   `cycles i = N(d i j)` and `boundaries j = R(d i j)`.
+* `HilbertComplex.apply_mem_cycles`, `HilbertComplex.apply_mem_boundaries`: cochain maps preserve
+  cycles and boundaries.
 
 ## References
 
@@ -193,6 +195,42 @@ theorem cycles_eq_iInf (i : ι) : H.cycles i = ⨅ j, (H.d i j).ker := by
   · rw [H.d_eq_zero_of_ne_next hj]
     intro x _
     exact mem_ker_iff.2 ⟨⟨x, Submodule.mem_top⟩, rfl, rfl⟩
+
+/-! ### Cochain maps -/
+
+section CochainMap
+
+variable {H} {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
+  [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜 c W'} {T : ∀ j, W' j →ₗ[𝕜] W j}
+
+/-- **Cochain maps preserve cycles**: linear maps `T` with `T D(d') ⊆ D(d)` and `d T = T d'` map
+`𝔷ⁱ(H')` into `𝔷ⁱ(H)`. -/
+theorem apply_mem_cycles
+    (hT : ∀ j k, c.Rel j k → ∀ x : (H'.d j k).domain,
+      ∃ hx : T j x ∈ (H.d j k).domain, H.d j k ⟨_, hx⟩ = T k (H'.d j k x))
+    {i : ι} {x : W' i} (hx : x ∈ H'.cycles i) : T i x ∈ H.cycles i := by
+  by_cases h : c.Rel i (c.next i)
+  · obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hx
+    obtain ⟨hTy, e⟩ := hT _ _ h y
+    exact LinearPMap.mem_ker_iff.2 ⟨⟨_, hTy⟩, rfl, by rw [e, hy, _root_.map_zero]⟩
+  · rw [cycles, H.shape _ _ h]
+    exact LinearPMap.mem_ker_iff.2 ⟨⟨T i x, Submodule.mem_top⟩, rfl, rfl⟩
+
+/-- **Cochain maps preserve boundaries**: linear maps `T` with `T D(d') ⊆ D(d)` and `d T = T d'`
+map `𝔅ⁱ(H')` into `𝔅ⁱ(H)`. -/
+theorem apply_mem_boundaries
+    (hT : ∀ j k, c.Rel j k → ∀ x : (H'.d j k).domain,
+      ∃ hx : T j x ∈ (H.d j k).domain, H.d j k ⟨_, hx⟩ = T k (H'.d j k x))
+    {i : ι} {x : W' i} (hx : x ∈ H'.boundaries i) : T i x ∈ H.boundaries i := by
+  obtain ⟨y, rfl⟩ := hx
+  by_cases h : c.Rel (c.prev i) i
+  · obtain ⟨hTy, e⟩ := hT _ _ h y
+    exact ⟨⟨_, hTy⟩, e⟩
+  · change T i (H'.d (c.prev i) i y) ∈ _
+    rw [H'.apply_eq_zero_of_not_rel h, _root_.map_zero]
+    exact Submodule.zero_mem _
+
+end CochainMap
 
 /-! ### Complexes on `ComplexShape.up α` from successive differentials -/
 

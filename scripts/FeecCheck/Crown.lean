@@ -146,9 +146,9 @@ heat verdict of `Feec.Models.Cube.FEM.crown_heat_nonvacuous` is a field of the c
 The crown gained a last field, `crime`: the FEEC theorem for approximating families with
 variational crimes (`ApproxComplexCrime.feec`, whose fields are, by `type_of%`, the verdicts of
 `approxFEEC_ofComplexCrime`, `dissipFEEC_fullyDiscrete`, `perturbFEEC`, and of the static and heat
-theorems with crimes `ApproxComplexCrime.Family.staticFEEC`, `ApproxComplexCrime.heatFEEC`,
-`ApproxComplexCrime.rate_heat_of_static`) on every conforming
-window, read as the family with zero inner-product and cochain defects
+theorems with crimes `ApproxComplexCrime.Family.staticFEEC`,
+`ApproxComplexCrime.HeatFamily.heatFEEC`, `ApproxComplexCrime.HeatFamily.rate_heat_of_static`) on
+every conforming window, read as the family with zero inner-product and cochain defects
 (`ConformingFamily.windowCrime`, `ConstrainedFEEC.toCrime`). `OldVerdict` states the verdict
 before it verbatim, and `crown_old_verdict` derives it from the new one.
 

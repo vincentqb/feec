@@ -234,13 +234,15 @@ is again equivalent to convergence
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.staticConsistent_iff_tendsto`), and on a dense set
 of data it gives convergence for every datum
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.tendsto_staticError_of_dense`). The heat theorem
-(`Feec.HilbertComplex.ApproxComplexCrime.heatFEEC`, `Feec.HilbertComplex.Approximation.HeatCrime`)
-follows the conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
+(`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`,
+`Feec.HilbertComplex.Approximation.HeatCrime`; it uses only the family, the constraint, the filter
+and the inner-product defect, `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily`) follows the
+conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
 projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static errors tend to `0` (the
 inner-product defect enters its consistency defect; in the crown, from static consistency on a
 dense set), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ` gives the heat rate
 `(2K + C (3C + 16 c_P² C) K t) L mᵅ`
-(`Feec.HilbertComplex.ApproxComplexCrime.rate_heat_of_static`). These are the fields `static`,
+(`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static`). These are the fields `static`,
 `heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted family
 satisfies every hypothesis, converges for every datum and is inexact
 (`Feec.HilbertComplex.ApproxComplexCrime.shifted_static_nonvacuous`,

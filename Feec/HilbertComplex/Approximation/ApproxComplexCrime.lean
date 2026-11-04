@@ -43,7 +43,9 @@ states.
 
 **The approximating family** (`ApproxComplexCrime`) adds a constraint `K`, a filter, a set
 `A ⊆ D(L)` of admissible states and a core `Z ≤ D(L²)` whose forward orbits (and those of `L Z`)
-stay in `A`, and two hypotheses: the inner-product defect `‖1 - Jₕ‖ → 0`, and **consistent
+stay in `A`, and two hypotheses: the inner-product defect `‖1 - Jₕ‖ → 0` (with the family, the
+constraint and the filter, the data `ApproxComplexCrime.HeatFamily` of the heat theorem with
+crimes, which it extends), and **consistent
 approximation** on `A` (`ApproxComplexCrime.consistent`): approximants `wₕ` with
 `‖y - iₕ wₕ‖ → 0` whose discrete residual `⟪(1 - Lₕ) wₕ, v⟫ - ⟪(1 - L) y, iₕ v⟫` tends to `0` in
 the dual discrete graph norm (a "best approximation plus consistency" condition in the spirit of
@@ -640,6 +642,22 @@ section Families
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
+/-- A **family of discrete differential spaces for the heat equation** for `H`: a family
+(`ApproxComplexCrime.Family`) of discrete differential spaces `(Xₕ, 𝐝ₕ)` with reading maps that
+need not be cochain maps, a closed constraint `K`, a filter `l`, and the **inner-product defect**
+`‖1 - iₕ* iₕ‖ → 0`: the data of the heat FEEC theorem with crimes
+(`Feec.HilbertComplex.Approximation.HeatCrime`). An approximating family (`ApproxComplexCrime`)
+adds the admissible states, the core and consistent approximation of the wave equation. -/
+structure ApproxComplexCrime.HeatFamily (H : HilbertComplex 𝕜 c W) (κ : Type*) where
+  /-- the discrete differential spaces and reading maps -/
+  toFamily : ApproxComplexCrime.Family.{u} H κ
+  /-- the constraint subspace -/
+  K : Submodule 𝕜 (PiLp 2 W)
+  isClosed_K : IsClosed (K : Set (PiLp 2 W))
+  /-- the filter along which the discretization is refined -/
+  l : Filter κ
+  tendsto_innerDefect : Tendsto (fun h => ‖1 - toFamily.J h‖) l (𝓝 0)
+
 /-- An **approximating family of discrete differential spaces** for `H`: a family
 (`ApproxComplexCrime.Family`) of discrete differential spaces `(Xₕ, 𝐝ₕ)` with reading maps that
 need not be cochain maps, a closed constraint `K`, a filter `l`, a set `A ⊆ D(L)` of admissible
@@ -657,15 +675,10 @@ Holst–Stern hypotheses:
 The field `consistent` is equivalent to `iₕ Rₕ y → y` on `A`
 (`consistent_iff_tendsto_incl_load`); from it and the inner-product defect, the uniform
 approximation of the comparison trajectories `Rₕ e^{tL} x` and their consistency defects are
-derived (`ApproxFEEC.ofComplexCrimeCore`). -/
-structure ApproxComplexCrime (H : HilbertComplex 𝕜 c W) (κ : Type*) where
-  /-- the discrete differential spaces and reading maps -/
-  toFamily : ApproxComplexCrime.Family.{u} H κ
-  /-- the constraint subspace -/
-  K : Submodule 𝕜 (PiLp 2 W)
-  isClosed_K : IsClosed (K : Set (PiLp 2 W))
-  /-- the filter along which the discretization is refined -/
-  l : Filter κ
+derived (`ApproxFEEC.ofComplexCrimeCore`). The family, the constraint, the filter and the
+inner-product defect form the data of the heat equation (`ApproxComplexCrime.HeatFamily`). -/
+structure ApproxComplexCrime (H : HilbertComplex 𝕜 c W) (κ : Type*) extends
+    ApproxComplexCrime.HeatFamily.{u} H κ where
   /-- the admissible states -/
   A : Set (PiLp 2 W)
   A_sub : A ⊆ H.wave.domain
@@ -674,7 +687,6 @@ structure ApproxComplexCrime (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   Z_le : Z ≤ H.wave.domainSq
   orbit_mem : ∀ x ∈ Z, ∀ t : ℝ, 0 ≤ t →
     H.waveGroup.S t x ∈ A ∧ H.waveGroup.S t (waveExt H x) ∈ A
-  tendsto_innerDefect : Tendsto (fun h => ‖1 - toFamily.J h‖) l (𝓝 0)
   consistent : ∀ y ∈ A, ∀ ε > 0, ∀ᶠ h in l, ∃ w : toFamily.X h,
     ‖y - toFamily.incl h w‖ ≤ ε ∧ ∀ v, ‖⟪w - toFamily.L h w, v⟫_𝕜 -
       ⟪y - waveExt H y, toFamily.incl h v⟫_𝕜‖ ≤ ε * (‖v‖ + ‖toFamily.D h v‖)

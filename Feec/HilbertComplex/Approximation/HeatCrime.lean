@@ -6,11 +6,13 @@ public import Feec.HilbertComplex.Approximation.StaticCrime
 /-!
 # The heat FEEC theorem with variational crimes
 
-The Hodge heat equation `u' = -Δ u` on `W = ⊕ Wⁱ`, discretized on an approximating family of
-discrete differential spaces (`ApproxComplexCrime`: `Xₕ` with its own inner product, a differential
-`𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be cochain maps nor isometric) by the
-discrete Hodge Laplacian `Δₕ = 𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ` of `(Xₕ, 𝐝ₕ)`, is a dissipative FEEC
-discretization (`ApproxComplexCrime.toHeat`), and the dissipative FEEC theorem holds for it with
+The Hodge heat equation `u' = -Δ u` on `W = ⊕ Wⁱ`, discretized on a family of discrete
+differential spaces for the heat equation (`ApproxComplexCrime.HeatFamily`: `Xₕ` with its own inner
+product, a differential `𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be cochain maps
+nor isometric, a closed constraint, a filter and the inner-product defect `‖1 - Jₕ‖ → 0`; every
+approximating family `ApproxComplexCrime` is one) by the discrete Hodge Laplacian
+`Δₕ = 𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ` of `(Xₕ, 𝐝ₕ)`, is a dissipative FEEC discretization
+(`ApproxComplexCrime.HeatFamily.toHeat`), and the dissipative FEEC theorem holds for it with
 the **heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ iₕ* z`: the route of
 `Feec.HilbertComplex.Approximation.HeatFEEC` with the orthogonal projection `Qₕ` replaced by
 `iₕ*` and the static FEEC theorem by its version with crimes
@@ -21,17 +23,21 @@ the **heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ 
   `harmonicProj`; `Gₕ iₕ* f = uₕ` and `P_ℌₕ iₕ* f = pₕ` are the components of the discrete mixed
   solution with the load `iₕ* f` (`green_adjoint_incl`, `harmonicProj_adjoint_incl`), so the
   static error `e(f)` bounds `‖G f - iₕ Gₕ iₕ* f‖` and `‖P_ℌ f - iₕ P_ℌₕ iₕ* f‖`.
-* **The heat Ritz projection** (`ApproxComplexCrime.heatRitz`) for the graph lift `ℓ y = (y, -Δ y)`
-  of `D(Δ²)`: its Galerkin property `-Δₕ Rₕ (y, z) = (1 - P_ℌₕ) iₕ* z` (`heatGen_ritzR`) gives the
-  defect operator `Δₕ (y, z) = 2 P_ℌₕ iₕ* (1 - P_ℌ) y + iₕ* G z - Gₕ iₕ* z` (`ritzDefect_lift`),
-  bounded by `2 C e((1 - P_ℌ) y) + C e(z) + ‖1 - Jₕ‖ ‖Gₕ iₕ* z‖` (`norm_ritzDefect_le`): with
-  crimes the inner-product defect enters the consistency of the heat flow.
-* **Convergence** (`ApproxComplexCrime.heatCore`, `ApproxComplexCrime.heatFEEC`): under the
-  uniform discrete Poincaré inequality, if the static errors tend to `0` for every datum (e.g.
-  from consistency on a dense set, `ApproxComplexCrime.Family.StaticVerdict.converges`), the
-  heat Ritz projection gives a core with data `D(Δ²)` (dense) and the full `DissipFEEC.Verdict`.
-* **Rates** (`ApproxComplexCrime.heatRateClass`, `ApproxComplexCrime.rate_heat_of_static`): a
-  static rate `e(f) ≤ K L mᵅ` on regular data and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` give
+* **The heat Ritz projection** (`ApproxComplexCrime.HeatFamily.heatRitz`) for the graph lift
+  `ℓ y = (y, -Δ y)` of `D(Δ²)`: its Galerkin property `-Δₕ Rₕ (y, z) = (1 - P_ℌₕ) iₕ* z`
+  (`heatGen_ritzR`) gives the defect operator
+  `Δₕ (y, z) = 2 P_ℌₕ iₕ* (1 - P_ℌ) y + iₕ* G z - Gₕ iₕ* z` (`ritzDefect_lift`), bounded by
+  `2 C e((1 - P_ℌ) y) + C e(z) + ‖1 - Jₕ‖ ‖Gₕ iₕ* z‖` (`norm_ritzDefect_le`): with crimes the
+  inner-product defect enters the consistency of the heat flow.
+* **Convergence** (`ApproxComplexCrime.HeatFamily.heatCore`, `heatFEEC`): under the uniform
+  discrete Poincaré inequality, if the static errors tend to `0` for every datum (e.g. from
+  consistency on a dense set, `ApproxComplexCrime.Family.StaticVerdict.converges`), the heat
+  Ritz projection gives a core with data `D(Δ²)` (dense) and the full `DissipFEEC.Verdict`. Only
+  the data of `ApproxComplexCrime.HeatFamily` are used: an approximating family `F` gives them
+  through `F.toHeatFamily`, so `F.heatFEEC` is the theorem for `F` (the field `heat` of
+  `ApproxComplexCrime.Verdict`).
+* **Rates** (`ApproxComplexCrime.HeatFamily.heatRateClass`, `rate_heat_of_static`): a static
+  rate `e(f) ≤ K L mᵅ` on regular data and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` give
   `‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L mᵅ`. The static rate is a
   hypothesis: for cochain reading maps it follows from rates of the read error of approximants,
   of `‖b - iₕ πₕ b‖` (`b = P_𝔷 G f`) and of `‖1 - Jₕ‖`, through
@@ -193,10 +199,9 @@ def heatReg (Reg : ℝ → Set (PiLp 2 W)) (L : ℝ) : Set (PiLp 2 W) :=
 
 /-! ### The heat FEEC discretization with crimes -/
 
-namespace ApproxComplexCrime
+namespace ApproxComplexCrime.HeatFamily
 
-variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
-  {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
+variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.HeatFamily.{u} H κ)
 
 /-- **The heat FEEC discretization with variational crimes** of `u' = -Δ u` on `W = ⊕ Wⁱ`:
 `Xₕ` with its own inner product, `Lₕ = -Δₕ` the discrete Hodge Laplacian of `(Xₕ, 𝐝ₕ)`, read by
@@ -225,10 +230,6 @@ theorem toHeat_incl (h : κ) : F.toHeat.incl h = F.toFamily.incl h := rfl
 section Ritz
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
-
-/-- **The graph lift** `ℓ y = (y, -Δ y)` of `D(Δ²)`, read by `ρ (y, z) = P_ℌ y - G z`. -/
-def heatLift : F.toHeat.Lift (PiLp 2 W × PiLp 2 W) :=
-  DissipFEEC.Lift.graph F.toHeat (H.heatRead hcr) fun _ hy => H.heatRead_lift hcr hy.1
 
 /-- **The heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ iₕ* z`: on the graph
 lift, `Rₕ ℓ y = Gₕ iₕ* (Δ y) + P_ℌₕ iₕ* y`, the discrete mixed solution with the load `iₕ* Δ y`
@@ -338,6 +339,12 @@ theorem norm_ritzDefect_le (h : κ) (g : PiLp 2 W × PiLp 2 W) :
   refine (norm_add_le _ _).trans ?_
   rw [norm_smul, RCLike.norm_ofNat]
   linarith
+
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+
+/-- **The graph lift** `ℓ y = (y, -Δ y)` of `D(Δ²)`, read by `ρ (y, z) = P_ℌ y - G z`. -/
+def heatLift : F.toHeat.Lift (PiLp 2 W × PiLp 2 W) :=
+  DissipFEEC.Lift.graph F.toHeat (H.heatRead hcr) fun _ hy => H.heatRead_lift hcr hy.1
 
 include hcP hP in
 /-- **The heat Ritz projection with crimes** of the heat FEEC discretization with crimes, for the
@@ -510,6 +517,8 @@ theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h :
   have h2' := mul_le_mul_of_nonneg_left h2 hC
   nlinarith
 
+variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+
 include hcP hP hm hK0 hK hJ hL in
 /-- **The heat rate class with crimes** on `[0, T]`: data `x ∈ D(Δ²)` whose orbit stays in the
 regular states with bound `L`, approximation constant `2K` and consistency constant
@@ -570,6 +579,6 @@ theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplac
 
 end Rate
 
-end ApproxComplexCrime
+end ApproxComplexCrime.HeatFamily
 
 end Feec.HilbertComplex

@@ -257,7 +257,8 @@ family satisfies every hypothesis, converges for every datum and is inexact
 §3 (`Feec.HilbertComplex.Approximation.StaticCochain`): reading maps that are cochain maps
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain`, not necessarily isometric) with
 cochain projections bounded in the graph norm of `D(𝐝)`, the `V`-bounds of §3.3
-(`Feec.HilbertComplex.ApproxComplexCrime.Family.CochainProj`; bounded in `W`, `CochainProj.ofNormLe`)
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.CochainProj`; bounded in `W`,
+`CochainProj.ofNormLe`)
 have no cochain defect, the discrete Poincaré inequality `(c₀ + 1) C_π C`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.isPoincare`, Thm 3.5), a harmonic defect
 bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖ ‖u‖`, `b = P_𝔷 u`

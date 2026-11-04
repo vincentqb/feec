@@ -171,8 +171,10 @@ structure IsCochain : Prop where
 /-- **Cochain projections bounded by `C_π` in the graph norm**: linear left inverses
 `πₕ : W → Xₕ` of the reading maps (`πₕ iₕ = 1`) with `πₕ 𝐝 = 𝐝ₕ πₕ` and
 `‖πₕ x‖ ≤ C_π (‖x‖ + ‖𝐝 x‖)` on `D(𝐝)`: the projection morphisms of [HolstStern2012], §3.1,
-uniformly bounded from `V = D(𝐝)` (graph norm, up to the factor `√2` of `‖x‖ + ‖𝐝 x‖ ≤
-√2 ‖x‖_V`). Only their values on `D(𝐝)` enter, and a map on `D(𝐝)` extends linearly to `W`
+which §3.3 assumes only `V`-bounded, `V = D(𝐝)` with the graph norm. The two bounds are
+equivalent up to constants: `‖x‖ + ‖𝐝 x‖ ≤ √2 ‖x‖_V`, and since `𝐝ₕ πₕ x = πₕ 𝐝 x` with
+`𝐝 x ∈ 𝔷`, `‖πₕ x‖_{Vₕ} ≤ ‖πₕ x‖ + ‖πₕ 𝐝 x‖ ≤ 2 C_π (‖x‖ + ‖𝐝 x‖)`. Only the values on `D(𝐝)`
+enter (`πₕ` need not be continuous on `W`), and a linear map on `D(𝐝)` extends linearly to `W`
 (`LinearMap.exists_extend`); projections bounded in `W` give one (`CochainProj.ofNormLe`). -/
 structure CochainProj (Cπ : ℝ) where
   /-- the projections -/
@@ -229,7 +231,8 @@ theorem mem_range_of_mem_closure (h : κ) {b : PiLp 2 W}
   have hsub : (H.total.boundaries () : Set (PiLp 2 W)) ⊆ (H.total.cycles () : Set (PiLp 2 W)) ∩
       P.π h ⁻¹' (LinearMap.range (S.D h : S.X h →ₗ[𝕜] S.X h) : Set (S.X h)) := by
     rintro _ ⟨z, rfl⟩
-    exact Set.mem_inter (H.totalD_mem_cycles z) (Set.mem_preimage.2 ⟨P.π h z, (P.π_totalD h z).symm⟩)
+    exact Set.mem_inter (H.totalD_mem_cycles z)
+      (Set.mem_preimage.2 ⟨P.π h z, (P.π_totalD h z).symm⟩)
   exact (closure_minimal hsub hA (by rwa [← Submodule.topologicalClosure_coe])).2
 
 /-- **The approximation error of `iₕ πₕ`** at a mixed triple `X = (σ, u, p)`: the sum of
@@ -253,7 +256,8 @@ def cochainRateConst (Cπ cP : ℝ) : ℝ :=
       S.boundConst * (5 * (1 + S.boundConst ^ 2) * (1 + S.boundConst * Cπ) + S.boundConst * Cπ) +
       S.boundConst * (1 + S.boundConst * Cπ))
 
-theorem cochainRateConst_nonneg {Cπ : ℝ} (hCπ : 0 ≤ Cπ) (cP : ℝ) : 0 ≤ S.cochainRateConst Cπ cP := by
+theorem cochainRateConst_nonneg {Cπ : ℝ} (hCπ : 0 ≤ Cπ) (cP : ℝ) :
+    0 ≤ S.cochainRateConst Cπ cP := by
   have := S.boundConst_nonneg
   unfold cochainRateConst
   positivity
@@ -289,7 +293,9 @@ theorem incl_mem_closure (h : κ) {β : S.X h}
 norm**: if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, then `‖v‖ ≤ (c₀ + 1) C_π C ‖𝐝ₕ v‖`
 on `(ker 𝐝ₕ)ᗮ`, `C` the bound of the reading maps: on `(ker 𝐝)ᗮ ∩ D(𝐝)`,
 `‖πₕ z‖ ≤ C_π (‖z‖ + ‖𝐝 z‖) ≤ C_π (c₀ + 1) ‖𝐝 z‖` (`isPoincare_of_norm_proj_le`).
-[HolstStern2012], Thm 3.5 -/
+[HolstStern2012], Thm 3.5, whose constant `c_P` is the Poincaré constant in the `V`-norm,
+`√(1 + c₀²) ≤ c₀ + 1`. For projections bounded in `W` the constant `c₀ C_π C` is
+`Family.isPoincare_of_proj`. -/
 theorem isPoincare {Cπ : ℝ} (P : S.CochainProj Cπ) {c₀ : ℝ}
     (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖) :
@@ -706,7 +712,8 @@ theorem staticError_le_projError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
     MixedSpace.mk (toDom (S.D h) (S.D_D h) (P.π h σ)) (toDom (S.D h) (S.D_D h) (P.π h υ))
       ⟨((S.cpx h).harmonic ()).starProjection (P.π h p),
         ((S.cpx h).harmonic ()).starProjection_apply_mem _⟩
-  have hread : S.readError h X x ≤ (1 + S.boundConst ^ 2) * P.projError h X + S.boundConst * Cπ * ‖1 - S.J h‖ * ‖X‖ := by
+  have hread : S.readError h X x ≤
+      (1 + S.boundConst ^ 2) * P.projError h X + S.boundConst * Cπ * ‖1 - S.J h‖ * ‖X‖ := by
     have hgap := hi.norm_sub_incl_harmonic_le P h hp
     have e : S.readError h X x = ‖(σ : PiLp 2 W) - S.incl h (P.π h σ)‖ +
         ‖H.totalD σ - S.incl h (S.D h (P.π h σ))‖ + ‖(υ : PiLp 2 W) - S.incl h (P.π h υ)‖ +
@@ -716,7 +723,7 @@ theorem staticError_le_projError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ}
         ‖H.totalD σ - S.incl h (P.π h (H.totalD σ))‖ + ‖(υ : PiLp 2 W) - S.incl h (P.π h υ)‖ +
         ‖H.totalD υ - S.incl h (P.π h (H.totalD υ))‖ + ‖p - S.incl h (P.π h p)‖ := rfl
     rw [e, ← P.π_totalD, ← P.π_totalD]
-    rw [e'] at ⊢
+    rw [e']
     have hp4 : ‖p‖ ≤ ‖X‖ := n4
     have : 0 ≤ S.boundConst * Cπ * ‖1 - S.J h‖ := by positivity
     have := mul_le_mul_of_nonneg_left hp4 this

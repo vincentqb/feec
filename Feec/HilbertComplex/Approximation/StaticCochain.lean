@@ -26,7 +26,8 @@ error estimate needs no assumed defect, and the method converges for every datum
 
 * `ApproxComplexCrime.Family.IsCochain.cochainDefect_eq_zero`: the cochain defect vanishes.
 * `ApproxComplexCrime.Family.IsCochain.isPoincare`: **the uniform discrete Poincaré inequality**
-  with `c_P = c₀ C_π C` ([HolstStern2012], Thm 3.5: `c_P ‖πₕ‖ ‖iₕ‖`).
+  with `c_P = c₀ C_π C` ([HolstStern2012], Thm 3.5: `c_P ‖πₕ‖ ‖iₕ‖`, there with the `V`-norm of
+  `πₕ`).
 * `ApproxComplexCrime.Family.IsCochain.norm_inner_incl_harmonic_le`: **the harmonic defect**: for
   `u ⊥ ℌ` and a discrete harmonic form `q`,
   `|⟪iₕ q, u⟫| ≤ (C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖) ‖q‖`, `b = P_𝔷 u` (which lies in `cl 𝔅`).
@@ -44,7 +45,8 @@ error estimate needs no assumed defect, and the method converges for every datum
 * `ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`: **the isomorphism on cohomology**
   `H(𝐝) ≃ H(𝐝ₕ)` induced by `πₕ` (`CochainProj.cohomologyMap`; onto always,
   `cohomologyMap_surjective`; one-to-one under closed range and the strict gap
-  `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`, `cohomologyMap_injective`; [HolstStern2012], Thm 3.3).
+  `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`, `cohomologyMap_injective`; [HolstStern2012], Thm 3.3 and,
+  under closed range, Cor 3.4).
 * The instances: `ApproxComplex.Family.isCochain_toCrimeFamily` (cochain reading maps of graded
   discrete complexes), `ConstrainedFEEC.cochainProj` (the total cochain projection of a
   subcomplex family with projections bounded in `W`), `ConstrainedFEEC.toCrime_isPoincare`.
@@ -52,7 +54,7 @@ error estimate needs no assumed defect, and the method converges for every datum
 ## References
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3 (Thm 3.3, Thm 3.5, Thm 3.9, Cor 3.11)
+  §3 (Thm 3.3, Cor 3.4, Thm 3.5, Cor 3.11)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   Thm 3.5 (the gap between harmonic forms), §5.5 (bounded smoothed projections)
 
@@ -70,28 +72,13 @@ namespace Feec.HilbertComplex
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-- **A cycle orthogonal to the harmonic forms is in `cl 𝔅`** (`𝔷 = cl 𝔅 ⊕ ℌ`). -/
-theorem mem_closure_boundaries_of_mem_cycles {ι' : Type*} {c' : ComplexShape ι'}
-    {V : ι' → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
-    [∀ i, CompleteSpace (V i)] (E : HilbertComplex 𝕜 c' V) {i : ι'} {b : V i}
-    (hb : b ∈ E.cycles i) (hbo : b ∈ (E.harmonic i)ᗮ) :
-    b ∈ (E.boundaries i).topologicalClosure := by
-  rw [← E.closure_boundaries_sup_harmonic i] at hb
-  obtain ⟨b₁, hb₁, r, hr, rfl⟩ := Submodule.mem_sup.1 hb
-  have h1 : ⟪r, b₁⟫_𝕜 = 0 :=
-    inner_eq_zero_symm.1 ((E.isOrtho_closure_boundaries_harmonic i).inner_eq hb₁ hr)
-  have h2 : ⟪r, b₁ + r⟫_𝕜 = 0 := Submodule.inner_right_of_mem_orthogonal hr hbo
-  rw [inner_add_right, h1, zero_add] at h2
-  rw [inner_self_eq_zero.1 h2, add_zero]
-  exact hb₁
-
-/-- `‖x‖ ≤ a + b` from `‖x‖² = a² + b²`. -/
-theorem le_add_of_sq_eq {x a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b)
+/-- `x ≤ a + b` from `x² = a² + b²`. -/
+private theorem le_add_of_sq_eq {x a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b)
     (e : x ^ 2 = a ^ 2 + b ^ 2) : x ≤ a + b := by
   nlinarith [mul_nonneg ha hb]
 
-/-- `‖x‖ ≤ a + b + c` from `‖x‖² = a² + b² + c²`. -/
-theorem le_add_add_of_sq_eq {x a b c : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c)
+/-- `x ≤ a + b + c` from `x² = a² + b² + c²`. -/
+private theorem le_add_add_of_sq_eq {x a b c : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c)
     (e : x ^ 2 = a ^ 2 + b ^ 2 + c ^ 2) : x ≤ a + b + c := by
   nlinarith [mul_nonneg ha hb, mul_nonneg ha hc, mul_nonneg hb hc]
 
@@ -126,8 +113,10 @@ namespace CochainProj
 variable {Cπ : ℝ} (P : S.CochainProj Cπ)
 
 include P in
+/-- `C_π ≥ 0` (as soon as there is a level). -/
 theorem nonneg (h : κ) : 0 ≤ Cπ := (norm_nonneg _).trans (P.norm_π_le h)
 
+/-- `‖πₕ x‖ ≤ C_π ‖x‖`. -/
 theorem norm_π_apply_le (h : κ) (x : PiLp 2 W) : ‖P.π h x‖ ≤ Cπ * ‖x‖ :=
   ((P.π h).le_opNorm x).trans (mul_le_mul_of_nonneg_right (P.norm_π_le h) (norm_nonneg _))
 
@@ -173,7 +162,8 @@ theorem incl_mem_closure (h : κ) {β : S.X h}
 
 /-- **The uniform discrete Poincaré inequality from bounded cochain projections**: if `𝐝` has the
 Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, then `‖v‖ ≤ c₀ C_π C ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`, `C` the bound
-of the reading maps. [HolstStern2012], Thm 3.5 -/
+of the reading maps. [HolstStern2012], Thm 3.5 (there `‖πₕ‖` is the `V`-norm, and `πₕ` need not
+be bounded in `W`) -/
 theorem isPoincare {Cπ : ℝ} (P : S.CochainProj Cπ) {c₀ : ℝ} (hc₀ : 0 ≤ c₀)
     (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖) :
@@ -206,7 +196,7 @@ theorem norm_inner_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ)
           rw [Submodule.starProjection_eq_self_iff.2 (H.total.harmonic_le_cycles () hr)]
       _ = 0 := Submodule.inner_right_of_mem_orthogonal hr hu
   obtain ⟨w, hw⟩ := P.mem_range_of_mem_closure h
-    (mem_closure_boundaries_of_mem_cycles H.total (K.starProjection_apply_mem u) hbo)
+    (H.total.mem_closure_boundaries_of_mem_cycles (K.starProjection_apply_mem u) hbo)
   have hq0 : ⟪q, P.π h b⟫_𝕜 = 0 := by
     rw [← hw]
     change ⟪q, S.D h w⟫_𝕜 = 0
@@ -252,7 +242,7 @@ theorem norm_sub_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {
   have haK : a ∈ (S.cpx h).cycles () := by
     rw [diffComplex_cycles]; exact LinearMap.mem_ker.2 hDa
   have hβ : β ∈ ((S.cpx h).boundaries ()).topologicalClosure :=
-    mem_closure_boundaries_of_mem_cycles (S.cpx h)
+    (S.cpx h).mem_closure_boundaries_of_mem_cycles
       (((S.cpx h).cycles ()).sub_mem haK
         ((S.cpx h).harmonic_le_cycles () (Kh.starProjection_apply_mem a)))
       (Kh.sub_starProjection_mem_orthogonal a)
@@ -298,12 +288,6 @@ theorem norm_sub_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-omit hi in
-/-- The potential `u = G f` is orthogonal to the harmonic forms. -/
-theorem greenOp_mem_orthogonal_harmonic (f : PiLp 2 W) :
-    H.greenOp hcr f ∈ (H.total.harmonic ())ᗮ :=
-  (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_greenOp hcr f hq
-
 /-- **The error estimate with cochain reading maps**: for every discrete triple `x̃`,
 `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖)`, `E` the
 read error of `x̃`, `u = G f` and `b = P_𝔷 u`: no cochain defect, and the harmonic defect bounded
@@ -326,7 +310,7 @@ theorem staticError_le {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.Is
     (fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero, zero_mul])
     (fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero, zero_mul])
     (fun q hq => hi.norm_inner_incl_harmonic_le P h
-      (greenOp_mem_orthogonal_harmonic hcr f) hq)
+      (H.greenOp_mem_orthogonal_harmonic hcr f) hq)
   simpa only [add_zero] using this
 
 /-- **Convergence with cochain reading maps**: under the uniform discrete Poincaré inequality, if
@@ -417,7 +401,7 @@ theorem tendsto_staticError {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP :
     fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero]; positivity,
     fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero]; positivity,
     fun q hq => (hi.norm_inner_incl_harmonic_le P h
-      (greenOp_mem_orthogonal_harmonic hcr f) hq).trans
+      (H.greenOp_mem_orthogonal_harmonic hcr f) hq).trans
       (mul_le_mul_of_nonneg_right (hη.trans hh.le) (norm_nonneg _))⟩
 
 end IsCochain
@@ -464,7 +448,7 @@ theorem cohomologyMap_surjective {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) :
 /-- **The induced map on cohomology is one-to-one** under closed range and the strict gap
 `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`: write a cycle `z = b + q`, `b ∈ 𝔅`, `q ∈ ℌ`; if
 `πₕ z ∈ 𝔅ₕ` then `πₕ q ∈ 𝔅ₕ`, so `iₕ πₕ q ∈ 𝔅 ⊥ q`, and the gap forces `q = 0`.
-[HolstStern2012], Thm 3.3 -/
+[HolstStern2012], Thm 3.3 (reduced cohomology, no closed range) and Cor 3.4 (closed complexes) -/
 theorem cohomologyMap_injective {Cπ : ℝ} (P : S.CochainProj Cπ) (hcr : ∀ i, H.ClosedRangeAt i)
     (h : κ) (hgap : ∀ q ∈ H.total.harmonic (), q ≠ 0 → ‖q - S.incl h (P.π h q)‖ < ‖q‖) :
     Function.Injective (P.cohomologyMap h) := by

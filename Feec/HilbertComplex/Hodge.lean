@@ -227,6 +227,17 @@ theorem isOrtho_closure_boundaries_harmonic (i : ι) :
     harmonic_eq]
   exact inf_le_right
 
+/-- A cycle orthogonal to `ℌⁱ` lies in `cl 𝔅ⁱ` (no closed range; `cl 𝔅ⁱ ⊕ ℌⁱ = 𝔷ⁱ`). -/
+theorem mem_closure_boundaries_of_mem_cycles {i : ι} {z : W i} (hz : z ∈ H.cycles i)
+    (ho : z ∈ (H.harmonic i)ᗮ) : z ∈ (H.boundaries i).topologicalClosure := by
+  rw [← H.closure_boundaries_sup_harmonic i] at hz
+  obtain ⟨b, hb, h, hh, rfl⟩ := Submodule.mem_sup.1 hz
+  have h1 : ⟪h, b + h⟫_𝕜 = 0 := Submodule.inner_right_of_mem_orthogonal hh ho
+  rw [inner_add_right, (H.isOrtho_closure_boundaries_harmonic i).symm.inner_eq hh hb,
+    zero_add] at h1
+  rw [inner_self_eq_zero.1 h1, add_zero]
+  exact hb
+
 theorem isOrtho_cycles_closure_dual_boundaries (i : ι) :
     H.cycles i ⟂ (H.dual.boundaries i).topologicalClosure := by
   rw [Submodule.isOrtho_comm, Submodule.isOrtho_iff_le, ← orthogonal_cycles]

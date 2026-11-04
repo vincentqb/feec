@@ -78,17 +78,6 @@ def domainProj (i : ι) : W i →ₗ[𝕜] (H.d i (c.next i)).domain :=
 theorem domainProj_apply {i : ι} (x : (H.d i (c.next i)).domain) : H.domainProj i x = x :=
   Submodule.projectionOnto_apply_left _ x
 
-/-- A cycle orthogonal to `ℌʲ` lies in `cl 𝔅ʲ` (no closed range; `cl 𝔅ʲ ⊕ ℌʲ = 𝔷ʲ`). -/
-theorem mem_closure_boundaries_of_mem_cycles {j : ι} {z : W j} (hz : z ∈ H.cycles j)
-    (ho : z ∈ (H.harmonic j)ᗮ) : z ∈ (H.boundaries j).topologicalClosure := by
-  rw [← H.closure_boundaries_sup_harmonic j] at hz
-  obtain ⟨b, hb, h, hh, rfl⟩ := Submodule.mem_sup.1 hz
-  have h1 : ⟪h, b + h⟫_𝕜 = 0 := Submodule.inner_right_of_mem_orthogonal hh ho
-  rw [inner_add_right, (H.isOrtho_closure_boundaries_harmonic j).symm.inner_eq hh hb,
-    zero_add] at h1
-  rw [inner_self_eq_zero.1 h1, add_zero]
-  exact hb
-
 private theorem starProjection_congr {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     {K K' : Submodule 𝕜 E} (h : K = K') [K.HasOrthogonalProjection] [K'.HasOrthogonalProjection]
     (x : E) : K.starProjection x = K'.starProjection x := by

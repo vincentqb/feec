@@ -257,9 +257,9 @@ estimate with no assumed defect
 datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.tendsto_staticError`), and the
 isomorphism on cohomology under the strict gap on `ℌ`
-(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`, Thm 3.3). The conforming
-windows are instances: under closed range they satisfy the discrete Poincaré inequality and the
-static method with crimes converges for every datum
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`, Thm 3.3, Cor 3.4).
+The conforming windows are instances: under closed range they satisfy the discrete Poincaré
+inequality and the static method with crimes converges for every datum
 (`Feec.HilbertComplex.ConformingFamily.windowCrime_isPoincare`,
 `Feec.HilbertComplex.ConformingFamily.windowCrime_tendsto_staticError`). Not formalized: a static
 rate for a concrete family with crimes (the heat rate takes it as hypothesis), and cohomology for

@@ -218,6 +218,11 @@ theorem inner_harmonic_greenOp (f : PiLp 2 W) {q : PiLp 2 W} (hq : q ∈ H.total
     ⟪q, H.greenOp hcr f⟫_𝕜 = 0 :=
   (H.isMixedSolution_totalMixedSolution hcr f).harm q hq
 
+/-- `u ∈ ℌᗮ`. -/
+theorem greenOp_mem_orthogonal_harmonic (f : PiLp 2 W) :
+    H.greenOp hcr f ∈ (H.total.harmonic ())ᗮ :=
+  (Submodule.mem_orthogonal _ _).2 fun _ hq => H.inner_harmonic_greenOp hcr f hq
+
 end Total
 
 /-! ### Arithmetic of the residual bound -/

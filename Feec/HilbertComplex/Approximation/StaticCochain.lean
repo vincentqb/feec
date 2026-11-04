@@ -40,13 +40,13 @@ error estimate needs no assumed defect, and the method converges for every datum
   read error of any discrete triple `x̃`, `u = G f`, `b = P_𝔷 u`: best approximation, the
   inner-product defect, and the approximation of `P_𝔷 u` (cf. [HolstStern2012], Cor 3.11).
   `staticError_le_of_gap`, `norm_inner_incl_harmonic_le_of_gap`: the same with `C` replaced in
-  the harmonic term by any bound `μ'` of the gap `‖(1 - P_ℌ) iₕ q‖ ≤ μ' ‖q‖` on `ℌₕ`.
+  the harmonic term by any bound `δ` of the gap `‖(1 - P_ℌ) iₕ q‖ ≤ δ ‖q‖` on `ℌₕ`.
 * `ApproxComplexCrime.Family.IsCochain.norm_incl_sub_harmonicProj_le`: **the gap from `iₕ ℌₕ`
   to `ℌ`**: `‖(1 - P_ℌ) iₕ q‖ ≤ ‖r - iₕ πₕ r‖ + C_π ‖1 - Jₕ‖ ‖q‖` on `ℌₕ`, `r = P_ℌ iₕ q` (for
-  subcomplexes, `Jₕ = 1`, cf. [AFW2010], Thm 3.5). So `μ' = C μ + C_π ‖1 - Jₕ‖` bounds the gap,
-  `μ = sup ‖r - iₕ πₕ r‖` over the unit harmonic forms `r` the factor of [HolstStern2012],
-  Cor 3.11, and `staticError_le_of_harmonic` is the error estimate with the harmonic term
-  `(C μ + C_π ‖1 - Jₕ‖) ‖b - iₕ πₕ b‖` (Cor 3.11 has `μ inf_v ‖P_𝔅 u - iₕ v‖_V`).
+  subcomplexes, `Jₕ = 1`, cf. [AFW2010], Thm 3.5). With the factor of [HolstStern2012],
+  Cor 3.11, `μ = sup ‖r - iₕ πₕ r‖` over the unit harmonic forms `r`, the gap is bounded by
+  `δ = C μ + C_π ‖1 - Jₕ‖`, and `staticError_le_of_harmonic` is the error estimate with the
+  harmonic term `(C μ + C_π ‖1 - Jₕ‖) ‖b - iₕ πₕ b‖` (Cor 3.11 has `μ inf_v ‖P_𝔅 u - iₕ v‖_V`).
 * `ApproxComplexCrime.Family.IsCochain.tendsto_staticError`: **convergence for every datum**
   from `‖1 - Jₕ‖ → 0` and `‖x - iₕ πₕ x‖ → 0` for every `x` (the approximants are
   `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`).
@@ -192,21 +192,21 @@ theorem isPoincare {Cπ : ℝ} (P : S.CochainProj Cπ) {c₀ : ℝ} (hc₀ : 0 �
     (fun h v => by rw [hi.totalD_incl]; exact S.norm_incl_apply_le h _) P.π P.π_incl P.norm_π_le
     fun h z hz => by rw [← P.π_totalD, hz, _root_.map_zero]
 
-/-- **The harmonic defect of cochain reading maps, with the harmonic gap `μ`**: if the read
-discrete harmonic forms are within `μ` of `ℌ`, `‖(1 - P_ℌ) iₕ q‖ ≤ μ ‖q‖` on `ℌₕ`, then for
+/-- **The harmonic defect of cochain reading maps, with the harmonic gap `δ`**: if the read
+discrete harmonic forms are within `δ` of `ℌ`, `‖(1 - P_ℌ) iₕ q‖ ≤ δ ‖q‖` on `ℌₕ`, then for
 `u ⊥ ℌ`, `b = P_𝔷 u` and a discrete harmonic form `q`,
-`|⟪iₕ q, u⟫| ≤ (μ ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖) ‖q‖`. Indeed `iₕ q ∈ 𝔷`, so
+`|⟪iₕ q, u⟫| ≤ (δ ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖) ‖q‖`. Indeed `iₕ q ∈ 𝔷`, so
 `⟪iₕ q, u⟫ = ⟪iₕ q, b⟫`; `b ∈ cl 𝔅`, so `πₕ b ∈ 𝔅ₕ ⊥ q`,
 `⟪iₕ q, iₕ πₕ b⟫ = -⟪(1 - Jₕ) q, πₕ b⟫`, and `b - iₕ πₕ b ∈ cl 𝔅 ⊥ ℌ`, so
 `⟪iₕ q, b - iₕ πₕ b⟫ = ⟪(1 - P_ℌ) iₕ q, b - iₕ πₕ b⟫`. The factor of [HolstStern2012],
 Cor 3.11 is `sup ‖r - iₕ πₕ r‖` over the unit harmonic forms `r`, not a bound of this gap; it
 bounds the gap through `norm_incl_sub_harmonicProj_le`. -/
-theorem norm_inner_incl_harmonic_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {μ : ℝ}
-    (hμ : ∀ q ∈ (S.cpx h).harmonic (),
-      ‖S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q)‖ ≤ μ * ‖q‖)
+theorem norm_inner_incl_harmonic_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {δ : ℝ}
+    (hδ : ∀ q ∈ (S.cpx h).harmonic (),
+      ‖S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q)‖ ≤ δ * ‖q‖)
     {u : PiLp 2 W} (hu : u ∈ (H.total.harmonic ())ᗮ) {q : S.X h}
     (hq : q ∈ (S.cpx h).harmonic ()) :
-    ‖⟪S.incl h q, u⟫_𝕜‖ ≤ (μ * ‖(H.total.cycles ()).starProjection u -
+    ‖⟪S.incl h q, u⟫_𝕜‖ ≤ (δ * ‖(H.total.cycles ()).starProjection u -
         S.incl h (P.π h ((H.total.cycles ()).starProjection u))‖ +
       Cπ * ‖1 - S.J h‖ * ‖u‖) * ‖q‖ := by
   set K := H.total.cycles ()
@@ -248,8 +248,8 @@ theorem norm_inner_incl_harmonic_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) (
   rw [e3, e4]
   have hCπ := P.nonneg h
   have t1 : ‖⟪S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q),
-      b - S.incl h (P.π h b)⟫_𝕜‖ ≤ μ * ‖q‖ * ‖b - S.incl h (P.π h b)‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right (hμ q hq) (norm_nonneg _))
+      b - S.incl h (P.π h b)⟫_𝕜‖ ≤ δ * ‖q‖ * ‖b - S.incl h (P.π h b)‖ :=
+    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right (hδ q hq) (norm_nonneg _))
   have t2 : ‖⟪(1 - S.J h) q, P.π h b⟫_𝕜‖ ≤ ‖1 - S.J h‖ * ‖q‖ * (Cπ * ‖u‖) :=
     (norm_inner_le_norm _ _).trans (mul_le_mul ((1 - S.J h).le_opNorm q)
       ((P.norm_π_apply_le h b).trans
@@ -261,7 +261,7 @@ theorem norm_inner_incl_harmonic_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) (
 
 /-- **The harmonic defect of cochain reading maps**: for `u ⊥ ℌ`, `b = P_𝔷 u` and a discrete
 harmonic form `q`, `|⟪iₕ q, u⟫| ≤ (C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖) ‖q‖`
-(`norm_inner_incl_harmonic_le_of_gap` with `μ = C`: `‖(1 - P_ℌ) iₕ q‖ ≤ ‖iₕ q‖ ≤ C ‖q‖`). -/
+(`norm_inner_incl_harmonic_le_of_gap` with `δ = C`: `‖(1 - P_ℌ) iₕ q‖ ≤ ‖iₕ q‖ ≤ C ‖q‖`). -/
 theorem norm_inner_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {u : PiLp 2 W}
     (hu : u ∈ (H.total.harmonic ())ᗮ) {q : S.X h} (hq : q ∈ (S.cpx h).harmonic ()) :
     ‖⟪S.incl h q, u⟫_𝕜‖ ≤ (S.boundConst * ‖(H.total.cycles ()).starProjection u -
@@ -390,39 +390,39 @@ theorem norm_sub_incl_harmonic_le {Cπ : ℝ} (P : S.CochainProj Cπ) (h : κ) {
 
 variable (hcr : ∀ i, H.ClosedRangeAt i)
 
-/-- **The error estimate with cochain reading maps, with the harmonic gap `μ`**: if
-`‖(1 - P_ℌ) iₕ q‖ ≤ μ ‖q‖` on `ℌₕ`, then for every discrete triple `x̃`,
-`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + μ ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖)`, `E` the
+/-- **The error estimate with cochain reading maps, with the harmonic gap `δ`**: if
+`‖(1 - P_ℌ) iₕ q‖ ≤ δ ‖q‖` on `ℌₕ`, then for every discrete triple `x̃`,
+`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖)`, `E` the
 read error of `x̃`, `u = G f` and `b = P_𝔷 u`: no cochain defect, and the harmonic defect bounded
 by `norm_inner_incl_harmonic_le_of_gap` (cf. [HolstStern2012], Cor 3.11, and
 `staticError_le_of_harmonic` for its factor `μ`). -/
 theorem staticError_le_of_gap {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
-    (hcP : 1 ≤ cP) (h : κ) {μ : ℝ} (hμ0 : 0 ≤ μ)
-    (hμ : ∀ q ∈ (S.cpx h).harmonic (),
-      ‖S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q)‖ ≤ μ * ‖q‖)
+    (hcP : 1 ≤ cP) (h : κ) {δ : ℝ} (hδ0 : 0 ≤ δ)
+    (hδ : ∀ q ∈ (S.cpx h).harmonic (),
+      ‖S.incl h q - (H.total.harmonic ()).starProjection (S.incl h q)‖ ≤ δ * ‖q‖)
     (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :
     S.staticError hcr h f ≤ S.readError h (H.totalMixedSolution hcr f) x +
       240 * S.boundConst * cP ^ 2 * (5 * ‖1 - S.J h‖ * ‖x‖ +
         S.boundConst * S.readError h (H.totalMixedSolution hcr f) x +
-        (μ * ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) -
+        (δ * ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) -
             S.incl h (P.π h ((H.total.cycles ()).starProjection (H.greenOp hcr f)))‖ +
           Cπ * ‖1 - S.J h‖ * ‖H.greenOp hcr f‖)) := by
   have hCπ := P.nonneg h
-  have hη0 : 0 ≤ μ * ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) -
+  have hη0 : 0 ≤ δ * ‖(H.total.cycles ()).starProjection (H.greenOp hcr f) -
       S.incl h (P.π h ((H.total.cycles ()).starProjection (H.greenOp hcr f)))‖ +
       Cπ * ‖1 - S.J h‖ * ‖H.greenOp hcr f‖ :=
-    add_nonneg (mul_nonneg hμ0 (norm_nonneg _))
+    add_nonneg (mul_nonneg hδ0 (norm_nonneg _))
       (mul_nonneg (mul_nonneg hCπ (norm_nonneg _)) (norm_nonneg _))
   have := S.staticError_le_of_split hcr hP hcP h f x le_rfl le_rfl hη0
     (fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero, zero_mul])
     (fun v => by rw [hi.cochainDefect_eq_zero, inner_zero_left, norm_zero, zero_mul])
-    (fun q hq => hi.norm_inner_incl_harmonic_le_of_gap P h hμ
+    (fun q hq => hi.norm_inner_incl_harmonic_le_of_gap P h hδ
       (H.greenOp_mem_orthogonal_harmonic hcr f) hq)
   simpa only [add_zero] using this
 
 /-- **The error estimate with cochain reading maps**: for every discrete triple `x̃`,
 `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + C ‖b - iₕ πₕ b‖ + C_π ‖1 - Jₕ‖ ‖u‖)`, `E` the
-read error of `x̃`, `u = G f` and `b = P_𝔷 u` (`staticError_le_of_gap` with `μ = C`; cf.
+read error of `x̃`, `u = G f` and `b = P_𝔷 u` (`staticError_le_of_gap` with `δ = C`; cf.
 [HolstStern2012], Cor 3.11). -/
 theorem staticError_le {Cπ : ℝ} (P : S.CochainProj Cπ) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :

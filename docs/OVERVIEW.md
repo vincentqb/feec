@@ -258,7 +258,7 @@ bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖ ‖u‖`, `b = P_
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`), the error
 estimate with no assumed defect
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`; with the factor
-`μ = sup ‖(1 − iₕ πₕ) r‖` over the unit harmonic forms of Cor 3.11, which bounds the gap
+`μ = sup ‖(1 − iₕ πₕ) r‖` over the unit harmonic forms of Cor 3.11, through the gap bound
 `‖(1 − P_ℌ) iₕ q‖ ≤ (C μ + C_π ‖1 − Jₕ‖) ‖q‖` on `ℌₕ`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_incl_sub_harmonicProj_le`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic`),

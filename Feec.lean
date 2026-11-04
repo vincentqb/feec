@@ -252,6 +252,7 @@ public import Feec.HilbertComplex.Homology
 public import Feec.HilbertComplex.InvariantCore
 public import Feec.HilbertComplex.InvariantCoreSpectral
 public import Feec.HilbertComplex.Mixed
+public import Feec.HilbertComplex.Quotient
 public import Feec.HilbertComplex.Reality
 public import Feec.HilbertComplex.ReducedSystem
 public import Feec.HilbertComplex.Reducing

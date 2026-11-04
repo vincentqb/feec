@@ -323,6 +323,7 @@ public import Feec.Models.Cube.DeRhamPartial
 public import Feec.Models.Cube.DeRhamPartialFEM
 public import Feec.Models.Cube.DeRhamPartialIdent
 public import Feec.Models.Cube.EigenDense
+public import Feec.Models.Cube.FiniteDifferenceHeat
 public import Feec.Models.Cube.FiniteElementConvergence
 public import Feec.Models.Cube.FiniteElementMethod
 public import Feec.Models.Cube.HeatFEM

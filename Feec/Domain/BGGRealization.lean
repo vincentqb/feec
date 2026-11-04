@@ -29,11 +29,13 @@ the BGG complex has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`*
 decompositions of `H(curl)`, `H(div)` hold on bounded Lipschitz domains ([ArnoldHu2021], §2,
 Theorem 3; [CapHu2024]); they follow from the `H¹`-regular decompositions of the rows
 (`Feec.Domain.ConstCoeffBGG.maximalData_regularDecomposition`), which are formalized on the cube
-`Q = (0, ½)³` over `ℝ` (`Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`; for these
-diagrams `Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`, …) and not on other
-domains. The finite-dimensionality of the cohomology of `deRhamVec ℝ m` passes from that of
-`deRham ℝ 3` row by row through the vector proxies, on every open `Ω ⊆ ℝ³`
-(`Feec.Domain.deRhamVec_finiteDimensional_cohomology`), and holds on `Q`
+`Q = (0, ½)³` over `ℝ` (`Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`) and, through
+the real and imaginary parts, over `ℂ` (for these diagrams
+`Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`, …), and not on other domains. The
+finite-dimensionality of the cohomology of `deRhamVec ℝ m` passes from that of `deRham ℝ 3` row by
+row through the vector proxies, on every open `Ω ⊆ ℝ³`
+(`Feec.Domain.deRhamVec_finiteDimensional_cohomology`), and from `ℝ` to `𝕜`
+(`Feec.Domain.ConstCoeffComplex.finiteDimensional_cohomology_ofReal`); it holds on `Q`
 (`Feec.Models.Cube.finiteDimensional_cohomology_deRhamVec_Q`, from the harmonic forms of
 `HΛ(Q)`); the instances here are over a general `𝕜`.
 

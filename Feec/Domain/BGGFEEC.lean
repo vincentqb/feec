@@ -19,11 +19,12 @@ general constant-coefficient diagrams, `ConstCoeffBGG.maximalData_feecVerdict`).
 decompositions of the maximal realizations (`Feec.BGG.HilbertData.RegularDecomposition`) are
 hypotheses here: they follow from the `H¹`-regular decompositions of the rows
 (`hessianMaximalData_regularDecomposition`, …, in `Feec.Domain.RegularDecomposition`) and are a
-theorem on the cube `Q = (0, ½)³` over `ℝ`, where the FEEC theorems hold without them
+theorem on the cube `Q = (0, ½)³` over `ℝ` and `ℂ`, where the FEEC theorems hold without them
 (`Feec.Models.Cube.hessianFEEC_Q`, `Feec.Models.Cube.elasticityFEEC_Q`,
 `Feec.Models.Cube.divDivFEEC_Q`). The finite-dimensional cohomology of `deRhamVec m` is a
 hypothesis here too; over `ℝ` it follows from that of the forms `deRham ℝ 3` on every open
-`Ω ⊆ ℝ³` (`Feec.Domain.deRhamVec_finiteDimensional_cohomology`) and is a theorem on `Q`
+`Ω ⊆ ℝ³` (`Feec.Domain.deRhamVec_finiteDimensional_cohomology`), over `𝕜` from that over `ℝ`
+(`Feec.Domain.ConstCoeffComplex.finiteDimensional_cohomology_ofReal`), and it is a theorem on `Q`
 (`Feec.Models.Cube.finiteDimensional_cohomology_deRhamVec_Q`), so the FEEC theorems on `Q` have
 no hypothesis. **No stacked family of the maximal data is known to exist here**: the theorems
 quantify over `G`, and no finite element family with `S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ` is constructed.

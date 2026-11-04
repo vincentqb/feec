@@ -138,6 +138,9 @@ theorem add (hφ : IsTestField Ω φ) (hψ : IsTestField Ω ψ) : IsTestField Ω
 theorem smul {𝕜 : Type*} [RCLike 𝕜] [NormedSpace 𝕜 F] [IsScalarTower ℝ 𝕜 F] (c : 𝕜)
     (hφ : IsTestField Ω φ) : IsTestField Ω (c • φ) := fun i => (hφ i).smul c
 
+theorem comp_clm {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G] (hφ : IsTestField Ω φ)
+    (L : F →L[ℝ] G) : IsTestField Ω (fun i x => L (φ i x)) := fun i => (hφ i).comp_clm L
+
 theorem single [DecidableEq ι] (i : ι) {g : E → F} (hg : IsTest Ω g) :
     IsTestField Ω (Pi.single i g) := by
   intro j

@@ -28,8 +28,9 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
   `N w ∈ H¹` lies in the bottom domain. For the Hessian, elasticity and div-div diagrams the
   matrices have right inverses from `J` on (`hessianSMat_rightInv`, …), so their regular
   decompositions follow from those of the rows (`hessianMaximalData_regularDecomposition`, …).
-  On the cube `Q = (0, ½)³` the rows have them (`Feec.Models.Cube.MaximalRegularDecomposition`),
-  which removes the hypothesis from the FEEC theorems there (`Feec.Models.Cube.BGGFEEC`).
+  On the cube `Q = (0, ½)³` the rows have them (`Feec.Models.Cube.MaximalRegularDecomposition`;
+  over `𝕜` from `ℝ`, `Feec.Domain.OfReal`), which removes the hypothesis from the FEEC theorems
+  there (`Feec.Models.Cube.BGGFEEC`).
 * **Finite-dimensional cohomology passes from forms to vector proxies**, row by row
   (`deRhamVec_finiteDimensional_cohomology`): the rows and the row embeddings are cochain maps
   and a field is the sum of its rows.

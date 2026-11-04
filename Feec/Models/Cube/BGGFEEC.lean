@@ -8,7 +8,7 @@ public import Feec.Models.Cube.MaximalRegularDecomposition
 
 On the cube `Q = (0, ½)³` the two hypotheses of the FEEC theorems for discrete Hessian,
 elasticity and div-div complexes (`Feec.Domain.hessianFEEC`, `elasticityFEEC`, `divDivFEEC`) are
-theorems, over `ℝ`:
+theorems, over `𝕜 = ℝ` and `ℂ` (every `RCLike 𝕜`):
 
 * **the regular decompositions** of the maximal realizations
   (`Feec.BGG.HilbertData.RegularDecomposition`; `hessianMaximalData_regularDecomposition_Q`, …):
@@ -22,6 +22,11 @@ theorems, over `ℝ`:
   (`Feec.Models.Cube.DeRhamIdent.Hmax_finiteDimensional_cohomology`), and the cohomology passes
   to the `ℝᵐ`-valued complexes row by row through the vector proxies
   (`Feec.Domain.deRhamVec_finiteDimensional_cohomology`).
+
+Both pass from `ℝ` to `𝕜`: the rows have real coefficients, so a `𝕜`-valued field lies in a
+maximal domain iff its real and imaginary parts do
+(`Feec.Domain.ConstCoeffComplex.HasRegularDecomposition.ofReal`,
+`Feec.Domain.ConstCoeffComplex.finiteDimensional_cohomology_ofReal`).
 
 So **the FEEC theorem holds for every stacked conforming family of the discrete Hessian,
 elasticity and div-div complexes on `Q`**, with no hypothesis (`hessianFEEC_Q`, `elasticityFEEC_Q`,
@@ -52,54 +57,58 @@ open Feec.Domain
 open Feec.Models.Cube.Geometry (isOpen_Q)
 open Feec.Models.Cube.Sobolev (deRhamVec_hasRegularDecomposition_Q)
 
+variable {𝕜 : Type*} [RCLike 𝕜]
+
 /-- **The regular decompositions of the Hessian diagram on `Q`** ([ArnoldHu2021], §2, Theorem 3
 for the rows). -/
 theorem hessianMaximalData_regularDecomposition_Q :
-    (hessianMaximalData ℝ (isOpen_Q (d := Fin 3))).RegularDecomposition 0 :=
+    (hessianMaximalData 𝕜 (isOpen_Q (d := Fin 3))).RegularDecomposition 0 :=
   hessianMaximalData_regularDecomposition isOpen_Q (deRhamVec_hasRegularDecomposition_Q 1)
 
 /-- **The regular decompositions of the elasticity diagram on `Q`** ([ArnoldHu2021], §2,
 Theorem 3 for the rows). -/
 theorem elasticityMaximalData_regularDecomposition_Q :
-    (elasticityMaximalData ℝ (isOpen_Q (d := Fin 3))).RegularDecomposition 1 :=
+    (elasticityMaximalData 𝕜 (isOpen_Q (d := Fin 3))).RegularDecomposition 1 :=
   elasticityMaximalData_regularDecomposition isOpen_Q
     ((deRhamVec_hasRegularDecomposition_Q 3).mono zero_le_one)
 
 /-- **The regular decompositions of the div-div diagram on `Q`** ([ArnoldHu2021], §2, Theorem 3
 for the rows). -/
 theorem divDivMaximalData_regularDecomposition_Q :
-    (divDivMaximalData ℝ (isOpen_Q (d := Fin 3))).RegularDecomposition 2 :=
+    (divDivMaximalData 𝕜 (isOpen_Q (d := Fin 3))).RegularDecomposition 2 :=
   divDivMaximalData_regularDecomposition isOpen_Q
     ((deRhamVec_hasRegularDecomposition_Q 3).mono zero_le_two)
 
-/-- **The de Rham complexes of `Q ⊆ ℝ³` with values in `ℝᵐ` have finite-dimensional
-cohomology** in every degree (from `HΛ(Q)`, row by row through the vector proxies). -/
+/-- **The de Rham complexes of `Q ⊆ ℝ³` with values in `𝕜ᵐ` have finite-dimensional
+cohomology** in every degree (from `HΛ(Q)`, row by row through the vector proxies, and from `ℝ`
+to `𝕜` through the real and imaginary parts). -/
 instance finiteDimensional_cohomology_deRhamVec_Q (m : ℕ) (i : ℤ) :
-    FiniteDimensional ℝ (((deRhamVec ℝ m).maximalComplex (isOpen_Q (d := Fin 3))).cohomology i) :=
-  deRhamVec_finiteDimensional_cohomology isOpen_Q m i
+    FiniteDimensional 𝕜 (((deRhamVec 𝕜 m).maximalComplex (isOpen_Q (d := Fin 3))).cohomology i) :=
+  have := deRhamVec_finiteDimensional_cohomology isOpen_Q m i
+  deRhamVec_ofReal (𝕜 := 𝕜) m ▸ (deRhamVec ℝ m).finiteDimensional_cohomology_ofReal isOpen_Q i
 
 variable {κ : Type*}
 
 /-- **The FEEC theorem for discrete Hessian complexes on the cube** `Q = (0, ½)³`: for every
-stacked conforming family of the scalar and `ℝ³`-valued `L²` de Rham complexes of `Q` linked by
+stacked conforming family of the scalar and `𝕜³`-valued `L²` de Rham complexes of `Q` linked by
 `I`, `2 vskw`, `tr`, the FEEC theorem holds for the discrete Hessian complexes `bgg 0`
 (`Feec.Domain.hessianFEEC` with the regular decompositions
 `hessianMaximalData_regularDecomposition_Q` and the finite-dimensional cohomology
 `finiteDimensional_cohomology_deRhamVec_Q`; the complexes of [ArnoldHu2021], §4.1). -/
-theorem hessianFEEC_Q (G : (hessianMaximalData ℝ (isOpen_Q (d := Fin 3))).StackedFamily κ) :
+theorem hessianFEEC_Q (G : (hessianMaximalData 𝕜 (isOpen_Q (d := Fin 3))).StackedFamily κ) :
     G.Verdict (0 < ·) (· < 0) :=
   hessianFEEC isOpen_Q hessianMaximalData_regularDecomposition_Q G
 
 /-- **The FEEC theorem for discrete elasticity complexes on the cube** `Q = (0, ½)³` (`bgg 1` of
-two `ℝ³`-valued de Rham complexes linked by `-mskw`, `T - tr`, `2 vskw`; [ArnoldHu2021], §4.1). -/
+two `𝕜³`-valued de Rham complexes linked by `-mskw`, `T - tr`, `2 vskw`; [ArnoldHu2021], §4.1). -/
 theorem elasticityFEEC_Q
-    (G : (elasticityMaximalData ℝ (isOpen_Q (d := Fin 3))).StackedFamily κ) :
+    (G : (elasticityMaximalData 𝕜 (isOpen_Q (d := Fin 3))).StackedFamily κ) :
     G.Verdict (1 < ·) (· < 1) :=
   elasticityFEEC isOpen_Q elasticityMaximalData_regularDecomposition_Q G
 
 /-- **The FEEC theorem for discrete div-div complexes on the cube** `Q = (0, ½)³` (`bgg 2` of the
-`ℝ³`-valued and scalar de Rham complexes linked by `· I`, `-mskw`, `I`; [ArnoldHu2021], §4.1). -/
-theorem divDivFEEC_Q (G : (divDivMaximalData ℝ (isOpen_Q (d := Fin 3))).StackedFamily κ) :
+`𝕜³`-valued and scalar de Rham complexes linked by `· I`, `-mskw`, `I`; [ArnoldHu2021], §4.1). -/
+theorem divDivFEEC_Q (G : (divDivMaximalData 𝕜 (isOpen_Q (d := Fin 3))).StackedFamily κ) :
     G.Verdict (2 < ·) (· < 2) :=
   divDivFEEC isOpen_Q divDivMaximalData_regularDecomposition_Q G
 

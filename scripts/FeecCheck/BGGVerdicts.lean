@@ -2,6 +2,7 @@ module
 
 public import Feec.Domain.BGGRealization
 public import Feec.Instances.CrownNonVacuity
+public import Feec.Models.Cube.BGGFEEC
 
 /-!
 # Regression test: the analytic BGG verdict
@@ -25,6 +26,10 @@ Between the `L²` domains the explicit-map hypothesis `Data.InjSurjWith` fails:
 `not_surjective_maximalData_domainS_statement` states the general non-surjectivity of `Sᵏ`
 verbatim (the corresponding fields of `Counterexamples.CrownSharpness` are read back in
 `FeecCheck.Sharpness`).
+The cube results of `Feec.Models.Cube.BGGFEEC` and
+`Feec.Models.Cube.Sobolev.deRhamVec_hasRegularDecomposition_Q` were generalized from `ℝ` to every
+`RCLike 𝕜`; the theorems `cube_…_old` of the section `Cube` state the earlier `ℝ` statements
+verbatim and derive them from the new ones.
 
 This file is part of the `FeecCheck` library, not of `Feec`.
 
@@ -122,5 +127,52 @@ theorem not_surjective_maximalData_domainS_statement {E : Type*} [NormedAddCommG
     (hSψ : (B.top.A (k + 1)).apply ((B.S k).apply ψ) = 0) (hdψ : (B.bot.A k).apply ψ ≠ 0) :
     ¬ Function.Surjective ((B.maximalData M hM hΩ).domainData.S k (k + 1)) :=
   B.not_surjective_maximalData_domainS M hM hΩ hne hN htop hbot hr hψ hSψ hdψ
+
+section Cube
+
+open Feec.Domain Feec.Models.Cube
+open Feec.Models.Cube.Geometry (Q isOpen_Q)
+
+/-- The earlier `Models.Cube.Sobolev.deRhamVec_hasRegularDecomposition_Q` (over `ℝ`). -/
+theorem cube_deRhamVec_hasRegularDecomposition_Q_old (m : ℕ) :
+    (deRhamVec ℝ m).HasRegularDecomposition (Q (Fin 3)) 0 :=
+  Sobolev.deRhamVec_hasRegularDecomposition_Q m
+
+/-- The earlier `Models.Cube.hessianMaximalData_regularDecomposition_Q`,
+`elasticityMaximalData_regularDecomposition_Q`, `divDivMaximalData_regularDecomposition_Q`
+(over `ℝ`). -/
+theorem cube_maximalData_regularDecomposition_Q_old :
+    (hessianMaximalData ℝ (isOpen_Q (d := Fin 3))).RegularDecomposition 0 ∧
+      (elasticityMaximalData ℝ (isOpen_Q (d := Fin 3))).RegularDecomposition 1 ∧
+      (divDivMaximalData ℝ (isOpen_Q (d := Fin 3))).RegularDecomposition 2 :=
+  ⟨hessianMaximalData_regularDecomposition_Q, elasticityMaximalData_regularDecomposition_Q,
+    divDivMaximalData_regularDecomposition_Q⟩
+
+/-- The earlier `Models.Cube.finiteDimensional_cohomology_deRhamVec_Q` (over `ℝ`). -/
+theorem cube_finiteDimensional_cohomology_deRhamVec_Q_old (m : ℕ) (i : ℤ) :
+    FiniteDimensional ℝ (((deRhamVec ℝ m).maximalComplex (isOpen_Q (d := Fin 3))).cohomology i) :=
+  finiteDimensional_cohomology_deRhamVec_Q m i
+
+variable {κ : Type*}
+
+/-- The earlier `Models.Cube.hessianFEEC_Q` (over `ℝ`). -/
+theorem cube_hessianFEEC_Q_old
+    (G : (hessianMaximalData ℝ (isOpen_Q (d := Fin 3))).StackedFamily κ) :
+    G.Verdict (0 < ·) (· < 0) :=
+  hessianFEEC_Q G
+
+/-- The earlier `Models.Cube.elasticityFEEC_Q` (over `ℝ`). -/
+theorem cube_elasticityFEEC_Q_old
+    (G : (elasticityMaximalData ℝ (isOpen_Q (d := Fin 3))).StackedFamily κ) :
+    G.Verdict (1 < ·) (· < 1) :=
+  elasticityFEEC_Q G
+
+/-- The earlier `Models.Cube.divDivFEEC_Q` (over `ℝ`). -/
+theorem cube_divDivFEEC_Q_old
+    (G : (divDivMaximalData ℝ (isOpen_Q (d := Fin 3))).StackedFamily κ) :
+    G.Verdict (2 < ·) (· < 2) :=
+  divDivFEEC_Q G
+
+end Cube
 
 end FeecCheck.BGGVerdicts

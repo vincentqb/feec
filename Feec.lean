@@ -61,6 +61,7 @@ public import Feec.Domain.L2Field
 public import Feec.Domain.LipschitzPullback
 public import Feec.Domain.Mollify
 public import Feec.Domain.Obstruction
+public import Feec.Domain.OfReal
 public import Feec.Domain.Operators
 public import Feec.Domain.RegularDecomposition
 public import Feec.Domain.Rellich

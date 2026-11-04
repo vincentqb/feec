@@ -1,6 +1,6 @@
 module
 
-public import Feec.Domain.RegularDecomposition
+public import Feec.Domain.OfReal
 public import Feec.Models.Cube.Sobolev
 
 /-!
@@ -11,9 +11,9 @@ the **regular decompositions** of [ArnoldHu2021], §2, Theorem 3: every `u ∈ H
 `d p + w` with `p ∈ HΛᵏ(Q)` and every coefficient of `w` in `H¹(Q)`
 (**`deRham_hasRegularDecomposition_Q`**; in three dimensions `H(curl) = grad H¹ + H¹`,
 `H(div) = curl H(curl) + H¹`, `L² = div H(div) + H¹`). Through the vector proxies the same holds
-for the de Rham complexes of `Q ⊆ ℝ³` with values in `ℝᵐ`
-(`deRhamVec_hasRegularDecomposition_Q`), the rows of the Hessian, elasticity and div-div
-diagrams.
+for the de Rham complexes of `Q ⊆ ℝ³` with values in `ℝᵐ`, and through the real and imaginary
+parts with values in `𝕜ᵐ`, `𝕜 = ℝ` or `ℂ` (`deRhamVec_hasRegularDecomposition_Q`), the rows of
+the Hessian, elasticity and div-div diagrams.
 
 **Proof.** `HΛ(Q)` has closed range (the Poincaré inequality `HQmax_norm_le`), so `u` splits as
 `b + v`, `b` the orthogonal projection onto `R(dᵏ)`, `b = d p`, and `v ⊥ R(dᵏ)` lies in
@@ -241,10 +241,13 @@ theorem deRham_hasRegularDecomposition_Q :
   rw [hpb]
   exact sobolevQ_one_le_fieldH1 (m + 1) ⟨_, hsob, Jinvf_Jf false (m + 1) _⟩
 
-/-- **The regular decompositions of the de Rham complexes of `Q ⊆ ℝ³` with values in `ℝᵐ`**
-(vector proxies, row by row; `Feec.Domain.deRhamVec_hasRegularDecomposition`). -/
-theorem deRhamVec_hasRegularDecomposition_Q (m : ℕ) :
-    (deRhamVec ℝ m).HasRegularDecomposition (Q (Fin 3)) 0 :=
-  deRhamVec_hasRegularDecomposition isOpen_Q deRham_hasRegularDecomposition_Q m
+/-- **The regular decompositions of the de Rham complexes of `Q ⊆ ℝ³` with values in `𝕜ᵐ`**
+(vector proxies, row by row, `Feec.Domain.deRhamVec_hasRegularDecomposition`; from `ℝ` to `𝕜`
+through the real and imaginary parts,
+`Feec.Domain.ConstCoeffComplex.HasRegularDecomposition.ofReal`). -/
+theorem deRhamVec_hasRegularDecomposition_Q {𝕜 : Type*} [RCLike 𝕜] (m : ℕ) :
+    (deRhamVec 𝕜 m).HasRegularDecomposition (Q (Fin 3)) 0 :=
+  deRhamVec_ofReal (𝕜 := 𝕜) m ▸
+    (deRhamVec_hasRegularDecomposition isOpen_Q deRham_hasRegularDecomposition_Q m).ofReal isOpen_Q
 
 end Feec.Models.Cube.Sobolev

@@ -200,11 +200,13 @@ theorem cycles_eq_iInf (i : ι) : H.cycles i = ⨅ j, (H.d i j).ker := by
 
 section CochainMap
 
-variable {H} {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)] [∀ i, InnerProductSpace 𝕜 (W' i)]
-  [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜 c W'} {T : ∀ j, W' j →ₗ[𝕜] W j}
+variable {H} {𝕜' : Type*} [RCLike 𝕜'] {W' : ι → Type*} [∀ i, NormedAddCommGroup (W' i)]
+  [∀ i, InnerProductSpace 𝕜' (W' i)] [∀ i, CompleteSpace (W' i)] {H' : HilbertComplex 𝕜' c W'}
+  {R : Type*} [Semiring R] [∀ i, Module R (W i)] [∀ i, Module R (W' i)] {T : ∀ j, W' j →ₗ[R] W j}
 
 /-- **Cochain maps preserve cycles**: linear maps `T` with `T D(d') ⊆ D(d)` and `d T = T d'` map
-`𝔷ⁱ(H')` into `𝔷ⁱ(H)`. -/
+`𝔷ⁱ(H')` into `𝔷ⁱ(H)` (the complexes may be over different fields and `T` linear over a common
+subring, e.g. `T` the real part or the cast between complexes over `ℝ` and `ℂ`). -/
 theorem apply_mem_cycles
     (hT : ∀ j k, c.Rel j k → ∀ x : (H'.d j k).domain,
       ∃ hx : T j x ∈ (H.d j k).domain, H.d j k ⟨_, hx⟩ = T k (H'.d j k x))

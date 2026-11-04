@@ -44,8 +44,9 @@ error estimate needs no assumed defect, and the method converges for every datum
   from `‖1 - Jₕ‖ → 0` and `‖x - iₕ πₕ x‖ → 0` for every `x` (the approximants are
   `(πₕ σ, πₕ u, P_ℌₕ πₕ p)`).
 * `ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`: **the isomorphism on cohomology**
-  `H(𝐝) ≃ H(𝐝ₕ)` induced by `πₕ` (`CochainProj.cohomologyMap`; onto always,
-  `cohomologyMap_surjective`; one-to-one under closed range and the strict gap
+  `H(𝐝) ≃ H(𝐝ₕ)` induced by `πₕ` (`CochainProj.cohomologyMap`, a cochain map,
+  `CochainProj.π_cochainMap`, through `HilbertComplex.apply_mem_cycles`, `apply_mem_boundaries`;
+  onto always, `cohomologyMap_surjective`; one-to-one under closed range and the strict gap
   `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`, `cohomologyMap_injective`; [HolstStern2012], Thm 3.3 and,
   under closed range, Cor 3.4).
 * `ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`: **eventually an
@@ -416,20 +417,25 @@ namespace CochainProj
 
 variable {Cπ : ℝ} (P : S.CochainProj Cπ)
 
+/-- `πₕ` is a cochain map `H.total → S.cpx h` (the hypothesis of
+`HilbertComplex.apply_mem_cycles`, `HilbertComplex.apply_mem_boundaries`). -/
+theorem π_cochainMap (h : κ) (j k : Unit) (_ : ComplexShape.loop.Rel j k)
+    (x : (H.total.d j k).domain) :
+    ∃ hx : (P.π h : PiLp 2 W →ₗ[𝕜] S.X h) x ∈ ((S.cpx h).d j k).domain,
+      (S.cpx h).d j k ⟨_, hx⟩ = (P.π h : PiLp 2 W →ₗ[𝕜] S.X h) (H.total.d j k x) :=
+  ⟨Submodule.mem_top, (P.π_totalD h x).symm⟩
+
 /-- `πₕ` on the cycles, valued in the discrete cycles. -/
 def cyclesMap (h : κ) : H.total.cycles () →ₗ[𝕜] (S.cpx h).cycles () :=
-  (P.π h : PiLp 2 W →ₗ[𝕜] S.X h).restrict fun z hz => by
-    obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 hz
-    rw [diffComplex_cycles, hy]
-    exact LinearMap.mem_ker.2
-      ((P.π_totalD h y).symm.trans ((congrArg (P.π h) hy0).trans (_root_.map_zero _)))
+  (P.π h : PiLp 2 W →ₗ[𝕜] S.X h).restrict fun _ hz =>
+    HilbertComplex.apply_mem_cycles (T := fun _ => (P.π h : PiLp 2 W →ₗ[𝕜] S.X h))
+      (P.π_cochainMap h) hz
 
 /-- **The map induced on cohomology** `H(𝐝) → H(𝐝ₕ)`, `[z] ↦ [πₕ z]`. [HolstStern2012], §3.1 -/
 def cohomologyMap (h : κ) : H.total.cohomology () →ₗ[𝕜] (S.cpx h).cohomology () :=
-  Submodule.mapQ _ _ (P.cyclesMap h) fun z hz => by
-    obtain ⟨w, hw⟩ := hz
-    exact ⟨⟨P.π h w, Submodule.mem_top⟩,
-      (P.π_totalD h w).symm.trans (congrArg (P.π h) hw)⟩
+  Submodule.mapQ _ _ (P.cyclesMap h) fun _ hz => by
+    exact HilbertComplex.apply_mem_boundaries (T := fun _ => (P.π h : PiLp 2 W →ₗ[𝕜] S.X h))
+      (P.π_cochainMap h) hz
 
 end CochainProj
 

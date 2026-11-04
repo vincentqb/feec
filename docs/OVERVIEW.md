@@ -242,8 +242,28 @@ static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ` gives the hea
 `heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted family
 satisfies every hypothesis, converges for every datum and is inexact
 (`Feec.HilbertComplex.ApproxComplexCrime.shifted_static_nonvacuous`,
-`Feec.HilbertComplex.ApproxComplexCrime.shifted_heat`). Not formalized with crimes: the
-isomorphism on cohomology (the reading maps are not cochain maps).
+`Feec.HilbertComplex.ApproxComplexCrime.shifted_heat`). **The cochain case** of [HolstStern2012],
+§3 (`Feec.HilbertComplex.Approximation.StaticCochain`): reading maps that are cochain maps
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain`, not necessarily isometric) with
+cochain projections bounded in `W` (`Feec.HilbertComplex.ApproxComplexCrime.Family.CochainProj`)
+have no cochain defect, the discrete Poincaré inequality `c₀ C_π C`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.isPoincare`, Thm 3.5), a harmonic defect
+bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖ ‖u‖`, `b = P_𝔷 u`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_inner_incl_harmonic_le`), the gap
+`‖p − iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p − iₕ πₕ p‖ + C C_π ‖1 − Jₕ‖ ‖p‖` on `ℌ`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`), the error
+estimate with no assumed defect
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`), convergence for every
+datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.tendsto_staticError`), and the
+isomorphism on cohomology under the strict gap on `ℌ`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`, Thm 3.3). The conforming
+windows are instances: under closed range they satisfy the discrete Poincaré inequality and the
+static method with crimes converges for every datum
+(`Feec.HilbertComplex.ConformingFamily.windowCrime_isPoincare`,
+`Feec.HilbertComplex.ConformingFamily.windowCrime_tendsto_staticError`). Not formalized: a static
+rate for a concrete family with crimes (the heat rate takes it as hypothesis), and cohomology for
+reading maps that are not cochain maps.
 
 **Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the
 README names (and others such as `Feec.Instances.Maxwell.maxwellFEEC` and

@@ -212,6 +212,7 @@ public import Feec.HilbertComplex.Approximation.RitzResolvent
 public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Spectral
+public import Feec.HilbertComplex.Approximation.StaticCochain
 public import Feec.HilbertComplex.Approximation.StaticCrime
 public import Feec.HilbertComplex.Approximation.StaticCrimeWitness
 public import Feec.HilbertComplex.Approximation.StaticFEEC

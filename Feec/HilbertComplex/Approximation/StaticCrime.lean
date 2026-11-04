@@ -12,7 +12,9 @@ own inner product, a differential `𝐝ₕ` independent of `𝐝`, reading maps 
 cochain maps nor isometric), with the load `iₕ* f`. This is the elliptic theory of
 [HolstStern2012], §3 (Thm 3.9, Thm 3.10, Cor 3.11, there for cochain reading maps) for the
 families of `Feec.HilbertComplex.Approximation.ApproxComplexCrime`, where the failure of `iₕ` to
-commute with the differentials enters as a cochain defect.
+commute with the differentials enters as a cochain defect. The cochain case of Holst–Stern, where
+the cochain defects vanish and the harmonic defect and the discrete Poincaré inequality are
+derived from bounded cochain projections, is `Feec.HilbertComplex.Approximation.StaticCochain`.
 
 ## Setting
 
@@ -47,8 +49,9 @@ commute with the differentials enters as a cochain defect.
   `staticError_le_of_split`: the error estimate
   `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`, `δ₁`,
   `δ₂` bounds of the cochain defects and `η` of the harmonic defect (the crime analogue of
-  [HolstStern2012], Thm 3.10 and Cor 3.11, where the reading maps are cochain maps and
-  `δ₁ = δ₂ = 0`).
+  [HolstStern2012], Thm 3.10 and Cor 3.11; for cochain reading maps `δ₁ = δ₂ = 0` and `η` is
+  bounded by the approximation of `P_𝔷 u` and `‖1 - Jₕ‖`,
+  `ApproxComplexCrime.Family.IsCochain.staticError_le`).
 * `ApproxComplexCrime.Family.staticConsistent_iff_tendsto`: consistent approximation at `f`
   (approximants with read error and residual tending to `0`) is equivalent to `e(f) → 0`;
   `staticConsistent_of_split` derives it from vanishing defects; `tendsto_staticError_of_dense`:
@@ -298,7 +301,8 @@ theorem cpx_mixedD1 (h : κ) (y : (S.cpx h).MixedSpace () ()) :
 
 /-- **The uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`, for every
 `h`: the hypothesis of the uniform stability of the discrete mixed problem ([AFW2010], Thm 3.8).
-It follows from bounded projections (`isPoincare_of_proj`; [HolstStern2012], Thm 3.5). -/
+It follows from bounded projections (`isPoincare_of_proj`; for cochain reading maps and cochain
+projections, `IsCochain.isPoincare`, [HolstStern2012], Thm 3.5). -/
 def IsPoincare (cP : ℝ) : Prop :=
   ∀ h (v : S.X h), v ∈ (LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h))ᗮ → ‖v‖ ≤ cP * ‖S.D h v‖
 
@@ -571,7 +575,8 @@ theorem norm_staticResidual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace
 `x̃` with cochain defects at most `δ₁`, `δ₂` and harmonic defect at most `η`,
 `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`: best
 approximation, inner-product defect and the defects of the reading map. Cf. [HolstStern2012],
-Thm 3.10 and Cor 3.11 (cochain reading maps, where `δ₁ = δ₂ = 0`) -/
+Thm 3.10 and Cor 3.11 (cochain reading maps: `δ₁ = δ₂ = 0`, and `η` is derived in
+`ApproxComplexCrime.Family.IsCochain.staticError_le`) -/
 theorem staticError_le_of_split {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
     (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) {δ₁ δ₂ η : ℝ}
     (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)

@@ -20,15 +20,17 @@ For `k`-forms the fibre matrix of the pullback is the matrix of `k × k` minors 
 exterior derivative of smooth forms, `d (T^* φ) = T^* (d φ)`, is a classical computation done
 there (`Feec.FiniteElement.extDeriv_affinePullback_apply`). This module takes the fibre matrices
 as data, together with the classical intertwining (`IsDIntertwining`), and proves the `L²`
-statements:
+statements, for every constant-coefficient operator `P` with a classical intertwining
+`P (T^* φ) = T^* (P' φ)` (`IsPullIntertwining`; `d`, and the gradient in
+`Feec.Domain.RegularDecomposition`):
 
 * `T^*` maps test forms to test forms (`fieldPull_testField`), and its `L²` adjoint on test forms
   is the pushforward `(T^♯ ψ)_t = |det A|⁻¹ Σ_s C_{st} ψ_s ∘ T⁻¹` (`inner_fieldPull_testField`);
-* **`T^*` maps `D(d_min)` into `D(d_min)` and `D(d_max)` into `D(d_max)` and commutes with `d`**
-  (`fieldPull_mem_minimal_domain`, `minimal_fieldPull`, `fieldPull_mem_maximal_domain`,
-  `maximal_fieldPull`): `d_min` is the closure of `d` on test forms, and `d_max` is tested
-  against test forms, on which the pushforward commutes with the codifferential by duality
-  (`testField_push_formalAdj`);
+* **`T^*` maps `D(P'_min)` into `D(P_min)` and `D(P'_max)` into `D(P_max)` and intertwines the
+  realizations** (`fieldPull_mem_minimal_domain`, `minimal_fieldPull`,
+  `fieldPull_mem_maximal_domain`): `P_min` is the closure of `P` on test fields, and `P_max` is
+  tested against test fields, on which the pushforward intertwines the formal adjoints by duality
+  (`testField_push_formalAdj`); for `d` this is `IsDIntertwining.isPullIntertwining`;
 * with an inverse pullback, **the de Rham complexes `HΛ(Ω)` and `H̊Λ(Ω)` are the transports of
   `HΛ(Ω')` and `H̊Λ(Ω')` along `T^*`** (`maximalComplex_eq_transport`,
   `minimalComplex_eq_transport`): `d_Ω = T^* d_{Ω'} (T^*)⁻¹` with the same domains.
@@ -515,11 +517,21 @@ theorem inner_fieldPull_testField (C : κ → ι → ℝ) (u : L2F ℝ Ω' ι)
 
 end Test
 
-/-! ### Intertwining the exterior derivative -/
+/-! ### Intertwining constant-coefficient operators -/
 
 section Intertwining
 
-variable (A : Matrix (Fin n) (Fin n) ℝ)
+variable (A : Matrix (Fin n) (Fin n) ℝ) {ι κ ι' κ' : Type*} [Fintype ι] [Fintype κ]
+  [Fintype ι'] [Fintype κ']
+
+/-- **Classical intertwining** of constant-coefficient operators by fibre matrices: for every
+translation `b` and every smooth field `φ`, `P (T^* φ) = T^* (P' φ)` pointwise, `T x = A x + b`,
+with fibre matrix `C` on the fields and `C'` on the values (`pullFun`). `P'` acts on the target
+of `T`, `P` on its source. -/
+def IsPullIntertwining (P : ConstCoeffOp (Fin n → ℝ) ℝ ι κ)
+    (P' : ConstCoeffOp (Fin n → ℝ) ℝ ι' κ') (C : ι → ι' → ℝ) (C' : κ → κ' → ℝ) : Prop :=
+  ∀ (b : Fin n → ℝ) (φ : ι' → (Fin n → ℝ) → ℝ), (∀ t, ContDiff ℝ ∞ (φ t)) →
+    P.apply (pullFun A b C φ) = pullFun A b C' (P'.apply φ)
 
 /-- **Classical intertwining of `d`** by fibre matrices `C k` on `k`-forms: for every translation
 `b` and every smooth `k`-form `φ`, `d (T^* φ) = T^* (d φ)` pointwise, `T x = A x + b`. For the
@@ -529,112 +541,109 @@ def IsDIntertwining (C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ) : Pro
     (extDerivOp ℝ n k).apply (pullFun A b (C k) φ) =
       pullFun A b (C (k + 1)) ((extDerivOp ℝ n k).apply φ)
 
-variable {A} {C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ} (hC : IsDIntertwining A C)
+variable {A}
+
+theorem IsDIntertwining.isPullIntertwining {C : ∀ k : ℤ, formIdx n k → formIdx n k → ℝ}
+    (hC : IsDIntertwining A C) (k : ℤ) :
+    IsPullIntertwining A (extDerivOp ℝ n k) (extDerivOp ℝ n k) (C k) (C (k + 1)) :=
+  fun b φ hφ => hC b k φ hφ
+
+variable {P : ConstCoeffOp (Fin n → ℝ) ℝ ι κ} {P' : ConstCoeffOp (Fin n → ℝ) ℝ ι' κ'}
+  {C : ι → ι' → ℝ} {C' : κ → κ' → ℝ} (hP : IsPullIntertwining A P P' C C')
   (hA : IsUnit A.det) (b : Fin n → ℝ) {Ω Ω' : Set (Fin n → ℝ)} (hΩo : IsOpen Ω)
   (hΩo' : IsOpen Ω') (hT : affMap A b ⁻¹' Ω' = Ω)
-include hC
+include hP
 
-/-- The pullback maps the test graph of `d` on `Ω'` into the test graph of `d` on `Ω`. -/
-theorem fieldPull_mem_testGraph (k : ℤ)
-    {p : L2F ℝ Ω' (formIdx n k) × L2F ℝ Ω' (formIdx n (k + 1))}
-    (hp : p ∈ (extDerivOp ℝ n k).testGraph Ω') :
-    (fieldPull hA b hΩo'.measurableSet hT (C k) p.1,
-      fieldPull hA b hΩo'.measurableSet hT (C (k + 1)) p.2) ∈
-        (extDerivOp ℝ n k).testGraph Ω := by
+omit [Fintype κ] in
+/-- The pullback maps the test graph of `P'` on `Ω'` into the test graph of `P` on `Ω`. -/
+theorem fieldPull_mem_testGraph {p : L2F ℝ Ω' ι' × L2F ℝ Ω' κ'} (hp : p ∈ P'.testGraph Ω') :
+    (fieldPull hA b hΩo'.measurableSet hT C p.1, fieldPull hA b hΩo'.measurableSet hT C' p.2) ∈
+      P.testGraph Ω := by
   obtain ⟨φ, hφ, rfl⟩ := hp
-  refine ⟨pullFun A b (C k) φ, hφ.pullFun b hA hT (C k), ?_⟩
+  refine ⟨pullFun A b C φ, hφ.pullFun b hA hT C, ?_⟩
   simp only [fieldPull_testField]
   refine Prod.ext rfl (testField_congr _ _ ?_)
-  exact (hC b k φ fun t => (hφ t).contDiff).symm
+  exact (hP b φ fun t => (hφ t).contDiff).symm
 
 include hΩo in
-/-- **The pullback preserves the graph of `d_min`.** -/
-theorem fieldPull_mem_graph_minimal (k : ℤ)
-    {p : L2F ℝ Ω' (formIdx n k) × L2F ℝ Ω' (formIdx n (k + 1))}
-    (hp : p ∈ ((extDerivOp ℝ n k).minimal Ω').graph) :
-    (fieldPull hA b hΩo'.measurableSet hT (C k) p.1,
-      fieldPull hA b hΩo'.measurableSet hT (C (k + 1)) p.2) ∈
-        ((extDerivOp ℝ n k).minimal Ω).graph := by
-  rw [(extDerivOp ℝ n k).minimal_graph hΩo'] at hp
-  rw [(extDerivOp ℝ n k).minimal_graph hΩo]
-  set L := (fieldPull hA b hΩo'.measurableSet hT (C k)).prodMap
-    (fieldPull hA b hΩo'.measurableSet hT (C (k + 1)))
-  have hsub : ((extDerivOp ℝ n k).testGraph Ω' : Set _) ⊆
-      L ⁻¹' (((extDerivOp ℝ n k).testGraph Ω).topologicalClosure : Set _) := fun q hq =>
-    Submodule.le_topologicalClosure _ (fieldPull_mem_testGraph hC hA b hΩo' hT k hq)
-  have hcl : IsClosed (L ⁻¹' (((extDerivOp ℝ n k).testGraph Ω).topologicalClosure : Set _)) :=
+/-- **The pullback maps the graph of `P'_min` into the graph of `P_min`.** -/
+theorem fieldPull_mem_graph_minimal {p : L2F ℝ Ω' ι' × L2F ℝ Ω' κ'}
+    (hp : p ∈ (P'.minimal Ω').graph) :
+    (fieldPull hA b hΩo'.measurableSet hT C p.1, fieldPull hA b hΩo'.measurableSet hT C' p.2) ∈
+      (P.minimal Ω).graph := by
+  rw [P'.minimal_graph hΩo'] at hp
+  rw [P.minimal_graph hΩo]
+  set L := (fieldPull hA b hΩo'.measurableSet hT C).prodMap
+    (fieldPull hA b hΩo'.measurableSet hT C')
+  have hsub : (P'.testGraph Ω' : Set _) ⊆ L ⁻¹' ((P.testGraph Ω).topologicalClosure : Set _) :=
+    fun q hq => Submodule.le_topologicalClosure _ (fieldPull_mem_testGraph hP hA b hΩo' hT hq)
+  have hcl : IsClosed (L ⁻¹' ((P.testGraph Ω).topologicalClosure : Set _)) :=
     (Submodule.isClosed_topologicalClosure _).preimage L.continuous
-  have hp' : p ∈ closure ((extDerivOp ℝ n k).testGraph Ω' : Set _) := by
+  have hp' : p ∈ closure (P'.testGraph Ω' : Set _) := by
     rw [← Submodule.topologicalClosure_coe]; exact hp
   exact closure_minimal hsub hcl hp'
 
 include hΩo in
-/-- **`T^*` maps `H̊Λᵏ(Ω')` into `H̊Λᵏ(Ω)`.** -/
-theorem fieldPull_mem_minimal_domain (k : ℤ) (u : ((extDerivOp ℝ n k).minimal Ω').domain) :
-    fieldPull hA b hΩo'.measurableSet hT (C k) u ∈ ((extDerivOp ℝ n k).minimal Ω).domain :=
+/-- **`T^*` maps `D(P'_min)` into `D(P_min)`.** -/
+theorem fieldPull_mem_minimal_domain (u : (P'.minimal Ω').domain) :
+    fieldPull hA b hΩo'.measurableSet hT C u ∈ (P.minimal Ω).domain :=
   LinearPMap.mem_domain_of_mem_graph
-    (fieldPull_mem_graph_minimal hC hA b hΩo hΩo' hT k (((extDerivOp ℝ n k).minimal Ω').mem_graph u))
+    (fieldPull_mem_graph_minimal hP hA b hΩo hΩo' hT ((P'.minimal Ω').mem_graph u))
 
 include hΩo in
-/-- **`T^*` commutes with `d_min`**: `d_min (T^* u) = T^* (d_min u)`. -/
-theorem minimal_fieldPull (k : ℤ) (u : ((extDerivOp ℝ n k).minimal Ω').domain) :
-    (extDerivOp ℝ n k).minimal Ω ⟨_, fieldPull_mem_minimal_domain hC hA b hΩo hΩo' hT k u⟩ =
-      fieldPull hA b hΩo'.measurableSet hT (C (k + 1)) ((extDerivOp ℝ n k).minimal Ω' u) :=
-  ((LinearPMap.image_iff _).2 (fieldPull_mem_graph_minimal hC hA b hΩo hΩo' hT k
-    (((extDerivOp ℝ n k).minimal Ω').mem_graph u))).symm
+/-- **`T^*` intertwines the minimal realizations**: `P_min (T^* u) = T^* (P'_min u)`. -/
+theorem minimal_fieldPull (u : (P'.minimal Ω').domain) :
+    P.minimal Ω ⟨_, fieldPull_mem_minimal_domain hP hA b hΩo hΩo' hT u⟩ =
+      fieldPull hA b hΩo'.measurableSet hT C' (P'.minimal Ω' u) :=
+  ((LinearPMap.image_iff _).2 (fieldPull_mem_graph_minimal hP hA b hΩo hΩo' hT
+    ((P'.minimal Ω').mem_graph u))).symm
 
 include hΩo' in
-/-- **The pushforward commutes with the codifferential on test forms** (by duality from the
-intertwining of `d` by the pullback): `dᵗ (T^♯ ψ) = T^♯ (dᵗ ψ)`. -/
-theorem testField_push_formalAdj (k : ℤ) {ψ : formIdx n (k + 1) → (Fin n → ℝ) → ℝ}
-    (hψ : IsTestField Ω ψ) :
-    testField ((extDerivOp ℝ n k).formalAdj.isTestField_apply
-        (hψ.pushFun b hA hT (C (k + 1)))) =
-      testField (((extDerivOp ℝ n k).formalAdj.isTestField_apply hψ).pushFun b hA hT (C k)) := by
+/-- **The pushforward intertwines the formal adjoints on test fields** (by duality from the
+classical intertwining): `P'ᵗ (T^♯ ψ) = T^♯ (Pᵗ ψ)`. -/
+theorem testField_push_formalAdj {ψ : κ → (Fin n → ℝ) → ℝ} (hψ : IsTestField Ω ψ) :
+    testField (P'.formalAdj.isTestField_apply (hψ.pushFun b hA hT C')) =
+      testField ((P.formalAdj.isTestField_apply hψ).pushFun b hA hT C) := by
   refine L2F.ext_of_forall_inner_testField hΩo' fun χ hχ => ?_
-  suffices key : ⟪testField hχ, testField ((extDerivOp ℝ n k).formalAdj.isTestField_apply
-        (hψ.pushFun b hA hT (C (k + 1))))⟫_ℝ = ⟪testField hχ,
-        testField (((extDerivOp ℝ n k).formalAdj.isTestField_apply hψ).pushFun b hA hT (C k))⟫_ℝ by
+  suffices key : ⟪testField hχ, testField (P'.formalAdj.isTestField_apply
+        (hψ.pushFun b hA hT C'))⟫_ℝ = ⟪testField hχ,
+        testField ((P.formalAdj.isTestField_apply hψ).pushFun b hA hT C)⟫_ℝ by
     simpa only [real_inner_comm (testField hχ)] using key
-  calc ⟪testField hχ, testField ((extDerivOp ℝ n k).formalAdj.isTestField_apply
-        (hψ.pushFun b hA hT (C (k + 1))))⟫_ℝ
-      = ⟪testField ((extDerivOp ℝ n k).isTestField_apply hχ),
-          testField (hψ.pushFun b hA hT (C (k + 1)))⟫_ℝ :=
-        ((extDerivOp ℝ n k).inner_testField_apply_testField hχ _).symm
-    _ = ⟪fieldPull hA b hΩo'.measurableSet hT (C (k + 1))
-          (testField ((extDerivOp ℝ n k).isTestField_apply hχ)), testField hψ⟫_ℝ :=
-        (inner_fieldPull_testField b hA hΩo'.measurableSet hT (C (k + 1)) _ hψ).symm
-    _ = ⟪testField ((extDerivOp ℝ n k).isTestField_apply (hχ.pullFun b hA hT (C k))),
-          testField hψ⟫_ℝ := by
+  calc ⟪testField hχ, testField (P'.formalAdj.isTestField_apply
+        (hψ.pushFun b hA hT C'))⟫_ℝ
+      = ⟪testField (P'.isTestField_apply hχ), testField (hψ.pushFun b hA hT C')⟫_ℝ :=
+        (P'.inner_testField_apply_testField hχ _).symm
+    _ = ⟪fieldPull hA b hΩo'.measurableSet hT C' (testField (P'.isTestField_apply hχ)),
+          testField hψ⟫_ℝ :=
+        (inner_fieldPull_testField b hA hΩo'.measurableSet hT C' _ hψ).symm
+    _ = ⟪testField (P.isTestField_apply (hχ.pullFun b hA hT C)), testField hψ⟫_ℝ := by
         rw [fieldPull_testField]
         congr 1
-        exact testField_congr _ _ (hC b k χ fun t => (hχ t).contDiff).symm
-    _ = ⟪testField (hχ.pullFun b hA hT (C k)),
-          testField ((extDerivOp ℝ n k).formalAdj.isTestField_apply hψ)⟫_ℝ :=
-        (extDerivOp ℝ n k).inner_testField_apply_testField _ hψ
-    _ = ⟪fieldPull hA b hΩo'.measurableSet hT (C k) (testField hχ),
-          testField ((extDerivOp ℝ n k).formalAdj.isTestField_apply hψ)⟫_ℝ := by
+        exact testField_congr _ _ (hP b χ fun t => (hχ t).contDiff).symm
+    _ = ⟪testField (hχ.pullFun b hA hT C),
+          testField (P.formalAdj.isTestField_apply hψ)⟫_ℝ :=
+        P.inner_testField_apply_testField _ hψ
+    _ = ⟪fieldPull hA b hΩo'.measurableSet hT C (testField hχ),
+          testField (P.formalAdj.isTestField_apply hψ)⟫_ℝ := by
         rw [fieldPull_testField]
-    _ = _ := inner_fieldPull_testField b hA hΩo'.measurableSet hT (C k) _ _
+    _ = _ := inner_fieldPull_testField b hA hΩo'.measurableSet hT C _ _
 
 include hΩo in
-/-- **`T^*` maps `HΛᵏ(Ω')` into `HΛᵏ(Ω)` and commutes with `d_max`**:
-`d_max (T^* u) = T^* (d_max u)`. -/
-theorem fieldPull_mem_maximal_domain (k : ℤ) (u : ((extDerivOp ℝ n k).maximal Ω').domain) :
-    ∃ h : fieldPull hA b hΩo'.measurableSet hT (C k) u ∈ ((extDerivOp ℝ n k).maximal Ω).domain,
-      (extDerivOp ℝ n k).maximal Ω ⟨_, h⟩ =
-        fieldPull hA b hΩo'.measurableSet hT (C (k + 1)) ((extDerivOp ℝ n k).maximal Ω' u) := by
-  have key : ∀ ψ : formIdx n (k + 1) → (Fin n → ℝ) → ℝ, ∀ hψ : IsTestField Ω ψ,
-      ⟪fieldPull hA b hΩo'.measurableSet hT (C (k + 1)) ((extDerivOp ℝ n k).maximal Ω' u),
-          testField hψ⟫_ℝ =
-        ⟪fieldPull hA b hΩo'.measurableSet hT (C k) u,
-          testField ((extDerivOp ℝ n k).formalAdj.isTestField_apply hψ)⟫_ℝ := by
+/-- **`T^*` maps `D(P'_max)` into `D(P_max)` and intertwines the maximal realizations**:
+`P_max (T^* u) = T^* (P'_max u)`. -/
+theorem fieldPull_mem_maximal_domain (u : (P'.maximal Ω').domain) :
+    ∃ h : fieldPull hA b hΩo'.measurableSet hT C u ∈ (P.maximal Ω).domain,
+      P.maximal Ω ⟨_, h⟩ = fieldPull hA b hΩo'.measurableSet hT C' (P'.maximal Ω' u) := by
+  have key : ∀ ψ : κ → (Fin n → ℝ) → ℝ, ∀ hψ : IsTestField Ω ψ,
+      ⟪fieldPull hA b hΩo'.measurableSet hT C' (P'.maximal Ω' u), testField hψ⟫_ℝ =
+        ⟪fieldPull hA b hΩo'.measurableSet hT C u,
+          testField (P.formalAdj.isTestField_apply hψ)⟫_ℝ := by
     intro ψ hψ
     rw [inner_fieldPull_testField, inner_fieldPull_testField,
-      (extDerivOp ℝ n k).maximal_inner_testField hΩo' u (hψ.pushFun b hA hT (C (k + 1))),
-      testField_push_formalAdj hC hA b hΩo' hT k hψ]
-  have hmem := ((extDerivOp ℝ n k).mem_maximal_domain_iff hΩo).2 ⟨_, key⟩
-  exact ⟨hmem, (extDerivOp ℝ n k).maximal_apply_eq hΩo ⟨_, hmem⟩ key⟩
+      P'.maximal_inner_testField hΩo' u (hψ.pushFun b hA hT C'),
+      testField_push_formalAdj hP hA b hΩo' hT hψ]
+  have hmem := (P.mem_maximal_domain_iff hΩo).2 ⟨_, key⟩
+  exact ⟨hmem, P.maximal_apply_eq hΩo ⟨_, hmem⟩ key⟩
 
 end Intertwining
 
@@ -689,14 +698,15 @@ theorem mem_maximal_domain_iff (k : ℤ) {u : L2F ℝ Ω' (formIdx n k)} :
       u ∈ ((extDerivOp ℝ n k).maximal Ω').domain := by
   constructor
   · intro h
-    obtain ⟨h', -⟩ := fieldPull_mem_maximal_domain D.isDIntertwining_inv (isUnit_det_inv hA)
-      (affInvShift A b) hΩo' hΩo (preimage_inv_of_affMap hA b hT) k ⟨_, h⟩
+    obtain ⟨h', -⟩ := fieldPull_mem_maximal_domain (D.isDIntertwining_inv.isPullIntertwining k)
+      (isUnit_det_inv hA) (affInvShift A b) hΩo' hΩo (preimage_inv_of_affMap hA b hT) ⟨_, h⟩
     have e : fieldPull (isUnit_det_inv hA) (affInvShift A b) hΩo.measurableSet
         (preimage_inv_of_affMap hA b hT) (D.Cinv k) (D.equiv hA b hΩo' hT k u) = u :=
       (D.equiv hA b hΩo' hT k).symm_apply_apply u
     exact e ▸ h'
   · intro h
-    exact (fieldPull_mem_maximal_domain D.isDIntertwining hA b hΩo hΩo' hT k ⟨u, h⟩).1
+    exact (fieldPull_mem_maximal_domain (D.isDIntertwining.isPullIntertwining k) hA b hΩo hΩo' hT
+      ⟨u, h⟩).1
 
 include hΩo in
 /-- **`T^*` maps `H̊Λᵏ(Ω')` onto `H̊Λᵏ(Ω)`**. -/
@@ -705,14 +715,15 @@ theorem mem_minimal_domain_iff (k : ℤ) {u : L2F ℝ Ω' (formIdx n k)} :
       u ∈ ((extDerivOp ℝ n k).minimal Ω').domain := by
   constructor
   · intro h
-    have h' := fieldPull_mem_minimal_domain D.isDIntertwining_inv (isUnit_det_inv hA)
-      (affInvShift A b) hΩo' hΩo (preimage_inv_of_affMap hA b hT) k ⟨_, h⟩
+    have h' := fieldPull_mem_minimal_domain (D.isDIntertwining_inv.isPullIntertwining k)
+      (isUnit_det_inv hA) (affInvShift A b) hΩo' hΩo (preimage_inv_of_affMap hA b hT) ⟨_, h⟩
     have e : fieldPull (isUnit_det_inv hA) (affInvShift A b) hΩo.measurableSet
         (preimage_inv_of_affMap hA b hT) (D.Cinv k) (D.equiv hA b hΩo' hT k u) = u :=
       (D.equiv hA b hΩo' hT k).symm_apply_apply u
     exact e ▸ h'
   · intro h
-    exact fieldPull_mem_minimal_domain D.isDIntertwining hA b hΩo hΩo' hT k ⟨u, h⟩
+    exact fieldPull_mem_minimal_domain (D.isDIntertwining.isPullIntertwining k) hA b hΩo hΩo' hT
+      ⟨u, h⟩
 
 end FormPullData
 
@@ -753,7 +764,8 @@ theorem maximalComplex_eq_transport :
       exact D.mem_maximal_domain_iff hA b hΩo hΩo' hT i
     · have hx : x.1 ∈ ((extDerivOp ℝ n i).maximal Ω').domain := by
         rw [← deRham_maximalComplex_d (𝕜 := ℝ) hΩo' i]; exact x.2
-      obtain ⟨h', hv⟩ := fieldPull_mem_maximal_domain D.isDIntertwining hA b hΩo hΩo' hT i ⟨_, hx⟩
+      obtain ⟨h', hv⟩ := fieldPull_mem_maximal_domain
+        (D.isDIntertwining.isPullIntertwining i) hA b hΩo hΩo' hT ⟨_, hx⟩
       refine ((LinearPMap.apply_eq_of_eq (deRham_maximalComplex_d hΩo i) _ ⟨_, h'⟩ rfl).trans
         hv).trans ?_
       exact congrArg _ (LinearPMap.apply_eq_of_eq (deRham_maximalComplex_d hΩo' i) x
@@ -777,9 +789,11 @@ theorem minimalComplex_eq_transport :
       exact D.mem_minimal_domain_iff hA b hΩo hΩo' hT i
     · have hx : x.1 ∈ ((extDerivOp ℝ n i).minimal Ω').domain := by
         rw [← deRham_minimalComplex_d (𝕜 := ℝ) hΩo' i]; exact x.2
-      have h' := fieldPull_mem_minimal_domain D.isDIntertwining hA b hΩo hΩo' hT i ⟨_, hx⟩
+      have h' := fieldPull_mem_minimal_domain (D.isDIntertwining.isPullIntertwining i) hA b hΩo
+        hΩo' hT ⟨_, hx⟩
       refine ((LinearPMap.apply_eq_of_eq (deRham_minimalComplex_d hΩo i) _ ⟨_, h'⟩ rfl).trans
-        (minimal_fieldPull D.isDIntertwining hA b hΩo hΩo' hT i ⟨_, hx⟩)).trans ?_
+        (minimal_fieldPull (D.isDIntertwining.isPullIntertwining i) hA b hΩo hΩo' hT
+          ⟨_, hx⟩)).trans ?_
       exact congrArg _ (LinearPMap.apply_eq_of_eq (deRham_minimalComplex_d hΩo' i) x
         ⟨_, hx⟩ rfl).symm
   · have hr : ¬ (ComplexShape.up ℤ).Rel i j := by simpa using hij

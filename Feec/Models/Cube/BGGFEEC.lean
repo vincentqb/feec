@@ -8,7 +8,7 @@ public import Feec.Models.Cube.MaximalRegularDecomposition
 
 On the cube `Q = (0, ½)³` the two hypotheses of the FEEC theorems for discrete Hessian,
 elasticity and div-div complexes (`Feec.Domain.hessianFEEC`, `elasticityFEEC`, `divDivFEEC`) are
-theorems, over `𝕜 = ℝ` and `ℂ` (every `RCLike 𝕜`):
+theorems, over every `RCLike 𝕜` (`ℝ`, `ℂ`):
 
 * **the regular decompositions** of the maximal realizations
   (`Feec.BGG.HilbertData.RegularDecomposition`; `hessianMaximalData_regularDecomposition_Q`, …):

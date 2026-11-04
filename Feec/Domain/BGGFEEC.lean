@@ -19,7 +19,7 @@ general constant-coefficient diagrams, `ConstCoeffBGG.maximalData_feecVerdict`).
 decompositions of the maximal realizations (`Feec.BGG.HilbertData.RegularDecomposition`) are
 hypotheses here: they follow from the `H¹`-regular decompositions of the rows
 (`hessianMaximalData_regularDecomposition`, …, in `Feec.Domain.RegularDecomposition`) and are a
-theorem on the cube `Q = (0, ½)³` over `ℝ` and `ℂ`, where the FEEC theorems hold without them
+theorem on the cube `Q = (0, ½)³` over every `RCLike 𝕜`, where the FEEC theorems hold without them
 (`Feec.Models.Cube.hessianFEEC_Q`, `Feec.Models.Cube.elasticityFEEC_Q`,
 `Feec.Models.Cube.divDivFEEC_Q`). The finite-dimensional cohomology of `deRhamVec m` is a
 hypothesis here too; over `ℝ` it follows from that of the forms `deRham ℝ 3` on every open

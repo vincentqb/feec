@@ -206,7 +206,7 @@ variable {H} {𝕜' : Type*} [RCLike 𝕜'] {W' : ι → Type*} [∀ i, NormedAd
 
 /-- **Cochain maps preserve cycles**: linear maps `T` with `T D(d') ⊆ D(d)` and `d T = T d'` map
 `𝔷ⁱ(H')` into `𝔷ⁱ(H)` (the complexes may be over different fields and `T` linear over a common
-subring, e.g. `T` the real part or the cast between complexes over `ℝ` and `ℂ`). -/
+ring of scalars `R`, e.g. `T` the real part or the cast between complexes over `ℝ` and `ℂ`). -/
 theorem apply_mem_cycles
     (hT : ∀ j k, c.Rel j k → ∀ x : (H'.d j k).domain,
       ∃ hx : T j x ∈ (H.d j k).domain, H.d j k ⟨_, hx⟩ = T k (H'.d j k x))

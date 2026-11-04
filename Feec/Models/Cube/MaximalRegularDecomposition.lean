@@ -12,7 +12,7 @@ the **regular decompositions** of [ArnoldHu2021], §2, Theorem 3: every `u ∈ H
 (**`deRham_hasRegularDecomposition_Q`**; in three dimensions `H(curl) = grad H¹ + H¹`,
 `H(div) = curl H(curl) + H¹`, `L² = div H(div) + H¹`). Through the vector proxies the same holds
 for the de Rham complexes of `Q ⊆ ℝ³` with values in `ℝᵐ`, and through the real and imaginary
-parts with values in `𝕜ᵐ`, `𝕜 = ℝ` or `ℂ` (`deRhamVec_hasRegularDecomposition_Q`), the rows of
+parts with values in `𝕜ᵐ`, every `RCLike 𝕜` (`deRhamVec_hasRegularDecomposition_Q`), the rows of
 the Hessian, elasticity and div-div diagrams.
 
 **Proof.** `HΛ(Q)` has closed range (the Poincaré inequality `HQmax_norm_le`), so `u` splits as

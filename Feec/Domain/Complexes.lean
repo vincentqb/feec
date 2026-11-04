@@ -30,7 +30,9 @@ bounded-domain models of the thesis are minimal complexes
   (closure argument);
 * `ConstCoeffOp.maximal_mapsTo`, `maximal_comp`: `R((A)_max) ⊆ N((B)_max)` (distributional
   `Aᵗ Bᵗ = 0`, `formalAdj_comp_testField`);
-* `ConstCoeffComplex.minimalComplex`, `maximalComplex`, and their duality.
+* `ConstCoeffComplex.minimalComplex`, `maximalComplex`, and their duality;
+* `ConstCoeffComplex.maximalComplex_comm`: maps intertwining the maximal operators degree by
+  degree are cochain maps of the maximal complexes, also across fields.
 
 ## References
 
@@ -203,6 +205,28 @@ theorem minimalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
 theorem maximalComplex_d (hΩ : IsOpen Ω) (k : ℤ) :
     (C.maximalComplex hΩ).d k (k + 1) = (C.A k).maximal Ω :=
   HilbertComplex.ofSuccD_succ (fun k => (C.A k).maximal Ω) k
+
+/-- **Maps intertwining the maximal operators in each degree are cochain maps of the maximal
+complexes**: if `T_k D(A_k max) ⊆ D(A'_k max)` and `A'_k max T_k = T_{k+1} A_k max`, then
+`T_j D(d_max) ⊆ D(d'_max)` and `d'_max T_j = T_k d_max` (the two complexes may be over different
+fields, e.g. `T` the real part of complex fields). -/
+theorem maximalComplex_comm {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike 𝕜₂]
+    (hΩ : IsOpen Ω) {C : ConstCoeffComplex E 𝕜₁} {C' : ConstCoeffComplex E 𝕜₂}
+    {T : ∀ k, L2F 𝕜₁ Ω (C.ι k) → L2F 𝕜₂ Ω (C'.ι k)}
+    (h : ∀ k (x : ((C.A k).maximal Ω).domain), ∃ hx : T k x ∈ ((C'.A k).maximal Ω).domain,
+      (C'.A k).maximal Ω ⟨_, hx⟩ = T (k + 1) ((C.A k).maximal Ω x))
+    (j k : ℤ) (hjk : (ComplexShape.up ℤ).Rel j k) (x : ((C.maximalComplex hΩ).d j k).domain) :
+    ∃ hx : T j x ∈ ((C'.maximalComplex hΩ).d j k).domain,
+      (C'.maximalComplex hΩ).d j k ⟨_, hx⟩ = T k ((C.maximalComplex hΩ).d j k x) := by
+  obtain rfl : j + 1 = k := hjk
+  have hx : (x : L2F 𝕜₁ Ω (C.ι j)) ∈ ((C.A j).maximal Ω).domain := by
+    rw [← C.maximalComplex_d hΩ j]; exact x.2
+  obtain ⟨h', hv⟩ := h j ⟨_, hx⟩
+  have h'' : T j x ∈ ((C'.maximalComplex hΩ).d j (j + 1)).domain := by
+    rw [C'.maximalComplex_d hΩ j]; exact h'
+  refine ⟨h'', ((LinearPMap.apply_eq_of_eq (C'.maximalComplex_d hΩ j) _ ⟨_, h'⟩ rfl).trans
+    hv).trans ?_⟩
+  exact congrArg _ (LinearPMap.apply_eq_of_eq (C.maximalComplex_d hΩ j) x ⟨_, hx⟩ rfl).symm
 
 /-- **Duality of the two boundary-condition families**: the dual of the minimal complex is the
 maximal complex of the formal adjoints, `(d_min)ᵏ† = (A kᵗ)_max`. -/

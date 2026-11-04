@@ -30,7 +30,7 @@ decompositions of `H(curl)`, `H(div)` hold on bounded Lipschitz domains ([Arnold
 Theorem 3; [CapHu2024]); they follow from the `H¹`-regular decompositions of the rows
 (`Feec.Domain.ConstCoeffBGG.maximalData_regularDecomposition`), which are formalized on the cube
 `Q = (0, ½)³` over `ℝ` (`Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`) and, through
-the real and imaginary parts, over `ℂ` (for these diagrams
+the real and imaginary parts, over every `RCLike 𝕜` (for these diagrams
 `Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`, …), and not on other domains. The
 finite-dimensionality of the cohomology of `deRhamVec ℝ m` passes from that of `deRham ℝ 3` row by
 row through the vector proxies, on every open `Ω ⊆ ℝ³`

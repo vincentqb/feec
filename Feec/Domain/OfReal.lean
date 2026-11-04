@@ -6,13 +6,14 @@ public import Feec.Domain.RegularDecomposition
 # Real-coefficient operators on `𝕜`-valued fields
 
 A constant-coefficient operator with real coefficients `A` acts on `𝕜`-valued fields for every
-`𝕜 = ℝ` or `ℂ` (`ConstCoeffOp.ofReal`, the coefficients cast to `𝕜`; the de Rham complexes in
-vector proxies are of this form, `deRhamVec_ofReal`). Real-linear maps `L : 𝕜₁ → 𝕜₂` (the real
-and imaginary parts, the cast `ℝ → 𝕜`) commute with `A` on smooth fields
+`RCLike 𝕜` (`ℝ`, `ℂ`; `ConstCoeffOp.ofReal`, the coefficients cast to `𝕜`; the de Rham complexes
+in vector proxies are of this form, `deRhamVec_ofReal`). Real-linear maps `L : 𝕜₁ → 𝕜₂` (the
+real and imaginary parts, the cast `ℝ → 𝕜`) commute with `A` on smooth fields
 (`ConstCoeffOp.clm_ofReal_apply`), and so with its maximal realizations: a field lies in
 `D(A_max)` over `𝕜` iff its real and imaginary parts lie in `D(A_max)` over `ℝ`
 (`ConstCoeffOp.reCLM_mem_maximal_domain`, `imCLM_mem_maximal_domain`,
-`ofRealCLM_mem_maximal_domain`; `u = re u + i im u`, `L2F.ofRealCLM_re_add_im`).
+`ofRealCLM_mem_maximal_domain`; `u = re u + i im u`, `L2F.ofRealCLM_re_add_im`, with the
+pointwise maps `L2F.reCLM`, `L2F.imCLM`, `L2F.ofRealCLM` of `Feec.Domain.L2Field`).
 
 Hence the analytic properties of a complex of real-coefficient operators pass from `ℝ` to `𝕜`,
 componentwise:
@@ -25,13 +26,11 @@ componentwise:
 
 ## Main definitions
 
-* `ConstCoeffOp.ofReal`, `ConstCoeffComplex.ofReal`; `L2F.mapCLM`, `L2F.reCLM`, `L2F.imCLM`,
-  `L2F.ofRealCLM`.
+* `ConstCoeffOp.ofReal`, `ConstCoeffComplex.ofReal`.
 
 ## Main results
 
 * `ConstCoeffOp.clm_ofReal_apply`, `ConstCoeffOp.formalAdj_ofReal`.
-* `L2F.inner_ofRealCLM`, `L2F.ofRealCLM_re_add_im`, `L2F.inner_reCLM`.
 * **`ConstCoeffOp.ofRealCLM_mem_maximal_domain`**, **`ConstCoeffOp.reCLM_mem_maximal_domain`**,
   `ConstCoeffOp.imCLM_mem_maximal_domain`; `ofRealCLM_mem_fieldH1`.
 * **`ConstCoeffComplex.HasRegularDecomposition.ofReal`**,
@@ -47,7 +46,7 @@ Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open MeasureTheory
-open scoped InnerProductSpace ContDiff ComplexConjugate
+open scoped InnerProductSpace ContDiff
 
 @[expose] public noncomputable section
 
@@ -114,92 +113,6 @@ def ConstCoeffComplex.ofReal (C : ConstCoeffComplex E ℝ) : ConstCoeffComplex E
   A k := (C.A k).ofReal 𝕜
   comp k := (C.comp k).ofReal
 
-/-! ### Real-linear maps of `L²` fields -/
-
-namespace L2F
-
-variable [MeasureSpace E] {Ω : Set E} {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike 𝕜₂]
-
-/-- A real-linear map `L : 𝕜₁ → 𝕜₂` acting pointwise on `L²(Ω; 𝕜₁^ι)`. -/
-def mapCLM (L : 𝕜₁ →L[ℝ] 𝕜₂) : L2F 𝕜₁ Ω ι →L[ℝ] L2F 𝕜₂ Ω ι :=
-  (PiLp.continuousLinearEquiv 2 ℝ (fun _ : ι => L2 𝕜₂ Ω)).symm.toContinuousLinearMap.comp
-    (ContinuousLinearMap.pi fun i =>
-      (L.compLpL 2 _).comp (PiLp.proj 2 (fun _ : ι => L2 𝕜₁ Ω) i))
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-theorem coeFn_mapCLM (L : 𝕜₁ →L[ℝ] 𝕜₂) (u : L2F 𝕜₁ Ω ι) (i : ι) :
-    (mapCLM L u i : E → 𝕜₂) =ᵐ[volume.restrict Ω] fun x => L (u i x) :=
-  L.coeFn_compLp (u i)
-
-/-- The real part of a field. -/
-abbrev reCLM : L2F 𝕜 Ω ι →L[ℝ] L2F ℝ Ω ι := mapCLM RCLike.reCLM
-
-/-- The imaginary part of a field. -/
-abbrev imCLM : L2F 𝕜 Ω ι →L[ℝ] L2F ℝ Ω ι := mapCLM RCLike.imCLM
-
-variable (𝕜) in
-/-- A real field as a `𝕜`-valued one. -/
-abbrev ofRealCLM : L2F ℝ Ω ι →L[ℝ] L2F 𝕜 Ω ι := mapCLM RCLike.ofRealCLM
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- The cast preserves the inner product: `⟪a, b⟫_𝕜 = ⟪a, b⟫_ℝ`. -/
-theorem inner_ofRealCLM [Fintype ι] (a b : L2F ℝ Ω ι) :
-    ⟪ofRealCLM 𝕜 a, ofRealCLM 𝕜 b⟫_𝕜 = (⟪a, b⟫_ℝ : 𝕜) := by
-  simp only [L2F.inner_def, RCLike.ofReal_sum]
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [MeasureTheory.L2.inner_def, MeasureTheory.L2.inner_def, ← integral_ofReal]
-  refine integral_congr_ae ?_
-  filter_upwards [coeFn_mapCLM (Ω := Ω) (RCLike.ofRealCLM (K := 𝕜)) a i,
-    coeFn_mapCLM (Ω := Ω) (RCLike.ofRealCLM (K := 𝕜)) b i] with x ha hb
-  rw [ha, hb]
-  simp [mul_comm]
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- **A field is its real part plus `i` times its imaginary part.** -/
-theorem ofRealCLM_re_add_im (u : L2F 𝕜 Ω ι) :
-    ofRealCLM 𝕜 (reCLM u) + (RCLike.I : 𝕜) • ofRealCLM 𝕜 (imCLM u) = u := by
-  refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
-  change ((ofRealCLM 𝕜 (reCLM u) + (RCLike.I : 𝕜) • ofRealCLM 𝕜 (imCLM u)) i : E → 𝕜) =ᵐ[_] u i
-  rw [PiLp.add_apply, PiLp.smul_apply]
-  filter_upwards [Lp.coeFn_add (ofRealCLM 𝕜 (reCLM u) i) _, Lp.coeFn_smul (RCLike.I : 𝕜)
-    (ofRealCLM 𝕜 (imCLM u) i), coeFn_mapCLM (RCLike.ofRealCLM (K := 𝕜)) (reCLM u) i,
-    coeFn_mapCLM (RCLike.ofRealCLM (K := 𝕜)) (imCLM u) i, coeFn_mapCLM RCLike.reCLM u i,
-    coeFn_mapCLM RCLike.imCLM u i] with x h1 h2 h3 h4 h5 h6
-  rw [h1, Pi.add_apply, h2, Pi.smul_apply, h3, h4, h5, h6, smul_eq_mul, mul_comm]
-  exact RCLike.re_add_im _
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- The imaginary part is the real part of `-i u`. -/
-theorem imCLM_eq (u : L2F 𝕜 Ω ι) : imCLM u = reCLM (-((RCLike.I : 𝕜) • u)) := by
-  refine (WithLp.ext_iff 2).2 (funext fun i => Lp.ext ?_)
-  change (imCLM u i : E → ℝ) =ᵐ[_] (reCLM (-((RCLike.I : 𝕜) • u)) i : E → ℝ)
-  filter_upwards [coeFn_mapCLM RCLike.imCLM u i,
-    coeFn_mapCLM RCLike.reCLM (-((RCLike.I : 𝕜) • u)) i,
-    Lp.coeFn_neg (((RCLike.I : 𝕜) • u) i), Lp.coeFn_smul (RCLike.I : 𝕜) (u i)] with x h1 h2 h3 h4
-  rw [h1, h2, PiLp.neg_apply, h3, Pi.neg_apply, PiLp.smul_apply, h4, Pi.smul_apply]
-  simp
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
-/-- `⟪re v, b⟫_ℝ = re ⟪v, b⟫_𝕜` for a real field `b`. -/
-theorem inner_reCLM [Fintype ι] (v : L2F 𝕜 Ω ι) (b : L2F ℝ Ω ι) :
-    ⟪reCLM v, b⟫_ℝ = RCLike.re ⟪v, ofRealCLM 𝕜 b⟫_𝕜 := by
-  conv_rhs => rw [← ofRealCLM_re_add_im v]
-  simp [inner_add_left, inner_smul_left, inner_ofRealCLM]
-
-section Test
-
-variable [BorelSpace E] [IsFiniteMeasureOnCompacts (volume : Measure E)]
-
-/-- A real-linear map of a test field is the test field `L ∘ φ`. -/
-theorem mapCLM_testField (L : 𝕜₁ →L[ℝ] 𝕜₂) {φ : ι → E → 𝕜₁} (hφ : IsTestField Ω φ) :
-    mapCLM L (testField hφ) = testField (hφ.comp_clm L) :=
-  eq_testField _ fun i => (coeFn_mapCLM L _ i).trans
-    ((coeFn_testField hφ i).mono fun x hx => by simp only [hx])
-
-end Test
-
-end L2F
-
 /-! ### The maximal realizations -/
 
 namespace ConstCoeffOp
@@ -258,7 +171,7 @@ theorem imCLM_mem_maximal_domain (hΩ : IsOpen Ω) (A : ConstCoeffOp E ℝ ι κ
       A.maximal Ω ⟨_, hu⟩ = L2F.imCLM ((A.ofReal 𝕜).maximal Ω u) := by
   obtain ⟨hu, e⟩ := reCLM_mem_maximal_domain hΩ A (-((RCLike.I : 𝕜) • u))
   rw [LinearPMap.map_neg, LinearPMap.map_smul] at e
-  simp only [L2F.imCLM_eq]
+  simp only [L2F.imCLM_eq_reCLM]
   exact ⟨hu, e⟩
 
 end ConstCoeffOp

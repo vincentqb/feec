@@ -146,28 +146,6 @@ theorem apply_ofMatrix_inv [DecidableEq ι] [DecidableEq ι'] [DecidableEq κ]
 
 end ConstCoeffOp
 
-/-- **Maps intertwining the maximal operators in each degree are cochain maps of the maximal
-complexes**: if `T_k D(A_k max) ⊆ D(A'_k max)` and `A'_k max T_k = T_{k+1} A_k max`, then
-`T_j D(d_max) ⊆ D(d'_max)` and `d'_max T_j = T_k d_max` (the two complexes may be over different
-fields, e.g. `T` the real part of complex fields). -/
-theorem ConstCoeffComplex.maximalComplex_comm {𝕜₁ 𝕜₂ : Type*} [RCLike 𝕜₁] [RCLike 𝕜₂]
-    (hΩ : IsOpen Ω) {C : ConstCoeffComplex E 𝕜₁} {C' : ConstCoeffComplex E 𝕜₂}
-    {T : ∀ k, L2F 𝕜₁ Ω (C.ι k) → L2F 𝕜₂ Ω (C'.ι k)}
-    (h : ∀ k (x : ((C.A k).maximal Ω).domain), ∃ hx : T k x ∈ ((C'.A k).maximal Ω).domain,
-      (C'.A k).maximal Ω ⟨_, hx⟩ = T (k + 1) ((C.A k).maximal Ω x))
-    (j k : ℤ) (hjk : (ComplexShape.up ℤ).Rel j k) (x : ((C.maximalComplex hΩ).d j k).domain) :
-    ∃ hx : T j x ∈ ((C'.maximalComplex hΩ).d j k).domain,
-      (C'.maximalComplex hΩ).d j k ⟨_, hx⟩ = T k ((C.maximalComplex hΩ).d j k x) := by
-  obtain rfl : j + 1 = k := hjk
-  have hx : (x : L2F 𝕜₁ Ω (C.ι j)) ∈ ((C.A j).maximal Ω).domain := by
-    rw [← C.maximalComplex_d hΩ j]; exact x.2
-  obtain ⟨h', hv⟩ := h j ⟨_, hx⟩
-  have h'' : T j x ∈ ((C'.maximalComplex hΩ).d j (j + 1)).domain := by
-    rw [C'.maximalComplex_d hΩ j]; exact h'
-  refine ⟨h'', ((LinearPMap.apply_eq_of_eq (C'.maximalComplex_d hΩ j) _ ⟨_, h'⟩ rfl).trans
-    hv).trans ?_⟩
-  exact congrArg _ (LinearPMap.apply_eq_of_eq (C.maximalComplex_d hΩ j) x ⟨_, hx⟩ rfl).symm
-
 /-- **Constant matrices intertwining two complexes of constant-coefficient operators are cochain
 maps of their maximal complexes**: if `C'.A k ∘ M_k = M_{k+1} ∘ C.A k` on smooth fields, then
 `M_j D(d_max) ⊆ D(d'_max)` and `d'_max M_j = M_k d_max` (`ConstCoeffOp.maximal_ofMatrixCLM_of_comm`

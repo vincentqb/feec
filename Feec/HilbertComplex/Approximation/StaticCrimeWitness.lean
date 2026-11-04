@@ -93,6 +93,7 @@ theorem shifted_isPoincare : ∃ cP, 1 ≤ cP ∧ (shiftedFamily 𝕜).IsPoincar
     (fun n v => by
       rw [idTotalD_eq, shifted_D_eq, norm_vec3_zero, norm_vec3_zero, norm_mul, one_mul]
       exact le_mul_of_one_le_left (norm_nonneg _) (one_lt_norm_sc n).le)
+    (shiftedFamily 𝕜).proj (shiftedFamily 𝕜).proj_incl (shiftedFamily 𝕜).norm_proj_le
     (fun n z hz => by
       have h0 : c0 (z : PiLp 2 (W3 𝕜 𝕜 PUnit)) = 0 := by
         have := congrArg c1 hz

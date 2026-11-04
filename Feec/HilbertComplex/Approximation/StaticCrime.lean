@@ -10,9 +10,9 @@ The mixed Hodge Laplacian of the total complex (`Feec.HilbertComplex.Total`), di
 approximating family of discrete differential spaces (`ApproxComplexCrime.Family`: `Xₕ` with its
 own inner product, a differential `𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be
 cochain maps nor isometric), with the load `iₕ* f`. This is the elliptic theory of
-[HolstStern2012], §3 (Thms 3.9, 3.10, there for cochain reading maps) for the families of
-`Feec.HilbertComplex.Approximation.ApproxComplexCrime`, where the failure of `iₕ` to commute with
-the differentials enters as a cochain defect.
+[HolstStern2012], §3 (Thm 3.9, Thm 3.10, Cor 3.11, there for cochain reading maps) for the
+families of `Feec.HilbertComplex.Approximation.ApproxComplexCrime`, where the failure of `iₕ` to
+commute with the differentials enters as a cochain defect.
 
 ## Setting
 
@@ -36,7 +36,8 @@ the differentials enters as a cochain defect.
 ## Main results
 
 * `ApproxComplexCrime.Family.norm_mixedSol_le`: **uniform stability**,
-  `‖(σₕ, uₕ, pₕ)‖ ≤ 16 c_P² C ‖f‖` (graph norms; [AFW2010], Thm 3.8 for `(Xₕ, 𝐝ₕ)`).
+  `‖(σₕ, uₕ, pₕ)‖ ≤ 16 c_P² C ‖f‖` (graph norms; [AFW2010], Thm 3.8 for `(Xₕ, 𝐝ₕ)`;
+  [HolstStern2012], Thm 3.9).
 * `ApproxComplexCrime.Family.staticError_le`: **the Strang lemma**, for every discrete triple
   `x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖`.
 * `ApproxComplexCrime.Family.inner_staticResidual_eq`, `norm_staticResidual_le`: **the residual
@@ -46,15 +47,17 @@ the differentials enters as a cochain defect.
   `staticError_le_of_split`: the error estimate
   `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`, `δ₁`,
   `δ₂` bounds of the cochain defects and `η` of the harmonic defect (the crime analogue of
-  [HolstStern2012], Thm 3.10, where the reading maps are cochain maps and `δ₁ = δ₂ = 0`).
+  [HolstStern2012], Thm 3.10 and Cor 3.11, where the reading maps are cochain maps and
+  `δ₁ = δ₂ = 0`).
 * `ApproxComplexCrime.Family.staticConsistent_iff_tendsto`: consistent approximation at `f`
   (approximants with read error and residual tending to `0`) is equivalent to `e(f) → 0`;
   `staticConsistent_of_split` derives it from vanishing defects; `tendsto_staticError_of_dense`:
   on a dense set of data it gives `e(f) → 0` for every `f`.
-* `ApproxComplexCrime.Family.isPoincare_of_proj`: **the discrete Poincaré inequality from the
-  projections** (for cochain maps, [HolstStern2012], §3): if `πₕ` maps `ker 𝐝` into `ker 𝐝ₕ`,
-  `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` for cochain maps), then
-  `c_P = c₀ C C'`, `c₀` a Poincaré constant of `𝐝`.
+* `ApproxComplexCrime.Family.isPoincare_of_proj`: **the discrete Poincaré inequality from
+  projections** ([HolstStern2012], Thm 3.5, there for cochain maps): if `iₕ Xₕ ⊆ D(𝐝)` with
+  `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` for cochain maps) and bounded linear left inverses `pₕ` of
+  `iₕ` (`‖pₕ‖ ≤ C_π`) map `ker 𝐝` into `ker 𝐝ₕ`, then `c_P = c₀ C_π C'`, `c₀` a Poincaré constant
+  of `𝐝`.
 * `ApproxComplexCrime.Family.StaticVerdict`, **`ApproxComplexCrime.Family.staticFEEC`**: the
   conclusions together.
 
@@ -294,7 +297,8 @@ theorem cpx_mixedD1 (h : κ) (y : (S.cpx h).MixedSpace () ()) :
   rfl
 
 /-- **The uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`, for every
-`h`. -/
+`h`: the hypothesis of the uniform stability of the discrete mixed problem ([AFW2010], Thm 3.8).
+It follows from bounded projections (`isPoincare_of_proj`; [HolstStern2012], Thm 3.5). -/
 def IsPoincare (cP : ℝ) : Prop :=
   ∀ h (v : S.X h), v ∈ (LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h))ᗮ → ‖v‖ ≤ cP * ‖S.D h v‖
 
@@ -337,7 +341,7 @@ theorem IsPoincare.mono {cP cP' : ℝ} (hP : S.IsPoincare cP) (hc : cP ≤ cP') 
 
 variable {S} in
 /-- **The uniform discrete inf-sup condition** of the discrete mixed form, with the constant
-`1 / (16 c_P²)` ([AFW2010], Thm 3.8). -/
+`1 / (16 c_P²)` ([AFW2010], Thm 3.8; [HolstStern2012], Thm 3.9). -/
 theorem IsPoincare.infSup {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) :
     Variational.InfSup ((S.cpx h).mixedForm () () ()) (1 / (16 * cP ^ 2)) :=
   (S.cpx h).infSup_mixedForm (loop_rel () ()) (loop_rel () ()) hcP (hP.cycles h) (hP.cycles h)
@@ -428,8 +432,9 @@ theorem norm_sub_mixedSol_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) 
   rwa [one_div, inv_inv] at this
 
 /-- **The Strang lemma for the mixed method with variational crimes**: for every discrete triple
-`x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖` (best approximation plus consistency).
-Cf. [HolstStern2012], Thm 3.9 -/
+`x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖` (best approximation plus consistency: the
+uniform inf-sup condition applied to `x̃ - (σₕ, uₕ, pₕ)`, as in the proof of [HolstStern2012],
+Thm 3.10). -/
 theorem staticError_le (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hP : S.IsPoincare cP)
     (hcP : 1 ≤ cP) (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) :
     S.staticError hcr h f ≤
@@ -566,7 +571,7 @@ theorem norm_staticResidual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace
 `x̃` with cochain defects at most `δ₁`, `δ₂` and harmonic defect at most `η`,
 `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`: best
 approximation, inner-product defect and the defects of the reading map. Cf. [HolstStern2012],
-Thm 3.10 (cochain reading maps, where `δ₁ = δ₂ = 0`) -/
+Thm 3.10 and Cor 3.11 (cochain reading maps, where `δ₁ = δ₂ = 0`) -/
 theorem staticError_le_of_split {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
     (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) {δ₁ δ₂ η : ℝ}
     (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)
@@ -745,18 +750,20 @@ theorem tendsto_staticError_of_dense {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
 
 /-! #### The discrete Poincaré inequality from the projections -/
 
-/-- **The uniform discrete Poincaré inequality from the projections** (for cochain maps,
-[HolstStern2012], §3): if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `πₕ` maps `ker 𝐝`
-into `ker 𝐝ₕ`, and `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain
-map), then `‖v‖ ≤ c₀ C C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part and the
-rest, and project back. -/
+/-- **The uniform discrete Poincaré inequality from projections** ([HolstStern2012], Thm 3.5, there
+for cochain maps): if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `iₕ Xₕ ⊆ D(𝐝)` with
+`‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain map), and linear left inverses `pₕ` of
+`iₕ` with `‖pₕ‖ ≤ C_π` map `ker 𝐝` into `ker 𝐝ₕ` (e.g. cochain projections), then
+`‖v‖ ≤ c₀ C_π C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part and the rest, and
+project back with `pₕ`. -/
 theorem isPoincare_of_proj {c₀ C' : ℝ} (hc₀ : 0 ≤ c₀)
     (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
       ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖)
     (hmem : ∀ h v, S.incl h v ∈ H.totalD.domain)
     (hd : ∀ h v, ‖H.totalD ⟨S.incl h v, hmem h v⟩‖ ≤ C' * ‖S.D h v‖)
-    (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (S.proj h z) = 0) :
-    S.IsPoincare (c₀ * S.boundConst * C') := by
+    {Cπ : ℝ} (p : ∀ h, PiLp 2 W →L[𝕜] S.X h) (hp : ∀ h v, p h (S.incl h v) = v)
+    (hpC : ∀ h, ‖p h‖ ≤ Cπ) (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (p h z) = 0) :
+    S.IsPoincare (c₀ * Cπ * C') := by
   intro h v hv
   by_cases hv0 : v = 0
   · rw [hv0, norm_zero, _root_.map_zero, norm_zero, mul_zero]
@@ -769,17 +776,17 @@ theorem isPoincare_of_proj {c₀ C' : ℝ} (hc₀ : 0 ≤ c₀)
   have hd' : H.totalD (z - y₀) = H.totalD z := by rw [LinearPMap.map_sub, hy₀0, sub_zero]
   have h1 := hc _ hperp
   rw [hd'] at h1
-  have hker : S.proj h y₀ ∈ LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h) := hπ h y₀ hy₀0
-  set b := S.proj h ((z - y₀ : H.totalD.domain) : PiLp 2 W)
-  have hv' : v = S.proj h y₀ + b := by
-    rw [← _root_.map_add, Submodule.coe_sub, add_sub_cancel]; exact (S.proj_incl h v).symm
-  have e : ⟪v, S.proj h y₀ + b⟫_𝕜 = ⟪v, S.proj h y₀⟫_𝕜 + ⟪v, b⟫_𝕜 := inner_add_right _ _ _
+  have hker : p h y₀ ∈ LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h) := hπ h y₀ hy₀0
+  set b := p h ((z - y₀ : H.totalD.domain) : PiLp 2 W)
+  have hv' : v = p h y₀ + b := by
+    rw [← _root_.map_add, Submodule.coe_sub, add_sub_cancel]; exact (hp h v).symm
+  have e : ⟪v, p h y₀ + b⟫_𝕜 = ⟪v, p h y₀⟫_𝕜 + ⟪v, b⟫_𝕜 := inner_add_right _ _ _
   rw [← hv', Submodule.inner_left_of_mem_orthogonal hker hv, zero_add] at e
   have hsq : ‖v‖ ^ 2 ≤ ‖v‖ * ‖b‖ := by
     rw [@norm_sq_eq_re_inner 𝕜, e]; exact re_inner_le_norm _ _
-  have hb : ‖b‖ ≤ S.boundConst * (c₀ * (C' * ‖S.D h v‖)) := by
-    have hC := S.boundConst_nonneg
-    refine ((S.proj h).le_opNorm _).trans (mul_le_mul (S.norm_proj_le h) (h1.trans ?_)
+  have hb : ‖b‖ ≤ Cπ * (c₀ * (C' * ‖S.D h v‖)) := by
+    have hC : 0 ≤ Cπ := (norm_nonneg _).trans (hpC h)
+    refine ((p h).le_opNorm _).trans (mul_le_mul (hpC h) (h1.trans ?_)
       (norm_nonneg _) hC)
     exact mul_le_mul_of_nonneg_left (hd h v) hc₀
   have hpos : 0 < ‖v‖ := norm_pos_iff.2 hv0

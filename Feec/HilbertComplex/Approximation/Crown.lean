@@ -124,8 +124,8 @@ theory of the mixed Hodge Laplacian of the total complex with the load `iₕ* f`
 well-posedness, the Strang lemma, the splitting of the residual into the inner-product defect, the
 cochain defects of `u`, `𝐝 u` and the harmonic defect, convergence for every datum from
 consistency on a dense set; `Feec.HilbertComplex.Approximation.StaticCrime`), and the heat FEEC
-theorem with the heat Ritz projection `P_ℌₕ iₕ* y - Gₕ iₕ* z` when the static errors tend to `0`,
-with the heat rate from a static rate and an inner-product defect rate
+theorem with the heat Ritz projection `P_ℌₕ iₕ* y - Gₕ iₕ* z` when the static mixed method is
+consistent on a dense set of data, with the heat rate from a static rate and an inner-product defect rate
 (`Feec.HilbertComplex.Approximation.HeatCrime`). The crown
 consumes it on the zero-defect instance: every conforming window read as an approximating family
 (`ConstrainedFEEC.toCrime`, `windowCrime`, with `Jₕ = 1`, zero cochain defect and the discrete
@@ -621,11 +621,12 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
   static (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
     (hP : F.toFamily.IsPoincare cP) : F.toFamily.StaticVerdict hcr cP F.l
   /-- the heat FEEC theorem with variational crimes, with the heat Ritz projection
-  `P_ℌₕ iₕ* y - Gₕ iₕ* z`, when the static errors tend to `0` for every datum (e.g. from
-  consistency on a dense set, the field `converges` of `static`) -/
+  `P_ℌₕ iₕ* y - Gₕ iₕ* z`, when the static mixed method is consistent on a dense set of data
+  (its core is built from the convergence for every datum, the field `converges` of `static`) -/
   heat (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : F.toFamily.IsPoincare cP)
-    (hconv : ∀ f, Tendsto (fun h => F.toFamily.staticError hcr h f) F.l (𝓝 0)) :
-    F.toHeat.Verdict (F.heatCore hcr hcP hP hconv)
+    {D : Set (PiLp 2 W)} (hD : Dense D) (hc : ∀ g ∈ D, F.toFamily.StaticConsistent hcr F.l g) :
+    F.toHeat.Verdict
+      (F.heatCore hcr hcP hP ((F.toFamily.staticFEEC hcr F.l hcP hP).converges hD hc))
   /-- the heat rate with variational crimes from a static rate `e(f) ≤ K L mᵅ` on regular data
   and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` -/
   heat_rate (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
@@ -670,7 +671,7 @@ theorem feec (F : ApproxComplexCrime H κ) : F.Verdict :=
     fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.2 _ hy,
     (approxFEEC_ofComplexCrime F).2.1, TimeStepping.banachFEEC _,
     fun hcr _ hcP hP => F.toFamily.staticFEEC hcr F.l hcP hP,
-    fun hcr _ hcP hP hconv => F.heatFEEC hcr hcP hP hconv,
+    fun hcr _ hcP hP _ _ _ => F.heatFEEC hcr hcP hP _,
     fun hcr _ hcP hP _ _ hm _ _ hK0 hK hJ _ hL _ _ hx hreg h _ ht =>
       F.rate_heat_of_static hcr hcP hP hm hK0 hK hJ hL hx hreg h ht⟩
 

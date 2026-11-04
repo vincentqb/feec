@@ -3788,9 +3788,9 @@ example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
   G.feec.static hcr hcP hP
 
 example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : G.toFamily.IsPoincare cP)
-    (hconv : ∀ f, Tendsto (fun h => G.toFamily.staticError hcr h f) G.l (𝓝 0)) :
-    type_of% (G.heatFEEC hcr hcP hP hconv) :=
-  G.feec.heat hcr hcP hP hconv
+    {D : Set (PiLp 2 W)} (hD : Dense D) (hc : ∀ g ∈ D, G.toFamily.StaticConsistent hcr G.l g) :
+    type_of% (G.heatFEEC hcr hcP hP ((G.toFamily.staticFEEC hcr G.l hcP hP).converges hD hc)) :=
+  G.feec.heat hcr hcP hP hD hc
 
 example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : G.toFamily.IsPoincare cP)
     {Reg : ℝ → Set (PiLp 2 W)} {m : κ → ℝ} (hm : ∀ h, 0 ≤ m h) {α K : ℝ} (hK0 : 0 ≤ K)

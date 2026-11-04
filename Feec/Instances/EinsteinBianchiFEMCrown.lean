@@ -103,6 +103,7 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
   (hB : ∀ a : Fin 3,
     Feec.Models.Cube.FEM.ParitySmoothingEstimates 3 {a} Feec.FiniteElement.PolySeq.lagrangeP2 ρ C)
 
+set_option maxHeartbeats 400000 in
 /-- **The inner-product defect of the mirror scheme vanishes**: the reading maps are isometric
 (`mirrorFEMApprox_isOrthogonal`), `Jₙ = ιₙ* ιₙ = 1`. -/
 theorem mirrorComplex_J (N : ℕ) : (mirrorComplex hT hB).toFamily.J N = 1 :=

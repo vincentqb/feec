@@ -213,6 +213,7 @@ public import Feec.HilbertComplex.Approximation.SemidiscreteWave
 public import Feec.HilbertComplex.Approximation.SkewFEEC
 public import Feec.HilbertComplex.Approximation.Spectral
 public import Feec.HilbertComplex.Approximation.StaticCrime
+public import Feec.HilbertComplex.Approximation.StaticCrimeWitness
 public import Feec.HilbertComplex.Approximation.StaticFEEC
 public import Feec.HilbertComplex.Approximation.Subcomplex
 public import Feec.HilbertComplex.BGG.Analytic

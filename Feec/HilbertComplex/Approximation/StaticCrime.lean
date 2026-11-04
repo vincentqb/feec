@@ -332,6 +332,10 @@ theorem IsPoincare.cycles {cP : ℝ} (hP : S.IsPoincare cP) (h : κ)
   exact hP h z hz
 
 variable {S} in
+theorem IsPoincare.mono {cP cP' : ℝ} (hP : S.IsPoincare cP) (hc : cP ≤ cP') : S.IsPoincare cP' :=
+  fun h v hv => (hP h v hv).trans (mul_le_mul_of_nonneg_right hc (norm_nonneg _))
+
+variable {S} in
 /-- **The uniform discrete inf-sup condition** of the discrete mixed form, with the constant
 `1 / (16 c_P²)` ([AFW2010], Thm 3.8). -/
 theorem IsPoincare.infSup {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ) :
@@ -742,17 +746,17 @@ theorem tendsto_staticError_of_dense {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
 /-! #### The discrete Poincaré inequality from the projections -/
 
 /-- **The uniform discrete Poincaré inequality from the projections** (for cochain maps,
-[HolstStern2012], §3.3): if `𝐝` has the Poincaré constant `c` on `(ker 𝐝)ᗮ`, `πₕ` maps `ker 𝐝`
+[HolstStern2012], §3.3): if `𝐝` has the Poincaré constant `c₀` on `(ker 𝐝)ᗮ`, `πₕ` maps `ker 𝐝`
 into `ker 𝐝ₕ`, and `iₕ Xₕ ⊆ D(𝐝)` with `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖` (`C' = C` when `iₕ` is a cochain
-map), then `‖v‖ ≤ c C C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part and the
+map), then `‖v‖ ≤ c₀ C C' ‖𝐝ₕ v‖` on `(ker 𝐝ₕ)ᗮ`: split `iₕ v` into its `ker 𝐝` part and the
 rest, and project back. -/
-theorem isPoincare_of_proj {c C' : ℝ} (hc0 : 0 ≤ c)
+theorem isPoincare_of_proj {c₀ C' : ℝ} (hc₀ : 0 ≤ c₀)
     (hc : ∀ z : H.totalD.domain, (z : PiLp 2 W) ∈ H.totalD.kerᗮ →
-      ‖(z : PiLp 2 W)‖ ≤ c * ‖H.totalD z‖)
+      ‖(z : PiLp 2 W)‖ ≤ c₀ * ‖H.totalD z‖)
     (hmem : ∀ h v, S.incl h v ∈ H.totalD.domain)
     (hd : ∀ h v, ‖H.totalD ⟨S.incl h v, hmem h v⟩‖ ≤ C' * ‖S.D h v‖)
     (hπ : ∀ h (z : H.totalD.domain), H.totalD z = 0 → S.D h (S.proj h z) = 0) :
-    S.IsPoincare (c * S.boundConst * C') := by
+    S.IsPoincare (c₀ * S.boundConst * C') := by
   intro h v hv
   by_cases hv0 : v = 0
   · rw [hv0, norm_zero, _root_.map_zero, norm_zero, mul_zero]
@@ -773,11 +777,11 @@ theorem isPoincare_of_proj {c C' : ℝ} (hc0 : 0 ≤ c)
   rw [← hv', Submodule.inner_left_of_mem_orthogonal hker hv, zero_add] at e
   have hsq : ‖v‖ ^ 2 ≤ ‖v‖ * ‖b‖ := by
     rw [@norm_sq_eq_re_inner 𝕜, e]; exact re_inner_le_norm _ _
-  have hb : ‖b‖ ≤ S.boundConst * (c * (C' * ‖S.D h v‖)) := by
+  have hb : ‖b‖ ≤ S.boundConst * (c₀ * (C' * ‖S.D h v‖)) := by
     have hC := S.boundConst_nonneg
     refine ((S.proj h).le_opNorm _).trans (mul_le_mul (S.norm_proj_le h) (h1.trans ?_)
       (norm_nonneg _) hC)
-    exact mul_le_mul_of_nonneg_left (hd h v) hc0
+    exact mul_le_mul_of_nonneg_left (hd h v) hc₀
   have hpos : 0 < ‖v‖ := norm_pos_iff.2 hv0
   have : ‖v‖ ≤ ‖b‖ := le_of_mul_le_mul_left (by nlinarith) hpos
   calc ‖v‖ ≤ _ := this.trans hb

@@ -270,8 +270,13 @@ finite-dimensional harmonic forms the cochain projections eventually induce isom
 cohomology
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`,
 `Feec.HilbertComplex.ConformingFamily.windowCrime_eventually_bijective_cohomologyMap`; the fields
-`crime_static`, `crime_cohomology` of `Feec.HilbertComplex.ConformingFamily.Verdict`). Not
-formalized: a static rate for a concrete family with crimes (the heat rate takes it as
+`crime_static`, `crime_cohomology` of `Feec.HilbertComplex.ConformingFamily.Verdict`). With
+nonzero harmonic forms and reading maps that are not isometric, the shear family of
+`𝕜 --id--> 𝕜 --0--> 𝕜` (`iₙ = 1 + hₙ N`, `N² = 0`) exercises these results: static convergence
+for every datum, a positive static error and a positive harmonic gap at `(0, 0, 1)` (whose reading
+is not harmonic), and the eventual isomorphism on a nonzero cohomology
+(`Feec.HilbertComplex.ApproxComplexCrime.shear_nonvacuous`,
+`Feec.HilbertComplex.Approximation.StaticCochainWitness`). Not formalized: a static rate for a concrete family with crimes (the heat rate takes it as
 hypothesis), and cohomology for reading maps that are not cochain maps.
 
 **Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the

@@ -2,6 +2,7 @@ module
 
 public import Feec.Instances.Corollaries
 public import Feec.HilbertComplex.Approximation.ApproxComplexCrimeWitness
+public import Feec.HilbertComplex.Approximation.StaticCochainWitness
 public import Feec.Counterexamples.Fredholm
 public import Feec.Examples.NonVacuity
 public import Feec.Domain.BGGKoszul
@@ -37,7 +38,10 @@ non-vacuity witnesses of the layers in `CrownNonVacuity` (`crownNonVacuity`).
   and bounded generators): variational crimes with nonzero defects instantiate the approximating
   FEEC theorem, with rates and both residual branches (`ApproxFEEC.perturbed_nonvacuous`,
   `ApproxFEEC.projPerturbed_nonvacuous`, `ApproxComplex.scaled_nonvacuous`,
-  `ApproxComplexCrime.shifted_nonvacuous`, `ApproxComplexCrime.mixed_nonvacuous`); a Hodge wave
+  `ApproxComplexCrime.shifted_nonvacuous`, `ApproxComplexCrime.mixed_nonvacuous`), and the
+  cochain case with nonzero harmonic forms and non-isometric reading maps
+  (`ApproxComplexCrime.shear_nonvacuous`: static convergence, a positive harmonic gap, the
+  eventual isomorphism on a nonzero cohomology, the heat theorem); a Hodge wave
   equation with `L ≠ 0` (`Feec.Examples.idComplex_nonvacuous`) and a nonzero skew generator
   (`Feec.Examples.rotGen_standing_hypotheses`).
 * **The Banach layer in a norm that is not Hilbert-contractive** (`maxNorm`,
@@ -220,6 +224,10 @@ structure CrownNonVacuity : Prop where
   scheme of the heat equation (the lumped-mass `P₁` Laplacian), with a nonzero classical
   solution -/
   finiteDifference : type_of% @Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat_nonvacuous
+  /-- the static theory with crimes in the cochain case on a complex with nonzero harmonic forms:
+  non-isometric cochain reading maps, static convergence, a positive harmonic gap, eventually
+  bijective maps on a nonzero cohomology, and the heat theorem with crimes -/
+  shear : type_of% @ApproxComplexCrime.shear_nonvacuous.{u}
 
 /-- **The crown is not vacuous** (`CrownNonVacuity`). -/
 theorem crownNonVacuity : CrownNonVacuity.{u} :=
@@ -231,6 +239,7 @@ theorem crownNonVacuity : CrownNonVacuity.{u} :=
     Examples.rotGen_standing_hypotheses, Domain.smoothBGGVerdict,
     @Models.Cube.MaxNormHeat.maxNormHeat_nonvacuous,
     @Models.Cube.MaxNormNeumann.maxNormNeumann_nonvacuous,
-    @Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat_nonvacuous⟩
+    @Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat_nonvacuous,
+    ApproxComplexCrime.shear_nonvacuous⟩
 
 end Feec.Instances

@@ -62,6 +62,7 @@ public import Feec.Domain.LipschitzPullback
 public import Feec.Domain.Mollify
 public import Feec.Domain.Obstruction
 public import Feec.Domain.Operators
+public import Feec.Domain.RegularDecomposition
 public import Feec.Domain.Rellich
 public import Feec.Domain.Scaling
 public import Feec.Domain.StarShapedSmoothing
@@ -308,6 +309,7 @@ public import Feec.Models.Cube.AbsorbingFiniteSpeed
 public import Feec.Models.Cube.AbsorbingGalerkin
 public import Feec.Models.Cube.AbsorbingTSD
 public import Feec.Models.Cube.AbsorbingTrace
+public import Feec.Models.Cube.BGGFEEC
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.CubicalFiniteElementConvergence
 public import Feec.Models.Cube.CubicalSmoothingEstimates
@@ -331,6 +333,7 @@ public import Feec.Models.Cube.Ident
 public import Feec.Models.Cube.Inhomogeneous
 public import Feec.Models.Cube.MaxNormHeat
 public import Feec.Models.Cube.MaxNormNeumann
+public import Feec.Models.Cube.MaximalRegularDecomposition
 public import Feec.Models.Cube.InhomogeneousError
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG

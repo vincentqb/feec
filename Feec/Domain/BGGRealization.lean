@@ -27,10 +27,11 @@ This is the case of the Hessian, elasticity and div-div diagrams on every open `
 finite-dimensional cohomology and the regular decompositions `R(d) + R(S) = D(d)` hold after `J`,
 the BGG complex has closed range and `dim Hⁱ ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`**. The regular
 decompositions of `H(curl)`, `H(div)` hold on bounded Lipschitz domains ([ArnoldHu2021], §2,
-Theorem 3; [CapHu2024]) and are not formalized for the maximal realizations: the cube result
-`Feec.Models.Cube.WeakSymmetry.curlPotential` is the regular decomposition of `H̊(curl)` on
-`Q = (0, ½)³`, for the minimal complex in form proxies (`deRham`), and the decomposition of
-`H(div)` has no counterpart. The finite-dimensionality of the cohomology of `deRhamVec m` is not
+Theorem 3; [CapHu2024]); they follow from the `H¹`-regular decompositions of the rows
+(`Feec.Domain.ConstCoeffBGG.maximalData_regularDecomposition`), which are formalized on the cube
+`Q = (0, ½)³` over `ℝ` (`Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`; for these
+diagrams `Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`, …) and not on other
+domains. The finite-dimensionality of the cohomology of `deRhamVec m` is not
 derived from the cube results on `deRham` either: over `ℝ`, the downstream module
 `Feec.Domain.VectorProxy` identifies the maximal complexes of `deRhamVec ℝ 1` and `deRham ℝ 3` on
 every open `Ω ⊆ ℝ³` (`deRhamVec_maximalComplex_eq_map`), but the cohomology is not transported,

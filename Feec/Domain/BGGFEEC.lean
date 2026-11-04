@@ -11,23 +11,26 @@ stacked `L²` de Rham complexes on an open `Ω ⊆ ℝ³` linked by constant mat
 (`Feec.Domain.hessianMaximalData`, `elasticityMaximalData`, `divDivMaximalData`). For discrete BGG
 data of them, stacked conforming families of the two de Rham complexes with `S Ṽₕ ⊆ Vₕ` and
 `πₕ S = S π̃ₕ` (`Feec.BGG.HilbertData.StackedFamily`), the FEEC theorem for discrete BGG complexes
-(`Feec.BGG.HilbertData.StackedFamily.bggVerdict`) applies: the matrices up to `J` have left
-inverses (`hessianSMat_leftInv`, …), so **wherever the two de Rham complexes have
-finite-dimensional cohomology and the regular decompositions after `J` hold, the discrete
-Hessian, elasticity and div-div complexes satisfy the FEEC theorem** (`hessianFEEC`,
-`elasticityFEEC`, `divDivFEEC`; for general constant-coefficient diagrams,
-`ConstCoeffBGG.maximalData_feecVerdict`). The regular decompositions of the maximal realizations
-(`Feec.BGG.HilbertData.RegularDecomposition`) and the finite-dimensional cohomology of
-`deRhamVec m` are hypotheses: neither is formalized on a domain of `ℝ³` (see
-`Feec.Domain.BGGRealization`). **No stacked family of the maximal data is known to exist here**:
-the theorems quantify over `G`, and no finite element family with `S Ṽₕ ⊆ Vₕ`, `πₕ S = S π̃ₕ` is
-constructed. The conditions are strong: the connecting maps `I`, `2 vskw`, `tr` of the Hessian
-data are onto, so they force `Vₕ¹ = Ṽₕ⁰`, `πₕ¹ = π̃ₕ⁰`, `Vₕ² = 2 vskw Ṽₕ¹`, `Vₕ³ = tr Ṽₕ²`, and
-`π̃ₕ¹` must preserve the symmetric matrix fields `ker (2 vskw)` (as for the tensor-product
-splines of [BonizzoniHuKanschatSap2024], not formalized). The non-vacuity witnesses of the
-abstract theorem are the full families of finite-dimensional data
-(`Feec.BGG.BoundedData.idShift_toHilbertData_bggVerdict`). The verdicts concern the derived
-complex of the domain complexes in the graph norms, not the hand-built `L²` complexes
+(`Feec.BGG.HilbertData.StackedFamily.bggVerdict`) applies: the matrices up to `J` have left inverses
+(`hessianSMat_leftInv`, …), so **wherever the two de Rham complexes have finite-dimensional
+cohomology and the regular decompositions after `J` hold, the discrete Hessian, elasticity and
+div-div complexes satisfy the FEEC theorem** (`hessianFEEC`, `elasticityFEEC`, `divDivFEEC`; for
+general constant-coefficient diagrams, `ConstCoeffBGG.maximalData_feecVerdict`). The regular
+decompositions of the maximal realizations (`Feec.BGG.HilbertData.RegularDecomposition`) are
+hypotheses here: they follow from the `H¹`-regular decompositions of the rows
+(`hessianMaximalData_regularDecomposition`, …, in `Feec.Domain.RegularDecomposition`) and are a
+theorem on the cube `Q = (0, ½)³` over `ℝ`, where the FEEC theorems hold without them
+(`Feec.Models.Cube.hessianFEEC_Q`, `Feec.Models.Cube.elasticityFEEC_Q`,
+`Feec.Models.Cube.divDivFEEC_Q`). The finite-dimensional cohomology of `deRhamVec m` is a
+hypothesis, formalized on no domain of `ℝ³`. **No stacked family of the maximal data is known to
+exist here**: the theorems quantify over `G`, and no finite element family with `S Ṽₕ ⊆ Vₕ`,
+`πₕ S = S π̃ₕ` is constructed. The conditions are strong: the connecting maps `I`, `2 vskw`, `tr` of
+the Hessian data are onto, so they force `Vₕ¹ = Ṽₕ⁰`, `πₕ¹ = π̃ₕ⁰`, `Vₕ² = 2 vskw Ṽₕ¹`,
+`Vₕ³ = tr Ṽₕ²`, and `π̃ₕ¹` must preserve the symmetric matrix fields `ker (2 vskw)` (as for the
+tensor-product splines of [BonizzoniHuKanschatSap2024], not formalized). The non-vacuity witnesses
+of the abstract theorem are the full families of finite-dimensional data
+(`Feec.BGG.BoundedData.idShift_toHilbertData_bggVerdict`). The verdicts concern the derived complex
+of the domain complexes in the graph norms, not the hand-built `L²` complexes
 `Feec.Domain.HessianComplex`, `Feec.Domain.Elasticity`, `Feec.Domain.DivDivComplex`.
 
 ## Main results

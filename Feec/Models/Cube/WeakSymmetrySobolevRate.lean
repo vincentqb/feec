@@ -3,6 +3,7 @@ module
 public import Feec.Models.Cube.WeakSymmetryConvergence
 public import Feec.Models.Cube.WeakSymmetryTangentialRate
 public import Feec.Models.Cube.SobolevRate
+public import Feec.Models.Cube.MaximalRegularDecomposition
 
 /-!
 # Sobolev-data rates for the BGG elements of Tables 5.1 / 6.1 with the thesis' boundary conditions
@@ -518,68 +519,6 @@ open Feec.Models.Cube.DeRhamIdent
 open Feec.Models.Cube.Geometry (Q)
 
 variable {n : ℕ}
-
-/-- **Gaffney's identity on the real torus window**: a sequence in the domains of the outgoing
-differential and of the adjoint of the incoming one lies in `H¹(𝕋ⁿ)`, with
-`Σ_m (1 + |ξ_m|²) |y(m)|² = ‖y‖² + ‖d y‖² + ‖d* y‖²` (the fibre Cartan identity
-`|ξ|² |v|² = |ξ ∧ v|² + |ι_ξ v|²`, `Feec.Models.Torus.DeRham.window_cartan`). -/
-theorem gaffney_RT (a : Fin (Fintype.card (Fin n) + 1)) {y : TW n a}
-    (h1 : y ∈ ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)).domain)
-    (h2 : y ∈ (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain) :
-    MemSob 1 (y : Seq n a) ∧
-      sobSum 1 (y : Seq n a) = ‖y‖ ^ 2 +
-        ‖(RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a) ⟨y, h1⟩‖ ^ 2 +
-        ‖((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)† ⟨y, h2⟩‖ ^ 2 := by
-  have h2' : y ∈ (((Torus.DeRham.window (Fin n)).d
-      ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†).domain := by
-    have := h2; rw [RT_adjoint] at this; exact this
-  have eadj : ((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)† ⟨y, h2⟩ =
-      ((Torus.DeRham.window (Fin n)).d
-        ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)† ⟨y, h2'⟩ :=
-    LinearPMap.apply_eq_of_eq (RT_adjoint _ a) ⟨y, h2⟩ ⟨y, h2'⟩ rfl
-  have h2'' : y ∈ (Operator.mulOp (Measure.count : Measure (Fin n → ℤ)) fun k =>
-      ContinuousLinearMap.adjoint ((Torus.DeRham.windowSymbol (Fin n)).m
-        ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a k)).domain := by
-    have := h2'; rw [Fourier.SymbolComplex.adjoint_d] at this; exact this
-  have eadj2 : ((Torus.DeRham.window (Fin n)).d
-      ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)† ⟨y, h2'⟩ =
-      Operator.mulOp (Measure.count : Measure (Fin n → ℤ)) (fun k =>
-        ContinuousLinearMap.adjoint ((Torus.DeRham.windowSymbol (Fin n)).m
-          ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a k)) ⟨y, h2''⟩ :=
-    LinearPMap.apply_eq_of_eq (Fourier.SymbolComplex.adjoint_d _ _ a) _ _ rfl
-  have hpt2 : ∀ m, cf (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†
-      ⟨y, h2⟩ : Seq n _) m = ContinuousLinearMap.adjoint ((Feec.Fourier.Exterior.deRham (Fin n)).m
-        ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a (Fourier.Torus.freq m))
-          (cf (y : Seq n a) m) := by
-    intro m
-    change ((((RT n).d _ a)† ⟨y, h2⟩ : TW n _) : (Fin n → ℤ) → _) m = _
-    rw [eadj, eadj2]
-    exact Operator.coeFn_mulOp_count _ ⟨y, h2''⟩ m
-  have hpt1 : ∀ m, cf ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)
-      ⟨y, h1⟩ : Seq n _) m = (Feec.Fourier.Exterior.deRham (Fin n)).m a
-        ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a) (Fourier.Torus.freq m)
-          (cf (y : Seq n a) m) := fun m => RT_d_apply ⟨y, h1⟩ m
-  have hc : ∀ m, weight 1 m * ‖cf (y : Seq n a) m‖ ^ 2 = ‖cf (y : Seq n a) m‖ ^ 2 +
-      ‖cf ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)
-        ⟨y, h1⟩ : Seq n _) m‖ ^ 2 +
-      ‖cf (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†
-        ⟨y, h2⟩ : Seq n _) m‖ ^ 2 := by
-    intro m
-    rw [weight_one, hpt1, hpt2]
-    have := Torus.DeRham.window_cartan a (Fourier.Torus.freq m) (cf (y : Seq n a) m)
-    linear_combination -this
-  have hs : Summable fun m => ‖cf (y : Seq n a) m‖ ^ 2 +
-      ‖cf ((RT n).d a ((ComplexShape.window (Fintype.card (Fin n) + 1)).next a)
-        ⟨y, h1⟩ : Seq n _) m‖ ^ 2 +
-      ‖cf (((RT n).d ((ComplexShape.window (Fintype.card (Fin n) + 1)).prev a) a)†
-        ⟨y, h2⟩ : Seq n _) m‖ ^ 2 :=
-    ((summable_norm_sq _).add (summable_norm_sq _)).add (summable_norm_sq _)
-  refine ⟨?_, ?_⟩
-  · exact hs.congr fun m => (hc m).symm
-  · unfold sobSum
-    rw [tsum_congr hc, ((summable_norm_sq _).add (summable_norm_sq _)).tsum_add
-      (summable_norm_sq _), (summable_norm_sq _).tsum_add (summable_norm_sq _),
-      ← norm_sq_eq_tsum, ← norm_sq_eq_tsum, ← norm_sq_eq_tsum]
 
 /-- **Gaffney's identity in the relative class `H̊Λ(Q)`** (window form): a form on `Q` in the
 domain of the outgoing minimal differential and of the adjoint of the incoming one lies in

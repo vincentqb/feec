@@ -14,73 +14,58 @@ public import Mathlib.LinearAlgebra.TensorProduct.Map
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 
 /-!
-# The algebra of the periodic table of the finite elements
+# Classification of invariant spaces of polynomial differential forms
 
-The finite element spaces of differential forms of the periodic table ([ArnoldLogg2014]) are
-built from four families of polynomial differential forms on `Kⁿ` ([AFW2006], §3;
-[ArnoldBoffiBonizzoni2015], §5). A polynomial differential form is an element of
-`PΛ = P(Kⁿ) ⊗ Λ(Kⁿ)*`, a polynomial combination of the constant forms
-`dx_σ = dx_{σ₁} ∧ ⋯ ∧ dx_{σ_k}` of Mathlib's exterior algebra of the covectors (`Form`); the
-`k`-forms with coefficients in a space `S` of polynomials are `S ⊗ Λᵏ(Kⁿ)*` (`kForm`), and
+A polynomial differential form on `Kⁿ` is an element of `PΛ = P(Kⁿ) ⊗ Λ(Kⁿ)*` (`Form`), a
+polynomial combination of the constant forms `dx_σ = dx_{σ₁} ∧ ⋯ ∧ dx_{σ_k}` of Mathlib's exterior
+algebra of the covectors; `H_rΛᵏ`, `P_rΛᵏ` are the `k`-forms with coefficients homogeneous of
+degree `r`, of degree at most `r` (`kForm`), `d` the exterior derivative, `κ` the Koszul
+differential (contraction with the position vector field `x`), and
+`P_r⁻Λᵏ = P_{r-1}Λᵏ + κH_{r-1}Λ^{k+1}` (`r ≥ 1`), `P_0⁻Λᵏ = 0`, the trimmed spaces
+([AFW2006], §3). Forms are pulled back along `φ(x) = Bx + b` by
+`φ^*(p ⊗ θ) = (p ∘ φ) ⊗ Λ(Bᵀ)θ` (`pullback`).
 
-* `H_rΛᵏ`, `P_rΛᵏ`: coefficients homogeneous of degree `r`, of degree at most `r`;
-* `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}` (`r ≥ 1`) and `P_0⁻Λᵏ = 0`, the trimmed spaces, `κ`
-  the Koszul differential (contraction with the position vector field `x`);
-* `Q_b⁻Λᵏ = ⨁_σ [⊗ⱼ P_{b_j - [j ∈ σ]}(I)] dx_σ`, the tensor-product spaces of the cube, in the
-  multidegree `b` (`Q_r⁻Λᵏ` for `b = (r, …, r)`).
+**The classification** (`FEEC.affineInvariantForms`, [AFW2006], §3.4, over every field `K` of
+characteristic `0`):
 
-The theorem below (`FEEC.periodicTable`) states, in every dimension `n`, form degree `k` and
-polynomial degree `r` (multidegree `b`), over every field `K` (of characteristic `0` where marked
-`[CharZero K]`):
+* the summands `dH_{r+1}Λᵏ⁻¹` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are invariant under the pullback
+  of every linear map and, for `r, k ≥ 1`, they are the only `GL(n)`-invariant subspaces of `H_rΛᵏ`
+  besides `0` and `H_rΛᵏ`;
+* the spaces `X(r, s, k) = dP_{r+1}Λᵏ⁻¹ + κP_sΛ^{k+1}` (`s ≤ r`) and `dP_{r+1}Λᵏ⁻¹` are invariant
+  under every affine map, `X(r, r, k) = P_{r+1}⁻Λᵏ`, `X(r + 1, r, k) = P_{r+1}Λᵏ`,
+  `dP_1Λᵏ⁻¹ = P_0Λᵏ` (Theorem 3.5);
+* for `0 < k < n` every nonzero finite-dimensional space of `k`-forms invariant under the
+  invertible affine maps is `dP_{r+1}Λᵏ⁻¹` or some `X(r, s, k)` (Theorem 3.6).
 
-1. the dimensions `dim P_rΛᵏ = C(r + n, r + k) C(r + k, k)`, `dim H_rΛᵏ = C(n, k) C(n + r - 1, r)`,
-   `dim P_r⁻Λᵏ = C(r + n, r + k) C(r + k - 1, k)` (`r ≥ 1`), `dim κ H_rΛ^{k+1}`, and
-   `dim Q_b⁻Λᵏ = Σ_{#s = k} Πⱼ (b_j + 1 - [j ∈ s])`, `dim Q_r⁻Λᵏ = C(n, k) rᵏ (r + 1)ⁿ⁻ᵏ`;
-2. `d² = 0`, `κ² = 0`, the Leibniz rule for `κ`, the closure of `P_rΛ` and `P_r⁻Λ` under the
-   wedge product, and the polynomial de Rham complexes
-   `P_rΛ⁰ → P_{r-1}Λ¹ → ⋯ → P_0Λʳ → 0` ⊆ `P_r⁻Λ⁰ → P_r⁻Λ¹ → ⋯ → P_r⁻Λⁿ` and
-   `Q_b⁻Λ⁰ → Q_b⁻Λ¹ → ⋯ → Q_b⁻Λⁿ` are cochain complexes (`deRham`), exact in positive degree, with
-   the constants as closed `0`-forms: resolutions of `K`; the homogeneous de Rham complexes and
-   the homogeneous and polynomial Koszul complexes are exact (but for the constants);
-3. the homotopy formula `(dκ + κd) ω = (r + k) ω` on `H_rΛᵏ`, the injectivity of `d` on the
-   range of `κ` and of `κ` on the range of `d`, the Koszul decompositions
-   `H_rΛᵏ = κ H_{r-1}Λ^{k+1} ⊕ d H_{r+1}Λᵏ⁻¹` (`r + k ≥ 1`),
-   `P_rΛᵏ = κ P_{r-1}Λ^{k+1} ⊕ d P_{r+1}Λᵏ⁻¹` (`k ≥ 1`) and
-   `P_rΛᵏ = P_r⁻Λᵏ ⊕ d H_{r+1}Λᵏ⁻¹` (`k ≥ 1`), so `d P_r⁻Λᵏ = d P_rΛᵏ`; the two forms
-   `P_{r+1}⁻Λᵏ = P_rΛᵏ ⊕ κ H_rΛ^{k+1} = P_rΛᵏ + κ P_rΛ^{k+1}` of the definition,
-   `P_r⁻Λ⁰ = P_rΛ⁰`, `P_r⁻Λⁿ = P_{r-1}Λⁿ`, the equivalent definition
-   `P_r⁻Λᵏ = {ω ∈ P_rΛᵏ | κω ∈ P_rΛᵏ⁻¹}`, the strict inclusions `P_{r-1}Λᵏ ⊊ P_r⁻Λᵏ ⊊ P_rΛᵏ`
-   (`0 < k < n`) and `P_{r+1}⁻Λᵏ ∩ ker d ⊆ P_rΛᵏ`.
-4. the degrees of freedom count `dim P_rΛᵏ = Σ_{m ≤ n} C(n + 1, m + 1) dim P⁻_{r+k-m}Λ^{m-k}(Kᵐ)`
-   and `dim P_r⁻Λᵏ = Σ_{m ≤ n} C(n + 1, m + 1) dim P_{r+k-m-1}Λ^{m-k}(Kᵐ)` (`r ≥ 1`) of
-   [AFW2006], Theorems 4.9, 4.13, and the complexes of the periodic table: for every admissible
-   sequence (`Admissible`; [AFW2006], §3.5, §5), the spaces `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` form a cochain
-   complex (`seqForm`), exact in positive degree with the constants as closed `0`-forms.
+**Characteristic `0` is necessary** (`FEEC.charZero_iff_classification`,
+`FEEC.charZero_iff_closed_eq_exact`): over every field, the classification of the
+`GL(n)`-invariant subspaces of `H_rΛᵏ`, and the Poincaré lemma `ker d ∩ H_rΛ^{k+1} = dH_{r+1}Λᵏ`,
+hold in every dimension iff `K` has characteristic `0`.
 
-A second theorem (`FEEC.affineInvariantForms`, over every field `K` of characteristic `0`)
-states the classification of the affinely invariant spaces of [AFW2006], §3.4, with the pullback
-`φ^*(p ⊗ θ) = (p ∘ φ) ⊗ Λ(Bᵀ)θ` along `φ(x) = B x + b` (`pullback`): the summands
-`dH_{r+1}Λᵏ⁻¹` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are invariant under every linear map and, for
-`r, k ≥ 1`, its only `GL(n)`-invariant subspaces besides `0` and `H_rΛᵏ`; the spaces
-`X(r, s, k) = dP_{r+1}Λᵏ⁻¹ + κP_sΛ^{k+1}` (`s ≤ r`) are invariant under every affine map,
-`X(r, r, k) = P_{r+1}⁻Λᵏ`, `X(r + 1, r, k) = P_{r+1}Λᵏ`, `dP_1Λᵏ⁻¹ = P_0Λᵏ` (Theorem 3.5); and for
-`0 < k < n` every nonzero finite-dimensional space of `k`-forms invariant under the invertible
-affine maps is `dP_{r+1}Λᵏ⁻¹` or some `X(r, s, k)` (Theorem 3.6). A third theorem
-(`FEEC.charZero_iff_classification`) states that characteristic `0` is necessary: the
-classification of the `GL(n)`-invariant subspaces of `H_rΛᵏ` holds in every dimension iff `K` has
-characteristic `0`.
+**The algebra of the classified spaces** (`FEEC.periodicTable`, over every field, of
+characteristic `0` where marked `[CharZero K]`): with also the cubical spaces
+`Q_b⁻Λᵏ = ⨁_σ [⊗ⱼ P_{b_j - [j ∈ σ]}(I)] dx_σ` ([ArnoldBoffiBonizzoni2015], §5), the dimensions of
+`P_rΛᵏ`, `H_rΛᵏ`, `P_r⁻Λᵏ`, `κH_rΛ^{k+1}`, `Q_b⁻Λᵏ` and the degrees of freedom counts of
+[AFW2006], Theorems 4.9, 4.13; `d² = 0`, `κ² = 0`, the Leibniz rule for `κ`, the wedge products;
+the polynomial de Rham complexes of `P_{r-k}Λᵏ`, `P_r⁻Λᵏ`, `Q_b⁻Λᵏ` and of every admissible
+sequence of the periodic table ([ArnoldLogg2014]; `Admissible`, `seqForm`) as resolutions of the
+constants (`deRham`); the exactness of the homogeneous de Rham and Koszul complexes; the
+homotopy formula `(dκ + κd) ω = (r + k) ω` on `H_rΛᵏ` and the Koszul decompositions
+`H_rΛᵏ = κH_{r-1}Λ^{k+1} ⊕ dH_{r+1}Λᵏ⁻¹` (`r + k ≥ 1`), `P_rΛᵏ = κP_{r-1}Λ^{k+1} ⊕ dP_{r+1}Λᵏ⁻¹`
+and `P_rΛᵏ = P_r⁻Λᵏ ⊕ dH_{r+1}Λᵏ⁻¹` (`k ≥ 1`), with the characterizations of `P_r⁻Λᵏ` of
+[AFW2006], §3.3.
 
 ## References
 
-* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.1–§3.5 (Theorems 3.1–3.6, Lemma 3.8, (3.1)–(3.3), (3.5), (3.6), (3.8), (3.10), (3.11),
-  (3.15)–(3.17), (3.18), (3.21), (3.22)), §4 (the dimension counts of Theorems 4.9, 4.13), §5
-  (admissible sequences)
+  §3.4 (the decomposition (3.10) into irreducible invariant subspaces, (3.18), Theorems 3.5,
+  3.6); §3.1–§3.3, §3.5 (Theorems 3.1–3.4, Lemma 3.8, (3.1)–(3.3), (3.5), (3.6), (3.8), (3.10),
+  (3.11), (3.15)–(3.17), (3.21), (3.22)), §4 (Theorems 4.9, 4.13), §5 (admissible sequences)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.1 (the same, Theorems 5.1–5.4, (68)–(72))
+  §5.1 (Theorems 5.1–5.4, (68)–(72))
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
   §5 (the spaces `Q_r⁻Λᵏ` and their dimension)
+* [D. N. Arnold, A. Logg, *Periodic table of the finite elements*][ArnoldLogg2014]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -133,6 +118,104 @@ def polyForm (r k : ℕ) : Submodule K (Form K n) :=
 def polyFormMinus : ℕ → ℕ → Submodule K (Form K n)
   | 0, _ => ⊥
   | r + 1, k => polyForm K n r k ⊔ (homForm K n r (k + 1)).map (koszul K n)
+
+/-! ### Invariant spaces of polynomial forms on `Kⁿ` ([AFW2006], §3.4) -/
+
+/-- The **pullback** of polynomial forms on `Kⁿ` along the affine map `φ(x) = B x + b`:
+`φ^*(p ⊗ θ) = (p ∘ φ) ⊗ Λ(Bᵀ) θ`, with `Bᵀ ξ = ξ ∘ B` on the covectors. -/
+def pullback (B : Matrix (Fin n) (Fin n) K) (b : Fin n → K) : Form K n →ₗ[K] Form K n :=
+  TensorProduct.map (aeval fun i => ∑ l, C (B i l) * X l + C (b i)).toLinearMap
+    (ExteriorAlgebra.map (Matrix.toLin' B).dualMap).toLinearMap
+
+/-- `V` is mapped into itself by the pullback along every affine map `φ : Kⁿ → Kⁿ`. -/
+def IsAffineInvariant (V : Submodule K (Form K n)) : Prop :=
+  ∀ B b, V.map (pullback K n B b) ≤ V
+
+/-- `V` is mapped into itself by the pullback along every linear map `x ↦ B x` of `Kⁿ`. -/
+def IsLinearInvariant (V : Submodule K (Form K n)) : Prop :=
+  ∀ B, V.map (pullback K n B 0) ≤ V
+
+/-- `V` is mapped into itself by the pullback along every invertible linear map `x ↦ g x`,
+`g ∈ GL(n, K)`. -/
+def IsGLInvariant (V : Submodule K (Form K n)) : Prop :=
+  ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
+
+/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5). -/
+def invariantForm (r s k : ℕ) : Submodule K (Form K n) :=
+  (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ⊔ (polyForm K n s (k + 1)).map (koszul K n)
+
+/-- **The classification of the invariant spaces of polynomial forms** on `Kⁿ`, `K` of
+characteristic `0` ([AFW2006], §3.4). -/
+structure AffineInvariantForms [CharZero K] : Prop where
+  /-- the images `dH_rΛᵏ` and `κH_rΛᵏ` are linearly invariant, among them the summands
+  `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` (§3.4) -/
+  isLinearInvariant_map_homForm (r k : ℕ) :
+    IsLinearInvariant K n ((homForm K n r k).map (extDeriv K n)) ∧
+      IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
+  /-- the `GL(n)`-invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
+  `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` (§3.4, before Lemma 3.7) -/
+  eq_of_le_homForm (r k : ℕ) (W : Submodule K (Form K n)) (hW : IsGLInvariant K n W)
+    (hle : W ≤ homForm K n (r + 1) (k + 1)) :
+    W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
+      W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1)
+  /-- `dP_{r+1}Λ^{k-1}` is affinely invariant ((3.18)) -/
+  isAffineInvariant_map_extDeriv (r k : ℕ) :
+    IsAffineInvariant K n ((polyForm K n (r + 1) (k - 1)).map (extDeriv K n))
+  /-- `X(r, s, k)` is affinely invariant for `s ≤ r`, `k ≥ 1` (Theorem 3.5) -/
+  isAffineInvariant_invariantForm (r s k : ℕ) (hk : 1 ≤ k) (hs : s ≤ r) :
+    IsAffineInvariant K n (invariantForm K n r s k)
+  /-- `X(r, r, k) = P_{r+1}⁻Λᵏ` (Theorem 3.5, case `s = r`) -/
+  invariantForm_eq_polyFormMinus (r k : ℕ) (hk : 1 ≤ k) :
+    invariantForm K n r r k = polyFormMinus K n (r + 1) k
+  /-- `X(r + 1, r, k) = P_{r+1}Λᵏ` (Theorem 3.5, case `s = r - 1`) -/
+  invariantForm_eq_polyForm (r k : ℕ) (hk : 1 ≤ k) :
+    invariantForm K n (r + 1) r k = polyForm K n (r + 1) k
+  /-- `dP_1Λ^{k-1} = P_0Λᵏ`, that is `X(0, -1, k) = P_0Λᵏ` (Theorem 3.5, case `s = r - 1`,
+  `r = 0`) -/
+  map_extDeriv_polyForm_one (k : ℕ) (hk : 1 ≤ k) :
+    (polyForm K n 1 (k - 1)).map (extDeriv K n) = polyForm K n 0 k
+  /-- for `0 < k < n` every nonzero finite-dimensional space of `k`-forms mapped into itself by the
+  pullback along every invertible affine map is `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r`
+  (Theorem 3.6) -/
+  eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule K (Form K n))
+    [FiniteDimensional K V] (hV : ∀ (g : GL (Fin n) K) b, V.map (pullback K n g b) ≤ V)
+    (hdeg : V ≤ kForm K n ⊤ k) (hne : V ≠ ⊥) :
+    ∃ r, V = (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ∨
+      ∃ s ≤ r, V = invariantForm K n r s k
+
+/-! ### The classification -/
+
+/-- **The classification of the invariant spaces of polynomial differential forms** on `Kⁿ`, `K`
+of characteristic `0` ([AFW2006], §3.4, Theorems 3.5–3.6): for `0 < k < n` the nonzero
+finite-dimensional affinely invariant spaces of `k`-forms are the spaces
+`dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`, `-1 ≤ s ≤ r`, among them `P_rΛᵏ` and `P_{r+1}⁻Λᵏ`; the summands
+`dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under `GL(n)`
+(`AffineInvariantForms`). -/
+theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
+    AffineInvariantForms K n := by
+  sorry
+
+/-- **Characteristic `0` is necessary for the classification**: the `GL(n)`-invariant subspaces
+of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` in every dimension
+`n` and all degrees iff `K` has characteristic `0`. This concerns the hypothesis of the
+generalization in `affineInvariantForms` of the decomposition of [AFW2006], §3.4, which is
+stated there over `ℝ` only. -/
+theorem charZero_iff_classification (K : Type u) [Field K] :
+    CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
+      W ≤ homForm K n (r + 1) (k + 1) →
+        W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
+          W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) := by
+  sorry
+
+/-- **Characteristic `0` is necessary for the homogeneous Poincaré lemma** ([AFW2006], (3.2)):
+the closed forms of `H_rΛ^{k+1}` are the exact forms `dH_{r+1}Λᵏ` in every dimension `n` and all
+degrees iff `K` has characteristic `0`. -/
+theorem charZero_iff_closed_eq_exact (K : Type u) [Field K] :
+    CharZero K ↔ ∀ n r k : ℕ,
+      ker (extDeriv K n) ⊓ homForm K n r (k + 1) = (homForm K n (r + 1) k).map (extDeriv K n) := by
+  sorry
+
+/-! ### The algebra of the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_b⁻Λᵏ` -/
 
 /-- `Q_b⁻Λᵏ = ⨁_σ [⊗ⱼ P_{b_j - [j ∈ σ]}(I)] dx_σ`: the sums of `p dx_{σ₁} ∧ ⋯ ∧ dx_{σ_k}`,
 `σ₁ < ⋯ < σ_k`, `p` a combination of monomials `x^α` with `α_j ≤ b_j - 1` for `j ∈ σ` and
@@ -347,99 +430,12 @@ structure PeriodicTable : Prop where
   closed_seqForm [CharZero K] (full : ℕ → Bool) (r : ℕ → ℕ) (h : Admissible full r) :
     ker (extDeriv K n) ⊓ seqForm K n full r 0 = polyForm K n 0 0
 
-/-! ### Affinely invariant spaces of polynomial forms on `Kⁿ` ([AFW2006], §3.4) -/
-
-/-- The **pullback** of polynomial forms on `Kⁿ` along the affine map `φ(x) = B x + b`:
-`φ^*(p ⊗ θ) = (p ∘ φ) ⊗ Λ(Bᵀ) θ`, with `Bᵀ ξ = ξ ∘ B` on the covectors. -/
-def pullback (B : Matrix (Fin n) (Fin n) K) (b : Fin n → K) : Form K n →ₗ[K] Form K n :=
-  TensorProduct.map (aeval fun i => ∑ l, C (B i l) * X l + C (b i)).toLinearMap
-    (ExteriorAlgebra.map (Matrix.toLin' B).dualMap).toLinearMap
-
-/-- `V` is mapped into itself by the pullback along every affine map `φ : Kⁿ → Kⁿ`. -/
-def IsAffineInvariant (V : Submodule K (Form K n)) : Prop :=
-  ∀ B b, V.map (pullback K n B b) ≤ V
-
-/-- `V` is mapped into itself by the pullback along every linear map `x ↦ B x` of `Kⁿ`. -/
-def IsLinearInvariant (V : Submodule K (Form K n)) : Prop :=
-  ∀ B, V.map (pullback K n B 0) ≤ V
-
-/-- `V` is mapped into itself by the pullback along every invertible linear map `x ↦ g x`,
-`g ∈ GL(n, K)`. -/
-def IsGLInvariant (V : Submodule K (Form K n)) : Prop :=
-  ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
-
-/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5). -/
-def invariantForm (r s k : ℕ) : Submodule K (Form K n) :=
-  (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ⊔ (polyForm K n s (k + 1)).map (koszul K n)
-
-/-- **The affinely invariant spaces of polynomial forms** on `Kⁿ`, `K` of characteristic `0`
-([AFW2006], §3.4). -/
-structure AffineInvariantForms [CharZero K] : Prop where
-  /-- the images `dH_rΛᵏ` and `κH_rΛᵏ` are linearly invariant, among them the summands
-  `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` (§3.4) -/
-  isLinearInvariant_map_homForm (r k : ℕ) :
-    IsLinearInvariant K n ((homForm K n r k).map (extDeriv K n)) ∧
-      IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
-  /-- the `GL(n)`-invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
-  `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` (§3.4, before Lemma 3.7) -/
-  eq_of_le_homForm (r k : ℕ) (W : Submodule K (Form K n)) (hW : IsGLInvariant K n W)
-    (hle : W ≤ homForm K n (r + 1) (k + 1)) :
-    W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
-      W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1)
-  /-- `dP_{r+1}Λ^{k-1}` is affinely invariant ((3.18)) -/
-  isAffineInvariant_map_extDeriv (r k : ℕ) :
-    IsAffineInvariant K n ((polyForm K n (r + 1) (k - 1)).map (extDeriv K n))
-  /-- `X(r, s, k)` is affinely invariant for `s ≤ r`, `k ≥ 1` (Theorem 3.5) -/
-  isAffineInvariant_invariantForm (r s k : ℕ) (hk : 1 ≤ k) (hs : s ≤ r) :
-    IsAffineInvariant K n (invariantForm K n r s k)
-  /-- `X(r, r, k) = P_{r+1}⁻Λᵏ` (Theorem 3.5, case `s = r`) -/
-  invariantForm_eq_polyFormMinus (r k : ℕ) (hk : 1 ≤ k) :
-    invariantForm K n r r k = polyFormMinus K n (r + 1) k
-  /-- `X(r + 1, r, k) = P_{r+1}Λᵏ` (Theorem 3.5, case `s = r - 1`) -/
-  invariantForm_eq_polyForm (r k : ℕ) (hk : 1 ≤ k) :
-    invariantForm K n (r + 1) r k = polyForm K n (r + 1) k
-  /-- `dP_1Λ^{k-1} = P_0Λᵏ`, that is `X(0, -1, k) = P_0Λᵏ` (Theorem 3.5, case `s = r - 1`,
-  `r = 0`) -/
-  map_extDeriv_polyForm_one (k : ℕ) (hk : 1 ≤ k) :
-    (polyForm K n 1 (k - 1)).map (extDeriv K n) = polyForm K n 0 k
-  /-- for `0 < k < n` every nonzero finite-dimensional space of `k`-forms mapped into itself by the
-  pullback along every invertible affine map is `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r`
-  (Theorem 3.6) -/
-  eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule K (Form K n))
-    [FiniteDimensional K V] (hV : ∀ (g : GL (Fin n) K) b, V.map (pullback K n g b) ≤ V)
-    (hdeg : V ≤ kForm K n ⊤ k) (hne : V ≠ ⊥) :
-    ∃ r, V = (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ∨
-      ∃ s ≤ r, V = invariantForm K n r s k
-
-/-! ### The theorem -/
-
 /-- **The algebra of the periodic table of the finite elements** ([AFW2006], §3;
 [ArnoldBoffiBonizzoni2015], §5). In every dimension `n`, the spaces `P_rΛᵏ`, `P_r⁻Λᵏ` and
 `Q_b⁻Λᵏ` have the dimensions of the periodic table and, in characteristic `0`, their polynomial de
 Rham complexes are resolutions of the constants; the homotopy formula and the Koszul
 decompositions hold (`PeriodicTable`). -/
 theorem periodicTable (K : Type u) [Field K] (n : ℕ) : PeriodicTable K n := by
-  sorry
-
-/-- **The affinely invariant spaces of polynomial differential forms** on `Kⁿ`, `K` of
-characteristic `0` ([AFW2006], Theorems 3.5–3.6): for `0 < k < n` they are the spaces
-`dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`, `-1 ≤ s ≤ r`, among them `P_rΛᵏ` and `P_{r+1}⁻Λᵏ`; the summands
-`dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under `GL(n)`
-(`AffineInvariantForms`). -/
-theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
-    AffineInvariantForms K n := by
-  sorry
-
-/-- **Characteristic `0` is necessary for the classification**: the `GL(n)`-invariant subspaces
-of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` in every dimension
-`n` and all degrees iff `K` has characteristic `0`. This concerns the hypothesis of the
-generalization in `affineInvariantForms` of the decomposition of [AFW2006], §3.4, which is
-stated there over `ℝ` only. -/
-theorem charZero_iff_classification (K : Type u) [Field K] :
-    CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
-      W ≤ homForm K n (r + 1) (k + 1) →
-        W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
-          W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) := by
   sorry
 
 end FEEC

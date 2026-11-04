@@ -15,8 +15,9 @@ and agreeing on the covectors. The invariance predicates and the spaces `X(r, s,
 (`isAffineInvariant_iff`, `isLinearInvariant_iff`, `map_invariantForm`), and the conclusions are
 those of `Feec.FiniteElement.InvariantForm` and `Feec.FiniteElement.AffineInvariantForm`
 (`affineInvariantForms_of_feec`); that characteristic `0` is necessary is
-`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification`
-(`charZero_iff_classification_of_feec`).
+`Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification` and
+`charZero_iff_closed_eq_exact` (`charZero_iff_classification_of_feec`,
+`charZero_iff_closed_eq_exact_of_feec`).
 
 ## References
 
@@ -204,5 +205,14 @@ theorem charZero_iff_classification_of_feec :
   · right; left; rw [← hV, h, map_map_extDeriv, map_homForm]
   · right; right; left; rw [← hV, h, map_map_koszul, map_homForm]
   · right; right; right; rw [← hV, h, map_homForm]
+
+variable (K) in
+theorem charZero_iff_closed_eq_exact_of_feec :
+    CharZero K ↔ ∀ n r k : ℕ,
+      ker (extDeriv K n) ⊓ homForm K n r (k + 1) = (homForm K n (r + 1) k).map (extDeriv K n) := by
+  rw [Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact K]
+  refine forall_congr' fun n => forall_congr' fun r => forall_congr' fun k => ?_
+  rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_homForm, map_map_extDeriv, map_homForm,
+    inf_comm]
 
 end FEEC

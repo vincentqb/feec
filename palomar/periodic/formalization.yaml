@@ -1,86 +1,68 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
-# formalization.yaml v0.4 for the Palomar submission of the algebra of the periodic table of the finite elements (`palomar/periodic/`).
+# formalization.yaml v0.4 for the Palomar submission of the classification of invariant spaces of polynomial differential forms (`palomar/periodic/`).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
-  name: "The algebra of the periodic table of the finite elements: P_r, P_r^- and Q_r^- polynomial differential forms"
+  name: "Classification of invariant spaces of polynomial differential forms"
   description: >-
-    A Lean 4 formalization of the polynomial algebra behind the periodic table of the finite
-    elements (Arnold-Logg 2014): the spaces of polynomial differential forms on K^n used by the
-    simplicial families P_r Lambda^k and P_r^- Lambda^k (Arnold-Falk-Winther 2006, §3; 2010,
-    §5.1) and the cubical family Q_r^- Lambda^k (Arnold-Boffi-Bonizzoni 2015, §5), in any
-    multidegree b. A polynomial differential form is an element of
+    A Lean 4 formalization of the classification of the invariant spaces of polynomial
+    differential forms on K^n (Arnold-Falk-Winther 2006, §3.4), over every field K of
+    characteristic 0, with the proof that characteristic 0 is necessary, and of the polynomial
+    algebra of the spaces it classifies, the shape spaces P_r Lambda^k and P_r^- Lambda^k of the
+    simplicial columns of the periodic table of the finite elements (Arnold-Logg 2014), together
+    with the cubical spaces Q_r^- Lambda^k (Arnold-Boffi-Bonizzoni 2015, §5). A polynomial
+    differential form is an element of
     P(K^n) (x) Lambda(K^n)* = MvPolynomial (Fin n) K (x) ExteriorAlgebra K (Module.Dual K (Fin n -> K)),
     the k-forms with coefficients in a space S of polynomials are S (x) Lambda^k (Mathlib's
-    exteriorPower), the exterior derivative is d(p (x) theta) = sum_j d_j p (x) (dx_j wedge theta)
-    and the Koszul differential is kappa(p (x) theta) = sum_j x_j p (x) (e_j contracted into theta)
-    (Mathlib's CliffordAlgebra.contractLeft). Over every field K (of characteristic 0 for the
-    clauses marked [CharZero K]), in every dimension n, form degree k and polynomial degree r, the
-    compared theorem FEEC.periodicTable states: (1) dim P_r Lambda^k = C(r+n, r+k) C(r+k, k),
-    dim H_r Lambda^k = C(n, k) C(n+r-1, r), dim P_r^- Lambda^k = C(r+n, r+k) C(r+k-1, k) (r >= 1), dim kappa H_r Lambda^(k+1) =
-    dim d H_(r+1) Lambda^k = C(n+r, r+k+1) C(r+k, k), dim Q_b^- Lambda^k =
-    sum_(#s = k) prod_j (b_j + 1 - [j in s]) and dim Q_r^- Lambda^k = C(n, k) r^k (r+1)^(n-k);
-    (2) d o d = 0, kappa o kappa = 0, the Leibniz rule
-    kappa(omega wedge eta) = kappa omega wedge eta + (-1)^k omega wedge kappa eta (the wedge product
-    is the product of the algebra), the closures P_r Lambda^k wedge P_s Lambda^l in
-    P_(r+s) Lambda^(k+l), P_r^- Lambda^k wedge P_s^- Lambda^l in P_(r+s)^- Lambda^(k+l) and
-    P_s P_r^- Lambda^k in P_(r+s)^- Lambda^k, and the three polynomial de Rham complexes
-    P_r Lambda^0 -> P_(r-1) Lambda^1 -> ... -> P_0 Lambda^r -> 0, P_r^- Lambda^0 -> P_r^- Lambda^1 -> ...
-    and Q_b^- Lambda^0 -> Q_b^- Lambda^1 -> ... are cochain complexes of K-vector spaces
-    (CochainComplex (ModuleCat K) N), exact (HomologicalComplex.ExactAt) in every positive degree,
-    whose closed 0-forms are the constants (r >= 1 for P_r^-), the first a subcomplex of the
-    second (r >= 1); the homogeneous de Rham complexes H_r Lambda^0 -> H_(r-1) Lambda^1 -> ... and
-    the homogeneous and polynomial Koszul complexes 0 -> H_(r-n) Lambda^n -> ... -> H_r Lambda^0 -> 0
-    and 0 -> P_(r-n) Lambda^n -> ... -> P_r Lambda^0 -> 0 are exact, but for the constants
-    (P_(r+1) Lambda^0 = kappa P_r Lambda^1 (+) P_0 Lambda^0), as kernel-in-image identities;
-    (3) the homotopy formula
-    (d kappa + kappa d) omega = (r + k) omega on H_r Lambda^k, the injectivity of d on the range of
-    kappa and of kappa on the range of d, the Koszul decompositions
-    H_(r+1) Lambda^(k+1) = kappa H_r Lambda^(k+2) (+) d H_(r+2) Lambda^k,
-    H_(r+1) Lambda^0 = kappa H_r Lambda^1, H_0 Lambda^(k+1) = d H_1 Lambda^k,
-    P_(r+1) Lambda^(k+1) = kappa P_r Lambda^(k+2) (+) d P_(r+2) Lambda^k,
-    P_0 Lambda^(k+1) = d P_1 Lambda^k and
-    P_r Lambda^(k+1) = P_r^- Lambda^(k+1) (+) d H_(r+1) Lambda^k (every r, P_0^- = 0), hence
-    d P_r^- Lambda^k = d P_r Lambda^k, the two forms
-    P_(r+1)^- Lambda^k = P_r Lambda^k (+) kappa H_r Lambda^(k+1) = P_r Lambda^k + kappa P_r Lambda^(k+1)
-    of the definition, P_r^- Lambda^0 = P_r Lambda^0, P_r^- Lambda^n = P_(r-1) Lambda^n, the
-    equivalent definition P_r^- Lambda^k = {omega in P_r Lambda^k | kappa omega in P_r Lambda^(k-1)}
-    (r + k >= 1), the strict inclusions
-    P_(r-1) Lambda^k < P_r^- Lambda^k (k < n) and P_r^- Lambda^(k+1) < P_r Lambda^(k+1) (k < n),
-    and that a closed form of P_(r+1)^- Lambda^k lies in P_r Lambda^k (H_r: the forms with
-    homogeneous coefficients of degree r); (4) the dimension counts of the degrees of freedom,
-    dim P_r Lambda^k = sum_(m <= n) C(n+1, m+1) dim P_(r+k-m)^- Lambda^(m-k)(K^m) and
-    dim P_r^- Lambda^k = sum_(m <= n) C(n+1, m+1) dim P_(r+k-m-1) Lambda^(m-k)(K^m) (r >= 1, the
-    summand 0 unless k <= m < r + k), and for every admissible sequence (in each degree k the
-    space P_(r_k) Lambda^k or P_(r_k)^- Lambda^k, r_k >= 1, followed by P_(r_k)^- Lambda^(k+1)
-    or P_(r_k - 1) Lambda^(k+1)) that its spaces form a cochain complex, exact in positive degree
-    [CharZero K] with the constants as closed 0-forms. A second compared theorem, FEEC.affineInvariantForms,
-    states over every field K of characteristic 0 the classification of the affinely invariant
-    spaces of AFW2006 §3.4, with the pullback
-    phi^*(p (x) theta) = (p o phi) (x) Lambda(B^T) theta along phi(x) = B x + b
-    (MvPolynomial.aeval tensor ExteriorAlgebra.map of the dual map): d H_r Lambda^k and
-    kappa H_r Lambda^k are invariant under the pullback of every linear map, and the subspaces
-    of H_r Lambda^k invariant under GL(n, K) are 0, d H_(r+1) Lambda^(k-1),
-    kappa H_(r-1) Lambda^(k+1) and H_r Lambda^k (r, k >= 1); X(r, s, k) = d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1) is
-    affinely invariant for s <= r, X(r, r, k) = P_(r+1)^- Lambda^k, X(r+1, r, k) = P_(r+1) Lambda^k
-    and d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
+    exteriorPower), the exterior derivative is d(p (x) theta) = sum_j d_j p (x) (dx_j wedge theta),
+    the Koszul differential is kappa(p (x) theta) = sum_j x_j p (x) (e_j contracted into theta)
+    (Mathlib's CliffordAlgebra.contractLeft), and the pullback along phi(x) = B x + b is
+    phi^*(p (x) theta) = (p o phi) (x) Lambda(B^T) theta (MvPolynomial.aeval tensor
+    ExteriorAlgebra.map of the dual map). H_r Lambda^k and P_r Lambda^k have coefficients
+    homogeneous of degree r, of degree at most r, and P_r^- Lambda^k = P_(r-1) Lambda^k +
+    kappa H_(r-1) Lambda^(k+1) (r >= 1), P_0^- Lambda^k = 0.
+    The compared theorem FEEC.affineInvariantForms states, over every field K of characteristic
+    0: d H_r Lambda^k and kappa H_r Lambda^k are invariant under the pullback of every linear
+    map, and the subspaces of H_r Lambda^k invariant under GL(n, K) are 0,
+    d H_(r+1) Lambda^(k-1), kappa H_(r-1) Lambda^(k+1) and H_r Lambda^k (r, k >= 1);
+    d P_(r+1) Lambda^(k-1) and X(r, s, k) = d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1)
+    (s <= r, k >= 1) are invariant under the pullback of every affine map,
+    X(r, r, k) = P_(r+1)^- Lambda^k, X(r+1, r, k) = P_(r+1) Lambda^k and
+    d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
     finite-dimensional space of k-forms invariant under the invertible affine maps is
-    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). A third compared theorem,
-    FEEC.charZero_iff_classification, states over every field K that characteristic 0 is
-    necessary: the classification of the GL(n)-invariant subspaces of H_(r+1) Lambda^(k+1) holds
-    in every dimension n and all r, k iff K has characteristic 0 (over a field of characteristic
-    p > 0, n = 2, the 1-forms with coefficients in the span of x^(p^2), y^(p^2) are a
-    counterexample). The
-    statement is self-contained over Mathlib (MvPolynomial and its submodules
-    homogeneousSubmodule, restrictTotalDegree and restrictSupport, TensorProduct, ExteriorAlgebra,
-    exteriorPower, CliffordAlgebra.contractLeft, CochainComplex, ModuleCat, finrank); the proof is
-    the library Feec of this repository (Feec.Algebra.ExteriorAlgebraForm identifies Mathlib's
-    exterior algebra with the coefficient forms of Feec; Feec.Algebra.PolynomialFormDim,
-    Feec.Algebra.CubicalForm, Feec.FiniteElement.InvariantForm,
-    Feec.FiniteElement.AffineInvariantForm).
+    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). The compared theorems
+    FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact state, over every
+    field K, that the classification of the GL(n)-invariant subspaces of H_(r+1) Lambda^(k+1),
+    and the homogeneous Poincare lemma ker d meet H_r Lambda^(k+1) = d H_(r+1) Lambda^k
+    (AFW2006 (3.2)), hold in every dimension n and all degrees iff K has characteristic 0 (over
+    a field of characteristic p > 0: for n = 2 the 1-forms with coefficients in the span of
+    x^(p^2), y^(p^2); for n = 1 the closed, non-exact form x^(p-1) dx). The compared theorem
+    FEEC.periodicTable states, over every field (of characteristic 0 for the clauses marked
+    [CharZero K]), in every dimension n, form degree k, polynomial degree r and multidegree b:
+    the dimensions of P_r Lambda^k, H_r Lambda^k, P_r^- Lambda^k, kappa H_r Lambda^(k+1) and
+    Q_b^- Lambda^k and the degrees-of-freedom counts of AFW2006 Theorems 4.9, 4.13;
+    d o d = 0, kappa o kappa = 0, the Leibniz rule for kappa and the closure of P_r Lambda and
+    P_r^- Lambda under the wedge product; that the polynomial de Rham complexes of
+    P_(r-k) Lambda^k, P_r^- Lambda^k, Q_b^- Lambda^k and of every admissible sequence of the
+    periodic table are cochain complexes (CochainComplex (ModuleCat K) N) exact in positive
+    degree with the constants as closed 0-forms; the exactness of the homogeneous de Rham and
+    Koszul complexes and of the polynomial Koszul complex; the homotopy formula
+    (d kappa + kappa d) omega = (r + k) omega on H_r Lambda^k, the Koszul decompositions
+    H_r Lambda^k = kappa H_(r-1) Lambda^(k+1) (+) d H_(r+1) Lambda^(k-1),
+    P_r Lambda^k = kappa P_(r-1) Lambda^(k+1) (+) d P_(r+1) Lambda^(k-1) (k >= 1) and
+    P_r Lambda^k = P_r^- Lambda^k (+) d H_(r+1) Lambda^(k-1), and the characterizations of
+    P_r^- Lambda^k of AFW2006 §3.3 (field by field in alignment below). The statement is
+    self-contained over Mathlib (MvPolynomial and its submodules homogeneousSubmodule,
+    restrictTotalDegree and restrictSupport, TensorProduct, ExteriorAlgebra, exteriorPower,
+    CliffordAlgebra.contractLeft, Matrix.GeneralLinearGroup, CochainComplex, ModuleCat,
+    finrank); the proof is the library Feec of this repository
+    (Feec.Algebra.ExteriorAlgebraForm identifies Mathlib's exterior algebra with the
+    coefficient forms of Feec; Feec.FiniteElement.InvariantForm,
+    Feec.FiniteElement.AffineInvariantForm, Feec.Counterexamples.PositiveCharacteristic,
+    Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -146,15 +128,20 @@ sources:
       sum_l b_l^q x_l^q, and for n >= 2 are none of 0, d H_(q+1) Lambda^0, kappa H_(q-1) Lambda^2
       and H_q Lambda^1 (they contain x_1^q dx_1, with kappa(x_1^q dx_1) = x_1^(q+1) != 0, and miss
       d(x_1^(q-1) x_2^2), whose coefficient q - 1 = -1 on x_1^(q-2) x_2^2 dx_1 does not vanish);
-      Feec.Counterexamples.PositiveCharacteristic. Proved in Feec, not compared: the same for the
-      summands as kernels (charZero_iff_classification_ker) and the failure of the Poincare lemma
-      (3.2) in characteristic p, x^(p-1) dx closed and not exact (charZero_iff_closed_eq_exact).
+      Feec.Counterexamples.PositiveCharacteristic. Also compared
+      (FEEC.charZero_iff_closed_eq_exact): the Poincare lemma (3.2) for H_r Lambda^k holds in
+      every dimension iff the characteristic is 0 (in characteristic p, x^(p-1) dx is closed and
+      not d of any element of H_p Lambda^0, by the homotopy formula with constant p = 0). Proved
+      in Feec, not compared: the classification for the summands as kernels, r + k > 0
+      (charZero_iff_classification_ker).
       Not formalized: the description of the third kind of Theorem 3.5 (s < r - 1) as
       {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its strict inclusions, the
       identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate statements (used in the proofs,
       Feec.FiniteElement.polyPullback_mem_polyForm, polyPullback_koszul,
       IsAffineInvariant.closed_le_of_succ), the count 2^(n-1) of the intermediate resolutions of
-      §3.5, §3.6.
+      §3.5, the classification of the affinely invariant subcomplexes (that every complex of
+      affinely invariant spaces of the kind of Theorem 3.6 ending in a given space is one of the
+      2^(n-1) resolutions; not proved in Feec), §3.6.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -219,24 +206,42 @@ sources:
     relationship: "background"
     note: "The source of AFW2006's irreducibility claim; the formalization proves it without representation theory."
     author_endorsement: "not-contacted"
+  - title: "A New Approach to Finite Element Simulations of General Relativity"
+    authors:
+      - "Vincent Quenneville-Bélair"
+    id: "http://hdl.handle.net/11299/175309"
+    type: "PhD thesis, University of Minnesota, 2015"
+    location: "§4.7 (the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k and their canonical projections, after Arnold 2013, Spaces of finite element differential forms)"
+    relationship: "background"
+    note: >-
+      The thesis of the formalization's author discusses the finite element spaces built on the
+      shape spaces P_r Lambda^k and P_r^- Lambda^k classified here; none of its statements is
+      compared in this entry (locator as cited in Feec.FiniteElement.Dof).
+    author_endorsement: "participated"
 
 related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: FEEC.periodicTable (Challenge.lean) for every field (of
-    characteristic 0 where marked), every n, k, r and multidegree b (r >= 1 where the sources
-    require it), and FEEC.affineInvariantForms over every field of characteristic 0, every n,
-    k, r, s, and FEEC.charZero_iff_classification (characteristic 0 is necessary for the
-    GL(n)-classification) over every field. Not compared (proved in Feec, outside the statement):
-    the failure of the Poincare lemma for H_r Lambda^k in positive characteristic
-    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact), the homotopy formula over
-    every commutative ring, the tensor-product characterization of Q_b^- Lambda^k as a span of
-    products of one-dimensional factors (Feec.Koszul.cubeFormMinus_eq_span), the serendipity
-    spaces S_r Lambda^k, the parametrization of the admissible P/P^- sequences ending in
-    P_s Lambda^n by their kinds (Feec.FiniteElement.PolySeq.ofKinds), the closed-form dimensions
-    of the classical elements in K^2 and K^3 (Feec.Koszul.finrank_polyForm_three_one, ...),
-    and the finite element spaces on meshes (degrees of freedom, unisolvence, Whitney forms).
+    Formalized and compared: FEEC.affineInvariantForms over every field of characteristic 0,
+    every n, k, r, s; FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact
+    (characteristic 0 is necessary for the GL(n)-classification and for the homogeneous
+    Poincare lemma) over every field; FEEC.periodicTable for every field (of characteristic 0
+    where marked), every n, k, r and multidegree b (r >= 1 where the sources require it). Not
+    formalized: the classification of the affinely invariant subcomplexes (the 2^(n-1)
+    resolutions of AFW2006 §3.5 as the only ones), the third kind of Theorem 3.5 as
+    {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)}. Not compared (proved in Feec,
+    outside the statement): the classification with the summands as kernels for r + k > 0
+    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker), the
+    homotopy formula over every commutative ring, the tensor-product characterization of
+    Q_b^- Lambda^k as a span of products of one-dimensional factors
+    (Feec.Koszul.cubeFormMinus_eq_span), the serendipity spaces S_r Lambda^k, the
+    parametrization of the admissible P/P^- sequences ending in P_s Lambda^n by their kinds
+    (Feec.FiniteElement.PolySeq.ofKinds), the closed-form dimensions of the classical elements
+    in K^2 and K^3 (Feec.Koszul.finrank_polyForm_three_one, ...), and the finite element spaces
+    on meshes (degrees of freedom, unisolvence, Whitney forms; the affine invariance of the
+    shape spaces of every admissible sequence enters the FEEC verdicts of
+    Feec.Models.Cube.FEM.feec_affineInvariant).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -310,7 +315,11 @@ fidelity:
     the source works over R). The hypothesis is necessary for the classification of the
     GL(n)-invariant subspaces of H_r Lambda^k (FEEC.charZero_iff_classification: it holds in every
     dimension iff K has characteristic 0; the counterexample is over every field of
-    characteristic p > 0, in dimension 2). The conclusions of invariance (the summands of (3.10), (3.18),
+    characteristic p > 0, in dimension 2), and for the Poincare lemma (3.2)
+    (FEEC.charZero_iff_closed_eq_exact; the counterexample in dimension 1). The two iff theorems quantify over all
+    dimensions: in a fixed dimension the classification can hold in characteristic p (in
+    dimension 1 every subspace of H_r Lambda^k is 0 or H_r Lambda^k, dim H_r Lambda^k <= 1);
+    they do not identify the dimensions and degrees in which it fails. The conclusions of invariance (the summands of (3.10), (3.18),
     Theorem 3.5) are stated for the pullback of every linear (resp. affine) map, singular ones
     included; the hypotheses of the classifications only for the invertible ones: GL(n, K) for
     the subspaces of H_r Lambda^k (AFW's sentence concerns GL(n)), the invertible affine maps
@@ -347,16 +356,55 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Every merge of the library was gated by a full build (zero warnings), an axiom audit
-    (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
-    mathematical review; the Challenge statement awaits the author's review (in particular the
-    2026-10-31 restatement of FEEC.AffineInvariantForms over fields of characteristic 0 with
-    GL(n) hypotheses, the 2026-11-01 statement FEEC.charZero_iff_classification and the
-    2026-11-01 fields of FEEC.PeriodicTable on admissible sequences and degrees of freedom).
+    Not yet reviewed by the author: the Challenge statement (all four compared theorems and
+    their definitions) awaits the author's review, in particular the restatement of
+    FEEC.AffineInvariantForms over fields of characteristic 0 with GL(n) hypotheses
+    (2026-10-31), FEEC.charZero_iff_classification and the fields of FEEC.PeriodicTable on
+    admissible sequences and degrees of freedom (2026-11-01), and
+    FEEC.charZero_iff_closed_eq_exact (2026-11-04). Every merge of the library was gated by a
+    full build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and
+    an independent AI review. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
   statements:
+    - source: "[AFW2006] §3.4: (3.10) irreducible, (3.18), Theorems 3.5-3.6"
+      lean: "FEEC.AffineInvariantForms"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Fields: isLinearInvariant_map_homForm (d H_r Lambda^k and kappa H_r Lambda^k are
+        linearly invariant), eq_of_le_homForm (the GL(n)-invariant subspaces of H_r Lambda^k),
+        isAffineInvariant_map_extDeriv ((3.18)), isAffineInvariant_invariantForm (Theorem 3.5),
+        invariantForm_eq_polyFormMinus, invariantForm_eq_polyForm, map_extDeriv_polyForm_one
+        (Theorem 3.5, s = r, s = r - 1 and r = 0, s = -1), eq_invariantForm (Theorem 3.6, for
+        spaces invariant under the invertible affine maps). Restated 2026-10-31 over every field
+        of characteristic 0 with GL(n) hypotheses (IsGLInvariant, eq_of_le_homForm,
+        eq_invariantForm); these new statements are not yet reviewed by the author.
+    - source: "[AFW2006] §3.4"
+      lean: "FEEC.affineInvariantForms"
+      module: "Challenge"
+      status: "proved"
+      note: "Compared theorem; proved in Solution.lean from FEEC.affineInvariantForms_of_feec (Solution/Affine.lean)."
+    - source: "[AFW2006] §3.4 (the hypothesis: characteristic 0 is necessary for the irreducibility of the summands of (3.10))"
+      lean: "FEEC.charZero_iff_classification"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Compared theorem (added 2026-11-01, not yet reviewed by the author); proved in
+        Solution.lean from FEEC.charZero_iff_classification_of_feec (Solution/Affine.lean), from
+        Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification. The source
+        works over R and does not discuss other fields; this is a fidelity statement about the
+        generalization (1), (6).
+    - source: "[AFW2006] (3.2) (the hypothesis: characteristic 0 is necessary for the homogeneous Poincare lemma)"
+      lean: "FEEC.charZero_iff_closed_eq_exact"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Compared theorem (added 2026-11-04, not yet reviewed by the author); proved in
+        Solution.lean from FEEC.charZero_iff_closed_eq_exact_of_feec (Solution/Affine.lean), from
+        Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact. The source
+        works over R; this is a fidelity statement about the generalization (1), (6).
     - source: "[AFW2006] §3.1-§3.3, §3.5; [AFW2010] §5.1; [ArnoldBoffiBonizzoni2015] §5"
       lean: "FEEC.PeriodicTable"
       module: "Challenge"
@@ -392,33 +440,5 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "The compared theorem; proved in Solution.lean from FEEC.periodicTable_of_feec (Solution/Bridge.lean)."
-    - source: "[AFW2006] §3.4: (3.10) irreducible, (3.18), Theorems 3.5-3.6"
-      lean: "FEEC.AffineInvariantForms"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Fields: isLinearInvariant_map_homForm (d H_r Lambda^k and kappa H_r Lambda^k are
-        linearly invariant), eq_of_le_homForm (the GL(n)-invariant subspaces of H_r Lambda^k),
-        isAffineInvariant_map_extDeriv ((3.18)), isAffineInvariant_invariantForm (Theorem 3.5),
-        invariantForm_eq_polyFormMinus, invariantForm_eq_polyForm, map_extDeriv_polyForm_one
-        (Theorem 3.5, s = r, s = r - 1 and r = 0, s = -1), eq_invariantForm (Theorem 3.6, for
-        spaces invariant under the invertible affine maps). Restated 2026-10-31 over every field
-        of characteristic 0 with GL(n) hypotheses (IsGLInvariant, eq_of_le_homForm,
-        eq_invariantForm); these new statements are not yet reviewed by the author.
-    - source: "[AFW2006] §3.4"
-      lean: "FEEC.affineInvariantForms"
-      module: "Challenge"
-      status: "proved"
-      note: "Compared theorem; proved in Solution.lean from FEEC.affineInvariantForms_of_feec (Solution/Affine.lean)."
-    - source: "[AFW2006] §3.4 (the hypothesis: characteristic 0 is necessary for the irreducibility of the summands of (3.10))"
-      lean: "FEEC.charZero_iff_classification"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Compared theorem (added 2026-11-01, not yet reviewed by the author); proved in
-        Solution.lean from FEEC.charZero_iff_classification_of_feec (Solution/Affine.lean), from
-        Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification. The source
-        works over R and does not discuss other fields; this is a fidelity statement about the
-        generalization (1), (6).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

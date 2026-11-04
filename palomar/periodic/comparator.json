@@ -1,7 +1,8 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.periodicTable", "FEEC.affineInvariantForms", "FEEC.charZero_iff_classification"],
+  "theorem_names": ["FEEC.affineInvariantForms", "FEEC.charZero_iff_classification",
+    "FEEC.charZero_iff_closed_eq_exact", "FEEC.periodicTable"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

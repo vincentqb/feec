@@ -22,9 +22,9 @@ applies.
 The exact solution `u` enters only through its **nodal consistency error**
 `εₕ(t) = ‖Iₕ uₜ(t) - Lₕ Iₕ u(t)‖_∞`, `Iₕ` the nodal interpolant (`NonobtuseMeshes.interp`). This
 error depends on the mesh: `O(h²)` for the uniform stencil of the Freudenthal meshes of a cube
-(`Feec.Models.Cube.MaxNormHeat.norm_interp_laplacian_sub_le`), only `O(1)` in general (and at the
-boundary nodes of the Neumann problem on the cube), so the estimates below are stated with a bound
-`ε` of `εₕ` on the time interval and no rate in `h`.
+(`Feec.Models.Cube.MaxNormHeat.norm_interp_laplacian_sub_le`), but in general it need not tend to
+`0` (it is only bounded at the boundary nodes of the Neumann problem on the cube), so the estimates
+below are stated with a bound `ε` of `εₕ` on the time interval and no rate in `h`.
 
 ## Main results
 
@@ -41,8 +41,8 @@ boundary nodes of the Neumann problem on the cube), so the estimates below are s
    `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ ε + C_r kτ τᵖ ‖Lₕ^{p+1} v‖_∞`
    (`norm_interp_sub_step_pow_le`);
 5. the verdict of the Banach layer for the family (`Feec.TimeStepping.StableFamily.Verdict`);
-6. (**the finite element function**, `abs_sub_p1Interp_nodalFun_le`) on a simplex `K` of `Mₕ` of
-   diameter `≤ δ` (maximum norm), for `u ∈ C²` with `|∂ᵢ∂ₖ u| ≤ D` on `K` vanishing at the
+6. (**the finite element function**, `abs_sub_p1Interp_nodalFun_le`) on any simplex `K` (one of
+   `Mₕ`) of diameter `≤ δ` (maximum norm), for `u ∈ C²` with `|∂ᵢ∂ₖ u| ≤ D` on `K` vanishing at the
    vertices of `K` that are not nodes, `|u(y) - U_h(y)| ≤ ‖Iₕ u - U‖_∞ + n² D δ² / 2` at every
    `y ∈ K` (`U_h` the `P₁` function with nodal values `U`,
    `Feec.FiniteElement.abs_sub_p1Interp_le_of_vertices`), so 2–4 bound the error of the finite
@@ -147,7 +147,7 @@ theorem norm_interp_sub_step_pow_le {r : RationalScheme} (hr : r.IsAStable) {p :
   simpa using F.family.norm_sub_step_pow_le_of_traj hr hp hτ h (U := fun s => F.interp h (u s))
     (fun s hs => hasDerivAt_pi.2 (hu s hs)) hε v
 
-/-- **The finite element function in the maximum norm**: on a simplex `K` of `Mₕ` with
+/-- **The finite element function in the maximum norm**: on any simplex `K` (one of `Mₕ`) with
 `|y - z|_∞ ≤ δ` on `K`, for `u ∈ C²` with `|∂ᵢ∂ₖ u| ≤ D` on `K` vanishing at the vertices of `K`
 that are not nodes, `|u(y) - U_h(y)| ≤ ‖Iₕ u - U‖_∞ + n² D δ² / 2` on `K`, `U_h = Π_K U` the
 `P₁` function with nodal values `U` (a `P₁` function attains its extrema at the vertices, plus the

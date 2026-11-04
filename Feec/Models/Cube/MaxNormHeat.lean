@@ -1,6 +1,6 @@
 module
 
-public import Feec.FiniteElement.MaxNormHeat
+public import Feec.FiniteElement.NonobtuseHeat
 public import Feec.ForMathlib.Analysis.FiniteDifference
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.SecondDifference

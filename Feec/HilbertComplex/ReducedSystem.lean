@@ -128,6 +128,17 @@ theorem norm_sq_mk3 {𝕜 : Type*} [RCLike 𝕜] [NormedAddCommGroup W₀] [Inne
     ‖(mk3 x₀ x₁ x₂ : PiLp 2 (W3 W₀ W₁ W₂))‖ ^ 2 = ‖x₀‖ ^ 2 + ‖x₁‖ ^ 2 + ‖x₂‖ ^ 2 := by
   rw [PiLp.norm_sq_eq_of_L2, Fin.sum_univ_three]; rfl
 
+theorem mk3_zero [NormedAddCommGroup W₀] [NormedAddCommGroup W₁] [NormedAddCommGroup W₂] :
+    (mk3 (0 : W₀) (0 : W₁) (0 : W₂) : PiLp 2 (W3 W₀ W₁ W₂)) = 0 := by
+  ext i; fin_cases i <;> rfl
+
+theorem inner_mk3 {𝕜 : Type*} [RCLike 𝕜] [NormedAddCommGroup W₀] [InnerProductSpace 𝕜 W₀]
+    [NormedAddCommGroup W₁] [InnerProductSpace 𝕜 W₁] [NormedAddCommGroup W₂]
+    [InnerProductSpace 𝕜 W₂] (x₀ y₀ : W₀) (x₁ y₁ : W₁) (x₂ y₂ : W₂) :
+    ⟪(mk3 x₀ x₁ x₂ : PiLp 2 (W3 W₀ W₁ W₂)), mk3 y₀ y₁ y₂⟫_𝕜 =
+      ⟪x₀, y₀⟫_𝕜 + ⟪x₁, y₁⟫_𝕜 + ⟪x₂, y₂⟫_𝕜 := by
+  rw [PiLp.inner_apply, Fin.sum_univ_three]; rfl
+
 end Mk3
 
 variable {𝕜 : Type*} [RCLike 𝕜] {W₀ W₁ W₂ : Type u}

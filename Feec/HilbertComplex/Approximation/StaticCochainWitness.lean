@@ -241,16 +241,6 @@ abbrev coord0 (u : PiLp 2 (W3 𝕜 𝕜 𝕜)) : 𝕜 := u 0
 /-- The degree-`2` component of a point of `𝕜 × 𝕜 × 𝕜`, in `𝕜`. -/
 abbrev coord2 (u : PiLp 2 (W3 𝕜 𝕜 𝕜)) : 𝕜 := u 2
 
-theorem mk3_zero_zero_zero : (mk3 (0 : 𝕜) (0 : 𝕜) (0 : 𝕜) : PiLp 2 (W3 𝕜 𝕜 𝕜)) = 0 :=
-  PiLp.ext fun i => by fin_cases i <;> rfl
-
-theorem inner_mk3 (a b c a' b' c' : 𝕜) :
-    ⟪mk3 a b c, mk3 a' b' c'⟫_𝕜 =
-      starRingEnd 𝕜 a * a' + starRingEnd 𝕜 b * b' + starRingEnd 𝕜 c * c' := by
-  rw [PiLp.inner_apply, Fin.sum_univ_three]
-  change ⟪a, a'⟫_𝕜 + ⟪b, b'⟫_𝕜 + ⟪c, c'⟫_𝕜 = _
-  rw [RCLike.inner_apply', RCLike.inner_apply', RCLike.inner_apply']
-
 theorem norm_mk3_zero (b : 𝕜) : ‖(mk3 (0 : 𝕜) b (0 : 𝕜) : PiLp 2 (W3 𝕜 𝕜 𝕜))‖ = ‖b‖ := by
   have h := norm_sq_mk3 (𝕜 := 𝕜) (0 : 𝕜) b (0 : 𝕜)
   rw [norm_zero] at h
@@ -303,7 +293,7 @@ theorem idZeroN_apply (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : idZeroN 𝕜 v = mk3 0 
   rfl
 
 theorem idZeroN_idZeroN (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) : idZeroN 𝕜 (idZeroN 𝕜 v) = 0 :=
-  mk3_zero_zero_zero
+  mk3_zero
 
 theorem idZeroN_totalDL (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) :
     idZeroN 𝕜 ((idZeroComplex 𝕜).totalDL v) = (idZeroComplex 𝕜).totalDL (idZeroN 𝕜 v) := by
@@ -332,7 +322,8 @@ theorem idZeroN_harmonicDatum :
 /-- The boundaries of `𝕜 --id--> 𝕜 --0--> 𝕜` are orthogonal to `(0, 0, 1)`. -/
 theorem inner_totalDL_harmonicDatum (v : PiLp 2 (W3 𝕜 𝕜 𝕜)) :
     ⟪(idZeroComplex 𝕜).totalDL v, harmonicDatum 𝕜⟫_𝕜 = 0 := by
-  rw [idZero_totalDL, inner_mk3]
+  rw [idZero_totalDL, inner_mk3, RCLike.inner_apply', RCLike.inner_apply',
+    RCLike.inner_apply']
   simp
 
 /-- **`(0, 0, 1)` is harmonic.** -/
@@ -343,7 +334,7 @@ theorem harmonicDatum_mem_harmonic :
     (Submodule.mem_orthogonal _ _).2 ?_⟩
   · change (idZeroComplex 𝕜).totalDL (harmonicDatum 𝕜) = 0
     rw [idZero_totalDL]
-    exact mk3_zero_zero_zero
+    exact mk3_zero
   · rintro _ ⟨y, rfl⟩
     change ⟪(idZeroComplex 𝕜).totalDL y, harmonicDatum 𝕜⟫_𝕜 = 0
     exact inner_totalDL_harmonicDatum _
@@ -354,7 +345,7 @@ theorem harmonicDatum_mem_cpx_harmonic (n : ℕ) :
   refine (mem_diffComplex_harmonic _ _).2 ⟨?_, ext_inner_left 𝕜 fun w => ?_⟩
   · change (idZeroComplex 𝕜).totalDL (harmonicDatum 𝕜) = 0
     rw [idZero_totalDL]
-    exact mk3_zero_zero_zero
+    exact mk3_zero
   · rw [ContinuousLinearMap.adjoint_inner_right, inner_zero_right]
     exact inner_totalDL_harmonicDatum w
 
@@ -363,7 +354,8 @@ theorem adjoint_shear_incl_harmonicDatum (n : ℕ) :
     ((shearIdZero 𝕜).incl n).adjoint (harmonicDatum 𝕜) = harmonicDatum 𝕜 :=
   ext_inner_left 𝕜 fun w => by
     rw [ContinuousLinearMap.adjoint_inner_right, shear_incl_apply, inner_add_left,
-      inner_smul_left, idZeroN_apply, inner_mk3]
+      inner_smul_left, idZeroN_apply, inner_mk3, RCLike.inner_apply', RCLike.inner_apply',
+      RCLike.inner_apply']
     simp
 
 /-- `P_ℌₙ πₙ p = p`: `πₙ p = p - hₙ 𝐝 (1, 0, 0)` and `𝐝ₙ = 𝐝`. -/
@@ -404,7 +396,7 @@ theorem shear_incl_harmonicDatum_not_mem_harmonic (n : ℕ) :
     ((idZeroComplex 𝕜).total.mem_harmonic_iff.1 h).2
   rw [shear_incl_apply, idZeroN_harmonicDatum, inner_add_right, inner_smul_right,
     inner_totalDL_harmonicDatum, zero_add, idZero_totalDL, inner_mk3] at h0
-  simp only [_root_.map_zero, zero_mul, zero_add, add_zero] at h0
+  simp only [RCLike.inner_apply', _root_.map_zero, zero_mul, zero_add, add_zero] at h0
   rw [show coord0 (mk3 (1 : 𝕜) 0 0) = 1 from rfl, _root_.map_one, mul_one, mul_one] at h0
   exact (perturbMesh_pos n).ne' (by exact_mod_cast h0)
 

@@ -120,7 +120,7 @@
    "configFile": "lakefile.toml"
   }
  ],
- "name": "FeecPalomarVonNeumann",
+ "name": "FeecPalomarTimeStepping",
  "lakeDir": ".lake",
  "fixedToolchain": false
 }

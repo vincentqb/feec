@@ -3,6 +3,7 @@ module
 
 public import Feec.HilbertComplex.Approximation.ApproxComplexCrime
 public import Feec.HilbertComplex.Approximation.FullyDiscrete
+public import Feec.HilbertComplex.Approximation.HeatCrime
 public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.PerturbFEEC
 public import Feec.HilbertComplex.Approximation.RationalScheme
@@ -117,7 +118,15 @@ with inner-product defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximat
 (the cochain defect `⟪𝐝ₕ* iₕ* y - iₕ* 𝐝* y, v⟫` enters the consistency residual): the approximating,
 fully discrete (every time scheme, leapfrog) and perturbed (dense core) FEEC theorems on the
 core, exact preservation of discrete constraints, and the Strang, residual-splitting and defect
-estimates of the exact-load projection; the rates are those of its rate classes. The crown
+estimates of the exact-load projection; the rates are those of its rate classes. Under closed
+range of `H` and a uniform discrete Poincaré inequality (`static`, `heat`, `heat_rate`): the static
+theory of the mixed Hodge Laplacian of the total complex with the load `iₕ* f` (uniform
+well-posedness, the Strang lemma, the splitting of the residual into the inner-product defect, the
+cochain defects of `u`, `𝐝 u` and the harmonic defect, convergence for every datum from
+consistency on a dense set; `Feec.HilbertComplex.Approximation.StaticCrime`), and the heat FEEC
+theorem with the heat Ritz projection `P_ℌₕ iₕ* y - Gₕ iₕ* z` when the static errors tend to `0`,
+with the heat rate from a static rate and an inner-product defect rate
+(`Feec.HilbertComplex.Approximation.HeatCrime`). The crown
 consumes it on the zero-defect instance: every conforming window read as an approximating family
 (`ConstrainedFEEC.toCrime`, `windowCrime`, with `Jₕ = 1`, zero cochain defect and the discrete
 solutions of the window) satisfies it (`crime`). This identification is at the level of data;
@@ -537,8 +546,10 @@ theorems of the crime front `ofComplexCrime F` on its core, the discrete generat
 constraints, and the
 complex-level estimates of the exact-load projection `Rₕ y = (1 - Lₕ)⁻¹ iₕ* (1 - L) y` (Strang
 lemma, residual splitting into the inner-product defect, the graph-norm approximation error and
-the cochain defect, defect bound, and their limits), and the fully discrete FEEC theorem on
-Banach spaces for the crime front (`banach`). The rates are the fields `wave.rate` and
+the cochain defect, defect bound, and their limits), the fully discrete FEEC theorem on
+Banach spaces for the crime front (`banach`), and, under closed range and a uniform discrete
+Poincaré inequality, the static FEEC theorem with crimes (`static`) and the heat FEEC theorem
+with crimes and its rate (`heat`, `heat_rate`). The wave rates are the fields `wave.rate` and
 `(full Θ).rate_*` at the rate classes of `ofComplexCrime F` (e.g. `rateClass_of_split`,
 `galerkinRateClass`). -/
 structure Verdict (F : ApproxComplexCrime H κ) : Prop where
@@ -604,6 +615,32 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
   /-- the fully discrete FEEC theorem on Banach spaces for the crime front, read without its
   inner products (`DissipFEEC.toBanachFEEC`, `banachFEEC`) -/
   banach : (ofComplexCrime F).toBanachFEEC.Verdict
+  /-- the static FEEC theorem with variational crimes for the mixed Hodge Laplacian of the total
+  complex, under closed range and the uniform discrete Poincaré inequality
+  (`ApproxComplexCrime.Family.staticFEEC`; [HolstStern2012], §3.3) -/
+  static (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hP : F.toFamily.IsPoincare cP) : F.toFamily.StaticVerdict hcr cP F.l
+  /-- the heat FEEC theorem with variational crimes, with the heat Ritz projection
+  `P_ℌₕ iₕ* y - Gₕ iₕ* z`, when the static errors tend to `0` for every datum (e.g. from
+  consistency on a dense set, the field `converges` of `static`) -/
+  heat (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : F.toFamily.IsPoincare cP)
+    (hconv : ∀ f, Tendsto (fun h => F.toFamily.staticError hcr h f) F.l (𝓝 0)) :
+    F.toHeat.Verdict (F.heatCore hcr hcP hP hconv)
+  /-- the heat rate with variational crimes from a static rate `e(f) ≤ K L mᵅ` on regular data
+  and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` -/
+  heat_rate (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
+    (hP : F.toFamily.IsPoincare cP) {Reg : ℝ → Set (PiLp 2 W)} {m : κ → ℝ}
+    (hm : ∀ h, 0 ≤ m h) {α K : ℝ} (hK0 : 0 ≤ K)
+    (hK : ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L → f ∈ Reg L → ∀ h,
+      F.toFamily.staticError hcr h f ≤ K * L * m h ^ α)
+    (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L) {T : ℝ}
+    {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
+    (hreg : ∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ H.heatReg Reg L) (h : κ) {t : ℝ}
+    (ht : t ∈ Icc 0 T) :
+    ‖F.toHeat.S t x - F.toHeat.sol h (F.ritzR h (x, DissipFEEC.genExt (-H.hodgeLaplacian) x)) t‖ ≤
+      (2 * K + F.toFamily.boundConst *
+        ((3 * F.toFamily.boundConst + 16 * cP ^ 2 * F.toFamily.boundConst) * K) * t) *
+          L * m h ^ α
 
 /-- **The FEEC theorem for approximating families with variational crimes.** For every approximating
 family `F` of discrete differential spaces of a Hilbert complex (`ApproxComplexCrime`: inner-product
@@ -611,9 +648,11 @@ defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximation on the admissib
 need not be cochain maps): the approximating FEEC theorem on the core, the discrete generator
 `𝐝ₕ - 𝐝ₕ*`, the fully discrete theorems for every time scheme and for leapfrog under the CFL
 condition, the perturbed theorems for every bounded perturbation (dense core), exact preservation of
-discrete constraints, the Strang, residual and defect estimates with their limits, and the fully
-discrete FEEC theorem on Banach spaces (`banachFEEC`). The conforming windows give the zero-defect
-instance (`ConstrainedFEEC.toCrime`,
+discrete constraints, the Strang, residual and defect estimates with their limits, the fully
+discrete FEEC theorem on Banach spaces (`banachFEEC`), and, under closed range and a uniform
+discrete Poincaré inequality, the static FEEC theorem with crimes (`Family.staticFEEC`) and the
+heat FEEC theorem with crimes with its rate (`heatFEEC`, `rate_heat_of_static`). The conforming
+windows give the zero-defect instance (`ConstrainedFEEC.toCrime`,
 `ConformingFamily.Verdict.crime`); scheme (6.5) is an instance
 (`Feec.Instances.EinsteinBianchiFEMCrown`). [HolstStern2012], §3; [BrennerThomee1979]; [Pazy1983],
 §3.4 -/
@@ -629,7 +668,11 @@ theorem feec (F : ApproxComplexCrime H κ) : F.Verdict :=
     (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.1,
     fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.1 _ hy,
     fun hy => (approxFEEC_ofComplexCrime F).2.2.2.2.2.2.2.2 _ hy,
-    (approxFEEC_ofComplexCrime F).2.1, TimeStepping.banachFEEC _⟩
+    (approxFEEC_ofComplexCrime F).2.1, TimeStepping.banachFEEC _,
+    fun hcr _ hcP hP => F.toFamily.staticFEEC hcr F.l hcP hP,
+    fun hcr _ hcP hP hconv => F.heatFEEC hcr hcP hP hconv,
+    fun hcr _ hcP hP _ _ hm _ _ hK0 hK hJ _ hL _ _ hx hreg h _ ht =>
+      F.rate_heat_of_static hcr hcP hP hm hK0 hK hJ hL hx hreg h ht⟩
 
 end ApproxComplexCrime
 

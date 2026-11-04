@@ -199,6 +199,7 @@ public import Feec.HilbertComplex.Approximation.DissipFEEC
 public import Feec.HilbertComplex.Approximation.DissipGalerkin
 public import Feec.HilbertComplex.Approximation.FullyDiscrete
 public import Feec.HilbertComplex.Approximation.GraphApprox
+public import Feec.HilbertComplex.Approximation.HeatCrime
 public import Feec.HilbertComplex.Approximation.HeatFEEC
 public import Feec.HilbertComplex.Approximation.ImprovedEstimate
 public import Feec.HilbertComplex.Approximation.MixedError

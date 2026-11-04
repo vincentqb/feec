@@ -152,6 +152,12 @@ window, read as the family with zero inner-product and cochain defects
 (`ConformingFamily.windowCrime`, `ConstrainedFEEC.toCrime`). `OldVerdict` states the verdict
 before it verbatim, and `crown_old_verdict` derives it from the new one.
 
+The crown then gained the last fields `crime_static` and `crime_cohomology`, the cochain case of
+[HolstStern2012], §3 on the conforming windows (by `type_of%`, the statements of
+`ConformingFamily.windowCrime_isPoincare`, `windowCrime_tendsto_staticError` and
+`windowCrime_eventually_bijective_cohomologyMap`). `OldCrimeVerdict` states the verdict before
+them verbatim, and `crown_old_crime_verdict` derives it from the new one.
+
 ## Spectral methods
 
 The time-uniform truncation rates of reducing families and of spectral families, the
@@ -3871,5 +3877,81 @@ example (h : κ) (y : (H.window a m).wave.domain)
     (F.windowFEEC a m K hK).toCrime_sol h v t⟩
 
 end CrownCrime
+
+section CrownCochain
+
+/-! ### The cochain case in the crown, and the conforming verdict before it -/
+
+open scoped InnerProductSpace
+
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α] [CharZero α]
+  {V : α → Type*} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] [∀ i, NormedSpace ℝ (V i)] [∀ i, IsScalarTower ℝ 𝕜 (V i)]
+  {H : HilbertComplex 𝕜 (ComplexShape.up α) V} {κ : Type*}
+
+/-- **The conclusions of the FEEC theorem before the fields `crime_static` and
+`crime_cohomology`** (`ConformingFamily.Verdict` of main `648fb8e`), stated verbatim. -/
+structure OldCrimeVerdict (F : ConformingFamily H κ) : Prop where
+  /-- the static FEEC theorem in every degree with finite-dimensional harmonic forms
+  ([AFW2010], Thms 3.4–3.9) -/
+  static (hcr : ∀ i, H.ClosedRangeAt i) (j : α) [FiniteDimensional 𝕜 (H.harmonic j)] :
+    F.StaticVerdict j
+  /-- the approximating FEEC theorem for the wave equation on every window with every closed
+  constraint, hence the skew-adjoint and dissipative ones -/
+  wave (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).toApprox.Verdict (F.windowFEEC a m K hK).toCore
+  /-- the constrained FEEC theorem on every window with every closed constraint
+  ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17) -/
+  constrained (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).Verdict
+  /-- the heat FEEC theorem on every window with closed range, with every closed constraint -/
+  heat (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) :
+    (F.windowFEEC a m K hK).toHeat.Verdict
+      ((F.windowFEEC a m K hK).heatCore hcr (F.isGraphBounded_windowFEEC a m K hK))
+  /-- the fully discrete wave and heat FEEC theorems on every window with every closed
+  constraint, for every time scheme, and leapfrog under the CFL condition -/
+  full (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowFEEC a m K hK).FullVerdict
+  /-- the perturbed FEEC theorems on every window with every closed constraint and every bounded
+  dissipative `B`: the damped wave and perturbed heat equations ([Pazy1983], §3.1, §3.3, §3.4) -/
+  perturbed (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (B : (PiLp 2 fun i : Fin m => V (a + i)) →L[𝕜] PiLp 2 fun i : Fin m => V (a + i))
+    (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) : (F.windowFEEC a m K hK).PerturbedVerdict B hB
+  /-- the zero-defect instance of the FEEC theorem for approximating families
+  (`ApproxComplexCrime.feec`): every window with every closed constraint, read as an approximating
+  family with zero defects (`windowCrime`; [HolstStern2012], §3) -/
+  crime (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowCrime a m K hK).Verdict
+
+/-- The old verdict is the new one without its last two fields. -/
+theorem crown_old_crime_verdict (F : ConformingFamily H κ) : OldCrimeVerdict F :=
+  ⟨F.feec.static, F.feec.wave, F.feec.constrained, F.feec.heat, F.feec.full, F.feec.perturbed,
+    F.feec.crime⟩
+
+variable (F : ConformingFamily H κ) (a : α) (m : ℕ)
+  (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+  (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+  (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+
+/-- The field `crime_static` is `windowCrime_isPoincare` and `windowCrime_tendsto_staticError`. -/
+example : type_of% (F.windowCrime_isPoincare a m K hK hcr) := (F.feec.crime_static a m K hK hcr).1
+
+example (f : PiLp 2 fun i : Fin m => V (a + i)) :
+    type_of% (F.windowCrime_tendsto_staticError a m K hK hcr f) :=
+  (F.feec.crime_static a m K hK hcr).2 f
+
+/-- The field `crime_cohomology` is `windowCrime_eventually_bijective_cohomologyMap`. -/
+example [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
+    type_of% (F.windowCrime_eventually_bijective_cohomologyMap a m K hK hcr) :=
+  F.feec.crime_cohomology a m K hK hcr
+
+end CrownCochain
 
 end FeecCheck.Crown

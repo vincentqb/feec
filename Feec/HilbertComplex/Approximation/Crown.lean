@@ -126,14 +126,17 @@ well-posedness, the Strang lemma, the splitting of the residual into the inner-p
 cochain defects of `u`, `𝐝 u` and the harmonic defect, convergence for every datum from
 consistency on a dense set; `Feec.HilbertComplex.Approximation.StaticCrime`), and the heat FEEC
 theorem with the heat Ritz projection `P_ℌₕ iₕ* y - Gₕ iₕ* z` when the static mixed method is
-consistent on a dense set of data, with the heat rate from a static rate and an inner-product defect rate
-(`Feec.HilbertComplex.Approximation.HeatCrime`). The crown
-consumes it on the zero-defect instance: every conforming window read as an approximating family
+consistent on a dense set of data, with the heat rate from a static rate and an inner-product
+defect rate (`Feec.HilbertComplex.Approximation.HeatCrime`). The crown consumes it on the
+zero-defect instance: every conforming window read as an approximating family
 (`ConstrainedFEEC.toCrime`, `windowCrime`, with `Jₕ = 1`, zero cochain defect and the discrete
 solutions of the window) satisfies it (`crime`); under closed range of the window the hypothesis
 of `static` holds there (`windowCrime_isPoincare`) and the static method with crimes converges for
 every datum (`windowCrime_tendsto_staticError`, through the cochain case
-`Feec.HilbertComplex.Approximation.StaticCochain`). This identification is at the level of data;
+`Feec.HilbertComplex.Approximation.StaticCochain`; the field `crime_static`), and with
+finite-dimensional harmonic forms the total cochain projections eventually induce isomorphisms on
+cohomology (`windowCrime_eventually_bijective_cohomologyMap`; the field `crime_cohomology`). This
+identification is at the level of data;
 on a conforming window the field `crime` adds to `wave`, `full` and `perturbed` (stated there on
 the subcomplex front and its Ritz core) the Strang, residual and defect estimates. The
 weak-symmetry scheme (6.5) of [QuennevilleBelair2015], Ch. 6 applies `ApproxComplexCrime.feec`
@@ -242,8 +245,10 @@ them).
 
 * **`ConformingFamily.feec`**, **`ConformingFamily.feec_rated`**, **`ApproxComplexCrime.feec`**;
   `constrainedFEEC_fullyDiscrete`, `constrainedFEEC_fullRate`.
-* `ConformingFamily.windowCrime_isPoincare`, `ConformingFamily.windowCrime_tendsto_staticError`:
-  the conforming windows satisfy the static theory with crimes.
+* `ConformingFamily.windowCrime_isPoincare`, `ConformingFamily.windowCrime_tendsto_staticError`,
+  `ConformingFamily.windowCrime_eventually_bijective_cohomologyMap`: the conforming windows satisfy
+  the static theory with crimes and eventually have the cohomology of the window (the fields
+  `crime_static`, `crime_cohomology`).
 
 ## References
 
@@ -733,6 +738,34 @@ theorem windowCrime_isPoincare (F : ConformingFamily H κ) (a : α) (m : ℕ)
   (F.windowFEEC a m K hK).toCrime_isPoincare (zero_le_one.trans (F.window a m).one_le_projBound)
     (F.window a m).norm_π_le hcr
 
+/-- **The cochain projections of a conforming window**: the total cochain projections of the
+window (`ConstrainedFEEC.cochainProj`), bounded in `W` by the projection bound of `F`. -/
+abbrev windowCochainProj (F : ConformingFamily H κ) (a : α) (m : ℕ)
+    (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
+    (F.windowCrime a m K hK).toFamily.CochainProj (F.window a m).projBound :=
+  (F.windowFEEC a m K hK).cochainProj (zero_le_one.trans (F.window a m).one_le_projBound)
+    (F.window a m).norm_π_le
+
+/-- On a conforming window, `iₕ πₕ x → x` for every `x` (degreewise, `ConformingFamily.tendsto_π`
+of the window). -/
+theorem windowCrime_tendsto_incl_π (F : ConformingFamily H κ) (a : α) (m : ℕ)
+    (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (x : PiLp 2 fun i : Fin m => V (a + i)) :
+    Tendsto (fun h => ‖x - (F.windowCrime a m K hK).toFamily.incl h
+      ((F.windowCochainProj a m K hK).π h x)‖) (F.windowCrime a m K hK).l (𝓝 0) := by
+  have e : ∀ h, ‖x - (F.windowCrime a m K hK).toFamily.incl h
+      ((F.windowCochainProj a m K hK).π h x)‖ ≤ ∑ i, ‖((F.window a m).π h).π i (x i) - x i‖ :=
+    fun h => by
+      rw [norm_sub_rev]
+      exact PiLp.norm_le_sum_norm _
+  refine squeeze_zero (fun _ => norm_nonneg _) e ?_
+  have hs := tendsto_finsetSum Finset.univ fun i (_ : i ∈ Finset.univ) =>
+    tendsto_iff_norm_sub_tendsto_zero.1 ((F.window a m).tendsto_π i (x i))
+  rw [Finset.sum_const_zero] at hs
+  exact hs
+
 /-- **The static method with crimes converges on the conforming windows**, under closed range of
 the window: the static error tends to `0` for every datum, with no defect assumed. The reading
 maps are cochain maps, `Jₕ = 1`, and the total cochain projections tend to the identity
@@ -745,27 +778,33 @@ theorem windowCrime_tendsto_staticError (F : ConformingFamily H κ) (a : α) (m 
       (F.windowCrime a m K hK).l (𝓝 0) := by
   obtain ⟨cP, hcP, hP⟩ := F.windowCrime_isPoincare a m K hK hcr
   set G := F.windowFEEC a m K hK
-  have hC := zero_le_one.trans (F.window a m).one_le_projBound
   have hJ : ∀ h, G.toComplex.toFamily.toCrimeFamily.J h = 1 := G.toCrime_J
   refine (G.toComplex.toFamily.isCochain_toCrimeFamily).tendsto_staticError hcr
-    (G.cochainProj hC (F.window a m).norm_π_le) hP hcP ?_ (fun x => ?_) f
-  · simp only [hJ, sub_self, norm_zero]
-    exact tendsto_const_nhds
-  · have e : ∀ h, ‖x - G.toComplex.toFamily.toCrimeFamily.incl h
-        ((G.cochainProj hC (F.window a m).norm_π_le).π h x)‖ ≤
-        ∑ i, ‖((F.window a m).π h).π i (x i) - x i‖ := fun h => by
-      rw [norm_sub_rev]
-      exact PiLp.norm_le_sum_norm _
-    refine squeeze_zero (fun _ => norm_nonneg _) e ?_
-    have hs := tendsto_finsetSum Finset.univ fun i (_ : i ∈ Finset.univ) =>
-      tendsto_iff_norm_sub_tendsto_zero.1 ((F.window a m).tendsto_π i (x i))
-    rw [Finset.sum_const_zero] at hs
-    exact hs
+    (F.windowCochainProj a m K hK) hP hcP ?_ (F.windowCrime_tendsto_incl_π a m K hK) f
+  simp only [hJ, sub_self, norm_zero]
+  exact tendsto_const_nhds
+
+/-- **The conforming windows read with crimes eventually have the cohomology of the window**:
+under closed range and with finite-dimensional harmonic forms, `[z] ↦ [πₕ z]` is eventually an
+isomorphism `H(𝐝) ≅ H(𝐝ₕ)` of the total complexes
+(`ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`; [HolstStern2012],
+Cor 3.4). -/
+theorem windowCrime_eventually_bijective_cohomologyMap (F : ConformingFamily H κ) (a : α)
+    (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
+    ∀ᶠ h in (F.windowCrime a m K hK).l,
+      Function.Bijective ((F.windowCochainProj a m K hK).cohomologyMap h) :=
+  ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap
+    (F.windowFEEC a m K hK).toComplex.toFamily.isCochain_toCrimeFamily
+    (F.windowCochainProj a m K hK) hcr fun q _ => F.windowCrime_tendsto_incl_π a m K hK q
 
 /-- **The conclusions of the FEEC theorem** (`feec`) for a conforming family `F`: the static FEEC
 theorem in every degree, and on every window with every closed constraint the semidiscrete wave
-and heat FEEC theorems, the fully discrete ones, and the perturbed ones for every bounded
-dissipative `B`. -/
+and heat FEEC theorems, the fully discrete ones, the perturbed ones for every bounded
+dissipative `B`, and, read as approximating families with crimes, the FEEC theorem with crimes,
+the static theory with crimes and the cohomology. -/
 structure Verdict (F : ConformingFamily H κ) : Prop where
   /-- the static FEEC theorem in every degree with finite-dimensional harmonic forms
   ([AFW2010], Thms 3.4–3.9) -/
@@ -804,14 +843,37 @@ structure Verdict (F : ConformingFamily H κ) : Prop where
   crime (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
     (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i)))) :
     (F.windowCrime a m K hK).Verdict
+  /-- the static theory with crimes on every window with closed range, with every closed
+  constraint: the uniform discrete Poincaré inequality, and convergence for every datum with no
+  defect assumed (the cochain case of [HolstStern2012], §3; `windowCrime_isPoincare`,
+  `windowCrime_tendsto_staticError`) -/
+  crime_static (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i) :
+    (∃ cP, 1 ≤ cP ∧ (F.windowCrime a m K hK).toFamily.IsPoincare cP) ∧
+      ∀ f, Tendsto (fun h => (F.windowCrime a m K hK).toFamily.staticError hcr h f)
+        (F.windowCrime a m K hK).l (𝓝 0)
+  /-- the cohomology with crimes on every window with closed range and finite-dimensional
+  harmonic forms, with every closed constraint: `[z] ↦ [πₕ z]` is eventually an isomorphism of
+  the total cohomologies ([HolstStern2012], Cor 3.4;
+  `windowCrime_eventually_bijective_cohomologyMap`) -/
+  crime_cohomology (a : α) (m : ℕ) (K : Submodule 𝕜 (PiLp 2 fun i : Fin m => V (a + i)))
+    (hK : IsClosed (K : Set (PiLp 2 fun i : Fin m => V (a + i))))
+    (hcr : ∀ i, (H.window a m).ClosedRangeAt i)
+    [∀ i, FiniteDimensional 𝕜 ((H.window a m).harmonic i)] :
+    ∀ᶠ h in (F.windowCrime a m K hK).l,
+      Function.Bijective ((F.windowCochainProj a m K hK).cohomologyMap h)
 
 /-- **The FEEC theorem.** For every conforming family `F` of a Hilbert complex on `ℕ` or `ℤ`:
 the static FEEC theorem in every degree (closed range, finite-dimensional harmonic forms), and on
 every window with every closed constraint the semidiscrete wave FEEC theorem (approximating and
-constrained), the heat FEEC theorem (closed range of the window), the fully discrete theorems for every time scheme and for leapfrog under the CFL
-condition, and the perturbed theorems for every bounded dissipative perturbation. [AFW2010],
-Thms 3.4–3.9; [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [BrennerThomee1979];
-[Pazy1983], §3.1, §3.3, §3.4 -/
+constrained), the heat FEEC theorem (closed range of the window), the fully discrete theorems for
+every time scheme and for leapfrog under the CFL condition, the perturbed theorems for every
+bounded dissipative perturbation, and, read as an approximating family with crimes, the FEEC
+theorem with crimes, the static theory with crimes (closed range) and eventually the cohomology
+(closed range, finite-dimensional harmonic forms). [AFW2010], Thms 3.4–3.9;
+[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Prop. 4.17; [BrennerThomee1979]; [Pazy1983], §3.1,
+§3.3, §3.4; [HolstStern2012], §3 -/
 theorem feec (F : ConformingFamily H κ) : F.Verdict :=
   ⟨fun hcr j _ => F.staticFEEC hcr j,
     fun a m K hK => approxFEEC _ (F.windowFEEC a m K hK).toCore,
@@ -819,7 +881,10 @@ theorem feec (F : ConformingFamily H κ) : F.Verdict :=
     fun a m K hK hcr => (F.windowFEEC a m K hK).heatFEEC hcr (F.isGraphBounded_windowFEEC a m K hK),
     fun a m K hK => constrainedFEEC_fullyDiscrete (F.windowFEEC a m K hK),
     fun a m K hK B hB => constrainedFEEC_perturbed (F.windowFEEC a m K hK) B hB,
-    fun a m K hK => (F.windowCrime a m K hK).feec⟩
+    fun a m K hK => (F.windowCrime a m K hK).feec,
+    fun a m K hK hcr => ⟨F.windowCrime_isPoincare a m K hK hcr,
+      F.windowCrime_tendsto_staticError a m K hK hcr⟩,
+    fun a m K hK hcr _ => F.windowCrime_eventually_bijective_cohomologyMap a m K hK hcr⟩
 
 variable {ρ : Type*}
 

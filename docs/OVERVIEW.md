@@ -224,20 +224,22 @@ posed for every `h` and, under a uniform discrete Poincaré inequality
 of `iₕ` mapping `ker 𝐝` into `ker 𝐝ₕ` when `‖𝐝 iₕ v‖ ≤ C' ‖𝐝ₕ v‖`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.isPoincare_of_proj`), uniformly stable. Against the
 mixed solution of the total complex, the error is at most best approximation plus `80 C c_P²` times
-the residual of any discrete triple (`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le`),
-and the residual splits into the inner-product defect, the read error, the cochain defects of
-`u = G f` and `𝐝 u`, and the harmonic defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms
+the residual of any discrete triple
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le`), and the residual splits into the
+inner-product defect, the read error, the cochain defects of `u = G f` and `𝐝 u`, and the harmonic
+defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.norm_staticResidual_le`,
-`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le_of_split`). Consistent approximation is
-again equivalent to convergence
+`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le_of_split`). Consistent approximation
+is again equivalent to convergence
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.staticConsistent_iff_tendsto`), and on a dense set
 of data it gives convergence for every datum
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.tendsto_staticError_of_dense`). The heat theorem
 (`Feec.HilbertComplex.ApproxComplexCrime.heatFEEC`, `Feec.HilbertComplex.Approximation.HeatCrime`)
 follows the conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
-projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static errors tend to `0` (the inner-product
-defect enters its consistency defect; in the crown, from static consistency on a dense set), and a
-static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ` gives the heat rate `(2K + C (3C + 16 c_P² C) K t) L mᵅ`
+projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static errors tend to `0` (the
+inner-product defect enters its consistency defect; in the crown, from static consistency on a
+dense set), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ` gives the heat rate
+`(2K + C (3C + 16 c_P² C) K t) L mᵅ`
 (`Feec.HilbertComplex.ApproxComplexCrime.rate_heat_of_static`). These are the fields `static`,
 `heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted family
 satisfies every hypothesis, converges for every datum and is inexact
@@ -261,9 +263,14 @@ isomorphism on cohomology under the strict gap on `ℌ`
 The conforming windows are instances: under closed range they satisfy the discrete Poincaré
 inequality and the static method with crimes converges for every datum
 (`Feec.HilbertComplex.ConformingFamily.windowCrime_isPoincare`,
-`Feec.HilbertComplex.ConformingFamily.windowCrime_tendsto_staticError`). Not formalized: a static
-rate for a concrete family with crimes (the heat rate takes it as hypothesis), and cohomology for
-reading maps that are not cochain maps.
+`Feec.HilbertComplex.ConformingFamily.windowCrime_tendsto_staticError`), and with
+finite-dimensional harmonic forms the cochain projections eventually induce isomorphisms on
+cohomology
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`,
+`Feec.HilbertComplex.ConformingFamily.windowCrime_eventually_bijective_cohomologyMap`; the fields
+`crime_static`, `crime_cohomology` of `Feec.HilbertComplex.ConformingFamily.Verdict`). Not
+formalized: a static rate for a concrete family with crimes (the heat rate takes it as
+hypothesis), and cohomology for reading maps that are not cochain maps.
 
 **Instances.** Every row of the README table is proved through `approxFEEC`; the theorems the
 README names (and others such as `Feec.Instances.Maxwell.maxwellFEEC` and

@@ -1,5 +1,6 @@
 module
 
+public import Feec.HilbertComplex.Approximation.DiscreteCohomology
 public import Feec.HilbertComplex.Approximation.StaticCrime
 
 /-!
@@ -47,6 +48,9 @@ error estimate needs no assumed defect, and the method converges for every datum
   `cohomologyMap_surjective`; one-to-one under closed range and the strict gap
   `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`, `cohomologyMap_injective`; [HolstStern2012], Thm 3.3 and,
   under closed range, Cor 3.4).
+* `ApproxComplexCrime.Family.IsCochain.eventually_bijective_cohomologyMap`: **eventually an
+  isomorphism on cohomology**: for a finite-dimensional `ℌ` and `iₕ πₕ → 1` pointwise on `ℌ`, the
+  strict gap holds eventually (`CochainProj.eventually_norm_sub_incl_π_lt`).
 * The instances: `ApproxComplex.Family.isCochain_toCrimeFamily` (cochain reading maps of graded
   discrete complexes), `ConstrainedFEEC.cochainProj` (the total cochain projection of a
   subcomplex family with projections bounded in `W`), `ConstrainedFEEC.toCrime_isPoincare`.
@@ -488,6 +492,73 @@ def cohomologyEquiv {Cπ : ℝ} (P : S.CochainProj Cπ) (hcr : ∀ i, H.ClosedRa
     H.total.cohomology () ≃ₗ[𝕜] (S.cpx h).cohomology () :=
   LinearEquiv.ofBijective _
     ⟨hi.cohomologyMap_injective P hcr h hgap, hi.cohomologyMap_surjective P h⟩
+
+end IsCochain
+
+namespace CochainProj
+
+variable {Cπ : ℝ} (P : S.CochainProj Cπ)
+
+/-- **The strict gap holds eventually** where `ℌ` is finite-dimensional: if `iₕ πₕ q → q` along
+`l` for every `q ∈ ℌ`, then eventually `‖q - iₕ πₕ q‖ < ‖q‖` on `ℌ \ 0`. The maps
+`q ↦ ‖q - iₕ πₕ q‖` are `(1 + C C_π)`-Lipschitz, so the convergence is uniform on the (compact)
+unit ball of `ℌ`. Cf. [AFW2010], Thm 3.5 and §3.4 -/
+theorem eventually_norm_sub_incl_π_lt [FiniteDimensional 𝕜 (H.total.harmonic ())] {l : Filter κ}
+    (happ : ∀ q ∈ H.total.harmonic (), Tendsto (fun h => ‖q - S.incl h (P.π h q)‖) l (𝓝 0)) :
+    ∀ᶠ h in l, ∀ q ∈ H.total.harmonic (), q ≠ 0 → ‖q - S.incl h (P.π h q)‖ < ‖q‖ := by
+  set Hm := H.total.harmonic ()
+  set B := 1 + S.boundConst * max Cπ 0
+  have hC := S.boundConst_nonneg
+  have hB : 0 ≤ B := by positivity
+  have hlip : ∀ h (x y : Hm), ‖(x : PiLp 2 W) - S.incl h (P.π h x)‖ ≤
+      ‖(y : PiLp 2 W) - S.incl h (P.π h y)‖ + B * dist x y := by
+    intro h x y
+    set z : PiLp 2 W := (x : PiLp 2 W) - y
+    have e : (x : PiLp 2 W) - S.incl h (P.π h x) =
+        ((y : PiLp 2 W) - S.incl h (P.π h y)) + (z - S.incl h (P.π h z)) := by
+      simp only [z, _root_.map_sub]; abel
+    have hz : ‖S.incl h (P.π h z)‖ ≤ S.boundConst * max Cπ 0 * ‖z‖ := by
+      rw [mul_assoc]
+      exact (S.norm_incl_apply_le h _).trans (mul_le_mul_of_nonneg_left
+        ((P.norm_π_apply_le h z).trans
+          (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))) hC)
+    have hd : dist x y = ‖z‖ := by rw [dist_eq_norm]; rfl
+    rw [e, hd]
+    refine (norm_add_le _ _).trans (add_le_add le_rfl ((norm_sub_le _ _).trans ?_))
+    linarith
+  have hev := (isCompact_closedBall (0 : Hm) 1).eventually_forall_le_of_lipschitz hB hlip
+    (fun x => happ x x.2) (by norm_num : (0 : ℝ) < 1 / 2)
+  filter_upwards [hev] with h hh q hq hq0
+  have hq' : 0 < ‖q‖ := norm_pos_iff.2 hq0
+  set c : 𝕜 := ((‖q‖⁻¹ : ℝ) : 𝕜)
+  have hr : c • (⟨q, hq⟩ : Hm) ∈ Metric.closedBall (0 : Hm) 1 := by
+    rw [mem_closedBall_zero_iff, norm_smul, RCLike.norm_ofReal, abs_inv, abs_norm]
+    exact (inv_mul_cancel₀ hq'.ne').le
+  have h1 := hh _ hr
+  have e : q - S.incl h (P.π h q) = ((‖q‖ : ℝ) : 𝕜) •
+      ((((c • (⟨q, hq⟩ : Hm)) : Hm) : PiLp 2 W) - S.incl h (P.π h (c • (⟨q, hq⟩ : Hm) : Hm))) := by
+    rw [Submodule.coe_smul, _root_.map_smul, _root_.map_smul, ← smul_sub, smul_smul,
+      ← RCLike.ofReal_mul, mul_inv_cancel₀ hq'.ne', RCLike.ofReal_one, one_smul]
+  rw [e, norm_smul, RCLike.norm_ofReal, abs_norm]
+  nlinarith
+
+end CochainProj
+
+namespace IsCochain
+
+variable (hi : S.IsCochain)
+include hi
+
+/-- **Cochain reading maps and projections eventually induce isomorphisms on cohomology**: under
+closed range, with `ℌ` finite-dimensional and `iₕ πₕ q → q` for every `q ∈ ℌ` along `l`, the
+maps `[z] ↦ [πₕ z]` are eventually bijective (`CochainProj.eventually_norm_sub_incl_π_lt`,
+`cohomologyEquiv`). [HolstStern2012], Cor 3.4 -/
+theorem eventually_bijective_cohomologyMap {Cπ : ℝ} (P : S.CochainProj Cπ)
+    (hcr : ∀ i, H.ClosedRangeAt i) [FiniteDimensional 𝕜 (H.total.harmonic ())] {l : Filter κ}
+    (happ : ∀ q ∈ H.total.harmonic (), Tendsto (fun h => ‖q - S.incl h (P.π h q)‖) l (𝓝 0)) :
+    ∀ᶠ h in l, Function.Bijective (P.cohomologyMap h) :=
+  (P.eventually_norm_sub_incl_π_lt happ).mono fun h hh =>
+    ⟨hi.cohomologyMap_injective P hcr h hh, hi.cohomologyMap_surjective P h⟩
 
 end IsCochain
 

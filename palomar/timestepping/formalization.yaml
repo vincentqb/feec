@@ -30,8 +30,8 @@ project:
     Euler on Banach spaces with growth M e^(omega t), unconditionally stable with an explicit
     error bound; (4) the same stability and error bounds for bounded generators L with
     ||e^(tL)|| <= M, uniformly in L, with p(tau L) q(tau L)^(-1), plus the error along a
-    trajectory with a space-discretization defect; (5) a Lax-equivalence convergence theorem for
-    families of bounded generators on Banach spaces X_h read in a Banach space E: if the
+    trajectory with a space-discretization defect; (5) the convergence half of the Lax
+    equivalence theorem for families of bounded generators on Banach spaces X_h read in a Banach space E: if the
     semidiscrete solutions converge to S(t) x uniformly on bounded time intervals, the fully
     discrete solutions of every power-bounded time scheme consistent of order p >= 1 converge to
     S(n tau_h) x, uniformly over the time levels, for every datum; backward Euler always
@@ -76,11 +76,11 @@ sources:
       - "Vidar Thomée"
     id: "doi:10.1137/0716051"
     type: "article"
-    location: "SIAM J. Numer. Anal. 16 (1979)"
+    location: "SIAM J. Numer. Anal. 16 (1979) 683-694, Thms 1 and 4"
     relationship: "formalizes"
     note: >-
-      The stability bound ||r(tau A)^n|| <= C sqrt(n) for bounded semigroups and A-acceptable
-      r (per the paper's abstract, checked via Crossref), formalized as M (1 + C sqrt(n)) with C
+      The stability bound ||r(tau A)^n|| <= C M sqrt(n) for bounded semigroups and A-stable
+      r (Thm 1, as restated in Gomilko-Tomilov 2024, Thm 1.1(i)), formalized as M (1 + C sqrt(n)) with C
       depending on r only (TimeStepping.stable, TimeStepping.stable_of_bounded), on real or
       complex Banach spaces (real ones through the complexification) and for every A-stable r,
       |r(infinity)| = 1 included; the proof is the Hille-Phillips calculus r(tau A) = Phi(mu_r)
@@ -92,7 +92,8 @@ sources:
       the remarks of this paper; the proof (translates of kernels in the Hille-Phillips calculus
       and an L^1 bound O(n) of the error kernel) is not the paper's. The convergence for every
       datum from stability and consistency (TimeStepping.converges), in the form for families of
-      discretizations. Paper itself not consulted beyond its abstract.
+      discretizations. The paper itself was not consulted beyond its abstract; Thms 1 and 4 were
+      checked as restated in Gomilko-Tomilov 2024, Thm 1.1 (arXiv:2403.14411v2).
     author_endorsement: "not-contacted"
   - title: "Rational Approximation of Operator Semigroups via the B-Calculus"
     authors:
@@ -103,9 +104,14 @@ sources:
     location: "J. Funct. Anal. 287 (2024) 110426, Thm 1.1(ii) (arXiv:2403.14411)"
     relationship: "formalizes"
     note: >-
-      Thm 1.1(ii), case s = m + 1: for A-stable r of order m and a bounded semigroup on a Banach
-      space, the error C M t^(m+1)/n^m ||A^(m+1) x|| = C M n tau tau^m ||A^(m+1) x||
-      (TimeStepping.error). The less smooth cases s < m + 1 are not formalized.
+      Checked against arXiv:2403.14411v2. Thm 1.1 is the Banach-space statement of
+      Brenner-Thomee (attributed there to [BT1979, Thms 1, 4 and Remarks]), written for -A the
+      generator and r approximating e^(-z): (i) ||r^n(tA/n)|| <= C(r) M n^(1/2)
+      (TimeStepping.stable); (ii), case s = q + 1 = m + 1, ||e^(-tA) x - r^n(tA/n) x|| <=
+      C M t^(m+1)/n^m ||A^(m+1) x|| = C M n tau tau^m ||A^(m+1) x|| with tau = t/n
+      (TimeStepping.error); the paper notes both are optimal in general (shift semigroups on
+      L^1). The less smooth cases s < m + 1 and the paper's own Hilbert-space refinements via the
+      B-calculus are not formalized.
     author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
@@ -160,11 +166,12 @@ sources:
     location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 7, 9, 15"
     relationship: "background"
     note: >-
-      Single step methods: stability and consistency give convergence (Ch. 7, 9; the
-      Lax-Richtmyer form behind TimeStepping.converges and TimeStepping.error_of_bounded); the
-      lumped mass method, the finite difference scheme and the maximum principle (Ch. 15;
-      TimeStepping.subMarkov, TimeStepping.isSubMarkovGenerator_fdLaplacian,
-      TimeStepping.fdHeat). Chapter titles checked against Crossref; contents not consulted.
+      Ch. 7 (Single Step Fully Discrete Schemes for the Homogeneous Equation) and Ch. 9 (Single
+      Step Methods and Rational Approximations of Semigroups): stability and consistency give
+      convergence, the background of TimeStepping.converges and TimeStepping.error_of_bounded;
+      Ch. 15 (The Method of Lumped Masses): the discrete maximum principle, background of
+      TimeStepping.subMarkov, TimeStepping.isSubMarkovGenerator_fdLaplacian and
+      TimeStepping.fdHeat. Chapter titles checked against Crossref; contents not consulted.
     author_endorsement: "not-contacted"
   - title: "Maximum principle and uniform convergence for the finite element method"
     authors:
@@ -327,7 +334,9 @@ review:
   notes: >-
     Not yet reviewed by the author: the statements of this entry are new or restated from
     palomar/vonneumann (whose von Neumann and Hilbert-space statements the author had reviewed in
-    their earlier form). Every merge of the library was gated by a full build (zero warnings), an
+    their earlier form). An independent agent editorial review checked the statements against
+    the definitions and Gomilko-Tomilov 2024, Thm 1.1 (arXiv v2), and found no hidden hypotheses;
+    it is not an author or external review. Every merge of the library was gated by a full build (zero warnings), an
     axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI review. No
     external mathematical review.
 
@@ -359,12 +368,12 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Bounded generators with ||e^(tL)|| <= M, uniformly in L: q(tau L) invertible, ||r(tau L)^n|| <= M (1 + C sqrt(n))."
-    - source: "[BrennerThomee1979]; [Thomee2006], Ch. 7"
+    - source: "[BrennerThomee1979]; [Thomee2006], Ch. 7, 9"
       lean: "TimeStepping.error_of_bounded"
       module: "Challenge"
       status: "proved"
       note: "Bounded generators, uniformly in L: the sharp temporal error and the error along a trajectory with defect D."
-    - source: "[BrennerThomee1979]; [Thomee2006], Ch. 7; [Pazy1983], §3.4"
+    - source: "[Thomee2006], Ch. 7, 9; [Pazy1983], §3.4"
       lean: "TimeStepping.converges"
       module: "Challenge"
       status: "proved"

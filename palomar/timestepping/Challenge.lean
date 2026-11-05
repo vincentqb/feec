@@ -20,51 +20,47 @@ public import Mathlib.Order.CompletePartialOrder
 /-!
 # Time stepping for uniformly stable semigroup families on Banach spaces
 
-A one-step method for `u' = A u` replaces the exact evolution `e^{τA}` by a rational function
-`r(τA)` of the step, `r = p/q` with real coefficients. It is **A-stable** (`IsAStable`) if
-`q` has no zero and `|r| ≤ 1` on the closed left half-plane, and of **order `m`** (`HasOrder`) if
-`r(z) - e^z = O(z^{m+1})` at `0`. For a bounded generator `L`, `r(τL) = p(τL) q(τL)⁻¹`
-(`rationalApply`); for a possibly unbounded generator `A` with resolvent `R = (1 - τA)⁻¹`,
-`r(τA) = P(R) Q(R)⁻¹` (`rationalOfResolvent`) with `P(R) = Σ_{k ≤ N} pₖ (R - 1)ᵏ R^{N-k}`
-(`resolventPoly`, `N = deg q`), i.e. `p(τA) Rᴺ` for `deg p ≤ N` (as `R - 1 = τA R`). A
-strongly continuous semigroup is `IsC0Semigroup`, its generator is given by its graph
-(`generatorGraph`, right derivatives at `0`); Mathlib has no `C₀`-semigroups.
+A one-step method for `u' = A u` replaces the exact evolution `e^{τA}` by `r(τA)`, `r = p/q` a
+rational function with real coefficients; it is **A-stable** (`IsAStable`) if `q` has no zero
+and `|r| ≤ 1` on the closed left half-plane, and of **order `m`** (`HasOrder`) if
+`r(z) - e^z = O(z^{m+1})` at `0`. On a Hilbert space von Neumann's inequality makes A-stable
+schemes contractive; on a Banach space, e.g. for the heat equation in the maximum norm, they need
+not be power bounded. Brenner and Thomée showed that they are nevertheless nearly stable and
+converge at their order for smooth data, with constants depending on `r` only. The estimates
+therefore hold uniformly over families of space discretizations, and stability with consistency
+gives convergence for every datum; finite differences for the heat equation are the example.
 
-**Banach spaces** ([BrennerThomee1979]; [GomilkoTomilov2024], Thm 1.1(ii)). For every A-stable
-`r`, `|r(∞)| = 1` included (Crank–Nicolson, Gauss methods), there is `C`, depending on `r` only,
-such that for every bounded strongly continuous semigroup (`‖S(t)‖ ≤ M`) of a real or complex
-Banach space and every `τ > 0`, `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` (`stable`); for `r` of order `m`
-there is `K`, depending on `r` and `m` only, with the **sharp smooth-data estimate**
-`‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖` (`error`). The **Hille–Yosida** estimates
-(`hilleYosida`, [Pazy1983], §1.5) make backward Euler `r(z) = 1/(1 - z)` power bounded,
-`‖Rⁿ‖ ≤ M/(1 - ωτ)ⁿ`, also for semigroups with growth `‖S(t)‖ ≤ M e^{ωt}`, with an explicit
-error bound (`backwardEuler`).
+Mathlib has no `C₀`-semigroups: `IsC0Semigroup` is the definition and `generatorGraph` the graph
+of the generator (right derivatives at `0`). For a bounded `L`, `r(τL) = p(τL) q(τL)⁻¹`
+(`rationalApply`); for a generator `A` with resolvent `R = (1 - τA)⁻¹`, `r(τA) = P(R) Q(R)⁻¹`
+(`rationalOfResolvent`, `resolventPoly`), `P(R) = p(τA) Rᴺ`, `N = deg q`.
 
-**Uniformly stable families.** The constants depend on `r`, `m` only, so the estimates hold
-uniformly over every family of bounded generators `Lₕ` on Banach spaces `Xₕ` with
-`‖e^{tLₕ}‖ ≤ M` (`stable_of_bounded`, `error_of_bounded`; the latter also along trajectories
-with a space-discretization defect). For such a family read in a Banach space `E` by uniformly
-bounded `ιₕ` with uniformly bounded left inverses, **stability and consistency give
-convergence**: if the semidiscrete solutions converge to `S(t) x` uniformly on bounded time
-intervals, so do the fully discrete solutions of every power-bounded time scheme consistent of
-order `p ≥ 1`, as `τₕ → 0`, for every datum, without smoothness (`converges`); backward Euler is
-always such a scheme (`converges_backwardEuler`). [BrennerThomee1979]; [Thomee2006], Ch. 7.
+**Banach spaces** ([BrennerThomee1979], Thms 1, 4, as stated in [GomilkoTomilov2024], Thm 1.1).
+For every A-stable `r`, `|r(∞)| = 1` included, and every bounded strongly continuous semigroup
+(`‖S(t)‖ ≤ M`) of a real or complex Banach space, `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` (`stable`), and for
+`r` of order `m`, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖` (`error`), `C`, `K` depending
+on `r`, `m` only. The Hille–Yosida estimates (`hilleYosida`, [Pazy1983], §1.5) make backward
+Euler power bounded also under growth `‖S(t)‖ ≤ M e^{ωt}` (`backwardEuler`).
+
+**Uniformly stable families** ([Thomee2006], Ch. 7, 9). The same bounds for every bounded `L`
+with `‖e^{tL}‖ ≤ M` (`stable_of_bounded`, `error_of_bounded`, the latter also along a
+trajectory with a defect). For bounded generators `Lₕ` on Banach spaces `Xₕ`, uniformly stable
+and read in `E` by uniformly bounded `ιₕ` with uniformly bounded left inverses: if the
+semidiscrete solutions converge to `S(t) x`, so do the fully discrete solutions of every
+power-bounded scheme consistent of order `p ≥ 1`, for every datum (`converges`); backward Euler
+is always one (`converges_backwardEuler`).
 
 **Hilbert spaces** ([VonNeumann1951]; [HairerWanner1996], §IV.11). Von Neumann's inequality
-`‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|` for contractions (`vonNeumann`) and its rational form
-(`vonNeumann_rational`); for every m-dissipative `A` and every `r` without poles in the closed
-left half-plane, `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ`, so A-stable schemes are contractive
-(`contractive`).
+(`vonNeumann`, `vonNeumann_rational`); for m-dissipative `A`,
+`‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` (`contractive`).
 
-**The maximum norm** ([CiarletRaviart1973]; [Thomee2006], Ch. 15). On `ℝ^ι` with the maximum
-norm a sub-Markov generator (`IsSubMarkovGenerator`: nonnegative off-diagonal entries,
-nonpositive row sums) generates a positive contraction semigroup and has positive contractive
-backward Euler steps (`subMarkov`), so all the above applies with `M = 1`. The classical
-`(2|ι| + 1)`-point finite difference Laplacian `fdLaplacian` on any finite grid of `ℤ^ι` is one
-(`isSubMarkovGenerator_fdLaplacian`); on a cube, against every classical solution of the heat
-equation with bounded pure fourth derivatives, every A-stable scheme of order `m` has the error
-`‖Iₕ u(kτ) - r(τΔₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B h²/12 + K kτ τᵐ ‖Δₕ^{m+1} v‖_∞` (`fdHeat`).
-`backwardEuler_isAStable` and `crankNicolson_isAStable` show that the hypotheses on `r` are met.
+**The maximum norm** ([CiarletRaviart1973]; [Thomee2006], Ch. 15). A sub-Markov generator
+(`IsSubMarkovGenerator`) generates positive contractions and has positive contractive backward
+Euler steps (`subMarkov`); the finite difference Laplacian `fdLaplacian` on every finite grid of
+`ℤ^ι` is one (`isSubMarkovGenerator_fdLaplacian`). On a cube, every A-stable scheme of order `m`
+approximates every classical solution of the heat equation with bounded fourth derivatives to
+`O(h²) + O(τᵐ)` in the maximum norm (`fdHeat`). Backward Euler and Crank–Nicolson satisfy the
+hypotheses on `r` (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
 
 ## References
 
@@ -76,7 +72,7 @@ equation with bounded pure fourth derivatives, every A-stable scheme of order `m
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3,
   §IV.11
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 15
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9, 15
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -182,12 +178,13 @@ theorem stable (p q : ℝ[X]) (hr : IsAStable p q) :
   sorry
 
 /-- **Brenner–Thomée's smooth-data error estimate** ([BrennerThomee1979]; [GomilkoTomilov2024],
-Thm 1.1(ii)). For every A-stable `r = p/q` of order `m` (`|r(∞)| = 1` allowed) there is `K`,
-depending on `r` and `m` only, such that for every strongly continuous semigroup `S` of a real or
-complex Banach space with `‖S t‖ ≤ M` (`t ≥ 0`), generator `A`, every `τ > 0` and the resolvent
-`R` (as in `stable`), `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖` for every `n` and
-`x ∈ D(A^{m+1})` (a chain `u 0 = x, …, u (m + 1) = A^{m+1} x` in the graph of `A`): order `m`
-at fixed `T = nτ`, without the `√n` of the stability bound. -/
+Thm 1.1(ii), `s = m + 1`, optimal in general). For every A-stable `r = p/q` of order `m`
+(`|r(∞)| = 1` allowed) there is `K`, depending on `r` and `m` only, such that for every strongly
+continuous semigroup `S` of a real or complex Banach space with `‖S t‖ ≤ M` (`t ≥ 0`), generator
+`A`, every `τ > 0` and the resolvent `R` (as in `stable`),
+`‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖` for every `n` and `x ∈ D(A^{m+1})` (a chain
+`u 0 = x, …, u (m + 1) = A^{m+1} x` in the graph of `A`): order `m` at fixed `T = nτ`, without
+the `√n` of the stability bound. -/
 theorem error (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
     ∃ K : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
       [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (M : ℝ),
@@ -233,8 +230,8 @@ theorem error_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : Has
             M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ := by
   sorry
 
-/-- **Stability and consistency give convergence** (the Lax equivalence theorem in the
-Brenner–Thomée form, [BrennerThomee1979]; [Thomee2006], Ch. 7; [Pazy1983], §3.4). Let `S` be a
+/-- **Stability and consistency give convergence** (the sufficiency half of the Lax equivalence
+theorem, for the time discretization; [Thomee2006], Ch. 7, 9; [Pazy1983], §3.4). Let `S` be a
 strongly continuous semigroup of a Banach space `E` over `𝕜 = ℝ` or `ℂ` with `‖S t‖ ≤ M`, and
 let Banach spaces `Xₕ` (`h : κ`, refined along a filter `l`) carry bounded generators `Lₕ` with
 `‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in `h`, read in `E` by `ιₕ` with left inverses `πₕ`

@@ -8,38 +8,43 @@ version: "v0.4"
 project:
   name: "Constraint propagation for the linearized Einstein-Bianchi system on a cube with mirror boundary conditions"
   description: >-
-    A Lean 4 formalization of the propagation of the constraints of the linearized
-    Einstein-Bianchi system of general relativity (Anderson, Choquet-Bruhat, York 1997), the
-    application of [QuennevilleBelair2015] (§3.4, §4.10, Prop 4.17, Ch. 7). The system evolves
-    the electric and magnetic parts E, B (3x3 complex matrix fields) of the linearized Weyl
-    curvature, with an auxiliary vector field sigma, as the Hodge wave equation of the matrix
-    grad-curl complex: sigma' = div E + f_sigma, E' = grad sigma - curl B + f_E,
-    B' = curl E + f_B ((grad sigma)_ab = d_b sigma_a; div and curl row by row). The domain is an
-    arbitrary open cube C = prod_i (b_i, b_i + s) of R^3 (s > 0; the unit cube of Ch. 7 is b = 0,
-    s = 1) with the tensorial mirror boundary conditions sigma . n = 0, E_(n tau) = E_(tau n) = 0,
-    B_(tau tau) = 0, and, in the constraint, B_(nn) = 0. The fields are elements of
-    L^2(C; C) (Mathlib's Lp for the Lebesgue measure restricted to C); grad, curl and div are
-    defined by Green's formulas against C^1 test functions on R^3 vanishing on prescribed closed
-    faces of the closed cube and free on the others (IsTest, IsGrad, IsCurl, IsDiv), so each
-    formula is the weak derivative in C together with the boundary condition; the operator
-    L(sigma, E, B) = (div E, grad sigma - curl B, curl E) is IsWave, strong and classical
-    solutions (IsStrongSolution, IsClassicalSolution; cf. Pazy §4.2) ask for the equation at every
-    time of the interval, the forcing class
-    is C([a, c]) intersected with W^(1,1)(a, c; L^2) union L^1(a, c; D(L)) (IsAdmissible,
-    Cazenave-Haraux Prop 4.1.6), and the constraint is sigma = 0 with E and B symmetric,
-    trace-free and divergence-free with the wall conditions E_(tau n) = 0, B_(nn) = 0
-    (Constraint, IsTSD). The compared theorems: FEEC.EinsteinBianchi.tsd_propagates (every strong
-    solution on [a, c] with initial value and forcing in the constraint stays in the
-    constraint); FEEC.EinsteinBianchi.tsd_existsUnique (for an initial value in D(L) and in the
-    constraint and admissible forcing in the constraint there is a classical solution on
-    [a, c], it stays in the constraint, and every strong solution with the same initial value
-    agrees with it on [a, c]); FEEC.EinsteinBianchi.exists_nonstationary (non-vacuity: on every
-    open cube some datum in D(L) and in the constraint has L U != 0, so the constraint has
-    dynamical content). The statement is self-contained over Mathlib (Lp, PiLp, fderiv,
-    ContDiff, set integrals, HasDerivWithinAt, interval integrals); the proof is the library Feec
-    of this repository, where the mirror complex on the cube is the compression of the Fourier
-    grad-curl complex of the torus along the mirror extensions and the TSD constraint is a
-    reducing subcomplex (Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorTrace).
+    Constraint propagation in the presence of a boundary: the linearized Einstein-Bianchi system
+    of general relativity (Anderson, Choquet-Bruhat, York 1997) preserves its constraints on R^3
+    and on the torus, but on a domain with boundary only under suitable boundary conditions, and
+    constraint-preserving boundary conditions are a central problem of the initial-boundary value
+    problem of general relativity (Friedrich-Nagy 1999; Calabrese-Pullin-Reula-Sarbach-Tiglio
+    2003). This entry formalizes, on every open cube C = prod_i (b_i, b_i + s) of R^3 (s > 0),
+    boundary conditions under which the TSD (symmetric, trace-free, divergence-free) constraints
+    propagate, with existence and uniqueness: the tensorial mirror conditions sigma . n = 0,
+    E_(n tau) = E_(tau n) = 0, B_(tau tau) = 0 and, in the constraint, B_(nn) = 0, the face
+    conditions of the fields on R^3 symmetric under the reflections in the faces (sigma a vector,
+    E a tensor, B a pseudotensor). The system is that of [QuennevilleBelair2015] (§3.4, §4.10,
+    (4.14), Prop 4.17): the electric and magnetic parts E, B (3x3 complex matrix fields) of the
+    linearized Weyl curvature, with an auxiliary vector field sigma, evolve by the Hodge wave
+    equation of the matrix grad-curl complex, sigma' = div E + f_sigma,
+    E' = grad sigma - curl B + f_E, B' = curl E + f_B ((grad sigma)_ab = d_b sigma_a; div and
+    curl row by row). The fields are elements of L^2(C; C) (Mathlib's Lp for the Lebesgue
+    measure restricted to C); grad, curl and div are defined by Green's formulas against C^1
+    test functions on R^3 vanishing on prescribed closed faces of the closed cube and free on
+    the others (IsTest, IsGrad, IsCurl, IsDiv), so each formula is the weak derivative in C
+    together with the boundary condition as a weak trace condition; the operator
+    L(sigma, E, B) = (div E, grad sigma - curl B, curl E) is IsWave; strong and classical
+    solutions (IsStrongSolution, IsClassicalSolution; cf. Pazy §4.2) ask for the equation at
+    every time of the interval; the forcing class is C([t0, t1]) intersected with
+    W^(1,1)(t0, t1; L^2) union L^1(t0, t1; D(L)) (IsAdmissible, Cazenave-Haraux Prop 4.1.6); and
+    the constraint is sigma = 0 with E and B TSD with the wall conditions E_(tau n) = 0,
+    B_(nn) = 0 (Constraint, IsTSD). The compared theorems: FEEC.EinsteinBianchi.tsd_propagates
+    (every strong solution on [t0, t1] with initial value and forcing in the constraint stays in
+    the constraint); FEEC.EinsteinBianchi.tsd_existsUnique (for an initial value in D(L) and in
+    the constraint and admissible forcing in the constraint there is a classical solution on
+    [t0, t1], it stays in the constraint, and every strong solution with the same initial value
+    agrees with it on [t0, t1]); FEEC.EinsteinBianchi.exists_nonstationary (non-vacuity: on
+    every open cube some datum in D(L) and in the constraint has L U != 0). The statement is
+    self-contained over Mathlib (Lp, PiLp, fderiv, ContDiff, set integrals, HasDerivWithinAt,
+    interval integrals); the proof is the library Feec of this repository, where the mirror
+    complex on the cube is the compression of the Fourier grad-curl complex of the torus of side
+    2s along the mirror extensions and the TSD constraint is a reducing subcomplex
+    (Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorTrace).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -80,6 +85,29 @@ sources:
     relationship: "background"
     note: "The Einstein-Bianchi system and its constraints."
     author_endorsement: "not-contacted"
+  - title: "The Initial Boundary Value Problem for Einstein's Vacuum Field Equation"
+    authors:
+      - "Helmut Friedrich"
+      - "Gabriel Nagy"
+    id: "doi:10.1007/s002200050571"
+    type: "article"
+    location: "Comm. Math. Phys. 201 (1999)"
+    relationship: "background"
+    note: "Constraint-preserving boundary conditions for the initial-boundary value problem of general relativity (context; not formalized)."
+    author_endorsement: "not-contacted"
+  - title: "Well Posed Constraint-Preserving Boundary Conditions for the Linearized Einstein Equations"
+    authors:
+      - "Gioel Calabrese"
+      - "Jorge Pullin"
+      - "Oscar Reula"
+      - "Olivier Sarbach"
+      - "Manuel Tiglio"
+    id: "doi:10.1007/s00220-003-0889-2"
+    type: "article"
+    location: "Comm. Math. Phys. 240 (2003)"
+    relationship: "background"
+    note: "Constraint-preserving boundary conditions for the linearized Einstein equations (context; not formalized)."
+    author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
       - "Amnon Pazy"
@@ -116,9 +144,9 @@ status:
     Formalized and compared: FEEC.EinsteinBianchi.tsd_propagates,
     FEEC.EinsteinBianchi.tsd_existsUnique and FEEC.EinsteinBianchi.exists_nonstationary
     (Challenge.lean), for every open cube prod_i (b_i, b_i + s), s > 0, every time interval
-    [a, c] and every forcing in the stated classes. Not compared (proved in Feec, outside this
-    statement): the same propagation on the torus T^3 and on R^3 (Feec.EinsteinBianchi
-    .torus_tsd_propagates, euclidean_tsd_propagates, tsd_propagates_classical); the finite
+    [t0, t1] and every forcing in the stated classes. Not compared (proved in Feec, outside this
+    statement): the same propagation on the torus T^3 and on R^3 (Feec.EinsteinBianchi.torus_tsd_propagates,
+    euclidean_tsd_propagates, tsd_propagates_classical); the finite
     element discretizations of the system and their convergence
     (Feec.Instances.EinsteinBianchi.FEM.einsteinBianchiFEM_crown); the Ch. 7 Crank-Nicolson
     plane-wave error (Feec.Numerics.PlaneWaveCube.unit_planeWave_cn_error_le); Maxwell's
@@ -166,15 +194,20 @@ fidelity:
     (1) Boundary conditions: the statement is for the tensorial mirror boundary conditions on a
     cube (sigma . n = 0; E_(n tau) = 0 in curl E and E_(tau n) = 0 in div E; B_(tau tau) = 0 in
     curl B; and the wall conditions E_(tau n) = 0, B_(nn) = 0 of the divergence constraints),
-    which are the conditions under which the result is proved; other boundary conditions and
-    general bounded domains are out of scope.
+    which are the conditions under which the result is proved. They are the face conditions of
+    the fields symmetric under the reflections in the faces, so the problem on the cube is the
+    problem on the torus of side 2s restricted to the reflection-symmetric fields, and the proof
+    goes through that torus. Other boundary conditions, boxes with unequal sides (proved in Feec,
+    Feec.Models.Box.Mirror.propagatesBox, without the Green's-formula description) and general
+    bounded domains are out of scope.
     (2) Weak formulation: the operators and the divergence constraints are defined by Green's
     formulas against C^1 test functions on R^3 vanishing on the closed faces of the closed cube
     normal to the e_j of a prescribed set (the parities of the mirror conditions) and free on
     the other faces; the boundary conditions are the reading of these formulas (pointwise
     traces of L^2 fields with L^2 derivatives are not formalized). That these formulas define
     exactly the closed operators of the mirror Hilbert complex (domains included) is proved in
-    Feec (Feec.Models.Cube.Mirror.complexQ_d0_iff and companions, mem_wave_domain_cube_iff_trace).
+    Feec (Feec.Models.Cube.Mirror.complexQ_d₀_iff and companions on (0, 1/2)^3,
+    Feec.Models.Cube.Mirror.mem_wave_domain_cube_iff_trace on every open cube).
     (3) Fields are complex (L^2(C; C)); real fields are a special case. The system carries the
     auxiliary field sigma of [QuennevilleBelair2015] (4.14), with the constraint sigma = 0; the
     sign convention is E' = grad sigma - curl B, B' = curl E (L = d - d* of the complex).
@@ -183,8 +216,8 @@ fidelity:
     as for the strong solutions of Pazy §4.2, so the uniqueness among strong solutions is
     uniqueness in this pointwise class); classical solutions have in addition t -> L(U t)
     continuous. The forcing class
-    for existence is continuity on [a, c] together with W^(1,1)(a, c; L^2) (F = x0 + integral of
-    an integrable g, a.e.) or L^1(a, c; D(L)), the class of the existence theorem cited by the
+    for existence is continuity on [t0, t1] together with W^(1,1)(t0, t1; L^2) (F = x0 + integral
+    of an integrable g, a.e.) or L^1(t0, t1; D(L)), the class of the existence theorem cited by the
     thesis.
     (5) The hypothesis s > 0 excludes the empty cube, on which every statement but the
     non-vacuity theorem is trivial and the non-vacuity theorem fails.

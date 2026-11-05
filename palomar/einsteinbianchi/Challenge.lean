@@ -28,13 +28,24 @@ The domain is an open cube `C = ∏ᵢ (bᵢ, bᵢ + s)` of `ℝ³` (the unit cu
 [QuennevilleBelair2015], Ch. 7, is `b = 0`, `s = 1`), with the **tensorial mirror boundary
 conditions**: on a face with normal `n` and tangents `τ`,
 
-| field | condition | formula | test functions vanish on the faces normal to `e_j` for |
+| field | condition | definition | test functions vanish on the faces normal to `e_j` for |
 |---|---|---|---|
 | `σ` (`grad σ`) | `σ · n = 0` | `IsGrad` | `j` equal to exactly one of `a`, `c` (entry `(a, c)`) |
 | `E` (`curl E`) | `E_{nτ} = 0` | `IsCurl` | `j` equal to both or neither of `a`, `c` |
 | `E` (`div E`) | `E_{τn} = 0` | `IsDiv` | `j = a` (row `a`) |
 | `B` (`curl B`) | `B_{ττ} = 0` | `IsCurl` | `j` equal to exactly one of `a`, `c` |
 | `B` (`div B = 0`) | `B_{nn} = 0` | `IsDiv` | `j ≠ a` (row `a`) |
+
+These are the conditions on the faces of the fields on `ℝ³` that are symmetric under the
+reflections in the faces of `C`, with `σ` a vector, `E` a tensor and `B` a pseudotensor (`B` is
+the curl of a tensor): on each face, the components that are odd under the reflection vanish.
+
+Constraint propagation is a question about the boundary. On `ℝ³` and on the torus the constraints
+of the linearized system propagate; on a domain with boundary they propagate only under suitable
+boundary conditions, and constraint-preserving boundary conditions are a central problem of the
+initial–boundary value problem of general relativity ([FriedrichNagy1999]; [CPRST2003]). The
+theorems below give boundary conditions on the cube under which the TSD constraints of this first
+order system propagate, with existence and uniqueness of solutions.
 
 Each operator is defined by its Green's formula against the `C¹` test functions of the last column
 (`IsTest`), which carry no condition on the other faces: for test functions compactly supported in
@@ -61,6 +72,8 @@ The fields are complex-valued.
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §3.4, §4.10 (Prop 4.17, (4.14)), Ch. 7
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
+* [H. Friedrich, G. Nagy, *The Initial Boundary Value Problem for Einstein's Vacuum Field Equation*][FriedrichNagy1999]
+* [G. Calabrese, J. Pullin, O. Reula, O. Sarbach, M. Tiglio, *Well Posed Constraint-Preserving Boundary Conditions for the Linearized Einstein Equations*][CPRST2003]
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §4.2
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],

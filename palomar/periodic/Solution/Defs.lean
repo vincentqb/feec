@@ -103,7 +103,8 @@ def IsLinearInvariant (V : Submodule K (Form K n)) : Prop :=
 def IsGLInvariant (V : Submodule K (Form K n)) : Prop :=
   ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
 
-/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5). -/
+/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5), used for `k ≥ 1` and
+`s ≥ 0`; the source's case `s = -1` is `dP_{r+1}Λ^{k-1}`. -/
 def invariantForm (r s k : ℕ) : Submodule K (Form K n) :=
   (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ⊔ (polyForm K n s (k + 1)).map (koszul K n)
 
@@ -115,8 +116,8 @@ structure AffineInvariantForms [CharZero K] : Prop where
   isLinearInvariant_map_homForm (r k : ℕ) :
     IsLinearInvariant K n ((homForm K n r k).map (extDeriv K n)) ∧
       IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
-  /-- the `GL(n)`-invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
-  `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` (§3.4, before Lemma 3.7) -/
+  /-- every `GL(n)`-invariant subspace of `H_{r+1}Λ^{k+1}` is `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}`
+  or `H_{r+1}Λ^{k+1}`: the summands of (3.10) are irreducible (§3.4, before Lemma 3.7) -/
   eq_of_le_homForm (r k : ℕ) (W : Submodule K (Form K n)) (hW : IsGLInvariant K n W)
     (hle : W ≤ homForm K n (r + 1) (k + 1)) :
     W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
@@ -173,9 +174,10 @@ def deRham (hd : extDeriv K n ∘ₗ extDeriv K n = 0) {S : ℕ → Submodule K 
       ((extDeriv K n).restrict fun _ h => hS k (Submodule.mem_map_of_mem h)))
     fun _ => by ext ω; exact LinearMap.congr_fun hd ω.1
 
-/-- **An admissible sequence** of the periodic table ([AFW2006], §5; [ArnoldLogg2014]): in every
-form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
-`r_k ≥ 1`, followed in degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. -/
+/-- **An admissible sequence** ([AFW2006], §3.5, §5.5): in every form degree `k` the full space
+`P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`, `r_k ≥ 1`, followed in degree
+`k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹` (the spaces of degree `k > n` are `0`;
+`P_0Λⁿ = P_1⁻Λⁿ` enters as the trimmed space). -/
 structure Admissible (full : ℕ → Bool) (r : ℕ → ℕ) : Prop where
   one_le (k : ℕ) : 1 ≤ r k
   transition (k : ℕ) :

@@ -25,6 +25,12 @@ differential (contraction with the position vector field `x`), and
 ([AFW2006], §3). Forms are pulled back along `φ(x) = Bx + b` by
 `φ^*(p ⊗ θ) = (p ∘ φ) ⊗ Λ(Bᵀ)θ` (`pullback`).
 
+Affine invariance is what lets a space of shape functions be defined on one reference simplex and
+transported to every simplex independently of the affine map chosen ([AFW2006], §3.4). The
+classification says which spaces of `k`-forms, `0 < k < n`, have this property: besides `P_rΛᵏ`
+and `P_r⁻Λᵏ`, the two families of the simplicial columns of the periodic table, only the spaces
+`dP_{r+1}Λᵏ⁻¹ + κP_sΛ^{k+1}`, `-1 ≤ s < r - 1`, of a third kind.
+
 **The classification** (`FEEC.affineInvariantForms`, [AFW2006], §3.4, over every field `K` of
 characteristic `0`):
 
@@ -48,7 +54,7 @@ characteristic `0` where marked `[CharZero K]`): with also the cubical spaces
 `P_rΛᵏ`, `H_rΛᵏ`, `P_r⁻Λᵏ`, `κH_rΛ^{k+1}`, `Q_b⁻Λᵏ` and the degrees of freedom counts of
 [AFW2006], Theorems 4.9, 4.13; `d² = 0`, `κ² = 0`, the Leibniz rule for `κ`, the wedge products;
 the polynomial de Rham complexes of `P_{r-k}Λᵏ`, `P_r⁻Λᵏ`, `Q_b⁻Λᵏ` and of every admissible
-sequence of the periodic table ([ArnoldLogg2014]; `Admissible`, `seqForm`) as resolutions of the
+sequence ([AFW2006], §3.5, §5.5; `Admissible`, `seqForm`) as resolutions of the
 constants (`deRham`); the exactness of the homogeneous de Rham and Koszul complexes; the
 homotopy formula `(dκ + κd) ω = (r + k) ω` on `H_rΛᵏ` and the Koszul decompositions
 `H_rΛᵏ = κH_{r-1}Λ^{k+1} ⊕ dH_{r+1}Λᵏ⁻¹` (`r + k ≥ 1`), `P_rΛᵏ = κP_{r-1}Λ^{k+1} ⊕ dP_{r+1}Λᵏ⁻¹`
@@ -60,7 +66,7 @@ and `P_rΛᵏ = P_r⁻Λᵏ ⊕ dH_{r+1}Λᵏ⁻¹` (`k ≥ 1`), with the charac
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3.4 (the decomposition (3.10) into irreducible invariant subspaces, (3.18), Theorems 3.5,
   3.6); §3.1–§3.3, §3.5 (Theorems 3.1–3.4, Lemma 3.8, (3.1)–(3.3), (3.5), (3.6), (3.8), (3.10),
-  (3.11), (3.15)–(3.17), (3.21), (3.22)), §4 (Theorems 4.9, 4.13), §5 (admissible sequences)
+  (3.11), (3.15)–(3.17), (3.21), (3.22)), §4 (Theorems 4.9, 4.13), §5.5 (the complexes (5.13))
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.1 (Theorems 5.1–5.4, (68)–(72))
 * [D. N. Arnold, D. Boffi, F. Bonizzoni, *Finite element differential forms on curvilinear cubic meshes and their approximation properties*][ArnoldBoffiBonizzoni2015],
@@ -140,7 +146,8 @@ def IsLinearInvariant (V : Submodule K (Form K n)) : Prop :=
 def IsGLInvariant (V : Submodule K (Form K n)) : Prop :=
   ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
 
-/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5). -/
+/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5), used for `k ≥ 1` and
+`s ≥ 0`; the source's case `s = -1` is `dP_{r+1}Λ^{k-1}`. -/
 def invariantForm (r s k : ℕ) : Submodule K (Form K n) :=
   (polyForm K n (r + 1) (k - 1)).map (extDeriv K n) ⊔ (polyForm K n s (k + 1)).map (koszul K n)
 
@@ -152,8 +159,8 @@ structure AffineInvariantForms [CharZero K] : Prop where
   isLinearInvariant_map_homForm (r k : ℕ) :
     IsLinearInvariant K n ((homForm K n r k).map (extDeriv K n)) ∧
       IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
-  /-- the `GL(n)`-invariant subspaces of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`,
-  `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` (§3.4, before Lemma 3.7) -/
+  /-- every `GL(n)`-invariant subspace of `H_{r+1}Λ^{k+1}` is `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}`
+  or `H_{r+1}Λ^{k+1}`: the summands of (3.10) are irreducible (§3.4, before Lemma 3.7) -/
   eq_of_le_homForm (r k : ℕ) (W : Submodule K (Form K n)) (hW : IsGLInvariant K n W)
     (hle : W ≤ homForm K n (r + 1) (k + 1)) :
     W = ⊥ ∨ W = (homForm K n (r + 2) k).map (extDeriv K n) ∨
@@ -195,11 +202,10 @@ theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
     AffineInvariantForms K n := by
   sorry
 
-/-- **Characteristic `0` is necessary for the classification**: the `GL(n)`-invariant subspaces
-of `H_{r+1}Λ^{k+1}` are `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` and `H_{r+1}Λ^{k+1}` in every dimension
-`n` and all degrees iff `K` has characteristic `0`. This concerns the hypothesis of the
-generalization in `affineInvariantForms` of the decomposition of [AFW2006], §3.4, which is
-stated there over `ℝ` only. -/
+/-- **Characteristic `0` is necessary for the classification**: every `GL(n)`-invariant subspace
+of `H_{r+1}Λ^{k+1}` is `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}` or `H_{r+1}Λ^{k+1}`, in every dimension
+`n` and all degrees, iff `K` has characteristic `0`. [AFW2006], §3.4 works over `ℝ`; this shows
+that the hypothesis `CharZero K` of `affineInvariantForms` cannot be dropped. -/
 theorem charZero_iff_classification (K : Type u) [Field K] :
     CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (Form K n)), IsGLInvariant K n W →
       W ≤ homForm K n (r + 1) (k + 1) →
@@ -240,9 +246,10 @@ def deRham (hd : extDeriv K n ∘ₗ extDeriv K n = 0) {S : ℕ → Submodule K 
       ((extDeriv K n).restrict fun _ h => hS k (Submodule.mem_map_of_mem h)))
     fun _ => by ext ω; exact LinearMap.congr_fun hd ω.1
 
-/-- **An admissible sequence** of the periodic table ([AFW2006], §5; [ArnoldLogg2014]): in every
-form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
-`r_k ≥ 1`, followed in degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. -/
+/-- **An admissible sequence** ([AFW2006], §3.5, §5.5): in every form degree `k` the full space
+`P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`, `r_k ≥ 1`, followed in degree
+`k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹` (the spaces of degree `k > n` are `0`;
+`P_0Λⁿ = P_1⁻Λⁿ` enters as the trimmed space). -/
 structure Admissible (full : ℕ → Bool) (r : ℕ → ℕ) : Prop where
   one_le (k : ℕ) : 1 ≤ r k
   transition (k : ℕ) :

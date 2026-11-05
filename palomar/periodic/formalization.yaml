@@ -13,7 +13,13 @@ project:
     characteristic 0, with the proof that characteristic 0 is necessary, and of the polynomial
     algebra of the spaces it classifies, the shape spaces P_r Lambda^k and P_r^- Lambda^k of the
     simplicial columns of the periodic table of the finite elements (Arnold-Logg 2014), together
-    with the cubical spaces Q_r^- Lambda^k (Arnold-Boffi-Bonizzoni 2015, §5). A polynomial
+    with the cubical spaces Q_r^- Lambda^k (Arnold-Boffi-Bonizzoni 2015, §5). Affine invariance
+    is what lets a finite element shape space be defined on a reference simplex and transported
+    to every simplex independently of the affine map (AFW2006 §3.4); the classification shows
+    that, for 0 < k < n, besides P_r Lambda^k and P_r^- Lambda^k only the spaces
+    d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1), s < r - 1, have it. The formal proof
+    replaces the representation theory (Fulton-Harris) of the source by a direct argument valid
+    over every field of characteristic 0, and shows that characteristic 0 cannot be dropped. A polynomial
     differential form is an element of
     P(K^n) (x) Lambda(K^n)* = MvPolynomial (Fin n) K (x) ExteriorAlgebra K (Module.Dual K (Fin n -> K)),
     the k-forms with coefficients in a space S of polynomials are S (x) Lambda^k (Mathlib's
@@ -82,7 +88,7 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
     type: "article"
-    location: "Acta Numerica 15 (2006), §3.1-§3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.6, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.18), the decomposition (3.10) into irreducible linear-invariant subspaces, (3.21), (3.22), the 2^(n-1) intermediate resolutions of §3.5, Lemma 3.8; §4: the dimension counts of Theorems 4.9 and 4.13; §5: admissible sequences"
+    location: "Acta Numerica 15 (2006), §3.1-§3.5: (3.1)-(3.3), (3.5), (3.6), (3.8), the Koszul complex after (3.8), Theorems 3.1-3.6, (3.10), (3.11), the definition of P_r^- Lambda^k (both forms) and its equivalent form, (3.15)-(3.18), the decomposition (3.10) into irreducible linear-invariant subspaces, (3.21), (3.22), the 2^(n-1) intermediate resolutions of §3.5, Lemma 3.8; §4: the dimension counts of Theorems 4.9 and 4.13; §5.5: the complexes (5.13) (admissible sequences)"
     relationship: "formalizes"
     note: >-
       Locators checked against the published text (author-hosted PDF of the Acta Numerica
@@ -96,10 +102,12 @@ sources:
       definition, P_r^- Lambda^0 = P_r Lambda^0, P_r^- Lambda^n = P_(r-1) Lambda^n, the strict
       inclusions, the closure P_r wedge P_s in P_(r+s), (3.16) and (3.17); Theorem 3.4; the
       resolutions (3.21), (3.22) of §3.5 and the subcomplex inclusion (3.21) in (3.22), and every
-      intermediate resolution of §3.5, as the complex of an admissible sequence (Admissible,
-      seqForm: in each degree P_(r_k) or P_(r_k)^-, with the transitions of §5; stated for every
-      admissible sequence, not only those ending in a given P_s Lambda^n, and without the count
-      2^(n-1)); the dimension counts of Theorems 4.9 and 4.13 (dim P_r Lambda^k and
+      intermediate resolution of §3.5 with r_k >= 1 in every degree, as the complex of an
+      admissible sequence (Admissible, seqForm: in each degree P_(r_k) or P_(r_k)^-, with the
+      transitions of (5.13); stated for every admissible sequence, not only those starting at a
+      given P_r Lambda^0, and without the count 2^(n-1); P_0 Lambda^n enters as P_1^- Lambda^n,
+      but the resolutions through a space P_0 Lambda^k with k < n, which occur only for r < n,
+      are not covered, except (3.21) itself); the dimension counts of Theorems 4.9 and 4.13 (dim P_r Lambda^k and
       dim P_r^- Lambda^k as sums over the faces of a simplex of the dimensions of the test
       spaces; the degrees of freedom themselves and their unisolvence, which need integration over
       faces, are proved in Feec over R and not compared);
@@ -138,7 +146,11 @@ sources:
       {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)} and its strict inclusions, the
       identities (3.4), (3.7) and (3.19) and Lemma 3.7 as separate statements (used in the proofs,
       Feec.FiniteElement.polyPullback_mem_polyForm, polyPullback_koszul,
-      IsAffineInvariant.closed_le_of_succ), the count 2^(n-1) of the intermediate resolutions of
+      IsAffineInvariant.closed_le_of_succ), the decomposition (3.20) of P Lambda^k into
+      irreducible linear-invariant summands, their mutual inequivalence and the resulting
+      description of the finite-dimensional linear-invariant subspaces as sums of summands (the
+      irreducibility of each summand of (3.10) is compared), the count
+      2^(n-1) of the intermediate resolutions of
       §3.5, the classification of the affinely invariant subcomplexes (that every complex of
       affinely invariant spaces of the kind of Theorem 3.6 ending in a given space is one of the
       2^(n-1) resolutions; not proved in Feec), §3.6.
@@ -211,12 +223,17 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "§4.7 (the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k and their canonical projections, after Arnold 2013, Spaces of finite element differential forms)"
+    location: "§4.7 (the spaces H_r Lambda^k, P_r Lambda^k, P_r^- Lambda^k, d and kappa, recalled from AFW2010; the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k after Arnold 2013, Spaces of finite element differential forms)"
     relationship: "background"
     note: >-
-      The thesis of the formalization's author discusses the finite element spaces built on the
-      shape spaces P_r Lambda^k and P_r^- Lambda^k classified here; none of its statements is
-      compared in this entry (locator as cited in Feec.FiniteElement.Dof).
+      The thesis of the formalization's author recalls from AFW2010 the shape spaces
+      P_r Lambda^k and P_r^- Lambda^k classified here, with d o d = 0, kappa o kappa = 0, the
+      homotopy formula and the Koszul decomposition (restated from AFW2006 in the fields
+      extDeriv_comp_extDeriv, koszul_comp_koszul, homotopy, homForm_eq of FEEC.PeriodicTable),
+      and builds finite element spaces on them. The classification of the invariant spaces is
+      not attributed to the thesis. Locator as cited in Feec (Feec.Algebra.Koszul,
+      Feec.Algebra.PolynomialForm, Feec.FiniteElement.Dof), not rechecked against the thesis
+      text for this entry.
     author_endorsement: "participated"
 
 related_formalizations: []
@@ -227,8 +244,9 @@ status:
     every n, k, r, s; FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact
     (characteristic 0 is necessary for the GL(n)-classification and for the homogeneous
     Poincare lemma) over every field; FEEC.periodicTable for every field (of characteristic 0
-    where marked), every n, k, r and multidegree b (r >= 1 where the sources require it). Not
-    formalized: the classification of the affinely invariant subcomplexes (the 2^(n-1)
+    where marked), every n, k, r and multidegree b (r >= 1 where the sources require it; the complexes
+    of admissible sequences with r_k >= 1 in every degree). Not formalized: the decomposition
+    (3.20) and the inequivalence of its summands, the classification of the affinely invariant subcomplexes (the 2^(n-1)
     resolutions of AFW2006 §3.5 as the only ones), the third kind of Theorem 3.5 as
     {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)}. Not compared (proved in Feec,
     outside the statement): the classification with the summands as kernels for r + k > 0
@@ -334,9 +352,11 @@ fidelity:
     polyPullback_koszul, Feec.Koszul.interior_C_mem_polyForm), nor the translation lemmas of
     Lemma 3.7 (Feec proves them in the form used by the proof of Theorem 3.6,
     Feec.FiniteElement.IsAffineInvariant.closed_le_of_succ, koszulClosed_le_of_succ,
-    closed_le_of_koszulClosed_le). The 2^(n-1) intermediate resolutions of §3.5 are stated as the
-    complexes of all admissible sequences (Admissible, seqForm; the full and trimmed kinds encoded
-    by a Boolean sequence), without their count. §3.6 (change of origin). Everything beyond the
+    closed_le_of_koszulClosed_le), nor (3.20) and the inequivalence of its summands. The 2^(n-1)
+    intermediate resolutions of §3.5 are stated as the complexes of all admissible sequences
+    (Admissible, seqForm; the full and trimmed kinds encoded by a Boolean sequence), without
+    their count, and with r_k >= 1 in every degree: P_0 Lambda^n is P_1^- Lambda^n, but the
+    resolutions through P_0 Lambda^k, k < n (only for r < n), are covered only for (3.21). §3.6 (change of origin). Everything beyond the
     polynomial algebra and the dimension counts of Theorems 4.9, 4.13: meshes, the degrees of
     freedom as moments, unisolvence and the serendipity column of the periodic table (Feec proves them;
     their statement needs integration over the faces of simplices and cubes and would not fit the
@@ -431,7 +451,7 @@ alignment:
         (Lemma 3.8 (3); AFW2010 Theorem 5.4, second sentence), ker_inf_polyFormMinus_le
         (Theorem 3.4; Lemma 3.8 (2)), finrank_polyForm_eq_sum, finrank_polyFormMinus_eq_sum
         (the dimension counts of Theorems 4.9, 4.13), map_seqForm_le, exactAt_seqForm,
-        closed_seqForm (the resolutions of §3.5 of every admissible sequence, §5; definitions
+        closed_seqForm (the resolutions of §3.5 of every admissible sequence, §5.5; definitions
         Admissible, seqForm). Added 2026-11-01: finrank_polyForm_eq_sum,
         finrank_polyFormMinus_eq_sum, map_seqForm_le, exactAt_seqForm, closed_seqForm and the
         definitions Admissible, seqForm are not yet reviewed by the author.

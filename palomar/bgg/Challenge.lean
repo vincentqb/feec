@@ -30,40 +30,25 @@ the bottom spaces `Ṽⁱ⁻¹`, and the bottom spaces `Ṽⁱ`, `i < J`, agains
 * `Δⁱ ⊆ Tⁱ` is spanned by `0 × Ṽⁱ` if `i < J` and by its image `{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` under
   the twisted differential if `i - 1 < J`, a subcomplex of `T`.
 
-The theorems, for `Sⁱ` injective for `i < J` and onto modulo `d` for `i ≥ J`
-(`R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`; the condition (23) of [ArnoldHu2021] asks `Sⁱ` surjective for `i ≥ J`
-and also `Sᴶ` injective):
+The theorems (hypotheses: `Sⁱ` injective for `i < J` and onto modulo `d` for `i ≥ J`,
+`R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`, weaker than the condition (23) of [ArnoldHu2021]; exact hypotheses in
+the docstrings):
 
-* `FEEC.bggCohomology`: the inclusion `Γ → T` and the projection `Γ → Γ / Δ` are
-  quasi-isomorphisms, so **the BGG complex has the cohomology of the twisted complex**
-  ([ArnoldHu2021], §5.2); `T` is an extension of `Ṽ` by `V`; the BGG complex is exact when both
-  rows are.
-* `FEEC.bggIdentification` (every `S`, `J`): **`Γ / Δ` is the output complex (24)–(26)**: the
-  cochain maps `Γ / Δ → V / R(S)`, `[(σ, φ)] ↦ [σ]`, and `N(S) → Γ / Δ`, `φ ↦ [(0, φ)]`, are
-  bijective in degrees `i < J` and `i > J`, the first also at `J` when `Sᴶ` is bijective, and the
-  differential at `J` is `[σ] ↦ d̃ (Sᴶ)⁻¹ dσ`. [ArnoldHu2021] realize `Vⁱ / R(Sⁱ⁻¹)` as the
-  orthogonal complement `Vⁱ ⊗ R(sⁱ⁻¹)^⊥` with the projected differential `P_{R^⊥} d`.
-* `FEEC.bggFinrank` (over a field, [ArnoldHu2021], Theorem 6): where both rows have
-  finite-dimensional cohomology, so does the BGG complex, `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`,
-  with equality iff `Sⁱ⁻¹` and `Sⁱ` induce the zero maps on cohomology, `S N(d̃) ⊆ R(d)` ((27)).
-* `FEEC.bggSum` ([ArnoldHu2021], Theorem 7 and Proposition 1): if `Sⁱ = dKⁱ - Kⁱ⁺¹d̃` ((28)),
-  `S` induces zero on cohomology and `(ω, μ) ↦ (ω + Kμ, μ)` is an isomorphism from the sum complex
-  `V × Ṽ` onto `T`; under the hypotheses of `FEEC.bggCohomology` at any `J`, the BGG complex has
-  the cohomology of the sum complex.
-* `FEEC.bggExplicit` ([ArnoldHu2021], (30), Theorem 7 and Corollary 1): under (28), with `Sⁱ`
-  injective up to `J` and right inverses `tⁱ⁺¹` of `Sⁱ` from `J` on, the explicit map
-  `BGG.sumMap` is a cochain map from the sum complex to the BGG complex, a quasi-isomorphism, and
-  it carries cohomology representatives `H × H̃` of the rows to those of the BGG complex.
-* `FEEC.bggHilbert` (bounded Hilbert complexes, `Sⁱ` bounded below for `i < J`;
-  [ArnoldHu2021], Theorem 6 and the remark after it): `Γⁱ`, `Δⁱ` are closed; for the quotient
-  norm of the `ℓ²` norm of `Vⁱ ⊕ Ṽⁱ`, `Γⁱ / Δⁱ` is isometric to the Hilbert space
-  `Γⁱ ⊖ Δⁱ = Γⁱ ∩ (Δⁱ)ᗮ` by `y ↦ [y]`, its differentials are bounded, and they have closed range
-  where both rows have finite-dimensional cohomology: the BGG complex is a bounded Hilbert complex.
-* `FEEC.bggOrthogonal` (bounded Hilbert complexes under (23), [ArnoldHu2021], (24)–(26),
-  (29)–(31), Theorem 7, Corollary 1): with the Moore–Penrose inverses of the connecting maps, the
-  orthogonal output complex on `R(Sⁱ⁻¹)ᗮ` (`i ≤ J`) and `N(Sⁱ)` (`i > J`) is isomorphic to the BGG
-  complex, the map (30) into it is a quasi-isomorphism and carries cohomology representatives of
-  the rows to those of the output complex.
+* `FEEC.bggCohomology` (§5.2): `Γ → T` and `Γ → Γ / Δ` are quasi-isomorphisms.
+* `FEEC.bggIdentification` ((24)–(26), every `S`, `J`): `Γ / Δ` is the output complex, `V / R(S)`
+  before `J`, `N(S)` after `J`, with the differential `d̃ (Sᴶ)⁻¹ d` at `J`.
+* `FEEC.bggFinrank` (Theorem 6, (27)): `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, with equality
+  iff `Sⁱ⁻¹` and `Sⁱ` induce zero on cohomology.
+* `FEEC.bggSum` (Theorem 7, Proposition 1): under `S = dK - Kd̃` ((28)), the BGG complex has the
+  cohomology of the sum complex `V × Ṽ`.
+* `FEEC.bggExplicit` ((30), Theorem 7, Corollary 1): the explicit map `BGG.sumMap` is a
+  quasi-isomorphism from the sum complex carrying cohomology representatives to representatives.
+* `FEEC.bggHilbert` (Theorem 6 and the remark after it): for bounded Hilbert rows, `Γ / Δ` with
+  the quotient norm is a bounded Hilbert complex, with closed ranges where the rows have
+  finite-dimensional cohomology.
+* `FEEC.bggOrthogonal` ((24)–(31), Theorem 7, Corollary 1): for bounded Hilbert rows under (23),
+  with closed ranges of `sⁱ` for `i < J`, the orthogonal output complex of [ArnoldHu2021] with the
+  Moore–Penrose form of (30).
 
 Complexes of any length are included (rows vanishing outside a window). Non-vacuity:
 `BGG.hypotheses_id` (`S = 𝟙 : V⟦1⟧ ⟶ V⟦1⟧`) and `BGG.hypotheses_bounded_id` (`sⁱ = id`,
@@ -496,7 +481,10 @@ def ΔL (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) 
     (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
 
 /-- **The space `Γⁱ / Δⁱ` of the BGG complex with the quotient norm** of the `ℓ²` norm,
-`‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖`. -/
+`‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖`. For `i ≠ J` it is the norm of the output space `Υⁱ` of
+[ArnoldHu2021], (25) (`‖[(σ, φ)]‖ = ‖P_{R(Sⁱ⁻¹)ᗮ} σ‖` before `J`, `‖φ‖` on `0 × N(Sⁱ)` after `J`);
+at `J` it is `inf_ψ (‖σ + Sψ‖² + ‖φ - d̃ψ‖²)^½`, under (23) equivalent to, not equal to,
+`‖P_{R(Sᴶ⁻¹)ᗮ} σ‖`. -/
 abbrev QuotL (s : ∀ i, Ht i →L[𝕜] H (i + 1))
     (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x)) (J i : ℤ) : Type v :=
   ΓL (hd := hd) (hdt := hdt) s hs J i ⧸
@@ -618,7 +606,8 @@ with isomorphisms `Yⁱ ≅ Υⁱ` onto the output spaces (`BGG.Υ`: `R(sⁱ⁻�
 carrying its differential to the output differentials (26), `P_{R(sⁱ)ᗮ} d` before `J`,
 `d̃ (sᴶ)† d` at `J`, `d̃` after `J`, and a quasi-isomorphism `κ` from the sum complex to `Y` which
 is the map (30): `(ω, μ) ↦ P_{R(sⁱ⁻¹)ᗮ}(ω + Kμ)` up to `J`, and in degree `i + 1 > J`,
-`(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; `Y` is isomorphic to the BGG complex; and
+`(ω, μ) ↦ P_{N(sⁱ⁺¹)}(d̃ tⁱ⁺¹ω + (I + d̃ tⁱ⁺¹ K)μ)`; `Y` is isomorphic to the BGG complex (as
+a complex of modules); and
 (Corollary 1, (31)) if `A`, `Ã` represent the cohomology of the rows in degree `i`, then `κ(A × Ã)`
 represents that of `Y`. -/
 theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}

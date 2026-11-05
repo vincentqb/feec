@@ -9,7 +9,9 @@ project:
   name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, and the output Hilbert complex with the quotient norm"
   description: >-
     A Lean 4 formalization of the Bernstein-Gelfand-Gelfand construction of Arnold and Hu (2021),
-    §3 and §5: two cochain complexes of modules (V, d) and (V~, d~) over any ring, on Z and of any
+    §3 and §5, the abstract construction from which they derive the elasticity, Hessian and
+    div-div complexes and their closed-range, Hodge-decomposition and Poincare-inequality
+    properties from those of de Rham complexes: two cochain complexes of modules (V, d) and (V~, d~) over any ring, on Z and of any
     length, linked by connecting maps S^i : V~^i -> V^(i+1) with d S = -S d~ (a morphism of cochain
     complexes V~ -> V[1] in Mathlib's shift convention). The twisted complex T has
     T^i = V^i x V~^i and differential (sigma, phi) -> (d sigma - S phi, d~ phi). The BGG complex at
@@ -242,7 +244,17 @@ fidelity:
     Upsilon^i (orthogonal complements); FEEC.bggHilbert gives Gamma^i / Delta^i the quotient norm
     of the l2 norm of V^i (+) V~^i (WithLp 2, the rows Gamma, Delta transported to it as
     FEEC.BGG.ΓL, FEEC.BGG.ΔL, the quotient FEEC.BGG.QuotL) and proves that y -> [y] is an
-    isometry of Gamma^i ∩ (Delta^i)^perp onto it, so the quotient norm is a Hilbert norm; the
+    isometry of Gamma^i ∩ (Delta^i)^perp onto it, so the quotient norm is a Hilbert norm. This
+    is not the paper's norm at J: for i < J the quotient norm of [(sigma, phi)] is
+    dist(sigma, R(S^(i-1))) = ||P_(R^perp) sigma|| (R(S^(i-1)) closed since S^(i-1) is bounded
+    below), for i > J Gamma^i = 0 x N(S^i) and Delta^i = 0, so both agree with the norm of
+    Upsilon^i; at J the quotient norm is inf_psi (||sigma + S psi||^2 + ||phi - d~ psi||^2)^(1/2)
+    (S^J phi = d sigma), which is >= ||P_(R^perp) sigma|| and, under (23), <=
+    (1 + ||(S^J)^(-1) d||^2)^(1/2) ||P_(R^perp) sigma|| (take S psi = -P_R sigma): equivalent, not
+    equal. This equivalence is not stated in the challenge, and closed range of the orthogonal
+    output differentials of FEEC.bggOrthogonal in the paper's norm is not compared (it follows
+    from FEEC.bggHilbert through the equivalence, closed range being invariant under equivalent
+    norms). The
     bounded differentials are stated by existence, D^i [x] = [x'] whenever x' is the twisted
     differential of x, and closed range as IsClosed (range D^i) where both rows have
     finite-dimensional cohomology in degree i + 1 (the paper derives closed range from finite
@@ -269,7 +281,9 @@ fidelity:
     Hilbert complexes indexed 0..n, spaces Z^i = V^i (x) E^i, Z~^i = V^(i+1) (x) E~^i ((20)) and connecting maps id (x) s^i with s^i
     between finite-dimensional spaces; the algebraic theorems hold over any ring, on Z (finite
     complexes vanish outside a window), for arbitrary S, and the Hilbert theorem for arbitrary
-    bounded S. (7) The hypothesis is weaker than the J-injectivity/surjectivity condition (23),
+    bounded S; in FEEC.bggOrthogonal the null-homotopy K of (28) is only linear (Arnold-Hu: bounded),
+    and closed range of s^i for i < J is assumed, automatic for id (x) s^i with s^i between
+    finite-dimensional spaces. (7) The hypothesis is weaker than the J-injectivity/surjectivity condition (23),
     which asks s^i injective for i <= J and surjective for i >= J: S^i injective only for i < J and
     onto modulo d for i >= J; S^J bijective is assumed only where (25)-(26) need it
     (FEEC.bggIdentification); FEEC.bggExplicit assumes (23) itself (S^i injective for i <= J),
@@ -303,7 +317,8 @@ review:
     (propext, Classical.choice, Quot.sound only), regression snapshots and an independent AI
     review. No external mathematical review; the author has yet to review this challenge, in
     particular the statements FEEC.bggOrthogonal (with its new Corollary 1 conclusion) and
-    FEEC.bggHilbert (new: the quotient norm) and their definitions FEEC.BGG.moorePenrose,
+    FEEC.bggHilbert (new: the quotient norm, which at J is equivalent but not equal to the norm of
+    Arnold-Hu, see fidelity (3)) and their definitions FEEC.BGG.moorePenrose,
     FEEC.BGG.Υ, FEEC.BGG.ΓL, FEEC.BGG.ΔL and FEEC.BGG.QuotL.
 
 alignment:

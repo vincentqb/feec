@@ -44,6 +44,7 @@ variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
 /-- `κ (P_r⁻Λ¹) ⊆ P_rΛ⁰`. -/
 theorem koszul_mem_polyForm_of_mem_polyFormMinus {r : ℕ} (hr : 1 ≤ r) {v : PolyForm K d}
     (hv : v ∈ polyFormMinus K d r 1) : koszul v ∈ polyForm K d r 0 := by
+  rw [polyFormMinus_eq_sup hr] at hv
   obtain ⟨a, ha, b, ⟨c, -, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hv
   change koszul (a + koszul c) ∈ _
   rw [koszul_add, koszul_koszul, add_zero]

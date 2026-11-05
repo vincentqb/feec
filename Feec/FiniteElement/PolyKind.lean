@@ -25,8 +25,8 @@ shape spaces and test forms of the degrees of freedom as spaces of polynomial fo
   `dim P_rΛᵏ(Kⁿ) = Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` and likewise for `P_r⁻Λᵏ`
   ([AFW2006], Thms 4.9, 4.13), via the Vandermonde identity `sum_choose_mul_choose_eq`;
 * `PolyKind.IsAdmissible`: the admissible sequences of [AFW2006], §3.5, (5.13), including those
-  whose degree reaches `0` (a full space `P_0Λᵏ`, then `0`; `PolyKind.form₀`), their polynomial
-  complexes (`IsAdmissible.extDeriv_mem`) and exactness (`IsAdmissible.exists_extDeriv_eq`,
+  whose degree reaches `0` (a full space `P_0Λᵏ`, then `P_0⁻Λ = 0`), their polynomial complexes
+  (`IsAdmissible.extDeriv_mem`) and exactness (`IsAdmissible.exists_extDeriv_eq`,
   `IsAdmissible.mem_polyForm_zero_of_extDeriv_eq_zero`).
 
 ## References
@@ -159,20 +159,22 @@ theorem form_le_polyFormMinus {r : ℕ} {κ' : PolyKind} {r' : ℕ} (ht : Transi
     (k : ℕ) : κ'.form K r' k ≤ Koszul.polyFormMinus K (Fin n) r k := by
   rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
   · exact le_rfl
-  · simpa using Koszul.polyForm_le_polyFormMinus (R := K) (d := Fin n) (r' + 1) k
+  · simpa using Koszul.polyForm_le_polyFormMinus (R := K) (d := Fin n) (r := r' + 1) (by omega) k
 
 /-- **`d` along an admissible transition**, over every commutative ring: `d P_rΛᵏ` and
-`d P_r⁻Λᵏ` lie in `P_{r-1}Λᵏ⁺¹ ⊆ P_r⁻Λᵏ⁺¹`. [AFW2006], §5; [AFW2010], §5.2 -/
+`d P_r⁻Λᵏ` lie in `P_r⁻Λᵏ⁺¹` and in `P_{r-1}Λᵏ⁺¹`. [AFW2006], §5; [AFW2010], §5.2 -/
 theorem extDeriv_mem_form (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ κ.form K r k) :
     Koszul.extDeriv ω ∈ κ'.form K r' (k + 1) := by
-  have h : Koszul.extDeriv ω ∈ Koszul.polyForm K (Fin n) (r - 1) (k + 1) := by
-    cases κ
-    · exact Koszul.extDeriv_mem_polyForm hω
-    · exact Koszul.extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus hω
   rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
-  · exact Koszul.polyForm_le_polyFormMinus _ _ h
-  · simpa using h
+  · cases κ
+    · exact Koszul.extDeriv_mem_polyFormMinus_of_mem_polyForm hω
+    · exact Koszul.extDeriv_mem_polyFormMinus hω
+  · have h : Koszul.extDeriv ω ∈ Koszul.polyForm K (Fin n) (r' + 1 - 1) (k + 1) := by
+      cases κ
+      · exact Koszul.extDeriv_mem_polyForm hω
+      · exact Koszul.extDeriv_mem_polyForm_of_mem_polyFormMinus hω
+    simpa using h
 
 end CommRing
 
@@ -180,16 +182,19 @@ section Field
 
 variable {K : Type*} [Field K] [CharZero K]
 
-/-- **Exactness along an admissible transition** (`K` of characteristic `0`, `r ≥ 1`): a closed
-form of the target space is `d η` with `η` in the source space (in `P_r⁻Λᵏ`).
-[AFW2010], §5.1.4, (72) -/
-theorem exists_extDeriv_eq (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) {κ' : PolyKind} {r' : ℕ}
+/-- **Exactness along an admissible transition** (`K` of characteristic `0`): a closed form of the
+target space is `d η` with `η` in the source space (in `P_r⁻Λᵏ`; from `r = 0` the target is
+`P_0⁻Λᵏ⁺¹ = 0`). [AFW2010], §5.1.4, (72) -/
+theorem exists_extDeriv_eq (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ κ'.form K r' (k + 1)) (hd : Koszul.extDeriv ω = 0) :
-    ∃ η ∈ κ.form K r k, Koszul.extDeriv η = ω :=
-  let ⟨η, hη, he⟩ :=
+    ∃ η ∈ κ.form K r k, Koszul.extDeriv η = ω := by
+  rcases Nat.eq_zero_or_pos r with rfl | hr
+  · obtain ⟨rfl, rfl⟩ : κ' = trimmed ∧ r' = 0 := ht.resolve_right (by omega)
+    exact ⟨0, zero_mem _, by rw [Koszul.extDeriv_zero, (Submodule.mem_bot K).1 hω]⟩
+  obtain ⟨η, hη, he⟩ :=
     Koszul.exists_extDeriv_eq_of_mem_polyFormMinus hr (form_le_polyFormMinus ht _ hω) hd
-  ⟨η, κ.polyFormMinus_le_form hr k hη, he⟩
+  exact ⟨η, κ.polyFormMinus_le_form hr k hη, he⟩
 
 /-- **The closed `0`-forms are the constants** (`K` of characteristic `0`, `r ≥ 1`). -/
 theorem mem_polyForm_zero_of_extDeriv_eq_zero (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r)
@@ -245,103 +250,45 @@ end Field
 
 An admissible sequence of [AFW2006], §3.5, (5.13) chooses in every form degree a full or a trimmed
 space along admissible transitions. Its degree may reach `0` before the top form degree, at a full
-space `P_0Λᵏ`; every later space is then `P_0⁻Λ = 0` (`form₀`, `IsAdmissible`). The sequences of
-the element families keep `r_k ≥ 1` (`Feec.FiniteElement.PolySeq`, `PolySeq.isAdmissible`). -/
-
-section Seq
-
-variable (K : Type*) [CommRing K]
-
-/-- The polynomial forms of the family over `K` with the convention `P_0⁻Λᵏ = 0` of [AFW2006],
-§3.3: `form`, except at `P_0⁻Λᵏ`, which is `P_1⁻Λᵏ` in `form` (`Koszul.polyFormMinus` truncates
-`r - 1` at `0`). -/
-def form₀ : PolyKind → ℕ → ℕ → Submodule K (Koszul.PolyForm K (Fin n))
-  | full, r, k => Koszul.polyForm K (Fin n) r k
-  | trimmed, 0, _ => ⊥
-  | trimmed, r + 1, k => Koszul.polyFormMinus K (Fin n) (r + 1) k
-
-variable {K}
-
-theorem form₀_of_one_le (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
-    κ.form₀ K (n := n) r k = κ.form K r k := by
-  obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
-  cases κ <;> rfl
+space `P_0Λᵏ`; every later space is then `P_0⁻Λ = 0` (`IsAdmissible`). The sequences of the element
+families keep `r_k ≥ 1` (`Feec.FiniteElement.PolySeq`, `PolySeq.isAdmissible`). -/
 
 /-- **An admissible sequence** of spaces of polynomial forms ([AFW2006], §3.5, (5.13)): in every
-form degree `k` the space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of the family `κ k` (`form₀`), `r_0 ≥ 1`,
+form degree `k` the space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of the family `κ k` (`form`), `r_0 ≥ 1`,
 consecutive degrees related by admissible transitions. The degree reaches `0` only at a full space
 `P_0Λᵏ`, after which every space is `P_0⁻Λ = 0`. -/
 structure IsAdmissible (κ : ℕ → PolyKind) (r : ℕ → ℕ) : Prop where
   one_le : 1 ≤ r 0
   transition (k : ℕ) : Transition (r k) (κ (k + 1)) (r (k + 1))
 
-end Seq
-
-section SeqField
-
-variable {K : Type*} [Field K]
-
-/-- **`d` along an admissible transition**, with `P_0⁻Λ = 0`: `d` maps `κ.form₀ K r k` into
-`κ'.form₀ K r' (k + 1)` (from `r = 0` the target is `0` and the source consists of constant
-forms). -/
-theorem extDeriv_mem_form₀ (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
-    (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ κ.form₀ K r k) :
-    Koszul.extDeriv ω ∈ κ'.form₀ K r' (k + 1) := by
-  rcases Nat.eq_zero_or_pos r with rfl | hr
-  · have h0 : ω ∈ Koszul.polyForm K (Fin n) 0 k := by
-      cases κ
-      · exact hω
-      · rw [(Submodule.mem_bot K).1 hω]; exact zero_mem _
-    rw [Koszul.extDeriv_eq_zero_of_mem_polyForm_zero h0]
-    exact zero_mem _
-  · have h := κ.extDeriv_mem_form (K := K) ht (by rwa [← κ.form₀_of_one_le hr])
-    rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
-    · rwa [form₀_of_one_le _ hr]
-    · exact h
-
-/-- **Exactness along an admissible transition**, with `P_0⁻Λ = 0` (`K` of characteristic `0`):
-a closed form of `κ'.form₀ K r' (k + 1)` is `d η`, `η ∈ κ.form₀ K r k`. -/
-theorem exists_extDeriv_eq_of_mem_form₀ [CharZero K] (κ : PolyKind) {r : ℕ} {κ' : PolyKind}
-    {r' : ℕ} (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
-    (hω : ω ∈ κ'.form₀ K r' (k + 1)) (hd : Koszul.extDeriv ω = 0) :
-    ∃ η ∈ κ.form₀ K r k, Koszul.extDeriv η = ω := by
-  rcases Nat.eq_zero_or_pos r with rfl | hr
-  · obtain ⟨rfl, rfl⟩ : κ' = trimmed ∧ r' = 0 := ht.resolve_right (by omega)
-    exact ⟨0, zero_mem _, by rw [Koszul.extDeriv_zero, (Submodule.mem_bot K).1 hω]⟩
-  · rw [κ.form₀_of_one_le hr]
-    refine κ.exists_extDeriv_eq hr ht ?_ hd
-    rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
-    · rwa [form₀_of_one_le _ hr] at hω
-    · exact hω
-
 namespace IsAdmissible
 
 variable {κ : ℕ → PolyKind} {r : ℕ → ℕ} (h : IsAdmissible κ r)
 include h
 
-/-- **The polynomial complex of an admissible sequence**: `d` maps each space into the next. -/
-theorem extDeriv_mem {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ (κ k).form₀ K (r k) k) :
-    Koszul.extDeriv ω ∈ (κ (k + 1)).form₀ K (r (k + 1)) (k + 1) :=
-  (κ k).extDeriv_mem_form₀ (h.transition k) hω
+/-- **The polynomial complex of an admissible sequence**: `d` maps each space into the next, over
+every commutative ring. -/
+theorem extDeriv_mem {K : Type*} [CommRing K] {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
+    (hω : ω ∈ (κ k).form K (r k) k) : Koszul.extDeriv ω ∈ (κ (k + 1)).form K (r (k + 1)) (k + 1) :=
+  (κ k).extDeriv_mem_form (h.transition k) hω
+
+variable {K : Type*} [Field K] [CharZero K]
 
 /-- **The polynomial complex of an admissible sequence is exact** in positive degree, over every
 field of characteristic `0`. [AFW2006], §3.5, (5.13); [AFW2010], §5.1.4, (72) -/
-theorem exists_extDeriv_eq [CharZero K] {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
-    (hω : ω ∈ (κ (k + 1)).form₀ K (r (k + 1)) (k + 1)) (hd : Koszul.extDeriv ω = 0) :
-    ∃ η ∈ (κ k).form₀ K (r k) k, Koszul.extDeriv η = ω :=
-  (κ k).exists_extDeriv_eq_of_mem_form₀ (h.transition k) hω hd
+theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
+    (hω : ω ∈ (κ (k + 1)).form K (r (k + 1)) (k + 1)) (hd : Koszul.extDeriv ω = 0) :
+    ∃ η ∈ (κ k).form K (r k) k, Koszul.extDeriv η = ω :=
+  (κ k).exists_extDeriv_eq (h.transition k) hω hd
 
 /-- **The closed `0`-forms of an admissible sequence are the constants**, over every field of
 characteristic `0`. -/
-theorem mem_polyForm_zero_of_extDeriv_eq_zero [CharZero K] {ω : Koszul.PolyForm K (Fin n)}
-    (hω : ω ∈ (κ 0).form₀ K (r 0) 0) (hd : Koszul.extDeriv ω = 0) :
+theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : Koszul.PolyForm K (Fin n)}
+    (hω : ω ∈ (κ 0).form K (r 0) 0) (hd : Koszul.extDeriv ω = 0) :
     ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
-  (κ 0).mem_polyForm_zero_of_extDeriv_eq_zero h.one_le
-    (by rwa [← (κ 0).form₀_of_one_le h.one_le]) hd
+  (κ 0).mem_polyForm_zero_of_extDeriv_eq_zero h.one_le hω hd
 
 end IsAdmissible
-
-end SeqField
 
 /-- The degree `r'` of the `d`-part `dP_{r'+1}Λ^{k-1}` of the family: `r` for `P_rΛᵏ`, `r - 1`
 for `P_r⁻Λᵏ`. -/

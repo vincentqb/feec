@@ -206,7 +206,7 @@ theorem extDeriv_mem_space (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) {κ' : PolyK
     · exact extDeriv_mem_polySpace hω
     · exact extDeriv_mem_polySpace (polyMinusSpace_le_polySpace hr hω)
   rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
-  · exact polySpace_le_polyMinusSpace r' (k + 1) hfull
+  · exact polySpace_le_polyMinusSpace hr (k + 1) hfull
   · simpa using hfull
 
 /-- **Test forms along an admissible transition**: if `η` is a test form of the target family in
@@ -229,7 +229,7 @@ theorem test_of_transition (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
           rw [testSpace_eq (by omega)]
           have := affinePullback_mem_polySpace (simplexMatrix (refVertex (M + 1) ∘ i.succAbove))
             (refVertex (M + 1) (i.succAbove 0)) hη
-          have h2 := polySpace_le_polyMinusSpace (n := M) (r' + k - M) (M - k)
+          have h2 := polySpace_le_polyMinusSpace (n := M) (r := r' + k - M) (by omega) (M - k)
           rw [show r' + k - M - 1 = r' + (k + 1) - (M + 1) - 1 by omega,
             show M - k = M + 1 - (k + 1) by omega] at h2
           rw [show M - k = M + 1 - (k + 1) by omega]
@@ -238,7 +238,8 @@ theorem test_of_transition (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
           by_cases hc' : M + 1 < r' + k
           · rw [testSpace_eq (by omega)]
             have := extDeriv_mem_polySpace hη
-            have h2 := polySpace_le_polyMinusSpace (n := M + 1) (r' + k - (M + 1)) (M + 1 - k)
+            have h2 := polySpace_le_polyMinusSpace (n := M + 1) (r := r' + k - (M + 1)) (by omega)
+              (M + 1 - k)
             rw [show r' + k - (M + 1) - 1 = r' + (k + 1) - (M + 1) - 1 - 1 by omega,
               show M + 1 - k = M + 1 - (k + 1) + 1 by omega] at h2
             rw [show M + 1 - k = M + 1 - (k + 1) + 1 by omega]

@@ -10,8 +10,8 @@ index type `d`):
 
 * `homForm r k = H_rΛᵏ`: `k`-forms with coefficients homogeneous of degree `r`;
 * `polyForm r k = P_rΛᵏ`: `k`-forms with coefficients of total degree `≤ r`;
-* `polyFormMinus r k = P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}` (the first-kind Nédélec /
-  trimmed space).
+* `polyFormMinus r k = P_r⁻Λᵏ`, `P_{r+1}⁻Λᵏ = P_rΛᵏ + κ H_rΛ^{k+1}` and `P_0⁻Λᵏ = 0` (the
+  first-kind Nédélec / trimmed space).
 
 These are the shape-function spaces of the two FEEC families `P_rΛᵏ`, `P_r⁻Λᵏ`, which the thesis
 takes from [AFW2010] ([QuennevilleBelair2015], §4.7) as part of the Finite Element Exterior
@@ -22,7 +22,7 @@ Calculus framework of [AFW2006] and [AFW2010] that it extends ([QuennevilleBelai
 * degree bookkeeping: `d : H_rΛᵏ → H_{r-1}Λ^{k+1}`, `κ : H_rΛ^{k+1} → H_{r+1}Λᵏ`,
   `d : P_rΛᵏ → P_{r-1}Λ^{k+1}`, `κ : P_rΛ^{k+1} → P_{r+1}Λᵏ` (`totalDegree_pderiv_le`);
 * inclusions `P_{r-1}Λᵏ ⊆ P_r⁻Λᵏ ⊆ P_rΛᵏ` (`1 ≤ r`), and the subcomplex properties
-  `d P_r⁻Λᵏ ⊆ P_{r-1}Λ^{k+1} ⊆ P_r⁻Λ^{k+1}`;
+  `d P_r⁻Λᵏ ⊆ P_{r-1}Λ^{k+1}`, `d P_r⁻Λᵏ ⊆ P_r⁻Λ^{k+1}`, `d P_rΛᵏ ⊆ P_r⁻Λ^{k+1}` (every `r`);
 * over a field of characteristic zero, for `r + k > 0`:
   **exactness** of the homogeneous Koszul and polynomial de Rham complexes
   (`exists_koszul_eq_of_koszul_eq_zero`, `exists_extDeriv_eq_of_extDeriv_eq_zero`) and the
@@ -127,12 +127,25 @@ def polyForm (r k : ℕ) : Submodule R (PolyForm R d) where
     (totalDegree_smul_le c (ω s)).trans (hω.2 s)⟩
 
 variable (R d) in
-/-- `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}` (`r ≥ 1`), the trimmed (first-kind Nédélec)
-polynomial forms. At `r = 0` the truncation `0 - 1 = 0` gives `P_1⁻Λᵏ`, not the convention
-`P_0⁻Λᵏ = 0` of [AFW2006], §3.3 (kept by `Feec.FiniteElement.PolyKind.form₀`).
-[QuennevilleBelair2015], §4.7, §4.10 -/
-def polyFormMinus (r k : ℕ) : Submodule R (PolyForm R d) :=
-  polyForm R d (r - 1) k ⊔ (homForm R d (r - 1) (k + 1)).map (koszulₗ R d)
+/-- `P_r⁻Λᵏ`, the trimmed (first-kind Nédélec) polynomial forms: `P_{r+1}⁻Λᵏ = P_rΛᵏ + κ H_rΛ^{k+1}`
+and `P_0⁻Λᵏ = 0` ([AFW2006], §3.3). [QuennevilleBelair2015], §4.7, §4.10 -/
+def polyFormMinus : ℕ → ℕ → Submodule R (PolyForm R d)
+  | 0, _ => ⊥
+  | r + 1, k => polyForm R d r k ⊔ (homForm R d r (k + 1)).map (koszulₗ R d)
+
+@[simp] theorem polyFormMinus_zero_left (k : ℕ) : polyFormMinus R d 0 k = ⊥ := rfl
+
+/-- `P_{r+1}⁻Λᵏ = P_rΛᵏ + κ H_rΛ^{k+1}`. -/
+theorem polyFormMinus_succ (r k : ℕ) :
+    polyFormMinus R d (r + 1) k =
+      polyForm R d r k ⊔ (homForm R d r (k + 1)).map (koszulₗ R d) := rfl
+
+/-- `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}` (`r ≥ 1`). -/
+theorem polyFormMinus_eq_sup {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+    polyFormMinus R d r k =
+      polyForm R d (r - 1) k ⊔ (homForm R d (r - 1) (k + 1)).map (koszulₗ R d) := by
+  obtain ⟨r, rfl⟩ := Nat.exists_eq_add_of_le' hr
+  rfl
 
 omit [LinearOrder d] [Fintype d] in
 theorem homForm_le_polyForm (r k : ℕ) : homForm R d r k ≤ polyForm R d r k :=
@@ -179,8 +192,11 @@ theorem koszul_mem_polyForm {r k : ℕ} {ω : PolyForm R d} (h : ω ∈ polyForm
 
 /-! ### `P_r⁻Λᵏ` -/
 
-theorem polyForm_le_polyFormMinus (r k : ℕ) :
-    polyForm R d (r - 1) k ≤ polyFormMinus R d r k := le_sup_left
+/-- `P_{r-1}Λᵏ ⊆ P_r⁻Λᵏ` (`r ≥ 1`). -/
+theorem polyForm_le_polyFormMinus {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+    polyForm R d (r - 1) k ≤ polyFormMinus R d r k := by
+  rw [polyFormMinus_eq_sup hr]
+  exact le_sup_left
 
 /-- `κ H_{r-1}Λ^{k+1} ⊆ H_rΛᵏ` for `r ≥ 1`. -/
 theorem map_koszul_homForm_le {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
@@ -191,55 +207,47 @@ theorem map_koszul_homForm_le {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
 
 /-- `P_{r-1}Λᵏ ⊆ P_r⁻Λᵏ ⊆ P_rΛᵏ` (`r ≥ 1`). [QuennevilleBelair2015], §4.7 -/
 theorem polyFormMinus_le_polyForm {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
-    polyFormMinus R d r k ≤ polyForm R d r k :=
-  sup_le (polyForm_mono (Nat.sub_le r 1) k)
+    polyFormMinus R d r k ≤ polyForm R d r k := by
+  rw [polyFormMinus_eq_sup hr]
+  exact sup_le (polyForm_mono (Nat.sub_le r 1) k)
     ((map_koszul_homForm_le hr k).trans (homForm_le_polyForm r k))
+
+omit [Fintype d] in
+/-- Constant forms are closed: `d P_0Λᵏ = 0`. -/
+theorem extDeriv_eq_zero_of_mem_polyForm_zero {k : ℕ} {ω : PolyForm R d}
+    (h : ω ∈ polyForm R d 0 k) : extDeriv ω = 0 := by
+  funext s
+  refine sum_eq_zero fun j _ => ?_
+  rw [totalDegree_eq_zero_iff_eq_C.1 (Nat.le_zero.1 (h.2 _)), pderiv_C, mul_zero]
 
 /-- **`d P_r⁻Λᵏ ⊆ P_{r-1}Λ^{k+1}`**: on `κ H_{r-1}Λ^{k+1}`, `dκω` is homogeneous of degree
 `r - 1`. [QuennevilleBelair2015], §4.7 -/
-theorem extDeriv_mem_polyForm_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d}
+theorem extDeriv_mem_polyForm_of_mem_polyFormMinus {r k : ℕ} {ω : PolyForm R d}
     (h : ω ∈ polyFormMinus R d r k) : extDeriv ω ∈ polyForm R d (r - 1) (k + 1) := by
-  refine Submodule.mem_sup.1 h |>.elim fun a ⟨ha, b, hb, hab⟩ => ?_
-  rw [← hab, extDeriv_add]
-  refine add_mem (polyForm_mono (Nat.sub_le _ 1) _ (extDeriv_mem_polyForm ha)) ?_
-  obtain ⟨η, hη, rfl⟩ := hb
-  have := extDeriv_mem_homForm (map_koszul_homForm_le hr k ⟨η, hη, rfl⟩)
-  exact homForm_le_polyForm _ _ this
+  cases r with
+  | zero => rw [(Submodule.mem_bot R).1 h, extDeriv_zero]; exact zero_mem _
+  | succ r =>
+    obtain ⟨a, ha, b, ⟨η, hη, rfl⟩, rfl⟩ := Submodule.mem_sup.1 h
+    rw [extDeriv_add]
+    refine add_mem (polyForm_mono (Nat.sub_le _ 1) _ (extDeriv_mem_polyForm ha)) ?_
+    have := extDeriv_mem_homForm (map_koszul_homForm_le (r := r + 1) (by omega) k ⟨η, hη, rfl⟩)
+    exact homForm_le_polyForm _ _ this
 
 /-- **`P_r⁻Λ` is a subcomplex**: `d P_r⁻Λᵏ ⊆ P_r⁻Λ^{k+1}`. [QuennevilleBelair2015], §4.7, §4.10 -/
-theorem extDeriv_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm R d}
-    (h : ω ∈ polyFormMinus R d r k) : extDeriv ω ∈ polyFormMinus R d r (k + 1) :=
-  polyForm_le_polyFormMinus r (k + 1) (extDeriv_mem_polyForm_of_mem_polyFormMinus hr h)
+theorem extDeriv_mem_polyFormMinus {r k : ℕ} {ω : PolyForm R d}
+    (h : ω ∈ polyFormMinus R d r k) : extDeriv ω ∈ polyFormMinus R d r (k + 1) := by
+  cases r with
+  | zero => rw [(Submodule.mem_bot R).1 h, extDeriv_zero]; exact zero_mem _
+  | succ r =>
+    exact polyForm_le_polyFormMinus (by omega) _ (extDeriv_mem_polyForm_of_mem_polyFormMinus h)
 
-/-! ### `d P_r⁻Λᵏ` for every `r` -/
-
-/-- `d (κ H_{r-1}Λ^{k+1}) ⊆ H_{r-1}Λ^{k+1}`, for every `r`. -/
-theorem extDeriv_koszul_mem_homForm {r k : ℕ} {η : PolyForm R d}
-    (h : η ∈ homForm R d (r - 1) (k + 1)) : extDeriv (koszul η) ∈ homForm R d (r - 1) (k + 1) := by
-  have h1 := koszul_mem_homForm h
-  rw [Nat.add_sub_cancel] at h1
-  have := extDeriv_mem_homForm h1
-  rwa [Nat.add_sub_cancel] at this
-
-/-- **`d P_r⁻Λᵏ ⊆ P_{r-1}Λ^{k+1}`** for every `r` (at `r = 0`, `P_0⁻Λᵏ = P_0Λᵏ + κ H_0Λ^{k+1}`).
-[QuennevilleBelair2015], §4.7 -/
-theorem extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus {r k : ℕ} {ω : PolyForm R d}
-    (h : ω ∈ polyFormMinus R d r k) : extDeriv ω ∈ polyForm R d (r - 1) (k + 1) := by
-  refine Submodule.mem_sup.1 h |>.elim fun a ⟨ha, b, hb, hab⟩ => ?_
-  rw [← hab, extDeriv_add]
-  refine add_mem (polyForm_mono (Nat.sub_le _ 1) _ (extDeriv_mem_polyForm ha)) ?_
-  obtain ⟨η, hη, rfl⟩ := hb
-  exact homForm_le_polyForm _ _ (extDeriv_koszul_mem_homForm hη)
-
-/-- `d P_r⁻Λᵏ ⊆ P_r⁻Λ^{k+1}` for every `r`. [QuennevilleBelair2015], §4.7, §4.10 -/
-theorem extDeriv_mem_polyFormMinus_of_mem_polyFormMinus {r k : ℕ} {ω : PolyForm R d}
-    (h : ω ∈ polyFormMinus R d r k) : extDeriv ω ∈ polyFormMinus R d r (k + 1) :=
-  polyForm_le_polyFormMinus r (k + 1) (extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus h)
-
-/-- `d P_rΛᵏ ⊆ P_r⁻Λ^{k+1}`. [QuennevilleBelair2015], §4.10 -/
+/-- `d P_rΛᵏ ⊆ P_r⁻Λ^{k+1}` (for `r = 0`, constant forms are closed). [QuennevilleBelair2015],
+§4.10 -/
 theorem extDeriv_mem_polyFormMinus_of_mem_polyForm {r k : ℕ} {ω : PolyForm R d}
-    (h : ω ∈ polyForm R d r k) : extDeriv ω ∈ polyFormMinus R d r (k + 1) :=
-  polyForm_le_polyFormMinus r (k + 1) (extDeriv_mem_polyForm h)
+    (h : ω ∈ polyForm R d r k) : extDeriv ω ∈ polyFormMinus R d r (k + 1) := by
+  cases r with
+  | zero => rw [extDeriv_eq_zero_of_mem_polyForm_zero h]; exact zero_mem _
+  | succ r => exact polyForm_le_polyFormMinus (by omega) _ (extDeriv_mem_polyForm h)
 
 /-- The Koszul differential vanishes on `0`-forms. -/
 theorem IsDeg.koszul_eq_zero {ω : PolyForm R d} (hω : IsDeg 0 ω) : Koszul.koszul ω = 0 := by
@@ -252,6 +260,7 @@ theorem IsDeg.koszul_eq_zero {ω : PolyForm R d} (hω : IsDeg 0 ω) : Koszul.kos
 theorem koszul_mem_polyForm_of_mem_polyFormMinus_succ {r k : ℕ} (hr : 1 ≤ r)
     {ω : PolyForm R d}
     (h : ω ∈ polyFormMinus R d r (k + 1)) : koszul ω ∈ polyForm R d r k := by
+  rw [polyFormMinus_eq_sup hr] at h
   obtain ⟨a, ha, b, ⟨c, -, rfl⟩, rfl⟩ := Submodule.mem_sup.1 h
   change koszul (a + koszul c) ∈ _
   rw [koszul_add, koszul_koszul, add_zero]
@@ -317,9 +326,9 @@ theorem isSubcomplex_polyForm (r k : ℕ) :
     fun _ hω => extDeriv_mem_polyForm hω
   exact ⟨⟨h0, h1⟩, ⟨h0, fun _ hω => extDeriv_mem_polyFormMinus_of_mem_polyForm hω⟩,
     ⟨fun _ hω => extDeriv_mem_polyFormMinus_of_mem_polyForm hω,
-      fun _ hω => extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus hω⟩,
+      fun _ hω => extDeriv_mem_polyForm_of_mem_polyFormMinus hω⟩,
     ⟨fun _ hω => extDeriv_mem_polyFormMinus_of_mem_polyForm hω,
-      fun _ hω => extDeriv_mem_polyFormMinus_of_mem_polyFormMinus hω⟩⟩
+      fun _ hω => extDeriv_mem_polyFormMinus hω⟩⟩
 
 /-- **The corrected list, `⊗ V`** (row-wise, the matrix wave equation (4.14) for `ι = Fin 3`,
 `k = 0`). See [QuennevilleBelair2015], §4.10. -/
@@ -538,7 +547,7 @@ has a coefficient `± x_j^r` of degree `r`. (In `ℝ³` with `k = 2`: `x₀^{r-1
 See [QuennevilleBelair2015], §4.10. -/
 theorem polyForm_lt_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
     (hk : k + 1 ≤ Fintype.card d) : polyForm K d (r - 1) k < polyFormMinus K d r k := by
-  refine lt_of_le_of_ne (polyForm_le_polyFormMinus r k) fun h => ?_
+  refine lt_of_le_of_ne (polyForm_le_polyFormMinus hr k) fun h => ?_
   have hd : 0 < Fintype.card d := by omega
   obtain ⟨j⟩ : Nonempty d := Fintype.card_pos_iff.1 hd
   obtain ⟨t, ht, htk⟩ := Finset.exists_subset_card_eq (s := (Finset.univ : Finset d).erase j)
@@ -551,8 +560,9 @@ theorem polyForm_lt_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
     by_cases hu : u = insert j t
     · subst hu; simp only [η, Pi.single_eq_same]; exact isHomogeneous_X_pow j (r - 1)
     · simp only [η, Pi.single_eq_of_ne hu]; exact isHomogeneous_zero _ _ _
-  have hmem : koszul η ∈ polyFormMinus K d r k :=
-    Submodule.mem_sup_right ⟨η, hη, rfl⟩
+  have hmem : koszul η ∈ polyFormMinus K d r k := by
+    rw [polyFormMinus_eq_sup hr]
+    exact Submodule.mem_sup_right ⟨η, hη, rfl⟩
   rw [← h] at hmem
   have hcoef : koszul η t = sgn j t * X j ^ r := by
     rw [koszul_apply, Finset.sum_eq_single j]

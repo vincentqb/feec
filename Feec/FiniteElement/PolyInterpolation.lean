@@ -562,7 +562,7 @@ theorem polyMinusRefInterp_apply_eq (hr : 1 ≤ r) {s : ℕ} (hs : s + 1 ≤ r)
   have hk : ∀ k : Fin (n + 1), degPartField k p ∈ localPolyMinusSpace (refVertex n) r k :=
     fun k => by
       rw [localPolyMinusSpace_eq isUnit_det_edgeMatrix_refVertex]
-      exact polySpace_le_polyMinusSpace r k
+      exact polySpace_le_polyMinusSpace hr k
         (polySpace_mono (by omega) (degPartField_mem_polySpace hp k))
   have h : ∀ k : Fin (n + 1), ∑ i : Σ f : Face n, DofIndexMinus r k f,
       faceMoment (refVertex n) i.1.emb (testBasisMinus r k i.1.dim i.2 : FormField i.1.dim)
@@ -901,7 +901,7 @@ theorem exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq (K : Affine.Simplex 
     intro v hv
     have hc : (v : FormField n) ∈ localPolyMinusSpace K.points r' k := by
       rw [localPolyMinusSpace_eq (isUnit_det_edgeMatrix K)]
-      exact polySpace_le_polyMinusSpace r' k
+      exact polySpace_le_polyMinusSpace hr' k
         (mem_polySpace_of_eq_const hv (isDeg_of_mem_polySpace v.2))
     have e := polyMinusInterp_inclusion (isUnit_det_edgeMatrix K) hr' hk ⟨_, hc⟩
     rw [LinearMap.sub_apply, LinearMap.id_apply, sub_eq_zero]

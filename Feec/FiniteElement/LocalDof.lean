@@ -765,13 +765,13 @@ theorem extDeriv_mem_polySpace {m s j : ℕ} {η : FormField m} (h : η ∈ poly
 theorem extDeriv_mem_polyMinusSpace {m s j : ℕ} {η : FormField m}
     (h : η ∈ polyMinusSpace m s j) : extDeriv η ∈ polyMinusSpace m s (j + 1) := by
   obtain ⟨H, hH, rfl⟩ := h
-  exact ⟨_, Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus hH,
+  exact ⟨_, Koszul.extDeriv_mem_polyFormMinus hH,
     (extDeriv_evalForm H).symm⟩
 
 theorem polyMinusSpace_mono {m s : ℕ} (hs : 1 ≤ s) (j : ℕ) :
     polyMinusSpace m s j ≤ polyMinusSpace m (s + 1) j :=
   Submodule.map_mono ((Koszul.polyFormMinus_le_polyForm hs j).trans
-    (Koszul.polyForm_le_polyFormMinus (s + 1) j))
+    (Koszul.polyForm_le_polyFormMinus (r := s + 1) (by omega) j))
 
 theorem extDeriv_zero_field {m : ℕ} : extDeriv (0 : FormField m) = 0 := by
   funext x s; simp [FiniteElement.extDeriv_apply]

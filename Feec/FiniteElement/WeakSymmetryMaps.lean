@@ -368,7 +368,7 @@ theorem constOneTest_of_two_le_deg (S : PolySeq) {k : ℕ} (hk : 2 ≤ S.deg k) 
   cases hkind : S.kind k
   · simp only [PolyKind.test_full]
     rw [testSpace_eq ⟨by omega, by omega⟩]
-    refine polySpace_le_polyMinusSpace _ _ ?_
+    refine polySpace_le_polyMinusSpace (by omega) _ ?_
     rw [show k + 1 - k = 1 by omega]
     exact mem_polySpace_of_eq_const hc hd
   · simp only [PolyKind.test_trimmed]

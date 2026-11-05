@@ -23,6 +23,7 @@ public import FeecCheck.MaxNormHeat
 public import FeecCheck.MaxNormNeumann
 public import FeecCheck.Semigroups
 public import FeecCheck.AffineTransport
+public import FeecCheck.TrimmedForms
 
 public section
 

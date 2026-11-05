@@ -4637,8 +4637,8 @@ Feec.Repair.C410.mcurl_mgrad	Feec.Koszul.extDeriv_extDeriv	generalize
 Feec.Repair.C410.mgrad	Feec.Koszul.extDeriv	generalize
 Feec.Repair.C410.pcurl	Feec.Koszul.Proxy3.curl	generalize
 Feec.Repair.C410.pcurl_PLambda1_mem_PminusLambda2	Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyForm	generalize
-Feec.Repair.C410.pcurl_PminusLambda1_mem_PLambda2	Feec.Koszul.extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus	generalize
-Feec.Repair.C410.pcurl_PminusLambda1_mem_PminusLambda2	Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus	generalize
+Feec.Repair.C410.pcurl_PminusLambda1_mem_PLambda2	Feec.Koszul.extDeriv_mem_polyForm_of_mem_polyFormMinus	generalize
+Feec.Repair.C410.pcurl_PminusLambda1_mem_PminusLambda2	Feec.Koszul.extDeriv_mem_polyFormMinus	generalize
 Feec.Repair.C410.pcurl_add	Feec.Koszul.extDeriv_add	generalize
 Feec.Repair.C410.pcurl_isHomogeneous	Feec.Koszul.extDeriv_mem_homForm	generalize
 Feec.Repair.C410.pcurl_mem_PLambda2	Feec.Koszul.extDeriv_mem_polyForm	generalize

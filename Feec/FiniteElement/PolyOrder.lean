@@ -47,7 +47,7 @@ theorem polySpace_le_space {k s : ℕ} (hs : s + 1 ≤ S.deg k) :
   change polySpace n s k ≤ (S.kind k).space n (S.deg k) k
   cases S.kind k
   · exact polySpace_mono (by omega)
-  · exact (polySpace_mono (by omega)).trans (polySpace_le_polyMinusSpace (S.deg k) k)
+  · exact (polySpace_mono (by omega)).trans (polySpace_le_polyMinusSpace (by omega) k)
 
 /-- `P_sΛᵏ ⊆ P_{r_k}Λᵏ` for `s ≤ r_k` when the sequence uses the full family in degree `k`. -/
 theorem polySpace_le_space_of_full {k s : ℕ} (hk : S.kind k = .full) (hs : s ≤ S.deg k) :

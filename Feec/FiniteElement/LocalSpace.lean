@@ -136,12 +136,12 @@ open ExteriorFibre MvPolynomial
 
 variable {K : Type*} [Field K] {d : Type*} [LinearOrder d] [Fintype d]
 
-/-- `κ P_{r-1}Λ^{k+1} ⊆ P_r⁻Λᵏ` (the second form of the definition of `P_r⁻Λᵏ`, [AFW2010],
-§5.1.3). -/
-theorem koszul_mem_polyFormMinus {r k : ℕ} {ω : PolyForm K d}
+/-- `κ P_{r-1}Λ^{k+1} ⊆ P_r⁻Λᵏ` (`r ≥ 1`; the second form of the definition of `P_r⁻Λᵏ`,
+[AFW2010], §5.1.3). -/
+theorem koszul_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm K d}
     (h : ω ∈ polyForm K d (r - 1) (k + 1)) :
     koszul ω ∈ polyFormMinus K d r k := by
-  rw [← sum_homComp h, ← koszulₗ_apply, map_sum]
+  rw [polyFormMinus_eq_sup hr, ← sum_homComp h, ← koszulₗ_apply, map_sum]
   refine Submodule.sum_mem _ fun j hj => ?_
   have hj' : j ≤ r - 1 := by simp at hj; omega
   have hm := homComp_mem_homForm h.1 j
@@ -337,15 +337,21 @@ theorem polyPullback_mem_polyFormMinus {K : Type*} [Field K] (B : Fin n → Fin 
     (b : Fin n → K) {r k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (h : ω ∈ Koszul.polyFormMinus K (Fin n) r k) :
     polyPullback B b ω ∈ Koszul.polyFormMinus K (Fin m) r k := by
+  rcases Nat.eq_zero_or_pos r with rfl | hr
+  · rw [(Submodule.mem_bot K).1 h, Koszul.polyFormMinus_zero_left, Submodule.mem_bot]
+    simpa using polyPullback_add B b 0 0
+  rw [Koszul.polyFormMinus_eq_sup hr] at h ⊢
   obtain ⟨a, ha, c, ⟨c, hc, rfl⟩, rfl⟩ := Submodule.mem_sup.1 h
   rw [polyPullback_add]
   refine Submodule.add_mem _ (Submodule.mem_sup_left (polyPullback_mem_polyForm B b ha)) ?_
   change polyPullback B b (Koszul.koszul c) ∈ _
   rw [polyPullback_koszul]
-  refine Submodule.add_mem _ (Koszul.koszul_mem_polyFormMinus
-    (polyPullback_mem_polyForm B b (Koszul.homForm_le_polyForm _ _ hc))) ?_
-  exact Submodule.mem_sup_left (polyPullback_mem_polyForm B b
-    (Koszul.interior_C_mem_polyForm b (Koszul.homForm_le_polyForm _ _ hc)))
+  refine Submodule.add_mem _ ?_ ?_
+  · have := Koszul.koszul_mem_polyFormMinus hr
+      (polyPullback_mem_polyForm B b (Koszul.homForm_le_polyForm _ _ hc))
+    rwa [Koszul.polyFormMinus_eq_sup hr] at this
+  · exact Submodule.mem_sup_left (polyPullback_mem_polyForm B b
+      (Koszul.interior_C_mem_polyForm b (Koszul.homForm_le_polyForm _ _ hc)))
 
 end Subst
 
@@ -358,11 +364,8 @@ def polySpace (r k : ℕ) : Submodule ℝ (FormField n) :=
   (Koszul.polyForm ℝ (Fin n) r k).map (evalForm n)
 
 variable (n) in
-/-- `P_r⁻Λᵏ(ℝⁿ)` as a space of form fields.
-
-Warning: this is meaningful only for `1 ≤ r`. At `r = 0` the underlying
-`Feec.Koszul.polyFormMinus` uses the truncated `r - 1 = 0`, so it is `P_0Λᵏ + κH_0Λ^{k+1}` rather
-than the classical `P_0⁻Λᵏ = 0`; every result here about the trimmed family assumes `1 ≤ r`. -/
+/-- `P_r⁻Λᵏ(ℝⁿ)` as a space of form fields: the evaluated polynomial forms of
+`Feec.Koszul.polyFormMinus` (`P_0⁻Λᵏ = 0`). -/
 def polyMinusSpace (r k : ℕ) : Submodule ℝ (FormField n) :=
   (Koszul.polyFormMinus ℝ (Fin n) r k).map (evalForm n)
 
@@ -422,9 +425,9 @@ theorem polyMinusSpace_le_polySpace {r k : ℕ} (hr : 1 ≤ r) :
     polyMinusSpace n r k ≤ polySpace n r k :=
   Submodule.map_mono (Koszul.polyFormMinus_le_polyForm hr k)
 
-theorem polySpace_le_polyMinusSpace (r k : ℕ) :
+theorem polySpace_le_polyMinusSpace {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     polySpace n (r - 1) k ≤ polyMinusSpace n r k :=
-  Submodule.map_mono (Koszul.polyForm_le_polyFormMinus r k)
+  Submodule.map_mono (Koszul.polyForm_le_polyFormMinus hr k)
 
 /-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions.
 [AFW2006], §3 -/
@@ -928,6 +931,8 @@ theorem integral_wedge_add {Ω H H' : Koszul.PolyForm ℝ (Fin n)} :
 /-- `P_r⁻Λⁿ(ℝⁿ) = P_{r-1}Λⁿ(ℝⁿ)` (`κ` of an `(n+1)`-form vanishes). -/
 theorem polyFormMinus_top_le (r : ℕ) :
     Koszul.polyFormMinus ℝ (Fin n) r n ≤ Koszul.polyForm ℝ (Fin n) (r - 1) n := by
+  rcases r with _ | r
+  · exact bot_le
   refine sup_le le_rfl ?_
   rintro _ ⟨c, hc, rfl⟩
   have : c = 0 := funext fun s => hc.1 s fun h => by
@@ -963,7 +968,7 @@ theorem eq_zero_of_isBubble_of_mem_polyForm {r k : ℕ} (hr : 1 ≤ r)
       rwa [show r - 1 + (k + 1) - (N + 1) = r + k - (N + 1) by omega,
         show N + 1 - (k + 1) + 1 = N + 1 - k by omega] at this
     rcases Nat.lt_or_ge (N + 1) (r + k) with hlt | hge
-    · rw [hint hlt _ (Koszul.polyForm_le_polyFormMinus _ _ hdM)]; ring
+    · rw [hint hlt _ (Koszul.polyForm_le_polyFormMinus (by omega) _ hdM)]; ring
     · have hM0 : Koszul.extDeriv M = 0 := extDeriv_eq_zero_of_mem_polyForm_zero
         (by rwa [show r - 1 + (k + 1) - (N + 1) = 0 by omega] at hM)
       rw [hM0]; simp
@@ -1000,7 +1005,7 @@ theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
     · have hdeg : IsDeg k Ω := (Koszul.polyFormMinus_le_polyForm_succ r k hΩ).1
       exact funext fun s => hdeg s fun h => by have := card_le_univ s; simp at this; omega
   obtain ⟨N, rfl⟩ : ∃ N, n = N + 1 := ⟨n - 1, by omega⟩
-  have hdmem := Koszul.extDeriv_mem_polyForm_sub_one_of_mem_polyFormMinus hΩ
+  have hdmem := Koszul.extDeriv_mem_polyForm_of_mem_polyFormMinus hΩ
   have hdeg : IsDeg k Ω := (Koszul.polyFormMinus_le_polyForm_succ r k hΩ).1
   have hdbub : IsBubble (refVertex (N + 1)) (evalForm (N + 1) (Koszul.extDeriv Ω)) := by
     rw [← extDeriv_evalForm]

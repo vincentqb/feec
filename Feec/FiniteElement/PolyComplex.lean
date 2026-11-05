@@ -40,8 +40,8 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
   `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13,
   `PolySeq.finrank_form_eq_sum`), and its shape spaces are affinely invariant
   (`PolySeq.isAffineInvariant_form`). Its families and degrees form an admissible sequence of
-  [AFW2006], §3.5, (5.13) (`PolySeq.isAdmissible`, `PolySeq.form_eq_form₀`); those sequences may
-  also reach the degree `0` before the top form degree (`PolyKind.IsAdmissible`).
+  [AFW2006], §3.5, (5.13) (`PolySeq.isAdmissible`); those sequences may also reach the degree `0`
+  before the top form degree (`PolyKind.IsAdmissible`).
 * **The classical elements in closed form**, over every field `K` (of characteristic `0` for the
   trimmed spaces; `Koszul.finrank_polyForm_three_zero`, …, `Koszul.finrank_polyFormMinus_two_one`
   of `Feec.Algebra.PolynomialFormClassical`), and over `ℝ` for the form fields: in `ℝ³`, `dim P_rΛ⁰ = dim P_rΛ³ = (r+1)(r+2)(r+3)/6`
@@ -335,9 +335,6 @@ theorem extDeriv_mem_form {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω �
 (5.13) (`PolyKind.IsAdmissible`), one whose degree stays `≥ 1`. -/
 theorem isAdmissible : PolyKind.IsAdmissible S.kind S.deg := ⟨S.one_le_deg 0, S.transition⟩
 
-theorem form_eq_form₀ (k : ℕ) : S.form K (n := n) k = (S.kind k).form₀ K (S.deg k) k :=
-  ((S.kind k).form₀_of_one_le (S.one_le_deg k) k).symm
-
 end CommRing
 
 variable {K : Type*} [Field K] [CharZero K] (S : PolySeq)
@@ -347,7 +344,7 @@ characteristic `0`: a closed form of `S.form K (k + 1)` is `d η`, `η ∈ S.for
 [AFW2010], §5.1.4, (71), (72); [ArnoldLogg2014] -/
 theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ S.form K (k + 1))
     (hd : Koszul.extDeriv ω = 0) : ∃ η ∈ S.form K k, Koszul.extDeriv η = ω :=
-  (S.kind k).exists_extDeriv_eq (S.one_le_deg k) (S.transition k) hω hd
+  (S.kind k).exists_extDeriv_eq (S.transition k) hω hd
 
 /-- **The closed `0`-forms of an admissible sequence are the constants**, over every field of
 characteristic `0`: the polynomial complex is a resolution of `K`. -/

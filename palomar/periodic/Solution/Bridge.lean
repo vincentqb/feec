@@ -134,15 +134,12 @@ theorem map_polyForm (r k : ℕ) :
   rw [polyForm, map_kForm, Feec.Koszul.polyForm_eq_coeffForm]
 
 theorem map_polyFormMinus (r k : ℕ) :
-    (polyFormMinus K n (r + 1) k).map (Φ).toLinearMap =
-      Feec.Koszul.polyFormMinus K (Fin n) (r + 1) k := by
-  rw [polyFormMinus, Submodule.map_sup, map_polyForm, map_map_koszul, map_homForm,
-    Feec.Koszul.polyFormMinus_succ]
-
-theorem map_polyFormMinus_of_le {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     (polyFormMinus K n r k).map (Φ).toLinearMap = Feec.Koszul.polyFormMinus K (Fin n) r k := by
-  obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
-  exact map_polyFormMinus r k
+  cases r with
+  | zero => exact Submodule.map_bot _
+  | succ r =>
+    rw [polyFormMinus, Submodule.map_sup, map_polyForm, map_map_koszul, map_homForm,
+      Feec.Koszul.polyFormMinus_succ]
 
 theorem map_cubeFormMinus (b : Fin n → ℕ) (k : ℕ) :
     (cubeFormMinus K n b k).map (Φ).toLinearMap = Feec.Koszul.cubeFormMinus K b k := by
@@ -311,18 +308,16 @@ end Helpers
 
 An admissible sequence of the challenge is an admissible sequence of families
 `Feec.FiniteElement.PolyKind` (`kindOf`, `isAdmissible_of_admissible`), whose spaces are carried to
-`Feec.FiniteElement.PolyKind.form₀` (`map_seqForm`, with `P_0⁻Λ = 0`). -/
+`Feec.FiniteElement.PolyKind.form` (`map_seqForm`). -/
 
 /-- The family `P_rΛ` (`true`) or `P_r⁻Λ` (`false`). -/
 def kindOf (b : Bool) : Feec.FiniteElement.PolyKind := if b then .full else .trimmed
 
 theorem map_seqForm (full : ℕ → Bool) (r : ℕ → ℕ) (k : ℕ) :
-    (seqForm K n full r k).map (Φ).toLinearMap = (kindOf (full k)).form₀ K (r k) k := by
+    (seqForm K n full r k).map (Φ).toLinearMap = (kindOf (full k)).form K (r k) k := by
   unfold seqForm kindOf
   cases full k
-  · rcases r k with _ | r
-    · exact Submodule.map_bot _
-    · exact map_polyFormMinus r k
+  · exact map_polyFormMinus (r k) k
   · exact map_polyForm (r k) k
 
 theorem isAdmissible_of_admissible {full : ℕ → Bool} {r : ℕ → ℕ} (h : Admissible full r) :
@@ -342,7 +337,7 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
   finrank_homForm r k := by
     rw [finrank_eq, map_homForm, Feec.Koszul.finrank_homForm, Fintype.card_fin]
   finrank_polyFormMinus r k hr := by
-    rw [finrank_eq, map_polyFormMinus_of_le hr, Feec.Koszul.finrank_polyFormMinus hr,
+    rw [finrank_eq, map_polyFormMinus, Feec.Koszul.finrank_polyFormMinus hr,
       Fintype.card_fin]
   finrank_map_koszul_homForm r k := by
     refine ⟨?_, ?_⟩
@@ -388,12 +383,9 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     · omega
     · rw [Submodule.map_bot]
   map_polyFormMinus_le r k := by
-    cases r with
-    | zero => simp [polyFormMinus]
-    | succ r =>
-      rw [← map_le_iff, map_map_extDeriv, map_polyFormMinus, map_polyFormMinus]
-      rintro _ ⟨ω, hω, rfl⟩
-      exact Feec.Koszul.extDeriv_mem_polyFormMinus_of_mem_polyFormMinus hω
+    rw [← map_le_iff, map_map_extDeriv, map_polyFormMinus, map_polyFormMinus]
+    rintro _ ⟨ω, hω, rfl⟩
+    exact Feec.Koszul.extDeriv_mem_polyFormMinus hω
   map_cubeFormMinus_le b k := by
     rw [← map_le_iff, map_map_extDeriv, map_cubeFormMinus, map_cubeFormMinus]
     rintro _ ⟨ω, hω, rfl⟩
@@ -423,13 +415,8 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
       exact ⟨0, Submodule.zero_mem _, by simp⟩
   exactAt_polyFormMinus r k := by
     refine exactAt_deRham_of_feec _ _ k fun ω hω hd => ?_
-    cases r with
-    | zero =>
-      simp only [polyFormMinus, Submodule.map_bot, Submodule.mem_bot] at hω ⊢
-      exact ⟨0, rfl, by rw [hω]; simp⟩
-    | succ r =>
-      rw [map_polyFormMinus] at hω ⊢
-      exact Feec.Koszul.exists_extDeriv_eq_of_mem_polyFormMinus (by omega) hω hd
+    rw [map_polyFormMinus] at hω ⊢
+    exact Feec.FiniteElement.PolyKind.trimmed.exists_extDeriv_eq (Or.inl ⟨rfl, rfl⟩) hω hd
   exactAt_cubeFormMinus b k := by
     refine exactAt_deRham_of_feec _ _ k fun ω hω hd => ?_
     rw [map_cubeFormMinus] at hω ⊢
@@ -438,7 +425,7 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_polyForm, map_polyForm]
     exact ker_inf_eq_const le_rfl (Feec.Koszul.polyForm_mono (Nat.zero_le r) 0)
   closed_polyFormMinus r hr := by
-    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_polyFormMinus_of_le hr, map_polyForm,
+    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_polyFormMinus, map_polyForm,
       Feec.Koszul.polyFormMinus_zero hr]
     exact ker_inf_eq_const le_rfl (Feec.Koszul.polyForm_mono (Nat.zero_le r) 0)
   closed_cubeFormMinus b := by
@@ -547,17 +534,17 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
       rw [← (polyForm_eq' r k).1, Submodule.map_sup, ← Submodule.map_comp,
         extDeriv_comp_extDeriv', Submodule.map_zero, sup_bot_eq]
   polyFormMinus_zero r hr := by
-    rw [← map_eq_iff, map_polyFormMinus_of_le hr, map_polyForm]
+    rw [← map_eq_iff, map_polyFormMinus, map_polyForm]
     exact Feec.Koszul.polyFormMinus_zero hr
   polyFormMinus_top r hr := by
-    rw [← map_eq_iff, map_polyFormMinus_of_le hr, map_polyForm]
+    rw [← map_eq_iff, map_polyFormMinus, map_polyForm]
     simpa using Feec.Koszul.polyFormMinus_top (K := K) (d := Fin n) hr
   polyFormMinus_eq_inf_comap := polyFormMinus_eq_inf_comap'
   polyForm_lt_polyFormMinus r k hr hk := by
-    rw [← map_lt_iff, map_polyForm, map_polyFormMinus_of_le hr]
+    rw [← map_lt_iff, map_polyForm, map_polyFormMinus]
     exact Feec.Koszul.polyForm_lt_polyFormMinus hr (by simpa using hk)
   polyFormMinus_lt_polyForm r k hr hk := by
-    rw [← map_lt_iff, map_polyForm, map_polyFormMinus_of_le hr]
+    rw [← map_lt_iff, map_polyForm, map_polyFormMinus]
     exact Feec.Koszul.polyFormMinus_lt_polyForm hr (by simpa using hk)
   ker_inf_polyFormMinus_le r k := by
     rw [← map_le_iff, map_inf, map_ker_extDeriv, map_polyFormMinus, map_polyForm]
@@ -569,12 +556,12 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     refine sum_congr rfl fun m _ => congrArg _ ?_
     by_cases h : k ≤ m ∧ m < r + k
     · rw [Feec.FiniteElement.PolyKind.testForm_full h, finrank_eq,
-        map_polyFormMinus_of_le (by omega)]
+        map_polyFormMinus]
       simp only [h, and_self, ↓reduceIte]
     · rw [Feec.FiniteElement.PolyKind.testForm_eq_bot _ h, finrank_bot]
       simp only [h, ↓reduceIte]
   finrank_polyFormMinus_eq_sum r k hr := by
-    rw [finrank_eq, map_polyFormMinus_of_le hr, ← Feec.FiniteElement.PolyKind.form_trimmed,
+    rw [finrank_eq, map_polyFormMinus, ← Feec.FiniteElement.PolyKind.form_trimmed,
       Feec.FiniteElement.PolyKind.finrank_form_eq_sum _ hr]
     refine sum_congr rfl fun m _ => congrArg _ ?_
     by_cases h : k ≤ m ∧ m < r + k
@@ -591,11 +578,10 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     rw [map_seqForm] at hω ⊢
     exact (isAdmissible_of_admissible h).exists_extDeriv_eq hω hd
   closed_seqForm full r h := by
-    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm, map_polyForm,
-      (kindOf (full 0)).form₀_of_one_le h.one_le]
+    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm, map_polyForm]
     exact ker_inf_eq_const ((kindOf (full 0)).form_le_polyForm h.one_le 0)
       ((Feec.Koszul.polyForm_mono (Nat.zero_le _) 0).trans
-        ((Feec.Koszul.polyForm_le_polyFormMinus _ 0).trans
+        ((Feec.Koszul.polyForm_le_polyFormMinus h.one_le 0).trans
           ((kindOf (full 0)).polyFormMinus_le_form h.one_le 0)))
 
 end FEEC

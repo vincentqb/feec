@@ -253,7 +253,8 @@ section Seq
 variable (K : Type*) [CommRing K]
 
 /-- The polynomial forms of the family over `K` with the convention `P_0⁻Λᵏ = 0` of [AFW2006],
-§3.3: `form`, except `P_0⁻Λᵏ` (`Koszul.polyFormMinus` truncates `r - 1` at `0`). -/
+§3.3: `form`, except at `P_0⁻Λᵏ`, which is `P_1⁻Λᵏ` in `form` (`Koszul.polyFormMinus` truncates
+`r - 1` at `0`). -/
 def form₀ : PolyKind → ℕ → ℕ → Submodule K (Koszul.PolyForm K (Fin n))
   | full, r, k => Koszul.polyForm K (Fin n) r k
   | trimmed, 0, _ => ⊥
@@ -337,15 +338,6 @@ theorem mem_polyForm_zero_of_extDeriv_eq_zero [CharZero K] {ω : Koszul.PolyForm
     ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
   (κ 0).mem_polyForm_zero_of_extDeriv_eq_zero h.one_le
     (by rwa [← (κ 0).form₀_of_one_le h.one_le]) hd
-
-/-- The space of degree `0` lies in `P_{r_0}Λ⁰` and contains the constants. -/
-theorem polyForm_zero_le_form₀_le :
-    Koszul.polyForm K (Fin n) 0 0 ≤ (κ 0).form₀ K (r 0) 0 ∧
-      (κ 0).form₀ K (r 0) 0 ≤ Koszul.polyForm K (Fin n) (r 0) 0 := by
-  rw [(κ 0).form₀_of_one_le h.one_le]
-  exact ⟨(Koszul.polyForm_mono (Nat.zero_le _) 0).trans
-    ((Koszul.polyForm_le_polyFormMinus _ 0).trans ((κ 0).polyFormMinus_le_form h.one_le 0)),
-    (κ 0).form_le_polyForm h.one_le 0⟩
 
 end IsAdmissible
 

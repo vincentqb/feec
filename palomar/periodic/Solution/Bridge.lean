@@ -591,8 +591,11 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     rw [map_seqForm] at hω ⊢
     exact (isAdmissible_of_admissible h).exists_extDeriv_eq hω hd
   closed_seqForm full r h := by
-    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm, map_polyForm]
-    exact ker_inf_eq_const (isAdmissible_of_admissible h).polyForm_zero_le_form₀_le.2
-      (isAdmissible_of_admissible h).polyForm_zero_le_form₀_le.1
+    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm, map_polyForm,
+      (kindOf (full 0)).form₀_of_one_le h.one_le]
+    exact ker_inf_eq_const ((kindOf (full 0)).form_le_polyForm h.one_le 0)
+      ((Feec.Koszul.polyForm_mono (Nat.zero_le _) 0).trans
+        ((Feec.Koszul.polyForm_le_polyFormMinus _ 0).trans
+          ((kindOf (full 0)).polyFormMinus_le_form h.one_le 0)))
 
 end FEEC

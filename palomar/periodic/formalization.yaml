@@ -106,7 +106,9 @@ sources:
       seqForm: in each degree P_(r_k) or P_(r_k)^-, r_0 >= 1, with the transitions of (5.13);
       stated for every admissible sequence, not only those starting at a given P_r Lambda^0, and
       without the count 2^(n-1); including the sequences through a full space P_0 Lambda^k with
-      k < n, which occur only for r < n and are followed by the spaces P_0^- Lambda = 0); the
+      k < n, which occur only for r < n and are followed by the spaces P_0^- Lambda = 0; r_0 >= 1
+      leaves out only (3.21) for r = 0, K -> P_0 Lambda^0 -> 0, covered by exactAt_polyForm and
+      closed_polyForm); the
       dimension counts of Theorems 4.9 and 4.13 (dim P_r Lambda^k and
       dim P_r^- Lambda^k as sums over the faces of a simplex of the dimensions of the test
       spaces; the degrees of freedom themselves and their unisolvence, which need integration over
@@ -245,7 +247,8 @@ status:
     (characteristic 0 is necessary for the GL(n)-classification and for the homogeneous
     Poincare lemma) over every field; FEEC.periodicTable for every field (of characteristic 0
     where marked), every n, k, r and multidegree b (r >= 1 where the sources require it; the complexes
-    of every admissible sequence, including those through P_0 Lambda^k with k < n). Not formalized: the decomposition
+    of every admissible sequence, including those through P_0 Lambda^k with k < n).
+    Not formalized: the decomposition
     (3.20) and the inequivalence of its summands, the classification of the affinely invariant subcomplexes (the 2^(n-1)
     resolutions of AFW2006 §3.5 as the only ones), the third kind of Theorem 3.5 as
     {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)}. Not compared (proved in Feec,
@@ -356,7 +359,8 @@ fidelity:
     intermediate resolutions of §3.5 are stated as the complexes of all admissible sequences
     (Admissible, seqForm; the full and trimmed kinds encoded by a Boolean sequence), without
     their count; a sequence through P_0 Lambda^k, k < n (only for r < n), continues with the
-    spaces P_0^- Lambda = 0, the convention of AFW2006 §3.3. §3.6 (change of origin). Everything beyond the
+    spaces P_0^- Lambda = 0, the convention of AFW2006 §3.3. §3.6 (change of origin).
+    Everything beyond the
     polynomial algebra and the dimension counts of Theorems 4.9, 4.13: meshes, the degrees of
     freedom as moments, unisolvence and the serendipity column of the periodic table (Feec proves them;
     their statement needs integration over the faces of simplices and cubes and would not fit the

@@ -128,7 +128,9 @@ def polyForm (r k : ℕ) : Submodule R (PolyForm R d) where
 
 variable (R d) in
 /-- `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}` (`r ≥ 1`), the trimmed (first-kind Nédélec)
-polynomial forms. [QuennevilleBelair2015], §4.7, §4.10 -/
+polynomial forms. At `r = 0` the truncation `0 - 1 = 0` gives `P_1⁻Λᵏ`, not the convention
+`P_0⁻Λᵏ = 0` of [AFW2006], §3.3 (kept by `Feec.FiniteElement.PolyKind.form₀`).
+[QuennevilleBelair2015], §4.7, §4.10 -/
 def polyFormMinus (r k : ℕ) : Submodule R (PolyForm R d) :=
   polyForm R d (r - 1) k ⊔ (homForm R d (r - 1) (k + 1)).map (koszulₗ R d)
 

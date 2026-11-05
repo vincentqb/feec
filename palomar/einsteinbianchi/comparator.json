@@ -1,0 +1,7 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": ["FEEC.EinsteinBianchi.tsd_propagates", "FEEC.EinsteinBianchi.tsd_existsUnique", "FEEC.EinsteinBianchi.exists_nonstationary"],
+  "definition_names": [],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
+}

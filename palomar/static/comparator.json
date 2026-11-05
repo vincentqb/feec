@@ -1,8 +1,0 @@
-{
-  "challenge_module": "Challenge",
-  "solution_module": "Solution",
-  "theorem_names": ["FEEC.staticFEEC", "FEEC.staticFEEC_uniform", "FEEC.exists_cochainProjection",
-    "FEEC.exists_subcomplexFamily_iff"],
-  "definition_names": [],
-  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
-}

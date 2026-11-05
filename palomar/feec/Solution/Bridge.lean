@@ -9,8 +9,9 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 The vocabulary of `Challenge.lean` restates over Mathlib the objects of `Feec`: a Hilbert complex
 of the challenge is a `Feec.HilbertComplex` on `ComplexShape.up ℤ` (`HilbertComplex.toFeec`, the
 same fields), and so are its subcomplexes; a cochain projection of the challenge, defined on the
-domain complex only, extends linearly (not continuously) to `W` along an algebraic complement of
-`D(d)` (`CochainProjection.extend`), which is a `Feec` cochain projection
+domain complex only, extends linearly to `W` (`CochainProjection.extend`: continuously where it is
+bounded in `W`, otherwise along an algebraic complement of `D(d)`), which is a `Feec` cochain
+projection
 (`CochainProjection.toFeec`). A family of subcomplexes is a `Feec.HilbertComplex.SubcomplexFamily`
 (`SubcomplexFamily.toFeec`), to which the graph-norm bounds and the approximation property
 transfer degree by degree. The graph norm of the challenge is the norm of `Feec`'s domain spaces
@@ -120,22 +121,67 @@ namespace CochainProjection
 
 variable {S} (P : S.CochainProjection)
 
-/-- **The cochain projection extended to `W`**: `π ∘ (projection onto D(d))`, linear, not
-continuous; it agrees with `π` on `D(d)`. -/
-def extend (i : ℤ) : W i →ₗ[𝕜] W i := (S.V i).subtype ∘ₗ P.π i ∘ₗ H.domainProj i
+/-- **The cochain projection extended to `W`**: where `π` is bounded in the norm of `W` on `D(d)`
+and `V` is closed, its continuous extension (`D(d)` is dense); otherwise `π` after a linear
+projection onto `D(d)` along an algebraic complement (not continuous). Linear; it agrees with `π`
+on `D(d)` and takes values in `V`. -/
+def extend (i : ℤ) : W i →ₗ[𝕜] W i := by
+  classical
+  exact if hb : (∃ C, ∀ x : (H.d i (i + 1)).domain, ‖(P.π i x : W i)‖ ≤ C * ‖(x : W i)‖) ∧
+      IsClosed (S.V i : Set (W i)) then
+    haveI := hb.2.completeSpace_coe
+    (S.V i).subtype ∘ₗ ((P.π i).extendOfNorm (H.d i (i + 1)).domain.subtype :
+      W i →L[𝕜] S.V i).toLinearMap
+  else (S.V i).subtype ∘ₗ P.π i ∘ₗ H.domainProj i
+
+theorem extend_mem (i : ℤ) (x : W i) : P.extend i x ∈ S.V i := by
+  unfold extend
+  split_ifs with hb
+  · exact Submodule.coe_mem _
+  · exact Submodule.coe_mem _
 
 theorem extend_apply {i : ℤ} (x : (H.d i (i + 1)).domain) : P.extend i x = P.π i x := by
-  simp only [extend, LinearMap.comp_apply, Submodule.subtype_apply, domainProj_apply]
+  unfold extend
+  split_ifs with hb
+  · have := hb.2.completeSpace_coe
+    obtain ⟨C, hC⟩ := hb.1
+    change (((P.π i).extendOfNorm (H.d i (i + 1)).domain.subtype :
+      W i →L[𝕜] S.V i) ((H.d i (i + 1)).domain.subtype x) : W i) = _
+    rw [LinearMap.extendOfNorm_eq (H.dense i (i + 1)).denseRange_val ⟨C, fun y => hC y⟩]
+  · simp only [LinearMap.comp_apply, Submodule.subtype_apply, domainProj_apply]
+
+/-- **The continuous extension is bounded in `W`**: a bound `‖π x‖ ≤ C ‖x‖` on `D(d)` with `V`
+closed gives `‖π x‖ ≤ max C 0 ‖x‖` for the extension on all of `W`. -/
+theorem norm_extend_le {i : ℤ} {C : ℝ}
+    (hC : ∀ x : (H.d i (i + 1)).domain, ‖(P.π i x : W i)‖ ≤ C * ‖(x : W i)‖)
+    (hV : IsClosed (S.V i : Set (W i))) (x : W i) : ‖P.extend i x‖ ≤ max C 0 * ‖x‖ := by
+  classical
+  have hb : (∃ C, ∀ x : (H.d i (i + 1)).domain, ‖(P.π i x : W i)‖ ≤ C * ‖(x : W i)‖) ∧
+      IsClosed (S.V i : Set (W i)) := ⟨⟨C, hC⟩, hV⟩
+  have := hV.completeSpace_coe
+  set g : W i →L[𝕜] S.V i := (P.π i).extendOfNorm (H.d i (i + 1)).domain.subtype
+  have e : ∀ y, P.extend i y = g y := fun y => by
+    unfold extend
+    split_ifs
+    rfl
+  rw [e]
+  have hd := (H.dense i (i + 1)).denseRange_val
+  refine hd.induction_on (p := fun y => ‖(g y : W i)‖ ≤ max C 0 * ‖y‖) x
+    (isClosed_le (continuous_norm.comp (continuous_subtype_val.comp g.continuous))
+      (continuous_const.mul continuous_norm)) fun y => ?_
+  change ‖(g ((H.d i (i + 1)).domain.subtype y) : W i)‖ ≤ _
+  rw [LinearMap.extendOfNorm_eq hd ⟨C, fun z => hC z⟩]
+  exact (hC y).trans (mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _))
 
 /-- The extended cochain projection as a `Feec` cochain projection. -/
 def toFeec : S.toFeec.CochainProjection where
   π := P.extend
-  mem i x := (P.π i (H.domainProj i x)).2
+  mem i x := P.extend_mem i x
   proj i x hx := (P.extend_apply ⟨x, S.le_domain i (i + 1) hx⟩).trans (P.proj i _ hx)
   comm i j x := by
     by_cases hij : i + 1 = j
     · subst hij
-      have e1 : (⟨P.extend i x, S.le_domain i (i + 1) (P.π i (H.domainProj i x)).2⟩ :
+      have e1 : (⟨P.extend i x, S.le_domain i (i + 1) (P.extend_mem i x)⟩ :
           (H.d i (i + 1)).domain) = ⟨P.π i x, S.le_domain i (i + 1) (P.π i x).2⟩ :=
         Subtype.ext (P.extend_apply x)
       exact (congrArg (H.d i (i + 1)) e1).trans ((P.comm i x).trans

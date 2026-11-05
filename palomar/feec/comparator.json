@@ -1,0 +1,9 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": ["FEEC.feec", "FEEC.feec_rated", "FEEC.staticFEEC_uniform",
+    "FEEC.exists_cochainProjection", "FEEC.exists_subcomplexFamily_iff", "FEEC.crimeFEEC",
+    "FEEC.crime_nonvacuous"],
+  "definition_names": [],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
+}

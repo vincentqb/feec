@@ -120,7 +120,7 @@
    "configFile": "lakefile.toml"
   }
  ],
- "name": "FeecPalomarStatic",
+ "name": "FeecPalomarFeec",
  "lakeDir": ".lake",
  "fixedToolchain": false
 }

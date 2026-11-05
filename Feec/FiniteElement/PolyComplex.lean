@@ -350,7 +350,7 @@ theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω 
 characteristic `0`: the polynomial complex is a resolution of `K`. -/
 theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ S.form K 0) (hd : Koszul.extDeriv ω = 0) : ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
-  (S.kind 0).mem_polyForm_zero_of_extDeriv_eq_zero (S.one_le_deg 0) hω hd
+  (S.kind 0).mem_polyForm_zero_of_extDeriv_eq_zero hω hd
 
 /-- **`dim = #DOF`**: the dimension of the shape space in degree `k` is the number of degrees of
 freedom of a simplex, `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)`, over every field of

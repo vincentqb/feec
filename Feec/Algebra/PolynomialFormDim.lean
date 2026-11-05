@@ -43,13 +43,13 @@ In characteristic zero:
   `dim κ H_rΛ^{k+1} = dim d H_{r+1}Λᵏ = (n + r choose r + k + 1) (r + k choose k)`
   ([AFW2006], Thm 3.3; [AFW2010], Thm 5.3);
 * `polyFormMinus_sup_map_extDeriv`, `disjoint_polyFormMinus_map_extDeriv`:
-  `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ` (`r ≥ 1`), and `polyFormMinus_zero`:
-  `P_r⁻Λ⁰ = P_rΛ⁰`;
+  `P_rΛ^{k+1} = P_r⁻Λ^{k+1} ⊕ d H_{r+1}Λᵏ`, and `polyFormMinus_zero_right`:
+  `P_r⁻Λ⁰ = P_rΛ⁰` (`r ≥ 1`);
 * `finrank_polyFormMinus`: `dim P_r⁻Λᵏ = (r + n choose r + k) (r + k - 1 choose k)` (`r ≥ 1`),
   and `polyFormMinus_top`: `P_r⁻Λⁿ = P_{r-1}Λⁿ` in the top degree;
 * **exactness**: `exists_extDeriv_eq_of_mem_polyForm` for
   `P_{r+1}Λᵏ → P_rΛ^{k+1} → P_{r-1}Λ^{k+2}`, `exists_extDeriv_eq_of_mem_polyFormMinus` for
-  `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` (`r ≥ 1`), and in degree `0`
+  `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}`, and in degree `0`
   `mem_polyForm_zero_of_extDeriv_eq_zero` (the closed `0`-forms are the constants `P_0Λ⁰`);
 * `mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero`: a closed form of `P_r⁻Λᵏ` lies in
   `P_{r-1}Λᵏ` ([AFW2006], Thm 3.4; [AFW2010], Thm 5.4);
@@ -356,10 +356,8 @@ instance (r k : ℕ) : FiniteDimensional K (homForm K d r k) :=
   Submodule.finiteDimensional_of_le (homForm_le_polyForm r k)
 
 theorem polyFormMinus_le_polyForm_succ (r k : ℕ) :
-    polyFormMinus K d r k ≤ polyForm K d (r + 1) k := by
-  cases r with
-  | zero => exact bot_le
-  | succ r => exact (polyFormMinus_le_polyForm (by omega) k).trans (polyForm_mono (by omega) k)
+    polyFormMinus K d r k ≤ polyForm K d (r + 1) k :=
+  (polyFormMinus_le_polyForm r k).trans (polyForm_mono (Nat.le_succ r) k)
 
 instance (r k : ℕ) : FiniteDimensional K (polyFormMinus K d r k) :=
   Submodule.finiteDimensional_of_le (polyFormMinus_le_polyForm_succ r k)
@@ -444,10 +442,11 @@ theorem extDeriv_smul_koszul_of_mem {r k : ℕ} (hrk : 0 < r + k) {ω : PolyForm
   conv_rhs => rw [eq_koszul_add_extDeriv hrk h]
   rw [hd, smul_zero, koszul_zero, zero_add]
 
-/-- **`P_r⁻Λᵏ` with `d ω = 0` lies in `P_{r-1}Λᵏ`** (`r ≥ 1`). [AFW2010], §5.1.3, Thm 5.4 -/
-theorem mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero {r k : ℕ} (hr : 1 ≤ r)
-    {ω : PolyForm K d} (h : ω ∈ polyFormMinus K d r k) (hd : extDeriv ω = 0) :
-    ω ∈ polyForm K d (r - 1) k := by
+/-- **`P_r⁻Λᵏ` with `d ω = 0` lies in `P_{r-1}Λᵏ`**. [AFW2010], §5.1.3, Thm 5.4 -/
+theorem mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero {r k : ℕ} {ω : PolyForm K d}
+    (h : ω ∈ polyFormMinus K d r k) (hd : extDeriv ω = 0) : ω ∈ polyForm K d (r - 1) k := by
+  rcases Nat.eq_zero_or_pos r with rfl | hr
+  · rw [(Submodule.mem_bot K).1 h]; exact zero_mem _
   rw [polyFormMinus_eq_sup hr] at h
   obtain ⟨a, ha, b, ⟨c, hc, rfl⟩, rfl⟩ := Submodule.mem_sup.1 h
   change a + koszul c ∈ _
@@ -497,8 +496,9 @@ theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : PolyForm K d} (h0 : IsDeg 0 
   exact (smul_eq_zero.1 this.symm).resolve_left (Nat.cast_ne_zero.2 (by omega))
 
 /-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`). [AFW2010], §5.1.3 -/
-theorem polyFormMinus_zero {r : ℕ} (hr : 1 ≤ r) : polyFormMinus K d r 0 = polyForm K d r 0 := by
-  refine le_antisymm (polyFormMinus_le_polyForm hr 0) fun ω h => ?_
+theorem polyFormMinus_zero_right {r : ℕ} (hr : 1 ≤ r) :
+    polyFormMinus K d r 0 = polyForm K d r 0 := by
+  refine le_antisymm (polyFormMinus_le_polyForm r 0) fun ω h => ?_
   obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
   rw [← sum_homComp h, Finset.sum_range_succ]
   refine Submodule.add_mem_sup (Submodule.sum_mem _ fun j hj => ?_) ?_
@@ -515,14 +515,14 @@ lies in `κ H_rΛ^{k+1}`. [AFW2006], §3.3 -/
 theorem polyFormMinus_succ_eq_inf_comap (r k : ℕ) :
     polyFormMinus K d (r + 1) k =
       polyForm K d (r + 1) k ⊓ (polyForm K d (r + 1) (k - 1)).comap (koszulₗ K d) := by
-  refine le_antisymm (le_inf (polyFormMinus_le_polyForm (by omega) k) fun ω h => ?_) ?_
+  refine le_antisymm (le_inf (polyFormMinus_le_polyForm _ k) fun ω h => ?_) ?_
   · cases k with
     | zero =>
-      have h0 : IsDeg 0 ω := (polyFormMinus_le_polyForm (by omega) 0 h).1
+      have h0 : IsDeg 0 ω := (polyFormMinus_le_polyForm _ 0 h).1
       change koszulₗ K d ω ∈ polyForm K d (r + 1) (0 - 1)
       rw [koszulₗ_apply, IsDeg.koszul_eq_zero h0]
       exact Submodule.zero_mem _
-    | succ k => exact koszul_mem_polyForm_of_mem_polyFormMinus_succ (by omega) h
+    | succ k => exact koszul_mem_polyForm_of_mem_polyFormMinus_succ h
   · rintro ω ⟨h, hκ⟩
     have hlow : ∑ j ∈ range (r + 1), homComp j ω ∈ polyForm K d r k :=
       Submodule.sum_mem _ fun j hj => polyForm_mono (by simp at hj; omega) k
@@ -541,12 +541,14 @@ theorem polyFormMinus_succ_eq_inf_comap (r k : ℕ) :
     rw [← hsum]
     exact Submodule.add_mem_sup hlow ⟨η, by simpa using hη, he⟩
 
-/-- **Exactness of the trimmed complex** `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}` (`r ≥ 1`): a closed
+/-- **Exactness of the trimmed complex** `P_r⁻Λᵏ → P_r⁻Λ^{k+1} → P_r⁻Λ^{k+2}`: a closed
 `ω ∈ P_r⁻Λ^{k+1}` is `d η` with `η ∈ P_r⁻Λᵏ`. [AFW2010], §5.1.4, (72) -/
-theorem exists_extDeriv_eq_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω : PolyForm K d}
+theorem exists_extDeriv_eq_of_mem_polyFormMinus {r k : ℕ} {ω : PolyForm K d}
     (h : ω ∈ polyFormMinus K d r (k + 1)) (hd : extDeriv ω = 0) :
     ∃ η ∈ polyFormMinus K d r k, extDeriv η = ω := by
-  have h' := mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero hr h hd
+  rcases Nat.eq_zero_or_pos r with rfl | hr
+  · exact ⟨0, zero_mem _, by rw [extDeriv_zero, (Submodule.mem_bot K).1 h]⟩
+  have h' := mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero h hd
   rw [polyFormMinus_eq_sup hr]
   refine ⟨∑ j ∈ range (r - 1 + 1), ((j + (k + 1) : ℕ) : K)⁻¹ • koszul (homComp j ω),
     Submodule.sum_mem _ fun j hj => Submodule.smul_mem _ _ ?_, ?_⟩
@@ -566,17 +568,29 @@ theorem exists_extDeriv_eq_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r) {ω :
 
 /-! #### `P_rΛᵏ = P_r⁻Λᵏ ⊕ d H_{r+1}Λ^{k-1}` -/
 
-/-- **`P_rΛ^{k+1} = P_r⁻Λ^{k+1} + d H_{r+1}Λᵏ`** (`r ≥ 1`); the sum is direct
-(`disjoint_polyFormMinus_map_extDeriv`), and `P_r⁻Λ⁰ = P_rΛ⁰` (`polyFormMinus_zero`).
-[AFW2010], §5.1.3 -/
-theorem polyFormMinus_sup_map_extDeriv {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+/-- `d H_1Λᵏ = H_0Λ^{k+1}`: a constant `(k+1)`-form `ω` is `d ((k+1)⁻¹ κω)`. [AFW2006], (3.10) -/
+theorem map_extDeriv_homForm_one (k : ℕ) :
+    (homForm K d 1 k).map (extDerivₗ K d) = homForm K d 0 (k + 1) := by
+  refine le_antisymm ?_ fun ω hm => ?_
+  · rintro _ ⟨η, hη, rfl⟩
+    simpa using extDeriv_mem_homForm hη
+  · obtain ⟨η, hη, he⟩ := exists_extDeriv_eq_of_extDeriv_eq_zero (by omega) hm
+      (extDeriv_eq_zero_of_mem_polyForm_zero (homForm_le_polyForm _ _ hm))
+    exact ⟨η, by simpa using hη, he⟩
+
+/-- **`P_rΛ^{k+1} = P_r⁻Λ^{k+1} + d H_{r+1}Λᵏ`**; the sum is direct
+(`disjoint_polyFormMinus_map_extDeriv`), and `P_r⁻Λ⁰ = P_rΛ⁰` for `r ≥ 1`
+(`polyFormMinus_zero_right`).
+For `r = 0` this is `P_0Λ^{k+1} = d H_1Λᵏ` (`map_extDeriv_homForm_one`). [AFW2010], §5.1.3 -/
+theorem polyFormMinus_sup_map_extDeriv (r k : ℕ) :
     polyFormMinus K d r (k + 1) ⊔ (homForm K d (r + 1) k).map (extDerivₗ K d) =
       polyForm K d r (k + 1) := by
-  refine le_antisymm (sup_le (polyFormMinus_le_polyForm hr _) ?_) fun ω h => ?_
+  rcases r with _ | r
+  · rw [polyFormMinus_zero_left, bot_sup_eq, polyForm_zero_eq_homForm, map_extDeriv_homForm_one]
+  refine le_antisymm (sup_le (polyFormMinus_le_polyForm _ _) ?_) fun ω h => ?_
   · rintro _ ⟨η, hη, rfl⟩
     exact homForm_le_polyForm _ _ (by simpa using extDeriv_mem_homForm hη)
-  · obtain ⟨r, rfl⟩ : ∃ r', r = r' + 1 := ⟨r - 1, by omega⟩
-    rw [← sum_homComp h, Finset.sum_range_succ]
+  · rw [← sum_homComp h, Finset.sum_range_succ]
     have hm := homComp_mem_homForm h.1 (r + 1)
     rw [eq_koszul_add_extDeriv (by omega) hm, ← add_assoc]
     refine Submodule.add_mem_sup (Submodule.add_mem _ (Submodule.mem_sup_left
@@ -586,9 +600,11 @@ theorem polyFormMinus_sup_map_extDeriv {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     exact polyForm_mono (by simp at hj; omega) _
       (homForm_le_polyForm _ _ (homComp_mem_homForm h.1 j))
 
-/-- `P_r⁻Λ^{k+1} ∩ d H_{r+1}Λᵏ = 0` (`r ≥ 1`). [AFW2010], §5.1.3 -/
-theorem disjoint_polyFormMinus_map_extDeriv {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+/-- `P_r⁻Λ^{k+1} ∩ d H_{r+1}Λᵏ = 0`. [AFW2010], §5.1.3 -/
+theorem disjoint_polyFormMinus_map_extDeriv (r k : ℕ) :
     Disjoint (polyFormMinus K d r (k + 1)) ((homForm K d (r + 1) k).map (extDerivₗ K d)) := by
+  rcases Nat.eq_zero_or_pos r with rfl | hr
+  · rw [polyFormMinus_zero_left]; exact disjoint_bot_left
   rw [Submodule.disjoint_def]
   rintro x hx ⟨β, hβ, rfl⟩
   have hxh : extDeriv β ∈ homForm K d r (k + 1) := by simpa using extDeriv_mem_homForm hβ
@@ -611,16 +627,6 @@ theorem map_koszul_homForm_one (s : ℕ) :
   rw [eq_koszul_add_extDeriv (by omega) hm, IsDeg.koszul_eq_zero hm.1, smul_zero, extDeriv_zero,
     add_zero]
   exact ⟨_, Submodule.smul_mem _ _ (by simpa using extDeriv_mem_homForm hm), rfl⟩
-
-/-- `d H_1Λᵏ = H_0Λ^{k+1}`: a constant `(k+1)`-form `ω` is `d ((k+1)⁻¹ κω)`. [AFW2006], (3.10) -/
-theorem map_extDeriv_homForm_one (k : ℕ) :
-    (homForm K d 1 k).map (extDerivₗ K d) = homForm K d 0 (k + 1) := by
-  refine le_antisymm ?_ fun ω hm => ?_
-  · rintro _ ⟨η, hη, rfl⟩
-    simpa using extDeriv_mem_homForm hη
-  · obtain ⟨η, hη, he⟩ := exists_extDeriv_eq_of_extDeriv_eq_zero (by omega) hm
-      (extDeriv_eq_zero_of_mem_polyForm_zero (homForm_le_polyForm _ _ hm))
-    exact ⟨η, by simpa using hη, he⟩
 
 /-- `d H_{r+1}Λᵏ = d κ H_rΛ^{k+1}`. -/
 theorem map_extDeriv_homForm_eq (r k : ℕ) :
@@ -756,17 +762,17 @@ theorem polyFormMinus_top {r : ℕ} (hr : 1 ≤ r) :
   rw [finrank_polyForm, finrank_polyFormMinus hr, Nat.choose_self, Nat.choose_self,
     show r - 1 + Fintype.card d = r + Fintype.card d - 1 by omega]
 
-/-- **`P_r⁻Λ^{k+1} ⊊ P_rΛ^{k+1}`** (`r ≥ 1`, `k + 1 ≤ n`): the complement `d H_{r+1}Λᵏ` of
+/-- **`P_r⁻Λ^{k+1} ⊊ P_rΛ^{k+1}`** (`k + 1 ≤ n`): the complement `d H_{r+1}Λᵏ` of
 `P_r⁻Λ^{k+1}` in `P_rΛ^{k+1}` has dimension `C(n + r, r + k + 1) C(r + k, k) > 0`.
 [AFW2006], §3.3 -/
-theorem polyFormMinus_lt_polyForm {r k : ℕ} (hr : 1 ≤ r) (hk : k + 1 ≤ Fintype.card d) :
+theorem polyFormMinus_lt_polyForm (r : ℕ) {k : ℕ} (hk : k + 1 ≤ Fintype.card d) :
     polyFormMinus K d r (k + 1) < polyForm K d r (k + 1) := by
-  refine lt_of_le_of_ne (polyFormMinus_le_polyForm hr _) fun h => ?_
+  refine lt_of_le_of_ne (polyFormMinus_le_polyForm r _) fun h => ?_
   have hle : (homForm K d (r + 1) k).map (extDerivₗ K d) ≤ polyFormMinus K d r (k + 1) := by
-    rw [h, ← polyFormMinus_sup_map_extDeriv hr k]
+    rw [h, ← polyFormMinus_sup_map_extDeriv r k]
     exact le_sup_right
   have h0 := finrank_map_extDeriv_homForm' (K := K) (d := d) r k
-  rw [(disjoint_polyFormMinus_map_extDeriv hr k).symm.eq_bot_of_le hle, finrank_bot] at h0
+  rw [(disjoint_polyFormMinus_map_extDeriv r k).symm.eq_bot_of_le hle, finrank_bot] at h0
   exact absurd h0.symm (Nat.mul_ne_zero (Nat.choose_pos (by omega)).ne'
     (Nat.choose_pos (by omega)).ne')
 

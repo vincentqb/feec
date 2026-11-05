@@ -351,7 +351,7 @@ theorem eq_zero_of_faceMoment_eq_zero {r : ℕ} (hr : 1 ≤ r) (k n : ℕ) {ω :
 
 /-- **Vanishing of the degrees of freedom forces `ω = 0` on `P_r⁻Λᵏ(T̂)`** ([AFW2006],
 Thm 4.12), with the test forms `η ∈ P_{r+k-m-1}Λ^{m-k}(f)`. -/
-theorem eq_zero_of_faceMoment_eq_zero_minus {r : ℕ} (hr : 1 ≤ r) (k n : ℕ) {ω : FormField n}
+theorem eq_zero_of_faceMoment_eq_zero_minus {r : ℕ} (k n : ℕ) {ω : FormField n}
     (hω : ω ∈ polyMinusSpace n r k)
     (hdof : ∀ (m : ℕ) (e : Fin (m + 1) ↪o Fin (n + 1)), ∀ η ∈ testSpaceMinus r k m,
       faceMoment (refVertex n) e η ω = 0) : ω = 0 := by
@@ -365,7 +365,7 @@ theorem eq_zero_of_faceMoment_eq_zero_minus {r : ℕ} (hr : 1 ≤ r) (k n : ℕ)
     have := hdof m' (e'.trans e) η hη
     rw [faceMoment, faceTrace_faceTrace]
     exact this
-  refine eq_zero_of_mem_bubbleSpace_polyMinusSpace hr ⟨hω, hbub⟩ fun h η hη => ?_
+  refine eq_zero_of_mem_bubbleSpace_polyMinusSpace ⟨hω, hbub⟩ fun h η hη => ?_
   have := hdof n (OrderEmbedding.ofStrictMono id strictMono_id) η
     (by rw [testSpaceMinus_eq ⟨by omega, h⟩]; exact hη)
   rw [faceMoment] at this
@@ -528,10 +528,10 @@ theorem eq_zero_of_faceMoment_eq_zero_simplex (hp : IsUnit (edgeMatrix p).det) {
 
 /-- **Vanishing of the degrees of freedom on a simplex `T`**, for `P_r⁻Λᵏ(T)`. -/
 theorem eq_zero_of_faceMoment_eq_zero_minus_simplex (hp : IsUnit (edgeMatrix p).det) {r : ℕ}
-    (hr : 1 ≤ r) (k : ℕ) {ω : FormField n} (hω : ω ∈ polyMinusSpace n r k)
+    (k : ℕ) {ω : FormField n} (hω : ω ∈ polyMinusSpace n r k)
     (hdof : ∀ (m : ℕ) (e : Fin (m + 1) ↪o Fin (n + 1)), ∀ η ∈ testSpaceMinus r k m,
       faceMoment p e η ω = 0) : ω = 0 :=
-  eq_zero_of_affinePullback_eq_zero hp (eq_zero_of_faceMoment_eq_zero_minus hr k n
+  eq_zero_of_affinePullback_eq_zero hp (eq_zero_of_faceMoment_eq_zero_minus k n
     (affinePullback_mem_polyMinusSpace _ _ hω) fun m e η hη => by
       rw [← faceMoment_eq_faceMoment_refVertex]; exact hdof m e η hη)
 
@@ -558,7 +558,7 @@ theorem isUnisolvent_localDofMinus (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} 
   rw [isUnisolvent_iff_forall_eq_zero _ (by
     rw [localPolyMinusSpace_eq hp, finrank_polyMinusSpace n hr, card_dofIndexMinus hr hk])]
   intro ω hω
-  refine Subtype.ext (eq_zero_of_faceMoment_eq_zero_minus_simplex hp hr k
+  refine Subtype.ext (eq_zero_of_faceMoment_eq_zero_minus_simplex hp (r := r) k
     (localPolyMinusSpace_eq hp r k ▸ ω.2) fun m e η hη => ?_)
   have := faceMoment_eq_zero_of_basis p (Face.ofEmb e).emb (testBasisMinus r k m)
     (fun η h => (contDiff_of_mem_testSpaceMinus h).continuous)
@@ -604,7 +604,7 @@ theorem faceTrace_eq_of_localDof_eq (hp : IsUnit (edgeMatrix p).det) {r k : ℕ}
 
 /-- **Trace determination for `P_r⁻Λᵏ(T)`**. -/
 theorem faceTrace_eq_of_localDofMinus_eq (hp : IsUnit (edgeMatrix p).det) {r k : ℕ}
-    (hr : 1 ≤ r) (f : Face n) {ω ω' : localPolyMinusSpace p r k}
+    (f : Face n) {ω ω' : localPolyMinusSpace p r k}
     (h : ∀ g : Face n, g.2.1 ⊆ f.2.1 → ∀ i,
       localDofMinus p r k ⟨g, i⟩ ω = localDofMinus p r k ⟨g, i⟩ ω') :
     faceTrace p f.emb ω = faceTrace p f.emb ω' := by
@@ -615,7 +615,7 @@ theorem faceTrace_eq_of_localDofMinus_eq (hp : IsUnit (edgeMatrix p).det) {r k :
     refine affinePullback_mem_polyMinusSpace _ _ ?_
     rw [← localPolyMinusSpace_eq hp r k]
     exact Submodule.sub_mem _ ω.2 ω'.2
-  have h0 := eq_zero_of_faceMoment_eq_zero_minus hr k f.dim hmem fun m e' η hη => by
+  have h0 := eq_zero_of_faceMoment_eq_zero_minus k f.dim hmem fun m e' η hη => by
     rw [faceMoment, faceTrace_faceTrace]
     refine faceMoment_eq_zero_of_basis p (e'.trans f.emb) (testBasisMinus r k m)
       (fun η h => (contDiff_of_mem_testSpaceMinus h).continuous) ((hc ω).sub (hc ω'))
@@ -665,7 +665,7 @@ def polyMinusSimplexElement (hp : IsUnit (edgeMatrix p).det) {r k : ℕ} (hr : 1
   dofIndex := DofIndexMinus r k
   dof f i := localDofMinus p r k ⟨f, i⟩
   isUnisolvent := isUnisolvent_localDofMinus hp hr hk
-  faceTrace_eq f _ _ h := faceTrace_eq_of_localDofMinus_eq hp hr f h
+  faceTrace_eq f _ _ h := faceTrace_eq_of_localDofMinus_eq hp f h
 
 /-! ### The Leibniz rule and Stokes' theorem for moments -/
 
@@ -768,9 +768,9 @@ theorem extDeriv_mem_polyMinusSpace {m s j : ℕ} {η : FormField m}
   exact ⟨_, Koszul.extDeriv_mem_polyFormMinus hH,
     (extDeriv_evalForm H).symm⟩
 
-theorem polyMinusSpace_mono {m s : ℕ} (hs : 1 ≤ s) (j : ℕ) :
+theorem polyMinusSpace_mono {m : ℕ} (s j : ℕ) :
     polyMinusSpace m s j ≤ polyMinusSpace m (s + 1) j :=
-  Submodule.map_mono ((Koszul.polyFormMinus_le_polyForm hs j).trans
+  Submodule.map_mono ((Koszul.polyFormMinus_le_polyForm s j).trans
     (Koszul.polyForm_le_polyFormMinus (r := s + 1) (by omega) j))
 
 theorem extDeriv_zero_field {m : ℕ} : extDeriv (0 : FormField m) = 0 := by
@@ -788,7 +788,7 @@ theorem faceTrace_mem_testSpace {r k M : ℕ} {η : FormField (M + 1)}
       (refVertex (M + 1) (i.succAbove 0)) h
     rw [show r + 1 + k - M = r + (k + 1) - (M + 1) + 1 by omega,
       show M - k = M + 1 - (k + 1) by omega]
-    exact polyMinusSpace_mono (by omega) _ this
+    exact polyMinusSpace_mono _ _ this
   · rw [testSpace_eq_bot hc, Submodule.mem_bot] at h
     rw [h, map_zero]; exact Submodule.zero_mem _
 
@@ -1260,7 +1260,7 @@ theorem finrank_bubbleSpace_polyMinusSpace {r k : ℕ} (hr : 1 ≤ r) (hk : k �
     intro ω hω
     have hj : ∀ j, faceMoment (refVertex n) (Face.top n).emb (b j : FormField n) ω = 0 :=
       fun j => congrFun hω j
-    refine Subtype.ext (eq_zero_of_mem_bubbleSpace_polyMinusSpace hr ω.2 fun h η hη => ?_)
+    refine Subtype.ext (eq_zero_of_mem_bubbleSpace_polyMinusSpace ω.2 fun h η hη => ?_)
     have := faceMoment_eq_zero_of_basis (refVertex n) (Face.top n).emb b
       (fun η h => (contDiff_of_mem_testSpaceMinus h).continuous) (hcont ω.2) hj
       (by rw [testSpaceMinus_eq ⟨hk, h⟩]; exact hη)
@@ -1277,7 +1277,7 @@ theorem finrank_bubbleSpace_polyMinusSpace {r k : ℕ} (hr : 1 ≤ r) (hk : k �
     have hω : (ω : FormField n) ∈ polyMinusSpace n r k := localPolyMinusSpace_eq hp r k ▸ ω.2
     have hbub : IsBubble (refVertex n) ω := by
       intro m e hm
-      have h := faceTrace_eq_of_localDofMinus_eq hp hr (Face.ofEmb e) (ω := ω) (ω' := 0)
+      have h := faceTrace_eq_of_localDofMinus_eq hp (Face.ofEmb e) (ω := ω) (ω' := 0)
         fun g hg i => by
           rw [map_zero, hℓ.dof_equiv_symm]
           simp only [c', (Face.dim_lt_of_subset e hm hg).ne, ↓reduceDIte]

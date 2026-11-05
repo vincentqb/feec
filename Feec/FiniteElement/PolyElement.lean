@@ -175,7 +175,7 @@ theorem eq_zero_of_faceMoment {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind
       faceMoment p e η ω = 0) : ω = 0 := by
   cases κ
   · exact eq_zero_of_faceMoment_eq_zero_simplex hp hr k hω hdof
-  · exact eq_zero_of_faceMoment_eq_zero_minus_simplex hp hr k hω hdof
+  · exact eq_zero_of_faceMoment_eq_zero_minus_simplex hp k hω hdof
 
 /-- **Trace determination** (`faceTrace_eq_of_localDof_eq`, `faceTrace_eq_of_localDofMinus_eq`):
 the moments on a face `f` of `p` and on its subfaces determine the trace on `f`. -/
@@ -189,25 +189,21 @@ theorem faceTrace_eq {p : Fin (n + 1) → Fin n → ℝ} (κ : PolyKind)
   · exact faceTrace_eq_of_localDof_eq hp hr f (ω := ⟨ω, (localPolySpace_eq hp r k).symm ▸ hω⟩)
       (ω' := ⟨ω', (localPolySpace_eq hp r k).symm ▸ hω'⟩)
       fun g hg i => h g hg _ (testBasis r k g.dim i).2
-  · exact faceTrace_eq_of_localDofMinus_eq hp hr f
+  · exact faceTrace_eq_of_localDofMinus_eq hp f
       (ω := ⟨ω, (localPolyMinusSpace_eq hp r k).symm ▸ hω⟩)
       (ω' := ⟨ω', (localPolyMinusSpace_eq hp r k).symm ▸ hω'⟩)
       fun g hg i => h g hg _ (testBasisMinus r k g.dim i).2
 
 /-! ### Admissible transitions -/
 
-/-- **`d` maps the source space into the target space** along an admissible transition:
-`d P_rΛᵏ ⊆ P_{r-1}Λᵏ⁺¹ ⊆ P_r⁻Λᵏ⁺¹` and `d P_r⁻Λᵏ ⊆ P_{r-1}Λᵏ⁺¹ ⊆ P_r⁻Λᵏ⁺¹` (`r ≥ 1`). -/
-theorem extDeriv_mem_space (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) {κ' : PolyKind} {r' : ℕ}
+/-- **`d` maps the source space into the target space** along an admissible transition: `d P_rΛᵏ`
+and `d P_r⁻Λᵏ` lie in `P_r⁻Λᵏ⁺¹` and in `P_{r-1}Λᵏ⁺¹` (`PolyKind.extDeriv_mem_form`). -/
+theorem extDeriv_mem_space (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : FormField n} (hω : ω ∈ κ.space n r k) :
     extDeriv ω ∈ κ'.space n r' (k + 1) := by
-  have hfull : extDeriv ω ∈ polySpace n (r - 1) (k + 1) := by
-    cases κ
-    · exact extDeriv_mem_polySpace hω
-    · exact extDeriv_mem_polySpace (polyMinusSpace_le_polySpace hr hω)
-  rcases ht with ⟨rfl, rfl⟩ | ⟨rfl, rfl⟩
-  · exact polySpace_le_polyMinusSpace hr (k + 1) hfull
-  · simpa using hfull
+  rw [space_eq_map_form] at hω ⊢
+  obtain ⟨Ω, hΩ, rfl⟩ := hω
+  exact ⟨_, κ.extDeriv_mem_form ht hΩ, (extDeriv_evalForm Ω).symm⟩
 
 /-- **Test forms along an admissible transition**: if `η` is a test form of the target family in
 degree `k + 1` on an `(M+1)`-face, its traces on the facets and `dη` are test forms of the source
@@ -261,8 +257,7 @@ theorem test_of_transition (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
       change η ∈ testSpace r' (k + 1) (M + 1) at hη
       by_cases hc : k + 1 ≤ M + 1 ∧ M + 1 < r' + (k + 1)
       · rw [testSpace_eq hc] at hη
-        have hs : 1 ≤ r' + (k + 1) - (M + 1) := by omega
-        have hη' := polyMinusSpace_le_polySpace hs hη
+        have hη' := polyMinusSpace_le_polySpace hη
         refine ⟨fun i => ?_, ?_⟩
         · change _ ∈ testSpaceMinus (r' + 1) k M
           rw [testSpaceMinus_eq (by omega)]
@@ -914,7 +909,7 @@ def polyElement (n : ℕ) (S : PolySeq) : LocalElement n where
   space _ k := S.space n k
   contDiff_of_mem h := (PolyKind.contDiff_of_mem_space h).of_le le_top
   isDeg_of_mem h x := PolyKind.isDeg_of_mem_space h x
-  extDeriv_mem {_ k _} h := PolyKind.extDeriv_mem_space _ (S.one_le_deg k) (S.transition k) h
+  extDeriv_mem {_ k _} h := PolyKind.extDeriv_mem_space _ (S.transition k) h
   finiteDimensional _ _ := inferInstance
   DofIdx := S.DofIdx
   dofIdxFintype _ _ := inferInstance

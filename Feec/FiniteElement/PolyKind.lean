@@ -26,8 +26,8 @@ shape spaces and test forms of the degrees of freedom as spaces of polynomial fo
   ([AFW2006], Thms 4.9, 4.13), via the Vandermonde identity `sum_choose_mul_choose_eq`;
 * `PolyKind.IsAdmissible`: the admissible sequences of [AFW2006], §3.5, (5.13), including those
   whose degree reaches `0` (a full space `P_0Λᵏ`, then `P_0⁻Λ = 0`), their polynomial complexes
-  (`IsAdmissible.extDeriv_mem`) and exactness (`IsAdmissible.exists_extDeriv_eq`,
-  `IsAdmissible.mem_polyForm_zero_of_extDeriv_eq_zero`).
+  (`IsAdmissible.extDeriv_mem`) and exactness (`IsAdmissible.exists_extDeriv_eq`; in degree `0`,
+  `PolyKind.mem_polyForm_zero_of_extDeriv_eq_zero` for every family and degree).
 
 ## References
 
@@ -139,18 +139,18 @@ theorem testForm_eq_bot (κ : PolyKind) {r k m : ℕ} (h : ¬(k ≤ m ∧ m < r 
     κ.testForm K r k m = ⊥ := by
   cases κ <;> simp only [testForm, h, ↓reduceIte]
 
-/-- `P_r⁻Λᵏ ⊆ P_rΛᵏ` (`r ≥ 1`): both families lie in `P_rΛᵏ`. -/
-theorem form_le_polyForm (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+/-- `P_r⁻Λᵏ ⊆ P_rΛᵏ`: both families lie in `P_rΛᵏ`. -/
+theorem form_le_polyForm (κ : PolyKind) (r k : ℕ) :
     κ.form K r k ≤ Koszul.polyForm K (Fin n) r k := by
   cases κ
   · exact le_rfl
-  · exact Koszul.polyFormMinus_le_polyForm hr k
+  · exact Koszul.polyFormMinus_le_polyForm r k
 
-/-- Both families contain `P_r⁻Λᵏ` (`r ≥ 1`). -/
-theorem polyFormMinus_le_form (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+/-- Both families contain `P_r⁻Λᵏ`. -/
+theorem polyFormMinus_le_form (κ : PolyKind) (r k : ℕ) :
     Koszul.polyFormMinus K (Fin n) r k ≤ κ.form K r k := by
   cases κ
-  · exact Koszul.polyFormMinus_le_polyForm hr k
+  · exact Koszul.polyFormMinus_le_polyForm r k
   · exact le_rfl
 
 /-- The target `P_r⁻Λᵏ` or `P_{r-1}Λᵏ` of an admissible transition from degree `r` lies in
@@ -189,18 +189,15 @@ theorem exists_extDeriv_eq (κ : PolyKind) {r : ℕ} {κ' : PolyKind} {r' : ℕ}
     (ht : Transition r κ' r') {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ κ'.form K r' (k + 1)) (hd : Koszul.extDeriv ω = 0) :
     ∃ η ∈ κ.form K r k, Koszul.extDeriv η = ω := by
-  rcases Nat.eq_zero_or_pos r with rfl | hr
-  · obtain ⟨rfl, rfl⟩ : κ' = trimmed ∧ r' = 0 := ht.resolve_right (by omega)
-    exact ⟨0, zero_mem _, by rw [Koszul.extDeriv_zero, (Submodule.mem_bot K).1 hω]⟩
   obtain ⟨η, hη, he⟩ :=
-    Koszul.exists_extDeriv_eq_of_mem_polyFormMinus hr (form_le_polyFormMinus ht _ hω) hd
-  exact ⟨η, κ.polyFormMinus_le_form hr k hη, he⟩
+    Koszul.exists_extDeriv_eq_of_mem_polyFormMinus (form_le_polyFormMinus ht _ hω) hd
+  exact ⟨η, κ.polyFormMinus_le_form r k hη, he⟩
 
-/-- **The closed `0`-forms are the constants** (`K` of characteristic `0`, `r ≥ 1`). -/
-theorem mem_polyForm_zero_of_extDeriv_eq_zero (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r)
+/-- **The closed `0`-forms are the constants** (`K` of characteristic `0`). -/
+theorem mem_polyForm_zero_of_extDeriv_eq_zero (κ : PolyKind) {r : ℕ}
     {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ κ.form K r 0) (hd : Koszul.extDeriv ω = 0) :
     ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
-  Koszul.mem_polyForm_zero_of_extDeriv_eq_zero (κ.form_le_polyForm hr 0 hω).1 hd
+  Koszul.mem_polyForm_zero_of_extDeriv_eq_zero (κ.form_le_polyForm r 0 hω).1 hd
 
 /-- `dim` of the test forms, over every field of characteristic `0`. -/
 theorem finrank_testForm (κ : PolyKind) {r : ℕ} (hr : 1 ≤ r) (k m : ℕ) :
@@ -280,13 +277,6 @@ theorem exists_extDeriv_eq {k : ℕ} {ω : Koszul.PolyForm K (Fin n)}
     (hω : ω ∈ (κ (k + 1)).form K (r (k + 1)) (k + 1)) (hd : Koszul.extDeriv ω = 0) :
     ∃ η ∈ (κ k).form K (r k) k, Koszul.extDeriv η = ω :=
   (κ k).exists_extDeriv_eq (h.transition k) hω hd
-
-/-- **The closed `0`-forms of an admissible sequence are the constants**, over every field of
-characteristic `0`. -/
-theorem mem_polyForm_zero_of_extDeriv_eq_zero {ω : Koszul.PolyForm K (Fin n)}
-    (hω : ω ∈ (κ 0).form K (r 0) 0) (hd : Koszul.extDeriv ω = 0) :
-    ω ∈ Koszul.polyForm K (Fin n) 0 0 :=
-  (κ 0).mem_polyForm_zero_of_extDeriv_eq_zero h.one_le hω hd
 
 end IsAdmissible
 

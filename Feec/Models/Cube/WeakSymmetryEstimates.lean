@@ -160,7 +160,7 @@ theorem exists_formL2Sq_polyMinusInterp_le (K : Affine.Simplex ℝ (Fin n → �
   have hdeg := isDeg_of_mem_polySpace hu
   set w : FormField n := (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K))
     hr' hk ⟨u, polySpace_le_contDegForms r k hu⟩ : FormField n)
-  have hwdeg : ∀ x, IsDeg k (w x) := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace hr'
+  have hwdeg : ∀ x, IsDeg k (w x) := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace
       (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix _)
         (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr' hk
           ⟨u, polySpace_le_contDegForms r k hu⟩).2))
@@ -1091,7 +1091,7 @@ theorem refGap_pos : 0 < refGap := by
     (isUnit_det_edgeMatrix refK) (polyMinusInterp (isUnit_det_edgeMatrix refK) (r := 1)
       le_rfl (by norm_num : 2 ≤ 3) ⟨refZ, refZ_mem_contDegForms⟩).2
   have hu : refZ - P ∈ polySpace 3 1 2 :=
-    Submodule.sub_mem _ refZ_mem (polyMinusSpace_le_polySpace le_rfl hPm)
+    Submodule.sub_mem _ refZ_mem (polyMinusSpace_le_polySpace hPm)
   have hK := refK.isCompact_closedInterior
   refine lt_of_le_of_ne (formL2Sq_nonneg hK.measurableSet _) fun h0 => ?_
   have hinj := l2EmbedOf_injective_of_le_polySpace (le_refl (polySpace 3 1 2)) hK
@@ -1156,7 +1156,7 @@ theorem formL2Sq_sub_localInterp_of_pullback {h : ℝ} (hh : 0 < h) (t : Fin 3 �
     rw [e, hnat, hsm, map_smul, hpull, smul_sub]
     rfl
   have hPdeg : ∀ x, IsDeg 2 (P x) := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace
-    (r := 1) le_rfl (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix q)
+    (r := 1) (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix q)
       (polyMinusInterp (isUnit_det_edgeMatrix q) (PolySeq.lowestOrder.one_le_deg (1 + 1))
         (by norm_num : 1 + 1 ≤ 3) ⟨Z, hZc⟩).2))
   have hdeg : ∀ x, IsDeg 2 ((Z - P) x) := fun x s hs => by
@@ -1202,7 +1202,7 @@ theorem refDist_pos : 0 < refDist := by
 /-- `‖Ẑ − p‖²_{L²(K₁)} ≥ δ₀²` for every `p ∈ P₁⁻Λ²`. -/
 theorem refDist_sq_le {p : FormField 3} (hp : p ∈ polyMinusSpace 3 1 2) :
     refDist ^ 2 ≤ formL2Sq refK.closedInterior (refZ - p) := by
-  have hpp : p ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace le_rfl hp
+  have hpp : p ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace hp
   have hmem : refEmb ⟨p, hpp⟩ ∈ refMinusL2 := Submodule.mem_map_of_mem (by exact hp)
   have h1 := Metric.infDist_le_dist_of_mem (x := refEmb ⟨refZ, refZ_mem⟩) hmem
   rw [dist_eq_norm, ← map_sub] at h1
@@ -1224,7 +1224,7 @@ theorem mul_refDist_sq_le_formL2Sq {h : ℝ} (hh : 0 < h) (t : Fin 3 → ℝ)
       (mapEquiv (boxMap t h hh.ne') (kuhnSimplex (1 : Equiv.Perm (Fin 3)))).closedInterior
         (Z - w) := by
   rw [← closedInterior_mapEquiv_lexSimplex _ t hh.ne']
-  have hwp : w ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace le_rfl hw
+  have hwp : w ∈ polySpace 3 1 2 := polyMinusSpace_le_polySpace hw
   have hdeg : ∀ x, IsDeg 2 ((Z - w) x) := fun x s hs => by
     simp only [Pi.sub_apply]
     rw [isDeg_of_mem_polySpace hZ x s hs, isDeg_of_mem_polySpace hwp x s hs, sub_zero]

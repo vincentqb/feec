@@ -421,9 +421,8 @@ theorem polySpace_le_c1 {r k : ℕ} {ω : FormField n} (h : ω ∈ polySpace n r
   obtain ⟨Ω, -, rfl⟩ := h
   exact contDiff_evalForm Ω
 
-theorem polyMinusSpace_le_polySpace {r k : ℕ} (hr : 1 ≤ r) :
-    polyMinusSpace n r k ≤ polySpace n r k :=
-  Submodule.map_mono (Koszul.polyFormMinus_le_polyForm hr k)
+theorem polyMinusSpace_le_polySpace {r k : ℕ} : polyMinusSpace n r k ≤ polySpace n r k :=
+  Submodule.map_mono (Koszul.polyFormMinus_le_polyForm r k)
 
 theorem polySpace_le_polyMinusSpace {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     polySpace n (r - 1) k ≤ polyMinusSpace n r k :=
@@ -432,7 +431,7 @@ theorem polySpace_le_polyMinusSpace {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
 /-- **`P_r⁻Λ⁰ = P_rΛ⁰`** (`r ≥ 1`): the trimmed and full families agree on functions.
 [AFW2006], §3 -/
 theorem polyMinusSpace_zero {r : ℕ} (hr : 1 ≤ r) : polyMinusSpace n r 0 = polySpace n r 0 := by
-  rw [polyMinusSpace, polySpace, Koszul.polyFormMinus_zero hr]
+  rw [polyMinusSpace, polySpace, Koszul.polyFormMinus_zero_right hr]
 
 /-- **`P_r⁻Λⁿ = P_{r-1}Λⁿ`** (`r ≥ 1`): in the top degree the trimmed space is the full space of
 one degree less (for `r = 1`, the constants: piecewise constants are `P₁⁻Λⁿ`). [AFW2006], §3 -/
@@ -480,8 +479,7 @@ along `F_T⁻¹`. -/
 def localPolySpace (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : Submodule ℝ (FormField n) :=
   (polySpace n r k).map (affinePullbackₗ (invMatrix p) (invOffset p))
 
-/-- **The local space** `P_r⁻Λᵏ(T)`: the pullback of `P_r⁻Λᵏ(ℝⁿ)` along `F_T⁻¹`
-(meaningful for `1 ≤ r`; see `polyMinusSpace`). -/
+/-- **The local space** `P_r⁻Λᵏ(T)`: the pullback of `P_r⁻Λᵏ(ℝⁿ)` along `F_T⁻¹`. -/
 def localPolyMinusSpace (p : Fin (n + 1) → Fin n → ℝ) (r k : ℕ) : Submodule ℝ (FormField n) :=
   (polyMinusSpace n r k).map (affinePullbackₗ (invMatrix p) (invOffset p))
 
@@ -951,7 +949,7 @@ theorem eq_zero_of_isBubble_of_mem_polyForm {r k : ℕ} (hr : 1 ≤ r)
   by_cases hkn : n ≤ k
   · refine eq_zero_of_coordTrace_of_integral hΩ hbub.eval_eq_zero fun hnr H hH => ?_
     refine hint (by omega) H ?_
-    rw [show n - k = 0 by omega, Koszul.polyFormMinus_zero (by omega)]
+    rw [show n - k = 0 by omega, Koszul.polyFormMinus_zero_right (by omega)]
     rwa [show n - k = 0 by omega] at hH
   obtain ⟨N, rfl⟩ : ∃ N, n = N + 1 := ⟨n - 1, by omega⟩
   have hdmem := Koszul.extDeriv_mem_polyForm hΩ
@@ -981,20 +979,22 @@ theorem eq_zero_of_isBubble_of_mem_polyForm {r k : ℕ} (hr : 1 ≤ r)
     obtain ⟨c, -, rfl⟩ := Koszul.exists_extDeriv_eq_of_mem_polyForm hH
       (extDeriv_eq_zero_of_mem_polyForm_zero hH)
     exact integral_wedge_extDeriv_eq_zero_of_isBubble hΩ.1 hbub hd
-  · rw [← Koszul.polyFormMinus_sup_map_extDeriv hs] at hH
+  · rw [← Koszul.polyFormMinus_sup_map_extDeriv] at hH
     obtain ⟨a, ha, b, ⟨c, -, rfl⟩, rfl⟩ := Submodule.mem_sup.1 hH
     rw [integral_wedge_add, hint (by omega) a (by rwa [hj]),
       show (Koszul.extDerivₗ ℝ (Fin (N + 1))) c = Koszul.extDeriv c from rfl,
       integral_wedge_extDeriv_eq_zero_of_isBubble hΩ.1 hbub hd, add_zero]
 
-/-- **[AFW2006], Lemma 4.11** (bubbles of `P_r⁻Λᵏ`): if `ω ∈ P_r⁻Λᵏ(T̂)` (`r ≥ 1`) has vanishing
-trace on `∂T̂` and `∫_{T̂} ω ∧ η = 0` for all `η ∈ P_{r+k-n-1}Λ^{n-k}` (a condition only when
-`r + k > n`), then `ω = 0`. -/
-theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
+/-- **[AFW2006], Lemma 4.11** (bubbles of `P_r⁻Λᵏ`): if `ω ∈ P_r⁻Λᵏ(T̂)` has vanishing trace on
+`∂T̂` and `∫_{T̂} ω ∧ η = 0` for all `η ∈ P_{r+k-n-1}Λ^{n-k}` (a condition only when `r + k > n`),
+then `ω = 0`. -/
+theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ}
     {Ω : Koszul.PolyForm ℝ (Fin n)} (hΩ : Ω ∈ Koszul.polyFormMinus ℝ (Fin n) r k)
     (hbub : IsBubble (refVertex n) (evalForm n Ω))
     (hint : n < r + k → ∀ H ∈ Koszul.polyForm ℝ (Fin n) (r + k - n - 1) (n - k),
       ∫ x in refSimplex n, eval x (wedgeForm Ω H univ) = 0) : Ω = 0 := by
+  rcases Nat.eq_zero_or_pos r with rfl | hr
+  · exact (Submodule.mem_bot ℝ).1 hΩ
   by_cases hkn : n ≤ k
   · by_cases hkn' : k = n
     · subst hkn'
@@ -1023,7 +1023,7 @@ theorem eq_zero_of_isBubble_of_mem_polyFormMinus {r k : ℕ} (hr : 1 ≤ r)
     · have hM0 : Koszul.extDeriv M = 0 := extDeriv_eq_zero_of_mem_polyForm_zero
         (by rwa [show r - 1 + (k + 1) - (N + 1) = 0 by omega] at hM)
       rw [hM0]; simp
-  have hΩ' := Koszul.mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero hr hΩ hd
+  have hΩ' := Koszul.mem_polyForm_of_mem_polyFormMinus_of_extDeriv_eq_zero hΩ hd
   refine eq_zero_of_coordTrace_of_integral hΩ' hbub.eval_eq_zero fun hnr H hH => ?_
   exact hint (by omega) H (by rwa [show r - 1 + k - (N + 1) = r + k - (N + 1) - 1 by omega] at hH)
 
@@ -1048,12 +1048,12 @@ theorem eq_zero_of_mem_bubbleSpace_polySpace {r k : ℕ} (hr : 1 ≤ r) {ω : Fo
 
 /-- **The bubbles of `P_r⁻Λᵏ(T̂)` are detected by `P_{r+k-n-1}Λ^{n-k}(T̂)`** ([AFW2006],
 Lemma 4.11); `P̊_r⁻Λᵏ(T̂) = 0` when `r + k ≤ n`. -/
-theorem eq_zero_of_mem_bubbleSpace_polyMinusSpace {r k : ℕ} (hr : 1 ≤ r) {ω : FormField n}
+theorem eq_zero_of_mem_bubbleSpace_polyMinusSpace {r k : ℕ} {ω : FormField n}
     (hω : ω ∈ bubbleSpace (refVertex n) (polyMinusSpace n r k))
     (hint : n < r + k → ∀ η ∈ polySpace n (r + k - n - 1) (n - k),
       simplexIntegral (refVertex n) (wedgeField ω η) = 0) : ω = 0 := by
   obtain ⟨⟨Ω, hΩ, rfl⟩, hbub⟩ := hω
-  rw [eq_zero_of_isBubble_of_mem_polyFormMinus hr hΩ hbub fun h H hH => by
+  rw [eq_zero_of_isBubble_of_mem_polyFormMinus hΩ hbub fun h H hH => by
     rw [← simplexIntegral_wedgeField_evalForm]; exact hint h _ ⟨H, hH, rfl⟩, map_zero]
 
 end Feec.FiniteElement

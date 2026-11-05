@@ -739,7 +739,7 @@ theorem transportInterp_polyMinusRefInterp_eq (K : Affine.Simplex ℝ (Fin n →
   set P := (polyMinusInterp (isUnit_det_edgeMatrix T) hr hk ⟨w, mem_contDegForms hwc hwk⟩ :
     FormField n)
   have hhk : h ^ k ≠ 0 := pow_ne_zero k hh.ne'
-  have hPdeg : ∀ x, IsDeg k (P x) := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace hr
+  have hPdeg : ∀ x, IsDeg k (P x) := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace
     (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix T)
       (polyMinusInterp (isUnit_det_edgeMatrix T) hr hk ⟨w, mem_contDegForms hwc hwk⟩).2))
   have hrefw : refPullback T Φ w = (h ^ k)⁻¹ •
@@ -878,7 +878,7 @@ theorem mem_polySpace_of_eq_const {s : ℕ} {v : FormField n} (hv : ∀ x, v x =
 /-- `Π_K` of `P_{r'}⁻Λᵏ(K)` as a linear map `P_rΛᵏ → P_rΛᵏ` (`r' ≤ r`). -/
 def polyMinusInterpOn (K : Affine.Simplex ℝ (Fin n → ℝ) n) {r' : ℕ} (hr' : 1 ≤ r') (hk : k ≤ n)
     (hrr : r' ≤ r) : polySpace n r k →ₗ[ℝ] polySpace n r k :=
-  Submodule.inclusion (fun _ hω => polySpace_mono hrr (polyMinusSpace_le_polySpace hr'
+  Submodule.inclusion (fun _ hω => polySpace_mono hrr (polyMinusSpace_le_polySpace
       (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix K) hω))) ∘ₗ
     polyMinusInterp (isUnit_det_edgeMatrix K) hr' hk ∘ₗ
       Submodule.inclusion (polySpace_le_contDegForms r k)
@@ -912,7 +912,7 @@ theorem exists_formL2Sq_sub_polyMinusInterp_le_formGradL2Sq (K : Affine.Simplex 
     (fun h t _ hu => affinePullback_mem_polySpace_scalarMat h t hu) le_rfl
     (LinearMap.id - P : polySpace n r k →ₗ[ℝ] polySpace n r k) hP K
   refine ⟨C, hC0, fun {h} hh t u hu => hC hh t u hu _ (fun x => ?_) ?_⟩
-  · have hPi := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace hr'
+  · have hPi := isDeg_of_mem_polySpace (polyMinusSpace_le_polySpace
       (mem_polyMinusSpace_of_mem_localPolyMinusSpace (isUnit_det_edgeMatrix _)
         (polyMinusInterp (isUnit_det_edgeMatrix (mapEquiv (boxMap t h hh.ne') K)) hr' hk
           ⟨u, polySpace_le_contDegForms r k hu⟩).2))
@@ -986,7 +986,7 @@ theorem space_le_polySpace (k : ℕ) : S.space n k ≤ polySpace n (S.deg k) k :
   change (S.kind k).space n (S.deg k) k ≤ _
   cases S.kind k
   · exact le_rfl
-  · exact polyMinusSpace_le_polySpace (S.one_le_deg k)
+  · exact polyMinusSpace_le_polySpace
 
 theorem affinePullback_mem_space_scalarMat (k : ℕ) (h : ℝ) (t : Fin n → ℝ) {u : FormField n}
     (hu : u ∈ S.space n k) : affinePullback (scalarMat n h) t u ∈ S.space n k := by

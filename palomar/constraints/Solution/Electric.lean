@@ -17,6 +17,7 @@ conditions are those of the minimal grad–curl complex of `Feec`,
 * `IsGrad₀` and `IsCurl₀` are the graphs of `d₀` and `d₁` (`graph_grad_iff`, `graph_curl_iff`), by
   the weak characterization of a closed operator through its adjoint
   (`LinearPMap.mem_graph_iff_of_isClosed`);
+* the real states are carried to `PiLp 2 (Ident.WC b s)` by the unitary `toPiRI`;
 * `IsWave₀` is the graph of the wave operator (`isWave₀_iff`), `Constraint₀` is
   `{0} × L²(TSD) × L²(TSD)` (`constraint₀_iff`, `isTSD₀_iff`), and the strong solutions are those
   of `Feec.Evolution` (`isStrongSolution₀_iff`).
@@ -310,47 +311,53 @@ theorem graph_curl_iff (E C : Mat ℝ b s) :
 /-! ### The states, the wave operator and the constraint -/
 
 /-- The real states `(σ, E, B)` as elements of `PiLp 2 (Ident.WC b s)`. -/
-def toPiR : State ℝ b s ≃L[ℝ] PiLp 2 (Feec.Models.Cube.Ident.WC b s) where
+def toPiRₗ : State ℝ b s ≃ₗ[ℝ] PiLp 2 (Feec.Models.Cube.Ident.WC b s) where
   toFun U := WithLp.toLp 2 fun i => match i with
-    | 0 => U.1
-    | 1 => U.2.1
-    | 2 => U.2.2
-  invFun x := (x 0, x 1, x 2)
+    | 0 => U.fst
+    | 1 => U.snd.fst
+    | 2 => U.snd.snd
+  invFun x := WithLp.toLp 2 (x 0, WithLp.toLp 2 (x 1, x 2))
   map_add' U V := by ext i; fin_cases i <;> rfl
   map_smul' c U := by ext i; fin_cases i <;> rfl
   left_inv U := rfl
   right_inv x := by ext i; fin_cases i <;> rfl
-  continuous_toFun := (PiLp.continuous_toLp 2 _).comp (continuous_pi fun i => by
-    fin_cases i
-    exacts [continuous_fst, continuous_fst.comp continuous_snd, continuous_snd.comp continuous_snd])
-  continuous_invFun := (PiLp.continuous_apply 2 _ 0).prodMk
-    ((PiLp.continuous_apply 2 _ 1).prodMk (PiLp.continuous_apply 2 _ 2))
+
+/-- `toPiRₗ` is unitary. -/
+def toPiRI : State ℝ b s ≃ₗᵢ[ℝ] PiLp 2 (Feec.Models.Cube.Ident.WC b s) :=
+  toPiRₗ.isometryOfInner fun U V => by
+    rw [PiLp.inner_apply, Fin.sum_univ_three, WithLp.prod_inner_apply, WithLp.prod_inner_apply,
+      add_assoc]
+    rfl
+
+/-- The real states as elements of `PiLp 2 (Ident.WC b s)`, a continuous linear isomorphism. -/
+def toPiR : State ℝ b s ≃L[ℝ] PiLp 2 (Feec.Models.Cube.Ident.WC b s) :=
+  toPiRI.toContinuousLinearEquiv
 
 /-- **`IsWave₀` is the graph of the wave operator of the electric complex.** -/
 theorem isWave₀_iff (U V : State ℝ b s) :
     IsWave₀ b s U V ↔ (toPiR U, toPiR V) ∈ (elec b s).wave.graph := by
   rw [mem_graph_iff']
   constructor
-  · rintro ⟨G, CE, D, CB, hG, hCE, hD, hCB, rfl⟩
+  · rintro ⟨hD, ⟨G, CB, hG, hCB, hV1⟩, hCE⟩
     obtain ⟨h0, e0⟩ := mem_graph_iff'.1 ((graph_grad_iff _ _).2 hG)
     obtain ⟨h1, e1⟩ := mem_graph_iff'.1 ((graph_curl_iff _ _).2 hCE)
-    obtain ⟨h1', e1'⟩ := mem_graph_iff'.1 ((graph_adjoint_grad_iff U.2.1 (-D)).2
+    obtain ⟨h1', e1'⟩ := mem_graph_iff'.1 ((graph_adjoint_grad_iff U.snd.fst (-V.fst)).2
       (by rwa [neg_neg]))
     obtain ⟨h2, e2⟩ := mem_graph_iff'.1 ((graph_adjoint_curl_iff _ _).2 hCB)
     have hx : toPiR U ∈ (elec b s).wave.domain :=
       HilbertComplex.mem_wave_domain_fin3 _ h0 h1 h1' h2
     refine ⟨hx, ?_⟩
-    have k0 : ((elec b s).wave ⟨_, hx⟩) 0 = D := by
+    have k0 : ((elec b s).wave ⟨_, hx⟩) 0 = V.fst := by
       rw [HilbertComplex.wave_apply_fin3_zero]
-      change -((elec b s).d 0 1)† ⟨U.2.1, h1'⟩ = D
+      change -((elec b s).d 0 1)† ⟨U.snd.fst, h1'⟩ = V.fst
       rw [e1']
-      exact neg_neg D
-    have k1 : ((elec b s).wave ⟨_, hx⟩) 1 = G - CB := by
+      exact neg_neg _
+    have k1 : ((elec b s).wave ⟨_, hx⟩) 1 = V.snd.fst := by
       rw [HilbertComplex.wave_apply_fin3_one]
-      change (elec b s).d 0 1 ⟨U.1, h0⟩ - ((elec b s).d 1 2)† ⟨U.2.2, h2⟩ = _
-      rw [e0, e2]
+      change (elec b s).d 0 1 ⟨U.fst, h0⟩ - ((elec b s).d 1 2)† ⟨U.snd.snd, h2⟩ = _
+      rw [e0, e2, hV1]
       rfl
-    have k2 : ((elec b s).wave ⟨_, hx⟩) 2 = CE := by
+    have k2 : ((elec b s).wave ⟨_, hx⟩) 2 = V.snd.snd := by
       rw [HilbertComplex.wave_apply_fin3_two]
       exact e1
     exact PiLp.ext fun i => by fin_cases i; exacts [k0, k1, k2]
@@ -361,15 +368,15 @@ theorem isWave₀_iff (U V : State ℝ b s) :
     have k2 := congrArg (fun y : PiLp 2 (Feec.Models.Cube.Ident.WC b s) => y 2) e
     simp only [HilbertComplex.wave_apply_fin3_zero, HilbertComplex.wave_apply_fin3_one,
       HilbertComplex.wave_apply_fin3_two] at k0 k1 k2
-    have hD : IsDiv b s (fun _ => IsCompactTest b s) U.2.1
-        (-((elec b s).d 0 1)† ⟨U.2.1, hd' 0 1⟩) :=
-      (graph_adjoint_grad_iff _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩)
-    refine ⟨(elec b s).d 0 1 ⟨U.1, hd 0 1⟩, (elec b s).d 1 2 ⟨U.2.1, hd 1 2⟩,
-      -((elec b s).d 0 1)† ⟨U.2.1, hd' 0 1⟩, ((elec b s).d 1 2)† ⟨U.2.2, hd' 1 2⟩,
+    refine ⟨?_, ⟨(elec b s).d 0 1 ⟨U.fst, hd 0 1⟩, ((elec b s).d 1 2)† ⟨U.snd.snd, hd' 1 2⟩,
       (graph_grad_iff _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩),
-      (graph_curl_iff _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩), hD,
-      (graph_adjoint_curl_iff _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩), ?_⟩
-    exact Prod.ext k0.symm (Prod.ext k1.symm k2.symm)
+      (graph_adjoint_curl_iff _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩), k1.symm⟩, ?_⟩
+    · have e0 : V.fst = -((elec b s).d 0 1)† ⟨U.snd.fst, hd' 0 1⟩ := k0.symm
+      rw [e0]
+      exact (graph_adjoint_grad_iff _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩)
+    · have e2 : V.snd.snd = (elec b s).d 1 2 ⟨U.snd.fst, hd 1 2⟩ := k2.symm
+      rw [e2]
+      exact (graph_curl_iff _ _).1 (mem_graph_iff'.2 ⟨hd 1 2, rfl⟩)
 
 /-- **`IsTSD₀` is `L²(TSD)`**, the TSD fields of `Feec` (no boundary condition). -/
 theorem isTSD₀_iff (E : Mat ℝ b s) :

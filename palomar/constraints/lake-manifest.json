@@ -120,7 +120,7 @@
    "configFile": "lakefile.toml"
   }
  ],
- "name": "FeecPalomarEinsteinBianchi",
+ "name": "FeecPalomarConstraints",
  "lakeDir": ".lake",
  "fixedToolchain": false
 }

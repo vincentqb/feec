@@ -1,6 +1,6 @@
 module
 
-public import Solution.Defs
+public import Solution.General
 public import Feec.Models.Cube.MirrorTrace
 
 /-!
@@ -8,7 +8,8 @@ public import Feec.Models.Cube.MirrorTrace
 
 The fields of `Challenge.lean` on the cube `C = ∏ (bᵢ, bᵢ + s)` are those of `Feec`
 (`Feec.Domain.L2F ℂ (openCube b s) _`, by definition); the states `(σ, E, B)` are carried to
-`PiLp 2 (Feec.Models.Cube.Mirror.SpaceCube b s)` by the isomorphism `toPi`. Along it:
+`PiLp 2 (Feec.Models.Cube.Mirror.SpaceCube b s)` by the unitary `toPiI` (`toPi` as a continuous
+linear isomorphism): both are `ℓ²` sums of `σ`, `E`, `B`. Along it:
 
 * the test functions `IsTest` are the trace test functions `Mirror.IsTraceTestCube` of the parity
   of each formula (`isTest_iff`), so the Green's formulas `IsGrad`, `IsCurl`, `IsDiv` are those of
@@ -225,25 +226,30 @@ omit hs
 /-! ### The states -/
 
 /-- The states `(σ, E, B)` as elements of `PiLp 2 (SpaceCube b s)`. -/
-def toPi : State ℂ b s ≃L[ℂ] PiLp 2 (SpaceCube b s) where
+def toPiₗ : State ℂ b s ≃ₗ[ℂ] PiLp 2 (SpaceCube b s) where
   toFun U := WithLp.toLp 2 fun i => match i with
-    | 0 => U.1
-    | 1 => U.2.1
-    | 2 => U.2.2
-  invFun x := (x 0, x 1, x 2)
+    | 0 => U.fst
+    | 1 => U.snd.fst
+    | 2 => U.snd.snd
+  invFun x := WithLp.toLp 2 (x 0, WithLp.toLp 2 (x 1, x 2))
   map_add' U V := by ext i; fin_cases i <;> rfl
   map_smul' c U := by ext i; fin_cases i <;> rfl
   left_inv U := rfl
   right_inv x := by ext i; fin_cases i <;> rfl
-  continuous_toFun := (PiLp.continuous_toLp 2 _).comp (continuous_pi fun i => by
-    fin_cases i
-    exacts [continuous_fst, continuous_fst.comp continuous_snd, continuous_snd.comp continuous_snd])
-  continuous_invFun := (PiLp.continuous_apply 2 _ 0).prodMk
-    ((PiLp.continuous_apply 2 _ 1).prodMk (PiLp.continuous_apply 2 _ 2))
 
-theorem toPi_zero (U : State ℂ b s) : toPi U 0 = U.1 := rfl
-theorem toPi_one (U : State ℂ b s) : toPi U 1 = U.2.1 := rfl
-theorem toPi_two (U : State ℂ b s) : toPi U 2 = U.2.2 := rfl
+/-- `toPiₗ` is unitary: both inner products are the sums of the inner products of `σ`, `E`, `B`. -/
+def toPiI : State ℂ b s ≃ₗᵢ[ℂ] PiLp 2 (SpaceCube b s) :=
+  toPiₗ.isometryOfInner fun U V => by
+    rw [PiLp.inner_apply, Fin.sum_univ_three, WithLp.prod_inner_apply, WithLp.prod_inner_apply,
+      add_assoc]
+    rfl
+
+/-- The states as elements of `PiLp 2 (SpaceCube b s)`, as a continuous linear isomorphism. -/
+def toPi : State ℂ b s ≃L[ℂ] PiLp 2 (SpaceCube b s) := toPiI.toContinuousLinearEquiv
+
+theorem toPi_zero (U : State ℂ b s) : toPi U 0 = U.fst := rfl
+theorem toPi_one (U : State ℂ b s) : toPi U 1 = U.snd.fst := rfl
+theorem toPi_two (U : State ℂ b s) : toPi U 2 = U.snd.snd := rfl
 
 include hs
 
@@ -252,7 +258,7 @@ theorem isWave_iff (U V : State ℂ b s) :
     IsWave b s U V ↔ (toPi U, toPi V) ∈ (complexCube b s hs).wave.graph := by
   rw [mem_graph_iff']
   constructor
-  · rintro ⟨G, CE, D, CB, hG, hCE, hD, hCB, rfl⟩
+  · rintro ⟨hD, ⟨G, CB, hG, hCB, hV1⟩, hCE⟩
     obtain ⟨h0, e0⟩ := mem_graph_iff'.1 ((graph_d₀_iff hs _ _).2 hG)
     obtain ⟨h1, e1⟩ := mem_graph_iff'.1 ((graph_d₁_iff hs _ _).2 hCE)
     obtain ⟨h1', e1'⟩ := mem_graph_iff'.1 ((graph_adjoint_d₀_iff hs _ _).2 ((isDivE_iff _ _).1 hD))
@@ -260,17 +266,18 @@ theorem isWave_iff (U V : State ℂ b s) :
     have hx : toPi U ∈ (complexCube b s hs).wave.domain :=
       HilbertComplex.mem_wave_domain_fin3 _ h0 h1 h1' h2
     refine ⟨hx, ?_⟩
-    have k0 : ((complexCube b s hs).wave ⟨_, hx⟩) 0 = D := by
+    have k0 : ((complexCube b s hs).wave ⟨_, hx⟩) 0 = V.fst := by
       rw [HilbertComplex.wave_apply_fin3_zero]
-      change -((complexCube b s hs).d 0 1)† ⟨U.2.1, h1'⟩ = D
+      change -((complexCube b s hs).d 0 1)† ⟨U.snd.fst, h1'⟩ = V.fst
       rw [e1']
-      exact neg_neg D
-    have k1 : ((complexCube b s hs).wave ⟨_, hx⟩) 1 = G - CB := by
+      exact neg_neg _
+    have k1 : ((complexCube b s hs).wave ⟨_, hx⟩) 1 = V.snd.fst := by
       rw [HilbertComplex.wave_apply_fin3_one]
-      change (complexCube b s hs).d 0 1 ⟨U.1, h0⟩ - ((complexCube b s hs).d 1 2)† ⟨U.2.2, h2⟩ = _
-      rw [e0, e2]
+      change (complexCube b s hs).d 0 1 ⟨U.fst, h0⟩ -
+        ((complexCube b s hs).d 1 2)† ⟨U.snd.snd, h2⟩ = _
+      rw [e0, e2, hV1]
       rfl
-    have k2 : ((complexCube b s hs).wave ⟨_, hx⟩) 2 = CE := by
+    have k2 : ((complexCube b s hs).wave ⟨_, hx⟩) 2 = V.snd.snd := by
       rw [HilbertComplex.wave_apply_fin3_two]
       exact e1
     exact PiLp.ext fun i => by fin_cases i; exacts [k0, k1, k2]
@@ -281,16 +288,20 @@ theorem isWave_iff (U V : State ℂ b s) :
     have k2 := congrArg (fun y : PiLp 2 (SpaceCube b s) => y 2) e
     simp only [HilbertComplex.wave_apply_fin3_zero, HilbertComplex.wave_apply_fin3_one,
       HilbertComplex.wave_apply_fin3_two] at k0 k1 k2
-    have hD : DivTraceCube b s U.2.1 (-(-((complexCube b s hs).d 0 1)† ⟨U.2.1, hd' 0 1⟩)) := by
+    have hD : DivTraceCube b s U.snd.fst
+        (-(-((complexCube b s hs).d 0 1)† ⟨U.snd.fst, hd' 0 1⟩)) := by
       rw [neg_neg]
       exact (graph_adjoint_d₀_iff hs _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩)
-    refine ⟨(complexCube b s hs).d 0 1 ⟨U.1, hd 0 1⟩, (complexCube b s hs).d 1 2 ⟨U.2.1, hd 1 2⟩,
-      -((complexCube b s hs).d 0 1)† ⟨U.2.1, hd' 0 1⟩,
-      ((complexCube b s hs).d 1 2)† ⟨U.2.2, hd' 1 2⟩,
+    refine ⟨?_, ⟨(complexCube b s hs).d 0 1 ⟨U.fst, hd 0 1⟩,
+      ((complexCube b s hs).d 1 2)† ⟨U.snd.snd, hd' 1 2⟩,
       (graph_d₀_iff hs _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩),
-      (graph_d₁_iff hs _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩), (isDivE_iff _ _).2 hD,
-      (graph_adjoint_d₁_iff hs _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩), ?_⟩
-    exact Prod.ext k0.symm (Prod.ext k1.symm k2.symm)
+      (graph_adjoint_d₁_iff hs _ _).1 (mem_graph_iff'.2 ⟨_, rfl⟩), k1.symm⟩, ?_⟩
+    · have e0 : V.fst = -((complexCube b s hs).d 0 1)† ⟨U.snd.fst, hd' 0 1⟩ := k0.symm
+      rw [e0]
+      exact (isDivE_iff _ _).2 hD
+    · have e2 : V.snd.snd = (complexCube b s hs).d 1 2 ⟨U.snd.fst, hd 1 2⟩ := k2.symm
+      rw [e2]
+      exact (graph_d₁_iff hs _ _).1 (mem_graph_iff'.2 ⟨hd 1 2, rfl⟩)
 
 /-! ### The constraint -/
 
@@ -542,10 +553,10 @@ theorem constraint_iff (U : State ℂ b s) :
     Constraint b s U ↔ toPi U ∈ totalSub (tsdCube b s hs) :=
   ⟨fun h i => by
     fin_cases i
-    exacts [(mem_tsdCube_zero_iff hs _).2 h.1, (mem_tsdCube_one_iff hs _).2 h.2.1,
-      (mem_tsdCube_two_iff hs _).2 h.2.2],
-   fun h => ⟨(mem_tsdCube_zero_iff hs _).1 (h 0), (mem_tsdCube_one_iff hs _).1 (h 1),
-     (mem_tsdCube_two_iff hs _).1 (h 2)⟩⟩
+    exacts [(mem_tsdCube_zero_iff hs U.fst).2 h.1, (mem_tsdCube_one_iff hs U.snd.fst).2 h.2.1,
+      (mem_tsdCube_two_iff hs U.snd.snd).2 h.2.2],
+   fun h => ⟨(mem_tsdCube_zero_iff hs U.fst).1 (h 0), (mem_tsdCube_one_iff hs U.snd.fst).1 (h 1),
+     (mem_tsdCube_two_iff hs U.snd.snd).1 (h 2)⟩⟩
 
 end Constraint
 

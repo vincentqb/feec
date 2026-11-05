@@ -4,6 +4,7 @@ public import Mathlib.Analysis.Calculus.ContDiff.Defs
 public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
 public import Mathlib.MeasureTheory.Constructions.Pi
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
@@ -15,29 +16,35 @@ A linear evolution `u' = A u` often carries a **constraint**: a closed subspace 
 space that the solutions should not leave. For the Hodge wave equation `u' = L u`,
 `L = d - d*`, of a Hilbert complex the constraints are typically divergence conditions (Gauss's
 laws, the TSD conditions of linearized gravity), and whether they propagate depends on the
-boundary conditions built into the complex. This file states a general criterion and decides
-it for three boundary conditions of the linearized Einstein–Bianchi system.
+boundary conditions built into the complex. This file states a general criterion, places it on
+Hilbert complexes, and decides it for three boundary conditions of the linearized
+Einstein–Bianchi system.
 
-**The criterion.** Let `A` be a skew-adjoint operator on a Hilbert space `H` (`A† = -A`, as the
-Hodge wave operator of every closed Hilbert complex; by Stone's theorem `A` generates a unitary
-group), and `K` a closed subspace. Solutions are the mild solutions (`IsMildSolution`, in
-integrated form, cf. [Pazy1983], §4.2), which exist and are unique for every datum
-(`existsUnique_mild`). Then:
+**The criterion.** Let `A` be a skew-adjoint operator on a Hilbert space `H` (`A† = -A`; by
+Stone's theorem `A` generates a unitary group), and `K` a closed subspace. Solutions are the mild
+solutions (`IsMildSolution`, in integrated form, cf. [Pazy1983], §4.2), which exist and are
+unique for every datum (`existsUnique_mild`). Then:
 
 1. (`isReducing_iff_propagates`) every solution starting in `K` stays in `K` for all `t ∈ ℝ`
    (forward and backward; forward invariance alone does not suffice) iff `K` **reduces**
    `A` (`IsReducing`: the orthogonal projection `P_K` maps `D(A)` into `D(A)` and commutes with
    `A` there; [Kato1995], §III.5.6);
 2. (`exists_invariantCore`) the set `K*` of data whose solutions stay in `K` for all `t ∈ ℝ` is
-   the largest
-   closed subspace of `K` reducing `A`: the constraint propagates exactly on `K*`, `A` maps
-   `D(A) ∩ K*` into `K*`, and `D(A) ∩ K*` is dense in `K*`.
+   the largest closed subspace of `K` reducing `A`: the constraint propagates exactly on `K*`,
+   `A` maps `D(A) ∩ K*` into `K*`, and `D(A) ∩ K*` is dense in `K*`.
 
 For an m-dissipative `A` (`IsMDissipative`, a contraction semigroup by Lumer–Phillips, e.g.
-absorbing boundary conditions; that the absorbing operator below is m-dissipative is proved in
-the library, not stated here), solutions on `[0, ∞)` exist and are unique
+absorbing boundary conditions), solutions on `[0, ∞)` exist and are unique
 (`existsUnique_mild_of_isMDissipative`), and `K` reduces `A` iff both `K` and `Kᗮ` propagate
 (`isReducing_iff_propagates_of_isMDissipative`).
+
+**Hilbert complexes.** For a Hilbert complex `H` (`HilbertComplex`, closed densely defined
+`d` with `d ∘ d = 0`, as in [AFW2010], §3.1) and a window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}`:
+
+3. (`HilbertComplex.isSkewAdjoint_wave`) the Hodge wave operator `L = 𝐝 - 𝐝*` is skew-adjoint;
+4. (`HilbertComplex.isReducing_wave`) the total space `∏ Sⁱ` of a reducing subcomplex `S`
+   (`IsReducingSubcomplex`: closed `Sⁱ ⊆ Wⁱ` with `d P_{Sⁱ} = P_{Sʲ} d` on `D(d)`) reduces `L`,
+   so the constraint `∏ Sⁱ` propagates ([QuennevilleBelair2015], Prop 4.16).
 
 **Instances: the linearized Einstein–Bianchi system.** The system ([ACBY1997];
 [QuennevilleBelair2015], §3.4, (4.14)) evolves the electric and magnetic parts `E`, `B` of the
@@ -53,8 +60,11 @@ where `(grad σ)_{ab} = ∂_b σ_a`, and `div` and `curl` act row by row:
 mod 3). The constraint is `σ = 0`, `E` and `B` TSD. Constraint-preserving boundary conditions
 are a central problem of the initial–boundary value problem of general relativity
 ([FriedrichNagy1999]; [CPRST2003]; [KreissWinicour2006]). On an open cube
-`C = ∏ᵢ (bᵢ, bᵢ + s)` of `ℝ³` the invariant core `K*` of the constraint `K` is computed for
-three boundary conditions.
+`C = ∏ᵢ (bᵢ, bᵢ + s)` of `ℝ³` the states `(σ, E, B)` form the Hilbert space
+`L²(C; 𝕜³) ⊕ L²(C; 𝕜³ˣ³) ⊕ L²(C; 𝕜³ˣ³)` (`State`, an `ℓ²` sum; `StateQ` for the absorbing
+case), `L` is given by Green's formulas and shown skew-adjoint (or m-dissipative), and the
+invariant core `K*` of the constraint `K` is decided for three boundary conditions. (That these
+`L` are the Hodge wave operators of grad–curl complexes is used in the proof, not stated.)
 
 **Mirror conditions: `K* = K`.** On a face with normal `n` and tangents `τ`,
 
@@ -73,29 +83,30 @@ faces: for test functions compactly supported in `C` the formula is the weak der
 free traces of the test functions impose the boundary condition. For every open cube, with
 complex fields:
 
-3. (`mirror_propagates`) every datum has a unique solution, and every solution starting in the
-   constraint stays in it;
-4. (`tsd_propagates`) with forcing in the constraint, every strong solution on `[t₀, t₁]` from
+5. (`mirror_propagates`) `L` is skew-adjoint and the constraint reduces it (`K* = K`): every
+   datum has a unique solution, and every solution starting in the constraint stays in it;
+6. (`tsd_propagates`) with forcing in the constraint, every strong solution on `[t₀, t₁]` from
    the constraint stays in it;
-5. (`tsd_existsUnique`) for data in `D(L)` and in the constraint, and admissible forcing in the
-   constraint (`IsAdmissible`, [CazenaveHaraux1998], Prop 4.1.6), the system has a classical
+7. (`tsd_existsUnique`) for data in `D(L)` and in the constraint, and admissible forcing in the
+   constraint (`IsAdmissible`, [CazenaveHaraux1998], Prop 4.1.6, Cor 2.4.9), the system has a classical
    solution on `[t₀, t₁]`, unique among the strong solutions, and it stays in the constraint;
-6. (`exists_nonstationary`) the constraint has dynamical content: some datum of `D(L)` in the
+8. (`exists_nonstationary`) the constraint has dynamical content: some datum of `D(L)` in the
    constraint has `L U ≠ 0`.
 
 **Electric (perfect conductor) conditions: `K*` is the stationary data.** The conditions `σ = 0`
 and `n × Eₐ = 0` (`E_{aτ} = 0`) on `∂C` are those of the minimal realizations
-`H̊¹(C) --grad--> H̊(curl; C) --curl--> L²(C)`; their adjoints are the distributional `div` and
-`curl`, with no boundary condition (`IsCompactTest`, `IsGrad₀`, `IsCurl₀`, `IsWave₀`), and the
+`H̊¹(C) --grad--> H̊(curl; C) --curl--> L²(C)` (`IsGrad₀`, `IsCurl₀`); their adjoints are the
+distributional `div` and `curl`, with no boundary condition (`IsDiv`, `IsCurl` against
+`IsCompactTest`); the operator is `IsWave₀`, and the
 constraint is `σ = 0` with `E`, `B` TSD in the sense of distributions (`IsTSD₀`,
 `Constraint₀`). For every open cube, with real fields:
 
-7. (`electric_propagates_iff`) every datum has a unique solution, and a solution stays in the
-   constraint for all `t ≥ 0` iff its datum lies in the constraint and is stationary,
-   `L U₀ = 0` (a corollary, not stated separately: boundary conditions on the TSD fields only
-   shrink the constraint, so no such constraint lets non-stationary data propagate);
-8. (`electric_tsd_leaves`) some TSD datum of `D(L)` leaves the constraint at once: on every
-   `[0, T]` it has a strong solution, and every strong solution from it leaves the constraint.
+9. (`electric_propagates_iff`) `L` is skew-adjoint, and a solution stays in the constraint for
+   all `t ≥ 0` iff its datum lies in the constraint and is stationary, `L U₀ = 0`; boundary
+   conditions on the TSD fields only shrink the constraint, so none of them lets non-stationary
+   data propagate;
+10. (`electric_tsd_leaves`) some TSD datum of `D(L)` leaves the constraint at once: on every
+    `[0, T]` it has a strong solution, and every strong solution from it leaves the constraint.
 
 **Absorbing conditions: `K* ≠ K`.** On `Q = (0, ½)³` (`cube 0 (1/2)`), for the system
 `E' = -curl B`, `B' = curl E` in `(E, B)` (the constraint `σ = 0` imposed), the absorbing
@@ -104,8 +115,8 @@ characteristic fields to zero. Its generator `A` is defined by the energy space 
 fields with an `L²` curl and an `L²` tangential trace (`IsEnergy`, the closure of the `C¹`
 fields) and a Green's formula with a boundary term (`IsAbsorbing`). With real fields:
 
-9. (`absorbing_not_propagates`) some TSD datum has a solution on `[0, ∞)`, and every solution
-   from it leaves the TSD constraint.
+11. (`absorbing_not_propagates`) `A` is m-dissipative, the TSD pairs do not reduce it, and some
+    TSD datum has a solution on `[0, ∞)` and every solution from it leaves the TSD constraint.
 
 The fields are elements of `L²` for the Lebesgue measure restricted to the domain, over
 `𝕜 = ℝ` or `ℂ` (`RCLike 𝕜`); on the cube the operators are given by their graphs, and solutions
@@ -115,7 +126,9 @@ are those of `U' = L U + F` (`IsStrongSolution`, `IsClassicalSolution`, `IsMildS
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §3.4, §4.1, §4.10 (Prop 4.17, (4.14))
+  §3.4, §4.1, §4.4, §4.10 (Thm 4.6, Props 4.16, 4.17, (4.14))
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.1
 * [A. Anderson, Y. Choquet-Bruhat, J. W. York, Jr., *Einstein–Bianchi hyperbolic system for general relativity*][ACBY1997]
 * [H. Friedrich, G. Nagy, *The Initial Boundary Value Problem for Einstein's Vacuum Field Equation*][FriedrichNagy1999]
 * [G. Calabrese, J. Pullin, O. Reula, O. Sarbach, M. Tiglio, *Well Posed Constraint-Preserving Boundary Conditions for the Linearized Einstein Equations*][CPRST2003]
@@ -125,7 +138,7 @@ are those of `U' = L U + F` (`IsStrongSolution`, `IsClassicalSolution`, `IsMildS
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.4, §1.10, §4.2
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
-  Prop 4.1.6
+  Prop 4.1.6, Cor 2.4.9
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -183,7 +196,7 @@ end Solutions
 section Criterion
 
 variable {𝕜 H : Type*} [RCLike 𝕜] [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
-  [CompleteSpace H] [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H]
+  [CompleteSpace H]
 
 /-- `A : D(A) ⊆ H → H` is **skew-adjoint**: `A† = -A`, with equal domains (Mathlib's adjoint of
 a densely defined operator). By Stone's theorem these are the generators of the strongly
@@ -201,6 +214,8 @@ def IsMDissipative (A : H →ₗ.[𝕜] H) : Prop :=
 def IsReducing (A : H →ₗ.[𝕜] H) (K : Submodule 𝕜 H) [K.HasOrthogonalProjection] : Prop :=
   ∀ x : A.domain, ∃ hx : K.starProjection (x : H) ∈ A.domain,
     A ⟨_, hx⟩ = K.starProjection (A x)
+
+variable [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H]
 
 /-- **Well-posedness** (Stone): for a skew-adjoint `A`, every datum `x` has exactly one mild
 solution of `u' = A u` on `ℝ` with `u 0 = x`. -/
@@ -220,7 +235,8 @@ theorem isReducing_iff_propagates {A : H →ₗ.[𝕜] H} (hA : IsSkewAdjoint A)
 /-- **The invariant core**: for a skew-adjoint `A` and a closed subspace `K`, the data `x` whose
 mild solutions stay in `K` for all `t ∈ ℝ` form a closed subspace `K*` (with an orthogonal
 projection) such that `K* ⊆ K`; `K*` reduces `A`, so it propagates and `A` maps `D(A) ∩ K*`
-into `K*`; `D(A) ∩ K*` is dense in `K*`; and every closed subspace of `K` reducing `A` lies in `K*`. -/
+into `K*`; `D(A) ∩ K*` is dense in `K*`; and every closed subspace of `K` reducing `A` lies in
+`K*`. -/
 theorem exists_invariantCore {A : H →ₗ.[𝕜] H} (hA : IsSkewAdjoint A) (K : Submodule 𝕜 H)
     [K.HasOrthogonalProjection] :
     ∃ (Ks : Submodule 𝕜 H) (_ : Ks.HasOrthogonalProjection),
@@ -257,14 +273,96 @@ theorem isReducing_iff_propagates_of_isMDissipative {A : H →ₗ.[𝕜] H} (hA 
 
 end Criterion
 
+/-! ### Hilbert complexes -/
+
+section Complex
+
+open LinearPMap
+
+/-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
+zero unless `j = i + 1`, with `R(d i j) ⊆ D(d j k)` and `d j k ∘ d i j = 0`. -/
+structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] where
+  /-- the differentials -/
+  d : ∀ i j, W i →ₗ.[𝕜] W j
+  shape : ∀ i j, ¬ i + 1 = j → d i j = 0
+  dense : ∀ i j, Dense ((d i j).domain : Set (W i))
+  closed : ∀ i j, (d i j).IsClosed
+  mapsTo : ∀ i j k (x : (d i j).domain), (d i j x : W j) ∈ (d j k).domain
+  d_comp_d : ∀ i j k (x : (d i j).domain), d j k ⟨_, mapsTo i j k x⟩ = 0
+
+variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+
+/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of a window (an `ℓ²` sum). -/
+abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
+
+namespace HilbertComplex
+
+variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
+
+/-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
+def totalDomain : Submodule 𝕜 (Total W a m) where
+  carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
+  add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
+  zero_mem' _ _ := (H.d _ _).domain.zero_mem
+  smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
+
+/-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
+def totalD : Total W a m →ₗ.[𝕜] Total W a m where
+  domain := H.totalDomain a m
+  toFun :=
+    { toFun := fun x => WithLp.toLp 2 fun j : Fin m =>
+        ∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, x.2 i j⟩
+      map_add' := fun x y => PiLp.ext fun j => by
+        rw [PiLp.add_apply, PiLp.toLp_apply, PiLp.toLp_apply, PiLp.toLp_apply,
+          ← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_add ⟨_, x.2 i j⟩ ⟨_, y.2 i j⟩
+      map_smul' := fun c x => PiLp.ext fun j => by
+        rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
+          Finset.smul_sum]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
+
+/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
+def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
+
+/-- A **reducing subcomplex** of `H` ([QuennevilleBelair2015], Props 4.16, 4.17): closed subspaces
+`Sⁱ ⊆ Wⁱ` (given with their orthogonal projections `P_{Sⁱ}`) reducing every differential:
+`P_{Sⁱ} D(d i j) ⊆ D(d i j)` and `d i j P_{Sⁱ} = P_{Sʲ} d i j` on `D(d i j)`. -/
+def IsReducingSubcomplex (S : ∀ i, Submodule 𝕜 (W i)) [∀ i, (S i).HasOrthogonalProjection] :
+    Prop :=
+  ∀ i j (x : (H.d i j).domain), ∃ hx : (S i).starProjection (x : W i) ∈ (H.d i j).domain,
+    H.d i j ⟨_, hx⟩ = (S j).starProjection (H.d i j x)
+
+/-- **The Hodge wave operator is skew-adjoint** ([QuennevilleBelair2015], Thm 4.6): for every
+Hilbert complex and every window `[a, a + m)`, `L = 𝐝 - 𝐝*` on `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` (`𝐝` the
+differentials inside the window) has `L† = -L`, with no closed-range hypothesis. So
+(`existsUnique_mild`) the Hodge wave equation `u' = L u` has a unique mild solution on `ℝ` from
+every datum (with the `ℝ`-structure of `W` by restriction of scalars, e.g. for `𝕜 = ℝ, ℂ`). -/
+theorem isSkewAdjoint_wave : IsSkewAdjoint (H.wave a m) := by
+  sorry
+
+/-- **The constraint of a reducing subcomplex propagates** ([QuennevilleBelair2015], Prop 4.16):
+for a reducing subcomplex `S`, the total space `∏ᵢ S^{a+i}` reduces the wave operator of every
+window. So (`isReducing_iff_propagates`, `isSkewAdjoint_wave`) every mild solution of `u' = L u`
+starting in `∏ᵢ S^{a+i}` stays in it for all `t ∈ ℝ` (with the `ℝ`-structure by restriction of
+scalars). -/
+theorem isReducing_wave {S : ∀ i, Submodule 𝕜 (W i)} [∀ i, (S i).HasOrthogonalProjection]
+    (hS : H.IsReducingSubcomplex S) :
+    ∃ (K : Submodule 𝕜 (Total W a m)) (_ : K.HasOrthogonalProjection),
+      (∀ x, x ∈ K ↔ ∀ i : Fin m, x i ∈ S (a + (i : ℕ))) ∧ IsReducing (H.wave a m) K := by
+  sorry
+
+end HilbertComplex
+
+end Complex
+
 /-! ### The linearized Einstein–Bianchi system on a cube -/
 
 /-- The open cube `∏ᵢ (bᵢ, bᵢ + s)` of `ℝⁿ`. -/
 def cube {n : ℕ} (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
 
 variable {𝕜 : Type*} [RCLike 𝕜] (b : Fin 3 → ℝ) (s : ℝ)
-
-/-! ### Fields on the cube -/
 
 variable (𝕜) in
 /-- `L²(C; 𝕜)`, for the Lebesgue measure restricted to `C = cube b s`. -/
@@ -279,8 +377,9 @@ variable (𝕜) in
 abbrev Mat := PiLp 2 fun _ : Fin 3 × Fin 3 => L2 𝕜 b s
 
 variable (𝕜) in
-/-- The states `(σ, E, B)` of the system. -/
-abbrev State := Vec 𝕜 b s × Mat 𝕜 b s × Mat 𝕜 b s
+/-- The states `(σ, E, B)` of the system: the Hilbert space `L²(C; 𝕜³) ⊕ L²(C; 𝕜³ˣ³) ⊕
+L²(C; 𝕜³ˣ³)` (an `ℓ²` sum), with `U.fst = σ`, `U.snd.fst = E`, `U.snd.snd = B`. -/
+abbrev State := WithLp 2 (Vec 𝕜 b s × WithLp 2 (Mat 𝕜 b s × Mat 𝕜 b s))
 
 /-- The **test functions vanishing on the faces normal to `e_j`, `j ∈ S`**: `ψ ∈ C¹(ℝ³; 𝕜)` with
 `ψ = 0` on the closed faces `{x_j = b_j}` and `{x_j = b_j + s}` of the closed cube `C̄` for
@@ -339,19 +438,21 @@ def IsTSD₀ (E : Mat 𝕜 b s) : Prop := IsTSD b s (fun _ => IsCompactTest b s)
 /-! ### Mirror boundary conditions -/
 
 /-- **`V = L U` for the linearized Einstein–Bianchi operator with mirror boundary conditions**,
-`L (σ, E, B) = (div E, grad σ - curl B, curl E)`, with `σ · n = 0` (`grad σ`), `E_{nτ} = 0`
-(`curl E`), `E_{τn} = 0` (`div E`) and `B_{ττ} = 0` (`curl B`) on `∂C`. The domain `D(L)` is the
-set of the `U` with `IsWave U V` for some `V`. -/
+`L (σ, E, B) = (div E, grad σ - curl B, curl E)`, with `E_{τn} = 0` (`div E`), `σ · n = 0`
+(`grad σ`), `B_{ττ} = 0` (`curl B`) and `E_{nτ} = 0` (`curl E`) on `∂C`. The domain `D(L)` is
+the set of the `U` with `IsWave U V` for some `V`. -/
 def IsWave (U V : State 𝕜 b s) : Prop :=
-  ∃ G CE D CB, IsGrad b s U.1 G ∧ IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) U.2.1 CE ∧
-    IsDiv b s (fun a => IsTest b s {a}) U.2.1 D ∧
-      IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) U.2.2 CB ∧ V = (D, G - CB, CE)
+  IsDiv b s (fun a => IsTest b s {a}) U.snd.fst V.fst ∧
+    (∃ G CB, IsGrad b s U.fst G ∧
+      IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) U.snd.snd CB ∧
+        V.snd.fst = G - CB) ∧
+    IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) U.snd.fst V.snd.snd
 
 /-- **The constraint with mirror boundary conditions** `{0} × TSD × TSD`: `σ = 0`, `E` TSD with
 `E_{τn} = 0` and `B` TSD with `B_{nn} = 0` on `∂C`. -/
 def Constraint (U : State 𝕜 b s) : Prop :=
-  U.1 = 0 ∧ IsTSD b s (fun a => IsTest b s {a}) U.2.1 ∧
-    IsTSD b s (fun a => IsTest b s {j | j ≠ a}) U.2.2
+  U.fst = 0 ∧ IsTSD b s (fun a => IsTest b s {a}) U.snd.fst ∧
+    IsTSD b s (fun a => IsTest b s {j | j ≠ a}) U.snd.snd
 
 /-! ### Electric boundary conditions -/
 
@@ -375,15 +476,21 @@ def IsCurl₀ (E C : Mat 𝕜 b s) : Prop :=
 curl E)` with `σ = 0` (`grad σ`) and `n × Eₐ = 0` (`curl E`) on `∂C`, and the distributional
 `div E` and `curl B`. -/
 def IsWave₀ (U V : State 𝕜 b s) : Prop :=
-  ∃ G CE D CB, IsGrad₀ b s U.1 G ∧ IsCurl₀ b s U.2.1 CE ∧
-    IsDiv b s (fun _ => IsCompactTest b s) U.2.1 D ∧
-      IsCurl b s (fun _ _ => IsCompactTest b s) U.2.2 CB ∧ V = (D, G - CB, CE)
+  IsDiv b s (fun _ => IsCompactTest b s) U.snd.fst V.fst ∧
+    (∃ G CB, IsGrad₀ b s U.fst G ∧ IsCurl b s (fun _ _ => IsCompactTest b s) U.snd.snd CB ∧
+      V.snd.fst = G - CB) ∧
+    IsCurl₀ b s U.snd.fst V.snd.snd
 
 /-- **The constraint with no boundary condition** `{0} × TSD × TSD`: `σ = 0`, `E` and `B` TSD in
 the sense of distributions. -/
-def Constraint₀ (U : State 𝕜 b s) : Prop := U.1 = 0 ∧ IsTSD₀ b s U.2.1 ∧ IsTSD₀ b s U.2.2
+def Constraint₀ (U : State 𝕜 b s) : Prop :=
+  U.fst = 0 ∧ IsTSD₀ b s U.snd.fst ∧ IsTSD₀ b s U.snd.snd
 
 /-! ### Absorbing boundary conditions on `Q = (0, ½)³` -/
+
+/-- The states `(E, B)` on `Q = cube 0 (1/2)` with real fields: the Hilbert space
+`L²(Q; ℝ³ˣ³) ⊕ L²(Q; ℝ³ˣ³)` (an `ℓ²` sum), with `U.fst = E`, `U.snd = B`. -/
+abbrev StateQ := WithLp 2 (Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2))
 
 /-- The faces of `Q = cube 0 (1/2)`: `{x_m = ½}` for `f = (m, true)`, `{x_m = 0}` for
 `f = (m, false)`, parametrized by the square `(0, ½)²` (`y ↦ x` with the coordinate `x_m`
@@ -415,25 +522,27 @@ def IsEnergy (E C : Mat ℝ 0 (1 / 2)) (β : Bdry) : Prop :=
         ((β q : (Fin 2 → ℝ) → ℝ) y - Φ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)) ^ 2) < ε
 
 /-- **`V = A U` for the absorbing condition** `n × Eₐ + (Bₐ)_τ = 0` on `∂Q`,
-`A (E, B) = (-curl B, curl E)`: `E` lies in the energy space with `curl E = V.2` and tangential
-trace `β`, and `V.1 = -curl B` in the weak form whose boundary term is `-∫_{∂Q} β · Ψ_τ`: for
-every `C¹` field `Ψ`, `∫_Q V.1 : Ψ = -∫_Q B : curl Ψ - ∫_{∂Q} β · Ψ_τ`. -/
-def IsAbsorbing (U V : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2)) : Prop :=
-  ∃ β, IsEnergy U.1 V.2 β ∧ ∀ Ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ p, ContDiff ℝ 1 (Ψ p)) →
-    ∑ p, ∫ x in cube 0 (1 / 2), (V.1 p : (Fin 3 → ℝ) → ℝ) x * Ψ p x =
-      -(∑ p, ∫ x in cube 0 (1 / 2), (U.2 p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ p x) -
+`A (E, B) = (-curl B, curl E)`: `E` lies in the energy space with `curl E = V.snd` and tangential
+trace `β`, and `V.fst = -curl B` in the weak form whose boundary term is `-∫_{∂Q} β · Ψ_τ`: for
+every `C¹` field `Ψ`, `∫_Q V.fst : Ψ = -∫_Q B : curl Ψ - ∫_{∂Q} β · Ψ_τ`. -/
+def IsAbsorbing (U V : StateQ) : Prop :=
+  ∃ β, IsEnergy U.fst V.snd β ∧ ∀ Ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ p, ContDiff ℝ 1 (Ψ p)) →
+    ∑ p, ∫ x in cube 0 (1 / 2), (V.fst p : (Fin 3 → ℝ) → ℝ) x * Ψ p x =
+      -(∑ p, ∫ x in cube 0 (1 / 2), (U.snd p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ p x) -
         ∑ q, ∫ y in cube 0 (1 / 2),
           (β q : (Fin 2 → ℝ) → ℝ) y * Ψ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)
 
 /-! ### Mirror conditions: `K* = K` -/
 
 /-- **With mirror boundary conditions the TSD constraints propagate** ([QuennevilleBelair2015],
-Prop 4.17): on every open cube every datum has exactly one mild solution of `U' = L U` on `ℝ`,
-and every mild solution starting in the constraint stays in it (`K* = K`). -/
+Prop 4.17): on every open cube `IsWave` is the graph of a skew-adjoint operator `L` on `State`,
+and the constraint is a closed subspace `K` reducing `L`. So (`existsUnique_mild`,
+`isReducing_iff_propagates`, `exists_invariantCore`) every datum has a unique mild solution of
+`U' = L U` on `ℝ`, every mild solution starting in the constraint stays in it, and `K* = K`. -/
 theorem mirror_propagates (hs : 0 < s) :
-    (∀ U₀ : State ℂ b s, ∃! U, U 0 = U₀ ∧ IsMildSolution (IsWave b s) univ U) ∧
-      ∀ U : ℝ → State ℂ b s, IsMildSolution (IsWave b s) univ U → Constraint b s (U 0) →
-        ∀ t, Constraint b s (U t) := by
+    ∃ L : State ℂ b s →ₗ.[ℂ] State ℂ b s, (∀ U V, (U, V) ∈ L.graph ↔ IsWave b s U V) ∧
+      IsSkewAdjoint L ∧ ∃ (K : Submodule ℂ (State ℂ b s)) (_ : K.HasOrthogonalProjection),
+        (∀ U, U ∈ K ↔ Constraint b s U) ∧ IsReducing L K := by
   sorry
 
 /-- **The TSD constraints propagate under forcing** ([QuennevilleBelair2015], Prop 4.17): a strong
@@ -465,12 +574,13 @@ theorem exists_nonstationary (hs : 0 < s) :
 /-! ### Electric conditions: `K*` is the stationary data -/
 
 /-- **With electric boundary conditions only stationary data propagate**: on every open cube
-every datum has exactly one mild solution of `U' = L U` on `ℝ`, and a mild solution stays in the
+`IsWave₀` is the graph of a skew-adjoint operator `L` on `State` (so, by `existsUnique_mild`,
+every datum has a unique mild solution of `U' = L U` on `ℝ`), and a mild solution stays in the
 constraint `{0} × TSD × TSD` for all `t ≥ 0` iff its datum lies in the constraint and
-`L U₀ = 0`. -/
+`L U₀ = 0`. So `K*` is the stationary data of the constraint. -/
 theorem electric_propagates_iff (hs : 0 < s) :
-    (∀ U₀ : State ℝ b s, ∃! U, U 0 = U₀ ∧ IsMildSolution (IsWave₀ b s) univ U) ∧
-      ∀ U : ℝ → State ℝ b s, IsMildSolution (IsWave₀ b s) univ U →
+    ∃ L : State ℝ b s →ₗ.[ℝ] State ℝ b s, (∀ U V, (U, V) ∈ L.graph ↔ IsWave₀ b s U V) ∧
+      IsSkewAdjoint L ∧ ∀ U : ℝ → State ℝ b s, IsMildSolution (IsWave₀ b s) univ U →
         ((∀ t ∈ Ici (0 : ℝ), Constraint₀ b s (U t)) ↔
           Constraint₀ b s (U 0) ∧ IsWave₀ b s (U 0) 0) := by
   sorry
@@ -488,13 +598,19 @@ theorem electric_tsd_leaves (hs : 0 < s) :
 /-! ### Absorbing conditions: `K* ≠ K` -/
 
 /-- **The absorbing boundary conditions do not preserve the TSD constraint**: on `Q = (0, ½)³`
+`IsAbsorbing` is the graph of an m-dissipative operator `A` on `StateQ` (so, by
+`existsUnique_mild_of_isMDissipative`, mild solutions on `[0, ∞)` exist and are unique), and
 some datum `(E₀, B₀)` with `E₀`, `B₀` TSD has a mild solution of `(E, B)' = A (E, B)` on
-`[0, ∞)`, and every mild solution from it leaves the TSD constraint. -/
+`[0, ∞)` and every mild solution from it leaves the TSD constraint; the TSD pairs form a closed
+subspace `K` not reducing `A` (`K* ≠ K`). -/
 theorem absorbing_not_propagates :
-    ∃ U₀ : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2), IsTSD₀ 0 (1 / 2) U₀.1 ∧ IsTSD₀ 0 (1 / 2) U₀.2 ∧
-      (∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing (Ici 0) U) ∧
-      ∀ U, U 0 = U₀ → IsMildSolution IsAbsorbing (Ici 0) U →
-        ∃ t ∈ Ici (0 : ℝ), ¬(IsTSD₀ 0 (1 / 2) (U t).1 ∧ IsTSD₀ 0 (1 / 2) (U t).2) := by
+    ∃ A : StateQ →ₗ.[ℝ] StateQ, (∀ U V, (U, V) ∈ A.graph ↔ IsAbsorbing U V) ∧
+      IsMDissipative A ∧ (∃ (K : Submodule ℝ StateQ) (_ : K.HasOrthogonalProjection),
+        (∀ U, U ∈ K ↔ IsTSD₀ 0 (1 / 2) U.fst ∧ IsTSD₀ 0 (1 / 2) U.snd) ∧ ¬IsReducing A K) ∧
+      ∃ U₀ : StateQ, IsTSD₀ 0 (1 / 2) U₀.fst ∧ IsTSD₀ 0 (1 / 2) U₀.snd ∧
+        (∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing (Ici 0) U) ∧
+        ∀ U, U 0 = U₀ → IsMildSolution IsAbsorbing (Ici 0) U →
+          ∃ t ∈ Ici (0 : ℝ), ¬(IsTSD₀ 0 (1 / 2) (U t).fst ∧ IsTSD₀ 0 (1 / 2) (U t).snd) := by
   sorry
 
 end FEEC.ConstraintPropagation

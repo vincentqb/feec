@@ -6,8 +6,8 @@ public import Feec.Models.Cube.AbsorbingTSD
 /-!
 # The bridge for the absorbing boundary conditions
 
-The pairs `(E, B)` of real matrix fields on `Q = (0, ½)³` of `Challenge.lean` are the states of
-`Feec.Models.Cube.Absorbing` (`eAbs`); along this identification:
+The states `StateQ` of `Challenge.lean`, pairs `(E, B)` of real matrix fields on `Q = (0, ½)³`,
+are the states of `Feec.Models.Cube.Absorbing` (`eAbs`, the identity); along it:
 
 * the energy space `IsEnergy` (the `ε`-closure of the triples of `C¹` fields) is
   `Feec.Models.Cube.Absorbing.energySpace` (`isEnergy_iff`): the span of the triples is the set of
@@ -40,18 +40,10 @@ open Feec.Models.Cube.Absorbing (MQ Amb Bdry C1Field energySpace absorbing absor
   cL2 cField tanTrace tanFun impedanceTriple fieldMap curlMap traceMap)
 
 /-- The pairs `(E, B)` of the challenge as states of `Feec.Models.Cube.Absorbing`. -/
-def eAbs : (MQ × MQ) ≃L[ℝ] Feec.Models.Cube.Absorbing.State where
-  toFun U := WithLp.toLp 2 U
-  invFun x := x.ofLp
-  map_add' _ _ := rfl
-  map_smul' _ _ := rfl
-  left_inv _ := rfl
-  right_inv _ := rfl
-  continuous_toFun := WithLp.prod_continuous_toLp 2 MQ MQ
-  continuous_invFun := WithLp.prod_continuous_ofLp 2 MQ MQ
+def eAbs : StateQ ≃L[ℝ] Feec.Models.Cube.Absorbing.State := ContinuousLinearEquiv.refl ℝ _
 
-@[simp] theorem eAbs_fst (U : MQ × MQ) : (eAbs U).fst = U.1 := rfl
-@[simp] theorem eAbs_snd (U : MQ × MQ) : (eAbs U).snd = U.2 := rfl
+@[simp] theorem eAbs_fst (U : StateQ) : (eAbs U).fst = U.fst := rfl
+@[simp] theorem eAbs_snd (U : StateQ) : (eAbs U).snd = U.snd := rfl
 
 /-! ### Linearity of the triples -/
 
@@ -256,44 +248,44 @@ theorem inner_tan_eq (β : Bdry) (Ψ : C1Field) :
     (Feec.Models.Cube.Absorbing.continuous_tanFun Ψ.continuous q)
 
 /-- **`IsAbsorbing` is the graph of the absorbing generator of `Feec`.** -/
-theorem isAbsorbing_iff (U V : MQ × MQ) :
+theorem isAbsorbing_iff (U V : Feec.Models.Cube.Absorbing.State) :
     IsAbsorbing U V ↔ (eAbs U, eAbs V) ∈ absorbing.graph := by
   unfold absorbing
   rw [impedanceTriple.mem_graph_op_iff]
   have hsmooth : ∀ (β : Bdry) (Ψ : C1Field),
-      weakFun V.1 U.2 β Ψ.triple = 0 ↔
-        ∑ p, ∫ x in cube 0 (1 / 2), (V.1 p : (Fin 3 → ℝ) → ℝ) x * Ψ.1 p x =
-          -(∑ p, ∫ x in cube 0 (1 / 2), (U.2 p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ.1 p x) -
+      weakFun V.fst U.snd β Ψ.triple = 0 ↔
+        ∑ p, ∫ x in cube 0 (1 / 2), (V.fst p : (Fin 3 → ℝ) → ℝ) x * Ψ.1 p x =
+          -(∑ p, ∫ x in cube 0 (1 / 2), (U.snd p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ.1 p x) -
             ∑ q, ∫ y in cube 0 (1 / 2),
               (β q : (Fin 2 → ℝ) → ℝ) y * Ψ.1 (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y) := by
     intro β Ψ
     rw [weakFun_apply]
-    change ⟪V.1, Ψ.l2⟫_ℝ + ⟪U.2, Ψ.curlL2⟫_ℝ + ⟪β, Ψ.tan⟫_ℝ = 0 ↔ _
+    change ⟪V.fst, Ψ.l2⟫_ℝ + ⟪U.snd, Ψ.curlL2⟫_ℝ + ⟪β, Ψ.tan⟫_ℝ = 0 ↔ _
     rw [inner_cField_eq, inner_curlL2_eq', inner_tan_eq]
     constructor <;> intro h <;> linarith
   constructor
   · rintro ⟨β, hE, hw⟩
-    have hz := (isEnergy_iff U.1 V.2 β).1 hE
+    have hz := (isEnergy_iff U.fst V.snd β).1 hE
     refine ⟨⟨_, hz⟩, rfl, rfl, fun v' => ?_⟩
-    have hle : energySpace ≤ LinearMap.ker (weakFun V.1 U.2 β).toLinearMap := by
+    have hle : energySpace ≤ LinearMap.ker (weakFun V.fst U.snd β).toLinearMap := by
       refine Submodule.topologicalClosure_minimal _ (Submodule.span_le.2 ?_) ?_
       · rintro _ ⟨Ψ, rfl⟩
         exact (hsmooth β Ψ).2 (hw Ψ.1 Ψ.2)
-      · exact (weakFun V.1 U.2 β).isClosed_ker
-    have h0 : weakFun V.1 U.2 β v' = 0 := hle v'.2
+      · exact (weakFun V.fst U.snd β).isClosed_ker
+    have h0 : weakFun V.fst U.snd β v' = 0 := hle v'.2
     rw [weakFun_apply] at h0
-    change ⟪V.1, (v' : Amb).fst⟫_ℝ = -⟪U.2, (v' : Amb).snd.fst⟫_ℝ - ⟪β, (v' : Amb).snd.snd⟫_ℝ
+    change ⟪V.fst, (v' : Amb).fst⟫_ℝ = -⟪U.snd, (v' : Amb).snd.fst⟫_ℝ - ⟪β, (v' : Amb).snd.snd⟫_ℝ
     linarith
   · rintro ⟨v, h1, h2, h3⟩
     refine ⟨traceMap v, ?_, fun Ψ hΨ => ?_⟩
-    · have hv : (v : Amb) = WithLp.toLp 2 (U.1, WithLp.toLp 2 (V.2, traceMap v)) :=
+    · have hv : (v : Amb) = WithLp.toLp 2 (U.fst, WithLp.toLp 2 (V.snd, traceMap v)) :=
         withLp_prod_ext h1 (withLp_prod_ext h2 rfl)
       exact (isEnergy_iff _ _ _).2 (hv ▸ v.2)
     · have e := h3 ⟨_, Feec.Models.Cube.Absorbing.triple_mem_energySpace ⟨Ψ, hΨ⟩⟩
       refine (hsmooth (traceMap v) ⟨Ψ, hΨ⟩).1 ?_
-      change ⟪V.1, C1Field.l2 ⟨Ψ, hΨ⟩⟫_ℝ = -⟪U.2, C1Field.curlL2 ⟨Ψ, hΨ⟩⟫_ℝ -
+      change ⟪V.fst, C1Field.l2 ⟨Ψ, hΨ⟩⟫_ℝ = -⟪U.snd, C1Field.curlL2 ⟨Ψ, hΨ⟩⟫_ℝ -
         ⟪traceMap v, C1Field.tan ⟨Ψ, hΨ⟩⟫_ℝ at e
-      change ⟪V.1, C1Field.l2 ⟨Ψ, hΨ⟩⟫_ℝ + ⟪U.2, C1Field.curlL2 ⟨Ψ, hΨ⟩⟫_ℝ +
+      change ⟪V.fst, C1Field.l2 ⟨Ψ, hΨ⟩⟫_ℝ + ⟪U.snd, C1Field.curlL2 ⟨Ψ, hΨ⟩⟫_ℝ +
         ⟪traceMap v, C1Field.tan ⟨Ψ, hΨ⟩⟫_ℝ = 0
       linarith
 
@@ -307,12 +299,12 @@ theorem intervalIntegral_mapR {E F : Type*} [NormedAddCommGroup E] [NormedSpace 
 /-- **The orbits of the absorbing semigroup are mild solutions.** -/
 theorem isMildSolution_orbit (x : Feec.Models.Cube.Absorbing.State) :
     IsMildSolution IsAbsorbing (Ici 0)
-      fun t => (eAbs.symm (absorbingSemigroup.S t x) : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2)) := by
+      fun t => (eAbs.symm (absorbingSemigroup.S t x) : StateQ) := by
   refine ⟨eAbs.symm.continuous.comp_continuousOn (absorbingSemigroup.strongCont x),
     fun t ht => ?_⟩
   obtain ⟨hd, e⟩ := Feec.Models.Cube.Absorbing.integral_mem_domain x ht
-  change IsAbsorbing (∫ τ in (0 : ℝ)..t, (eAbs.symm (absorbingSemigroup.S τ x) : MQ × MQ))
-    ((eAbs.symm (absorbingSemigroup.S t x) : MQ × MQ) - eAbs.symm (absorbingSemigroup.S 0 x))
+  change IsAbsorbing (∫ τ in (0 : ℝ)..t, (eAbs.symm (absorbingSemigroup.S τ x) : StateQ))
+    ((eAbs.symm (absorbingSemigroup.S t x) : StateQ) - eAbs.symm (absorbingSemigroup.S 0 x))
   refine (isAbsorbing_iff _ _).2 ?_
   have key : ((eAbs (∫ τ in (0 : ℝ)..t, eAbs.symm (absorbingSemigroup.S τ x)),
       eAbs (eAbs.symm (absorbingSemigroup.S t x) - eAbs.symm (absorbingSemigroup.S 0 x))) :
@@ -328,7 +320,7 @@ theorem isMildSolution_orbit (x : Feec.Models.Cube.Absorbing.State) :
 /-- **The mild solutions are the orbits of the absorbing semigroup.** The primitive `∫₀^· U` of
 a mild solution and that of the orbit of `U 0` are strong solutions of `W' = A W + U 0` on
 `[0, t]` vanishing at `0`, hence equal (`A` is dissipative); `U t - U 0` is `A` of either. -/
-theorem isMildSolution_eq_orbit {U : ℝ → MQ × MQ} (hU : IsMildSolution IsAbsorbing (Ici 0) U)
+theorem isMildSolution_eq_orbit {U : ℝ → StateQ} (hU : IsMildSolution IsAbsorbing (Ici 0) U)
     {t : ℝ} (ht : 0 ≤ t) : eAbs (U t) = absorbingSemigroup.S t (eAbs (U 0)) := by
   set x := eAbs (U 0)
   have hsol : ∀ w : ℝ → Feec.Models.Cube.Absorbing.State, ContinuousOn w (Ici 0) →

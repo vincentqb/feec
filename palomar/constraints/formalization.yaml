@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of constraint propagation for wave equations
 # of Hilbert complexes, with the linearized Einstein-Bianchi system on a cube as instances
-# (`palomar/einsteinbianchi/`).
+# (`palomar/constraints/`).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
@@ -10,77 +10,85 @@ version: "v0.4"
 project:
   name: "Constraint propagation for wave equations of Hilbert complexes"
   description: >-
-    A general criterion for constraint propagation, with sharp instances. A linear evolution
-    u' = A u on a Hilbert space H carries a constraint, a closed subspace K that solutions should
-    not leave; for the Hodge wave equation u' = L u, L = d - d*, of a Hilbert complex the
-    constraints are divergence conditions (Gauss laws, the TSD conditions of linearized gravity),
-    and whether they propagate depends on the boundary conditions built into the complex.
-    The criterion (operators on a Hilbert space over R or C, Mathlib's LinearPMap, with Mathlib's
-    adjoint and orthogonal projections): for a skew-adjoint A (A^* = -A, as L for every closed
-    Hilbert complex), every datum has a unique mild solution on R (existsUnique_mild); the mild
-    solutions starting in K stay in K iff K reduces A, i.e. P_K D(A) is contained in D(A) and
-    A P_K = P_K A on D(A) (isReducing_iff_propagates); and the data whose solutions stay in K form
-    a closed subspace K* of K, the largest closed subspace of K reducing A, which propagates, is
-    mapped into itself by A on D(A) and has D(A) intersected with K* dense in it
-    (exists_invariantCore). For an m-dissipative A (a contraction semigroup, e.g. absorbing
-    boundary conditions) mild solutions on [0, infinity) exist and are unique
-    (existsUnique_mild_of_isMDissipative), and K reduces A iff K and its orthogonal complement
-    both propagate (isReducing_iff_propagates_of_isMDissipative). Instances: the linearized
-    Einstein-Bianchi system of general relativity (Anderson, Choquet-Bruhat, York 1997), whose
-    constraint-preserving boundary conditions are a central problem of the initial-boundary value
-    problem of general relativity (Friedrich-Nagy 1999; Calabrese-Pullin-Reula-Sarbach-Tiglio
-    2003; Kreiss-Winicour 2006), on an open cube C = prod_i (b_i, b_i + s) of R^3 (s > 0), with
-    K* computed for three boundary conditions. (i) Tensorial mirror conditions
-    sigma . n = 0, E_(n tau) = E_(tau n) = 0, B_(tau tau) = 0 and, in the constraint,
-    B_(nn) = 0 (the face conditions of the fields symmetric under the reflections in the faces,
-    sigma a vector, E a tensor, B a pseudotensor): K* = K, the TSD (symmetric, trace-free,
-    divergence-free) constraints propagate for all data (mirror_propagates), under forcing
-    (tsd_propagates), with existence and uniqueness (tsd_existsUnique), and the constraint
-    contains non-stationary data (exists_nonstationary). (ii) Electric (perfect conductor)
-    conditions sigma = 0, n x E_a = 0, the minimal realizations H0^1 -> H0(curl) -> L^2: K* is
-    the stationary data, a mild solution stays in the constraint {0} x TSD x TSD for all t >= 0
-    iff its datum lies there and L U0 = 0 (electric_propagates_iff; boundary conditions on the
-    TSD fields only shrink the constraint, so none of them makes it propagate), and some TSD datum
-    of D(L) leaves the constraint on every time interval (electric_tsd_leaves). (iii) Absorbing
-    (Silver-Muller) conditions n x E_a + (B_a)_tau = 0 on Q = (0, 1/2)^3 for (E, B): K* is not
-    K, some TSD datum has a mild solution on [0, infinity) and every mild solution from it leaves
-    the TSD constraint (absorbing_not_propagates). The system is that of
-    [QuennevilleBelair2015] (§3.4, §4.10, (4.14)): the electric and magnetic parts E, B (3x3
-    matrix fields) of the linearized Weyl curvature, with an auxiliary vector field sigma,
-    evolve by the Hodge wave equation of the matrix grad-curl complex,
-    sigma' = div E + f_sigma, E' = grad sigma - curl B + f_E, B' = curl E + f_B
-    ((grad sigma)_ab = d_b sigma_a; div and curl row by row). The fields are elements of L^2 of
-    the domain over R or C (Mathlib's Lp for the Lebesgue measure restricted to the domain).
-    Mirror conditions: grad, curl and div are defined by Green's formulas against C^1 test
-    functions vanishing on prescribed closed faces of the closed cube and free on the others
-    (IsTest, IsGrad, IsCurl, IsDiv), the operator is IsWave and the constraint Constraint.
-    Electric conditions: div and curl are the same Green's formulas against C_c^infinity(C)
-    (IsCompactTest, the distributional operators), grad and curl with the boundary condition are
-    defined by Green's formula with no boundary term against every field of H(div) resp.
-    H(curl) (IsGrad0, IsCurl0), the operator is IsWave0 and the constraint Constraint0
-    (sigma = 0, E and B TSD in the sense of distributions, IsTSD0). Absorbing conditions: the
-    energy space of the L^2 fields with an L^2 curl and an L^2 tangential trace on the six faces
-    (IsEnergy, the closure of the triples (Phi, curl Phi, Phi_tau) of C^1 fields), and the
-    generator by its weak equation with the boundary term (IsAbsorbing). Strong and classical
-    solutions of U' = L U + F for an operator L given by its graph (IsStrongSolution,
-    IsClassicalSolution) ask for the equation at every time; mild solutions (IsMildSolution,
-    Pazy §4.2) are continuous with the integral from 0 to t in D(L) and L of it equal to
-    U t - U 0; the forcing class of the existence theorem is IsAdmissible (Cazenave-Haraux
-    Prop 4.1.6). The statement is self-contained over Mathlib; the proof is the library Feec of
-    this repository: Stone's and the Lumer-Phillips theorems (Feec.Semigroup.Stone,
-    Feec.Semigroup.LumerPhillips), the reducing-subspace criterion and the invariant core
-    (Feec.Semigroup.Invariance: C0Group.IsIsometric.isReducing_iff_invariant,
+    A general criterion for constraint propagation, with sharp instances. A linear evolution u' = A
+    u on a Hilbert space H carries a constraint, a closed subspace K that solutions should not
+    leave; for the Hodge wave equation u' = L u, L = d - d*, of a Hilbert complex the constraints
+    are divergence conditions (Gauss laws, the TSD conditions of linearized gravity), and whether
+    they propagate depends on the boundary conditions built into the complex. The criterion
+    (operators on a Hilbert space over R or C, Mathlib's LinearPMap, with Mathlib's adjoint and
+    orthogonal projections): for a skew-adjoint A (A^* = -A), every datum has a unique mild solution
+    on R (existsUnique_mild); the mild solutions starting in K stay in K iff K reduces A, i.e. P_K
+    D(A) is contained in D(A) and A P_K = P_K A on D(A) (isReducing_iff_propagates); and the data
+    whose solutions stay in K form a closed subspace K* of K, the largest closed subspace of K
+    reducing A, which propagates, is mapped into itself by A on D(A) and has D(A) intersected with
+    K* dense in it (exists_invariantCore). For an m-dissipative A (a contraction semigroup, e.g.
+    absorbing boundary conditions) mild solutions on [0, infinity) exist and are unique
+    (existsUnique_mild_of_isMDissipative), and K reduces A iff K and its orthogonal complement both
+    propagate (isReducing_iff_propagates_of_isMDissipative). On Hilbert complexes (closed densely
+    defined d with d o d = 0, the definitions of palomar/feec verbatim): the Hodge wave operator L =
+    d - d^* of every window W^a + ... + W^(a+m-1) is skew-adjoint
+    (HilbertComplex.isSkewAdjoint_wave), and the total space of a reducing subcomplex (closed S^i in
+    W^i with d P_(S^i) = P_(S^j) d on D(d)) reduces L, so it propagates
+    (HilbertComplex.isReducing_wave). Instances: the linearized Einstein-Bianchi system of general
+    relativity (Anderson, Choquet-Bruhat, York 1997), whose constraint-preserving boundary
+    conditions are a central problem of the initial-boundary value problem of general relativity
+    (Friedrich-Nagy 1999; Calabrese-Pullin-Reula-Sarbach-Tiglio 2003; Kreiss-Winicour 2006), on an
+    open cube C = prod_i (b_i, b_i + s) of R^3 (s > 0), with the states (sigma, E, B) in the Hilbert
+    space L^2(C)^3 + L^2(C)^(3x3) + L^2(C)^(3x3) (an l^2 sum, State), the operator given by its
+    graph and shown to be the graph of a skew-adjoint (resp. m-dissipative) operator, so that the
+    instances are applications of the criterion, and K* computed for three boundary conditions. (i)
+    Tensorial mirror conditions sigma . n = 0, E_(n tau) = E_(tau n) = 0, B_(tau tau) = 0 and, in
+    the constraint, B_(nn) = 0 (the face conditions of the fields symmetric under the reflections in
+    the faces, sigma a vector, E a tensor, B a pseudotensor): L is skew-adjoint and the TSD
+    (symmetric, trace-free, divergence-free) constraint is a closed subspace reducing it, so K* = K
+    and the constraint propagates for all data (mirror_propagates), under forcing (tsd_propagates),
+    with existence and uniqueness (tsd_existsUnique), and the constraint contains non-stationary
+    data (exists_nonstationary). (ii) Electric (perfect conductor) conditions sigma = 0, n x E_a =
+    0, the minimal realizations H0^1 -> H0(curl) -> L^2: L is skew-adjoint and K* is the stationary
+    data, a mild solution stays in the constraint {0} x TSD x TSD for all t >= 0 iff its datum lies
+    there and L U0 = 0 (electric_propagates_iff; boundary conditions on the TSD fields only shrink
+    the constraint, so none of them lets non-stationary data propagate), and some TSD datum of D(L)
+    leaves the constraint on every time interval (electric_tsd_leaves). (iii) Absorbing
+    (Silver-Muller) conditions n x E_a + (B_a)_tau = 0 on Q = (0, 1/2)^3 for (E, B): the generator
+    is m-dissipative and K* is not K, some TSD datum has a mild solution on [0, infinity) and every
+    mild solution from it leaves the TSD constraint (absorbing_not_propagates). The system is that
+    of [QuennevilleBelair2015] (§3.4, §4.10, (4.14)): the electric and magnetic parts E, B (3x3
+    matrix fields) of the linearized Weyl curvature, with an auxiliary vector field sigma, evolve by
+    the Hodge wave equation of the matrix grad-curl complex, sigma' = div E + f_sigma, E' = grad
+    sigma - curl B + f_E, B' = curl E + f_B ((grad sigma)_ab = d_b sigma_a; div and curl row by
+    row). The fields are elements of L^2 of the domain over R or C (Mathlib's Lp for the Lebesgue
+    measure restricted to the domain). Mirror conditions: grad, curl and div are defined by Green's
+    formulas against C^1 test functions vanishing on prescribed closed faces of the closed cube and
+    free on the others (IsTest, IsGrad, IsCurl, IsDiv), the operator is IsWave and the constraint
+    Constraint. Electric conditions: div and curl are the same Green's formulas against
+    C_c^infinity(C) (IsCompactTest, the distributional operators), grad and curl with the boundary
+    condition are defined by Green's formula with no boundary term against every field of H(div)
+    resp. H(curl) (IsGrad0, IsCurl0), the operator is IsWave0 and the constraint Constraint0 (sigma
+    = 0, E and B TSD in the sense of distributions, IsTSD0). Absorbing conditions: the energy space
+    of the L^2 fields with an L^2 curl and an L^2 tangential trace on the six faces (IsEnergy, the
+    closure of the triples (Phi, curl Phi, Phi_tau) of C^1 fields), and the generator by its weak
+    equation with the boundary term (IsAbsorbing). Strong and classical solutions of U' = L U + F
+    for an operator L given by its graph (IsStrongSolution, IsClassicalSolution) ask for the
+    equation at every time; mild solutions (IsMildSolution, Pazy §4.2) are continuous with the
+    integral from 0 to t in D(L) and L of it equal to U t - U 0; the forcing class of the existence
+    theorem is IsAdmissible (Cazenave-Haraux Prop 4.1.6). The statement is self-contained over
+    Mathlib; the proof is the library Feec of this repository: Stone's and the Lumer-Phillips
+    theorems (Feec.Semigroup.Stone, Feec.Semigroup.LumerPhillips), the reducing-subspace criterion
+    and the invariant core (Feec.Semigroup.Invariance: C0Group.IsIsometric.isReducing_iff_invariant,
     C0Group.invariantCore; Feec.Semigroup.DissipativeInvariance: IsMDissipative.isReducing_iff),
-    with mild solutions identified with the orbits in Solution/General.lean; the mirror complex
-    is the compression of the Fourier grad-curl complex of the torus of side 2s along the mirror
-    extensions, with the TSD constraint a reducing subcomplex (Feec.Models.Cube.Mirror,
-    Feec.Models.Cube.MirrorTrace); the electric complex on a cube is a compression of a torus
-    complex whose wave group has pure point spectrum, so forward invariance in L^2(TSD) forces
-    stationarity (Feec.Counterexamples.CubeStationary, Feec.Models.Box.EigenDense), and a TSD
-    datum leaves at once because L^2(TSD) intersected with H0(curl) has mean-zero fields only
-    (Feec.Counterexamples.BoundedDomainTSD); for the absorbing conditions the TSD states of the
-    domain of the generator are not dense in the TSD states, since on them the normal-normal
-    component of E vanishes on a face (Feec.Models.Cube.AbsorbingTSD).
+    with mild solutions identified with the orbits in Solution/General.lean; the Hodge wave operator
+    of a closed Hilbert complex and its reducing subcomplexes (Feec.HilbertComplex.Dirac,
+    Feec.HilbertComplex.Reducing, in Solution/Complex.lean); the cube operators are carried to those
+    of Feec by unitary maps of the l^2 state spaces (Solution/General.lean: transfer,
+    isSkewAdjoint_transfer); the mirror complex is the compression of the Fourier grad-curl complex
+    of the torus of side 2s along the mirror extensions, with the TSD constraint a reducing
+    subcomplex (Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorTrace); the electric complex on a
+    cube is a compression of a torus complex whose wave group has pure point spectrum, so forward
+    invariance in L^2(TSD) forces stationarity (Feec.Counterexamples.CubeStationary,
+    Feec.Models.Box.EigenDense), and a TSD datum leaves at once because L^2(TSD) intersected with
+    H0(curl) has mean-zero fields only (Feec.Counterexamples.BoundedDomainTSD); for the absorbing
+    conditions the TSD states of the domain of the generator are not dense in the TSD states, since
+    on them the normal-normal component of E vanishes on a face (Feec.Models.Cube.AbsorbingTSD).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -98,12 +106,14 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "§3.4 (the linearized Einstein-Bianchi system), §4.1 (skew-adjoint evolutions and the constrained operator, Thm 4.4), §4.10 ((4.14), Prop 4.17)"
+    location: "§3.4 (the linearized Einstein-Bianchi system), §4.1 (skew-adjoint evolutions and the constrained operator, Thm 4.4), §4.4 (Thm 4.6, the Hodge wave operator is skew-adjoint), Prop 4.16 (reducing subcomplexes propagate), §4.10 ((4.14), Prop 4.17)"
     relationship: "formalizes"
     note: >-
       Used as a source: the linearized Einstein-Bianchi system as the Hodge wave equation of the
       matrix grad-curl complex with the auxiliary field sigma, the skew-adjoint framework of the
-      evolution and the restriction of the operator to a constraint subspace, and the
+      evolution (the Hodge wave operator of a Hilbert complex, Thm 4.6, there with closed range,
+      here without) and the restriction of the operator to a constraint subspace (reducing
+      subcomplexes, Prop 4.16), and the
       propagation of the TSD constraints with existence and uniqueness (Prop 4.17), here on an
       open cube with the tensorial mirror boundary conditions. Original to the formalization:
       the general criterion as stated (constraint propagation iff reduction of the generator for
@@ -115,6 +125,17 @@ sources:
       (electric_propagates_iff, electric_tsd_leaves, absorbing_not_propagates) and their proofs.
       The formalization is by the thesis author.
     author_endorsement: "participated"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.1 (Hilbert complexes)"
+    relationship: "background"
+    note: "Closed Hilbert complexes and their domain complexes; the definition HilbertComplex (shared verbatim with palomar/feec)."
+    author_endorsement: "not-contacted"
   - title: "Einstein-Bianchi hyperbolic system for general relativity"
     authors:
       - "Arlen Anderson"
@@ -211,31 +232,32 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared, in the namespace FEEC.ConstraintPropagation: the general criterion
-    existsUnique_mild, isReducing_iff_propagates, exists_invariantCore (every skew-adjoint
-    operator on every real or complex Hilbert space, every closed subspace) and
+    existsUnique_mild, isReducing_iff_propagates, exists_invariantCore (every skew-adjoint operator
+    on every real or complex Hilbert space, every closed subspace) and
     existsUnique_mild_of_isMDissipative, isReducing_iff_propagates_of_isMDissipative (every
-    m-dissipative operator); the instances mirror_propagates, tsd_propagates, tsd_existsUnique,
-    exists_nonstationary (mirror conditions, every open cube prod_i (b_i, b_i + s), s > 0, every
-    time interval [t0, t1] and every forcing in the stated classes, complex fields);
-    electric_propagates_iff and electric_tsd_leaves (electric conditions, every open cube, real
-    fields, homogeneous system, mild solutions on R resp. strong solutions on [0, T]);
-    absorbing_not_propagates (absorbing conditions on (0, 1/2)^3 only, real fields, the system
-    in (E, B) without sigma, mild solutions on [0, infinity)). Not compared (proved in Feec,
-    outside this statement): that the Hodge wave operator d - d* of every closed Hilbert complex
-    is skew-adjoint (Feec.HilbertComplex.isSkewAdjoint_wave) and that a reducing subcomplex gives
-    a reducing subspace of it (Feec.HilbertComplex.ReducingSubcomplex.isReducing_totalD), which
-    place the criterion on Hilbert complexes; the BGG weak-symmetry system on every bounded
-    domain, whose TSD constraint does not propagate
-    (Feec.Counterexamples.BoundedBGG.bggComplex_not_propagate, bggComplex_verdict; the electric
-    slot of the invariant core lies in L^2(TSD_0), invariantCore₁_le_tsd₀); the same cube results on boxes with unequal sides (Feec.Models.Box.Mirror,
-    Feec.Counterexamples.BoxStationary.forward_iff_stationary_box); for the absorbing conditions
-    the propagation of the Gauss laws and of TSD in the domain of dependence
+    m-dissipative operator); on Hilbert complexes HilbertComplex.isSkewAdjoint_wave and
+    HilbertComplex.isReducing_wave (every Hilbert complex over R or C on Z, every window); the
+    instances mirror_propagates, tsd_propagates, tsd_existsUnique, exists_nonstationary (mirror
+    conditions, every open cube prod_i (b_i, b_i + s), s > 0, every time interval [t0, t1] and every
+    forcing in the stated classes, complex fields); electric_propagates_iff and electric_tsd_leaves
+    (electric conditions, every open cube, real fields, homogeneous system, mild solutions on R
+    resp. strong solutions on [0, T]); absorbing_not_propagates (absorbing conditions on (0, 1/2)^3
+    only, real fields, the system in (E, B) without sigma, mild solutions on [0, infinity)). Not
+    compared (proved in Feec, outside this statement): the cube instances as Hilbert complexes of
+    the challenge (the mirror and electric operators are stated by their Green's formulas, and their
+    identification with the Hodge wave operators of Hilbert complexes is in the proof); the BGG
+    weak-symmetry system on every bounded domain, whose TSD constraint does not propagate
+    (Feec.Counterexamples.BoundedBGG.bggComplex_not_propagate, bggComplex_verdict; the electric slot
+    of the invariant core lies in L^2(TSD_0), invariantCore₁_le_tsd₀); the same cube results on
+    boxes with unequal sides (Feec.Models.Box.Mirror,
+    Feec.Counterexamples.BoxStationary.forward_iff_stationary_box); for the absorbing conditions the
+    propagation of the Gauss laws and of TSD in the domain of dependence
     (Feec.Models.Cube.AbsorbingTSD); the propagation on the torus T^3 and on R^3
-    (Feec.EinsteinBianchi.torus_tsd_propagates, euclidean_tsd_propagates,
-    tsd_propagates_classical); the finite element discretizations of the system and their
-    convergence (Feec.Instances.EinsteinBianchi.FEM.einsteinBianchiFEM_crown); Maxwell's
-    equations (Feec.Instances.Maxwell). Constraint-preserving boundary conditions of derivative
-    type (Kreiss-Winicour, CPRST) and the Friedrich-Nagy system are not formalized.
+    (Feec.EinsteinBianchi.torus_tsd_propagates, euclidean_tsd_propagates, tsd_propagates_classical);
+    the finite element discretizations of the system and their convergence
+    (Feec.Instances.EinsteinBianchi.FEM.einsteinBianchiFEM_crown); Maxwell's equations
+    (Feec.Instances.Maxwell). Constraint-preserving boundary conditions of derivative type
+    (Kreiss-Winicour, CPRST) and the Friedrich-Nagy system are not formalized.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -267,17 +289,21 @@ automation:
       prompting_notes: "n/a"
   spend_usd: "not tracked"
   notes: >-
-    Human-directed, AI-written development. The Challenge statement and its definitions were
-    written for this submission by an agent and are not yet reviewed by the author; the Solution
-    translates them to the library Feec (Solution/General.lean for the criterion: the definitions
-    are those of Feec, and the mild solutions are the orbits of the Stone group resp. of the
-    Lumer-Phillips semigroup; Solution/Bridge.lean for the mirror conditions: the test
-    functions, the graphs of the differentials of Feec.Models.Cube.Mirror.complexCube and of
-    their adjoints, the wave operator, the constraint, the solutions and the forcing class;
-    Solution/Electric.lean for the electric conditions: the graphs of the minimal complex
-    Feec.Models.Cube.Ident.complexCube and of its adjoints, the constraint L^2(TSD) and the
-    strong solutions; Solution/Absorbing.lean for the absorbing conditions: the energy space,
-    the generator Feec.Models.Cube.Absorbing.absorbing and the mild solutions) and applies
+    Human-directed, AI-written development. The Challenge statement and its definitions were written
+    for this submission by an agent and are not yet reviewed by the author; the Solution translates
+    them to the library Feec (Solution/General.lean for the criterion: the definitions are those of
+    Feec, and the mild solutions are the orbits of the Stone group resp. of the Lumer-Phillips
+    semigroup, and skew-adjointness is carried by unitary maps; Solution/Complex.lean for Hilbert
+    complexes: a complex of the challenge is a Feec Hilbert complex, and its window wave operator
+    that of the Feec window; Solution/Bridge.lean for the mirror conditions: the test functions, the
+    graphs of the differentials of Feec.Models.Cube.Mirror.complexCube and of their adjoints, the
+    unitary map of the states, the wave operator, the constraint, the solutions and the forcing
+    class; Solution/Electric.lean for the electric conditions: the graphs of the minimal complex
+    Feec.Models.Cube.Ident.complexCube and of its adjoints, the unitary map of the states, the
+    constraint L^2(TSD) and the strong solutions; Solution/Absorbing.lean for the absorbing
+    conditions: the energy space, the generator Feec.Models.Cube.Absorbing.absorbing, m-dissipative
+    by isMDissipative_absorbing, and the mild solutions) and applies
+    Feec.HilbertComplex.isSkewAdjoint_wave, Feec.HilbertComplex.ReducingSubcomplex.isReducing_wave,
     Feec.Semigroup.Invariance (C0Group.IsIsometric.isReducing_iff_invariant,
     isReducing_invariantCore, le_invariantCore_of_isReducing, apply_mem_invariantCore,
     mem_closure_domain_inter_invariantCore), LinearPMap.IsMDissipative.isReducing_iff,
@@ -288,9 +314,12 @@ automation:
 
 fidelity:
   divergences: >-
-    (0) The criterion is stated for operators on a Hilbert space, not for Hilbert complexes: it
-    covers the Hodge wave operator L = d - d* of every closed Hilbert complex (skew-adjoint, proved
-    in Feec but not compared) and every other skew-adjoint or m-dissipative generator. The
+    (0) The criterion is stated for operators on a Hilbert space; on Hilbert complexes it is
+    applied through HilbertComplex.isSkewAdjoint_wave (L = d - d* of a window, the differentials
+    inside the window, no closed-range hypothesis) and HilbertComplex.isReducing_wave (a reducing
+    subcomplex reduces L; the converse is not claimed: L reduced by a product of subspaces need
+    not make them a reducing subcomplex). The Hilbert complex structure is that of palomar/feec,
+    verbatim (complexes on Z, differentials d i j for all pairs, zero unless j = i + 1). The
     evolution is through mild solutions (continuous, the integral from 0 to t in D(A) with A of it
     equal to u t - u 0; on R for skew-adjoint A, on [0, infinity) for m-dissipative A), which
     exist and are unique for every datum (compared theorems) and are the orbits of the group resp.
@@ -313,13 +342,16 @@ fidelity:
     particular the constraint-preserving conditions of derivative type of the literature), boxes
     with unequal sides (proved in Feec without the Green's-formula description) and general
     bounded domains are out of scope.
-    (2) The instances are stated in their own terms, not as applications of the criterion: the
-    states (sigma, E, B) form the product Vec x Mat x Mat of Mathlib (sup norm), not an l^2 sum,
-    so the cube operators are not literally operators on a Hilbert space of the Challenge; the
-    proof carries them to the Hodge wave operators of Hilbert complexes in Feec by linear
-    homeomorphisms. The instance theorems say K* = K (mirror_propagates), K* = the stationary data
-    of K (electric_propagates_iff, forward in time, which is stronger than for all t) and
-    K* is not K (absorbing_not_propagates), in terms of the mild solutions of the cube operators.
+    (2) The instances are applications of the criterion: the states form the l^2 sums State
+    (sigma, E, B) and StateQ (E, B) (Mathlib's WithLp 2 of the products), on which each instance
+    asserts that its relation (IsWave, IsWave0, IsAbsorbing) is the graph of an operator, and that
+    this operator is skew-adjoint (mirror, electric) resp. m-dissipative (absorbing), so that the
+    compared criterion theorems apply. mirror_propagates states that the constraint is a closed
+    subspace reducing L (equivalently K* = K, by exists_invariantCore); electric_propagates_iff
+    states K* as the stationary data of the constraint, forward in time, which is stronger than
+    for all t; absorbing_not_propagates states K* not K through a TSD datum all of whose mild
+    solutions leave. The cube operators are not stated as the Hodge wave operators of Hilbert
+    complexes of the challenge (that identification is in the proof).
     (3) Weak formulation: the mirror operators and divergence constraints are Green's formulas
     against C^1 test functions on R^3 vanishing on the closed faces normal to the e_j of a
     prescribed set and free on the other faces; that they define exactly the closed operators of
@@ -359,10 +391,10 @@ review:
   reviewers:
     - "none"
   notes: >-
-    The Challenge statement is new and not yet reviewed by the author; an independent agent
-    editorial review checked the definitions, the hypotheses and the non-vacuity of the earlier
-    six compared cube theorems; the criterion and the mild-solution instances were added after
-    it and are not yet independently reviewed. The library results it is
+    The Challenge statement is new and not yet reviewed by the author; independent agent
+    editorial reviews checked the definitions, the hypotheses and the non-vacuity of the cube
+    theorems, then the criterion, the Hilbert-complex theorems and the instances as operators on
+    the l^2 state spaces. The library results it is
     proved from were gated by a full build (zero warnings), an axiom audit (propext,
     Classical.choice, Quot.sound only), regression snapshots and an independent AI review. No
     external mathematical review.
@@ -395,11 +427,21 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "m-dissipative A, closed K: K reduces A iff the mild solutions starting in K stay in K and those starting in the orthogonal complement stay there."
+    - source: "[QuennevilleBelair2015], Thm 4.6 (there with closed range)"
+      lean: "FEEC.ConstraintPropagation.HilbertComplex.isSkewAdjoint_wave"
+      module: "Challenge"
+      status: "proved"
+      note: "The Hodge wave operator L = d - d* of every window of every Hilbert complex is skew-adjoint."
+    - source: "[QuennevilleBelair2015], Prop 4.16"
+      lean: "FEEC.ConstraintPropagation.HilbertComplex.isReducing_wave"
+      module: "Challenge"
+      status: "proved"
+      note: "The total space of a reducing subcomplex reduces the wave operator of every window, so it propagates."
     - source: "[QuennevilleBelair2015], Prop 4.17, §4.10 (4.14)"
       lean: "FEEC.ConstraintPropagation.mirror_propagates"
       module: "Challenge"
       status: "proved"
-      note: "Mirror conditions, K* = K: unique mild solutions on R, and those starting in the constraint stay in it, on every open cube."
+      note: "Mirror conditions, K* = K: IsWave is the graph of a skew-adjoint operator on the l^2 states, and the constraint is a closed subspace reducing it, on every open cube."
     - source: "[QuennevilleBelair2015], Prop 4.17, §4.10 (4.14)"
       lean: "FEEC.ConstraintPropagation.tsd_propagates"
       module: "Challenge"
@@ -419,7 +461,7 @@ alignment:
       lean: "FEEC.ConstraintPropagation.electric_propagates_iff"
       module: "Challenge"
       status: "proved"
-      note: "Electric conditions, K* = stationary data: unique mild solutions on R, and a mild solution stays in the constraint {0} x TSD x TSD for all t >= 0 iff its datum lies there and L U0 = 0."
+      note: "Electric conditions, K* = stationary data: IsWave0 is the graph of a skew-adjoint operator on the l^2 states, and a mild solution stays in the constraint {0} x TSD x TSD for all t >= 0 iff its datum lies there and L U0 = 0."
     - source: "constraint propagation under electric boundary conditions"
       lean: "FEEC.ConstraintPropagation.electric_tsd_leaves"
       module: "Challenge"
@@ -429,6 +471,6 @@ alignment:
       lean: "FEEC.ConstraintPropagation.absorbing_not_propagates"
       module: "Challenge"
       status: "proved"
-      note: "Absorbing conditions on (0, 1/2)^3, K* is not K: some TSD datum has a mild solution of (E, B)' = A (E, B) on [0, infinity), and every mild solution from it leaves the TSD constraint."
+      note: "Absorbing conditions on (0, 1/2)^3, K* is not K: IsAbsorbing is the graph of an m-dissipative operator A on the l^2 states, the TSD pairs form a closed subspace not reducing A, some TSD datum has a mild solution of (E, B)' = A (E, B) on [0, infinity), and every mild solution from it leaves the TSD constraint."
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

@@ -4,6 +4,7 @@ public import Mathlib.Analysis.Calculus.ContDiff.Defs
 public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
 public import Mathlib.MeasureTheory.Constructions.Pi
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Integral.IntervalIntegral.Basic
@@ -82,7 +83,7 @@ end Solutions
 section Criterion
 
 variable {𝕜 H : Type*} [RCLike 𝕜] [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
-  [CompleteSpace H] [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H]
+  [CompleteSpace H]
 
 /-- `A : D(A) ⊆ H → H` is **skew-adjoint**: `A† = -A`, with equal domains (Mathlib's adjoint of
 a densely defined operator). By Stone's theorem these are the generators of the strongly
@@ -101,7 +102,74 @@ def IsReducing (A : H →ₗ.[𝕜] H) (K : Submodule 𝕜 H) [K.HasOrthogonalPr
   ∀ x : A.domain, ∃ hx : K.starProjection (x : H) ∈ A.domain,
     A ⟨_, hx⟩ = K.starProjection (A x)
 
+variable [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H]
+
 end Criterion
+
+/-! ### Hilbert complexes -/
+
+section Complex
+
+open LinearPMap
+
+/-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
+zero unless `j = i + 1`, with `R(d i j) ⊆ D(d j k)` and `d j k ∘ d i j = 0`. -/
+structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i, NormedAddCommGroup (W i)]
+    [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] where
+  /-- the differentials -/
+  d : ∀ i j, W i →ₗ.[𝕜] W j
+  shape : ∀ i j, ¬ i + 1 = j → d i j = 0
+  dense : ∀ i j, Dense ((d i j).domain : Set (W i))
+  closed : ∀ i j, (d i j).IsClosed
+  mapsTo : ∀ i j k (x : (d i j).domain), (d i j x : W j) ∈ (d j k).domain
+  d_comp_d : ∀ i j k (x : (d i j).domain), d j k ⟨_, mapsTo i j k x⟩ = 0
+
+variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+
+/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of a window (an `ℓ²` sum). -/
+abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
+
+namespace HilbertComplex
+
+variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
+
+/-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
+def totalDomain : Submodule 𝕜 (Total W a m) where
+  carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
+  add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
+  zero_mem' _ _ := (H.d _ _).domain.zero_mem
+  smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
+
+/-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
+def totalD : Total W a m →ₗ.[𝕜] Total W a m where
+  domain := H.totalDomain a m
+  toFun :=
+    { toFun := fun x => WithLp.toLp 2 fun j : Fin m =>
+        ∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, x.2 i j⟩
+      map_add' := fun x y => PiLp.ext fun j => by
+        rw [PiLp.add_apply, PiLp.toLp_apply, PiLp.toLp_apply, PiLp.toLp_apply,
+          ← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_add ⟨_, x.2 i j⟩ ⟨_, y.2 i j⟩
+      map_smul' := fun c x => PiLp.ext fun j => by
+        rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
+          Finset.smul_sum]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
+
+/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
+def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
+
+/-- A **reducing subcomplex** of `H` ([QuennevilleBelair2015], Props 4.16, 4.17): closed subspaces
+`Sⁱ ⊆ Wⁱ` (given with their orthogonal projections `P_{Sⁱ}`) reducing every differential:
+`P_{Sⁱ} D(d i j) ⊆ D(d i j)` and `d i j P_{Sⁱ} = P_{Sʲ} d i j` on `D(d i j)`. -/
+def IsReducingSubcomplex (S : ∀ i, Submodule 𝕜 (W i)) [∀ i, (S i).HasOrthogonalProjection] :
+    Prop :=
+  ∀ i j (x : (H.d i j).domain), ∃ hx : (S i).starProjection (x : W i) ∈ (H.d i j).domain,
+    H.d i j ⟨_, hx⟩ = (S j).starProjection (H.d i j x)
+
+end HilbertComplex
+
+end Complex
 
 /-! ### The linearized Einstein–Bianchi system on a cube -/
 
@@ -109,8 +177,6 @@ end Criterion
 def cube {n : ℕ} (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
 
 variable {𝕜 : Type*} [RCLike 𝕜] (b : Fin 3 → ℝ) (s : ℝ)
-
-/-! ### Fields on the cube -/
 
 variable (𝕜) in
 /-- `L²(C; 𝕜)`, for the Lebesgue measure restricted to `C = cube b s`. -/
@@ -125,8 +191,9 @@ variable (𝕜) in
 abbrev Mat := PiLp 2 fun _ : Fin 3 × Fin 3 => L2 𝕜 b s
 
 variable (𝕜) in
-/-- The states `(σ, E, B)` of the system. -/
-abbrev State := Vec 𝕜 b s × Mat 𝕜 b s × Mat 𝕜 b s
+/-- The states `(σ, E, B)` of the system: the Hilbert space `L²(C; 𝕜³) ⊕ L²(C; 𝕜³ˣ³) ⊕
+L²(C; 𝕜³ˣ³)` (an `ℓ²` sum), with `U.fst = σ`, `U.snd.fst = E`, `U.snd.snd = B`. -/
+abbrev State := WithLp 2 (Vec 𝕜 b s × WithLp 2 (Mat 𝕜 b s × Mat 𝕜 b s))
 
 /-- The **test functions vanishing on the faces normal to `e_j`, `j ∈ S`**: `ψ ∈ C¹(ℝ³; 𝕜)` with
 `ψ = 0` on the closed faces `{x_j = b_j}` and `{x_j = b_j + s}` of the closed cube `C̄` for
@@ -185,19 +252,21 @@ def IsTSD₀ (E : Mat 𝕜 b s) : Prop := IsTSD b s (fun _ => IsCompactTest b s)
 /-! ### Mirror boundary conditions -/
 
 /-- **`V = L U` for the linearized Einstein–Bianchi operator with mirror boundary conditions**,
-`L (σ, E, B) = (div E, grad σ - curl B, curl E)`, with `σ · n = 0` (`grad σ`), `E_{nτ} = 0`
-(`curl E`), `E_{τn} = 0` (`div E`) and `B_{ττ} = 0` (`curl B`) on `∂C`. The domain `D(L)` is the
-set of the `U` with `IsWave U V` for some `V`. -/
+`L (σ, E, B) = (div E, grad σ - curl B, curl E)`, with `E_{τn} = 0` (`div E`), `σ · n = 0`
+(`grad σ`), `B_{ττ} = 0` (`curl B`) and `E_{nτ} = 0` (`curl E`) on `∂C`. The domain `D(L)` is
+the set of the `U` with `IsWave U V` for some `V`. -/
 def IsWave (U V : State 𝕜 b s) : Prop :=
-  ∃ G CE D CB, IsGrad b s U.1 G ∧ IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) U.2.1 CE ∧
-    IsDiv b s (fun a => IsTest b s {a}) U.2.1 D ∧
-      IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) U.2.2 CB ∧ V = (D, G - CB, CE)
+  IsDiv b s (fun a => IsTest b s {a}) U.snd.fst V.fst ∧
+    (∃ G CB, IsGrad b s U.fst G ∧
+      IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) U.snd.snd CB ∧
+        V.snd.fst = G - CB) ∧
+    IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) U.snd.fst V.snd.snd
 
 /-- **The constraint with mirror boundary conditions** `{0} × TSD × TSD`: `σ = 0`, `E` TSD with
 `E_{τn} = 0` and `B` TSD with `B_{nn} = 0` on `∂C`. -/
 def Constraint (U : State 𝕜 b s) : Prop :=
-  U.1 = 0 ∧ IsTSD b s (fun a => IsTest b s {a}) U.2.1 ∧
-    IsTSD b s (fun a => IsTest b s {j | j ≠ a}) U.2.2
+  U.fst = 0 ∧ IsTSD b s (fun a => IsTest b s {a}) U.snd.fst ∧
+    IsTSD b s (fun a => IsTest b s {j | j ≠ a}) U.snd.snd
 
 /-! ### Electric boundary conditions -/
 
@@ -221,15 +290,21 @@ def IsCurl₀ (E C : Mat 𝕜 b s) : Prop :=
 curl E)` with `σ = 0` (`grad σ`) and `n × Eₐ = 0` (`curl E`) on `∂C`, and the distributional
 `div E` and `curl B`. -/
 def IsWave₀ (U V : State 𝕜 b s) : Prop :=
-  ∃ G CE D CB, IsGrad₀ b s U.1 G ∧ IsCurl₀ b s U.2.1 CE ∧
-    IsDiv b s (fun _ => IsCompactTest b s) U.2.1 D ∧
-      IsCurl b s (fun _ _ => IsCompactTest b s) U.2.2 CB ∧ V = (D, G - CB, CE)
+  IsDiv b s (fun _ => IsCompactTest b s) U.snd.fst V.fst ∧
+    (∃ G CB, IsGrad₀ b s U.fst G ∧ IsCurl b s (fun _ _ => IsCompactTest b s) U.snd.snd CB ∧
+      V.snd.fst = G - CB) ∧
+    IsCurl₀ b s U.snd.fst V.snd.snd
 
 /-- **The constraint with no boundary condition** `{0} × TSD × TSD`: `σ = 0`, `E` and `B` TSD in
 the sense of distributions. -/
-def Constraint₀ (U : State 𝕜 b s) : Prop := U.1 = 0 ∧ IsTSD₀ b s U.2.1 ∧ IsTSD₀ b s U.2.2
+def Constraint₀ (U : State 𝕜 b s) : Prop :=
+  U.fst = 0 ∧ IsTSD₀ b s U.snd.fst ∧ IsTSD₀ b s U.snd.snd
 
 /-! ### Absorbing boundary conditions on `Q = (0, ½)³` -/
+
+/-- The states `(E, B)` on `Q = cube 0 (1/2)` with real fields: the Hilbert space
+`L²(Q; ℝ³ˣ³) ⊕ L²(Q; ℝ³ˣ³)` (an `ℓ²` sum), with `U.fst = E`, `U.snd = B`. -/
+abbrev StateQ := WithLp 2 (Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2))
 
 /-- The faces of `Q = cube 0 (1/2)`: `{x_m = ½}` for `f = (m, true)`, `{x_m = 0}` for
 `f = (m, false)`, parametrized by the square `(0, ½)²` (`y ↦ x` with the coordinate `x_m`
@@ -261,13 +336,13 @@ def IsEnergy (E C : Mat ℝ 0 (1 / 2)) (β : Bdry) : Prop :=
         ((β q : (Fin 2 → ℝ) → ℝ) y - Φ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)) ^ 2) < ε
 
 /-- **`V = A U` for the absorbing condition** `n × Eₐ + (Bₐ)_τ = 0` on `∂Q`,
-`A (E, B) = (-curl B, curl E)`: `E` lies in the energy space with `curl E = V.2` and tangential
-trace `β`, and `V.1 = -curl B` in the weak form whose boundary term is `-∫_{∂Q} β · Ψ_τ`: for
-every `C¹` field `Ψ`, `∫_Q V.1 : Ψ = -∫_Q B : curl Ψ - ∫_{∂Q} β · Ψ_τ`. -/
-def IsAbsorbing (U V : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2)) : Prop :=
-  ∃ β, IsEnergy U.1 V.2 β ∧ ∀ Ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ p, ContDiff ℝ 1 (Ψ p)) →
-    ∑ p, ∫ x in cube 0 (1 / 2), (V.1 p : (Fin 3 → ℝ) → ℝ) x * Ψ p x =
-      -(∑ p, ∫ x in cube 0 (1 / 2), (U.2 p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ p x) -
+`A (E, B) = (-curl B, curl E)`: `E` lies in the energy space with `curl E = V.snd` and tangential
+trace `β`, and `V.fst = -curl B` in the weak form whose boundary term is `-∫_{∂Q} β · Ψ_τ`: for
+every `C¹` field `Ψ`, `∫_Q V.fst : Ψ = -∫_Q B : curl Ψ - ∫_{∂Q} β · Ψ_τ`. -/
+def IsAbsorbing (U V : StateQ) : Prop :=
+  ∃ β, IsEnergy U.fst V.snd β ∧ ∀ Ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ p, ContDiff ℝ 1 (Ψ p)) →
+    ∑ p, ∫ x in cube 0 (1 / 2), (V.fst p : (Fin 3 → ℝ) → ℝ) x * Ψ p x =
+      -(∑ p, ∫ x in cube 0 (1 / 2), (U.snd p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ p x) -
         ∑ q, ∫ y in cube 0 (1 / 2),
           (β q : (Fin 2 → ℝ) → ℝ) y * Ψ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)
 

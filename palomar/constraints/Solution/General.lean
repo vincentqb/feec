@@ -1,6 +1,7 @@
 module
 
-public import Solution.Absorbing
+public import Solution.Defs
+public import Feec.HilbertComplex.Reweight
 public import Feec.Semigroup.Invariance
 public import Feec.Semigroup.DissipativeInvariance
 public import Feec.Semigroup.LumerPhillips
@@ -18,6 +19,9 @@ difference `w = ∫₀^· u - ∫₀^· S τ (u 0)` of the primitives of a mild 
 solves `w' = A w`, `w 0 = 0`, so vanishes (the energy argument, resp. uniqueness for a dissipative
 generator). The criterion is then that of `Feec`: `C0Group.IsIsometric.isReducing_iff_invariant`,
 the invariant core `C0Group.invariantCore` and `LinearPMap.IsMDissipative.isReducing_iff`.
+Skew-adjointness is carried along unitary maps (`transfer`, `isSkewAdjoint_transfer`, from
+`LinearPMap.Intertwines.isSkewAdjoint`), which the instances use to move the operators of `Feec`
+to the states of the challenge.
 
 ## References
 
@@ -75,6 +79,41 @@ theorem IsMDissipative.toFeec {A : H →ₗ.[𝕜] H} (h : IsMDissipative A) : A
   ⟨h.1, 1, one_pos, fun y => by
     obtain ⟨x, hx⟩ := h.2 y
     exact ⟨x, by rwa [RCLike.ofReal_one, one_smul]⟩⟩
+
+omit [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H] in
+theorem IsMDissipative.ofFeec {A : H →ₗ.[𝕜] H} (h : A.IsMDissipative) : IsMDissipative A :=
+  ⟨h.dissipative, fun y => by
+    obtain ⟨x, hx⟩ := h.surjective one_pos y
+    exact ⟨x, by rwa [RCLike.ofReal_one, one_smul] at hx⟩⟩
+
+/-! ### Unitary equivalence -/
+
+section Transfer
+
+variable {X Y : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [CompleteSpace X]
+  [NormedAddCommGroup Y] [InnerProductSpace 𝕜 Y] [CompleteSpace Y]
+
+/-- The operator `e⁻¹ B e` on `X`, for a unitary `e : X ≃ Y` and `B` on `Y`. -/
+def transfer (e : X ≃ₗᵢ[𝕜] Y) (B : Y →ₗ.[𝕜] Y) : X →ₗ.[𝕜] X :=
+  B.conj e.symm.toContinuousLinearEquiv e.symm.toContinuousLinearEquiv
+
+omit [CompleteSpace X] [CompleteSpace Y] in
+theorem mem_graph_transfer (e : X ≃ₗᵢ[𝕜] Y) (B : Y →ₗ.[𝕜] Y) {x y : X} :
+    (x, y) ∈ (transfer e B).graph ↔ (e x, e y) ∈ B.graph :=
+  mem_conj_graph_iff
+
+/-- **Skew-adjointness is carried by a unitary map.** -/
+theorem isSkewAdjoint_transfer (e : X ≃ₗᵢ[𝕜] Y) {B : Y →ₗ.[𝕜] Y} (hB : B.IsSkewAdjoint) :
+    IsSkewAdjoint (transfer e B) := by
+  have h : Intertwines (e.symm : Y →L[𝕜] X) B (transfer e B) :=
+    ⟨fun x => apply_mem_conj_domain.2 x.2, fun x => conj_apply_apply x⟩
+  have h' : Intertwines (e.symm.symm : X →L[𝕜] Y) (transfer e B) B := by
+    refine ⟨fun x => x.2, fun x => ?_⟩
+    change B ⟨e x, x.2⟩ = e (e.symm (B ⟨e x, x.2⟩))
+    rw [LinearIsometryEquiv.apply_symm_apply]
+  exact h.isSkewAdjoint h' hB
+
+end Transfer
 
 /-! ### Groups: mild solutions are orbits -/
 

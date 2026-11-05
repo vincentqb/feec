@@ -431,6 +431,9 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
     ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
       ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
         K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
+  /-- a closed `K` reduces `A` iff `S t`, `t ≥ 0`, maps `K` into `K` and `Kᗮ` into `Kᗮ` (the
+  criterion for m-dissipative `A`; for a unitary group, `WaveVerdict.propagates_iff` asks `K`
+  alone, for all `t`) -/
   reducing_iff (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : IsReducing A K ↔
     (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ
 
@@ -561,7 +564,8 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
         F.graphDist a m h y ≤ M) :
     ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
       ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
-  /-- a closed constraint `K` propagates iff it reduces `L` ([Kato1995], §III.5.6) -/
+  /-- a closed constraint `K` propagates (for all `t`, forward and backward) iff it reduces `L`
+  (`IsReducing`, [Kato1995], §III.5.6) -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
   /-- the invariant core: the data whose solutions stay in `K` form the largest closed subspace
@@ -600,8 +604,8 @@ structure DynamicVerdict : Prop where
 static verdict in every degree with bounded projections and closed ranges, the wave and heat
 verdicts on every window `F` approximates. -/
 structure Verdict : Prop where
-  /-- the wave operator `L = 𝐝 - 𝐝*` of every window is skew-adjoint, with no closed range
-  ([QuennevilleBelair2015], Thm 4.6) -/
+  /-- the wave operator `L = 𝐝 - 𝐝*` of every window is skew-adjoint, `L† = -L`, with no
+  closed-range or approximation hypothesis ([QuennevilleBelair2015], Thm 4.6) -/
   skewAdjoint (a : ℤ) (m : ℕ) : (H.wave a m)† = -H.wave a m
   /-- the static FEEC theorem in degree `j` -/
   static (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)

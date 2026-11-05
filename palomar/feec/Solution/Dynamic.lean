@@ -530,7 +530,8 @@ theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
   have hEV : EvolutionVerdict (H.wave a m) F.l (F.Xh a m) (F.Lh a m) G.toApprox.U := by
     rw [H.wave_eq a m, hL]
     exact evolutionVerdict_of (S' := G.toApprox.S) (fun t ht => (V.S_eq_U ht).symm)
-      G.toApprox.isMDissipative (fun _ => rfl) G.toApprox.dissipative V.isClassicalSolution V.unique V.antitone
+      G.toApprox.isMDissipative (fun _ => rfl) G.toApprox.dissipative V.isClassicalSolution V.unique
+      V.antitone
       (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
       (fun x v hv T => V.converges (G.mem_toCore_closure x) hv T)
       (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>

@@ -16,24 +16,28 @@ public import Mathlib.Topology.UniformSpace.UniformConvergence
 Finite element exterior calculus ([AFW2006], [AFW2010]) approximates a Hilbert complex
 `⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely defined operators `d` by finite-dimensional subcomplexes
 `Vₕ` of its domain complex `Vⁱ = D(dⁱ)` (graph norm `‖x‖_V = (‖x‖² + ‖d x‖²)^½`) with commuting
-cochain projections `πₕ`. This file states its approximation theory in one place: the static
-theory of [AFW2010], §3.3–§3.4, the semidiscrete Hodge wave equation of
-[QuennevilleBelair2015], Ch. 4, the heat equation, fully discrete A-stable time stepping, and
-the variational crimes of [HolstStern2012], §3, for every Hilbert complex and every family.
+cochain projections `πₕ`. This file states its approximation theory as one theorem family, for
+every Hilbert complex and every family: the static theory of [AFW2010], §3.3–§3.4; the evolutions
+on a window of consecutive degrees, the Hodge wave equation of [QuennevilleBelair2015], Ch. 4,
+and the heat equation, with the propagation of constraints; their fully discrete A-stable time
+stepping; rates under a Jackson estimate; and the variational crimes of [HolstStern2012], §3.
 
-* `FEEC.feec` (`HilbertComplex.SubcomplexFamily.Verdict`): for bounded `πₕ` and closed ranges,
-  the gaps between `ℌʲ` and `ℌₕʲ`, `Hʲ ≅ Hʲ(Vₕ)`, the uniform discrete Poincaré and inf-sup
-  conditions and quasi-optimality of the mixed method ([AFW2010], Thms 3.4–3.6, 3.8, 3.9); on
-  every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` which `Vₕ` approximates, the wave equation `ξ' = L ξ`,
-  `L = 𝐝 - 𝐝*` skew-adjoint on every window, is well posed with a convergent Galerkin
-  approximation and an error bound by the best approximation of the trajectory; a closed
-  constraint `K` propagates iff it reduces `L` ([Kato1995], §III.5.6), it propagates exactly
-  from its invariant core `K*`, the largest closed subspace of `K` reducing `L`, and the
-  constraint of a reducing subcomplex propagates ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14,
-  Props 4.13, 4.16, 4.17); so does the heat equation `u' = L² u = -Δ u`
-  ([GilletteHolstZhu2017]); for both, `K` reduces the generator iff `K` and `Kᗮ` propagate
-  forward; and every A-stable rational scheme of order `p` (θ-schemes, `θ ≥ 1/2`, included)
-  converges with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` ([BrennerThomee1979]).
+* `FEEC.feec` (`HilbertComplex.SubcomplexFamily.Verdict`):
+  - static: for bounded `πₕ` and closed ranges, the gaps between `ℌʲ` and `ℌₕʲ`,
+    `Hʲ ≅ Hʲ(Vₕ)`, the uniform discrete Poincaré and inf-sup conditions and quasi-optimality of
+    the mixed method ([AFW2010], Thms 3.4–3.6, 3.8, 3.9);
+  - evolution: the wave operator `L = 𝐝 - 𝐝*` of every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` is
+    skew-adjoint; on every window which `Vₕ` approximates, the wave equation `ξ' = L ξ` is well
+    posed with a convergent Galerkin approximation and an error bound by the best approximation
+    of the trajectory ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17), and so
+    is the heat equation `u' = L² u = -Δ u` ([GilletteHolstZhu2017]);
+  - constraints: a closed constraint `K` propagates under the wave equation iff it reduces `L`
+    (in the sense of [Kato1995], §III.5.6); the data that stay in `K` form its invariant core
+    `K*`, the largest closed subspace of `K` reducing `L`; the constraint of a reducing
+    subcomplex propagates ([QuennevilleBelair2015], Prop 4.16); and for the wave and the heat
+    equation, `K` reduces the generator iff `K` and `Kᗮ` propagate forward in time;
+  - fully discrete: for both equations, every A-stable rational scheme of order `p` (θ-schemes,
+    `θ ≥ 1/2`, included) converges with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` ([BrennerThomee1979]).
 * `FEEC.feec_rated`: for a Jackson estimate, the mixed method is `O(L hᵒʳᵈ⁽ˢ⁾)` and the fully
   discrete wave error `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖`.
 * `FEEC.staticFEEC_uniform`: the static constant depends only on the bound of `πₕ` and the
@@ -469,6 +473,9 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
     ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
       ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
         K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
+  /-- a closed `K` reduces `A` iff `S t`, `t ≥ 0`, maps `K` into `K` and `Kᗮ` into `Kᗮ` (the
+  criterion for m-dissipative `A`; for a unitary group, `WaveVerdict.propagates_iff` asks `K`
+  alone, for all `t`) -/
   reducing_iff (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : IsReducing A K ↔
     (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ
 
@@ -599,7 +606,8 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
         F.graphDist a m h y ≤ M) :
     ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
       ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
-  /-- a closed constraint `K` propagates iff it reduces `L` ([Kato1995], §III.5.6) -/
+  /-- a closed constraint `K` propagates (for all `t`, forward and backward) iff it reduces `L`
+  (`IsReducing`, [Kato1995], §III.5.6) -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
   /-- the invariant core: the data whose solutions stay in `K` form the largest closed subspace
@@ -638,8 +646,8 @@ structure DynamicVerdict : Prop where
 static verdict in every degree with bounded projections and closed ranges, the wave and heat
 verdicts on every window `F` approximates. -/
 structure Verdict : Prop where
-  /-- the wave operator `L = 𝐝 - 𝐝*` of every window is skew-adjoint, with no closed range
-  ([QuennevilleBelair2015], Thm 4.6) -/
+  /-- the wave operator `L = 𝐝 - 𝐝*` of every window is skew-adjoint, `L† = -L`, with no
+  closed-range or approximation hypothesis ([QuennevilleBelair2015], Thm 4.6) -/
   skewAdjoint (a : ℤ) (m : ℕ) : (H.wave a m)† = -H.wave a m
   /-- the static FEEC theorem in degree `j` -/
   static (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)

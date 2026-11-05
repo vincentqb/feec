@@ -25,12 +25,15 @@ the variational crimes of [HolstStern2012], §3, for every Hilbert complex and e
   the gaps between `ℌʲ` and `ℌₕʲ`, `Hʲ ≅ Hʲ(Vₕ)`, the uniform discrete Poincaré and inf-sup
   conditions and quasi-optimality of the mixed method ([AFW2010], Thms 3.4–3.6, 3.8, 3.9); on
   every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` which `Vₕ` approximates, the wave equation `ξ' = L ξ`,
-  `L = 𝐝 - 𝐝*`, is well posed with a convergent Galerkin approximation, an error bound by the
-  best approximation of the trajectory, and constraints propagate iff they reduce `L`
-  ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17); so does the heat equation
-  `u' = L² u = -Δ u` ([GilletteHolstZhu2017]); and every A-stable rational scheme of order `p`
-  (θ-schemes, `θ ≥ 1/2`, included) converges with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`
-  ([BrennerThomee1979]).
+  `L = 𝐝 - 𝐝*` skew-adjoint on every window, is well posed with a convergent Galerkin
+  approximation and an error bound by the best approximation of the trajectory; a closed
+  constraint `K` propagates iff it reduces `L` ([Kato1995], §III.5.6), it propagates exactly
+  from its invariant core `K*`, the largest closed subspace of `K` reducing `L`, and the
+  constraint of a reducing subcomplex propagates ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14,
+  Props 4.13, 4.16, 4.17); so does the heat equation `u' = L² u = -Δ u`
+  ([GilletteHolstZhu2017]); for both, `K` reduces the generator iff `K` and `Kᗮ` propagate
+  forward; and every A-stable rational scheme of order `p` (θ-schemes, `θ ≥ 1/2`, included)
+  converges with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` ([BrennerThomee1979]).
 * `FEEC.feec_rated`: for a Jackson estimate, the mixed method is `O(L hᵒʳᵈ⁽ˢ⁾)` and the fully
   discrete wave error `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖`.
 * `FEEC.staticFEEC_uniform`: the static constant depends only on the bound of `πₕ` and the
@@ -61,6 +64,7 @@ theorems assert to exist, characterized by their strong solutions.
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -442,7 +446,8 @@ def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : 
 finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique strong solution
 from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; the semidiscrete solutions
 `exp(t Bₕ) vₕ` and the iterates `r(τₕ Bₕ)ⁿ vₕ` of every A-stable rational scheme of order
-`p ≥ 1` converge as `h, τₕ → 0`, the latter with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`. -/
+`p ≥ 1` converge as `h, τₕ → 0`, the latter with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`; and
+a closed `K` reduces `A` iff `S` keeps both `K` and `Kᗮ` forward in time. -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
   dense : Dense (A.domain : Set E)
@@ -464,6 +469,8 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
     ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
       ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
         K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
+  reducing_iff (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : IsReducing A K ↔
+    (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ
 
 end Evolution
 
@@ -592,9 +599,23 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
         F.graphDist a m h y ≤ M) :
     ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
       ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
-  /-- a closed constraint `K` propagates iff it reduces `L` -/
+  /-- a closed constraint `K` propagates iff it reduces `L` ([Kato1995], §III.5.6) -/
   propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
     IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
+  /-- the invariant core: the data whose solutions stay in `K` form the largest closed subspace
+  `K* ⊆ K` reducing `L` -/
+  invariantCore (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
+    ∃ (Ks : Submodule 𝕜 (Total W a m)) (_ : Ks.HasOrthogonalProjection),
+      (∀ x, x ∈ Ks ↔ ∀ t, S t x ∈ K) ∧ IsReducing (H.wave a m) Ks ∧
+      ∀ (M : Submodule 𝕜 (Total W a m)) [M.HasOrthogonalProjection], M ≤ K →
+        IsReducing (H.wave a m) M → M ≤ Ks
+  /-- the constraint of a reducing subcomplex propagates: closed `Zⁱ ⊆ Wⁱ` with
+  `P_{Zⁱ} D(d) ⊆ D(d)` and `d P_{Zⁱ} = P_{Zʲ} d` ([QuennevilleBelair2015], Prop 4.16) -/
+  subcomplex (Z : ∀ i, Submodule 𝕜 (W i)) [∀ i, (Z i).HasOrthogonalProjection]
+    (hZ : ∀ i j (x : (H.d i j).domain), ∃ hx : (Z i).starProjection (x : W i) ∈ (H.d i j).domain,
+      H.d i j ⟨_, hx⟩ = (Z j).starProjection (H.d i j x))
+    (t : ℝ) (x : Total W a m) (hx : ∀ i : Fin m, x i ∈ Z (a + (i : ℕ))) (i : Fin m) :
+    S t x i ∈ Z (a + (i : ℕ))
 
 /-- **The conclusions of the FEEC theorem for the Hodge wave and heat equations** on the
 window. -/
@@ -613,10 +634,13 @@ structure DynamicVerdict : Prop where
     ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
 
-/-- **The conclusions of the FEEC theorem** for `F`: the static verdict in every degree with
-bounded projections and closed ranges, the wave and heat verdicts on every window `F`
-approximates. -/
+/-- **The conclusions of the FEEC theorem** for `F`: skew-adjointness of the wave operators, the
+static verdict in every degree with bounded projections and closed ranges, the wave and heat
+verdicts on every window `F` approximates. -/
 structure Verdict : Prop where
+  /-- the wave operator `L = 𝐝 - 𝐝*` of every window is skew-adjoint, with no closed range
+  ([QuennevilleBelair2015], Thm 4.6) -/
+  skewAdjoint (a : ℤ) (m : ℕ) : (H.wave a m)† = -H.wave a m
   /-- the static FEEC theorem in degree `j` -/
   static (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
     (hj : IsClosed (H.boundaries j : Set (W j)))
@@ -890,8 +914,8 @@ theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
   sorry
 
 /-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
-4.7, 4.14, Props 4.13, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family of
-subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
+4.7, 4.14, Props 4.13, 4.16, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family
+of subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
 (`HilbertComplex.SubcomplexFamily.Verdict`). -/
 theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) : F.Verdict := by
   sorry

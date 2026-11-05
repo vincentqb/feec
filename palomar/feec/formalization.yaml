@@ -1,7 +1,7 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of finite element exterior calculus for
-# Hilbert complexes (`palomar/feec/`; it replaces the former packages palomar/static and
-# palomar/dynamic, whose compared theorems it contains).
+# Hilbert complexes (`palomar/feec/`; it replaces the former packages palomar/static,
+# palomar/dynamic and palomar/constraints, whose general compared theorems it contains).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
@@ -13,12 +13,15 @@ project:
     The approximation theory of finite element exterior calculus in one statement: the static
     theory of Arnold-Falk-Winther (cohomology, discrete stability, quasi-optimality of the mixed
     Hodge Laplacian), the semidiscrete Hodge wave equation of the author's thesis (well-posedness,
-    convergence, error bound, constraint propagation), the Hodge heat equation, fully discrete
+    convergence, error bound, constraint propagation and the invariant core of a constraint), the
+    Hodge heat equation, fully discrete
     A-stable time stepping, Jackson rates, and the variational crimes of Holst-Stern, for an
     arbitrary Hilbert complex of closed densely defined operators on Z (any RCLike field) and an
     arbitrary family of finite-dimensional subcomplexes of its domain complex V = D(d) with
     commuting cochain projections, refined along any filter. Seven compared theorems.
-    FEEC.feec (the verdict SubcomplexFamily.Verdict): (static, [AFW2010] Thms 3.4-3.6, 3.8, 3.9)
+    FEEC.feec (the verdict SubcomplexFamily.Verdict): (skew-adjointness, [QuennevilleBelair2015]
+    Thm 4.6) on every window the wave operator L = d - d* satisfies L* = -L, with no closed range;
+    (static, [AFW2010] Thms 3.4-3.6, 3.8, 3.9)
     in a degree j with projections bounded in the graph norm in degrees j-1 and j and closed
     ranges of d^(j-1) and d^j: the gaps between the harmonic forms and the discrete harmonic
     forms, the maps on cohomology (isomorphisms under a strict gap, and eventually where V_h
@@ -31,9 +34,15 @@ project:
     L = d - d* is well posed with a unitary group S, its semidiscrete Galerkin solutions converge
     uniformly on bounded time intervals for every convergent family of initial values, with the
     error bound ||S(t)x - exp(t L_h) v|| <= ||v - x|| + 2 (1 + 4 sqrt 3)(1 + t) M (M a bound of the
-    graph-norm best approximation of the trajectories of x and L x), and a closed constraint
-    propagates iff it reduces L; (heat) with projections bounded in the graph norm of the window
-    and closed ranges, the same convergence for the Hodge heat equation u' = L^2 u = -Delta u;
+    graph-norm best approximation of the trajectories of x and L x), a closed constraint K
+    propagates (S(t) K in K for all real t) iff it reduces L (P_K D(L) in D(L), L P_K = P_K L,
+    [Kato1995] §III.5.6), the data x with S(t) x in K for all t form the invariant core K*, the
+    largest closed subspace of K reducing L, and for a reducing subcomplex (closed Z^i in W^i with
+    d P_(Z^i) = P_(Z^j) d on D(d), Prop 4.16) the constraint Z^a + ... + Z^(a+m-1) propagates;
+    (heat) with projections bounded in the graph norm of the window and closed ranges, the same
+    convergence for the Hodge heat equation u' = L^2 u = -Delta u; for both evolutions a closed K
+    reduces the generator iff S(t), t >= 0, maps K into K and its orthogonal complement into
+    itself (the criterion for m-dissipative generators, e.g. damped or absorbing problems);
     (fully discrete, [BrennerThomee1979]) for both equations, every A-stable rational scheme
     r = n/d of order p >= 1 (the theta-schemes, theta >= 1/2, included) converges as h and tau
     tend to 0, with the temporal error K n tau tau^p ||B_h^(p+1) w||, K independent of h.
@@ -105,13 +114,15 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 (Theorems 4.6, 4.7, 4.14, Propositions 4.13, 4.17)"
+    location: "Ch. 4 (Theorems 4.6, 4.7, 4.14, Propositions 4.13, 4.16, 4.17)"
     relationship: "formalizes"
     note: >-
-      The semidiscrete Hodge wave equation for a Hilbert complex: well-posedness, convergence of
-      the semidiscrete solutions with an error bound by the graph-norm best approximation of the
-      trajectory, the rate from approximation estimates, and propagation of constraints iff they
-      reduce the wave operator. The formalization is by the thesis author.
+      The semidiscrete Hodge wave equation for a Hilbert complex: skew-adjointness of the wave
+      operator, well-posedness, convergence of the semidiscrete solutions with an error bound by
+      the graph-norm best approximation of the trajectory, the rate from approximation estimates,
+      propagation of constraints iff they reduce the wave operator and of the constraints of
+      reducing subcomplexes. The invariant core K* and the K / K-perp criterion for dissipative
+      generators are added here. The formalization is by the thesis author.
     author_endorsement: "participated"
   - title: "Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces"
     authors:
@@ -183,6 +194,15 @@ sources:
     relationship: "background"
     note: "Rational stability functions, A-stability and order."
     author_endorsement: "not-contacted"
+  - title: "Perturbation Theory for Linear Operators"
+    authors:
+      - "Tosio Kato"
+    id: "doi:10.1007/978-3-642-66282-9"
+    type: "book"
+    location: "Springer, reprint of the 2nd ed., 1995, §III.5.6"
+    relationship: "background"
+    note: "Reducing subspaces of closed operators."
+    author_endorsement: "not-contacted"
   - title: "Hilbert complexes"
     authors:
       - "Jochen Brüning"
@@ -215,7 +235,17 @@ status:
     wave equation with variational crimes (the approximating FEEC theorem of the crime front, its
     defect estimates and rates), the residual splitting of the static error into inner-product,
     cochain and harmonic defects, the BGG complexes, and the concrete finite element families and
-    physical instances.
+    physical instances. In particular the boundary-condition results for the linearized
+    Einstein-Bianchi system on a cube, compared in the former palomar/constraints, are proved in
+    Feec as instances of the constraint criterion of FEEC.feec and are not compared: with mirror
+    conditions the TSD constraint reduces the wave operator (K* = K; well-posedness and
+    propagation with forcing in the constraint), with electric (perfect conductor) conditions K*
+    is the stationary data and TSD data leave the constraint at once, and the absorbing
+    (Silver-Muller) generator is m-dissipative with K* != K (Feec/Physics/EinsteinBianchi,
+    Feec/Models/Cube/Mirror*, Feec/Models/Cube/Ident.lean, Feec/Models/Cube/Absorbing*,
+    Feec/Counterexamples/CubeStationary.lean). The general criterion for mild solutions
+    (integrated form) of skew-adjoint and m-dissipative generators on a Hilbert space is in Feec
+    (Feec.Semigroup.Invariance, Feec.Semigroup.DissipativeInvariance).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -332,7 +362,15 @@ fidelity:
     bijective, so no compared witness has reading maps that are not cochain maps (such witnesses,
     with a nonzero cochain defect, are in Feec, Feec.HilbertComplex.Approximation.StaticCrimeWitness,
     and are not compared).
-    (8) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
+    (8) Constraints: propagation and the invariant core are stated through the exact group S of
+    the wave verdict (its orbits are the solutions), not through a separate notion of mild
+    solution, and on the windows the family approximates (where S is asserted to exist); the
+    skew-adjointness of L is stated for every window. That L maps the intersection of D(L) and K*
+    into K*, and that this intersection is dense in K*, follow from the reducing property and are
+    not restated. The
+    criterion "K reduces the generator iff K and K-perp are forward invariant" is a field of the
+    evolution verdict, so it is stated for both the wave and the heat generators.
+    (9) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
     time, and nothing relating it to the K-structure: a real normed-space structure on a normed
     K-space is the restricted one (t x and (t : K) x are continuous in t and agree on Q), which the
     solution proves. The finite element families that satisfy
@@ -347,7 +385,9 @@ review:
     Not yet reviewed by the author: the challenge of this package was written from the reviewed
     challenges of palomar/static and palomar/dynamic (their definitions and statements are
     contained, up to the changes recorded in fidelity.divergences (3), (4)); the statements of
-    rational schemes, Jackson rates and variational crimes are new. An independent agent
+    rational schemes, Jackson rates and variational crimes are new, and the constraint fields
+    (skewAdjoint, invariantCore, subcomplex, EvolutionVerdict.reducing_iff) are folded in from the
+    former palomar/constraints. An independent agent
     editorial review checked the statements against the definitions, [AFW2010] §3.3-§3.4
     (arXiv:0906.4325) and [HolstStern2012] §3 (arXiv:1005.4455), and found no hidden
     hypotheses; it is not an author or external review. Every merge of the library was gated by a full build (zero warnings), an
@@ -362,11 +402,16 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Field static of FEEC.HilbertComplex.SubcomplexFamily.Verdict."
-    - source: "[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17; [GilletteHolstZhu2017]; [Thomee2006], Ch. 7; [BrennerThomee1979]"
+    - source: "[QuennevilleBelair2015], Thm 4.6"
+      lean: "FEEC.HilbertComplex.SubcomplexFamily.Verdict"
+      module: "Challenge"
+      status: "proved"
+      note: "Field skewAdjoint: the wave operator of every window is skew-adjoint."
+    - source: "[QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.16, 4.17; [Kato1995], §III.5.6; [GilletteHolstZhu2017]; [Thomee2006], Ch. 7; [BrennerThomee1979]"
       lean: "FEEC.HilbertComplex.SubcomplexFamily.DynamicVerdict"
       module: "Challenge"
       status: "proved"
-      note: "Field dynamic of FEEC.HilbertComplex.SubcomplexFamily.Verdict: wave (WaveVerdict, with EvolutionVerdict) and heat (EvolutionVerdict), including the A-stable rational schemes."
+      note: "Field dynamic of FEEC.HilbertComplex.SubcomplexFamily.Verdict: wave (WaveVerdict, with EvolutionVerdict; constraint fields propagates_iff, invariantCore, subcomplex) and heat (EvolutionVerdict), including the A-stable rational schemes and the K / K-perp criterion EvolutionVerdict.reducing_iff."
     - source: "all of the above"
       lean: "FEEC.feec"
       module: "Challenge"

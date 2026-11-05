@@ -107,12 +107,14 @@ theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
   F.rated J
 
 /-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
-4.7, 4.14, Props 4.13, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family of
-subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
+4.7, 4.14, Props 4.13, 4.16, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family
+of subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
 (`HilbertComplex.SubcomplexFamily.Verdict`). -/
 theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) : F.Verdict :=
   have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
-  ⟨fun j hπ hπ' hj hj' => F.exists_staticVerdict j hπ hπ' hj hj', fun a m ha =>
+  ⟨fun a m => by
+    rw [HilbertComplex.wave_eq]; exact (H.toFeec.window a m).isSkewAdjoint_wave,
+    fun j hπ hπ' hj hj' => F.exists_staticVerdict j hπ hπ' hj hj', fun a m ha =>
     ⟨F.waveVerdict a m (F.approximates_window a m ha.1 ha.2), fun hπ hπ' hcr =>
       F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩⟩
 

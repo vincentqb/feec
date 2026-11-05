@@ -98,33 +98,34 @@ theorem staticFEEC_uniform : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [
 
 variable [∀ i, NormedSpace ℝ (W i)]
 
-/-- **The FEEC theorem with rates** ([AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14;
-[BrennerThomee1979]): for every Jackson estimate `J` of `F`, the static and fully discrete wave
-errors are `O(L hᵒʳᵈ⁽ˢ⁾)` and `O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)`
-(`HilbertComplex.SubcomplexFamily.Rated`). -/
+/-- **The FEEC theorem with rates** ([AFW2010], Thm 3.9, §3.5; [QuennevilleBelair2015],
+Thm 4.14; [BrennerThomee1979]): for every Jackson estimate `J` of `F`, the static error is
+`O(L hᵒʳᵈ⁽ˢ⁾)` and, on every window `F` approximates, the fully discrete wave error
+`O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)` (`HilbertComplex.SubcomplexFamily.Rated`). -/
 theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
     (J : F.Jackson ρ) : F.Rated J :=
   F.rated J
-
-variable [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
 4.7, 4.14, Props 4.13, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family of
 subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
 (`HilbertComplex.SubcomplexFamily.Verdict`). -/
 theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) : F.Verdict :=
-  ⟨fun j hπ hπ' hj hj' => F.exists_staticVerdict j hπ hπ' hj hj', fun a m happrox happrox' =>
-    ⟨F.waveVerdict a m (F.approximates_window a m happrox happrox'), fun hπ hπ' hcr =>
-      F.heatVerdict a m (F.approximates_window a m happrox happrox') hπ hπ' hcr⟩⟩
+  have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
+  ⟨fun j hπ hπ' hj hj' => F.exists_staticVerdict j hπ hπ' hj hj', fun a m ha =>
+    ⟨F.waveVerdict a m (F.approximates_window a m ha.1 ha.2), fun hπ hπ' hcr =>
+      F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩⟩
 
 /-- **The FEEC theorem with variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8):
-every approximating family of discrete differential spaces on a window satisfies the static,
-cochain and heat verdicts with crimes under their hypotheses
-(`HilbertComplex.CrimeFamily.Verdict`). -/
-theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ}
-    (S : H.CrimeFamily a m κ) : S.Verdict :=
-  ⟨fun hcr _ hP => S.staticVerdict hcr hP, fun hcr hi _ P => S.cochainVerdict hcr hi P,
-    fun hcr _ hP hJ hconv => S.heatVerdict hcr hP hJ hconv⟩
+on a window with closed ranges (degrees `a + 1, …, a + m - 1`), every approximating family of
+discrete differential spaces satisfies the static, cochain and heat verdicts with crimes under
+their hypotheses (`HilbertComplex.CrimeFamily.Verdict`). -/
+theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
+    (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
+      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) : S.Verdict :=
+  have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
+  ⟨fun hP => S.staticVerdict hcr hP, fun hi _ P => S.cochainVerdict hcr hi P,
+    fun hP hJ hconv => S.heatVerdict hcr hP hJ hconv⟩
 
 /-- **Non-vacuity of the crimes** ([HolstStern2012], §3): on the complex `ℝ` in every degree with
 `d⁰ = id` and all other differentials `0`, on the window `ℝ --id--> ℝ --0--> ℝ` (harmonic forms

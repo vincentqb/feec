@@ -10,7 +10,11 @@ version: "v0.4"
 project:
   name: "Finite element exterior calculus for Hilbert complexes"
   description: >-
-    A Lean 4 formalization of the approximation theory of finite element exterior calculus for an
+    The approximation theory of finite element exterior calculus in one statement: the static
+    theory of Arnold-Falk-Winther (cohomology, discrete stability, quasi-optimality of the mixed
+    Hodge Laplacian), the semidiscrete Hodge wave equation of the author's thesis (well-posedness,
+    convergence, error bound, constraint propagation), the Hodge heat equation, fully discrete
+    A-stable time stepping, Jackson rates, and the variational crimes of Holst-Stern, for an
     arbitrary Hilbert complex of closed densely defined operators on Z (any RCLike field) and an
     arbitrary family of finite-dimensional subcomplexes of its domain complex V = D(d) with
     commuting cochain projections, refined along any filter. Seven compared theorems.
@@ -30,16 +34,16 @@ project:
     graph-norm best approximation of the trajectories of x and L x), and a closed constraint
     propagates iff it reduces L; (heat) with projections bounded in the graph norm of the window
     and closed ranges, the same convergence for the Hodge heat equation u' = L^2 u = -Delta u;
-    (fully discrete, [BrennerThomee1979]) for both equations, the theta-schemes (theta >= 1/2,
-    temporal errors (theta + 1/2) n tau tau ||B_h^2 w_0|| and, for Crank-Nicolson,
-    5/12 n tau tau^2 ||B_h^3 w_0||) and every A-stable rational scheme r = n/d of order p >= 1
-    converge as h and tau tend to 0, with the temporal error K n tau tau^p ||B_h^(p+1) w||, K
-    independent of h. FEEC.feec_rated (SubcomplexFamily.Rated), for every Jackson estimate
-    (classes Reg s of forms approximated in V_h at the order h^(ord s) in the graph norm,
-    [AFW2010] §3.4): the error of the mixed method is at most C L h^(ord s) when sigma, u, p and
-    P_B u are s-regular with bound L, and the fully discrete wave error of every A-stable rational
-    scheme of order p is at most ||v - x|| + C (1 + n tau) L h^(ord s) + K n tau tau^p
-    ||L_h^(p+1) v|| when the trajectories of x and L x are s-regular with bound L.
+    (fully discrete, [BrennerThomee1979]) for both equations, every A-stable rational scheme
+    r = n/d of order p >= 1 (the theta-schemes, theta >= 1/2, included) converges as h and tau
+    tend to 0, with the temporal error K n tau tau^p ||B_h^(p+1) w||, K independent of h.
+    FEEC.feec_rated (SubcomplexFamily.Rated), for every Jackson estimate (classes Reg s of forms
+    approximated in V_h at the order h^(ord s) in the graph norm, as in [AFW2010] §3.5): the error
+    of the mixed method is at most C L h^(ord s) when sigma, u, p and P_B u are s-regular with
+    bound L, and on every window which the family approximates the group S of the wave equation
+    (with the whole wave verdict) exists and the fully discrete wave error of every A-stable
+    rational scheme of order p is at most ||v - x|| + C (1 + n tau) L h^(ord s) +
+    K n tau tau^p ||L_h^(p+1) v|| when the trajectories of x and L x are s-regular with bound L.
     FEEC.staticFEEC_uniform: the static constant depends only on the bound c of the projections
     and the Poincare constant c_P (one function Phi for every complex, family and degree).
     FEEC.exists_cochainProjection ([AFW2010] Thm 3.7): a finite-dimensional subcomplex with the
@@ -50,7 +54,7 @@ project:
     FEEC.crimeFEEC ([HolstStern2012] §3; HilbertComplex.CrimeFamily.Verdict): for discrete
     differential spaces (X_h, d_h) with their own inner products, read in a window by uniformly
     bounded maps i_h with bounded left inverses, that need not be isometric, cochain maps, nor map
-    into D(d): under closed ranges and a uniform discrete Poincare inequality, the mixed Hodge
+    into D(d): on a window with closed ranges, under a uniform discrete Poincare inequality, the mixed Hodge
     Laplacian of the window and its discretization with the load i_h* f are uniquely solvable,
     the discrete solutions are stable, satisfy the Strang lemma (error at most the read error of
     any discrete triple plus C times its residual in the dual graph norm) and converge for every
@@ -87,13 +91,14 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
     type: "article"
-    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.4 (Theorems 3.4-3.9; (30))"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.5 (Theorems 3.4-3.9; (30))"
     relationship: "formalizes"
     note: >-
       The a priori theory of §3.3-§3.4 for the mixed Hodge Laplacian (discrete cohomology,
       harmonic gap, uniform discrete Poincare inequality, unique solvability and stability,
       quasi-optimal graph-norm error bound and convergence) under the hypotheses of §3.3 in the
-      degrees used, the converse Thm 3.7, and the rates of §3.4 from approximation estimates.
+      degrees used, the converse Thm 3.7, and rates from approximation estimates as in §3.5
+      (checked against arXiv:0906.4325: Thms 3.4-3.7 and (30) in §3.3, Thms 3.8, 3.9 in §3.4).
     author_endorsement: "not-contacted"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
     authors:
@@ -120,7 +125,8 @@ sources:
       Approximating families of discrete Hilbert complexes with non-isometric reading maps: the
       stability and Strang-type error estimates of the mixed Hodge Laplacian with the load i_h* f,
       and, for cochain reading maps with bounded cochain projections, the discrete Poincare
-      inequality, the isomorphism on cohomology and the error estimate. Generalized here to
+      inequality, the isomorphism on cohomology and the error estimate (checked against
+      arXiv:1005.4455: Thms 3.3, 3.5 in §3.1, Thms 3.9, 3.10, Cor 3.11 in §3.3). Generalized here to
       reading maps that need not be cochain maps (for the static and heat statements).
     author_endorsement: "not-contacted"
   - title: "On Rational Approximations of Semigroups"
@@ -154,7 +160,7 @@ sources:
     type: "book"
     location: "Springer, 2nd ed., 2006, Ch. 7"
     relationship: "background"
-    note: "Theta-schemes and their unconditional stability for theta >= 1/2."
+    note: "Theta-schemes (rational schemes, A-stable for theta >= 1/2) for parabolic problems."
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus for evolution problems"
     authors:
@@ -200,7 +206,10 @@ status:
     constant 256 (1 + K^2)(1 + max(c, 1))^2, K = max(c, 1)(1 + c_P^2)^(1/2), is used by the
     solution of FEEC.staticFEEC_uniform), the spatial heat rates (ConstrainedFEEC.rate_heat), the
     uniform fully discrete rate O(h^alpha + tau^(p/(p+2))) for every one-step scheme and the order
-    tau^p along smooth comparisons, the improved L2 estimate, the necessity of closed range,
+    tau^p along smooth comparisons, the explicit theta-scheme temporal errors
+    (theta + 1/2) n tau tau ||B_h^2 w_0|| and, for Crank-Nicolson, 5/12 n tau tau^2 ||B_h^3 w_0||
+    (compared in the former palomar/dynamic, here subsumed by the rational schemes up to the
+    constant), the improved L2 estimate, the necessity of closed range,
     leapfrog, Crank-Nicolson signed systems, Runge-Kutta stability functions, bounded perturbations
     (damping, Ohmic loss) and the Dyson-Phillips semigroups, Brenner-Thomee on Banach spaces, the
     wave equation with variational crimes (the approximating FEEC theorem of the crime front, its
@@ -284,17 +293,17 @@ fidelity:
     O(L h^(ord s) + tau^p) only along initial values with ||L_h^(p+1) v|| bounded (a per-h
     estimate, not a uniform rate; the uniform rates are proved in Feec and not compared). The
     rational scheme r(B) is n(B) Ring.inverse(d(B)); d(B) is invertible for the dissipative
-    generators of the statement. The theta-scheme iterates are given by their implicit recurrence;
-    the former fully discrete theta error bounds of palomar/dynamic follow from the fields error and
-    theta_temporal by the triangle inequality and are not restated, nor is the constraint
-    residual bound (immediate from propagates_iff).
+    generators of the statement. The theta-schemes are not separate fields: the theta-scheme is
+    the rational scheme n = 1 + (1 - theta) X, d = 1 - theta X (A-stable for theta >= 1/2, order
+    1, and 2 for theta = 1/2), whose iterates r(tau B)^n w_0 solve the implicit recurrence; the
+    constraint residual bound is not restated (immediate from propagates_iff).
     (5) Rates: a Jackson estimate is data (mesh size h_h -> 0, classes Reg s i L, orders ord s,
     constants B s i) with ||x - v|| and ||d(x - v)|| at most B L h^(ord s) for some v in V_h; the
     static rate is a consequence of quasi-optimality and the bound mu_h <= 1 + c of the harmonic
     gap; the wave rate needs s-regularity of every component of the trajectories of x and L x on
-    [0, n tau]. Rated.wave takes as hypothesis that S satisfies the whole wave verdict (it exists
-    by FEEC.feec when the family approximates on the window); for a family that does not
-    approximate there is no such S and the field is vacuous. No heat rate is compared.
+    [0, n tau]. Rated.wave assumes only that the family approximates on the window (the hypothesis
+    of the wave verdict, SubcomplexFamily.ApproximatesOn) and asserts that a group S with the
+    whole wave verdict exists and satisfies the rate. No heat rate is compared.
     (6) Variational crimes: the discrete differential spaces are total (ungraded) complexes
     (X_h, d_h), d_h^2 = 0, read in a window; the mixed problems are those of the total
     differentials (the mixed Hodge Laplacian of the total complex of the window, the direct sum of
@@ -323,10 +332,10 @@ fidelity:
     bijective, so no compared witness has reading maps that are not cochain maps (such witnesses,
     with a nonzero cochain defect, are in Feec, Feec.HilbertComplex.Approximation.StaticCrimeWitness,
     and are not compared).
-    (8) FEEC.feec and FEEC.crimeFEEC assume [IsScalarTower R K (W i)] (with the real structure
-    [NormedSpace R (W i)] used for derivatives in time): the proofs need the compatibility of the
-    real and K-structures, which their statements do not mention; a real normed-space structure
-    on a normed K-space is unique, so this is no restriction for the usual choice. The finite element families that satisfy
+    (8) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
+    time, and nothing relating it to the K-structure: a real normed-space structure on a normed
+    K-space is the restricted one (t x and (t : K) x are continuous in t and agree on Q), which the
+    solution proves. The finite element families that satisfy
     the conforming hypotheses (Whitney forms, P_r and P_r^- families with smoothed projections)
     are constructed in Feec but are not compared.
 
@@ -337,11 +346,13 @@ review:
   notes: >-
     Not yet reviewed by the author: the challenge of this package was written from the reviewed
     challenges of palomar/static and palomar/dynamic (their definitions and statements are
-    contained verbatim, up to the changes recorded in fidelity.divergences (3), (4)); the
-    statements of rational schemes, Jackson rates and variational crimes are new. Every merge of
-    the library was gated by a full build (zero warnings), an axiom audit (propext,
-    Classical.choice, Quot.sound only), regression snapshots and an independent AI review. No
-    external mathematical review.
+    contained, up to the changes recorded in fidelity.divergences (3), (4)); the statements of
+    rational schemes, Jackson rates and variational crimes are new. An independent agent
+    editorial review checked the statements against the definitions, [AFW2010] §3.3-§3.4
+    (arXiv:0906.4325) and [HolstStern2012] §3 (arXiv:1005.4455), and found no hidden
+    hypotheses; it is not an author or external review. Every merge of the library was gated by a full build (zero warnings), an
+    axiom audit (propext, Classical.choice, Quot.sound only), regression snapshots and an
+    independent AI review. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
@@ -355,13 +366,13 @@ alignment:
       lean: "FEEC.HilbertComplex.SubcomplexFamily.DynamicVerdict"
       module: "Challenge"
       status: "proved"
-      note: "Field dynamic of FEEC.HilbertComplex.SubcomplexFamily.Verdict: wave (WaveVerdict, with EvolutionVerdict) and heat (EvolutionVerdict), including the theta-schemes and the A-stable rational schemes."
+      note: "Field dynamic of FEEC.HilbertComplex.SubcomplexFamily.Verdict: wave (WaveVerdict, with EvolutionVerdict) and heat (EvolutionVerdict), including the A-stable rational schemes."
     - source: "all of the above"
       lean: "FEEC.feec"
       module: "Challenge"
       status: "proved"
       note: "The crown theorem; proved in Solution.lean."
-    - source: "[AFW2010], §3.4, Thm 3.9; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979]"
+    - source: "[AFW2010], Thm 3.9, §3.5; [QuennevilleBelair2015], Thm 4.14; [BrennerThomee1979]"
       lean: "FEEC.feec_rated"
       module: "Challenge"
       status: "proved"

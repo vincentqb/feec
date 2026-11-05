@@ -15,42 +15,34 @@ public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 Finite element exterior calculus ([AFW2006], [AFW2010]) approximates a Hilbert complex
 `⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely defined operators `d` by finite-dimensional subcomplexes
-`Vₕ` of its domain complex `Vⁱ = D(dⁱ)` (graph norm `‖x‖_V = (‖x‖² + ‖d x‖²)^½`) with
-commuting cochain projections `πₕ`. `FEEC.feec` (`HilbertComplex.SubcomplexFamily.Verdict`):
+`Vₕ` of its domain complex `Vⁱ = D(dⁱ)` (graph norm `‖x‖_V = (‖x‖² + ‖d x‖²)^½`) with commuting
+cochain projections `πₕ`. This file states its approximation theory in one place: the static
+theory of [AFW2010], §3.3–§3.4, the semidiscrete Hodge wave equation of
+[QuennevilleBelair2015], Ch. 4, the heat equation, fully discrete A-stable time stepping, and
+the variational crimes of [HolstStern2012], §3, for every Hilbert complex and every family.
 
-1. (**static**, [AFW2010], Thms 3.4–3.6, 3.8, 3.9) for `πₕ` bounded in the graph norm uniformly
-   in degrees `j - 1`, `j` and closed ranges: the gaps between `ℌʲ` and `ℌₕʲ`, `Hʲ ≅ Hʲ(Vₕ)`
-   (under a strict gap; eventually under approximation, `dim ℌʲ < ∞`, the harmonic gap → 0), the
-   uniform discrete Poincaré and inf-sup conditions, well-posedness, quasi-optimality and
-   convergence of the mixed method;
-2. (**wave**, [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17) on every window
-   `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` (total differential `𝐝`) approximated by `Vₕ`, the Hodge wave equation
-   `ξ' = L ξ`, `L = 𝐝 - 𝐝*`, is well posed (unitary group `S`), its Galerkin solutions converge
-   with the error bound `‖v - x‖ + 2 (1 + 4√3) (1 + t) M` (`M` bounds the graph-norm best
-   approximation of the trajectories of `x`, `L x`), and constraints propagate iff they reduce `L`;
-3. (**heat**, [GilletteHolstZhu2017]) the same convergence for `u' = L² u = -Δ u` under bounded
-   projections and closed ranges in the window;
-4. (**fully discrete**, [BrennerThomee1979]; [Thomee2006], Ch. 7) the θ-schemes `θ ≥ ½` and every
-   A-stable rational scheme of order `p ≥ 1` converge as `h, τ → 0`, with temporal error
-   `K nτ τᵖ ‖Bₕ^{p+1} w‖`, `K` independent of `h`.
-
-`FEEC.feec_rated`: for a Jackson estimate ([AFW2010], §3.4), the mixed method is `O(L hᵒʳᵈ⁽ˢ⁾)`
-and the fully discrete wave error is `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖`.
-`FEEC.staticFEEC_uniform`: the static constant depends only on the bound of `πₕ` and the Poincaré
-constant. Conversely ([AFW2010], Thm 3.7), `FEEC.exists_cochainProjection`,
-`FEEC.exists_subcomplexFamily_iff`: bounded cochain projections exist iff the discrete Poincaré
-inequality and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly.
-
-**Variational crimes** ([HolstStern2012], §3), `FEEC.crimeFEEC`: discrete differential spaces
-`(Xₕ, 𝐝ₕ)` with their own inner products, read in a window by maps `iₕ` that need not be
-isometric nor cochain maps (`HilbertComplex.CrimeFamily`): under closed range and a uniform
-discrete Poincaré inequality, the mixed method with load `iₕ* f` is well posed, stable, satisfies
-the Strang lemma and converges once consistent on a dense set, and, when the static method
-converges for every datum and `‖1 - iₕ* iₕ‖ → 0`, the heat equation converges; for cochain maps
-with bounded cochain projections, the Poincaré inequality, convergence when `‖1 - iₕ* iₕ‖ → 0`
-and `iₕ πₕ → 1` on `D(𝐝)`, eventual isomorphisms on cohomology (`dim ℌ < ∞`, `iₕ πₕ → 1` on
-`ℌ`), and rates. `FEEC.crime_nonvacuous`: a
-crime with non-isometric readings, harmonic forms and positive errors meets the hypotheses.
+* `FEEC.feec` (`HilbertComplex.SubcomplexFamily.Verdict`): for bounded `πₕ` and closed ranges,
+  the gaps between `ℌʲ` and `ℌₕʲ`, `Hʲ ≅ Hʲ(Vₕ)`, the uniform discrete Poincaré and inf-sup
+  conditions and quasi-optimality of the mixed method ([AFW2010], Thms 3.4–3.6, 3.8, 3.9); on
+  every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` which `Vₕ` approximates, the wave equation `ξ' = L ξ`,
+  `L = 𝐝 - 𝐝*`, is well posed with a convergent Galerkin approximation, an error bound by the
+  best approximation of the trajectory, and constraints propagate iff they reduce `L`
+  ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17); so does the heat equation
+  `u' = L² u = -Δ u` ([GilletteHolstZhu2017]); and every A-stable rational scheme of order `p`
+  (θ-schemes, `θ ≥ 1/2`, included) converges with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`
+  ([BrennerThomee1979]).
+* `FEEC.feec_rated`: for a Jackson estimate, the mixed method is `O(L hᵒʳᵈ⁽ˢ⁾)` and the fully
+  discrete wave error `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖`.
+* `FEEC.staticFEEC_uniform`: the static constant depends only on the bound of `πₕ` and the
+  Poincaré constant. `FEEC.exists_cochainProjection`, `FEEC.exists_subcomplexFamily_iff`
+  ([AFW2010], Thm 3.7): bounded cochain projections exist iff the discrete Poincaré inequality
+  and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly.
+* `FEEC.crimeFEEC` (`HilbertComplex.CrimeFamily.Verdict`): discrete differential spaces
+  `(Xₕ, 𝐝ₕ)` with their own inner products, read in a window by maps `iₕ` that need be neither
+  isometric nor cochain maps: well-posedness, stability, the Strang lemma and convergence of the
+  mixed method with load `iₕ* f`, the heat equation, and for cochain maps the Poincaré
+  inequality, convergence, cohomology and rates. `FEEC.crime_nonvacuous`: a genuine crime meets
+  the hypotheses.
 
 The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero unless `j = i + 1` (windows
 need no casts). Mathlib has no `C₀`-semigroups: the exact evolutions are operator families the
@@ -60,7 +52,7 @@ theorems assert to exist, characterized by their strong solutions.
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3–§3.4
+  §3.3–§3.5
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 4
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
@@ -335,10 +327,7 @@ structure SubcomplexFamily.StaticVerdict (F : H.SubcomplexFamily κ) (j : ℤ) (
     ∀ᶠ h in F.l, Function.Bijective ((F.π h).cohomologyMap j) ∧
       Function.Bijective ((F.V h).cohomologyIncl j)
   /-- the uniform discrete Poincaré inequality `‖v‖_V ≤ C ‖d v‖` on `Vₕʲ ⊥ 𝔷ₕʲ` -/
-  poincare : ∀ (h : κ) (v : W j) (hv : v ∈ (F.V h).V j),
-    (∀ z ∈ (F.V h).cycles j, ⟪z, v⟫_𝕜 = 0) →
-      H.graphNorm j (j + 1) ⟨v, (F.V h).le_domain j (j + 1) hv⟩ ≤
-        C * ‖H.d j (j + 1) ⟨v, (F.V h).le_domain j (j + 1) hv⟩‖
+  poincare (h : κ) : (F.V h).PoincareBy j C
   /-- the mixed problem is uniquely solvable -/
   existsUnique (f : W j) : ∃! x : (H.d (j - 1) j).domain × (H.d j (j + 1)).domain × W j,
     H.IsMixedSolution j ⊤ ⊤ (H.harmonic j) f x.1 x.2.1 x.2.2
@@ -404,7 +393,9 @@ def IsReducing (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalPr
     A ⟨_, hx⟩ = K.starProjection (A x)
 
 /-- A **rational time scheme** `r = n/d` ([HairerWanner1996], §IV.3): real polynomials with
-`deg n ≤ deg d` and `d(z) ≠ 0` for `re z ≤ 0`; a step is `wₙ₊₁ = r(τ B) wₙ`. -/
+`deg n ≤ deg d` and `d(z) ≠ 0` for `re z ≤ 0`; a step is `wₙ₊₁ = r(τ B) wₙ`. The θ-scheme
+`wₙ₊₁ - wₙ = τ B (θ wₙ₊₁ + (1 - θ) wₙ)` is `n = 1 + (1 - θ) X`, `d = 1 - θ X`, A-stable for
+`θ ≥ 1/2`, of order 1, and 2 for Crank–Nicolson `θ = 1/2`. -/
 structure RationalScheme where
   /-- the numerator -/
   num : Polynomial ℝ
@@ -449,12 +440,9 @@ def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : 
 
 /-- **The FEEC theorem for an evolution** `u' = A u` approximated by `uₕ' = Bₕ uₕ` on the
 finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique strong solution
-from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, and `S t x` has nonincreasing norm; the semidiscrete
-solutions `exp(t Bₕ) vₕ` converge to `S t x` uniformly on `[0, T]` from every family `vₕ → x`;
-and so do the θ-schemes `wₙ₊₁ - wₙ = τₕ Bₕ (θ wₙ₊₁ + (1 - θ) wₙ)`, `θ ≥ 1/2`, as `h, τₕ → 0`,
-with the temporal error `‖exp(nτ Bₕ) w₀ - wₙ‖ ≤ (θ + 1/2) nτ τ ‖Bₕ² w₀‖`, of second order
-`5/12 nτ τ² ‖Bₕ³ w₀‖` for Crank–Nicolson (`θ = 1/2`), and every A-stable rational scheme of
-order `p ≥ 1`, with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w₀‖`. -/
+from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; the semidiscrete solutions
+`exp(t Bₕ) vₕ` and the iterates `r(τₕ Bₕ)ⁿ vₕ` of every A-stable rational scheme of order
+`p ≥ 1` converge as `h, τₕ → 0`, the latter with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`. -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
   dense : Dense (A.domain : Set E)
@@ -466,25 +454,12 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → S
   semidiscrete (x : E) (v : ∀ h, X h) (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) :
     TendstoUniformlyOn (fun h (t : ℝ) => (semiflow (B h) t (v h) : E))
       (fun t => S t x) l (Icc 0 T)
-  theta (θ : ℝ) (hθ : 1 / 2 ≤ θ) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0))
-    (x : E) (w : ∀ h, ℕ → X h) (hw : ∀ h n, w h (n + 1) - w h n =
-      (τ h : 𝕜) • B h ((θ : 𝕜) • w h (n + 1) + (1 - (θ : 𝕜)) • w h n))
-    (hw0 : Tendsto (fun h => (w h 0 : E)) l (𝓝 x)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T → ‖S (n * τ h) x - w h n‖ < ε
-  theta_temporal (θ : ℝ) (hθ : 1 / 2 ≤ θ) (h : κ) {τ : ℝ} (hτ : 0 < τ) (w : ℕ → X h)
-    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n))
-    (n : ℕ) :
-    ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ (θ + 1 / 2) * (n * τ) * τ * ‖(B h ^ 2) (w 0)‖
-  crankNicolson_temporal (h : κ) {τ : ℝ} (hτ : 0 < τ) (w : ℕ → X h)
-    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B h ((1 / 2 : 𝕜) • (w (n + 1) + w n))) (n : ℕ) :
-    ‖semiflow (B h) (n * τ) (w 0) - w n‖ ≤ 5 / 12 * (n * τ) * τ ^ 2 * ‖(B h ^ 3) (w 0)‖
-  /-- every A-stable rational scheme of order `p ≥ 1` converges as `h, τₕ → 0` -/
   rational (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (hp0 : 0 < p)
     (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (x : E) (v : ∀ h, X h)
     (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
       ‖S (n * τ h) x - ((r.apply ((τ h : 𝕜) • B h) ^ n) (v h) : E)‖ < ε
-  /-- with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`, `K` independent of `h`, `τ`, `n`, `w` -/
+  /-- `K` independent of `h`, `τ`, `n`, `w` -/
   rational_temporal (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
     ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
       ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
@@ -569,10 +544,17 @@ def graphDist (h : κ) (y : (H.totalD a m).domain) : ℝ :=
   ⨅ w : F.Xh a m h, ‖(y : Total W a m) - w‖ +
     ‖H.totalD a m y - H.totalD a m ⟨w, F.Xh_le a m h w.2⟩‖
 
-/-- **A Jackson estimate** for `F` ([AFW2010], §3.4): a mesh size `hₕ → 0` and, for every
+/-- `F` **approximates on the window** `[a, a + m)`: in the graph norm in the degrees
+`a, …, a + m - 2`, and in `W` in the last degree `a + m - 1` (no differential in the window). -/
+def ApproximatesOn : Prop :=
+  (∀ i : Fin m, (i : ℕ) + 1 < m → F.Approximates (a + (i : ℕ))) ∧
+    ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
+      Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0)
+
+/-- **A Jackson estimate** for `F` ([AFW2010], §3.5): a mesh size `hₕ → 0` and, for every
 regularity index `s : ρ`, classes `Reg s i L` of `s`-regular forms in `Wⁱ` with bound `L`,
-approximated in `Vₕⁱ` at the order `hₕ^{ord s}` in the graph norm: some `v ∈ Vₕⁱ` has
-`‖x - v‖ ≤ B L hₕ^{ord s}` and `‖d (x - v)‖ ≤ B L hₕ^{ord s}`. -/
+approximated in `Vₕⁱ` at the order `hₕ^{ord s}`: some `v ∈ Vₕⁱ` has `‖x - v‖ ≤ B L hₕ^{ord s}`
+and `‖d (x - v)‖ ≤ B L hₕ^{ord s}`. -/
 structure Jackson (ρ : Type*) where
   /-- the mesh size -/
   meshSize : κ → ℝ
@@ -589,7 +571,7 @@ structure Jackson (ρ : Type*) where
       ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
         B s i * (L * meshSize h ^ ord s)
 
-variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+variable [∀ i, NormedSpace ℝ (W i)]
 
 /-- **The conclusions of the FEEC theorem for the Hodge wave equation** on the window, with
 exact evolution `S`. -/
@@ -631,30 +613,22 @@ structure DynamicVerdict : Prop where
     ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
 
-/-- **The conclusions of the FEEC theorem** for the family `F`: the static verdict in every
-degree with bounded projections and closed ranges, and the wave and heat verdicts on every
-window which `F` approximates (in the graph norm in the degrees `a, …, a + m - 2`, in `W` in the
-last degree). -/
+/-- **The conclusions of the FEEC theorem** for `F`: the static verdict in every degree with
+bounded projections and closed ranges, the wave and heat verdicts on every window `F`
+approximates. -/
 structure Verdict : Prop where
   /-- the static FEEC theorem in degree `j` -/
   static (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
     (hj : IsClosed (H.boundaries j : Set (W j)))
     (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) : ∃ C, F.StaticVerdict j C
   /-- the wave and heat FEEC theorems on the window `[a, a + m)` -/
-  dynamic (a : ℤ) (m : ℕ) (happrox : ∀ i : Fin m, (i : ℕ) + 1 < m → F.Approximates (a + (i : ℕ)))
-    (happrox' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
-      Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0)) :
-    F.DynamicVerdict a m
+  dynamic (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) : F.DynamicVerdict a m
 
 /-- **The rates of a Jackson estimate** `J` of `F`, constants independent of `h`, `τ`, `n`, `L`
-and the data: the mixed method is `O(L hᵒʳᵈ⁽ˢ⁾)` when `σ`, `u`, `p`, `P_𝔅 u` are `s`-regular with
-bound `L` ([AFW2010], Thm 3.9); the fully discrete wave equation with every A-stable rational
-scheme of order `p` (iterates `r(τ Lₕ)ⁿ v`) has the error
-`‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖` when the components of `S(s) x` and
-`S(s) L x` are `s`-regular with bound `L` for `s ∈ [0, nτ]` ([QuennevilleBelair2015], Thm 4.14;
-[BrennerThomee1979]). -/
+and the data. -/
 structure Rated {ρ : Type*} (J : F.Jackson ρ) : Prop where
-  /-- the rate of the mixed method in degree `j` -/
+  /-- the mixed method in degree `j` is `O(L hᵒʳᵈ⁽ˢ⁾)` when `σ`, `u`, `p`, `P_𝔅 u` are `s`-regular
+  with bound `L` ([AFW2010], Thm 3.9, §3.5) -/
   static (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
     (hj : IsClosed (H.boundaries j : Set (W j)))
     (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) (s : ρ) :
@@ -665,10 +639,14 @@ structure Rated {ρ : Type*} (J : F.Jackson ρ) : Prop where
       ∀ (h : κ) {σh : (H.d (j - 1) j).domain} {uh : (H.d j (j + 1)).domain} {ph : W j},
       H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f σh uh ph →
       H.mixedError j σ σh u uh p ph ≤ C * L * J.meshSize h ^ J.ord s
-  /-- the fully discrete rate of the wave equation on the window `[a, a + m)`, `S` its group -/
-  wave (a : ℤ) (m : ℕ) (S : ℝ → Total W a m →L[𝕜] Total W a m) (hS : F.WaveVerdict a m S)
-    (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (s : ρ) :
-    ∃ C K : ℝ, ∀ (x : Total W a m) (hx : x ∈ (H.wave a m).domain),
+  /-- on a window `F` approximates, with its group `S`, the iterates `r(τ Lₕ)ⁿ v` of an A-stable
+  rational scheme of order `p` have the error
+  `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖` when the components of `S(t) x`,
+  `S(t) L x` are `s`-regular with bound `L` on `[0, nτ]` ([QuennevilleBelair2015], Thm 4.14;
+  [BrennerThomee1979]) -/
+  wave (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) (r : RationalScheme) (hr : r.IsAStable)
+    {p : ℕ} (hp : r.HasOrder p) (s : ρ) : ∃ S, F.WaveVerdict a m S ∧ ∃ C K : ℝ,
+      ∀ (x : Total W a m) (hx : x ∈ (H.wave a m).domain),
       H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain → ∀ {L : ℝ}, 0 ≤ L → ∀ (h : κ) {τ : ℝ}, 0 ≤ τ →
       ∀ (n : ℕ) (v : F.Xh a m h), (∀ t ∈ Icc 0 (n * τ), ∀ i : Fin m,
         J.Reg s (a + (i : ℕ)) L (S t x i) ∧ J.Reg s (a + (i : ℕ)) L (S t (H.wave a m ⟨x, hx⟩) i)) →
@@ -799,16 +777,11 @@ structure StaticVerdict (C : ℝ) : Prop where
     Tendsto (fun h => S.readError h σ u p (σh h) (uh h) (ph h)) S.l (𝓝 0)
 
 /-- **The static FEEC theorem with cochain reading maps** and the cochain projections `P`
-([HolstStern2012], Thms 3.3, 3.5, Cors 3.4, 3.11): the uniform discrete Poincaré inequality;
-convergence for every datum when `‖1 - iₕ* iₕ‖ → 0` and `iₕ πₕ → 1` on `D(𝐝)`; eventually,
-`[z] ↦ [πₕ z]` is an isomorphism `H(𝐝) ≅ H(𝐝ₕ)` of the total cohomologies (onto: every discrete
-cycle is `πₕ` of a cycle up to a discrete boundary; one-to-one: a cycle `z` with `πₕ z` a discrete
-boundary is a boundary); and the error is at most `K ε` when `σ, u, p` and `P_𝔅 u` are within `ε`
-of `iₕ Xₕ` in the graph norm and `‖1 - iₕ* iₕ‖ (‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖) ≤ ε`. -/
+([HolstStern2012], Thms 3.3, 3.5, 3.10, Cors 3.4, 3.11). -/
 structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
   /-- the uniform discrete Poincaré inequality -/
   poincare : ∃ cP, S.IsPoincare cP
-  /-- convergence for every datum -/
+  /-- convergence for every datum when `‖1 - iₕ* iₕ‖ → 0` and `iₕ πₕ → 1` on `D(𝐝)` -/
   converges (hJ : Tendsto (fun h => ‖1 - (S.incl h).adjoint ∘L S.incl h‖) S.l (𝓝 0))
     (hπ : ∀ x : (H.totalD a m).domain,
       Tendsto (fun h => ‖(x : Total W a m) - S.incl h (P.π h x)‖) S.l (𝓝 0))
@@ -816,14 +789,17 @@ structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
     (hs : H.IsTotalMixedSolution a m f σ u p) {σh uh ph : ∀ h, S.X h}
     (hsh : ∀ h, S.IsMixedSolution h f (σh h) (uh h) (ph h)) :
     Tendsto (fun h => S.readError h σ u p (σh h) (uh h) (ph h)) S.l (𝓝 0)
-  /-- eventually `πₕ` induces an isomorphism on cohomology -/
+  /-- eventually `[z] ↦ [πₕ z]` is an isomorphism `H(𝐝) ≅ H(𝐝ₕ)`: onto (every discrete cycle is
+  `πₕ` of a cycle up to a discrete boundary) and one-to-one (a cycle `z` with `πₕ z` a discrete
+  boundary is a boundary) -/
   cohomology [FiniteDimensional 𝕜 (H.totalHarmonic a m)]
     (hπ : ∀ q ∈ H.totalHarmonic a m, Tendsto (fun h => ‖q - S.incl h (P.π h q)‖) S.l (𝓝 0)) :
     ∀ᶠ h in S.l, (∀ w : S.X h, S.D h w = 0 → ∃ z : (H.totalD a m).domain,
         H.totalD a m z = 0 ∧ ∃ y, w - P.π h z = S.D h y) ∧
       ∀ z : (H.totalD a m).domain, H.totalD a m z = 0 → (∃ y, P.π h z = S.D h y) →
         ∃ y : (H.totalD a m).domain, (z : Total W a m) = H.totalD a m y
-  /-- the error is `O(ε)` for data approximated within `ε` -/
+  /-- the error is at most `K ε` when `σ, u, p` and `P_𝔅 u` are within `ε` of `iₕ Xₕ` in the graph
+  norm and `‖1 - iₕ* iₕ‖ (‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖) ≤ ε` -/
   rate : ∃ K : ℝ, ∀ (h : κ) {f : Total W a m} {σ u : (H.totalD a m).domain} {p : Total W a m},
     H.IsTotalMixedSolution a m f σ u p → ∀ {σh uh ph : S.X h}, S.IsMixedSolution h f σh uh ph →
     ∀ {ε : ℝ}, (∃ v, ‖(σ : Total W a m) - S.incl h v‖ +
@@ -836,27 +812,17 @@ structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
         ‖(u : Total W a m)‖ + ‖H.totalD a m u‖ + ‖p‖) ≤ ε →
       S.readError h σ u p σh uh ph ≤ K * ε
 
-variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
+variable [∀ i, NormedSpace ℝ (W i)]
 
-/-- **The conclusions of the FEEC theorem with variational crimes** for `S` on a window with
-closed ranges (degrees `a + 1, …, a + m - 1`): the static verdict under the uniform discrete
-Poincaré inequality, the cochain verdict for cochain reading maps, and the heat equation
-`u' = L² u` (with `-Δₕ = -(𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ)`) when the static method converges for every datum
-and `‖1 - iₕ* iₕ‖ → 0`: well posed, and `iₕ exp(-t Δₕ) vₕ → U(t) x` uniformly on `[0, T]` for
-every family with `iₕ vₕ → x`. -/
+/-- **The conclusions of the FEEC theorem with variational crimes** for `S`: the static verdict
+under the uniform discrete Poincaré inequality, the cochain verdict for cochain reading maps. -/
 structure Verdict : Prop where
-  /-- the static verdict with crimes -/
-  static (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) {cP : ℝ}
-    (hP : S.IsPoincare cP) : ∃ C, S.StaticVerdict C
-  /-- the cochain verdict -/
-  cochain (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) (hi : S.IsCochain)
-    {Cπ : ℝ} (P : S.CochainProj Cπ) : S.CochainVerdict P
-  /-- the heat equation with crimes -/
-  heat (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) {cP : ℝ}
-    (hP : S.IsPoincare cP)
+  static {cP : ℝ} (hP : S.IsPoincare cP) : ∃ C, S.StaticVerdict C
+  cochain (hi : S.IsCochain) {Cπ : ℝ} (P : S.CochainProj Cπ) : S.CochainVerdict P
+  /-- the heat equation `u' = L² u`, `-Δₕ = -(𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ)`, when the static method converges
+  for every datum and `‖1 - iₕ* iₕ‖ → 0`: well posed, and `iₕ exp(-t Δₕ) vₕ → U(t) x` uniformly on
+  `[0, T]` for every family with `iₕ vₕ → x` -/
+  heat {cP : ℝ} (hP : S.IsPoincare cP)
     (hJ : Tendsto (fun h => ‖1 - (S.incl h).adjoint ∘L S.incl h‖) S.l (𝓝 0))
     (hconv : ∀ f σ u p, H.IsTotalMixedSolution a m f σ u p → ∀ σh uh ph : ∀ h, S.X h,
       (∀ h, S.IsMixedSolution h f (σh h) (uh h) (ph h)) →
@@ -915,15 +881,13 @@ theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l 
 
 variable [∀ i, NormedSpace ℝ (W i)]
 
-/-- **The FEEC theorem with rates** ([AFW2010], Thm 3.9; [QuennevilleBelair2015], Thm 4.14;
-[BrennerThomee1979]): for every Jackson estimate `J` of `F`, the static and fully discrete wave
-errors are `O(L hᵒʳᵈ⁽ˢ⁾)` and `O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)`
-(`HilbertComplex.SubcomplexFamily.Rated`). -/
+/-- **The FEEC theorem with rates** ([AFW2010], Thm 3.9, §3.5; [QuennevilleBelair2015],
+Thm 4.14; [BrennerThomee1979]): for every Jackson estimate `J` of `F`, the static error is
+`O(L hᵒʳᵈ⁽ˢ⁾)` and, on every window `F` approximates, the fully discrete wave error
+`O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)` (`HilbertComplex.SubcomplexFamily.Rated`). -/
 theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
     (J : F.Jackson ρ) : F.Rated J := by
   sorry
-
-variable [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
 /-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
 4.7, 4.14, Props 4.13, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family of
@@ -933,11 +897,12 @@ theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ
   sorry
 
 /-- **The FEEC theorem with variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8):
-every approximating family of discrete differential spaces on a window satisfies the static,
-cochain and heat verdicts with crimes under their hypotheses
-(`HilbertComplex.CrimeFamily.Verdict`). -/
-theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ}
-    (S : H.CrimeFamily a m κ) : S.Verdict := by
+on a window with closed ranges (degrees `a + 1, …, a + m - 1`), every approximating family of
+discrete differential spaces satisfies the static, cochain and heat verdicts with crimes under
+their hypotheses (`HilbertComplex.CrimeFamily.Verdict`). -/
+theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
+    (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
+      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) : S.Verdict := by
   sorry
 
 /-- **Non-vacuity of the crimes** ([HolstStern2012], §3): on the complex `ℝ` in every degree with

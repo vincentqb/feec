@@ -14,7 +14,7 @@ the projections in the window are those of `Feec` (`SubcomplexFamily.isGraphBoun
 last degree through the continuous extension of a projection bounded in `W`). This module identifies
 the challenge's window operators, discrete operators and rational schemes
 (`RationalScheme.toFeec`) with those of `Feec`, and turns the verdicts of
-`Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` (θ-schemes and
+`Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` (with
 `Feec.HilbertComplex.DissipFEEC.rationalScheme`), `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC`
 and the conforming rate `Feec.HilbertComplex.ConstrainedFEEC.rate_le` into the conclusions of the
 challenge (`SubcomplexFamily.waveVerdict`, `SubcomplexFamily.heatVerdict`).
@@ -53,6 +53,20 @@ def SubcomplexFamily.single (F : H.SubcomplexFamily κ) (h : κ) :
 
 end HilbertComplex
 
+/-- **A real normed-space structure on a normed `𝕜`-space is the restricted one**
+(`IsScalarTower ℝ 𝕜 E`): `t • x` and `(t : 𝕜) • x` are continuous in `t` and agree on `ℚ`. -/
+theorem isScalarTower_of_normedSpace {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+    [NormedSpace ℝ E] : IsScalarTower ℝ 𝕜 E := by
+  refine ⟨fun r k x => ?_⟩
+  have := Continuous.ext_on Rat.denseRange_cast (continuous_id.smul continuous_const)
+    ((RCLike.continuous_ofReal (K := 𝕜)).smul continuous_const) (by
+      rintro _ ⟨q, rfl⟩
+      change (q : ℝ) • (k • x) = ((q : ℝ) : 𝕜) • (k • x)
+      rw [RCLike.ofReal_ratCast]
+      exact ratCast_smul_eq ℝ 𝕜 q (k • x))
+  rw [Algebra.smul_def, mul_smul]
+  exact (congrFun this r).symm
+
 /-! ### Evolutions -/
 
 section Evolution
@@ -76,41 +90,6 @@ theorem isStrongSolution_iff {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u : ℝ → 
   · obtain ⟨v, hv, hd⟩ := h.deriv t ht
     exact ⟨v, hv, by simpa using hd⟩
 
-omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- A dissipative `B` has no nonzero `z = c B z` with `c ≥ 0`. -/
-theorem eq_zero_of_eq_smul {B : E →L[𝕜] E} (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) {c : ℝ}
-    (hc : 0 ≤ c) {z : E} (hz : z = (c : 𝕜) • B z) : z = 0 := by
-  have h : ⟪z, z⟫_𝕜 = ⟪(c : 𝕜) • B z, z⟫_𝕜 := by rw [← hz]
-  rw [inner_smul_left, RCLike.conj_ofReal] at h
-  have h' := congrArg RCLike.re h
-  rw [RCLike.re_ofReal_mul, inner_self_eq_norm_sq] at h'
-  have : ‖z‖ ^ 2 ≤ 0 := h' ▸ mul_nonpos_of_nonneg_of_nonpos hc (hB z)
-  exact norm_eq_zero.1 (by nlinarith [norm_nonneg z])
-
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **The θ-iterates are the powers of the θ-step** `r_θ(τ B)` for a dissipative `B`. -/
-theorem theta_eq_pow {B : E →L[𝕜] E} (hB : ∀ x, RCLike.re ⟪B x, x⟫_𝕜 ≤ 0) {θ τ : ℝ}
-    (hθ : 1 / 2 ≤ θ) (hτ : 0 < τ) {w : ℕ → E}
-    (hw : ∀ n, w (n + 1) - w n = (τ : 𝕜) • B ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n))
-    (n : ℕ) :
-    w n = (Feec.TimeStepping.thetaStep ((B : E →ₗ[𝕜] E).toPMap ⊤) (θ : 𝕜) τ ^ n) (w 0) := by
-  induction n with
-  | zero => rfl
-  | succ n ih =>
-    rw [pow_succ', ContinuousLinearMap.mul_def, ContinuousLinearMap.comp_apply, ← ih]
-    set u' := Feec.TimeStepping.thetaStep ((B : E →ₗ[𝕜] E).toPMap ⊤) (θ : 𝕜) τ (w n)
-    obtain ⟨_, hu'⟩ := Feec.TimeStepping.isThetaStep_thetaStep_of_isMDissipative
-      (θ := (θ : 𝕜)) (B.isMDissipative_toPMap_top hB) (by rw [RCLike.ofReal_re]; linarith) hτ (w n)
-    change u' - w n = (τ : 𝕜) • B ((θ : 𝕜) • u' + (1 - (θ : 𝕜)) • w n) at hu'
-    refine sub_eq_zero.1 (eq_zero_of_eq_smul hB (mul_nonneg hτ.le (by linarith : (0 : ℝ) ≤ θ)) ?_)
-    calc w (n + 1) - u' = (w (n + 1) - w n) - (u' - w n) := by abel
-      _ = (τ : 𝕜) • (B ((θ : 𝕜) • w (n + 1) + (1 - (θ : 𝕜)) • w n) -
-          B ((θ : 𝕜) • u' + (1 - (θ : 𝕜)) • w n)) := by rw [hw n, hu', smul_sub]
-      _ = (τ : 𝕜) • B ((θ : 𝕜) • (w (n + 1) - u')) := by
-        rw [← _root_.map_sub, smul_sub]; congr 2; abel
-      _ = ((τ * θ : ℝ) : 𝕜) • B (w (n + 1) - u') := by
-        rw [_root_.map_smul, smul_smul, RCLike.ofReal_mul]
-
 /-- The rational scheme as a `Feec` rational scheme (the same fields). -/
 def RationalScheme.toFeec (r : RationalScheme) : Feec.TimeStepping.RationalScheme :=
   ⟨r.num, r.den, r.natDegree_num_le, r.aeval_den_ne_zero⟩
@@ -130,11 +109,6 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
     (hconv : ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ T : ℝ,
       TendstoUniformlyOn (fun h t => ((Feec.C0Group.ofBounded (B h)).S t (v h) : E))
         (fun t => S' t x) l (Icc 0 T))
-    (htheta : ∀ (θ : ℝ) (_ : 1 / 2 ≤ θ) (τ : κ → ℝ) (_ : ∀ h, 0 < τ h), Tendsto τ l (𝓝 0) →
-      ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ (T ε : ℝ), 0 < ε →
-        ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
-          ‖S' (n * τ h) x - ((Feec.TimeStepping.thetaStep ((B h : X h →ₗ[𝕜] X h).toPMap ⊤)
-            (θ : 𝕜) (τ h) ^ n) (v h) : E)‖ < ε)
     (hrat : ∀ (r : RationalScheme) (_ : r.toFeec.IsAStable) {p : ℕ} (_ : r.toFeec.HasOrder p)
       (_ : 0 < p) (τ : κ → ℝ) (_ : ∀ h, 0 < τ h), Tendsto τ l (𝓝 0) →
       ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ (T ε : ℝ), 0 < ε →
@@ -154,22 +128,6 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
   semidiscrete x v hv T := by
     simpa only [semiflow, Feec.C0Group.ofBounded_S] using
       (hconv x v hv T).congr_right fun t ht => by simp only [hSS' t ht.1]
-  theta θ hθ τ hτ hτ0 x w hw hw0 T ε hε := by
-    filter_upwards [htheta θ hθ τ hτ hτ0 x (fun h => w h 0) hw0 T ε hε] with h hh n hn
-    rw [theta_eq_pow (hB h) hθ (hτ h) (hw h) n, hSS' _ hn.1]
-    exact hh n hn
-  theta_temporal θ hθ h τ hτ w hw n := by
-    rw [theta_eq_pow (hB h) hθ hτ hw n, norm_sub_rev]
-    exact Feec.TimeStepping.norm_thetaStep_pow_sub_exp_le (hB h) hθ hτ n (w 0)
-  crankNicolson_temporal h τ hτ w hw n := by
-    have e1 : ((1 / 2 : ℝ) : 𝕜) = 1 / 2 := by push_cast; ring
-    have e2 : (1 - (1 / 2 : 𝕜)) = 1 / 2 := by ring
-    have hw' : ∀ n, w (n + 1) - w n = (τ : 𝕜) •
-        B h (((1 / 2 : ℝ) : 𝕜) • w (n + 1) + (1 - ((1 / 2 : ℝ) : 𝕜)) • w n) := fun n => by
-      rw [hw n, e1, e2, smul_add]
-    rw [theta_eq_pow (hB h) le_rfl hτ hw' n, norm_sub_rev,
-      ← Feec.TimeStepping.cayley_half_eq_thetaStep]
-    exact Feec.TimeStepping.norm_cayley_pow_sub_exp_le (hB h) hτ n (w 0)
   rational r hr p hp hp0 τ hτ hτ0 x v hv T ε hε := by
     filter_upwards [hrat r hr hp hp0 τ hτ hτ0 x v hv T ε hε] with h hh n hn
     rw [hSS' _ hn.1]
@@ -543,10 +501,6 @@ theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
       G.toApprox.isMDissipative G.toApprox.dissipative V.isClassicalSolution V.unique V.antitone
       (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
       (fun x v hv T => V.converges (G.mem_toCore_closure x) hv T)
-      (fun θ hθ τ hτ hτ0 x v hv T ε hε =>
-        (Feec.HilbertComplex.dissipFEEC_fullyDiscrete G.toCore
-          (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
-          (G.mem_toCore_closure x) hv hτ0 T hε)
       (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>
         (Feec.HilbertComplex.dissipFEEC_fullyDiscrete G.toCore
           (G.toApprox.rationalScheme r.toFeec hr hp hp0 τ hτ)).converges_iterates
@@ -578,10 +532,6 @@ theorem heatVerdict (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded
     G.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
     (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
     (fun x v hv T => V.converges (hZ x) hv T)
-    (fun θ hθ τ hτ hτ0 x v hv T ε hε =>
-      (Feec.HilbertComplex.dissipFEEC_fullyDiscrete (G.heatCore hcrw hb)
-        (Feec.HilbertComplex.DissipFEEC.thetaScheme _ θ hθ τ hτ)).converges_iterates
-        (hZ x) hv hτ0 T hε)
     (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>
       (Feec.HilbertComplex.dissipFEEC_fullyDiscrete (G.heatCore hcrw hb)
         (G.toHeat.rationalScheme r.toFeec hr hp hp0 τ hτ)).converges_iterates

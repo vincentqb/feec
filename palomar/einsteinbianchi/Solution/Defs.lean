@@ -19,9 +19,10 @@ theorems (`Solution.lean`).
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §4.10 (Prop 4.17)
+  §4.1, §4.10 (Prop 4.17)
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §4.2
+  §1.4, §1.10, §4.2
 * [T. Cazenave, A. Haraux, *An Introduction to Semilinear Evolution Equations*][CazenaveHaraux1998],
   Prop 4.1.6
 

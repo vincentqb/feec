@@ -39,7 +39,9 @@ dimensions, and specializes to the Freudenthal meshes of cubes.
   dimensions are the numbers of degrees of freedom of a simplex,
   `Σ_{m ≤ n} C(n+1, m+1) dim(test forms on m-faces)` ([AFW2006], Thms 4.9, 4.13,
   `PolySeq.finrank_form_eq_sum`), and its shape spaces are affinely invariant
-  (`PolySeq.isAffineInvariant_form`).
+  (`PolySeq.isAffineInvariant_form`). Its families and degrees form an admissible sequence of
+  [AFW2006], §3.5, (5.13) (`PolySeq.isAdmissible`, `PolySeq.form_eq_form₀`); those sequences may
+  also reach the degree `0` before the top form degree (`PolyKind.IsAdmissible`).
 * **The classical elements in closed form**, over every field `K` (of characteristic `0` for the
   trimmed spaces; `Koszul.finrank_polyForm_three_zero`, …, `Koszul.finrank_polyFormMinus_two_one`
   of `Feec.Algebra.PolynomialFormClassical`), and over `ℝ` for the form fields: in `ℝ³`, `dim P_rΛ⁰ = dim P_rΛ³ = (r+1)(r+2)(r+3)/6`
@@ -328,6 +330,13 @@ theorem test_eq_map_testForm (k m : ℕ) : S.test k m = (S.testForm ℝ k m).map
 theorem extDeriv_mem_form {k : ℕ} {ω : Koszul.PolyForm K (Fin n)} (hω : ω ∈ S.form K k) :
     Koszul.extDeriv ω ∈ S.form K (k + 1) :=
   (S.kind k).extDeriv_mem_form (S.transition k) hω
+
+/-- The sequence of families and degrees of `S` is admissible in the sense of [AFW2006], §3.5,
+(5.13) (`PolyKind.IsAdmissible`), one whose degree stays `≥ 1`. -/
+theorem isAdmissible : PolyKind.IsAdmissible S.kind S.deg := ⟨S.one_le_deg 0, S.transition⟩
+
+theorem form_eq_form₀ (k : ℕ) : S.form K (n := n) k = (S.kind k).form₀ K (S.deg k) k :=
+  ((S.kind k).form₀_of_one_le (S.one_le_deg k) k).symm
 
 end CommRing
 

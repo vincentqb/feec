@@ -309,22 +309,25 @@ end Helpers
 
 /-! ### Admissible sequences
 
-An admissible sequence of the challenge is a sequence of families `Feec.FiniteElement.PolyKind`
-(`kindOf`) with admissible transitions (`transition_of_admissible`), whose spaces are carried to
-`Feec.FiniteElement.PolyKind.form` (`map_seqForm`). -/
+An admissible sequence of the challenge is an admissible sequence of families
+`Feec.FiniteElement.PolyKind` (`kindOf`, `isAdmissible_of_admissible`), whose spaces are carried to
+`Feec.FiniteElement.PolyKind.form₀` (`map_seqForm`, with `P_0⁻Λ = 0`). -/
 
 /-- The family `P_rΛ` (`true`) or `P_r⁻Λ` (`false`). -/
 def kindOf (b : Bool) : Feec.FiniteElement.PolyKind := if b then .full else .trimmed
 
-theorem map_seqForm {full : ℕ → Bool} {r : ℕ → ℕ} (h : Admissible full r) (k : ℕ) :
-    (seqForm K n full r k).map (Φ).toLinearMap = (kindOf (full k)).form K (r k) k := by
+theorem map_seqForm (full : ℕ → Bool) (r : ℕ → ℕ) (k : ℕ) :
+    (seqForm K n full r k).map (Φ).toLinearMap = (kindOf (full k)).form₀ K (r k) k := by
   unfold seqForm kindOf
   cases full k
-  · simpa using map_polyFormMinus_of_le (h.one_le k) k
-  · simpa using map_polyForm (r k) k
+  · rcases r k with _ | r
+    · exact Submodule.map_bot _
+    · exact map_polyFormMinus r k
+  · exact map_polyForm (r k) k
 
-theorem transition_of_admissible {full : ℕ → Bool} {r : ℕ → ℕ} (h : Admissible full r) (k : ℕ) :
-    Feec.FiniteElement.PolyKind.Transition (r k) (kindOf (full (k + 1))) (r (k + 1)) := by
+theorem isAdmissible_of_admissible {full : ℕ → Bool} {r : ℕ → ℕ} (h : Admissible full r) :
+    Feec.FiniteElement.PolyKind.IsAdmissible (fun k => kindOf (full k)) r := by
+  refine ⟨h.one_le, fun k => ?_⟩
   rcases h.transition k with ⟨h1, h2⟩ | ⟨h1, h2⟩
   · exact Or.inl ⟨by simp [kindOf, h1], h2⟩
   · exact Or.inr ⟨by simp [kindOf, h1], h2⟩
@@ -580,18 +583,16 @@ theorem periodicTable_of_feec (K : Type u) [Field K] (n : ℕ) : PeriodicTable K
     · rw [Feec.FiniteElement.PolyKind.testForm_eq_bot _ h, finrank_bot]
       simp only [h, ↓reduceIte]
   map_seqForm_le full r h k := by
-    rw [← map_le_iff, map_map_extDeriv, map_seqForm h, map_seqForm h]
+    rw [← map_le_iff, map_map_extDeriv, map_seqForm, map_seqForm]
     rintro _ ⟨ω, hω, rfl⟩
-    exact (kindOf (full k)).extDeriv_mem_form (transition_of_admissible h k) hω
+    exact (isAdmissible_of_admissible h).extDeriv_mem hω
   exactAt_seqForm full r h k := by
     refine exactAt_deRham_of_feec _ _ k fun ω hω hd => ?_
-    rw [map_seqForm h] at hω ⊢
-    exact (kindOf (full k)).exists_extDeriv_eq (h.one_le k) (transition_of_admissible h k) hω hd
+    rw [map_seqForm] at hω ⊢
+    exact (isAdmissible_of_admissible h).exists_extDeriv_eq hω hd
   closed_seqForm full r h := by
-    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm h, map_polyForm]
-    exact ker_inf_eq_const ((kindOf (full 0)).form_le_polyForm (h.one_le 0) 0)
-      ((Feec.Koszul.polyForm_mono (Nat.zero_le _) 0).trans
-        ((Feec.Koszul.polyForm_le_polyFormMinus _ 0).trans
-          ((kindOf (full 0)).polyFormMinus_le_form (h.one_le 0) 0)))
+    rw [← map_eq_iff, map_inf, map_ker_extDeriv, map_seqForm, map_polyForm]
+    exact ker_inf_eq_const (isAdmissible_of_admissible h).polyForm_zero_le_form₀_le.2
+      (isAdmissible_of_admissible h).polyForm_zero_le_form₀_le.1
 
 end FEEC

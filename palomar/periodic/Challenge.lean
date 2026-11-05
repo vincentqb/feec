@@ -246,12 +246,12 @@ def deRham (hd : extDeriv K n ∘ₗ extDeriv K n = 0) {S : ℕ → Submodule K 
       ((extDeriv K n).restrict fun _ h => hS k (Submodule.mem_map_of_mem h)))
     fun _ => by ext ω; exact LinearMap.congr_fun hd ω.1
 
-/-- **An admissible sequence** ([AFW2006], §3.5, §5.5): in every form degree `k` the full space
-`P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`, `r_k ≥ 1`, followed in degree
-`k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹` (the spaces of degree `k > n` are `0`;
-`P_0Λⁿ = P_1⁻Λⁿ` enters as the trimmed space). -/
+/-- **An admissible sequence** ([AFW2006], §3.5, §5.5 (5.13)): in every form degree `k` the full
+space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`, `r_0 ≥ 1`, followed in
+degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. The degree reaches `0` only at a full
+space `P_0Λᵏ`, after which every space is `P_0⁻Λ = 0`; the spaces of degree `k > n` are `0`. -/
 structure Admissible (full : ℕ → Bool) (r : ℕ → ℕ) : Prop where
-  one_le (k : ℕ) : 1 ≤ r k
+  one_le : 1 ≤ r 0
   transition (k : ℕ) :
     (full (k + 1) = false ∧ r (k + 1) = r k) ∨ (full (k + 1) = true ∧ r (k + 1) + 1 = r k)
 

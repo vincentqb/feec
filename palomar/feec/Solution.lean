@@ -27,6 +27,8 @@ of `Feec.HilbertComplex.Approximation.StaticCochain` and
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4, Thm 3.7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015], Ch. 4
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012], §3
+* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/

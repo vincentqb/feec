@@ -23,6 +23,9 @@ imports this module and the bridges to `Feec`, and proves the theorems (`Solutio
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012], §3
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015], Ch. 4
+* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/

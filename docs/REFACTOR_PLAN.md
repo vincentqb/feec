@@ -744,7 +744,7 @@ Each task owns the files listed and nothing else. Tasks inside a wave are indepe
 6. `docs/THESIS_MAP.md` is up to date (`lake exe feec-thesismap --check`).
 7. Every Lean name in backticks in `README.md` and `docs/*.md` exists (`lake exe feec-docnames`); the historical regions (dated status notes, the pre-refactor tree) may also name pre-refactor declarations, and the proposals written before the refactor (§0, §2–§4 of this plan, `docs/BLUEPRINT.md`) are not checked.
 
-8. `palomar/Solution/Defs.lean` is `palomar/Challenge.lean` without its theorem and `palomar/` builds (`lake exe feec-palomar`; the comparator, `cd palomar && lake comparator`, before a submission).
+8. In each Palomar package `palomar/*/` (a directory with a `comparator.json`), `Solution/Defs.lean` is `Challenge.lean` without its compared theorems and the package builds (`lake exe feec-palomar`; the comparator, `lake comparator` in the package, before a submission).
 
 Items 2 and 4–8 and the citation check run as one command, `lake exe feec-gate` (one import of `Feec` and `FeecCheck`; nonzero exit on any failure, each violation printed as `path:line: message`).
 

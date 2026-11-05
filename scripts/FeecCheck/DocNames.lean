@@ -3,6 +3,7 @@ module
 public import FeecCheck.Util
 public import FeecCheck.Env
 public import FeecCheck.Citations
+public import FeecCheck.Palomar
 
 /-!
 # Doc-name gate
@@ -58,7 +59,9 @@ under other names in the end; their names are not checked (`proposal` in `region
 `docs/REFACTOR_PLAN.md` §1 (`banned` in `regions`) must *not* resolve.
 
 An entry of `regions` or `historicalNames` that matches nothing is an error, so both lists stay
-minimal. Citation keys of `docs/references.bib` (`AFW2010`) also resolve.
+minimal. Citation keys of `docs/references.bib` (`AFW2010`) also resolve, and so do the compared
+theorems of the Palomar packages (`theorem_names` of `palomar/*/comparator.json`, `FEEC.feec`),
+which are not in `Feec`; the `Palomar` check finds each as a theorem of its `Challenge.lean`.
 
 Violations are reported as `path:line: message` at the line where the span starts.
 -/
@@ -463,9 +466,13 @@ def run (env : Environment) : IO Report := do
     | .error e => do
       rep := rep.addError e
       pure {}
+  let mut compared : Std.HashSet String := {}
+  for pkg in ← palomarPackages do
+    for n in (Palomar.theoremNames (← readText (pkg / "comparator.json"))).getD [] do
+      compared := compared.insert n
   let current (s : String) : Bool :=
     ix.resolves s || moduleQualified env ix s || opts.contains (nameOfString s) ||
-      (toks.find? s).isSome || bib.contains s
+      (toks.find? s).isSome || bib.contains s || compared.contains s
   let mut usedNames : Std.HashSet String := {}
   let mut nspans := 0
   let mut nnames := 0

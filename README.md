@@ -304,7 +304,8 @@ written in Lean (`scripts/FeecCheck/`): the citation convention, the import laye
 order of layers of `docs/REFACTOR_PLAN.md` §1), the axiom audit (only `propext`,
 `Classical.choice`, `Quot.sound`), banned identifiers, `docs/THESIS_MAP.md` up to date, the
 migration coverage of `docs/migration/map.tsv`, and the names of the documentation (every Lean name
-in backticks in `README.md` and `docs/*.md` is a declaration, module or namespace; historical
+in backticks in `README.md` and `docs/*.md` is a declaration, module or namespace, or a compared
+theorem of a Palomar package; historical
 regions may also name pre-refactor declarations, see `scripts/FeecCheck/DocNames.lean`), and the
 Palomar packages (below). It exits
 nonzero on any failure and prints each violation as `path:line: message`. Each check is also an
@@ -329,152 +330,31 @@ LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-g
 
 ## Palomar submission
 
-`palomar/` holds the submissions for the [Palomar registry](https://palomar-registry.org), each a
-nested Lake project sharing the dependencies of the root package
-(`packagesDir = "../../.lake/packages"`), with a `Challenge.lean` restating its statement over
-Mathlib alone, a `Solution.lean` proving it from `Feec` through `Solution/Bridge.lean` (the
-challenge's definitions copied verbatim in `Solution/Defs.lean`), `comparator.json` and
-`formalization.yaml`. The static and dynamic packages copy the same vocabulary (Hilbert complexes
-on ℤ, subcomplexes, cochain projections, families of subcomplexes); the others are self-contained.
+`palomar/` holds five entries for the [Palomar registry](https://palomar-registry.org): one
+repository and one library, with one comparator configuration, hence one entry, per package. Each
+package is a nested Lake project sharing the dependencies of the root
+(`packagesDir = "../../.lake/packages"`). Its `Challenge.lean` states the theorems over Mathlib
+alone; its `Solution.lean` proves them from `Feec`, with the definitions of the challenge copied
+verbatim in `Solution/Defs.lean`; `comparator.json` lists the compared theorems and
+`formalization.yaml` describes the entry. The gate (check `Palomar`, alone `lake exe feec-palomar`)
+checks that `Solution/Defs.lean` is the challenge without its compared theorems
+(`lake exe feec-palomar --write` regenerates it) and that every package builds against `Feec`. The
+comparator compares every constant a statement uses, proofs included, so a proof in a challenge
+must not create private auxiliary lemmas (`simp` with `←` lemmas, some `omega` calls). Before a
+submission, judge a package with the comparator (several minutes), e.g.
+`cd palomar/feec && lake build && lake comparator`.
 
-* `palomar/static/` (theorems FEEC.staticFEEC, FEEC.staticFEEC_uniform,
-  FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, about 410 lines): the a
-  priori theory of the mixed Hodge Laplacian of [AFW2010], §3.3–§3.4, under its hypotheses in the
-  degrees used (cochain projections `V → Vₕ` bounded in the graph norm in degrees `j - 1`, `j`; closed range in degrees
-  `j`, `j + 1`): both gap estimates between `ℌʲ` and `ℌₕʲ`, the cohomology isomorphisms under the
-  strict gap, uniform discrete Poincaré inequality, unique solvability, uniform inf-sup condition
-  and stability, quasi-optimal graph-norm error bound; with approximation in the graph norm and
-  finite-dimensional `ℌʲ`, vanishing harmonic gap, eventual cohomology isomorphisms and
-  convergence; one constant `Φ(c, c_P)` of the projection bound and the Poincaré constant only,
-  for every complex (FEEC.staticFEEC_uniform); the converse, Thm 3.7: the discrete Poincaré
-  inequality and `‖q‖ ≤ c₂ ‖P_ℌ q‖` on `ℌₕ` give a cochain projection bounded by `(1 + c₁)(1 + c₂)`
-  (FEEC.exists_cochainProjection), so under closed range uniformly bounded projections exist iff
-  discrete stability holds uniformly (FEEC.exists_subcomplexFamily_iff); from
-  `Feec.HilbertComplex.SubcomplexFamily.staticFEEC`, `Feec.HilbertComplex.Subcomplex.exists_cochainProjection`,
-  `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` and the explicit constants of `Feec`.
-* `palomar/dynamic/` (theorem FEEC.dynamicFEEC, about 370 lines): the Hodge wave and heat
-  equations on every window in which the subcomplexes approximate in the graph norm of the
-  window ([AFW2010], §3.3; graph norm in all but the last degree, `W` in the last; no bound of
-  the projections for the wave, projections bounded in these same norms for the heat):
-  well-posedness, convergence for every datum, the error bound
-  `‖S(t) x - exp(t Lₕ) vₕ‖ ≤ ‖vₕ - x‖ + 2 (1 + 4√3) (1 + t) M` by the graph-norm best
-  approximation of the trajectory, θ-schemes with their temporal and fully discrete error bounds
-  (second order for Crank–Nicolson), propagation of constraints iff reducing and the residual
-  bound; from
-  `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
-  `Feec.HilbertComplex.ConstrainedFEEC.rate_le`.
-* `palomar/periodic/` (theorems FEEC.periodicTable, FEEC.affineInvariantForms,
-  FEEC.charZero_iff_classification, about 445 lines): the algebra of the periodic table in
-  every dimension, for polynomial forms
-  `MvPolynomial ⊗ ExteriorAlgebra` of Mathlib: the dimensions of `H_rΛᵏ`, `P_rΛᵏ`, `P_r⁻Λᵏ` and `Q_b⁻Λᵏ` (any multidegree), the Leibniz rule
-  for `κ` and the wedge closure of `P_rΛ` and `P_r⁻Λ` and, in characteristic `0`, their
-  polynomial de Rham complexes as Mathlib cochain complexes, exact in positive degree with
-  the constants as closed `0`-forms, and so the complex of every admissible sequence; the
-  dimension counts of the degrees of freedom; the exact homogeneous and Koszul complexes, the homotopy
-  formula and the Koszul decompositions of
-  [AFW2006], §3 and [ArnoldBoffiBonizzoni2015], §5; from `Feec.Algebra.ExteriorAlgebraForm`
-  (coefficient forms as Mathlib's exterior algebra), `Feec.Algebra.PolynomialFormDim` and
-  `Feec.Algebra.CubicalForm`; and (theorem FEEC.affineInvariantForms, over every field of
-  characteristic `0`) the classification of the affinely invariant spaces of [AFW2006],
-  Thms 3.5–3.6, with the irreducibility of the summands of `H_rΛᵏ` under `GL(n)` alone proved
-  without representation theory
-  (`Feec.FiniteElement.InvariantForm`, `Feec.FiniteElement.AffineInvariantForm`); and (theorem
-  FEEC.charZero_iff_classification) that characteristic `0` is necessary for it, by a
-  counterexample over every field of positive characteristic
-  (`Feec.Counterexamples.PositiveCharacteristic`).
-* `palomar/vonneumann/` (theorems VonNeumann.inequality, VonNeumann.inequality_rational,
-  VonNeumann.inequality_dissipative, VonNeumann.inequality_mdissipative, their real forms
-  VonNeumann.inequality_dissipative_real and VonNeumann.inequality_mdissipative_real,
-  VonNeumann.cayley_contraction, VonNeumann.error_bound, VonNeumann.error_bound_real,
-  VonNeumann.error_bound_mdissipative, VonNeumann.error_bound_mdissipative_real,
-  VonNeumann.error_bound_quasi_real, VonNeumann.resolvent_estimates_banach,
-  VonNeumann.error_bound_backward_euler_banach, VonNeumann.error_bound_banach_real_hille_yosida,
-  VonNeumann.error_bound_banach_real, VonNeumann.error_bound_banach_sqrt and
-  VonNeumann.error_bound_banach_sharp, about 540 lines,
-  Mathlib vocabulary only): von Neumann's inequality `‖p(T)‖ ≤ sup_{|ζ|=1} |p(ζ)|` for contractions of every
-  complex inner product space and its rational form on Hilbert spaces;
-  `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for rational `r` without poles in the closed left half-plane
-  and every bounded dissipative or m-dissipative, possibly unbounded, `A` (complex `r` on
-  complex spaces, real `r` on real or complex spaces; `r(τA)` through the resolvent
-  `(1 - τA)⁻¹` when `A` is unbounded), so A-stable schemes are unconditionally stable; the
-  Cayley transform of an m-dissipative `A` as the unique contraction mapping `x - τAx` to
-  `x + τAx`; and the Brenner–Thomée error bound `‖r(τA)ⁿ x - e^{nτA} x‖ ≤ K nτ τᵐ ‖A^{m+1} x‖`
-  of an A-stable scheme of order `m`, `K` depending on `r` only, for bounded dissipative `A`
-  and for m-dissipative, possibly unbounded, `A` with `x ∈ D(A^{m+1})` and `e^{tA}` the
-  semigroup characterized by its strong solutions (complex `r` on complex spaces, real `r` on
-  real or complex spaces);
-  for `A - ω` m-dissipative (quasi-contractive semigroups, e.g. `L + B` with `B` bounded) the
-  bound `K e^{κωnτ} nτ τᵐ ‖A^{m+1} x‖` for `ωτ ≤ c₀`, `c₀`, `K`, `κ` depending on `r` only; and
-  on Banach spaces, for a strongly continuous semigroup, the bound
-  `Mₛ (K₀ + M/(m+1)!) M nτ τᵐ ‖A^{m+1} x‖` given the stability `‖r(τA)ᵏ‖ ≤ Mₛ` and the
-  remainder bound `‖ρ(τA)‖ ≤ K₀`, with `Q(R)` invertible (not automatic off Hilbert spaces);
-  for `‖S(t)‖ ≤ M e^{ωt}` the Hille–Yosida estimates `‖(z - A)⁻ᵐ‖ ≤ M/(re z - ω)ᵐ`, from which,
-  for `ωτ ≤ c`, `Q(R)` is invertible and `‖ρ(τA)‖ ≤ K₀` (`K₀` depending on `r`, `m` and `M`),
-  so only the stability is assumed, and none for backward Euler;
-  from `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
-  `Feec.TimeStepping.norm_resolventEval_mul_inverse_le`,
-  `Feec.TimeStepping.RationalScheme.ofBounded`, `Feec.TimeStepping.norm_cayley_le` and
-  `Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le` and
-  `Feec.TimeStepping.norm_aeval_mul_inverse_pow_sub_exp_le`, and for unbounded `A`
-  `Feec.TimeStepping.RationalScheme.norm_step_pow_sub_semigroup_le` (from the Banach-space
-  bound) and `Feec.TimeStepping.norm_resolventEval_mul_inverse_pow_sub_semigroup_le` (Yosida
-  limit),
-  `Feec.TimeStepping.RationalScheme.exists_norm_step_pow_sub_le` (shift `r(z + ωτ)`) and
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le` (Lax–Richtmyer on Banach
-  spaces), with `Feec.TimeStepping.RationalScheme.exists_norm_resolventStep_pow_sub_S_le` and
-  `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le` (Hille–Yosida,
-  `Feec.C0Semigroup.norm_resolvent_pow_le`, on the complexification for real spaces); for
-  bounded semigroups of Banach spaces over `ℝ` or `ℂ` and every A-stable `r` (`|r(∞)| = 1`
-  included)
-  (theorem VonNeumann.error_bound_banach_sqrt) the resolvent, `Q(R)` invertible, the
-  Brenner–Thomée stability `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` and an error bound with its `√n` loss
-  (order `m - 1/2` at fixed `nτ`),
-  from the Hille–Phillips calculus (`Feec.C0Semigroup.hillePhillips`) and
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_isAStable`, on real spaces by
-  complexification
-  (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_of_resolvent_of_isAStable`);
-  and on Banach spaces over `ℝ` or `ℂ` for every A-stable `r` (theorem
-  VonNeumann.error_bound_banach_sharp), Brenner–Thomée's smooth-data estimate
-  `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`, from
-  `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp` (the calculus on
-  translates of kernels, `Feec.C0Semigroup.hillePhillipsKernel_translate`, and the bound
-  `‖kₙ‖₁ ≤ C n` on Brenner–Thomée's error kernel,
-  `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`), on real spaces by complexification
-  (`Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`).
-* `palomar/bgg/` (theorems FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
-  FEEC.bggSum, FEEC.bggExplicit and FEEC.bggClosedRange, about 540 lines): the BGG construction of [ArnoldHu2021],
-  §3 and §5, over any ring, for cochain complexes on ℤ of any length: for a stacked diagram
-  `S : Ṽ ⟶ V⟦1⟧` with `Sⁱ` injective for `i < J` and onto modulo `d` for `i ≥ J`, the inclusion
-  `Γ → T` into the twisted complex and the projection `Γ → Γ / Δ` onto the BGG complex are
-  quasi-isomorphisms; `Γ / Δ` is the output complex (24)–(26) (`Vⁱ / R(Sⁱ⁻¹)` before `J`,
-  `N(Sⁱ)` after, `d̃ (Sᴶ)⁻¹ d` at `J`); over a field, Theorem 6: `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) +
-  dim Hⁱ(Ṽ)` with equality iff `S` induces zero on cohomology (27); under `S = dK - Kd̃` (28), the
-  cohomology of the sum complex (Theorem 7), the explicit cochain map (30) from the sum complex
-  (right inverses of `Sⁱ` from `J` on) a quasi-isomorphism carrying cohomology representatives of
-  the rows to those of the BGG complex (Corollary 1, (31)), and for Hilbert rows under (23) its
-  orthogonal form with the Moore–Penrose inverses into the output complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)`
-  (24)–(26) (`Feec.BGG.BoundedData.quasiIso_orthSumMap`); for bounded Hilbert complexes with `Sⁱ` bounded
-  below before `J`, `Γⁱ`, `Δⁱ` closed and closed ranges where the rows have finite-dimensional
-  cohomology; from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
-  `Feec.BGG.Data.finrank_twistComplex_homology_eq_iff`, `Feec.BGG.Data.bggProj`,
-  `Feec.BGG.Data.quasiIso_of_Γι_comp` and `Feec.BGG.BoundedData.isClosed_Δ_sup_map_twist`.
+| Package | Title | Compared theorems | Challenge lines |
+|---|---|---|---|
+| `palomar/feec/` | Finite element exterior calculus for Hilbert complexes: the static theory of [AFW2010], the semidiscrete Hodge wave and heat equations, A-stable fully discrete schemes, rates, variational crimes of [HolstStern2012] | `FEEC.feec`, `FEEC.feec_rated`, `FEEC.staticFEEC_uniform`, `FEEC.exists_cochainProjection`, `FEEC.exists_subcomplexFamily_iff`, `FEEC.crimeFEEC`, `FEEC.crime_nonvacuous` | 926 |
+| `palomar/einsteinbianchi/` | Constraint-preserving boundary conditions for the linearized Einstein–Bianchi system on cubes | `FEEC.EinsteinBianchi.tsd_propagates`, `FEEC.EinsteinBianchi.tsd_existsUnique`, `FEEC.EinsteinBianchi.exists_nonstationary` | 221 |
+| `palomar/timestepping/` | Time stepping for uniformly stable semigroup families on Banach spaces: Brenner–Thomée, von Neumann, sub-Markov generators, the finite-difference heat equation | `TimeStepping.hilleYosida`, `TimeStepping.backwardEuler`, `TimeStepping.stable`, `TimeStepping.error`, `TimeStepping.stable_of_bounded`, `TimeStepping.error_of_bounded`, `TimeStepping.converges`, `TimeStepping.converges_backwardEuler`, `TimeStepping.vonNeumann`, `TimeStepping.vonNeumann_rational`, `TimeStepping.contractive`, `TimeStepping.subMarkov`, `TimeStepping.isSubMarkovGenerator_fdLaplacian`, `TimeStepping.fdHeat`, `TimeStepping.backwardEuler_isAStable`, `TimeStepping.crankNicolson_isAStable` | 411 |
+| `palomar/periodic/` | Classification of invariant spaces of polynomial differential forms | `FEEC.periodicTable`, `FEEC.affineInvariantForms`, `FEEC.charZero_iff_classification`, `FEEC.charZero_iff_closed_eq_exact` | 448 |
+| `palomar/bgg/` | Bernstein–Gelfand–Gelfand complexes of [ArnoldHu2021] (algebraic and Hilbert; no finite elements) | `FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum`, `FEEC.bggExplicit`, `FEEC.bggHilbert`, `FEEC.bggOrthogonal` | 645 |
 
-The gate (`lake exe feec-gate`, check `Palomar`; alone, `lake exe feec-palomar`) checks in each
-package (each directory `palomar/*/` with a `comparator.json`) that `Solution/Defs.lean` is the
-challenge without its compared theorems (`lake exe feec-palomar --write` regenerates it) and that
-the package builds against `Feec`.
-The comparator compares every constant the statement uses, proofs included, so proofs in a
-challenge must not create private auxiliary lemmas (named after their module, hence different in
-`Solution/Defs.lean`), such as `simp` with `←` lemmas and some `omega` calls.
-Before a submission, judge each with the comparator (several minutes):
-
-```bash
-cd palomar/static && lake build && lake comparator
-cd palomar/dynamic && lake build && lake comparator
-cd palomar/periodic && lake build && lake comparator
-cd palomar/vonneumann && lake build && lake comparator
-cd palomar/bgg && lake build && lake comparator
-```
+Open before a submission (the author's): a root `LICENSE` whose SPDX identifier is
+`project.license` of every `formalization.yaml`; a public repository; the author's review of each
+`Challenge.lean` statement; the submission form, one per package path, with the 40-character commit.
 
 ## Citing
 

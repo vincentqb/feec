@@ -62,8 +62,9 @@ constraint is `σ = 0` with `E`, `B` TSD in the sense of distributions (`IsTSD�
 For every open cube, with real fields:
 
 4. (`electric_forward_iff`) for every datum of `D(L)` the system has a strong solution on
-   `[0, ∞)`, and for any sets `K₁`, `K₂` of TSD fields (whatever boundary conditions they carry)
-   a strong solution stays in `{0} × K₁ × K₂` iff its datum lies there and is stationary;
+   `[0, ∞)`, and a strong solution stays in the constraint iff its datum lies there and is
+   stationary (boundary conditions on the TSD fields only shrink the constraint, so none of
+   them lets non-stationary data propagate);
 5. (`electric_tsd_leaves`) some TSD datum of `D(L)` leaves the constraint at once: on every
    `[0, T]` it has a strong solution, and every strong solution from it leaves the constraint.
 
@@ -75,8 +76,8 @@ incoming characteristic fields to zero. Its generator `A` is defined by the ener
 fields) and a Green's formula with a boundary term (`IsAbsorbing`); its solutions are mild
 solutions (`IsMildSolution`, [Pazy1983], §4.2). With real fields:
 
-6. (`absorbing_not_propagates`) some TSD datum has a mild solution that leaves the TSD
-   constraint.
+6. (`absorbing_not_propagates`) some TSD datum has a mild solution, and every mild solution from
+   it leaves the TSD constraint.
 
 The fields are elements of `L²` for the Lebesgue measure restricted to the domain, over
 `𝕜 = ℝ` or `ℂ` (`RCLike 𝕜`); solutions are those of `U' = L U + F` for an operator `L` given by its
@@ -335,16 +336,13 @@ theorem exists_nonstationary (hs : 0 < s) :
 /-! ### Electric conditions: only stationary data propagate -/
 
 /-- **With electric boundary conditions only stationary data propagate**: for every
-`U₀ ∈ D(L)` the system `U' = L U` has a strong solution on `[0, ∞)` from `U₀`, and for any sets
-`K₁`, `K₂` of TSD fields a strong solution from `U₀` stays in `{0} × K₁ × K₂` iff `U₀` lies there
-and `L U₀ = 0`. -/
-theorem electric_forward_iff (hs : 0 < s) {K₁ K₂ : Set (Mat ℝ b s)}
-    (h₁ : ∀ E ∈ K₁, IsTSD₀ b s E) (h₂ : ∀ B ∈ K₂, IsTSD₀ b s B) {U₀ : State ℝ b s}
-    (hU₀ : ∃ V, IsWave₀ b s U₀ V) :
+`U₀ ∈ D(L)` the system `U' = L U` has a strong solution on `[0, ∞)` from `U₀`, and a strong
+solution from `U₀` stays in the constraint `{0} × TSD × TSD` iff `U₀` lies in it and
+`L U₀ = 0`. -/
+theorem electric_forward_iff (hs : 0 < s) {U₀ : State ℝ b s} (hU₀ : ∃ V, IsWave₀ b s U₀ V) :
     (∃ U, U 0 = U₀ ∧ IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U) ∧
       ∀ U, U 0 = U₀ → IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U →
-        ((∀ t ∈ Ici (0 : ℝ), (U t).1 = 0 ∧ (U t).2.1 ∈ K₁ ∧ (U t).2.2 ∈ K₂) ↔
-          (U₀.1 = 0 ∧ U₀.2.1 ∈ K₁ ∧ U₀.2.2 ∈ K₂) ∧ IsWave₀ b s U₀ 0) := by
+        ((∀ t ∈ Ici (0 : ℝ), Constraint₀ b s (U t)) ↔ Constraint₀ b s U₀ ∧ IsWave₀ b s U₀ 0) := by
   sorry
 
 /-- **With electric boundary conditions TSD data leave the constraint at once**: some datum
@@ -360,11 +358,12 @@ theorem electric_tsd_leaves (hs : 0 < s) :
 /-! ### Absorbing conditions: the constraints do not propagate -/
 
 /-- **The absorbing boundary conditions do not preserve the TSD constraint**: on `Q = (0, ½)³`
-some datum `(E₀, B₀)` with `E₀`, `B₀` TSD has a mild solution of `(E, B)' = A (E, B)` that
-leaves the TSD constraint. -/
+some datum `(E₀, B₀)` with `E₀`, `B₀` TSD has a mild solution of `(E, B)' = A (E, B)`, and
+every mild solution from it leaves the TSD constraint. -/
 theorem absorbing_not_propagates :
     ∃ U₀ : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2), IsTSD₀ 0 (1 / 2) U₀.1 ∧ IsTSD₀ 0 (1 / 2) U₀.2 ∧
-      ∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing U ∧
+      (∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing U) ∧
+      ∀ U, U 0 = U₀ → IsMildSolution IsAbsorbing U →
         ∃ t ∈ Ici (0 : ℝ), ¬(IsTSD₀ 0 (1 / 2) (U t).1 ∧ IsTSD₀ 0 (1 / 2) (U t).2) := by
   sorry
 

@@ -16,7 +16,8 @@ The pairs `(E, B)` of real matrix fields on `Q = (0, ½)³` of `Challenge.lean` 
 * `IsAbsorbing` is the graph of the impedance generator `Feec.Models.Cube.Absorbing.absorbing`
   (`isAbsorbing_iff`): its weak equation against all of the energy space follows from the one
   against the `C¹` triples by density;
-* the orbits of the absorbing semigroup are mild solutions (`isMildSolution_orbit`).
+* the orbits of the absorbing semigroup are mild solutions (`isMildSolution_orbit`), and the only
+  ones (`isMildSolution_eq_orbit`).
 
 ## References
 
@@ -323,5 +324,33 @@ theorem isMildSolution_orbit (x : Feec.Models.Cube.Absorbing.State) :
   have hmem := absorbing.mem_graph ⟨_, hd⟩
   rw [← key] at hmem
   exact hmem
+
+/-- **The mild solutions are the orbits of the absorbing semigroup.** The primitive `∫₀^· U` of
+a mild solution and that of the orbit of `U 0` are strong solutions of `W' = A W + U 0` on
+`[0, t]` vanishing at `0`, hence equal (`A` is dissipative); `U t - U 0` is `A` of either. -/
+theorem isMildSolution_eq_orbit {U : ℝ → MQ × MQ} (hU : IsMildSolution IsAbsorbing U) {t : ℝ}
+    (ht : 0 ≤ t) : eAbs (U t) = absorbingSemigroup.S t (eAbs (U 0)) := by
+  set x := eAbs (U 0)
+  have hsol : ∀ w : ℝ → Feec.Models.Cube.Absorbing.State, ContinuousOn w (Ici 0) →
+      (∀ τ ∈ Ici (0 : ℝ), ((∫ s in (0 : ℝ)..τ, w s), w τ - x) ∈ absorbing.graph) →
+      Evolution.IsStrongSolution absorbing (Icc 0 t) (fun _ => x)
+        (fun τ => ∫ s in (0 : ℝ)..τ, w s) := fun w hw hg =>
+    Evolution.IsStrongSolution.of_deriv fun τ hτ => ⟨w τ - x, hg τ hτ.1, by
+      simpa using hasDerivWithinAt_integral_of_continuousOn (hw.mono Icc_subset_Ici_self) hτ⟩
+  have hgU : ∀ τ ∈ Ici (0 : ℝ),
+      ((∫ s in (0 : ℝ)..τ, eAbs (U s)), eAbs (U τ) - x) ∈ absorbing.graph := fun τ hτ => by
+    have := (isAbsorbing_iff _ _).1 (hU.2 τ hτ)
+    convert this using 2
+    · exact intervalIntegral_mapR eAbs U 0 τ
+    · exact (_root_.map_sub eAbs _ _).symm
+  have hgS : ∀ τ ∈ Ici (0 : ℝ), ((∫ s in (0 : ℝ)..τ, absorbingSemigroup.S s x),
+      absorbingSemigroup.S τ x - x) ∈ absorbing.graph := fun τ hτ => by
+    obtain ⟨hd, e⟩ := Feec.Models.Cube.Absorbing.integral_mem_domain x hτ
+    rw [← e]
+    exact absorbing.mem_graph ⟨_, hd⟩
+  have e := (hsol _ (eAbs.continuous.comp_continuousOn hU.1) hgU).unique
+    Feec.Models.Cube.Absorbing.isMDissipative_absorbing.dissipative (hsol _ (absorbingSemigroup.strongCont x) hgS)
+    (by simp) ⟨ht, le_rfl⟩
+  exact sub_left_inj.1 (absorbing.mem_graph_snd_inj (hgU t ht) (hgS t ht) e)
 
 end FEEC.EinsteinBianchi

@@ -112,16 +112,13 @@ theorem isStrongSolution₀_zero_iff {b : Fin 3 → ℝ} {s : ℝ} {I : Set ℝ}
   rw [this]
 
 /-- **With electric boundary conditions only stationary data propagate**: for every
-`U₀ ∈ D(L)` the system `U' = L U` has a strong solution on `[0, ∞)` from `U₀`, and for any sets
-`K₁`, `K₂` of TSD fields a strong solution from `U₀` stays in `{0} × K₁ × K₂` iff `U₀` lies there
-and `L U₀ = 0`. -/
-theorem electric_forward_iff (hs : 0 < s) {K₁ K₂ : Set (Mat ℝ b s)}
-    (h₁ : ∀ E ∈ K₁, IsTSD₀ b s E) (h₂ : ∀ B ∈ K₂, IsTSD₀ b s B) {U₀ : State ℝ b s}
-    (hU₀ : ∃ V, IsWave₀ b s U₀ V) :
+`U₀ ∈ D(L)` the system `U' = L U` has a strong solution on `[0, ∞)` from `U₀`, and a strong
+solution from `U₀` stays in the constraint `{0} × TSD × TSD` iff `U₀` lies in it and
+`L U₀ = 0`. -/
+theorem electric_forward_iff (hs : 0 < s) {U₀ : State ℝ b s} (hU₀ : ∃ V, IsWave₀ b s U₀ V) :
     (∃ U, U 0 = U₀ ∧ IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U) ∧
       ∀ U, U 0 = U₀ → IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U →
-        ((∀ t ∈ Ici (0 : ℝ), (U t).1 = 0 ∧ (U t).2.1 ∈ K₁ ∧ (U t).2.2 ∈ K₂) ↔
-          (U₀.1 = 0 ∧ U₀.2.1 ∈ K₁ ∧ U₀.2.2 ∈ K₂) ∧ IsWave₀ b s U₀ 0) := by
+        ((∀ t ∈ Ici (0 : ℝ), Constraint₀ b s (U t)) ↔ Constraint₀ b s U₀ ∧ IsWave₀ b s U₀ 0) := by
   obtain ⟨V₀, hV₀⟩ := hU₀
   have hx := (mem_graph_iff'.1 ((isWave₀_iff _ _).1 hV₀)).1
   have hdiss : (elec b s).wave.IsDissipative := (elec b s).isSkewAdjoint_wave.isDissipative
@@ -138,12 +135,7 @@ theorem electric_forward_iff (hs : 0 < s) {K₁ K₂ : Set (Mat ℝ b s)}
     intro U hU0 hU t ht
     exact ((isStrongSolution₀_zero_iff.1 hU).mono Icc_subset_Ici_self).unique hdiss
       (horbit.mono Icc_subset_Ici_self) (by simp [hU0]) ⟨ht, le_rfl⟩
-  have hK : ∀ y : State ℝ b s, (y.1 = 0 ∧ y.2.1 ∈ K₁ ∧ y.2.2 ∈ K₂) →
-      toPiR y ∈ HilbertComplex.totalSub (ShortHilbertComplex.family3
-        (⊥ : Submodule ℝ (Domain.L2F ℝ (Feec.Models.Cube.Geometry.openCube b s) (Fin 3)))
-        (Models.BoundedDomain.tsd (Feec.Models.Cube.Geometry.openCube b s))
-        (Models.BoundedDomain.tsd (Feec.Models.Cube.Geometry.openCube b s))) :=
-    fun y hy => (constraint₀_iff y).1 ⟨hy.1, h₁ _ hy.2.1, h₂ _ hy.2.2⟩
+  have hK := fun y : State ℝ b s => (constraint₀_iff y).1
   refine ⟨⟨fun t => toPiR.symm ((elec b s).waveGroup.S t (toPiR U₀)), by simp,
     isStrongSolution₀_zero_iff.2 (by simpa using horbit)⟩, fun U hU0 hU => ⟨fun hall => ?_, ?_⟩⟩
   · have hst := ((Feec.Counterexamples.CubeStationary.forward_iff_stationary hs le_rfl le_rfl
@@ -198,19 +190,24 @@ end Electric
 /-! ### Absorbing conditions -/
 
 /-- **The absorbing boundary conditions do not preserve the TSD constraint**: on `Q = (0, ½)³`
-some datum `(E₀, B₀)` with `E₀`, `B₀` TSD has a mild solution of `(E, B)' = A (E, B)` that
-leaves the TSD constraint. -/
+some datum `(E₀, B₀)` with `E₀`, `B₀` TSD has a mild solution of `(E, B)' = A (E, B)`, and
+every mild solution from it leaves the TSD constraint. -/
 theorem absorbing_not_propagates :
     ∃ U₀ : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2), IsTSD₀ 0 (1 / 2) U₀.1 ∧ IsTSD₀ 0 (1 / 2) U₀.2 ∧
-      ∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing U ∧
+      (∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing U) ∧
+      ∀ U, U 0 = U₀ → IsMildSolution IsAbsorbing U →
         ∃ t ∈ Ici (0 : ℝ), ¬(IsTSD₀ 0 (1 / 2) (U t).1 ∧ IsTSD₀ 0 (1 / 2) (U t).2) := by
   have h := Feec.Models.Cube.Absorbing.not_invariant_tsdPair
   push Not at h
   obtain ⟨t, ht, x, hx, hn⟩ := h
+  have h0 : Feec.Models.Cube.Absorbing.absorbingSemigroup.S 0 x = x := by
+    rw [Feec.Models.Cube.Absorbing.absorbingSemigroup.map_zero]; rfl
   refine ⟨eAbs.symm x, (isTSD₀_iff _).2 hx.1, (isTSD₀_iff _).2 hx.2,
-    fun τ => eAbs.symm (Feec.Models.Cube.Absorbing.absorbingSemigroup.S τ x), ?_,
-    isMildSolution_orbit x, t, ht, fun h' => hn ⟨(isTSD₀_iff _).1 h'.1, (isTSD₀_iff _).1 h'.2⟩⟩
-  exact congrArg eAbs.symm (show Feec.Models.Cube.Absorbing.absorbingSemigroup.S 0 x = x by
-    rw [Feec.Models.Cube.Absorbing.absorbingSemigroup.map_zero]; rfl)
+    ⟨fun τ => eAbs.symm (Feec.Models.Cube.Absorbing.absorbingSemigroup.S τ x),
+      congrArg eAbs.symm h0, isMildSolution_orbit x⟩, fun U hU0 hU => ⟨t, ht, fun h' => hn ?_⟩⟩
+  have e : eAbs (U t) = Feec.Models.Cube.Absorbing.absorbingSemigroup.S t x := by
+    rw [isMildSolution_eq_orbit hU ht, hU0, ContinuousLinearEquiv.apply_symm_apply]
+  rw [← e]
+  exact ⟨(isTSD₀_iff _).1 h'.1, (isTSD₀_iff _).1 h'.2⟩
 
 end FEEC.EinsteinBianchi

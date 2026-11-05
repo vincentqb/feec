@@ -20,11 +20,12 @@ project:
     sigma a vector, E a tensor, B a pseudotensor): the TSD (symmetric, trace-free,
     divergence-free) constraints propagate, with existence and uniqueness, and the constraint
     contains non-stationary data. (ii) Electric (perfect conductor) conditions sigma = 0,
-    n x E_a = 0, i.e. the minimal realizations H0^1 -> H0(curl) -> L^2: for any sets K1, K2 of
-    TSD fields (with any boundary conditions) a strong solution stays in {0} x K1 x K2 iff its
-    datum lies there and is stationary, and some TSD datum of D(L) leaves the constraint on every
-    time interval. (iii) Absorbing (Silver-Muller) conditions n x E_a + (B_a)_tau = 0 on
-    Q = (0, 1/2)^3 for (E, B): some TSD datum has a mild solution that leaves the TSD constraint.
+    n x E_a = 0, i.e. the minimal realizations H0^1 -> H0(curl) -> L^2: a strong solution stays
+    in the constraint {0} x TSD x TSD iff its datum lies there and is stationary (so no boundary
+    conditions on the TSD fields, which only shrink the constraint, make it propagate), and some
+    TSD datum of D(L) leaves the constraint on every time interval. (iii) Absorbing
+    (Silver-Muller) conditions n x E_a + (B_a)_tau = 0 on Q = (0, 1/2)^3 for (E, B): some TSD
+    datum has a mild solution, and every mild solution from it leaves the TSD constraint.
     The system is that of [QuennevilleBelair2015] (§3.4, §4.10, (4.14)): the electric and
     magnetic parts E, B (3x3 matrix fields) of the linearized Weyl curvature, with an auxiliary
     vector field sigma, evolve by the Hodge wave equation of the matrix grad-curl complex,
@@ -277,15 +278,17 @@ fidelity:
     for the strong solutions of Pazy §4.2); classical solutions have in addition t -> L(U t)
     continuous; mild solutions (absorbing theorem) are continuous on [0, infinity) with the
     integral from 0 to t in D(L) and L of it equal to U t - U 0. The absorbing theorem asserts
-    that some mild solution from a TSD datum leaves the constraint; uniqueness of mild solutions
-    is not stated (it holds for semigroup generators) and the leaving datum is not shown to lie in
-    D(A) (the proof shows that the TSD states of D(A) are not dense in the TSD states). The
+    that some TSD datum has a mild solution and that every mild solution from it leaves the
+    constraint (the proof shows that mild solutions are the semigroup orbits); the leaving datum
+    is not shown to lie in D(A) (the proof shows that the TSD states of D(A) are not dense in the
+    TSD states). The
     forcing class for existence (mirror) is continuity on [t0, t1] together with
     W^(1,1)(t0, t1; L^2) or L^1(t0, t1; D(L)). The electric and absorbing theorems are for the
     homogeneous system.
-    (5) electric_forward_iff quantifies over arbitrary sets K1, K2 of TSD fields (in the sense of
-    distributions, so any boundary conditions on the constraint fields are covered); its
-    existence part gives a strong solution on [0, infinity) for every datum of D(L).
+    (5) electric_forward_iff is stated for the constraint {0} x TSD x TSD with TSD in the sense of
+    distributions (no boundary condition); a constraint with boundary conditions on the TSD fields
+    is a subset, to which the forward direction applies. Its existence part gives a strong
+    solution on [0, infinity) for every datum of D(L).
     (6) The hypothesis s > 0 excludes the empty cube.
     (7) Scope: the finite element schemes of the thesis (Ch. 5-7), their convergence and the Ch. 7
     numerical experiment are not part of this entry.
@@ -295,7 +298,9 @@ review:
   reviewers:
     - "none"
   notes: >-
-    The Challenge statement is new and not yet reviewed by the author. The library results it is
+    The Challenge statement is new and not yet reviewed by the author; an independent agent
+    editorial review checked the definitions, the hypotheses and the non-vacuity of the six
+    compared theorems. The library results it is
     proved from were gated by a full build (zero warnings), an axiom audit (propext,
     Classical.choice, Quot.sound only), regression snapshots and an independent AI review. No
     external mathematical review.
@@ -322,7 +327,7 @@ alignment:
       lean: "FEEC.EinsteinBianchi.electric_forward_iff"
       module: "Challenge"
       status: "proved"
-      note: "Electric conditions: every datum of D(L) has a strong solution on [0, infinity), and for any sets K1, K2 of TSD fields a strong solution stays in {0} x K1 x K2 iff its datum lies there and L U0 = 0."
+      note: "Electric conditions: every datum of D(L) has a strong solution on [0, infinity), and a strong solution stays in the constraint {0} x TSD x TSD iff its datum lies there and L U0 = 0."
     - source: "constraint propagation under electric boundary conditions"
       lean: "FEEC.EinsteinBianchi.electric_tsd_leaves"
       module: "Challenge"
@@ -332,6 +337,6 @@ alignment:
       lean: "FEEC.EinsteinBianchi.absorbing_not_propagates"
       module: "Challenge"
       status: "proved"
-      note: "Absorbing conditions on (0, 1/2)^3: some TSD datum has a mild solution of (E, B)' = A (E, B) that leaves the TSD constraint."
+      note: "Absorbing conditions on (0, 1/2)^3: some TSD datum has a mild solution of (E, B)' = A (E, B), and every mild solution from it leaves the TSD constraint."
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

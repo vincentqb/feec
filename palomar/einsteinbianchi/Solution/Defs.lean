@@ -28,113 +28,214 @@ Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open MeasureTheory Set
+open scoped ContDiff
 
 @[expose] public noncomputable section
 
 namespace FEEC.EinsteinBianchi
 
-variable (b : Fin 3 → ℝ) (s : ℝ)
+/-- The open cube `∏ᵢ (bᵢ, bᵢ + s)` of `ℝⁿ`. -/
+def cube {n : ℕ} (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
+
+variable {𝕜 : Type*} [RCLike 𝕜] (b : Fin 3 → ℝ) (s : ℝ)
 
 /-! ### Fields on the cube -/
 
-/-- The open cube `C = ∏ᵢ (bᵢ, bᵢ + s)` of `ℝ³`. -/
-def cube : Set (Fin 3 → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
+variable (𝕜) in
+/-- `L²(C; 𝕜)`, for the Lebesgue measure restricted to `C = cube b s`. -/
+abbrev L2 := Lp 𝕜 2 (volume.restrict (cube b s))
 
-/-- `L²(C; ℂ)`, for the Lebesgue measure restricted to `C`. -/
-abbrev L2 := Lp ℂ 2 (volume.restrict (cube b s))
+variable (𝕜) in
+/-- The vector fields `L²(C; 𝕜³)`, with components `σ a`. -/
+abbrev Vec := PiLp 2 fun _ : Fin 3 => L2 𝕜 b s
 
-/-- The vector fields `L²(C; ℂ³)`, with components `σ a`. -/
-abbrev Vec := PiLp 2 fun _ : Fin 3 => L2 b s
+variable (𝕜) in
+/-- The matrix fields `L²(C; 𝕜³ˣ³)`, with entries `E (a, c)`. -/
+abbrev Mat := PiLp 2 fun _ : Fin 3 × Fin 3 => L2 𝕜 b s
 
-/-- The matrix fields `L²(C; ℂ³ˣ³)`, with entries `E (a, c)`. -/
-abbrev Mat := PiLp 2 fun _ : Fin 3 × Fin 3 => L2 b s
-
+variable (𝕜) in
 /-- The states `(σ, E, B)` of the system. -/
-abbrev State := Vec b s × Mat b s × Mat b s
+abbrev State := Vec 𝕜 b s × Mat 𝕜 b s × Mat 𝕜 b s
 
-/-- The **test functions vanishing on the faces normal to `e_j`, `j ∈ S`**: `ψ ∈ C¹(ℝ³; ℂ)` with
+/-- The **test functions vanishing on the faces normal to `e_j`, `j ∈ S`**: `ψ ∈ C¹(ℝ³; 𝕜)` with
 `ψ = 0` on the closed faces `{x_j = b_j}` and `{x_j = b_j + s}` of the closed cube `C̄` for
 `j ∈ S`; no condition is imposed on the other faces. -/
-structure IsTest (S : Set (Fin 3)) (ψ : (Fin 3 → ℝ) → ℂ) : Prop where
+structure IsTest (S : Set (Fin 3)) (ψ : (Fin 3 → ℝ) → 𝕜) : Prop where
   contDiff : ContDiff ℝ 1 ψ
   vanish : ∀ j ∈ S, ∀ x ∈ Icc b (b + fun _ => s), (x j = b j ∨ x j = b j + s) → ψ x = 0
 
-/-! ### The operators, with the mirror boundary conditions -/
+/-- The **test functions `C_c^∞(C; 𝕜)`**: smooth, compactly supported, with support in `C`. -/
+structure IsCompactTest (ψ : (Fin 3 → ℝ) → 𝕜) : Prop where
+  contDiff : ContDiff ℝ ∞ ψ
+  hasCompactSupport : HasCompactSupport ψ
+  tsupport_subset : tsupport ψ ⊆ cube b s
+
+/-! ### Green's formulas -/
 
 /-- **`G = grad σ` with `σ · n = 0` on `∂C`**, `G_{ac} = ∂_c σ_a`: for all `a`, `c` and every test
 function `ψ` vanishing on the faces normal to `e_j` for the `j` equal to exactly one of `a`, `c`,
 `∫_C σ_a ∂_c ψ = -∫_C G_{ac} ψ`. For `c = a` the trace of `ψ` is free on the faces normal to
 `e_a`, which imposes `σ_a = 0` there. -/
-def IsGrad (σ : Vec b s) (G : Mat b s) : Prop :=
+def IsGrad (σ : Vec 𝕜 b s) (G : Mat 𝕜 b s) : Prop :=
   ∀ a c : Fin 3, ∀ ψ, IsTest b s {j | ¬(j = a ↔ j = c)} ψ →
-    ∫ x in cube b s, (σ a : (Fin 3 → ℝ) → ℂ) x * fderiv ℝ ψ x (Pi.single c 1) =
-      -∫ x in cube b s, (G (a, c) : (Fin 3 → ℝ) → ℂ) x * ψ x
+    ∫ x in cube b s, (σ a : (Fin 3 → ℝ) → 𝕜) x * fderiv ℝ ψ x (Pi.single c 1) =
+      -∫ x in cube b s, (G (a, c) : (Fin 3 → ℝ) → 𝕜) x * ψ x
 
 /-- **`C = curl E` row by row**, `C_{ac} = ∂_{c+1} E_{a,c+2} - ∂_{c+2} E_{a,c+1}` (indices mod 3),
-tested against the functions vanishing on the faces normal to `e_j`, `j ∈ S a c`:
+tested against the functions `ψ` of the class `T a c`:
 `∫_C (E_{a,c+2} ∂_{c+1} ψ - E_{a,c+1} ∂_{c+2} ψ) = -∫_C C_{ac} ψ`. The boundary condition is
-carried by `S`: `S a c = {j | j = a ↔ j = c}` imposes `E_{nτ} = 0`,
-`S a c = {j | ¬(j = a ↔ j = c)}` imposes `E_{ττ} = 0`. -/
-def IsCurl (S : Fin 3 → Fin 3 → Set (Fin 3)) (E C : Mat b s) : Prop :=
-  ∀ a c : Fin 3, ∀ ψ, IsTest b s (S a c) ψ →
-    (∫ x in cube b s, (E (a, c + 2) : (Fin 3 → ℝ) → ℂ) x * fderiv ℝ ψ x (Pi.single (c + 1) 1)) -
-      ∫ x in cube b s, (E (a, c + 1) : (Fin 3 → ℝ) → ℂ) x * fderiv ℝ ψ x (Pi.single (c + 2) 1) =
-      -∫ x in cube b s, (C (a, c) : (Fin 3 → ℝ) → ℂ) x * ψ x
+carried by `T`: `IsTest b s {j | j = a ↔ j = c}` imposes `E_{nτ} = 0`,
+`IsTest b s {j | ¬(j = a ↔ j = c)}` imposes `E_{ττ} = 0`, and `IsCompactTest b s` imposes none
+(the distributional curl). -/
+def IsCurl (T : Fin 3 → Fin 3 → ((Fin 3 → ℝ) → 𝕜) → Prop) (E C : Mat 𝕜 b s) : Prop :=
+  ∀ a c : Fin 3, ∀ ψ, T a c ψ →
+    (∫ x in cube b s, (E (a, c + 2) : (Fin 3 → ℝ) → 𝕜) x * fderiv ℝ ψ x (Pi.single (c + 1) 1)) -
+      ∫ x in cube b s, (E (a, c + 1) : (Fin 3 → ℝ) → 𝕜) x * fderiv ℝ ψ x (Pi.single (c + 2) 1) =
+      -∫ x in cube b s, (C (a, c) : (Fin 3 → ℝ) → 𝕜) x * ψ x
 
-/-- **`D = div E` row by row**, `D_a = Σ_c ∂_c E_{ac}`, tested against the functions vanishing on
-the faces normal to `e_j`, `j ∈ S a`: `Σ_c ∫_C E_{ac} ∂_c ψ = -∫_C D_a ψ`. The boundary condition
-is carried by `S`: `S a = {a}` imposes `E_{τn} = 0`, `S a = {j | j ≠ a}` imposes `E_{nn} = 0`. -/
-def IsDiv (S : Fin 3 → Set (Fin 3)) (E : Mat b s) (D : Vec b s) : Prop :=
-  ∀ a : Fin 3, ∀ ψ, IsTest b s (S a) ψ →
-    ∑ c, ∫ x in cube b s, (E (a, c) : (Fin 3 → ℝ) → ℂ) x * fderiv ℝ ψ x (Pi.single c 1) =
-      -∫ x in cube b s, (D a : (Fin 3 → ℝ) → ℂ) x * ψ x
+/-- **`D = div E` row by row**, `D_a = Σ_c ∂_c E_{ac}`, tested against the functions `ψ` of the
+class `T a`: `Σ_c ∫_C E_{ac} ∂_c ψ = -∫_C D_a ψ`. The boundary condition is carried by `T`:
+`IsTest b s {a}` imposes `E_{τn} = 0`, `IsTest b s {j | j ≠ a}` imposes `E_{nn} = 0`, and
+`IsCompactTest b s` imposes none (the distributional divergence). -/
+def IsDiv (T : Fin 3 → ((Fin 3 → ℝ) → 𝕜) → Prop) (E : Mat 𝕜 b s) (D : Vec 𝕜 b s) : Prop :=
+  ∀ a : Fin 3, ∀ ψ, T a ψ →
+    ∑ c, ∫ x in cube b s, (E (a, c) : (Fin 3 → ℝ) → 𝕜) x * fderiv ℝ ψ x (Pi.single c 1) =
+      -∫ x in cube b s, (D a : (Fin 3 → ℝ) → 𝕜) x * ψ x
+
+/-- `E` is **TSD**, with the boundary condition carried by `T` (as in `IsDiv`): symmetric,
+trace-free and divergence-free, `Σ_c ∫_C E_{ac} ∂_c ψ = 0` for every `ψ` of the class `T a`. -/
+def IsTSD (T : Fin 3 → ((Fin 3 → ℝ) → 𝕜) → Prop) (E : Mat 𝕜 b s) : Prop :=
+  (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 ∧ IsDiv b s T E 0
+
+/-- `E` is **TSD in the sense of distributions** (no boundary condition): symmetric, trace-free and
+`div E = 0` tested against `C_c^∞(C)`. -/
+def IsTSD₀ (E : Mat 𝕜 b s) : Prop := IsTSD b s (fun _ => IsCompactTest b s) E
+
+/-! ### Mirror boundary conditions -/
 
 /-- **`V = L U` for the linearized Einstein–Bianchi operator with mirror boundary conditions**,
 `L (σ, E, B) = (div E, grad σ - curl B, curl E)`, with `σ · n = 0` (`grad σ`), `E_{nτ} = 0`
 (`curl E`), `E_{τn} = 0` (`div E`) and `B_{ττ} = 0` (`curl B`) on `∂C`. The domain `D(L)` is the
 set of the `U` with `IsWave U V` for some `V`. -/
-def IsWave (U V : State b s) : Prop :=
-  ∃ G CE D CB, IsGrad b s U.1 G ∧ IsCurl b s (fun a c => {j | j = a ↔ j = c}) U.2.1 CE ∧
-    IsDiv b s (fun a => {a}) U.2.1 D ∧ IsCurl b s (fun a c => {j | ¬(j = a ↔ j = c)}) U.2.2 CB ∧
-      V = (D, G - CB, CE)
+def IsWave (U V : State 𝕜 b s) : Prop :=
+  ∃ G CE D CB, IsGrad b s U.1 G ∧ IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) U.2.1 CE ∧
+    IsDiv b s (fun a => IsTest b s {a}) U.2.1 D ∧
+      IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) U.2.2 CB ∧ V = (D, G - CB, CE)
 
-/-- `E` is **TSD**, with the boundary condition carried by `S` (as in `IsDiv`): symmetric,
-trace-free and divergence-free, `Σ_c ∫_C E_{ac} ∂_c ψ = 0` for every test function `ψ` vanishing
-on the faces normal to `e_j`, `j ∈ S a`. -/
-def IsTSD (S : Fin 3 → Set (Fin 3)) (E : Mat b s) : Prop :=
-  (∀ i j, E (i, j) = E (j, i)) ∧ ∑ i, E (i, i) = 0 ∧ IsDiv b s S E 0
+/-- **The constraint with mirror boundary conditions** `{0} × TSD × TSD`: `σ = 0`, `E` TSD with
+`E_{τn} = 0` and `B` TSD with `B_{nn} = 0` on `∂C`. -/
+def Constraint (U : State 𝕜 b s) : Prop :=
+  U.1 = 0 ∧ IsTSD b s (fun a => IsTest b s {a}) U.2.1 ∧
+    IsTSD b s (fun a => IsTest b s {j | j ≠ a}) U.2.2
 
-/-- **The constraint** `{0} × TSD × TSD`: `σ = 0`, `E` TSD with `E_{τn} = 0` and `B` TSD with
-`B_{nn} = 0` on `∂C`. -/
-def Constraint (U : State b s) : Prop :=
-  U.1 = 0 ∧ IsTSD b s (fun a => {a}) U.2.1 ∧ IsTSD b s (fun a => {j | j ≠ a}) U.2.2
+/-! ### Electric boundary conditions -/
+
+/-- **`G = grad σ` with `σ = 0` on `∂C`** (`σ ∈ H̊¹(C; 𝕜³)`): Green's formula with no boundary
+term against every `E ∈ H(div; C)`, `Σ_a ∫_C σ_a D_a = -Σ_{a,c} ∫_C G_{ac} E_{ac}` whenever
+`D = div E` in the sense of distributions. -/
+def IsGrad₀ (σ : Vec 𝕜 b s) (G : Mat 𝕜 b s) : Prop :=
+  ∀ E D, IsDiv b s (fun _ => IsCompactTest b s) E D →
+    ∑ a, ∫ x in cube b s, (σ a : (Fin 3 → ℝ) → 𝕜) x * (D a : (Fin 3 → ℝ) → 𝕜) x =
+      -∑ p, ∫ x in cube b s, (G p : (Fin 3 → ℝ) → 𝕜) x * (E p : (Fin 3 → ℝ) → 𝕜) x
+
+/-- **`C = curl E` with `n × Eₐ = 0` on `∂C`** (`E ∈ H̊(curl; C)` row by row): Green's formula
+with no boundary term against every `B ∈ H(curl; C)`, `Σ ∫_C E_p C'_p = Σ ∫_C C_p B_p` whenever
+`C' = curl B` in the sense of distributions. -/
+def IsCurl₀ (E C : Mat 𝕜 b s) : Prop :=
+  ∀ B C', IsCurl b s (fun _ _ => IsCompactTest b s) B C' →
+    ∑ p, ∫ x in cube b s, (E p : (Fin 3 → ℝ) → 𝕜) x * (C' p : (Fin 3 → ℝ) → 𝕜) x =
+      ∑ p, ∫ x in cube b s, (C p : (Fin 3 → ℝ) → 𝕜) x * (B p : (Fin 3 → ℝ) → 𝕜) x
+
+/-- **`V = L U` with electric boundary conditions**, `L (σ, E, B) = (div E, grad σ - curl B,
+curl E)` with `σ = 0` (`grad σ`) and `n × Eₐ = 0` (`curl E`) on `∂C`, and the distributional
+`div E` and `curl B`. -/
+def IsWave₀ (U V : State 𝕜 b s) : Prop :=
+  ∃ G CE D CB, IsGrad₀ b s U.1 G ∧ IsCurl₀ b s U.2.1 CE ∧
+    IsDiv b s (fun _ => IsCompactTest b s) U.2.1 D ∧
+      IsCurl b s (fun _ _ => IsCompactTest b s) U.2.2 CB ∧ V = (D, G - CB, CE)
+
+/-- **The constraint with no boundary condition** `{0} × TSD × TSD`: `σ = 0`, `E` and `B` TSD in
+the sense of distributions. -/
+def Constraint₀ (U : State 𝕜 b s) : Prop := U.1 = 0 ∧ IsTSD₀ b s U.2.1 ∧ IsTSD₀ b s U.2.2
+
+/-! ### Absorbing boundary conditions on `Q = (0, ½)³` -/
+
+/-- The faces of `Q = cube 0 (1/2)`: `{x_m = ½}` for `f = (m, true)`, `{x_m = 0}` for
+`f = (m, false)`, parametrized by the square `(0, ½)²` (`y ↦ x` with the coordinate `x_m`
+inserted). -/
+def faceMap (f : Fin 3 × Bool) (y : Fin 2 → ℝ) : Fin 3 → ℝ :=
+  Fin.insertNth f.1 (if f.2 then 1 / 2 else 0) y
+
+/-- `L²(∂Q; ℝ³ˣ³_τ)`, the tangential parts of matrix fields on `∂Q`: for each face `f`, row `i`
+and tangential slot `j'` (the column `f.1.succAbove j'`, tangential to the face), a function of
+`L²((0, ½)²)`. -/
+abbrev Bdry := PiLp 2 fun _ : (Fin 3 × Bool) × Fin 3 × Fin 2 =>
+  Lp ℝ 2 (volume.restrict (cube (0 : Fin 2 → ℝ) (1 / 2)))
+
+/-- The row-wise curl `(curl Φ)_{ac} = ∂_{c+1} Φ_{a,c+2} - ∂_{c+2} Φ_{a,c+1}` of a matrix field
+`Φ` on `ℝ³`. -/
+def curlF (Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ) (p : Fin 3 × Fin 3) (x : Fin 3 → ℝ) : ℝ :=
+  fderiv ℝ (Φ (p.1, p.2 + 2)) x (Pi.single (p.2 + 1) 1) -
+    fderiv ℝ (Φ (p.1, p.2 + 1)) x (Pi.single (p.2 + 2) 1)
+
+/-- **The energy space** (row-wise `H_imp(curl; Q)`): `E ∈ L²(Q; ℝ³ˣ³)` with `curl E = C ∈ L²` and
+tangential trace `E_τ = β ∈ L²(∂Q)`, i.e. `(E, C, β)` is a limit of the triples `(Φ, curl Φ, Φ_τ)`
+of `C¹` fields: for every `ε > 0` some `Φ` has
+`‖E - Φ‖²_{L²(Q)} + ‖C - curl Φ‖²_{L²(Q)} + ‖β - Φ_τ‖²_{L²(∂Q)} < ε`. -/
+def IsEnergy (E C : Mat ℝ 0 (1 / 2)) (β : Bdry) : Prop :=
+  ∀ ε > 0, ∃ Φ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ p, ContDiff ℝ 1 (Φ p)) ∧
+    (∑ p, ∫ x in cube 0 (1 / 2), ((E p : (Fin 3 → ℝ) → ℝ) x - Φ p x) ^ 2) +
+      (∑ p, ∫ x in cube 0 (1 / 2), ((C p : (Fin 3 → ℝ) → ℝ) x - curlF Φ p x) ^ 2) +
+      (∑ q, ∫ y in cube 0 (1 / 2),
+        ((β q : (Fin 2 → ℝ) → ℝ) y - Φ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)) ^ 2) < ε
+
+/-- **`V = A U` for the absorbing condition** `n × Eₐ + (Bₐ)_τ = 0` on `∂Q`,
+`A (E, B) = (-curl B, curl E)`: `E` lies in the energy space with `curl E = V.2` and tangential
+trace `β`, and `V.1 = -curl B` in the weak form whose boundary term is `-∫_{∂Q} β · Ψ_τ`: for
+every `C¹` field `Ψ`, `∫_Q V.1 : Ψ = -∫_Q B : curl Ψ - ∫_{∂Q} β · Ψ_τ`. -/
+def IsAbsorbing (U V : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2)) : Prop :=
+  ∃ β, IsEnergy U.1 V.2 β ∧ ∀ Ψ : Fin 3 × Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ p, ContDiff ℝ 1 (Ψ p)) →
+    ∑ p, ∫ x in cube 0 (1 / 2), (V.1 p : (Fin 3 → ℝ) → ℝ) x * Ψ p x =
+      -(∑ p, ∫ x in cube 0 (1 / 2), (U.2 p : (Fin 3 → ℝ) → ℝ) x * curlF Ψ p x) -
+        ∑ q, ∫ y in cube 0 (1 / 2),
+          (β q : (Fin 2 → ℝ) → ℝ) y * Ψ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)
 
 /-! ### Solutions -/
 
-/-- `U` is a **strong solution** of `U' = L U + F` on the time set `I`: `U` is continuous on `I`
-and at every `t ∈ I`, `U t ∈ D(L)` and `U' t = L (U t) + F t` (the derivative within `I`). This
-asks for the equation at every time, not almost every time as for the strong solutions of
-[Pazy1983], §4.2. -/
-def IsStrongSolution (I : Set ℝ) (F U : ℝ → State b s) : Prop :=
-  ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, IsWave b s (U t) V ∧ HasDerivWithinAt U (V + F t) I t
+variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+
+/-- `U` is a **strong solution** of `U' = L U + F` on the time set `I`, for an operator `L` given
+by its graph (`L U V` for `V = L U`): `U` is continuous on `I` and at every `t ∈ I`, `U t ∈ D(L)`
+and `U' t = L (U t) + F t` (the derivative within `I`). This asks for the equation at every time,
+not almost every time as for the strong solutions of [Pazy1983], §4.2. -/
+def IsStrongSolution (L : X → X → Prop) (I : Set ℝ) (F U : ℝ → X) : Prop :=
+  ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U (V + F t) I t
 
 /-- `U` is a **classical solution** of `U' = L U + F` on `I`: a strong solution with
-`t ↦ L (U t)` continuous on `I`; for continuous `F`, `U ∈ C(I; D(L)) ∩ C¹(I; L²)`. -/
-def IsClassicalSolution (I : Set ℝ) (F U : ℝ → State b s) : Prop :=
-  IsStrongSolution b s I F U ∧
-    ∃ V : ℝ → State b s, ContinuousOn V I ∧ ∀ t ∈ I, IsWave b s (U t) (V t)
+`t ↦ L (U t)` continuous on `I`; for continuous `F`, `U ∈ C(I; D(L)) ∩ C¹(I; X)`. -/
+def IsClassicalSolution (L : X → X → Prop) (I : Set ℝ) (F U : ℝ → X) : Prop :=
+  IsStrongSolution L I F U ∧ ∃ V : ℝ → X, ContinuousOn V I ∧ ∀ t ∈ I, L (U t) (V t)
+
+/-- `U` is a **mild solution** of `U' = L U` on `[0, ∞)` ([Pazy1983], §4.2): `U` is continuous on
+`[0, ∞)` and for every `t ≥ 0`, `∫₀ᵗ U ∈ D(L)` with `L ∫₀ᵗ U = U t - U 0`. -/
+def IsMildSolution (L : X → X → Prop) (U : ℝ → X) : Prop :=
+  ContinuousOn U (Ici 0) ∧ ∀ t ∈ Ici (0 : ℝ), L (∫ τ in (0 : ℝ)..t, U τ) (U t - U 0)
 
 /-- **Admissible forcing** on `[t₀, t₁]` ([CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9): `F` is
-continuous on `[t₀, t₁]` and either `F ∈ W^{1,1}(t₀, t₁; L²)`, i.e. `F = x₀ + ∫_{t₀}^· g` a.e. on
+continuous on `[t₀, t₁]` and either `F ∈ W^{1,1}(t₀, t₁; X)`, i.e. `F = x₀ + ∫_{t₀}^· g` a.e. on
 `(t₀, t₁)` with `g` integrable, or `F ∈ L¹(t₀, t₁; D(L))`, i.e. `F t ∈ D(L)` for a.e. `t` with
 `t ↦ L (F t)` a.e. equal to an integrable function. -/
-def IsAdmissible (t₀ t₁ : ℝ) (F : ℝ → State b s) : Prop :=
+def IsAdmissible (L : X → X → Prop) (t₀ t₁ : ℝ) (F : ℝ → X) : Prop :=
   ContinuousOn F (Icc t₀ t₁) ∧
-    ((∃ (x₀ : State b s) (g : ℝ → State b s), IntegrableOn g (Ioc t₀ t₁) ∧
+    ((∃ (x₀ : X) (g : ℝ → X), IntegrableOn g (Ioc t₀ t₁) ∧
         F =ᵐ[volume.restrict (Ioo t₀ t₁)] fun t => x₀ + ∫ τ in t₀..t, g τ) ∨
-      ∃ H : ℝ → State b s, IntegrableOn H (Ioc t₀ t₁) ∧
-        ∀ᵐ t ∂(volume.restrict (Ioo t₀ t₁)), IsWave b s (F t) (H t))
+      ∃ H : ℝ → X, IntegrableOn H (Ioc t₀ t₁) ∧
+        ∀ᵐ t ∂(volume.restrict (Ioo t₀ t₁)), L (F t) (H t))
 
-/-! ### The theorems -/
+/-! ### Mirror conditions: the constraints propagate -/
+
+/-! ### Electric conditions: only stationary data propagate -/
+
+/-! ### Absorbing conditions: the constraints do not propagate -/
 
 end FEEC.EinsteinBianchi

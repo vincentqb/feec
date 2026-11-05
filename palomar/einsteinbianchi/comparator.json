@@ -1,7 +1,7 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.EinsteinBianchi.tsd_propagates", "FEEC.EinsteinBianchi.tsd_existsUnique", "FEEC.EinsteinBianchi.exists_nonstationary"],
+  "theorem_names": ["FEEC.EinsteinBianchi.tsd_propagates", "FEEC.EinsteinBianchi.tsd_existsUnique", "FEEC.EinsteinBianchi.exists_nonstationary", "FEEC.EinsteinBianchi.electric_forward_iff", "FEEC.EinsteinBianchi.electric_tsd_leaves", "FEEC.EinsteinBianchi.absorbing_not_propagates"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

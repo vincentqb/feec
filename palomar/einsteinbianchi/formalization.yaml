@@ -6,45 +6,59 @@
 version: "v0.4"
 
 project:
-  name: "Constraint propagation for the linearized Einstein-Bianchi system on a cube with mirror boundary conditions"
+  name: "Which boundary conditions preserve the constraints of the linearized Einstein-Bianchi system on a cube"
   description: >-
     Constraint propagation in the presence of a boundary: the linearized Einstein-Bianchi system
     of general relativity (Anderson, Choquet-Bruhat, York 1997) preserves its constraints on R^3
     and on the torus, but on a domain with boundary only under suitable boundary conditions, and
     constraint-preserving boundary conditions are a central problem of the initial-boundary value
     problem of general relativity (Friedrich-Nagy 1999; Calabrese-Pullin-Reula-Sarbach-Tiglio
-    2003). This entry formalizes, on every open cube C = prod_i (b_i, b_i + s) of R^3 (s > 0),
-    boundary conditions under which the TSD (symmetric, trace-free, divergence-free) constraints
-    propagate, with existence and uniqueness: the tensorial mirror conditions sigma . n = 0,
-    E_(n tau) = E_(tau n) = 0, B_(tau tau) = 0 and, in the constraint, B_(nn) = 0, the face
-    conditions of the fields on R^3 symmetric under the reflections in the faces (sigma a vector,
-    E a tensor, B a pseudotensor). The system is that of [QuennevilleBelair2015] (§3.4, §4.10,
-    (4.14), Prop 4.17): the electric and magnetic parts E, B (3x3 complex matrix fields) of the
-    linearized Weyl curvature, with an auxiliary vector field sigma, evolve by the Hodge wave
-    equation of the matrix grad-curl complex, sigma' = div E + f_sigma,
-    E' = grad sigma - curl B + f_E, B' = curl E + f_B ((grad sigma)_ab = d_b sigma_a; div and
-    curl row by row). The fields are elements of L^2(C; C) (Mathlib's Lp for the Lebesgue
-    measure restricted to C); grad, curl and div are defined by Green's formulas against C^1
-    test functions on R^3 vanishing on prescribed closed faces of the closed cube and free on
-    the others (IsTest, IsGrad, IsCurl, IsDiv), so each formula is the weak derivative in C
-    together with the boundary condition as a weak trace condition; the operator
-    L(sigma, E, B) = (div E, grad sigma - curl B, curl E) is IsWave; strong and classical
-    solutions (IsStrongSolution, IsClassicalSolution; cf. Pazy §4.2) ask for the equation at
-    every time of the interval; the forcing class is C([t0, t1]) intersected with
-    W^(1,1)(t0, t1; L^2) union L^1(t0, t1; D(L)) (IsAdmissible, Cazenave-Haraux Prop 4.1.6); and
-    the constraint is sigma = 0 with E and B TSD with the wall conditions E_(tau n) = 0,
-    B_(nn) = 0 (Constraint, IsTSD). The compared theorems: FEEC.EinsteinBianchi.tsd_propagates
-    (every strong solution on [t0, t1] with initial value and forcing in the constraint stays in
-    the constraint); FEEC.EinsteinBianchi.tsd_existsUnique (for an initial value in D(L) and in
-    the constraint and admissible forcing in the constraint there is a classical solution on
-    [t0, t1], it stays in the constraint, and every strong solution with the same initial value
-    agrees with it on [t0, t1]); FEEC.EinsteinBianchi.exists_nonstationary (non-vacuity: on
-    every open cube some datum in D(L) and in the constraint has L U != 0). The statement is
-    self-contained over Mathlib (Lp, PiLp, fderiv, ContDiff, set integrals, HasDerivWithinAt,
-    interval integrals); the proof is the library Feec of this repository, where the mirror
-    complex on the cube is the compression of the Fourier grad-curl complex of the torus of side
-    2s along the mirror extensions and the TSD constraint is a reducing subcomplex
-    (Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorTrace).
+    2003; Kreiss-Winicour 2006). This entry decides the question for three boundary conditions on
+    an open cube C = prod_i (b_i, b_i + s) of R^3 (s > 0). (i) Tensorial mirror conditions
+    sigma . n = 0, E_(n tau) = E_(tau n) = 0, B_(tau tau) = 0 and, in the constraint,
+    B_(nn) = 0 (the face conditions of the fields symmetric under the reflections in the faces,
+    sigma a vector, E a tensor, B a pseudotensor): the TSD (symmetric, trace-free,
+    divergence-free) constraints propagate, with existence and uniqueness, and the constraint
+    contains non-stationary data. (ii) Electric (perfect conductor) conditions sigma = 0,
+    n x E_a = 0, i.e. the minimal realizations H0^1 -> H0(curl) -> L^2: for any sets K1, K2 of
+    TSD fields (with any boundary conditions) a strong solution stays in {0} x K1 x K2 iff its
+    datum lies there and is stationary, and some TSD datum of D(L) leaves the constraint on every
+    time interval. (iii) Absorbing (Silver-Muller) conditions n x E_a + (B_a)_tau = 0 on
+    Q = (0, 1/2)^3 for (E, B): some TSD datum has a mild solution that leaves the TSD constraint.
+    The system is that of [QuennevilleBelair2015] (§3.4, §4.10, (4.14)): the electric and
+    magnetic parts E, B (3x3 matrix fields) of the linearized Weyl curvature, with an auxiliary
+    vector field sigma, evolve by the Hodge wave equation of the matrix grad-curl complex,
+    sigma' = div E + f_sigma, E' = grad sigma - curl B + f_E, B' = curl E + f_B
+    ((grad sigma)_ab = d_b sigma_a; div and curl row by row). The fields are elements of L^2 of
+    the domain over R or C (Mathlib's Lp for the Lebesgue measure restricted to the domain).
+    Mirror conditions: grad, curl and div are defined by Green's formulas against C^1 test
+    functions vanishing on prescribed closed faces of the closed cube and free on the others
+    (IsTest, IsGrad, IsCurl, IsDiv), the operator is IsWave and the constraint Constraint.
+    Electric conditions: div and curl are the same Green's formulas against C_c^infinity(C)
+    (IsCompactTest, the distributional operators), grad and curl with the boundary condition are
+    defined by Green's formula with no boundary term against every field of H(div) resp.
+    H(curl) (IsGrad0, IsCurl0), the operator is IsWave0 and the constraint Constraint0
+    (sigma = 0, E and B TSD in the sense of distributions, IsTSD0). Absorbing conditions: the
+    energy space of the L^2 fields with an L^2 curl and an L^2 tangential trace on the six faces
+    (IsEnergy, the closure of the triples (Phi, curl Phi, Phi_tau) of C^1 fields), and the
+    generator by its weak equation with the boundary term (IsAbsorbing). Strong and classical
+    solutions of U' = L U + F for an operator L given by its graph (IsStrongSolution,
+    IsClassicalSolution) ask for the equation at every time; mild solutions (IsMildSolution,
+    Pazy §4.2) for t >= 0; the forcing class of the existence theorem is IsAdmissible
+    (Cazenave-Haraux Prop 4.1.6). The compared theorems: FEEC.EinsteinBianchi.tsd_propagates,
+    tsd_existsUnique and exists_nonstationary (mirror, complex fields); electric_forward_iff and
+    electric_tsd_leaves (electric, real fields); absorbing_not_propagates (absorbing, real
+    fields). The statement is self-contained over Mathlib; the proof is the library Feec of this
+    repository: the mirror complex is the compression of the Fourier grad-curl complex of the
+    torus of side 2s along the mirror extensions, with the TSD constraint a reducing subcomplex
+    (Feec.Models.Cube.Mirror, Feec.Models.Cube.MirrorTrace); the electric complex on a cube is a
+    compression of a torus complex whose wave group has pure point spectrum, so forward
+    invariance in L^2(TSD) forces stationarity (Feec.Counterexamples.CubeStationary,
+    Feec.Models.Box.EigenDense), and a TSD datum leaves at once because L^2(TSD) intersected
+    with H0(curl) has mean-zero fields only (Feec.Counterexamples.BoundedDomainTSD); for the
+    absorbing conditions the TSD states of the domain of the generator are not dense in the TSD
+    states, since on them the normal-normal component of E vanishes on a face
+    (Feec.Models.Cube.AbsorbingTSD).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -71,8 +85,10 @@ sources:
       boundary conditions. Adapted: the boundary conditions (mirror conditions encoded by
       reflection parities) and the domain (every open cube). Original to the formalization: the
       description of the operators and of the constraint on the cube by Green's formulas against
-      C^1 test functions with prescribed vanishing faces, and its proof (Feec.Models.Cube.MirrorTrace).
-      The formalization is by the thesis author.
+      C^1 test functions with prescribed vanishing faces (Feec.Models.Cube.MirrorTrace), and the
+      comparison with the electric and the absorbing boundary conditions (electric_forward_iff,
+      electric_tsd_leaves, absorbing_not_propagates) and their proofs. The formalization is by the
+      thesis author.
     author_endorsement: "participated"
   - title: "Einstein-Bianchi hyperbolic system for general relativity"
     authors:
@@ -108,6 +124,25 @@ sources:
     relationship: "background"
     note: "Constraint-preserving boundary conditions for the linearized Einstein equations (context; not formalized)."
     author_endorsement: "not-contacted"
+  - title: "Problems which are well posed in a generalized sense with applications to the Einstein equations"
+    authors:
+      - "Heinz-Otto Kreiss"
+      - "Jeffrey Winicour"
+    id: "doi:10.1088/0264-9381/23/16/S07"
+    type: "article"
+    location: "Class. Quantum Grav. 23 (2006), S405-S420"
+    relationship: "background"
+    note: "Constraint-preserving boundary conditions of derivative (Neumann) type for the Einstein equations (context; not formalized)."
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Methods for Maxwell's Equations"
+    authors:
+      - "Peter Monk"
+    id: "doi:10.1093/acprof:oso/9780198508885.001.0001"
+    type: "book"
+    location: "Oxford University Press, 2003, §1.4 (the Silver-Muller absorbing condition), §3.5 (traces of H(curl))"
+    relationship: "background"
+    note: "The absorbing boundary condition and the tangential traces of H(curl) fields, here posed row by row for the matrix fields E, B on (0, 1/2)^3."
+    author_endorsement: "not-contacted"
   - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
     authors:
       - "Amnon Pazy"
@@ -141,16 +176,24 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: FEEC.EinsteinBianchi.tsd_propagates,
-    FEEC.EinsteinBianchi.tsd_existsUnique and FEEC.EinsteinBianchi.exists_nonstationary
-    (Challenge.lean), for every open cube prod_i (b_i, b_i + s), s > 0, every time interval
-    [t0, t1] and every forcing in the stated classes. Not compared (proved in Feec, outside this
-    statement): the same propagation on the torus T^3 and on R^3 (Feec.EinsteinBianchi.torus_tsd_propagates,
-    euclidean_tsd_propagates, tsd_propagates_classical); the finite
-    element discretizations of the system and their convergence
-    (Feec.Instances.EinsteinBianchi.FEM.einsteinBianchiFEM_crown); the Ch. 7 Crank-Nicolson
-    plane-wave error (Feec.Numerics.PlaneWaveCube.unit_planeWave_cn_error_le); Maxwell's
-    equations (Feec.Instances.Maxwell).
+    Formalized and compared: FEEC.EinsteinBianchi.tsd_propagates, tsd_existsUnique,
+    exists_nonstationary (mirror conditions, every open cube prod_i (b_i, b_i + s), s > 0, every
+    time interval [t0, t1] and every forcing in the stated classes, complex fields);
+    electric_forward_iff and electric_tsd_leaves (electric conditions, every open cube, real
+    fields, homogeneous system, strong solutions on [0, infinity) resp. [0, T]);
+    absorbing_not_propagates (absorbing conditions on (0, 1/2)^3 only, real fields, the system
+    in (E, B) without sigma, mild solutions). Not compared (proved in Feec, outside this
+    statement): the same results on boxes with unequal sides (Feec.Models.Box.Mirror,
+    Feec.Counterexamples.BoxStationary.forward_iff_stationary_box); the largest invariant
+    subspace for the electric conditions (Feec.Counterexamples.CubeStationary.mem_invariantCore_tsd_iff);
+    for the absorbing conditions the propagation of the Gauss laws and of TSD in the domain of
+    dependence (Feec.Models.Cube.AbsorbingTSD); the propagation on the torus T^3 and on R^3
+    (Feec.EinsteinBianchi.torus_tsd_propagates, euclidean_tsd_propagates,
+    tsd_propagates_classical); the finite element discretizations of the system and their
+    convergence (Feec.Instances.EinsteinBianchi.FEM.einsteinBianchiFEM_crown); the Ch. 7
+    Crank-Nicolson plane-wave error (Feec.Numerics.PlaneWaveCube.unit_planeWave_cn_error_le);
+    Maxwell's equations (Feec.Instances.Maxwell). Constraint-preserving boundary conditions of
+    derivative type (Kreiss-Winicour, CPRST) and the Friedrich-Nagy system are not formalized.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -184,45 +227,68 @@ automation:
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written for this submission by an agent and are not yet reviewed by the author; the Solution
-    translates them to the library Feec (Solution/Bridge.lean: the test functions, the graphs of
-    the differentials of Feec.Models.Cube.Mirror.complexCube and of their adjoints, the wave
-    operator, the constraint, the solutions and the forcing class) and applies
-    Feec.Models.Cube.Mirror.propagatesCube, existsUnique_memCube and exists_nonstationaryCube.
+    translates them to the library Feec (Solution/Bridge.lean for the mirror conditions: the test
+    functions, the graphs of the differentials of Feec.Models.Cube.Mirror.complexCube and of
+    their adjoints, the wave operator, the constraint, the solutions and the forcing class;
+    Solution/Electric.lean for the electric conditions: the graphs of the minimal complex
+    Feec.Models.Cube.Ident.complexCube and of its adjoints, the constraint L^2(TSD) and the
+    strong solutions; Solution/Absorbing.lean for the absorbing conditions: the energy space,
+    the generator Feec.Models.Cube.Absorbing.absorbing and the mild solutions) and applies
+    Feec.Models.Cube.Mirror.propagatesCube, existsUnique_memCube, exists_nonstationaryCube,
+    Feec.Counterexamples.CubeStationary.forward_iff_stationary,
+    Feec.Counterexamples.BoundedDomainTSD.exists_isStrongSolution_tsd_not_propagates and
+    Feec.Models.Cube.Absorbing.not_invariant_tsdPair.
 
 fidelity:
   divergences: >-
-    (1) Boundary conditions: the statement is for the tensorial mirror boundary conditions on a
-    cube (sigma . n = 0; E_(n tau) = 0 in curl E and E_(tau n) = 0 in div E; B_(tau tau) = 0 in
-    curl B; and the wall conditions E_(tau n) = 0, B_(nn) = 0 of the divergence constraints),
-    which are the conditions under which the result is proved. They are the face conditions of
-    the fields symmetric under the reflections in the faces, so the problem on the cube is the
-    problem on the torus of side 2s restricted to the reflection-symmetric fields, and the proof
-    goes through that torus. Other boundary conditions, boxes with unequal sides (proved in Feec,
-    Feec.Models.Box.Mirror.propagatesBox, without the Green's-formula description) and general
+    (1) Boundary conditions: three boundary conditions are compared. The mirror conditions
+    (sigma . n = 0; E_(n tau) = 0 in curl E and E_(tau n) = 0 in div E; B_(tau tau) = 0 in curl B;
+    and the wall conditions E_(tau n) = 0, B_(nn) = 0 of the divergence constraints) are the
+    face conditions of the fields symmetric under the reflections in the faces, so the problem
+    on the cube is the problem on the torus of side 2s restricted to the reflection-symmetric
+    fields, and the proof goes through that torus. The electric conditions sigma = 0,
+    n x E_a = 0 are those of the minimal realizations of grad and curl, with no condition on div E
+    and curl B. The absorbing conditions n x E_a + (B_a)_tau = 0 are posed for the system
+    E' = -curl B, B' = curl E in (E, B) (the auxiliary field sigma and its condition are absent,
+    sigma = 0 being part of the constraint), on (0, 1/2)^3 only. Other boundary conditions (in
+    particular the constraint-preserving conditions of derivative type of the literature), boxes
+    with unequal sides (proved in Feec without the Green's-formula description) and general
     bounded domains are out of scope.
-    (2) Weak formulation: the operators and the divergence constraints are defined by Green's
-    formulas against C^1 test functions on R^3 vanishing on the closed faces of the closed cube
-    normal to the e_j of a prescribed set (the parities of the mirror conditions) and free on
-    the other faces; the boundary conditions are the reading of these formulas (pointwise
-    traces of L^2 fields with L^2 derivatives are not formalized). That these formulas define
-    exactly the closed operators of the mirror Hilbert complex (domains included) is proved in
-    Feec (Feec.Models.Cube.Mirror.complexQ_d₀_iff and companions on (0, 1/2)^3,
-    Feec.Models.Cube.Mirror.mem_wave_domain_cube_iff_trace on every open cube).
-    (3) Fields are complex (L^2(C; C)); real fields are a special case. The system carries the
-    auxiliary field sigma of [QuennevilleBelair2015] (4.14), with the constraint sigma = 0; the
-    sign convention is E' = grad sigma - curl B, B' = curl E (L = d - d* of the complex).
+    (2) Weak formulation: the mirror operators and divergence constraints are Green's formulas
+    against C^1 test functions on R^3 vanishing on the closed faces normal to the e_j of a
+    prescribed set and free on the other faces; that they define exactly the closed operators of
+    the mirror Hilbert complex is proved in Feec (Feec.Models.Cube.Mirror.complexQ_d₀_iff and
+    companions, Feec.Models.Cube.Mirror.mem_wave_domain_cube_iff_trace). The electric div and
+    curl are distributional (tested against C_c^infinity(C)); grad with sigma = 0 and curl with
+    n x E = 0 are defined by duality, Green's formula with no boundary term against every field of
+    H(div) resp. H(curl), which is the graph of the minimal realization (a closed operator is the
+    adjoint of its adjoint), not by the closure of the test functions. The absorbing energy space
+    is the closure of the triples (Phi, curl Phi, Phi_tau) of C^1 fields (Phi_tau the tangential
+    components of the rows on the six faces, each face parametrized by (0, 1/2)^2), and the
+    generator is defined by its weak equation against the C^1 triples (equivalent, by density, to
+    the weak equation against the energy space used in Feec). Pointwise traces of L^2 fields with
+    L^2 derivatives are not formalized; the boundary conditions are the reading of the formulas.
+    (3) Fields: complex (L^2(C; C)) for the mirror theorems, real (L^2(C; R)) for the electric and
+    absorbing theorems, as in the Feec results they are proved from; the definitions are stated
+    for both (RCLike). The sign convention is E' = grad sigma - curl B, B' = curl E (L = d - d*
+    of the complex).
     (4) Solutions: strong solutions are continuous on the time set with U t in D(L) and the
-    derivative within the time set equal to L(U t) + F t at every time (not almost every time,
-    as for the strong solutions of Pazy §4.2, so the uniqueness among strong solutions is
-    uniqueness in this pointwise class); classical solutions have in addition t -> L(U t)
-    continuous. The forcing class
-    for existence is continuity on [t0, t1] together with W^(1,1)(t0, t1; L^2) (F = x0 + integral
-    of an integrable g, a.e.) or L^1(t0, t1; D(L)), the class of the existence theorem cited by the
-    thesis.
-    (5) The hypothesis s > 0 excludes the empty cube, on which every statement but the
-    non-vacuity theorem is trivial and the non-vacuity theorem fails.
-    (6) Scope: the finite element schemes of the thesis (Ch. 5-7), their convergence and the
-    Ch. 7 numerical experiment are not part of this entry.
+    derivative within the time set equal to L(U t) + F t at every time (not almost every time, as
+    for the strong solutions of Pazy §4.2); classical solutions have in addition t -> L(U t)
+    continuous; mild solutions (absorbing theorem) are continuous on [0, infinity) with the
+    integral from 0 to t in D(L) and L of it equal to U t - U 0. The absorbing theorem asserts
+    that some mild solution from a TSD datum leaves the constraint; uniqueness of mild solutions
+    is not stated (it holds for semigroup generators) and the leaving datum is not shown to lie in
+    D(A) (the proof shows that the TSD states of D(A) are not dense in the TSD states). The
+    forcing class for existence (mirror) is continuity on [t0, t1] together with
+    W^(1,1)(t0, t1; L^2) or L^1(t0, t1; D(L)). The electric and absorbing theorems are for the
+    homogeneous system.
+    (5) electric_forward_iff quantifies over arbitrary sets K1, K2 of TSD fields (in the sense of
+    distributions, so any boundary conditions on the constraint fields are covered); its
+    existence part gives a strong solution on [0, infinity) for every datum of D(L).
+    (6) The hypothesis s > 0 excludes the empty cube.
+    (7) Scope: the finite element schemes of the thesis (Ch. 5-7), their convergence and the Ch. 7
+    numerical experiment are not part of this entry.
 
 review:
   status: "not yet reviewed by the author"
@@ -241,16 +307,31 @@ alignment:
       lean: "FEEC.EinsteinBianchi.tsd_propagates"
       module: "Challenge"
       status: "proved"
-      note: "Strong solutions with data and forcing in the constraint stay in the constraint, on every open cube with the mirror boundary conditions."
+      note: "Mirror conditions: strong solutions with data and forcing in the constraint stay in the constraint, on every open cube."
     - source: "[QuennevilleBelair2015], Prop 4.17 (existence and uniqueness); [CazenaveHaraux1998], Prop 4.1.6"
       lean: "FEEC.EinsteinBianchi.tsd_existsUnique"
       module: "Challenge"
       status: "proved"
-      note: "Classical solution in the constraint, unique among strong solutions, for data in D(L) and admissible forcing in the constraint."
+      note: "Mirror conditions: classical solution in the constraint, unique among strong solutions, for data in D(L) and admissible forcing in the constraint."
     - source: "non-vacuity"
       lean: "FEEC.EinsteinBianchi.exists_nonstationary"
       module: "Challenge"
       status: "proved"
-      note: "A datum of D(L) in the constraint with L U != 0 on every open cube (in Feec, (0, 2 cos(2 pi x_3) diag(1, -1, 0), 0) transported to the cube)."
+      note: "Mirror conditions: a datum of D(L) in the constraint with L U != 0 on every open cube (in Feec, (0, 2 cos(2 pi x_3) diag(1, -1, 0), 0) transported to the cube)."
+    - source: "constraint propagation under electric boundary conditions; context [FriedrichNagy1999], [CPRST2003]"
+      lean: "FEEC.EinsteinBianchi.electric_forward_iff"
+      module: "Challenge"
+      status: "proved"
+      note: "Electric conditions: every datum of D(L) has a strong solution on [0, infinity), and for any sets K1, K2 of TSD fields a strong solution stays in {0} x K1 x K2 iff its datum lies there and L U0 = 0."
+    - source: "constraint propagation under electric boundary conditions"
+      lean: "FEEC.EinsteinBianchi.electric_tsd_leaves"
+      module: "Challenge"
+      status: "proved"
+      note: "Electric conditions: a TSD datum of D(L) (in Feec, (0, 0, x_3 (e_1 e_2^T + e_2 e_1^T))) has strong solutions on every [0, T] and every one of them leaves the constraint in [0, T]."
+    - source: "constraint propagation under absorbing boundary conditions; [Monk2003], §1.4"
+      lean: "FEEC.EinsteinBianchi.absorbing_not_propagates"
+      module: "Challenge"
+      status: "proved"
+      note: "Absorbing conditions on (0, 1/2)^3: some TSD datum has a mild solution of (E, B)' = A (E, B) that leaves the TSD constraint."
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

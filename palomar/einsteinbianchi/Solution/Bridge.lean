@@ -44,7 +44,7 @@ open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self)
 open Feec.HilbertComplex (totalSub)
 open Feec.Models.BoundedDomain (R3)
 
-variable {b : Fin 3 → ℝ} {s : ℝ}
+variable {𝕜 : Type*} [RCLike 𝕜] {b : Fin 3 → ℝ} {s : ℝ}
 
 /-! ### Signs and test functions -/
 
@@ -80,42 +80,43 @@ theorem isTest_iff {S : Set (Fin 3)} {c : Fin 3 → ℂ} (hS : ∀ j, j ∈ S �
 
 /-! ### The Green's formulas -/
 
-theorem isGrad_iff (σ : Vec b s) (G : Mat b s) : IsGrad b s σ G ↔ GradTraceCube b s σ G :=
+theorem isGrad_iff (σ : Vec ℂ b s) (G : Mat ℂ b s) : IsGrad b s σ G ↔ GradTraceCube b s σ G :=
   forall_congr' fun a => forall_congr' fun c => forall_congr' fun ψ =>
     imp_congr_left (isTest_iff (fun j => (cE_eq_neg_one a c j).symm) ψ)
 
-theorem isCurlE_iff (E C : Mat b s) :
-    IsCurl b s (fun a c => {j | j = a ↔ j = c}) E C ↔ CurlTraceCube b s cB E C :=
+theorem isCurlE_iff (E C : Mat ℂ b s) :
+    IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) E C ↔ CurlTraceCube b s cB E C :=
   forall_congr' fun a => forall_congr' fun c => forall_congr' fun ψ =>
     imp_congr_left (isTest_iff (fun j => (cB_eq_neg_one a c j).symm) ψ)
 
-theorem isCurlB_iff (B C : Mat b s) :
-    IsCurl b s (fun a c => {j | ¬(j = a ↔ j = c)}) B C ↔ CurlTraceCube b s cE B C :=
+theorem isCurlB_iff (B C : Mat ℂ b s) :
+    IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) B C ↔ CurlTraceCube b s cE B C :=
   forall_congr' fun a => forall_congr' fun c => forall_congr' fun ψ =>
     imp_congr_left (isTest_iff (fun j => (cE_eq_neg_one a c j).symm) ψ)
 
-theorem setIntegral_neg_mul (u : L2 b s) (ψ : (Fin 3 → ℝ) → ℂ) :
-    ∫ x in cube b s, ((-u : L2 b s) : (Fin 3 → ℝ) → ℂ) x * ψ x =
-      -∫ x in cube b s, (u : (Fin 3 → ℝ) → ℂ) x * ψ x := by
+theorem setIntegral_neg_mul (u : L2 𝕜 b s) (ψ : (Fin 3 → ℝ) → 𝕜) :
+    ∫ x in cube b s, ((-u : L2 𝕜 b s) : (Fin 3 → ℝ) → 𝕜) x * ψ x =
+      -∫ x in cube b s, (u : (Fin 3 → ℝ) → 𝕜) x * ψ x := by
   rw [← integral_neg]
   refine integral_congr_ae ?_
   filter_upwards [Lp.coeFn_neg u] with x hx
   rw [hx, Pi.neg_apply, neg_mul]
 
-theorem setIntegral_zero_mul (ψ : (Fin 3 → ℝ) → ℂ) :
-    ∫ x in cube b s, ((0 : L2 b s) : (Fin 3 → ℝ) → ℂ) x * ψ x = 0 := by
-  rw [← integral_zero (Fin 3 → ℝ) ℂ]
+theorem setIntegral_zero_mul (ψ : (Fin 3 → ℝ) → 𝕜) :
+    ∫ x in cube b s, ((0 : L2 𝕜 b s) : (Fin 3 → ℝ) → 𝕜) x * ψ x = 0 := by
+  rw [← integral_zero (Fin 3 → ℝ) 𝕜]
   refine integral_congr_ae ?_
-  filter_upwards [Lp.coeFn_zero ℂ 2 (volume.restrict (cube b s))] with x hx
+  filter_upwards [Lp.coeFn_zero 𝕜 2 (volume.restrict (cube b s))] with x hx
   rw [hx, Pi.zero_apply, zero_mul]
 
-theorem isDivE_iff (E : Mat b s) (D : Vec b s) :
-    IsDiv b s (fun a => {a}) E D ↔ DivTraceCube b s E (-D) :=
+theorem isDivE_iff (E : Mat ℂ b s) (D : Vec ℂ b s) :
+    IsDiv b s (fun a => IsTest b s {a}) E D ↔ DivTraceCube b s E (-D) :=
   forall_congr' fun a => forall_congr' fun ψ => by
+    beta_reduce
     rw [isTest_iff (c := cV a) (fun j => (cV_eq_neg_one a j).symm) ψ]
     refine imp_congr_right fun _ => ?_
     change _ ↔ (∑ c, ∫ x in cube b s, (E (a, c) : (Fin 3 → ℝ) → ℂ) x *
-      fderiv ℝ ψ x (Pi.single c 1)) = ∫ x in cube b s, ((-D a : L2 b s) : (Fin 3 → ℝ) → ℂ) x * ψ x
+      fderiv ℝ ψ x (Pi.single c 1)) = ∫ x in cube b s, ((-D a : L2 ℂ b s) : (Fin 3 → ℝ) → ℂ) x * ψ x
     rw [setIntegral_neg_mul]
 
 /-! ### The graphs of the mirror complex on the cube -/
@@ -155,7 +156,7 @@ theorem conj_kappa_ne_zero (i j : Fin 3) : (fun a b' => conj (kappa s b' a)) j i
   simp only [conj_kappa]; exact kappa_ne_zero hs i j
 
 /-- The graph of `d₀` on the cube: `grad` with `σ · n = 0`. -/
-theorem graph_d₀_iff (σ : Vec b s) (G : Mat b s) :
+theorem graph_d₀_iff (σ : Vec ℂ b s) (G : Mat ℂ b s) :
     ((σ, G) : SpaceCube b s 0 × SpaceCube b s 1) ∈ ((complexCube b s hs).d 0 1).graph ↔
       IsGrad b s σ G := by
   refine (HilbertComplex.mem_transportD_graph_iff (kappa_ne_zero hs 0 1)).trans ?_
@@ -170,9 +171,9 @@ theorem graph_d₀_iff (σ : Vec b s) (G : Mat b s) :
   exact h.symm
 
 /-- The graph of `d₁` on the cube: `curl` with `E_{nτ} = 0`. -/
-theorem graph_d₁_iff (E C : Mat b s) :
+theorem graph_d₁_iff (E C : Mat ℂ b s) :
     ((E, C) : SpaceCube b s 1 × SpaceCube b s 2) ∈ ((complexCube b s hs).d 1 2).graph ↔
-      IsCurl b s (fun a c => {j | j = a ↔ j = c}) E C := by
+      IsCurl b s (fun a c => IsTest b s {j | j = a ↔ j = c}) E C := by
   refine (HilbertComplex.mem_transportD_graph_iff (kappa_ne_zero hs 1 2)).trans ?_
   refine mem_graph_iff'.trans ((complexQ_d₁_iff _ _).trans ?_)
   refine Iff.trans ?_ (isCurlE_iff E C).symm
@@ -186,7 +187,7 @@ theorem graph_d₁_iff (E C : Mat b s) :
   exact h.symm
 
 /-- The graph of `d₀†` on the cube: `-div` with `E_{τn} = 0`. -/
-theorem graph_adjoint_d₀_iff (E : Mat b s) (D : Vec b s) :
+theorem graph_adjoint_d₀_iff (E : Mat ℂ b s) (D : Vec ℂ b s) :
     ((E, D) : SpaceCube b s 1 × SpaceCube b s 0) ∈ ((complexCube b s hs).d 0 1)†.graph ↔
       DivTraceCube b s E D := by
   rw [adjoint_complexCube_d hs 0 1]
@@ -202,9 +203,9 @@ theorem graph_adjoint_d₀_iff (E : Mat b s) (D : Vec b s) :
   exact h.symm
 
 /-- The graph of `d₁†` on the cube: `curl` with `B_{ττ} = 0`. -/
-theorem graph_adjoint_d₁_iff (B C : Mat b s) :
+theorem graph_adjoint_d₁_iff (B C : Mat ℂ b s) :
     ((B, C) : SpaceCube b s 2 × SpaceCube b s 1) ∈ ((complexCube b s hs).d 1 2)†.graph ↔
-      IsCurl b s (fun a c => {j | ¬(j = a ↔ j = c)}) B C := by
+      IsCurl b s (fun a c => IsTest b s {j | ¬(j = a ↔ j = c)}) B C := by
   rw [adjoint_complexCube_d hs 1 2]
   refine (HilbertComplex.mem_transportD_graph_iff (κ := fun a b' => conj (kappa s b' a))
     (i := 2) (j := 1) (conj_kappa_ne_zero hs 1 2)).trans ?_
@@ -224,7 +225,7 @@ omit hs
 /-! ### The states -/
 
 /-- The states `(σ, E, B)` as elements of `PiLp 2 (SpaceCube b s)`. -/
-def toPi : State b s ≃L[ℂ] PiLp 2 (SpaceCube b s) where
+def toPi : State ℂ b s ≃L[ℂ] PiLp 2 (SpaceCube b s) where
   toFun U := WithLp.toLp 2 fun i => match i with
     | 0 => U.1
     | 1 => U.2.1
@@ -240,14 +241,14 @@ def toPi : State b s ≃L[ℂ] PiLp 2 (SpaceCube b s) where
   continuous_invFun := (PiLp.continuous_apply 2 _ 0).prodMk
     ((PiLp.continuous_apply 2 _ 1).prodMk (PiLp.continuous_apply 2 _ 2))
 
-theorem toPi_zero (U : State b s) : toPi U 0 = U.1 := rfl
-theorem toPi_one (U : State b s) : toPi U 1 = U.2.1 := rfl
-theorem toPi_two (U : State b s) : toPi U 2 = U.2.2 := rfl
+theorem toPi_zero (U : State ℂ b s) : toPi U 0 = U.1 := rfl
+theorem toPi_one (U : State ℂ b s) : toPi U 1 = U.2.1 := rfl
+theorem toPi_two (U : State ℂ b s) : toPi U 2 = U.2.2 := rfl
 
 include hs
 
 /-- **`IsWave` is the graph of the wave operator of the mirror complex on the cube.** -/
-theorem isWave_iff (U V : State b s) :
+theorem isWave_iff (U V : State ℂ b s) :
     IsWave b s U V ↔ (toPi U, toPi V) ∈ (complexCube b s hs).wave.graph := by
   rw [mem_graph_iff']
   constructor
@@ -461,9 +462,11 @@ def TSDQ (cv : Fin 3 → Fin 3 → ℂ) (M : MQ) : Prop :=
       ∑ c, ∫ y in Geometry.Q (Fin 3), (M (a, c) : R3 → ℂ) y * fderiv ℝ ψ y (Pi.single c 1) = 0
 
 theorem isTSD_iff {cv : Fin 3 → Fin 3 → ℂ} {S : Fin 3 → Set (Fin 3)}
-    (hS : ∀ a j, j ∈ S a ↔ cv a j = -1) (E : Mat b s) : IsTSD b s S E ↔ TSDCube cv E := by
+    (hS : ∀ a j, j ∈ S a ↔ cv a j = -1) (E : Mat ℂ b s) :
+    IsTSD b s (fun a => IsTest b s (S a)) E ↔ TSDCube cv E := by
   refine and_congr Iff.rfl (and_congr Iff.rfl ?_)
   refine forall_congr' fun a => forall_congr' fun φ => ?_
+  beta_reduce
   rw [isTest_iff (hS a) φ, PiLp.zero_apply, setIntegral_zero_mul, neg_zero]
   exact Iff.rfl
 
@@ -509,11 +512,11 @@ section Constraint
 
 include hs
 
-theorem mem_tsdCube_zero_iff (σ : Vec b s) : (σ : SpaceCube b s 0) ∈ tsdCube b s hs 0 ↔ σ = 0 :=
+theorem mem_tsdCube_zero_iff (σ : Vec ℂ b s) : (σ : SpaceCube b s 0) ∈ tsdCube b s hs 0 ↔ σ = 0 :=
   mem_tsdQ_zero.trans (eCube b s hs 0).symm.map_eq_zero_iff
 
-theorem mem_tsdCube_one_iff (E : Mat b s) :
-    (E : SpaceCube b s 1) ∈ tsdCube b s hs 1 ↔ IsTSD b s (fun a => {a}) E := by
+theorem mem_tsdCube_one_iff (E : Mat ℂ b s) :
+    (E : SpaceCube b s 1) ∈ tsdCube b s hs 1 ↔ IsTSD b s (fun a => IsTest b s {a}) E := by
   obtain ⟨E', rfl⟩ := (eCube b s hs 1).surjective E
   refine Iff.trans ?_ (isTSD_iff (cv := cV) (fun a j => Set.mem_singleton_iff.trans
     (cV_eq_neg_one a j).symm) _).symm
@@ -523,8 +526,8 @@ theorem mem_tsdCube_one_iff (E : Mat b s) :
   exact extF_mem_constraint_iff cV_sq cE_sq (fun a c => funext fun k => by simp only [cE]; ring)
     (fun a => funext fun k => by simp only [cE, sgn_mul_self]) cE_eq_update E'
 
-theorem mem_tsdCube_two_iff (B : Mat b s) :
-    (B : SpaceCube b s 2) ∈ tsdCube b s hs 2 ↔ IsTSD b s (fun a => {j | j ≠ a}) B := by
+theorem mem_tsdCube_two_iff (B : Mat ℂ b s) :
+    (B : SpaceCube b s 2) ∈ tsdCube b s hs 2 ↔ IsTSD b s (fun a => IsTest b s {j | j ≠ a}) B := by
   obtain ⟨B', rfl⟩ := (eCube b s hs 2).surjective B
   refine Iff.trans ?_ (isTSD_iff (cv := cPV) (fun a j => (cPV_eq_neg_one a j).symm) _).symm
   refine Iff.trans ?_ (tsdCube_pullCube_iff hs cPV B').symm
@@ -535,7 +538,7 @@ theorem mem_tsdCube_two_iff (B : Mat b s) :
     (fun a => funext fun k => by simp only [cB, sgn_mul_self]) cB_eq_update B'
 
 /-- **The constraint of the challenge is the constraint `tsdCube` of `Feec`.** -/
-theorem constraint_iff (U : State b s) :
+theorem constraint_iff (U : State ℂ b s) :
     Constraint b s U ↔ toPi U ∈ totalSub (tsdCube b s hs) :=
   ⟨fun h i => by
     fin_cases i
@@ -564,8 +567,8 @@ theorem intervalIntegral_map {E F : Type*} [NormedAddCommGroup E] [NormedSpace �
 include hs
 
 /-- **Strong solutions of the challenge are those of `Feec`.** -/
-theorem isStrongSolution_iff {I : Set ℝ} {F U : ℝ → State b s} :
-    IsStrongSolution b s I F U ↔ Evolution.IsStrongSolution (complexCube b s hs).wave I
+theorem isStrongSolution_iff {I : Set ℝ} {F U : ℝ → State ℂ b s} :
+    IsStrongSolution (IsWave b s) I F U ↔ Evolution.IsStrongSolution (complexCube b s hs).wave I
       (fun t => toPi (F t)) (fun t => toPi (U t)) := by
   constructor
   · rintro ⟨hc, hd⟩
@@ -585,8 +588,8 @@ theorem isStrongSolution_iff {I : Set ℝ} {F U : ℝ → State b s} :
       simpa [_root_.map_add] using this
 
 /-- **Classical solutions of the challenge are those of `Feec`.** -/
-theorem isClassicalSolution_iff {I : Set ℝ} {F U : ℝ → State b s} :
-    IsClassicalSolution b s I F U ↔ Evolution.IsClassicalSolution (complexCube b s hs).wave I
+theorem isClassicalSolution_iff {I : Set ℝ} {F U : ℝ → State ℂ b s} :
+    IsClassicalSolution (IsWave b s) I F U ↔ Evolution.IsClassicalSolution (complexCube b s hs).wave I
       (fun t => toPi (F t)) (fun t => toPi (U t)) := by
   constructor
   · rintro ⟨h, V, hV, hW⟩
@@ -601,8 +604,8 @@ theorem isClassicalSolution_iff {I : Set ℝ} {F U : ℝ → State b s} :
     exact hW t ht
 
 /-- **The admissible forcing of the challenge is that of `Feec`.** -/
-theorem isAdmissible_iff {a c : ℝ} {F : ℝ → State b s} :
-    IsAdmissible b s a c F ↔
+theorem isAdmissible_iff {a c : ℝ} {F : ℝ → State ℂ b s} :
+    IsAdmissible (IsWave b s) a c F ↔
       Evolution.ForcingClass.admissible (complexCube b s hs).wave a c (fun t => toPi (F t)) := by
   unfold IsAdmissible Evolution.ForcingClass.admissible Evolution.ForcingClass.w11
     Evolution.ForcingClass.l1Domain

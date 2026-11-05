@@ -37,7 +37,7 @@ open scoped InnerProductSpace ComplexConjugate
 
 @[expose] public noncomputable section
 
-namespace FEEC.EinsteinBianchi
+namespace FEEC.ConstraintPropagation
 
 open Feec Feec.Models.Cube Feec.Models.Cube.Mirror Feec.Models.Cube.MirrorTrace
 open Feec.Models.Cube.MirrorTorus (sgn sgn_mul_self)
@@ -637,4 +637,4 @@ theorem isAdmissible_iff {a c : ℝ} {F : ℝ → State ℂ b s} :
 
 end Solutions
 
-end FEEC.EinsteinBianchi
+end FEEC.ConstraintPropagation

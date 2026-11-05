@@ -1,7 +1,7 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.EinsteinBianchi.tsd_propagates", "FEEC.EinsteinBianchi.tsd_existsUnique", "FEEC.EinsteinBianchi.exists_nonstationary", "FEEC.EinsteinBianchi.electric_forward_iff", "FEEC.EinsteinBianchi.electric_tsd_leaves", "FEEC.EinsteinBianchi.absorbing_not_propagates"],
+  "theorem_names": ["FEEC.ConstraintPropagation.existsUnique_mild", "FEEC.ConstraintPropagation.isReducing_iff_propagates", "FEEC.ConstraintPropagation.exists_invariantCore", "FEEC.ConstraintPropagation.existsUnique_mild_of_isMDissipative", "FEEC.ConstraintPropagation.isReducing_iff_propagates_of_isMDissipative", "FEEC.ConstraintPropagation.mirror_propagates", "FEEC.ConstraintPropagation.tsd_propagates", "FEEC.ConstraintPropagation.tsd_existsUnique", "FEEC.ConstraintPropagation.exists_nonstationary", "FEEC.ConstraintPropagation.electric_propagates_iff", "FEEC.ConstraintPropagation.electric_tsd_leaves", "FEEC.ConstraintPropagation.absorbing_not_propagates"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

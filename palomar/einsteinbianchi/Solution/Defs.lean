@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Analysis.Calculus.ContDiff.Defs
 public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.MeasureTheory.Constructions.Pi
 public import Mathlib.MeasureTheory.Function.L2Space
@@ -28,11 +29,80 @@ Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open MeasureTheory Set
-open scoped ContDiff
+open scoped ContDiff InnerProductSpace
 
 @[expose] public noncomputable section
 
-namespace FEEC.EinsteinBianchi
+namespace FEEC.ConstraintPropagation
+
+/-! ### Solutions -/
+
+section Solutions
+
+variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+
+/-- `U` is a **strong solution** of `U' = L U + F` on the time set `I`, for an operator `L` given
+by its graph (`L U V` for `V = L U`): `U` is continuous on `I` and at every `t ∈ I`, `U t ∈ D(L)`
+and `U' t = L (U t) + F t` (the derivative within `I`). This asks for the equation at every time,
+not almost every time as for the strong solutions of [Pazy1983], §4.2. -/
+def IsStrongSolution (L : X → X → Prop) (I : Set ℝ) (F U : ℝ → X) : Prop :=
+  ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U (V + F t) I t
+
+/-- `U` is a **classical solution** of `U' = L U + F` on `I`: a strong solution with
+`t ↦ L (U t)` continuous on `I`; for continuous `F`, `U ∈ C(I; D(L)) ∩ C¹(I; X)`. -/
+def IsClassicalSolution (L : X → X → Prop) (I : Set ℝ) (F U : ℝ → X) : Prop :=
+  IsStrongSolution L I F U ∧ ∃ V : ℝ → X, ContinuousOn V I ∧ ∀ t ∈ I, L (U t) (V t)
+
+/-- `U` is a **mild solution** of `U' = L U` on the time set `I` (used for the intervals `ℝ` and
+`[0, ∞)`, which contain `0`), for an operator `L` given by its graph, in the integrated form
+(cf. [Pazy1983], §4.2, where mild solutions are given by the variation-of-constants formula; the
+two agree for generators): `U` is continuous on `I` and
+for every `t ∈ I`, `∫₀ᵗ U ∈ D(L)` with `L ∫₀ᵗ U = U t - U 0` (for `t < 0`, `∫₀ᵗ = -∫ₜ⁰`). For
+the generator of a strongly continuous semigroup or group the mild solutions are its orbits, and
+the strong solutions of `U' = L U` on such an interval are mild solutions. -/
+def IsMildSolution (L : X → X → Prop) (I : Set ℝ) (U : ℝ → X) : Prop :=
+  ContinuousOn U I ∧ ∀ t ∈ I, L (∫ τ in (0 : ℝ)..t, U τ) (U t - U 0)
+
+/-- **Admissible forcing** on `[t₀, t₁]` ([CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9): `F` is
+continuous on `[t₀, t₁]` and either `F ∈ W^{1,1}(t₀, t₁; X)`, i.e. `F = x₀ + ∫_{t₀}^· g` a.e. on
+`(t₀, t₁)` with `g` integrable, or `F ∈ L¹(t₀, t₁; D(L))`, i.e. `F t ∈ D(L)` for a.e. `t` with
+`t ↦ L (F t)` a.e. equal to an integrable function. -/
+def IsAdmissible (L : X → X → Prop) (t₀ t₁ : ℝ) (F : ℝ → X) : Prop :=
+  ContinuousOn F (Icc t₀ t₁) ∧
+    ((∃ (x₀ : X) (g : ℝ → X), IntegrableOn g (Ioc t₀ t₁) ∧
+        F =ᵐ[volume.restrict (Ioo t₀ t₁)] fun t => x₀ + ∫ τ in t₀..t, g τ) ∨
+      ∃ H : ℝ → X, IntegrableOn H (Ioc t₀ t₁) ∧
+        ∀ᵐ t ∂(volume.restrict (Ioo t₀ t₁)), L (F t) (H t))
+
+end Solutions
+
+/-! ### The general criterion -/
+
+section Criterion
+
+variable {𝕜 H : Type*} [RCLike 𝕜] [NormedAddCommGroup H] [InnerProductSpace 𝕜 H]
+  [CompleteSpace H] [NormedSpace ℝ H] [IsScalarTower ℝ 𝕜 H]
+
+/-- `A : D(A) ⊆ H → H` is **skew-adjoint**: `A† = -A`, with equal domains (Mathlib's adjoint of
+a densely defined operator). By Stone's theorem these are the generators of the strongly
+continuous unitary groups. -/
+def IsSkewAdjoint (A : H →ₗ.[𝕜] H) : Prop := A.adjoint = -A
+
+/-- `A` is **m-dissipative**: `re ⟪A x, x⟫ ≤ 0` on `D(A)`, and `1 - A : D(A) → H` is onto. By
+the Lumer–Phillips theorem these are the generators of the strongly continuous contraction
+semigroups ([Pazy1983], §1.4). -/
+def IsMDissipative (A : H →ₗ.[𝕜] H) : Prop :=
+  (∀ x : A.domain, RCLike.re ⟪A x, (x : H)⟫_𝕜 ≤ 0) ∧ ∀ y : H, ∃ x : A.domain, (x : H) - A x = y
+
+/-- The closed subspace `K` **reduces** `A` ([Kato1995], §III.5.6): `P_K D(A) ⊆ D(A)` and
+`A P_K = P_K A` on `D(A)`, for the orthogonal projection `P_K` onto `K`. -/
+def IsReducing (A : H →ₗ.[𝕜] H) (K : Submodule 𝕜 H) [K.HasOrthogonalProjection] : Prop :=
+  ∀ x : A.domain, ∃ hx : K.starProjection (x : H) ∈ A.domain,
+    A ⟨_, hx⟩ = K.starProjection (A x)
+
+end Criterion
+
+/-! ### The linearized Einstein–Bianchi system on a cube -/
 
 /-- The open cube `∏ᵢ (bᵢ, bᵢ + s)` of `ℝⁿ`. -/
 def cube {n : ℕ} (b : Fin n → ℝ) (s : ℝ) : Set (Fin n → ℝ) := univ.pi fun i => Ioo (b i) (b i + s)
@@ -200,42 +270,10 @@ def IsAbsorbing (U V : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2)) : Prop :=
         ∑ q, ∫ y in cube 0 (1 / 2),
           (β q : (Fin 2 → ℝ) → ℝ) y * Ψ (q.2.1, q.1.1.succAbove q.2.2) (faceMap q.1 y)
 
-/-! ### Solutions -/
+/-! ### Mirror conditions: `K* = K` -/
 
-variable {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+/-! ### Electric conditions: `K*` is the stationary data -/
 
-/-- `U` is a **strong solution** of `U' = L U + F` on the time set `I`, for an operator `L` given
-by its graph (`L U V` for `V = L U`): `U` is continuous on `I` and at every `t ∈ I`, `U t ∈ D(L)`
-and `U' t = L (U t) + F t` (the derivative within `I`). This asks for the equation at every time,
-not almost every time as for the strong solutions of [Pazy1983], §4.2. -/
-def IsStrongSolution (L : X → X → Prop) (I : Set ℝ) (F U : ℝ → X) : Prop :=
-  ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U (V + F t) I t
+/-! ### Absorbing conditions: `K* ≠ K` -/
 
-/-- `U` is a **classical solution** of `U' = L U + F` on `I`: a strong solution with
-`t ↦ L (U t)` continuous on `I`; for continuous `F`, `U ∈ C(I; D(L)) ∩ C¹(I; X)`. -/
-def IsClassicalSolution (L : X → X → Prop) (I : Set ℝ) (F U : ℝ → X) : Prop :=
-  IsStrongSolution L I F U ∧ ∃ V : ℝ → X, ContinuousOn V I ∧ ∀ t ∈ I, L (U t) (V t)
-
-/-- `U` is a **mild solution** of `U' = L U` on `[0, ∞)` ([Pazy1983], §4.2): `U` is continuous on
-`[0, ∞)` and for every `t ≥ 0`, `∫₀ᵗ U ∈ D(L)` with `L ∫₀ᵗ U = U t - U 0`. -/
-def IsMildSolution (L : X → X → Prop) (U : ℝ → X) : Prop :=
-  ContinuousOn U (Ici 0) ∧ ∀ t ∈ Ici (0 : ℝ), L (∫ τ in (0 : ℝ)..t, U τ) (U t - U 0)
-
-/-- **Admissible forcing** on `[t₀, t₁]` ([CazenaveHaraux1998], Prop 4.1.6 and Cor 2.4.9): `F` is
-continuous on `[t₀, t₁]` and either `F ∈ W^{1,1}(t₀, t₁; X)`, i.e. `F = x₀ + ∫_{t₀}^· g` a.e. on
-`(t₀, t₁)` with `g` integrable, or `F ∈ L¹(t₀, t₁; D(L))`, i.e. `F t ∈ D(L)` for a.e. `t` with
-`t ↦ L (F t)` a.e. equal to an integrable function. -/
-def IsAdmissible (L : X → X → Prop) (t₀ t₁ : ℝ) (F : ℝ → X) : Prop :=
-  ContinuousOn F (Icc t₀ t₁) ∧
-    ((∃ (x₀ : X) (g : ℝ → X), IntegrableOn g (Ioc t₀ t₁) ∧
-        F =ᵐ[volume.restrict (Ioo t₀ t₁)] fun t => x₀ + ∫ τ in t₀..t, g τ) ∨
-      ∃ H : ℝ → X, IntegrableOn H (Ioc t₀ t₁) ∧
-        ∀ᵐ t ∂(volume.restrict (Ioo t₀ t₁)), L (F t) (H t))
-
-/-! ### Mirror conditions: the constraints propagate -/
-
-/-! ### Electric conditions: only stationary data propagate -/
-
-/-! ### Absorbing conditions: the constraints do not propagate -/
-
-end FEEC.EinsteinBianchi
+end FEEC.ConstraintPropagation

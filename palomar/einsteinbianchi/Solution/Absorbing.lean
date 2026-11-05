@@ -31,7 +31,7 @@ open scoped InnerProductSpace
 
 @[expose] public noncomputable section
 
-namespace FEEC.EinsteinBianchi
+namespace FEEC.ConstraintPropagation
 
 open Feec Feec.Domain Feec.Models.BoundedDomain
 open Feec.Models.Cube.Geometry (Q measurableSet_Q)
@@ -306,7 +306,7 @@ theorem intervalIntegral_mapR {E F : Type*} [NormedAddCommGroup E] [NormedSpace 
 
 /-- **The orbits of the absorbing semigroup are mild solutions.** -/
 theorem isMildSolution_orbit (x : Feec.Models.Cube.Absorbing.State) :
-    IsMildSolution IsAbsorbing
+    IsMildSolution IsAbsorbing (Ici 0)
       fun t => (eAbs.symm (absorbingSemigroup.S t x) : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2)) := by
   refine ⟨eAbs.symm.continuous.comp_continuousOn (absorbingSemigroup.strongCont x),
     fun t ht => ?_⟩
@@ -328,8 +328,8 @@ theorem isMildSolution_orbit (x : Feec.Models.Cube.Absorbing.State) :
 /-- **The mild solutions are the orbits of the absorbing semigroup.** The primitive `∫₀^· U` of
 a mild solution and that of the orbit of `U 0` are strong solutions of `W' = A W + U 0` on
 `[0, t]` vanishing at `0`, hence equal (`A` is dissipative); `U t - U 0` is `A` of either. -/
-theorem isMildSolution_eq_orbit {U : ℝ → MQ × MQ} (hU : IsMildSolution IsAbsorbing U) {t : ℝ}
-    (ht : 0 ≤ t) : eAbs (U t) = absorbingSemigroup.S t (eAbs (U 0)) := by
+theorem isMildSolution_eq_orbit {U : ℝ → MQ × MQ} (hU : IsMildSolution IsAbsorbing (Ici 0) U)
+    {t : ℝ} (ht : 0 ≤ t) : eAbs (U t) = absorbingSemigroup.S t (eAbs (U 0)) := by
   set x := eAbs (U 0)
   have hsol : ∀ w : ℝ → Feec.Models.Cube.Absorbing.State, ContinuousOn w (Ici 0) →
       (∀ τ ∈ Ici (0 : ℝ), ((∫ s in (0 : ℝ)..τ, w s), w τ - x) ∈ absorbing.graph) →
@@ -353,4 +353,4 @@ theorem isMildSolution_eq_orbit {U : ℝ → MQ × MQ} (hU : IsMildSolution IsAb
     (by simp) ⟨ht, le_rfl⟩
   exact sub_left_inj.1 (absorbing.mem_graph_snd_inj (hgU t ht) (hgS t ht) e)
 
-end FEEC.EinsteinBianchi
+end FEEC.ConstraintPropagation

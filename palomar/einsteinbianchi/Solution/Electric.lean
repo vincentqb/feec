@@ -34,7 +34,7 @@ open scoped InnerProductSpace
 
 @[expose] public noncomputable section
 
-namespace FEEC.EinsteinBianchi
+namespace FEEC.ConstraintPropagation
 
 open Feec Feec.Domain Feec.Models.BoundedDomain
 open Feec.Models.Cube.Geometry (openCube isOpen_openCube)
@@ -412,4 +412,4 @@ theorem isStrongSolution₀_iff {I : Set ℝ} {F U : ℝ → State ℝ b s} :
         t hD
       simpa [Function.comp_def, _root_.map_add] using this
 
-end FEEC.EinsteinBianchi
+end FEEC.ConstraintPropagation

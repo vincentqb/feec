@@ -1,24 +1,32 @@
 module
 
-public import Solution.Absorbing
+public import Solution.General
 public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Invariance
 
 /-!
-# Which boundary conditions preserve the constraints of the linearized Einstein–Bianchi system (solution)
+# Constraint propagation for wave equations of Hilbert complexes (solution)
 
 The theorems of `Challenge.lean`, proved through the bridges to `Feec`:
 
-* mirror conditions (`Solution.Bridge`): `tsd_propagates`, `tsd_existsUnique` and
+* the general criterion (`Solution.General`): `existsUnique_mild`, `isReducing_iff_propagates`,
+  `exists_invariantCore`, `existsUnique_mild_of_isMDissipative` and
+  `isReducing_iff_propagates_of_isMDissipative`, from the mild solutions being the orbits
+  (`isMildSolution_univ_iff`, `isMildSolution_Ici_iff`) and
+  `Feec.C0Group.IsIsometric.isReducing_iff_invariant`, the invariant core
+  `Feec.C0Group.invariantCore`
+  and `LinearPMap.IsMDissipative.isReducing_iff`;
+* mirror conditions (`Solution.Bridge`): `mirror_propagates` from
+  `Feec.Models.Cube.Mirror.invariantCore_eqCube`; `tsd_propagates`, `tsd_existsUnique` and
   `exists_nonstationary` from `Feec.Models.Cube.Mirror.propagatesCube`,
   `Feec.Models.Cube.Mirror.existsUnique_memCube` and
   `Feec.Models.Cube.Mirror.exists_nonstationaryCube`: the TSD constraint is a reducing subcomplex
   of the mirror complex on the cube, the pull-back of the torus constraint along the mirror
   extensions ([QuennevilleBelair2015], Prop 4.17);
-* electric conditions (`Solution.Electric`): `electric_forward_iff` from
+* electric conditions (`Solution.Electric`): `electric_propagates_iff` from
   `Feec.Counterexamples.CubeStationary.forward_iff_stationary` (the minimal complex on the cube is
-  a compression of the torus complex, whose wave group has pure point spectrum) and uniqueness of
-  strong solutions; `electric_tsd_leaves` from
+  a compression of the torus complex, whose wave group has pure point spectrum);
+  `electric_tsd_leaves` from
   `Feec.Counterexamples.BoundedDomainTSD.exists_isStrongSolution_tsd_not_propagates`;
 * absorbing conditions (`Solution.Absorbing`): `absorbing_not_propagates` from
   `Feec.Models.Cube.Absorbing.not_invariant_tsdPair` (TSD states in the domain are not dense in
@@ -36,11 +44,35 @@ open Set
 
 @[expose] public noncomputable section
 
-namespace FEEC.EinsteinBianchi
+namespace FEEC.ConstraintPropagation
 
 open Feec Feec.Models.Cube.Mirror
+open Feec.HilbertComplex (totalSub)
 
 variable (b : Fin 3 → ℝ) (s : ℝ)
+
+/-- **With mirror boundary conditions the TSD constraints propagate** ([QuennevilleBelair2015],
+Prop 4.17): on every open cube every datum has exactly one mild solution of `U' = L U` on `ℝ`,
+and every mild solution starting in the constraint stays in it (`K* = K`). -/
+theorem mirror_propagates (hs : 0 < s) :
+    (∀ U₀ : State ℂ b s, ∃! U, U 0 = U₀ ∧ IsMildSolution (IsWave b s) univ U) ∧
+      ∀ U : ℝ → State ℂ b s, IsMildSolution (IsWave b s) univ U → Constraint b s (U 0) →
+        ∀ t, Constraint b s (U t) := by
+  have hm : ∀ U : ℝ → State ℂ b s, IsMildSolution (IsWave b s) univ U ↔
+      ∀ t, toPi (U t) = (complexCube b s hs).waveGroup.S t (toPi (U 0)) := fun U => by
+    have h1 := isMildSolution_congr toPi (I := univ) (U := U)
+      (M := fun v w => (v, w) ∈ (complexCube b s hs).wave.graph) (isWave_iff hs)
+    exact h1.trans (isMildSolution_univ_iff (complexCube b s hs).isIsometric_waveGroup
+      (complexCube b s hs).generator_waveGroup)
+  refine ⟨fun U₀ => ⟨fun t => toPi.symm ((complexCube b s hs).waveGroup.S t (toPi U₀)),
+    ⟨by simp [C0Group.map_zero], (hm _).2 fun t => by simp [C0Group.map_zero]⟩,
+    fun V ⟨hV0, hV⟩ => funext fun t => ?_⟩, fun U hU h0 t => ?_⟩
+  · rw [← hV0, ← (hm V).1 hV t, ContinuousLinearEquiv.symm_apply_apply]
+  · have hx : toPi (U 0) ∈ (complexCube b s hs).waveGroup.invariantCore
+        (totalSub (tsdCube b s hs)) := by
+      rw [invariantCore_eqCube hs]; exact (constraint_iff hs _).1 h0
+    rw [constraint_iff hs, (hm U).1 hU t]
+    exact C0Group.mem_invariantCore.1 hx t
 
 /-- **The TSD constraints propagate on the cube with mirror boundary conditions**
 ([QuennevilleBelair2015], Prop 4.17): a strong solution of the linearized Einstein–Bianchi system
@@ -111,57 +143,45 @@ theorem isStrongSolution₀_zero_iff {b : Fin 3 → ℝ} {s : ℝ} {I : Set ℝ}
   have : (fun t => toPiR ((0 : ℝ → State ℝ b s) t)) = 0 := funext fun _ => _root_.map_zero _
   rw [this]
 
-/-- **With electric boundary conditions only stationary data propagate**: for every
-`U₀ ∈ D(L)` the system `U' = L U` has a strong solution on `[0, ∞)` from `U₀`, and a strong
-solution from `U₀` stays in the constraint `{0} × TSD × TSD` iff `U₀` lies in it and
+/-- **With electric boundary conditions only stationary data propagate**: on every open cube
+every datum has exactly one mild solution of `U' = L U` on `ℝ`, and a mild solution stays in the
+constraint `{0} × TSD × TSD` for all `t ≥ 0` iff its datum lies in the constraint and
 `L U₀ = 0`. -/
-theorem electric_forward_iff (hs : 0 < s) {U₀ : State ℝ b s} (hU₀ : ∃ V, IsWave₀ b s U₀ V) :
-    (∃ U, U 0 = U₀ ∧ IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U →
-        ((∀ t ∈ Ici (0 : ℝ), Constraint₀ b s (U t)) ↔ Constraint₀ b s U₀ ∧ IsWave₀ b s U₀ 0) := by
-  obtain ⟨V₀, hV₀⟩ := hU₀
-  have hx := (mem_graph_iff'.1 ((isWave₀_iff _ _).1 hV₀)).1
-  have hdiss : (elec b s).wave.IsDissipative := (elec b s).isSkewAdjoint_wave.isDissipative
-  have horbit : Evolution.IsStrongSolution (elec b s).wave (Ici 0) 0
-      (fun t => (elec b s).waveGroup.S t (toPiR U₀)) := by
-    refine ⟨((elec b s).waveGroup.strongCont _).continuousOn, fun t ht => ?_⟩
-    obtain ⟨v, hv, hd⟩ := ((elec b s).isStrongSolution_waveGroup hx (t + 1)).deriv t
-      ⟨ht, by simp only [mem_Ici] at ht; linarith⟩
-    refine ⟨v, hv, hd.mono_of_mem_nhdsWithin ?_⟩
-    rw [← Ici_inter_Iic]
-    exact inter_mem_nhdsWithin _ (Iic_mem_nhds (by linarith))
-  have huniq : ∀ U : ℝ → State ℝ b s, U 0 = U₀ → IsStrongSolution (IsWave₀ b s) (Ici 0) 0 U →
-      ∀ t ∈ Ici (0 : ℝ), toPiR (U t) = (elec b s).waveGroup.S t (toPiR U₀) := by
-    intro U hU0 hU t ht
-    exact ((isStrongSolution₀_zero_iff.1 hU).mono Icc_subset_Ici_self).unique hdiss
-      (horbit.mono Icc_subset_Ici_self) (by simp [hU0]) ⟨ht, le_rfl⟩
-  have hK := fun y : State ℝ b s => (constraint₀_iff y).1
-  refine ⟨⟨fun t => toPiR.symm ((elec b s).waveGroup.S t (toPiR U₀)), by simp,
-    isStrongSolution₀_zero_iff.2 (by simpa using horbit)⟩, fun U hU0 hU => ⟨fun hall => ?_, ?_⟩⟩
-  · have hst := ((Feec.Counterexamples.CubeStationary.forward_iff_stationary hs le_rfl le_rfl
-      (toPiR U₀)).1 fun t ht => (huniq U hU0 hU t ht) ▸ hK _ (hall t ht)).2
-    have hconst : ∀ t ∈ Ici (0 : ℝ), U t = U₀ := fun t ht =>
-      toPiR.injective ((huniq U hU0 hU t ht).trans (C0Group.mem_stationary.1 hst t))
-    refine ⟨hU0 ▸ hall 0 (mem_Ici.2 le_rfl), ?_⟩
-    obtain ⟨V, hV, hd⟩ := hU.2 0 (mem_Ici.2 le_rfl)
-    have h0 : HasDerivWithinAt U 0 (Ici 0) 0 :=
-      (hasDerivWithinAt_const (0 : ℝ) (Ici 0) U₀).congr (fun t ht => hconst t ht)
-        (hconst 0 (mem_Ici.2 le_rfl))
-    have e := (uniqueDiffWithinAt_Ici 0).eq_deriv _ hd h0
-    simp only [Pi.zero_apply, add_zero] at e
-    rw [hU0, e] at hV
-    exact hV
-  · rintro ⟨hK0, hW0⟩ t ht
-    have hgraph := (isWave₀_iff U₀ 0).1 hW0
-    rw [_root_.map_zero] at hgraph
-    have hc : Evolution.IsStrongSolution (elec b s).wave (Icc 0 t) 0 (fun _ => toPiR U₀) :=
-      ⟨continuousOn_const, fun τ _ => ⟨0, hgraph, by
-        simpa using hasDerivWithinAt_const τ (Icc 0 t) (toPiR U₀)⟩⟩
-    have e := ((isStrongSolution₀_zero_iff.1 hU).mono Icc_subset_Ici_self).unique hdiss hc
-      (by simp [hU0]) ⟨ht, le_rfl⟩
-    have hUt : U t = U₀ := toPiR.injective e
-    rw [hUt]
-    exact hK0
+theorem electric_propagates_iff (hs : 0 < s) :
+    (∀ U₀ : State ℝ b s, ∃! U, U 0 = U₀ ∧ IsMildSolution (IsWave₀ b s) univ U) ∧
+      ∀ U : ℝ → State ℝ b s, IsMildSolution (IsWave₀ b s) univ U →
+        ((∀ t ∈ Ici (0 : ℝ), Constraint₀ b s (U t)) ↔
+          Constraint₀ b s (U 0) ∧ IsWave₀ b s (U 0) 0) := by
+  have hm : ∀ U : ℝ → State ℝ b s, IsMildSolution (IsWave₀ b s) univ U ↔
+      ∀ t, toPiR (U t) = (elec b s).waveGroup.S t (toPiR (U 0)) := fun U => by
+    have h1 := isMildSolution_congr toPiR (I := univ) (U := U)
+      (M := fun v w => (v, w) ∈ (elec b s).wave.graph) isWave₀_iff
+    exact h1.trans (isMildSolution_univ_iff (elec b s).isIsometric_waveGroup
+      (elec b s).generator_waveGroup)
+  refine ⟨fun U₀ => ⟨fun t => toPiR.symm ((elec b s).waveGroup.S t (toPiR U₀)),
+    ⟨by simp [C0Group.map_zero], (hm _).2 fun t => by simp [C0Group.map_zero]⟩,
+    fun V ⟨hV0, hV⟩ => funext fun t => ?_⟩, fun U hU => ?_⟩
+  · rw [← hV0, ← (hm V).1 hV t, ContinuousLinearEquiv.symm_apply_apply]
+  · have hst : toPiR (U 0) ∈ (elec b s).waveGroup.stationary ↔ IsWave₀ b s (U 0) 0 := by
+      rw [isWave₀_iff, _root_.map_zero, mem_graph_iff']
+      constructor
+      · intro h
+        obtain ⟨hd, e⟩ := C0Group.mem_domain_generator_of_mem_stationary h
+        have key : ∀ T, T = (elec b s).waveGroup.generator →
+            ∃ hx : toPiR (U 0) ∈ T.domain, T ⟨_, hx⟩ = 0 := by
+          rintro _ rfl; exact ⟨hd, e⟩
+        exact key _ (elec b s).generator_waveGroup.symm
+      · rintro ⟨hd, e⟩
+        have key : ∀ T, T = (elec b s).wave →
+            ∃ hx : toPiR (U 0) ∈ T.domain, T ⟨_, hx⟩ = 0 := by
+          rintro _ rfl; exact ⟨hd, e⟩
+        obtain ⟨hx, e'⟩ := key _ (elec b s).generator_waveGroup
+        exact C0Group.mem_stationary.2 fun t =>
+          C0Group.S_apply_eq_of_generator_eq_zero ⟨_, hx⟩ e' t
+    rw [← hst, constraint₀_iff,
+      ← Feec.Counterexamples.CubeStationary.forward_iff_stationary hs le_rfl le_rfl]
+    refine forall_congr' fun t => imp_congr mem_Ici ?_
+    rw [constraint₀_iff, (hm U).1 hU t]
 
 /-- **With electric boundary conditions TSD data leave the constraint at once**: some datum
 `U₀ ∈ D(L)` in the constraint has, for every `T > 0`, a strong solution on `[0, T]`, and every
@@ -194,8 +214,8 @@ some datum `(E₀, B₀)` with `E₀`, `B₀` TSD has a mild solution of `(E, B)
 every mild solution from it leaves the TSD constraint. -/
 theorem absorbing_not_propagates :
     ∃ U₀ : Mat ℝ 0 (1 / 2) × Mat ℝ 0 (1 / 2), IsTSD₀ 0 (1 / 2) U₀.1 ∧ IsTSD₀ 0 (1 / 2) U₀.2 ∧
-      (∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing U) ∧
-      ∀ U, U 0 = U₀ → IsMildSolution IsAbsorbing U →
+      (∃ U, U 0 = U₀ ∧ IsMildSolution IsAbsorbing (Ici 0) U) ∧
+      ∀ U, U 0 = U₀ → IsMildSolution IsAbsorbing (Ici 0) U →
         ∃ t ∈ Ici (0 : ℝ), ¬(IsTSD₀ 0 (1 / 2) (U t).1 ∧ IsTSD₀ 0 (1 / 2) (U t).2) := by
   have h := Feec.Models.Cube.Absorbing.not_invariant_tsdPair
   push Not at h
@@ -210,4 +230,4 @@ theorem absorbing_not_propagates :
   rw [← e]
   exact ⟨(isTSD₀_iff _).1 h'.1, (isTSD₀_iff _).1 h'.2⟩
 
-end FEEC.EinsteinBianchi
+end FEEC.ConstraintPropagation

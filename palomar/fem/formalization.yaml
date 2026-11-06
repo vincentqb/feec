@@ -44,7 +44,9 @@ project:
     gradient, curl and divergence (each defined as the adjoint of the closure of its formal
     adjoint on test fields, as the weak exterior derivative), and they discretize Maxwell's
     equations sigma' = -grad* E, E' = grad sigma - curl* B, B' = curl E (the Hodge wave equation
-    of the window H^1 -> H(curl) -> L^2(Omega; R^3)): for data in the domain of the Maxwell
+    of the window H^1 -> H(curl) -> L^2(Omega; R^3); with H = -B and sigma = 0, E' = curl H,
+    H' = -curl E with perfect-magnetic-conductor walls): every datum in V_N^0 x V_N^1 x V_N^2
+    has a unique Galerkin solution on [0, T], and for data in the domain of the Maxwell
     operator and every T there is a unique strong solution on [0, T], it conserves the energy,
     satisfies the Gauss laws sigma = 0, grad* E = 0, div B = 0 for all t if the data do, and is
     the uniform limit on [0, T] of every family of Galerkin solutions in V_N^0 x V_N^1 x V_N^2
@@ -246,14 +248,16 @@ fidelity:
     complex (where the projections of a subcomplex family are defined), not as an extension to
     all of L^2.
     (10) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
-    natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy): E . n = 0
-    and B x n = 0 enter through the adjoints grad* and curl*; the perfect electric conductor
+    natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy and
+    H = -B the magnetic field): E . n = 0 and B x n = 0 (H x n = 0) enter through the adjoints
+    grad* and curl*, the physical PMC walls; the perfect electric conductor
     (the minimal complex) is not compared. Scalar fields are L^2 fields with one component
     (Fin 1), and the state is the triple (sigma, E, B) with the scalar potential sigma of the
     Hodge wave equation (sigma = 0 is one of the Gauss laws). Data lie in the domain of the
     Maxwell operator; the statement has no rate (the Jackson estimate of FEEC.fem with the rates
     of palomar/feec gives them, not restated here). The Galerkin solutions are differentiable
-    in L^2 on [0, T] with values in V_N; their derivatives are not required to lie in V_N.
+    in L^2 on [0, T] with values in V_N; their derivatives are not required to lie in V_N (they
+    do when T > 0, V_N being finite-dimensional).
 
 review:
   status: "self-assessed"
@@ -291,7 +295,9 @@ alignment:
         are maximal realizations, weakOp_eq; the vector-proxy complex is the unitary transport of
         H Lambda(Omega), vC_maximalComplex_eq; strong and Galerkin solutions of the challenge
         are those of the Hodge wave equation of the window, isMaxwellSolution_of,
-        isStrongSolution_of, galerkin_of_semidiscrete, semidiscrete_of_galerkin).
+        isStrongSolution_of, galerkin_of_semidiscrete, semidiscrete_of_galerkin; discrete
+        well-posedness, galerkin_wellPosed, from Feec.HodgeWave.exists_isSemidiscreteSolution
+        and IsSemidiscreteSolution.eqOn).
     - source: "[Freudenthal1942]; [AFW2010] §4 (closed range)"
       lean: "FEEC.fem_parallelepiped"
       module: "Challenge"

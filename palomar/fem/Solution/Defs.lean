@@ -17,7 +17,7 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems `FEEC.fem`,
-`FEEC.femMin` and `FEEC.fem_parallelepiped`), compiled against Mathlib alone so that their
+`FEEC.femMin`, `FEEC.fem_parallelepiped` and `FEEC.maxwell`), compiled against Mathlib alone so that their
 elaborated values are those of the challenge. The solution imports this module and the bridges to
 `Feec`, and proves the theorems (`Solution.lean`).
 
@@ -305,7 +305,8 @@ def meshSize (M : SimplicialMesh n) : ℝ :=
   ⨆ T : M.simplices, diam (T : Affine.Simplex ℝ (Fin n → ℝ) n)
 
 /-- The mesh is **shape regular** with constant `σ` ([Ciarlet2002], §3.1): every simplex `T`
-contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T`. -/
+contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T` (the
+largest radius of a ball in `T`). Balls and `h_T` are those of the sup norm (Conventions). -/
 def IsShapeRegular (M : SimplicialMesh n) (σ : ℝ) : Prop :=
   ∀ T ∈ M.simplices, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ
 

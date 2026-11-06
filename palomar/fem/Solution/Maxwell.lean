@@ -650,6 +650,41 @@ theorem semidiscrete_of_galerkin {N : κ} {A₀ : Set (L2Field Ω (Fin 1))}
   · rw [hL]
     exact (Submodule.starProjection_eq_self_iff (K := X)).2 (hX (hm0 t ht) (hm1 t ht) (hm2 t ht))
 
+/-- **Discrete well-posedness**: for every datum in `Vₕ⁰ × Vₕ¹ × Vₕ²` there is a unique Galerkin
+solution of Maxwell's equations on `[0, T]` (`Feec.HodgeWave.exists_isSemidiscreteSolution`,
+`Feec.HodgeWave.IsSemidiscreteSolution.eqOn`). -/
+theorem galerkin_wellPosed {N : κ} {A₀ : Set (L2Field Ω (Fin 1))}
+    {A₁ A₂ : Set (L2Field Ω (Fin 3))} (h₀ : ∀ u, u ∈ A₀ ↔ u ∈ (G.V N).V 0)
+    (h₁ : ∀ u, u ∈ A₁ ↔ u ∈ (G.V N).V 1) (h₂ : ∀ u, u ∈ A₂ ↔ u ∈ (G.V N).V 2) (T : ℝ)
+    {σ₀ : L2Field Ω (Fin 1)} {E₀ B₀ : L2Field Ω (Fin 3)} (hσ₀ : σ₀ ∈ A₀) (hE₀ : E₀ ∈ A₁)
+    (hB₀ : B₀ ∈ A₂) :
+    ∃ σ E B, σ 0 = σ₀ ∧ E 0 = E₀ ∧ B 0 = B₀ ∧ IsMaxwellGalerkin Ω A₀ A₁ A₂ T σ E B ∧
+      ∀ σ₁ E₁ B₁, σ₁ 0 = σ₀ → E₁ 0 = E₀ → B₁ 0 = B₀ → IsMaxwellGalerkin Ω A₀ A₁ A₂ T σ₁ E₁ B₁ →
+        ∀ t ∈ Icc 0 T, σ₁ t = σ t ∧ E₁ t = E t ∧ B₁ t = B t := by
+  set Fc := Feec.Instances.Maxwell.feec G 0
+  set ξ₀ := liftV hΩ G N (x := pack σ₀ E₀ B₀) ((h₀ _).1 hσ₀) ((h₁ _).1 hE₀) ((h₂ _).1 hB₀)
+  have hfst₀ : (Win hΩ).totalD.graphFst ξ₀ = pack σ₀ E₀ B₀ :=
+    LinearPMap.graphFst_toGraphSpace _ _
+  have hξ₀ : ξ₀ ∈ Fc.Kh N := (mem_Kh_iff hΩ G N ξ₀).2 (by
+    rw [hfst₀]; exact ⟨(h₀ _).1 hσ₀, (h₁ _).1 hE₀, (h₂ _).1 hB₀⟩)
+  have : ∀ i, FiniteDimensional ℝ ((Fc.V N).V i) := Fc.finiteDimensional N
+  have : FiniteDimensional ℝ (Fc.Kh N) := inferInstanceAs (FiniteDimensional ℝ (Fc.V N).graphSub)
+  obtain ⟨ξ, ξ', hξ0, -, -, hsol⟩ := Feec.HodgeWave.exists_isSemidiscreteSolution (Fc.Kh N) hξ₀ 0
+  have hsol' := hsol.mono (subset_univ (Icc 0 T))
+  have hx0 : (Win hΩ).totalD.graphFst (ξ 0) = pack σ₀ E₀ B₀ := by rw [hξ0, hfst₀]
+  refine ⟨fun t => (Win hΩ).totalD.graphFst (ξ t) 0, fun t => (Win hΩ).totalD.graphFst (ξ t) 1,
+    fun t => (Win hΩ).totalD.graphFst (ξ t) 2, congrArg (fun z : MX Ω => z 0) hx0,
+    congrArg (fun z : MX Ω => z 1) hx0, congrArg (fun z : MX Ω => z 2) hx0,
+    galerkin_of_semidiscrete hΩ G h₀ h₁ h₂ hsol', ?_⟩
+  intro σ₁ E₁ B₁ e₀ e₁ e₂ hg t ht
+  obtain ⟨η, η', hη, hfst⟩ := semidiscrete_of_galerkin hΩ G h₀ h₁ h₂ hg
+  have h0 : η 0 = ξ 0 := (Win hΩ).totalD.graphFst_injective (by
+    rw [hfst 0 ⟨le_rfl, ht.1.trans ht.2⟩, hx0, e₀, e₁, e₂])
+  have e := hfst t ht
+  rw [hη.eqOn hsol' h0 ht] at e
+  exact ⟨congrArg (fun z : MX Ω => z 0) e.symm, congrArg (fun z : MX Ω => z 1) e.symm,
+    congrArg (fun z : MX Ω => z 2) e.symm⟩
+
 /-! ### The vector proxies of the finite element spaces, the Gauss laws -/
 
 section Spaces

@@ -54,8 +54,9 @@ The theorems, with no hypothesis beyond the data:
   `σ' = -grad* E`, `E' = grad σ - curl* B`, `B' = curl E` (`IsMaxwellSolution`; the weak `grad`,
   `curl`, `div` of `weakOp`): for data in the domain of the Maxwell operator there is a unique
   strong solution, it conserves the energy and the Gauss laws `σ = 0`, `grad* E = 0`,
-  `div B = 0`, and every family of Galerkin solutions (`IsMaxwellGalerkin`) with converging
-  initial data converges to it uniformly on `[0, T]`.
+  `div B = 0`; every datum in `V_N⁰ × V_N¹ × V_N²` has a unique Galerkin solution
+  (`IsMaxwellGalerkin`), and every family of Galerkin solutions with converging initial data
+  converges to the strong solution uniformly on `[0, T]`.
 
 ## Conventions
 
@@ -359,7 +360,8 @@ def meshSize (M : SimplicialMesh n) : ℝ :=
   ⨆ T : M.simplices, diam (T : Affine.Simplex ℝ (Fin n → ℝ) n)
 
 /-- The mesh is **shape regular** with constant `σ` ([Ciarlet2002], §3.1): every simplex `T`
-contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T`. -/
+contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T` (the
+largest radius of a ball in `T`). Balls and `h_T` are those of the sup norm (Conventions). -/
 def IsShapeRegular (M : SimplicialMesh n) (σ : ℝ) : Prop :=
   ∀ T ∈ M.simplices, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ
 
@@ -574,17 +576,29 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
 `Ω ⊆ ℝ³` star-shaped with respect to a ball, with a shape-regular, quasi-uniform family of meshes
 `M_N` and an admissible sequence `S`, the vector proxies `V_N⁰`, `V_N¹`, `V_N²` of `S_k(M_N)`
 (for `S = P₁⁻`: the Lagrange, Nédélec edge and Raviart–Thomas face elements) lie in `H¹(Ω)`,
-`H(curl, Ω)` and `H(div, Ω)`. Maxwell's equations are in Hodge-wave form: with `H = -B` they are
-`E' = curl H`, `H' = -curl E` with perfect-magnetic-conductor walls. For data `(σ₀, E₀, B₀)` in the domain of the Maxwell operator and every `T`:
-there is a unique strong solution on `[0, T]`, it conserves the energy, it satisfies the Gauss
-laws `σ = 0`, `grad* E = 0`, `div B = 0` if the data do, and it is the uniform limit on `[0, T]`
-of every family of Galerkin solutions in `V_N⁰ × V_N¹ × V_N²` whose initial data converge to the
-data, `N → ∞`; such families exist. -/
+`H(curl, Ω)` and `H(div, Ω)`, and every datum in `V_N⁰ × V_N¹ × V_N²` has a unique Galerkin
+solution on `[0, T]`. Maxwell's equations are in Hodge-wave form (the window
+`H¹ → H(curl) → L²` of `HΛ(Ω)`): with `H = -B` and `σ = 0` they are `E' = curl H`,
+`H' = -curl E` with perfect-magnetic-conductor walls `H × n = 0`, `E · n = 0` (the perfect
+electric conductor is the minimal complex, not stated here). For data `(σ₀, E₀, B₀)` in the
+domain of the Maxwell operator and every `T`: there is a unique strong solution on `[0, T]`, it
+conserves the energy, it satisfies the Gauss laws `σ = 0`, `grad* E = 0`, `div B = 0` if the
+data do, and it is the uniform limit on `[0, T]` of every family of Galerkin solutions in
+`V_N⁰ × V_N¹ × V_N²` whose initial data converge to the data, `N → ∞`; such families exist. -/
 theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ → SimplicialMesh 3}
     (hM : IsMeshFamily Ω M) (S : PolySeq) :
     (∀ N, proxy0 '' femSpace Ω (M N) S 0 ⊆ (grad Ω).domain ∧
       proxy1 '' femSpace Ω (M N) S 1 ⊆ (curl Ω).domain ∧
       proxy2 '' femSpace Ω (M N) S 2 ⊆ (div Ω).domain) ∧
+    (∀ N T σh₀ Eh₀ Bh₀, σh₀ ∈ proxy0 '' femSpace Ω (M N) S 0 →
+      Eh₀ ∈ proxy1 '' femSpace Ω (M N) S 1 → Bh₀ ∈ proxy2 '' femSpace Ω (M N) S 2 →
+      ∃ σh Eh Bh, σh 0 = σh₀ ∧ Eh 0 = Eh₀ ∧ Bh 0 = Bh₀ ∧
+        IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0) (proxy1 '' femSpace Ω (M N) S 1)
+          (proxy2 '' femSpace Ω (M N) S 2) T σh Eh Bh ∧
+        ∀ σ₁ E₁ B₁, σ₁ 0 = σh₀ → E₁ 0 = Eh₀ → B₁ 0 = Bh₀ →
+          IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0) (proxy1 '' femSpace Ω (M N) S 1)
+            (proxy2 '' femSpace Ω (M N) S 2) T σ₁ E₁ B₁ →
+          ∀ t ∈ Icc 0 T, σ₁ t = σh t ∧ E₁ t = Eh t ∧ B₁ t = Bh t) ∧
     ∀ σ₀ E₀ B₀, σ₀ ∈ (grad Ω).domain → E₀ ∈ (curl Ω).domain → E₀ ∈ (grad Ω)†.domain →
       B₀ ∈ (curl Ω)†.domain → ∀ T, ∃ σ E B, σ 0 = σ₀ ∧ E 0 = E₀ ∧ B 0 = B₀ ∧
         IsMaxwellSolution Ω T σ E B ∧

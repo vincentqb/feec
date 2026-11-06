@@ -215,6 +215,15 @@ theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ 
     (∀ N, proxy0 '' femSpace Ω (M N) S 0 ⊆ (grad Ω).domain ∧
       proxy1 '' femSpace Ω (M N) S 1 ⊆ (curl Ω).domain ∧
       proxy2 '' femSpace Ω (M N) S 2 ⊆ (div Ω).domain) ∧
+    (∀ N T σh₀ Eh₀ Bh₀, σh₀ ∈ proxy0 '' femSpace Ω (M N) S 0 →
+      Eh₀ ∈ proxy1 '' femSpace Ω (M N) S 1 → Bh₀ ∈ proxy2 '' femSpace Ω (M N) S 2 →
+      ∃ σh Eh Bh, σh 0 = σh₀ ∧ Eh 0 = Eh₀ ∧ Bh 0 = Bh₀ ∧
+        IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0) (proxy1 '' femSpace Ω (M N) S 1)
+          (proxy2 '' femSpace Ω (M N) S 2) T σh Eh Bh ∧
+        ∀ σ₁ E₁ B₁, σ₁ 0 = σh₀ → E₁ 0 = Eh₀ → B₁ 0 = Bh₀ →
+          IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0) (proxy1 '' femSpace Ω (M N) S 1)
+            (proxy2 '' femSpace Ω (M N) S 2) T σ₁ E₁ B₁ →
+          ∀ t ∈ Icc 0 T, σ₁ t = σh t ∧ E₁ t = Eh t ∧ B₁ t = Bh t) ∧
     ∀ σ₀ E₀ B₀, σ₀ ∈ (grad Ω).domain → E₀ ∈ (curl Ω).domain → E₀ ∈ (grad Ω)†.domain →
       B₀ ∈ (curl Ω)†.domain → ∀ T, ∃ σ E B, σ 0 = σ₀ ∧ E 0 = E₀ ∧ B 0 = B₀ ∧
         IsMaxwellSolution Ω T σ E B ∧
@@ -251,6 +260,7 @@ theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ 
   refine ⟨fun N => ⟨fun u hu => (mem_grad_domain hO).2 ((G.V N).le_domain 0 1 ((hA₀ N u).1 hu)),
     fun u hu => (mem_curl_domain hO).2 ((G.V N).le_domain 1 2 ((hA₁ N u).1 hu)),
     fun u hu => (mem_div_domain hO).2 ((G.V N).le_domain 2 3 ((hA₂ N u).1 hu))⟩,
+    fun N T _ _ _ hσ hE hB => galerkin_wellPosed hO G (hA₀ N) (hA₁ N) (hA₂ N) T hσ hE hB,
     fun σ₀ E₀ B₀ hσ₀ hE₀ hE₀' hB₀ T => ?_⟩
   set x : MX Ω := pack σ₀ E₀ B₀
   have hx : x ∈ (Win hO).wave.domain :=

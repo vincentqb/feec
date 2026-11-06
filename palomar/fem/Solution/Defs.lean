@@ -1,24 +1,30 @@
 module
 
 public import Mathlib.Algebra.MvPolynomial.PDeriv
+public import Mathlib.Algebra.Polynomial.AlgebraMap
 public import Mathlib.Analysis.Calculus.ContDiff.Basic
+public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.Calculus.FDeriv.Basic
 public import Mathlib.Analysis.Convex.Hull
+public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
+public import Mathlib.Analysis.Normed.Algebra.Exponential
 public import Mathlib.Analysis.Normed.Lp.PiLp
 public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
+public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 /-!
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems `FEEC.fem`,
-`FEEC.femMin`, `FEEC.fem_parallelepiped` and `FEEC.maxwell`), compiled against Mathlib alone so that their
-elaborated values are those of the challenge. The solution imports this module and the bridges to
+`FEEC.femMin`, `FEEC.fem_parallelepiped` and `FEEC.maxwell`), compiled against Mathlib alone so
+that their elaborated values are those of the challenge. The solution imports this module and the bridges to
 `Feec`, and proves the theorems (`Solution.lean`).
 
 ## References
@@ -29,6 +35,10 @@ elaborated values are those of the challenge. The solution imports this module a
   §3.3–§3.5, §4, §5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 4
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -95,6 +105,9 @@ structure SubcomplexFamily (κ : Type*) where
 
 attribute [instance] SubcomplexFamily.finiteDimensional
 
+/-- The boundaries `𝔅ⁱ = R(d (i - 1) i)`. -/
+def boundaries (i : ℤ) : Submodule 𝕜 (W i) := LinearMap.range (H.d (i - 1) i).toFun
+
 /-- The distance `E(x) = inf_{v ∈ Vⁱ} ‖x - v‖_V` from `x ∈ D(d i j)` to `Vⁱ` in the graph norm. -/
 def Subcomplex.graphDist {H : HilbertComplex 𝕜 W} (S : H.Subcomplex) (i j : ℤ)
     (x : (H.d i j).domain) : ℝ :=
@@ -138,6 +151,246 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
     ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
       ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
         B s i * (L * meshSize h ^ ord s)
+
+end HilbertComplex
+
+/-! ### Evolutions and time schemes (verbatim from `palomar/feec`) -/
+
+section Evolution
+
+variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {κ : Type*}
+
+/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
+def sq (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
+  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
+    obtain ⟨y, hy, hyx⟩ := x.2.1
+    have : (⟨x, x.2.2⟩ : A.domain) = y := Subtype.ext hyx.symm
+    change A ⟨(x : E), x.2.2⟩ ∈ A.domain
+    rw [this]
+    exact hy
+
+/-- The closed subspace `K` **reduces** `A`: `P_K D(A) ⊆ D(A)` and `A P_K = P_K A` on `D(A)`. -/
+def IsReducing (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : Prop :=
+  ∀ x : A.domain, ∃ hx : K.starProjection (x : E) ∈ A.domain,
+    A ⟨_, hx⟩ = K.starProjection (A x)
+
+/-- A **rational time scheme** `r = n/d` ([HairerWanner1996], §IV.3): real polynomials with
+`deg n ≤ deg d` and `d(z) ≠ 0` for `re z ≤ 0`; a step is `wₙ₊₁ = r(τ B) wₙ`. The θ-scheme
+`wₙ₊₁ - wₙ = τ B (θ wₙ₊₁ + (1 - θ) wₙ)` is `n = 1 + (1 - θ) X`, `d = 1 - θ X`, A-stable for
+`θ ≥ 1/2`, of order 1, and 2 for Crank–Nicolson `θ = 1/2`. -/
+structure RationalScheme where
+  /-- the numerator -/
+  num : Polynomial ℝ
+  /-- the denominator -/
+  den : Polynomial ℝ
+  natDegree_num_le : num.natDegree ≤ den.natDegree
+  aeval_den_ne_zero : ∀ z : ℂ, z.re ≤ 0 → Polynomial.aeval z den ≠ 0
+
+namespace RationalScheme
+
+variable (r : RationalScheme)
+
+/-- **A-stability**: `|r(iy)| ≤ 1` for every real `y`; with no poles in `re z ≤ 0` and
+`deg n ≤ deg d`, equivalent to `|r(z)| ≤ 1` on `re z ≤ 0` by the maximum principle. -/
+def IsAStable : Prop :=
+  ∀ y : ℝ, ‖Polynomial.aeval ((y : ℂ) * Complex.I) r.num /
+    Polynomial.aeval ((y : ℂ) * Complex.I) r.den‖ ≤ 1
+
+/-- **Order `p`**: `r(z) - e^z = O(z^{p+1})` at `0`, i.e. `X^{p+1}` divides `n - d Tₚ`,
+`Tₚ = ∑_{j ≤ p} Xʲ/j!`. -/
+def HasOrder (p : ℕ) : Prop :=
+  Polynomial.X ^ (p + 1) ∣ r.num - r.den * ∑ j ∈ Finset.range (p + 1),
+    Polynomial.C (1 / (j.factorial : ℝ)) * Polynomial.X ^ j
+
+/-- `r(B) = n(B) d(B)⁻¹` for a bounded operator `B` (`d(B)` is invertible for dissipative `B`). -/
+def apply (B : E →L[𝕜] E) : E →L[𝕜] E :=
+  Polynomial.aeval B (r.num.map (algebraMap ℝ 𝕜)) *
+    Ring.inverse (Polynomial.aeval B (r.den.map (algebraMap ℝ 𝕜)))
+
+end RationalScheme
+
+variable [NormedSpace ℝ E]
+
+/-- `u` is a **strong solution** of `u' = A u` on `I`. -/
+def IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (u : ℝ → E) : Prop :=
+  ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A.graph ∧ HasDerivWithinAt u v I t
+
+/-- The semidiscrete evolution `exp(t B)`. -/
+def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X)
+    (t : ℝ) : X →L[𝕜] X :=
+  NormedSpace.exp ((t : 𝕜) • B)
+
+/-- **The FEEC theorem for an evolution** `u' = A u` approximated by `uₕ' = Bₕ uₕ` on the
+finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique strong solution
+from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; the semidiscrete solutions
+`exp(t Bₕ) vₕ` and the iterates `r(τₕ Bₕ)ⁿ vₕ` of every A-stable rational scheme of order
+`p ≥ 1` converge as `h, τₕ → 0`, the latter with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`; and
+a closed `K` reduces `A` iff `S` keeps both `K` and `Kᗮ` forward in time. -/
+structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
+    (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
+  dense : Dense (A.domain : Set E)
+  solution (x : E) (hx : x ∈ A.domain) (T : ℝ) : IsStrongSolution A (Icc 0 T) fun t => S t x
+  unique (x : E) (hx : x ∈ A.domain) (T : ℝ) (u : ℝ → E) (hu0 : u 0 = x)
+    (hu : IsStrongSolution A (Icc 0 T) u) : EqOn u (fun t => S t x) (Icc 0 T)
+  initial (x : E) : S 0 x = x
+  contraction (x : E) {t : ℝ} (ht : 0 ≤ t) : ‖S t x‖ ≤ ‖x‖
+  semidiscrete (x : E) (v : ∀ h, X h) (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) :
+    TendstoUniformlyOn (fun h (t : ℝ) => (semiflow (B h) t (v h) : E))
+      (fun t => S t x) l (Icc 0 T)
+  rational (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (hp0 : 0 < p)
+    (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (x : E) (v : ∀ h, X h)
+    (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
+      ‖S (n * τ h) x - ((r.apply ((τ h : 𝕜) • B h) ^ n) (v h) : E)‖ < ε
+  /-- `K` independent of `h`, `τ`, `n`, `w` -/
+  rational_temporal (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
+    ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
+      ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
+        K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
+  /-- a closed `K` reduces `A` iff `S t`, `t ≥ 0`, maps `K` into `K` and `Kᗮ` into `Kᗮ` (the
+  criterion for m-dissipative `A`; for a unitary group, `WaveVerdict.propagates_iff` asks `K`
+  alone, for all `t`) -/
+  reducing_iff (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : IsReducing A K ↔
+    (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ
+
+end Evolution
+
+/-! ### Windows and the wave and heat verdicts (verbatim from `palomar/feec`) -/
+
+/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of a window (an `ℓ²` sum). -/
+abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
+
+namespace HilbertComplex
+
+section Window
+
+variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
+
+/-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
+def totalDomain : Submodule 𝕜 (Total W a m) where
+  carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
+  add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
+  zero_mem' _ _ := (H.d _ _).domain.zero_mem
+  smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
+
+/-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
+def totalD : Total W a m →ₗ.[𝕜] Total W a m where
+  domain := H.totalDomain a m
+  toFun :=
+    { toFun := fun x => WithLp.toLp 2 fun j : Fin m =>
+        ∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, x.2 i j⟩
+      map_add' := fun x y => PiLp.ext fun j => by
+        rw [PiLp.add_apply, PiLp.toLp_apply, PiLp.toLp_apply, PiLp.toLp_apply,
+          ← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_add ⟨_, x.2 i j⟩ ⟨_, y.2 i j⟩
+      map_smul' := fun c x => PiLp.ext fun j => by
+        rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
+          Finset.smul_sum]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
+
+/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
+def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
+
+/-- The harmonic forms `ℌ = N(𝐝) ∩ N(𝐝*)` of the window. -/
+def totalHarmonic : Submodule 𝕜 (Total W a m) := (H.totalD a m).ker ⊓ (H.totalD a m)†.ker
+
+end Window
+
+namespace SubcomplexFamily
+
+variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) (a : ℤ) (m : ℕ)
+
+/-- The discrete total space `Xₕ = Vₕᵃ ⊕ ⋯ ⊕ Vₕ^{a+m-1}`. -/
+def Xh (h : κ) : Submodule 𝕜 (Total W a m) where
+  carrier := {x | ∀ i : Fin m, x i ∈ (F.V h).V (a + (i : ℕ))}
+  add_mem' hx hy i := add_mem (hx i) (hy i)
+  zero_mem' _ := zero_mem _
+  smul_mem' c _ hx i := Submodule.smul_mem _ c (hx i)
+
+instance (h : κ) : FiniteDimensional 𝕜 (F.Xh a m h) :=
+  Module.Finite.of_injective
+    (LinearMap.pi fun i : Fin m => LinearMap.codRestrict ((F.V h).V (a + (i : ℕ)))
+      ((PiLp.projₗ 2 _ i).comp (F.Xh a m h).subtype) fun x => x.2 i)
+    fun _ _ hxy => Subtype.ext (PiLp.ext fun i => congrArg Subtype.val (congrFun hxy i))
+
+theorem Xh_le (h : κ) : F.Xh a m h ≤ H.totalDomain a m :=
+  fun _ hx _ _ => (F.V h).le_domain _ _ (hx _)
+
+/-- The discrete total differential `𝐝ₕ : Xₕ → Xₕ`. -/
+def Dh (h : κ) : F.Xh a m h →L[𝕜] F.Xh a m h :=
+  LinearMap.toContinuousLinearMap <| LinearMap.codRestrict _
+    ((H.totalD a m).toFun ∘ₗ Submodule.inclusion (F.Xh_le a m h)) fun x j =>
+      show (∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, _⟩) ∈ _ from
+        Submodule.sum_mem _ fun i _ => (F.V h).mapsTo _ _ _ (x.2 i)
+
+/-- The discrete wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*`. -/
+def Lh (h : κ) : F.Xh a m h →L[𝕜] F.Xh a m h := F.Dh a m h - (F.Dh a m h).adjoint
+
+/-- The distance `inf_{w ∈ Xₕ} ‖y - w‖ + ‖𝐝 y - 𝐝 w‖` from `y ∈ D(𝐝)` to `Xₕ` in the graph
+norm of the window. -/
+def graphDist (h : κ) (y : (H.totalD a m).domain) : ℝ :=
+  ⨅ w : F.Xh a m h, ‖(y : Total W a m) - w‖ +
+    ‖H.totalD a m y - H.totalD a m ⟨w, F.Xh_le a m h w.2⟩‖
+
+variable [∀ i, NormedSpace ℝ (W i)]
+
+/-- **The conclusions of the FEEC theorem for the Hodge wave equation** on the window, with
+exact evolution `S`. -/
+structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop where
+  /-- well-posedness and convergence of the semidiscrete and fully discrete solutions -/
+  evolution : EvolutionVerdict (H.wave a m) F.l (F.Xh a m) (F.Lh a m) S
+  /-- `S` is a unitary group -/
+  norm_eq (t : ℝ) (x : Total W a m) : ‖S t x‖ = ‖x‖
+  add (s t : ℝ) : S (s + t) = S s ∘L S t
+  /-- the semidiscrete error bound: for `x ∈ D(L²)`, if the graph-norm distances of `S(s) x` and
+  `S(s) L x` to `Xₕ` are at most `M` for `s ∈ [0, t]`, then
+  `‖S(t) x - exp(t Lₕ) v‖ ≤ ‖v - x‖ + 2 (1 + C_P) (1 + t) M`, `C_P = 4√3` the uniform bound of
+  the elliptic projections -/
+  error (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
+    (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) (v : F.Xh a m h) {t M : ℝ}
+    (ht : 0 ≤ t) (hM : ∀ s ∈ Icc 0 t, ∀ y : (H.totalD a m).domain,
+      (y : Total W a m) = S s x ∨ (y : Total W a m) = S s (H.wave a m ⟨x, hx⟩) →
+        F.graphDist a m h y ≤ M) :
+    ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
+      ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
+  /-- a closed constraint `K` propagates (for all `t`, forward and backward) iff it reduces `L`
+  (`IsReducing`, [Kato1995], §III.5.6) -/
+  propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
+    IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
+  /-- the invariant core: the data whose solutions stay in `K` form the largest closed subspace
+  `K* ⊆ K` reducing `L` -/
+  invariantCore (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
+    ∃ (Ks : Submodule 𝕜 (Total W a m)) (_ : Ks.HasOrthogonalProjection),
+      (∀ x, x ∈ Ks ↔ ∀ t, S t x ∈ K) ∧ IsReducing (H.wave a m) Ks ∧
+      ∀ (M : Submodule 𝕜 (Total W a m)) [M.HasOrthogonalProjection], M ≤ K →
+        IsReducing (H.wave a m) M → M ≤ Ks
+  /-- the constraint of a reducing subcomplex propagates: closed `Zⁱ ⊆ Wⁱ` with
+  `P_{Zⁱ} D(d) ⊆ D(d)` and `d P_{Zⁱ} = P_{Zʲ} d` ([QuennevilleBelair2015], Prop 4.16) -/
+  subcomplex (Z : ∀ i, Submodule 𝕜 (W i)) [∀ i, (Z i).HasOrthogonalProjection]
+    (hZ : ∀ i j (x : (H.d i j).domain), ∃ hx : (Z i).starProjection (x : W i) ∈ (H.d i j).domain,
+      H.d i j ⟨_, hx⟩ = (Z j).starProjection (H.d i j x))
+    (t : ℝ) (x : Total W a m) (hx : ∀ i : Fin m, x i ∈ Z (a + (i : ℕ))) (i : Fin m) :
+    S t x i ∈ Z (a + (i : ℕ))
+
+/-- **The conclusions of the FEEC theorem for the Hodge wave and heat equations** on the
+window. -/
+structure DynamicVerdict : Prop where
+  /-- the wave equation `ξ' = L ξ` -/
+  wave : ∃ S, F.WaveVerdict a m S
+  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm in the degrees
+  `a, …, a + m - 2` and in `W` in the last degree `a + m - 1` (which has no differential in the
+  window), and closed ranges in the window -/
+  heat (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
+    (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∃ C : ℝ, ∀ (h : κ)
+      (x : (H.d (a + (i : ℕ)) (a + (i : ℕ) + 1)).domain),
+        ‖((F.π h).π _ x : W (a + (i : ℕ)))‖ ≤ C * ‖(x : W (a + (i : ℕ)))‖)
+    (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
+      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
+    ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
+    EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
+
+
+end SubcomplexFamily
 
 end HilbertComplex
 

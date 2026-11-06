@@ -10,7 +10,8 @@ A `Feec.HilbertComplex` on `ComplexShape.up ℤ` is a Hilbert complex of the cha
 fields (`HilbertComplex.ofFeec`), and so are its subcomplexes (`Subcomplex.ofFeec`); a `Feec`
 cochain projection, defined on `W`, restricts to the domain complex (`CochainProjection.ofFeec`).
 The graph-norm bounds and the graph-norm approximation of `Feec` give those of the challenge
-(`isGraphBoundedBy_of_feec`, `approximates_of_eventually`).
+(`isGraphBoundedBy_of_feec`, `approximates_of_eventually`), and graph-norm approximation gives
+approximation in `W` (`tendsto_infDist`).
 
 ## References
 
@@ -117,6 +118,22 @@ theorem approximates_of_eventually {κ : Type*} (F : H.SubcomplexFamily κ) (i :
     rw [show (2 : ℝ) = √4 by rw [show (4 : ℝ) = 2 ^ 2 by norm_num, Real.sqrt_sq (by norm_num)]]
     exact Real.sqrt_lt_sqrt (by norm_num) (by norm_num)
   nlinarith
+
+/-- **Approximation in `W` from approximation in the graph norm**: `D(d)` is dense, and the
+distance in `W` is at most the graph-norm distance. -/
+theorem tendsto_infDist {κ : Type*} (F : H.SubcomplexFamily κ) {i : ℤ} (hA : F.Approximates i)
+    (x : W i) : Tendsto (fun h => Metric.infDist x ((F.V h).V i)) F.l (𝓝 0) := by
+  rw [Metric.tendsto_nhds]
+  intro ε hε
+  obtain ⟨y, hyD, hy⟩ := (H.dense i (i + 1)).exists_dist_lt x (half_pos hε)
+  filter_upwards [(tendsto_order.1 (hA ⟨y, hyD⟩)).2 (ε / 2) (half_pos hε)] with h hh
+  obtain ⟨v, hv⟩ := exists_lt_of_ciInf_lt hh
+  have hyv : dist y v ≤ H.graphNorm i (i + 1) (⟨y, hyD⟩ - ⟨v, (F.V h).le_domain i (i + 1) v.2⟩) :=
+    (dist_eq_norm y v).trans_le (Real.le_sqrt_of_sq_le (le_add_of_nonneg_right (sq_nonneg _)))
+  rw [Real.dist_eq, sub_zero, abs_of_nonneg Metric.infDist_nonneg]
+  calc Metric.infDist x ((F.V h).V i) ≤ dist x v := Metric.infDist_le_dist_of_mem v.2
+    _ ≤ dist x y + dist y v := dist_triangle _ _ _
+    _ < ε := by linarith
 
 end HilbertComplex
 

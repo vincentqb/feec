@@ -1,6 +1,7 @@
 module
 
 public import Solution.Complex
+public import Solution.Dynamic
 public import Solution.Forms
 public import Solution.Spaces
 public import Solution.Regularity
@@ -15,10 +16,13 @@ theory of `Feec.Models.StarShaped.PolyFiniteElement` on the star domain and the 
 challenge (`starDomainOf`, `meshFamilyOf`): the complexes `MeshFamily.poly` and
 `MeshFamily.polyMin` of the admissible sequence (whose spaces are the challenge's,
 `mem_V_iff`, `mem_V₀_iff`), the uniformly bounded smoothed projections
-(`MeshFamily.exists_uniform_polyProj`, `_Min`), the graph-norm density
-(`MeshFamily.eventually_exists_poly_graph`, `_Min`) and the interpolation error
-(`MeshFamily.exists_mem_poly_le_of_isCsForm`, `_Min`); the complexes are `Feec`'s `HΛ(Ω)` and
-`H̊Λ(Ω)` (`dMax_eq`, `dMin_eq`). `FEEC.fem_parallelepiped` from
+(`MeshFamily.exists_uniform_polyProj`, `_Min`; defined on all of `L²`, so their `L²` extensions
+are themselves), the graph-norm density (`MeshFamily.eventually_exists_poly_graph`, `_Min`) and
+the interpolation error (`MeshFamily.exists_mem_poly_le_of_isCsForm`, `_Min`); the complexes are
+`Feec`'s `HΛ(Ω)` and `H̊Λ(Ω)` (`dMax_eq`, `dMin_eq`). The wave and heat verdicts on every window
+from `Feec`'s crown through `Solution.Dynamic` (`HilbertComplex.SubcomplexFamily.waveVerdict`,
+`heatVerdict`, as in `palomar/feec`), the window approximating by the graph-norm density
+(`approximates_window`, `tendsto_infDist`). `FEEC.fem_parallelepiped` from
 `Feec.Models.StarShaped.ParallelepipedWitness` (the star domain and the image Freudenthal meshes
 of `A (0, ½)ⁿ + b`, here with the matrix `2 A`) and `Feec.Models.Parallelepiped.closedRangeAt`,
 `closedRangeAt_min`.
@@ -28,6 +32,8 @@ of `A (0, ½)ⁿ + b`, here with the matrix `2 A`) and `Feec.Models.Parallelepip
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.2, §5.5
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 4
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -56,9 +62,10 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     ∃ (H : HilbertComplex ℝ (L2Form Ω)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ),
       (∀ k, H.d k (k + 1) = dMax Ω k) ∧ F.l = atTop ∧
       (∀ N k, ((F.V N).V k : Set (L2Form Ω k)) = femSpace Ω (M N) S k) ∧
-      (∃ C : ℝ, ∀ N i (x : (H.d i (i + 1)).domain),
-        ‖((F.π N).π i x : L2Form Ω i)‖ ≤ C * ‖(x : L2Form Ω i)‖) ∧
-      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
+      (∃ C : ℝ, ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ C ∧
+        (∀ x, P x ∈ (F.V N).V i) ∧
+          ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i)) ∧
+      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧ (∀ a m, F.DynamicVerdict a m) ∧
       (∀ N, J.meshSize N = meshSize (M N)) ∧ (∀ s, J.ord s = s + 1) ∧
       ∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsCsForm Ω s j L x := by
   set D := starDomainOf hΩ
@@ -88,24 +95,30 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
             meshFamilyOf_mesh, SimplicialMesh.meshSize_toFeec]
           ring
         exact ⟨v, hv, e ▸ h1, fun j hxj => e ▸ h2 j hxj⟩ }
-  refine ⟨H, F, J, fun k => dMax_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, fun N i x => ?_⟩,
-    fun i => ⟨K, fun N x => ?_⟩, fun i => ?_, fun N => rfl, fun s => rfl, fun s j L x => Iff.rfl⟩
+  have hA : ∀ i, F.Approximates i := fun i =>
+    H.approximates_of_eventually F i fun x ε hε =>
+      Fm.eventually_exists_poly_graph S.toFeec i x.1 x.2 hε
+  refine ⟨H, F, J, fun k => dMax_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, fun N i =>
+    ⟨(π N).π i |>.mkContinuous K (hπ1 N i), LinearMap.mkContinuous_norm_le _ (by linarith) _,
+      (π N).mem i, fun x => rfl⟩⟩, fun i => ⟨K, fun N x => ?_⟩, hA, fun a m => ?_, fun N => rfl,
+    fun s => rfl, fun s j L x => Iff.rfl⟩
   · ext u
     exact mem_V_iff S (M N) Ω (hM.1 N) u
-  · exact hπ1 N i x.1
   · refine H.graphNorm_le_of_sq (by linarith) ?_
     exact hπ2 N i (i + 1) x
-  · refine H.approximates_of_eventually F i fun x ε hε => ?_
-    exact Fm.eventually_exists_poly_graph S.toFeec i x.1 x.2 hε
+  · have happ := F.approximates_window a m (fun i _ => hA _) fun i _ x =>
+      H.tendsto_infDist F (hA _) x
+    exact ⟨F.waveVerdict a m happ, fun hπ hπ' hcr => F.heatVerdict a m happ hπ hπ' hcr⟩
 
 theorem femMin [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) :
     ∃ (H : HilbertComplex ℝ (L2Form Ω)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ),
       (∀ k, H.d k (k + 1) = dMin Ω k) ∧ F.l = atTop ∧
       (∀ N k, ((F.V N).V k : Set (L2Form Ω k)) = femSpaceMin Ω (M N) S k) ∧
-      (∃ C : ℝ, ∀ N i (x : (H.d i (i + 1)).domain),
-        ‖((F.π N).π i x : L2Form Ω i)‖ ≤ C * ‖(x : L2Form Ω i)‖) ∧
-      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
+      (∃ C : ℝ, ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ C ∧
+        (∀ x, P x ∈ (F.V N).V i) ∧
+          ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i)) ∧
+      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧ (∀ a m, F.DynamicVerdict a m) ∧
       (∀ N, J.meshSize N = meshSize (M N)) ∧ (∀ s, J.ord s = s + 1) ∧
       ∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsCsFormMin Ω s j L x := by
   set D := starDomainOf hΩ
@@ -135,15 +148,20 @@ theorem femMin [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
             meshFamilyOf_mesh, SimplicialMesh.meshSize_toFeec]
           ring
         exact ⟨v, hv, e ▸ h1, fun j hxj => e ▸ h2 j hxj⟩ }
-  refine ⟨H, F, J, fun k => dMin_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, fun N i x => ?_⟩,
-    fun i => ⟨K, fun N x => ?_⟩, fun i => ?_, fun N => rfl, fun s => rfl, fun s j L x => Iff.rfl⟩
+  have hA : ∀ i, F.Approximates i := fun i =>
+    H.approximates_of_eventually F i fun x ε hε =>
+      Fm.eventually_exists_polyMin_graph S.toFeec i x.1 x.2 hε
+  refine ⟨H, F, J, fun k => dMin_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, fun N i =>
+    ⟨(π N).π i |>.mkContinuous K (hπ1 N i), LinearMap.mkContinuous_norm_le _ (by linarith) _,
+      (π N).mem i, fun x => rfl⟩⟩, fun i => ⟨K, fun N x => ?_⟩, hA, fun a m => ?_, fun N => rfl,
+    fun s => rfl, fun s j L x => Iff.rfl⟩
   · ext u
     exact mem_V₀_iff S (M N) Ω (hM.1 N) u
-  · exact hπ1 N i x.1
   · refine H.graphNorm_le_of_sq (by linarith) ?_
     exact hπ2 N i (i + 1) x
-  · refine H.approximates_of_eventually F i fun x ε hε => ?_
-    exact Fm.eventually_exists_polyMin_graph S.toFeec i x.1 x.2 hε
+  · have happ := F.approximates_window a m (fun i _ => hA _) fun i _ x =>
+      H.tendsto_infDist F (hA _) x
+    exact ⟨F.waveVerdict a m happ, fun hπ hπ' hcr => F.heatVerdict a m happ hπ hπ' hcr⟩
 
 /-! ### Parallelepipeds -/
 

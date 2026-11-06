@@ -291,9 +291,6 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
 /-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
 
-/-- The harmonic forms `ℌ = N(𝐝) ∩ N(𝐝*)` of the window. -/
-def totalHarmonic : Submodule 𝕜 (Total W a m) := (H.totalD a m).ker ⊓ (H.totalD a m)†.ker
-
 end Window
 
 namespace SubcomplexFamily
@@ -388,7 +385,6 @@ structure DynamicVerdict : Prop where
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
     ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
-
 
 end SubcomplexFamily
 

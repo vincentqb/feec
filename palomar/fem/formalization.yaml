@@ -14,8 +14,8 @@ project:
     families with cochain projections, graph-norm bounds and approximation, Jackson estimates,
     windows of degrees with the wave operator L = d - d*, and the conclusions of its FEEC
     theorem for the Hodge wave and heat equations, EvolutionVerdict, WaveVerdict,
-    DynamicVerdict) copied verbatim, so that the families of this entry are families in the sense of the theorem
-    FEEC.feec of palomar/feec. Four compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
+    DynamicVerdict) copied verbatim, so that the families of this entry are families in the
+    sense of the theorem FEEC.feec of palomar/feec. Four compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
     bounded open domain star-shaped with respect to a ball, M_N conforming simplicial meshes of
     Omega (Mathlib's Affine.Simplex), uniformly shape regular (every simplex T contains a ball of
     radius rho with h_T <= sigma rho, i.e. h_T / rho_T <= sigma) and quasi-uniform
@@ -46,8 +46,9 @@ project:
     FEEC.femMin: the same for the minimal complex (the closure of d on test forms) and the
     spaces with vanishing tangential traces on the boundary facets, for smooth forms vanishing
     outside Omega (the wave verdict on the window [0, 3) for n = 3 is Maxwell's equations with
-    perfect-electric-conductor walls). FEEC.fem_parallelepiped: every parallelepiped A (0,1)^n + b, A invertible
-    (every open box), is a domain star-shaped with respect to a ball carrying such a mesh family,
+    perfect-electric-conductor walls). FEEC.fem_parallelepiped: every parallelepiped
+    A (0,1)^n + b, A invertible (every open box), is a domain star-shaped with respect to a ball
+    carrying such a mesh family,
     and the weak and the minimal exterior derivatives have closed range in every degree; so the
     static FEEC theorem of palomar/feec (discrete Poincare inequality, stability and
     quasi-optimality of the mixed Hodge Laplacian, cohomology) and its rates, and the heat
@@ -219,7 +220,8 @@ status:
     Formalized and compared: FEEC.fem and FEEC.femMin for every dimension n >= 1, every bounded
     open domain star-shaped with respect to a ball, every shape-regular quasi-uniform family of
     conforming simplicial meshes of it with h_N -> 0, and every admissible sequence with r_k >= 1,
-    including the wave and heat verdicts on every window of degrees; FEEC.fem_parallelepiped for every parallelepiped; FEEC.maxwell for n = 3 on the same domains
+    including the wave and heat verdicts on every window of degrees; FEEC.fem_parallelepiped for
+    every parallelepiped; FEEC.maxwell for n = 3 on the same domains
     and meshes. Not compared (proved in Feec, outside the
     statement): the Whitney forms as a separate family (they are the sequence P_1^- in every
     degree), the dimension counts and unisolvence of the degrees of freedom, the finite element
@@ -306,16 +308,17 @@ fidelity:
     derivatives up to order s+2 vanish on the boundary: a smaller class than the usual one
     (vanishing tangential trace only).
     (8) The boundary facets of femSpaceMin are the facets of a single simplex of the mesh.
-    The window verdicts are stated for every window, the heat verdict with the closed-range
-    hypothesis of palomar/feec in the window (proved on parallelepipeds, not on general
-    star-shaped domains); its other hypotheses (graph-norm and L^2 bounds of the projections)
-    hold for these families by the preceding clauses.
-    (9) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
+    (9) The window verdicts are stated for every window; the heat verdict keeps the closed-range
+    hypothesis of palomar/feec in the window (proved here on parallelepipeds by
+    FEEC.fem_parallelepiped; true on Lipschitz domains, not formalized for general star-shaped
+    domains), its other hypotheses (graph-norm and L^2 bounds of the projections) holding for
+    these families by the preceding clauses. The wave verdict has no hypothesis.
+    (10) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
     natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy and
     H = -B the magnetic field): E . n = 0 and B x n = 0 (H x n = 0) enter through the adjoints
     grad* and curl*, the physical PMC walls; the perfect electric conductor (the minimal
-    complex) is compared only in forms, as the window [0, 3) of FEEC.femMin. Scalar fields are L^2 fields with one component
-    (Fin 1), and the state is the triple (sigma, E, B) with the scalar potential sigma of the
+    complex) is compared only in forms, as the window [0, 3) of FEEC.femMin. Scalar fields are
+    L^2 fields with one component (Fin 1), and the state is the triple (sigma, E, B) with the scalar potential sigma of the
     Hodge wave equation (sigma = 0 is one of the Gauss laws). Data lie in the domain of the
     Maxwell operator; the statement has no rate (the Jackson estimate of FEEC.fem with the rates
     of palomar/feec gives them, not restated here). The Galerkin solutions are differentiable

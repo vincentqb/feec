@@ -350,9 +350,6 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
 /-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
 
-/-- The harmonic forms `ℌ = N(𝐝) ∩ N(𝐝*)` of the window. -/
-def totalHarmonic : Submodule 𝕜 (Total W a m) := (H.totalD a m).ker ⊓ (H.totalD a m)†.ker
-
 end Window
 
 namespace SubcomplexFamily
@@ -447,7 +444,6 @@ structure DynamicVerdict : Prop where
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
     ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
     EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
-
 
 end SubcomplexFamily
 
@@ -780,13 +776,13 @@ def IsMaxwellGalerkin (Ω : Set (Fin 3 → ℝ)) (V₀ : Set (L2Field Ω (Fin 1)
 star-shaped with respect to a ball, `M_N` a shape-regular, quasi-uniform family of meshes of `Ω`
 with `h_N → 0`, and `S` an admissible sequence. Then `HΛ(Ω)` (the weak exterior derivative
 `dMax`) is a Hilbert complex, and the finite element spaces `S_k(M_N)` are the spaces of a family
-of finite-dimensional subcomplexes of it, along `N → ∞`, whose cochain projections extend to
-bounded projections `P` of `L²(Ω; Λ)` onto `S_k(M_N)` with `‖P‖` bounded uniformly in `N`, are
-hence bounded in every graph norm, which approximates every element of `HΛᵏ(Ω)` in the graph
-norm, which satisfies the wave and heat verdicts of the FEEC theorem on every window `[a, a + m)`
-of form degrees (`HilbertComplex.SubcomplexFamily.DynamicVerdict`; the heat verdict under closed
-range in the window), and which has a Jackson estimate of order `h_N^{s+1}` for the `C^{s+2}`
-forms (`IsCsForm`) of the degrees where `S` reproduces `P_sΛ` (`PolySeq.PolyOrderAt`). -/
+of finite-dimensional subcomplexes of it, along `N → ∞`, such that: the cochain projections
+extend to projections `P` of `L²(Ω; Λᵏ)` onto `S_k(M_N)` with `‖P‖` bounded uniformly in `N`,
+hence are bounded in every graph norm; the family approximates every element of `HΛᵏ(Ω)` in the
+graph norm; it satisfies the wave and heat verdicts of the FEEC theorem on every window
+`[a, a + m)` of form degrees (`HilbertComplex.SubcomplexFamily.DynamicVerdict`; the heat verdict
+under closed range in the window); and it has a Jackson estimate of order `h_N^{s+1}` for the
+`C^{s+2}` forms (`IsCsForm`) of the degrees where `S` reproduces `P_sΛ` (`PolySeq.PolyOrderAt`). -/
 theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) :
     ∃ (H : HilbertComplex ℝ (L2Form Ω)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ),

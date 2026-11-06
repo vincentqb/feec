@@ -1,0 +1,254 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of finite element exterior calculus on
+# polyhedral domains (`palomar/fem/`), the concrete counterpart of `palomar/feec/`.
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: "Finite element exterior calculus on polyhedral domains: the P_r^- Lambda and P_r Lambda families"
+  description: >-
+    The finite element de Rham complexes of Arnold-Falk-Winther on simplicial meshes, stated over
+    Mathlib with the definitions of the Palomar entry palomar/feec (Hilbert complexes, subcomplex
+    families with cochain projections, graph-norm bounds and approximation, Jackson estimates)
+    copied verbatim, so that the families of this entry are families in the sense of the theorem
+    FEEC.feec of palomar/feec. Three compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
+    bounded open domain star-shaped with respect to a ball, M_N conforming simplicial meshes of
+    Omega (Mathlib's Affine.Simplex), uniformly shape regular (||B_T|| <= C h_T,
+    ||B_T^-1|| <= C / h_T, c h_T^n <= |det B_T| for the edge matrix B_T) and quasi-uniform
+    (q h_N <= h_T), with mesh size h_N -> 0, and S an admissible sequence of polynomial families
+    (P_(r_k) Lambda^k or P_(r_k)^- Lambda^k in each degree, r_k >= 1, consecutive degrees
+    related by the transitions of AFW2006 §5 / AFW2010 §5.2). Then the L^2 de Rham complex
+    H Lambda(Omega) with the weak exterior derivative (the adjoint of the formal adjoint d^t on
+    test forms) is a Hilbert complex, and the finite element spaces S_k(M_N) (the L^2 forms that
+    are on every simplex a polynomial form of S_k, with single-valued tangential traces on the
+    common faces of the mesh) are the spaces of a family of finite-dimensional subcomplexes of it,
+    N -> infinity, with commuting cochain projections bounded in L^2 uniformly in N (the smoothed
+    projections of AFW2010 §5.5, Christiansen-Winther 2008) and hence in every graph norm, which
+    approximates every element of H Lambda^k(Omega) in the graph norm, and which has a Jackson
+    estimate: a C^(s+2) form whose (s+1)-st derivatives and those of its exterior derivative are
+    bounded by L on the closure of Omega is approximated in S_j(M_N) to within B L h_N^(s+1) in
+    L^2 and for d, in the degrees j where S contains P_s Lambda^j and P_s Lambda^(j+1).
+    FEEC.femMin: the same for the minimal complex (the closure of d on test forms) and the
+    spaces with vanishing tangential traces on the boundary facets, for smooth forms vanishing
+    outside Omega. FEEC.fem_parallelepiped: every parallelepiped A (0,1)^n + b, A invertible
+    (every open box), is a domain star-shaped with respect to a ball carrying such a mesh family,
+    and the weak and the minimal exterior derivatives have closed range in every degree; so the
+    static FEEC theorem of palomar/feec (discrete Poincare inequality, stability and
+    quasi-optimality of the mixed Hodge Laplacian, cohomology) and its rates apply to the
+    families of FEEC.fem and FEEC.femMin there with no remaining hypothesis. The proof is the
+    library Feec of this repository (Feec.FiniteElement, Feec.Models.StarShaped,
+    Feec.Models.Parallelepiped, Feec.Mesh).
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.NA", "math.FA"]
+  msc2020: ["65N30", "58A10", "58A14", "65N12", "65N15"]
+
+sources:
+  - title: "Finite element exterior calculus, homological techniques, and applications"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1017/S0962492906210018"
+    type: "article"
+    location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential), §5 (degrees of freedom, assembly of the global spaces with single-valued traces, admissible sequences (5.13))"
+    relationship: "formalizes"
+    note: >-
+      The polynomial spaces are stated in coordinates (a polynomial coefficient for each dx_s),
+      P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1). The global spaces are
+      stated as piecewise polynomial forms with single-valued tangential traces on every common
+      face of two simplices; the degrees of freedom (moments over faces), their unisolvence and
+      the assembly from them are proved in Feec and identified with this description in the
+      solution, not stated. Locators as cited in Feec, not rechecked for this entry.
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.5 (subcomplexes, bounded cochain projections, approximation, Jackson-type estimates), §4 (the L^2 de Rham complex), §5.2 (the complexes of P_r Lambda and P_r^- Lambda), §5.5 (smoothed projections)"
+    relationship: "formalizes"
+    note: >-
+      The smoothed projections are constructed in Feec for shape-regular quasi-uniform meshes of a
+      domain star-shaped with respect to a ball (the extension-dilation-mollification construction),
+      and stated only through their properties (uniform L^2 bound, commutation, projection).
+      Locators as cited in Feec, not rechecked for this entry.
+    author_endorsement: "not-contacted"
+  - title: "Smoothed projections in finite element exterior calculus"
+    authors:
+      - "Snorre H. Christiansen"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0025-5718-07-02081-9"
+    type: "article"
+    location: "Math. Comp. 77 (2008), the smoothed projections and their uniform L^2 bounds"
+    relationship: "formalizes"
+    note: "Locator as cited in Feec, not rechecked for this entry."
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Exterior Calculus"
+    authors:
+      - "Douglas N. Arnold"
+    id: "doi:10.1137/1.9781611975543"
+    type: "book"
+    location: "CBMS-NSF Regional Conference Series in Applied Mathematics 93 (2018), Ch. 6 (the L^2 de Rham complex), Ch. 7 (finite element spaces, approximation estimates)"
+    relationship: "formalizes"
+    author_endorsement: "not-contacted"
+  - title: "The Finite Element Method for Elliptic Problems"
+    authors:
+      - "Philippe G. Ciarlet"
+    id: "doi:10.1137/1.9780898719208"
+    type: "book"
+    location: "§3.1-§3.2 (shape-regular families, interpolation error)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Simplizialzerlegungen von beschränkter Flachheit"
+    authors:
+      - "Hans Freudenthal"
+    id: "doi:10.2307/1968813"
+    type: "article"
+    location: "Ann. of Math. 43 (1942) (the Freudenthal triangulations used for the mesh families of FEEC.fem_parallelepiped)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "A New Approach to Finite Element Simulations of General Relativity"
+    authors:
+      - "Vincent Quenneville-Bélair"
+    id: "http://hdl.handle.net/11299/175309"
+    type: "PhD thesis, University of Minnesota, 2015"
+    location: "Ch. 4 (finite element approximation of Hilbert complexes), Ch. 5 (finite element spaces on the cube)"
+    relationship: "background"
+    note: >-
+      The thesis of the formalization's author uses these finite element complexes for the
+      Hodge wave equation; the results of this entry are not attributed to the thesis.
+    author_endorsement: "participated"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: FEEC.fem and FEEC.femMin for every dimension n >= 1, every bounded
+    open domain star-shaped with respect to a ball, every shape-regular quasi-uniform family of
+    conforming simplicial meshes of it with h_N -> 0, and every admissible sequence with r_k >= 1;
+    FEEC.fem_parallelepiped for every parallelepiped. Not compared (proved in Feec, outside the
+    statement): the Whitney forms as a separate family (they are the sequence P_1^- in every
+    degree), the dimension counts and unisolvence of the degrees of freedom, the finite element
+    theory of the cube with mixed boundary conditions, the cubical and weak-symmetry elements,
+    the Maxwell and Einstein-Bianchi instances, the H^1 approximation of the smoothed projections;
+    the closed range on general star-shaped domains (a hypothesis of the static theory there,
+    true on Lipschitz domains by Costabel-McIntosh 2010, not formalized).
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals (the thesis and the FEEC literature), the
+        statement design and the review standard; agents proposed and proved lemmas.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge statement and its definitions were
+    written by an AI agent for this submission, to be reviewed by the author; the Solution
+    identifies them with the definitions of the library Feec (Solution/Forms.lean, Poly.lean,
+    Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean) and applies its theorems.
+
+fidelity:
+  divergences: >-
+    (1) Coordinates: points of R^n are Fin n -> R (sup norm), forms are given by their
+    coefficients on dx_s, s an increasing k-subset of Fin n, and L^2(Omega; Lambda^k) is the
+    l^2 sum of copies of L^2(Omega); this is the standard coordinate model, not Mathlib's
+    (alternating-map) differential forms.
+    (2) The weak exterior derivative is defined as the adjoint of the closure of the formal
+    adjoint d^t on test forms (Mathlib's LinearPMap.adjoint), and the minimal one as the closure
+    of d on test forms (Submodule.toLinearPMap of the closed graph); the docstrings state the
+    weak characterization, which is Mathlib's definition of the adjoint domain.
+    (3) The finite element spaces are stated as piecewise polynomial forms with single-valued
+    tangential traces on every common face (the trace agreement on all subsimplices, not only on
+    facets); the sources define them through degrees of freedom or as the piecewise polynomial
+    forms in H Lambda^k(Omega). The equivalence with the degrees of freedom is proved in the
+    solution; the equivalence with membership in H Lambda^k is not stated (the conformity
+    direction is a consequence of the subcomplex property, which is compared).
+    (4) Shape regularity is stated through the edge matrix (||B_T|| <= C h_T,
+    ||B_T^-1|| <= C / h_T, c h_T^n <= |det B_T|), equivalent to a bound on h_T / rho_T
+    (Ciarlet §3.1); the equivalence is not stated. Quasi-uniformity is assumed (the smoothed
+    projections of Feec use a fixed mollification scale h_N); the sources' local variants for
+    merely shape-regular meshes are not formalized.
+    (5) Admissible sequences have r_k >= 1 in every degree; the piecewise constants
+    P_0 Lambda^n are the equal space P_1^- Lambda^n, and the sequences through P_0 Lambda^k with
+    k < n are not covered.
+    (6) Domains: bounded open, star-shaped with respect to a ball (which implies Lipschitz);
+    the sources (AFW2010 §5.5, Christiansen-Winther 2008) allow general Lipschitz polyhedral
+    domains, which are not covered (the extension-dilation construction of the
+    smoothed projections in Feec uses star-shapedness). The closed range of d, needed by the
+    static theory, is proved only on parallelepipeds (FEEC.fem_parallelepiped).
+    (7) The Jackson estimate is for C^(s+2) forms with bounded (s+1)-st derivatives on the
+    closure of Omega (one more derivative than the order requires), not for Sobolev data; the
+    Sobolev rates proved in Feec on the cube are not compared.
+    For femMin the smooth form must vanish outside Omega and be C^(s+2) on R^n, so its
+    derivatives up to order s+2 vanish on the boundary: a smaller class than the usual one
+    (vanishing tangential trace only).
+    (8) The boundary facets of femSpaceMin are the facets of a single simplex of the mesh.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    Not yet reviewed by the author: the Challenge statement (the three compared theorems and
+    their definitions, 2026-11-06). Every merge of the library was gated by a full build (zero
+    warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
+    review. No external mathematical review.
+
+alignment:
+  namespace: "FEEC"
+  statements:
+    - source: "[AFW2006] §5; [AFW2010] §5.2, §5.5; [ChristiansenWinther2008]; [Arnold2018] Ch. 7"
+      lean: "FEEC.fem"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.Models.StarShaped.MeshFamily.poly, exists_uniform_polyProj,
+        eventually_exists_poly_graph and exists_mem_poly_le_of_isCsForm; the spaces through
+        Solution/Spaces.lean (mem_V_iff).
+    - source: "[AFW2010] §5.2, §5.5 (vanishing boundary traces)"
+      lean: "FEEC.femMin"
+      module: "Challenge"
+      status: "proved"
+      note: "As FEEC.fem with the Min versions; the spaces through mem_V₀_iff."
+    - source: "[Freudenthal1942]; [AFW2010] §4 (closed range)"
+      lean: "FEEC.fem_parallelepiped"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.Models.StarShaped.ParallelepipedWitness and
+        Feec.Models.Parallelepiped.closedRangeAt, closedRangeAt_min.
+
+acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

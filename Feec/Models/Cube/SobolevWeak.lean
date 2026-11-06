@@ -209,28 +209,63 @@ theorem norm_symb_sq (l : List (Fin n)) (m : Fin n → ℤ) :
       push_cast; ring, norm_mul, Complex.norm_I, mul_one, Complex.norm_real, Real.norm_eq_abs,
       sq_abs]
 
+section IterPartial
+
+variable {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+
 /-- **Iterated partial derivatives** along a list of directions:
 `∂^{[j₁, …, j_p]} f = ∂_{j₁} ⋯ ∂_{j_p} f`. -/
-def iterPartial : List (Fin n) → ((Fin n → ℝ) → ℝ) → (Fin n → ℝ) → ℝ
+def iterPartial : List (Fin n) → ((Fin n → ℝ) → F) → (Fin n → ℝ) → F
   | [], f => f
   | j :: l, f => partialDeriv j (iterPartial l f)
 
-@[simp] theorem iterPartial_nil (f : (Fin n → ℝ) → ℝ) : iterPartial [] f = f := rfl
+@[simp] theorem iterPartial_nil (f : (Fin n → ℝ) → F) : iterPartial [] f = f := rfl
 
-theorem iterPartial_cons (j : Fin n) (l : List (Fin n)) (f : (Fin n → ℝ) → ℝ) :
+theorem iterPartial_cons (j : Fin n) (l : List (Fin n)) (f : (Fin n → ℝ) → F) :
     iterPartial (j :: l) f = partialDeriv j (iterPartial l f) := rfl
 
-theorem iterPartial_append (l₁ l₂ : List (Fin n)) (f : (Fin n → ℝ) → ℝ) :
+/-- `∂^l f` as a fold of the partial derivatives along `l`. -/
+theorem iterPartial_eq_foldr (l : List (Fin n)) (f : (Fin n → ℝ) → F) :
+    iterPartial l f = l.foldr (fun j g => partialDeriv j g) f := by
+  induction l with
+  | nil => rfl
+  | cons j l ih => rw [iterPartial_cons, ih]; rfl
+
+theorem iterPartial_append (l₁ l₂ : List (Fin n)) (f : (Fin n → ℝ) → F) :
     iterPartial (l₁ ++ l₂) f = iterPartial l₁ (iterPartial l₂ f) := by
   induction l₁ with
   | nil => rfl
   | cons j l ih => rw [List.cons_append, iterPartial_cons, iterPartial_cons, ih]
 
-theorem contDiff_iterPartial {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ ∞ f) (l : List (Fin n)) :
+theorem contDiff_iterPartial {f : (Fin n → ℝ) → F} (hf : ContDiff ℝ ∞ f) (l : List (Fin n)) :
     ContDiff ℝ ∞ (iterPartial l f) := by
   induction l with
   | nil => exact hf
   | cons j l ih => exact ih.partialDeriv (by simp) j
+
+/-- Iterated partial derivatives commute with continuous linear maps. -/
+theorem iterPartial_clm {G : Type*} [NormedAddCommGroup G] [NormedSpace ℝ G] (T : F →L[ℝ] G)
+    {f : (Fin n → ℝ) → F} (hf : ContDiff ℝ ∞ f) (l : List (Fin n)) :
+    iterPartial l (fun y => T (f y)) = fun y => T (iterPartial l f y) := by
+  induction l with
+  | nil => rfl
+  | cons j l ih =>
+    funext y
+    rw [iterPartial_cons, ih, iterPartial_cons]
+    exact T.partialDeriv_comp ((contDiff_iterPartial hf l).differentiable (by simp) y) j
+
+/-- Functions equal on an open set have equal iterated partial derivatives there. -/
+theorem iterPartial_eqOn {O : Set (Fin n → ℝ)} (hO : IsOpen O) {f g : (Fin n → ℝ) → F}
+    (h : EqOn f g O) (l : List (Fin n)) : EqOn (iterPartial l f) (iterPartial l g) O := by
+  induction l with
+  | nil => exact h
+  | cons j l ih =>
+    intro y hy
+    rw [iterPartial_cons, iterPartial_cons]
+    exact Filter.EventuallyEq.partialDeriv_eq
+      (Filter.eventuallyEq_of_mem (hO.mem_nhds hy) ih) j
+
+end IterPartial
 
 /-- **Derivatives of real exponential sums**: `∂^l Re (Σ c_m e_m) = Re (Σ symb_l(m) c_m e_m)`. -/
 theorem iterPartial_re_expSum (S : Finset (Fin n → ℤ)) (c : (Fin n → ℤ) → ℂ)
@@ -533,7 +568,8 @@ section Weak
 
 variable {Ω : Set (Fin n → ℝ)}
 
-theorem isTest_iterPartial {φ : (Fin n → ℝ) → ℝ} (hφ : IsTest Ω φ) (l : List (Fin n)) :
+theorem isTest_iterPartial {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F]
+    {φ : (Fin n → ℝ) → F} (hφ : IsTest Ω φ) (l : List (Fin n)) :
     IsTest Ω (iterPartial l φ) := by
   induction l with
   | nil => exact hφ
@@ -859,10 +895,67 @@ theorem HasWeakDerivT.mFourierCoeff_eq {l : List (Fin n)}
   rw [← e]
   ring
 
+/-- **The power-mean inequality** `(1 + |ξ|²)^{m+1} ≤ (n + 1)ᵐ (1 + Σ_j ξ_j^{2(m+1)})`, at the
+frequency `q`: `⟨ξ_q⟩^{2(m+1)} |x(q)|² ≤ (n + 1)ᵐ (|x(q)|² + Σ_{j,t} (2π q_j)^{2(m+1)} |x(q)_t|²)`.
+-/
+theorem weight_mul_le_pure (x : Seq n k) (m : ℕ) (q : Fin n → ℤ) :
+    weight ((m + 1 : ℕ) : ℝ) q * ‖cf x q‖ ^ 2 ≤ (n + 1 : ℝ) ^ m *
+      (‖cf x q‖ ^ 2 + ∑ j, ∑ t : formIdx n (k : ℤ),
+        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2) := by
+  set a : Option (Fin n) → ℝ := fun i => i.elim 1 fun j => (2 * Real.pi * q j) ^ 2
+  have ha : ∀ i ∈ (Finset.univ : Finset (Option (Fin n))), 0 ≤ a i := fun i _ => by
+    cases i <;> simp [a, sq_nonneg]
+  have hpm := pow_sum_le_card_mul_sum_pow ha m
+  have hS : ∑ i, a i = 1 + ‖freq q‖ ^ 2 := by
+    rw [Fintype.sum_option, norm_freq_sq, Finset.mul_sum]
+    simp only [a, Option.elim]
+    congr 1
+    exact Finset.sum_congr rfl fun j _ => by ring
+  have hS' : ∑ i, a i ^ (m + 1) = 1 + ∑ j, ((2 * Real.pi * q j) ^ 2) ^ (m + 1) := by
+    rw [Fintype.sum_option]; simp [a]
+  rw [hS, hS', Finset.card_univ, Fintype.card_option, Fintype.card_fin] at hpm
+  rw [weight, Real.rpow_natCast]
+  calc (1 + ‖freq q‖ ^ 2) ^ (m + 1) * ‖cf x q‖ ^ 2
+      ≤ ((n + 1 : ℕ) : ℝ) ^ m * (1 + ∑ j, ((2 * Real.pi * q j) ^ 2) ^ (m + 1)) *
+        ‖cf x q‖ ^ 2 := mul_le_mul_of_nonneg_right (by exact_mod_cast hpm) (sq_nonneg _)
+    _ = _ := by
+      push_cast
+      rw [mul_assoc, add_mul, one_mul, Finset.sum_mul]
+      congr 2
+      refine Finset.sum_congr rfl fun j _ => ?_
+      rw [norm_cf_sq_eq_sum k, Finset.mul_sum]
+
+/-- **The Sobolev sum by the pure derivatives**: if `v j t = ∂_j^{m+1} (physF x)_t` weakly on
+`𝕋ⁿ`, then `Σ_q ⟨ξ_q⟩^{2(m+1)} |x(q)|² ≤ (n + 1)ᵐ (‖x‖² + Σ_{j,t} ‖v j t‖²)`
+(`weight_mul_le_pure`). -/
+theorem sobSum_le (x : Seq n k) {m : ℕ}
+    (v : Fin n → formIdx n (k : ℤ) → Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin n))))
+    (hv : ∀ j t, HasWeakDerivT (List.replicate (m + 1) j) (physF k x t) (v j t)) :
+    sobSum ((m + 1 : ℕ) : ℝ) x ≤ (n + 1 : ℝ) ^ m * (‖x‖ ^ 2 + ∑ j, ∑ t, ‖v j t‖ ^ 2) := by
+  have hpure : ∀ j t, HasSum (fun q : Fin n → ℤ =>
+      ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2) (‖v j t‖ ^ 2) := by
+    intro j t
+    have h := hasSum_sq_mFourierCoeff (v j t)
+    rw [← Feec.Models.Cube.Geometry.norm_sq_eq_integral] at h
+    have e : (fun q => ‖mFourierCoeff (v j t : UnitAddTorus (Fin n) → ℂ) q‖ ^ 2) = fun q =>
+        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2 := by
+      funext q
+      rw [(hv j t).mFourierCoeff_eq, mFourierCoeff_physF, norm_mul, mul_pow, norm_symb_sq]
+      simp
+    rwa [e] at h
+  have hx : HasSum (fun q => ‖cf x q‖ ^ 2) (‖x‖ ^ 2) := by
+    rw [norm_sq_eq_tsum]; exact (summable_norm_sq x).hasSum
+  have hb := (hx.add (hasSum_sum (s := Finset.univ) fun j _ =>
+    hasSum_sum (s := Finset.univ) fun t _ => hpure j t)).mul_left ((n + 1 : ℝ) ^ m)
+  have hs : Summable fun q => weight ((m + 1 : ℕ) : ℝ) q * ‖cf x q‖ ^ 2 :=
+    Summable.of_nonneg_of_le (fun q => mul_nonneg (weight_nonneg _ _) (sq_nonneg _))
+      (weight_mul_le_pure x m) hb.summable
+  exact (hs.tsum_le_tsum (weight_mul_le_pure x m) hb.summable).trans_eq hb.tsum_eq
+
 /-- **The integer Sobolev spaces of the torus are the spaces of weak derivatives**:
 `x ∈ Hᵐ(𝕋ⁿ; Λᵏ)` iff every component of the physical form `physF k x` has weak derivatives up
 to order `m` in `L²(𝕋ⁿ)`. The direction `⇐` uses only the pure derivatives `∂_j^m` and the
-power-mean inequality `(1 + |ξ|²)ᵐ ≤ (n + 1)^{m-1} (1 + Σ_j ξ_j^{2m})`. -/
+power-mean inequality `(1 + |ξ|²)ᵐ ≤ (n + 1)^{m-1} (1 + Σ_j ξ_j^{2m})` (`weight_mul_le_pure`). -/
 theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
     MemSob m x ↔ ∀ t, HasWeakDerivsT m (physF k x t) := by
   constructor
@@ -879,37 +972,9 @@ theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
       refine ((hasSum_sq_mFourierCoeff v).summable).congr fun q => ?_
       rw [hv.mFourierCoeff_eq, mFourierCoeff_physF, norm_mul, mul_pow, norm_symb_sq]
       simp
-    have hsum : Summable fun q : Fin n → ℤ =>
-        (n + 1 : ℝ) ^ m * (‖cf x q‖ ^ 2 + ∑ j, ∑ t : formIdx n (k : ℤ),
-          ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2) :=
-      ((summable_norm_sq x).add
-        (summable_sum fun j _ => summable_sum fun t _ => hpure j t)).mul_left _
-    refine Summable.of_nonneg_of_le (fun q => mul_nonneg (weight_nonneg _ _) (sq_nonneg _))
-      (fun q => ?_) hsum
-    -- the power-mean inequality
-    set a : Option (Fin n) → ℝ := fun i => i.elim 1 fun j => (2 * Real.pi * q j) ^ 2
-    have ha : ∀ i ∈ (Finset.univ : Finset (Option (Fin n))), 0 ≤ a i := fun i _ => by
-      cases i <;> simp [a, sq_nonneg]
-    have hpm := pow_sum_le_card_mul_sum_pow ha m
-    have hS : ∑ i, a i = 1 + ‖freq q‖ ^ 2 := by
-      rw [Fintype.sum_option, norm_freq_sq, Finset.mul_sum]
-      simp only [a, Option.elim]
-      congr 1
-      exact Finset.sum_congr rfl fun j _ => by ring
-    have hS' : ∑ i, a i ^ (m + 1) = 1 + ∑ j, ((2 * Real.pi * q j) ^ 2) ^ (m + 1) := by
-      rw [Fintype.sum_option]; simp [a]
-    rw [hS, hS', Finset.card_univ, Fintype.card_option, Fintype.card_fin] at hpm
-    rw [weight, show ((m + 1 : ℕ) : ℝ) = ((m + 1 : ℕ) : ℝ) from rfl, Real.rpow_natCast]
-    calc (1 + ‖freq q‖ ^ 2) ^ (m + 1) * ‖cf x q‖ ^ 2
-        ≤ ((n + 1 : ℕ) : ℝ) ^ m * (1 + ∑ j, ((2 * Real.pi * q j) ^ 2) ^ (m + 1)) *
-          ‖cf x q‖ ^ 2 := mul_le_mul_of_nonneg_right (by exact_mod_cast hpm) (sq_nonneg _)
-      _ = (n + 1 : ℝ) ^ m * (‖cf x q‖ ^ 2 + ∑ j, ∑ t : formIdx n (k : ℤ),
-          ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2) := by
-        push_cast
-        rw [mul_assoc, add_mul, one_mul, Finset.sum_mul]
-        congr 2
-        refine Finset.sum_congr rfl fun j _ => ?_
-        rw [norm_cf_sq_eq_sum k, Finset.mul_sum]
+    exact Summable.of_nonneg_of_le (fun q => mul_nonneg (weight_nonneg _ _) (sq_nonneg _))
+      (weight_mul_le_pure x m) (((summable_norm_sq x).add
+        (summable_sum fun j _ => summable_sum fun t _ => hpure j t)).mul_left _)
 
 /-- **`mem_sobolevPar_nat_iff`**: `u ∈ Hᵐ_J(Q; Λᵏ)` (`m ∈ ℕ`) iff every component of the parity
 extension `JfJ J k u` (as a function on `𝕋ⁿ`, `physF k (JfJ J k u)`) has weak derivatives up to

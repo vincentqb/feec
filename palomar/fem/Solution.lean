@@ -7,7 +7,7 @@ public import Solution.Spaces
 public import Solution.Regularity
 public import Solution.Maxwell
 public import Feec.Models.Parallelepiped.StarShaped
-public import Solution.Sobolev
+public import Feec.Models.Cube.SobolevRestriction
 
 /-!
 # Finite element exterior calculus on polyhedral domains (solution)
@@ -29,7 +29,8 @@ of `A (0, ½)ⁿ + b`, here with the matrix `2 A`) and `Feec.Models.Parallelepip
 `closedRangeAt_min`. `FEEC.fem_cube`: the family of `FEEC.fem` on the cube with the Freudenthal
 meshes (`CubeWitness`), whose spaces are the cube's `Feec.Models.Cube.FEM.poly` (`poly_V_eq`); the
 best approximation of `H^{s+1}` data (`exists_infDist_le_of_isSobolevForm`, from
-`Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high` and `Solution.Sobolev`) passes to the graph
+`Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high` and
+`Feec.Models.Cube.SobolevRestriction.exists_qNorm_le`) passes to the graph
 norm through the uniformly bounded projections.
 
 ## References
@@ -256,7 +257,7 @@ theorem meshSize_cube [NeZero n] (N : ℕ) :
 
 open Feec.Models.Cube Feec.Models.Cube.Sobolev Feec.Models.Cube.FEM in
 /-- **Best approximation of `H^{s+1}` forms on the cube**, `dist(x, S_j(M_N)) ≤ c L h_N^{s+1}`
-(`Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high` with `SobolevData.exists_qNorm_le`). -/
+(`Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high` with `SobolevRestriction.exists_qNorm_le`). -/
 theorem exists_infDist_le_of_isSobolevForm [NeZero n] (S : PolySeq) (s : ℕ) (j : ℤ) :
     ∃ c : ℝ, 0 ≤ c ∧ ∀ (N : ℕ) {L : ℝ} (x : L2Form (cube n) j), 0 ≤ L →
       (∀ k : ℕ, (k : ℤ) = j → polySpace n s k ≤ S.toFeec.space n k) →
@@ -271,13 +272,15 @@ theorem exists_infDist_le_of_isSobolevForm [NeZero n] (S : PolySeq) (s : ℕ) (j
     rw [← poly_V_eq S N]
     exact SetLike.mem_coe.2 (Submodule.zero_mem _)
   obtain ⟨k, rfl⟩ := Int.eq_ofNat_of_zero_le hj
-  obtain ⟨C, hC0, hC⟩ := SobolevData.exists_qNorm_le (n := n) k s
+  obtain ⟨C, hC0, hC⟩ := SobolevRestriction.exists_qNorm_le (n := n) k s
   refine ⟨sobConstHigh n S.toFeec k s * C,
     mul_nonneg (sobConstHigh_nonneg S.toFeec k s) hC0, fun N L x hL hS hx => ?_⟩
   obtain ⟨D, hD, hsum, hxD⟩ := hx
   have hD' : ∀ t l, l.length ≤ s + 1 → MemLp (D t l) 2 volume ∧
-      SobolevData.IsWD l (D t []) (D t l) ∧ ∫ y, D t l y ^ 2 ≤ L ^ 2 := fun t l hl => by
-    refine ⟨(hD t l hl).1, fun φ hφ => (hD t l hl).2 φ (isTestFn_of hφ), ?_⟩
+      SobolevRestriction.IsWeakDeriv l (D t []) (D t l) ∧ ∫ y, D t l y ^ 2 ≤ L ^ 2 :=
+        fun t l hl => by
+    refine ⟨(hD t l hl).1, fun φ hφ => by
+      rw [Sobolev.iterPartial_eq_foldr]; exact (hD t l hl).2 φ (isTestFn_of hφ), ?_⟩
     have hle : ∀ t' l', 0 ≤ ∫ y, D t' l' y ^ 2 := fun _ _ => integral_nonneg fun _ => sq_nonneg _
     refine le_trans ?_ hsum
     have h1 := Finset.single_le_sum (f := fun p : ℕ => (∑ r : Fin p → Fin n,
@@ -313,6 +316,8 @@ theorem LinearPMap.apply_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [Ad
   subst h; rfl
 
 theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cube n) M ∧
+    (∀ N, ∀ T ∈ (M N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
+      T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))) ∧
     ∀ S : PolySeq, ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ)
       (J : F.Jackson ℕ), (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
       (∀ N k, ((F.V N).V k : Set (L2Form (cube n) k)) = femSpace (cube n) (M N) S k) ∧
@@ -323,7 +328,17 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
   set D := CubeWitness.starDomain n
   have hΩ : IsStarShapedBall (cube n) := ⟨D.isOpen, D.isBounded, D.x₀, D.s₀, D.s₀_pos, D.starBall⟩
   have hM := isMeshFamily_ofFeec (CubeWitness.meshFamily n)
-  refine ⟨_, hM, fun S => ?_⟩
+  refine ⟨_, hM, fun N T hT => ?_, fun S => ?_⟩
+  · -- the Freudenthal simplices `h (z + K_σ)`, `h = (1 / 2) / (N + 1)`
+    obtain ⟨z, σ, hzσ⟩ :=
+      (Feec.Mesh.mem_freudenthalMesh_simplices (hs := by norm_num)).1 hT
+    refine ⟨z, σ, fun j i => ?_⟩
+    rw [← hzσ]
+    simp only [Feec.Mesh.mapEquiv_points, Feec.Mesh.freudenthalSimplex_points,
+      Feec.Mesh.boxMap_apply, Pi.add_apply, Pi.smul_apply, smul_eq_mul, Pi.zero_apply, zero_add,
+      Feec.Mesh.latticePoint_apply, Feec.Mesh.finLattice, Feec.Mesh.kuhnVertex]
+    push_cast
+    field_simp
   obtain ⟨H, F, -, hd, hl, hV, ⟨C, hP⟩, -⟩ := fem hΩ hM S
   choose P hPC hPV hPπ using hP
   have hC : 0 ≤ C := (norm_nonneg _).trans (hPC 0 0)
@@ -381,8 +396,8 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
           rw [hV N k₀]
           have := hc s k₀ N x hL (fun k hk => (hS k hk).1) hx.2.1
           refine ((mul_le_mul_of_nonneg_left this h1).trans (mul_le_mul_of_nonneg_left
-            (mul_le_mul_of_nonneg_right (le_add_of_nonneg_right hc2) (mul_nonneg hL hh)) h1)).trans_eq
-              ?_
+            (mul_le_mul_of_nonneg_right (le_add_of_nonneg_right hc2) (mul_nonneg hL hh))
+              h1)).trans_eq ?_
           ring
         · by_cases hij : (k₀ : ℤ) + 1 = j
           · subst hij
@@ -408,8 +423,8 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
               obtain rfl : k = k₀ + 1 := by omega
               exact (hS k₀ rfl).2) hsd
             refine ((mul_le_mul_of_nonneg_left this h1).trans (mul_le_mul_of_nonneg_left
-              (mul_le_mul_of_nonneg_right (le_add_of_nonneg_left hc1) (mul_nonneg hL hh)) h1)).trans_eq
-                ?_
+              (mul_le_mul_of_nonneg_right (le_add_of_nonneg_left hc1) (mul_nonneg hL hh))
+                h1)).trans_eq ?_
             ring
           · rw [LinearPMap.apply_of_eq (H.shape _ _ hij), LinearPMap.zero_apply, norm_zero]
             exact mul_nonneg (mul_nonneg h1 (add_nonneg hc1 hc2)) (mul_nonneg hL hh) }

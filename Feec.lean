@@ -369,6 +369,7 @@ public import Feec.Models.Cube.SmoothingEstimates
 public import Feec.Models.Cube.Sobolev
 public import Feec.Models.Cube.SobolevRate
 public import Feec.Models.Cube.SobolevRateHigh
+public import Feec.Models.Cube.SobolevRestriction
 public import Feec.Models.Cube.SobolevWeak
 public import Feec.Models.Cube.Static
 public import Feec.Models.Cube.TangentialRate

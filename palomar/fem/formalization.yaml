@@ -53,8 +53,10 @@ project:
     static FEEC theorem of palomar/feec (discrete Poincare inequality, stability and
     quasi-optimality of the mixed Hodge Laplacian, cohomology) and its rates, and the heat
     verdicts of FEEC.fem and FEEC.femMin, apply to their families there with no remaining
-    hypothesis. FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries such a mesh family
-    (the Freudenthal meshes) for which, for every admissible sequence S, the spaces S_k(M_N) are
+    hypothesis. FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries such a mesh family,
+    the Freudenthal meshes (stated by their vertices: every simplex of M_N is a Kuhn simplex
+    h (z + K_sigma), h = 1/(2(N+1)), with vertices h (z + e_sigma(0) + ... + e_sigma(j-1))),
+    for which, for every admissible sequence S, the spaces S_k(M_N) are
     those of a family of subcomplexes of H Lambda(Omega) with a Jackson estimate of order
     h_N^(s+1) for Sobolev data: if x and dx lie in H^(s+1)(Omega) with norm at most L
     (H^m(Omega) the restrictions to Omega of the forms whose coefficients have weak derivatives
@@ -77,7 +79,7 @@ project:
     whose initial data converge to the data; such families exist. The proof is the library Feec
     of this repository (Feec.FiniteElement, Feec.Models.StarShaped, Feec.Models.Parallelepiped,
     Feec.Mesh, Feec.HilbertComplex.Approximation.Crown, Feec.Instances.Maxwell,
-    Feec.Models.Cube.SobolevRateHigh).
+    Feec.Models.Cube.SobolevRateHigh, Feec.Models.Cube.SobolevRestriction).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -176,7 +178,7 @@ sources:
       - "Hans Freudenthal"
     id: "doi:10.2307/1968813"
     type: "article"
-    location: "Ann. of Math. 43 (1942) (the Freudenthal triangulations used for the mesh families of FEEC.fem_parallelepiped)"
+    location: "Ann. of Math. 43 (1942) (the Freudenthal triangulations: the mesh families of FEEC.fem_parallelepiped and FEEC.fem_cube)"
     relationship: "background"
     author_endorsement: "not-contacted"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
@@ -323,13 +325,14 @@ fidelity:
     domains, which are not covered (the extension-dilation construction of the
     smoothed projections in Feec uses star-shapedness). The closed range of d, needed by the
     static theory, is proved only on parallelepipeds (FEEC.fem_parallelepiped).
-    (7) Sobolev data are compared only on the cube (0, 1/2)^n, with its Freudenthal meshes (the
-    mesh family is existential in FEEC.fem_cube), and only for H Lambda: H^m(Omega) is
+    (7) Sobolev data are compared only on the cube (0, 1/2)^n, with its Freudenthal meshes
+    (named in FEEC.fem_cube by their vertices; other mesh families of the cube are not covered),
+    and only for H Lambda: H^m(Omega) is
     defined by restriction of H^m(R^n) (weak derivatives in L^2(R^n) along words, the norm a
     sum over words, equivalent to the multi-index norm), which equals the weak-derivative space
     of Omega on Lipschitz domains (not formalized). On general star-shaped domains, for every
-    mesh family, and for the minimal complex the Jackson estimates of FEEC.fem and FEEC.femMin are for
-    C^(s+2) forms with bounded (s+1)-st derivatives on the closure of Omega (one more derivative
+    mesh family, and for the minimal complex the Jackson estimates of FEEC.fem and FEEC.femMin
+    are for C^(s+2) forms with bounded (s+1)-st derivatives on the closure of Omega (one more derivative
     than the order requires); for femMin the smooth form must vanish outside Omega and be
     C^(s+2) on R^n, so its derivatives up to order s+2 vanish on the boundary: a smaller class
     than the usual one (vanishing tangential trace only).
@@ -381,7 +384,7 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "As FEEC.fem with the Min versions; the spaces through mem_V₀_iff."
-    - source: "[AFW2010] §5; [Arnold2018] Ch. 7 (approximation estimates for Sobolev data); [Evans2010] §5.2"
+    - source: "[AFW2010] §5; [Arnold2018] Ch. 7 (Sobolev approximation); [Evans2010] §5.2"
       lean: "FEEC.fem_cube"
       module: "Challenge"
       status: "proved"
@@ -389,10 +392,11 @@ alignment:
         The family of FEEC.fem on the cube with the Freudenthal meshes
         (Feec.Models.StarShaped.CubeWitness); the best approximation from
         Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high (periodic Sobolev spaces of the torus),
-        reached from H^m(R^n) data by Solution/Sobolev.lean (Leibniz's rule for weak derivatives
-        with a cutoff, periodization, weak derivatives on the torus, the Fourier norm bounded by
-        the pure derivatives, exists_qNorm_le), and the graph-norm bound through the uniformly
-        L^2-bounded cochain projections of FEEC.fem.
+        reached from H^m(R^n) data by Feec.Models.Cube.SobolevRestriction.exists_qNorm_le
+        (Leibniz's rule for weak derivatives with a cutoff, periodization, weak derivatives on
+        the torus, the Fourier norm bounded by the pure derivatives), the vertices of the
+        Freudenthal simplices from Feec.Mesh.mem_freudenthalMesh_simplices, and the graph-norm
+        bound through the uniformly L^2-bounded cochain projections of FEEC.fem.
     - source: "[QuennevilleBelair2015] Ch. 4, Prop. 4.16; [AFW2010] §4; [Monk2003]"
       lean: "FEEC.maxwell"
       module: "Challenge"

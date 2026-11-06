@@ -60,8 +60,8 @@ The theorems, with no hypothesis beyond the data:
   box), is such a domain, carries such a mesh family, and `d` has closed range in every degree
   on `HΛ(Ω)` and on `H̊Λ(Ω)`, so the static FEEC theorem of `palomar/feec` and the heat verdicts
   of `FEEC.fem` and `FEEC.femMin` apply on it with no remaining hypothesis.
-* `FEEC.fem_cube` ([AFW2010], §5; [Arnold2018], Ch. 7): the cube `(0, ½)ⁿ` has a mesh family
-  (the proof uses the Freudenthal meshes) whose spaces `S_k(M_N)` of `HΛ(Ω)` have a Jackson
+* `FEEC.fem_cube` ([AFW2010], §5; [Arnold2018], Ch. 7): on the cube `(0, ½)ⁿ` with its
+  Freudenthal meshes (stated by their vertices), the spaces `S_k(M_N)` of `HΛ(Ω)` have a Jackson
   estimate of order `h_N^{s+1}` for `x, dx ∈ H^{s+1}(Ω)`, the restrictions of `H^{s+1}(ℝⁿ)`
   (`IsSobolevForm`), in the degrees where `S` reproduces `P_sΛ`, in every dimension.
 * `FEEC.maxwell` ([QuennevilleBelair2015], Ch. 4; [AFW2010], §4; [Monk2003]): the window
@@ -855,13 +855,18 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
   sorry
 
 /-- **Sobolev rates on the cube** ([AFW2010], §5.4–§5.5; [Arnold2018], Ch. 7): the cube
-`Ω = (0, ½)ⁿ` carries some shape-regular, quasi-uniform family of meshes `M_N` with `h_N → 0`
-(the proof uses the Freudenthal meshes; the statement does not cover every family) such that,
-for every admissible sequence `S`, the spaces `S_k(M_N)` are those of a family of subcomplexes of
+`Ω = (0, ½)ⁿ` carries a shape-regular, quasi-uniform family of meshes `M_N` with `h_N → 0`, the
+**Freudenthal meshes** ([Freudenthal1942]): every simplex of `M_N` is a Kuhn simplex
+`h (z + K_σ)`, `h = 1 / (2 (N + 1))`, `z ∈ {0, …, N}ⁿ`, `σ ∈ 𝔖ₙ`, with vertices
+`v_j = h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`, `j = 0, …, n` (as `M_N` covers `Ω` with disjoint
+interiors, it consists of all of them; other mesh families are not covered), such that, for
+every admissible sequence `S`, the spaces `S_k(M_N)` are those of a family of subcomplexes of
 `HΛ(Ω)` with a Jackson estimate of order `h_N^{s+1}` for the forms `x` with `x, dx ∈ H^{s+1}(Ω)`
 of norm at most `L`, in the degrees where `S` reproduces `P_sΛ` (`H^{s+1} ⊆ D(d)`, so the clause
 on `dx` always applies). -/
 theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cube n) M ∧
+    (∀ N, ∀ T ∈ (M N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
+      T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))) ∧
     ∀ S : PolySeq, ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ)
       (J : F.Jackson ℕ), (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
       (∀ N k, ((F.V N).V k : Set (L2Form (cube n) k)) = femSpace (cube n) (M N) S k) ∧

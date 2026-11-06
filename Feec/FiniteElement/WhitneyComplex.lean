@@ -289,29 +289,30 @@ theorem exists_simplexMap_eq_of_mem_convexHull {k : ℕ} (q : Fin (k + 1) → Fi
   rw [← Finset.sum_subset (Finset.subset_univ s) fun i _ hi => by simp [w', hi]]
   exact Finset.sum_congr rfl fun i hi => by simp [w', hi]
 
-/-- Tangential traces through a parametrization of the facet: if the pullbacks along the edge
-matrix `B_q` agree, the tangential traces agree. -/
-theorem tangentialTraceEq_of_pullback_eq {m : ℕ} {F : Finset (Fin (m + 1) → ℝ)} {k : ℕ}
-    (q : Fin (m + 1) → Fin (m + 1) → ℝ) (hq : Set.range q = F) {α β : Finset (Fin (m + 1)) → ℝ}
+/-- Tangential traces through a parametrization of a face of any dimension: if the pullbacks
+along the edge matrix `B_q` of `q : Fin (j + 1) → ℝᵈ` agree, the tangential traces on the face
+`range q` agree. -/
+theorem tangentialTraceEq_of_pullback_eq {d j : ℕ} {F : Finset (Fin d → ℝ)} {k : ℕ}
+    (q : Fin (j + 1) → Fin d → ℝ) (hq : Set.range q = F) {α β : Finset (Fin d) → ℝ}
     (h : pullback (simplexMatrix q) α = pullback (simplexMatrix q) β) :
     TangentialTraceEq F k α β := by
   intro V hV
-  have hV' : ∀ l, ∃ c : Fin m → ℝ, ∀ i, V i l = ∑ j, simplexMatrix q i j * c j := by
+  have hV' : ∀ l, ∃ c : Fin j → ℝ, ∀ i, V i l = ∑ m, simplexMatrix q i m * c m := by
     intro l
     have h1 := hV l
     rw [← hq, vectorSpan_range_eq_span_range_vsub_right ℝ q 0,
       Submodule.mem_span_range_iff_exists_fun] at h1
     obtain ⟨c, hc⟩ := h1
-    refine ⟨fun j => c j.succ, fun i => ?_⟩
+    refine ⟨fun m => c m.succ, fun i => ?_⟩
     have := congrFun hc i
     simp only [Finset.sum_apply, Pi.smul_apply, vsub_eq_sub, Pi.sub_apply, smul_eq_mul,
       Fin.sum_univ_succ, sub_self, mul_zero, zero_add] at this
     rw [← this]
-    exact Finset.sum_congr rfl fun j _ => by simp [simplexMatrix, mul_comm]
+    exact Finset.sum_congr rfl fun m _ => by simp [simplexMatrix, mul_comm]
   choose C hC using hV'
-  have hVC : V = fun i l => ∑ j, simplexMatrix q i j * C l j := by
+  have hVC : V = fun i l => ∑ m, simplexMatrix q i m * C l m := by
     funext i l; exact hC l i
-  rw [hVC, ← pullback_pullback (simplexMatrix q) (fun j l => C l j), h, pullback_pullback]
+  rw [hVC, ← pullback_pullback (simplexMatrix q) (fun m l => C l m), h, pullback_pullback]
 
 /-- **Trace determination for Whitney forms**: on a common facet `F` of `T` and `T'`, Whitney
 forms with the same integrals over the faces of `F` have the same tangential trace on `F`. -/

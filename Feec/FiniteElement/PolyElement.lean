@@ -52,6 +52,9 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
 * `vertexMoment_extDeriv`: Stokes' formula for moments along any vertex family;
 * `PolySeq.isUnisolvent_dof`, `PolySeq.tangentialTraceEq_of_dof_eq`, `PolySeq.dof_congr`,
   `PolySeq.dof_comp_extDerivC1_mem_span`: the axioms of an element family;
+* `PolySeq.tangentialTraceEq_of_dof_eq_face`: the degrees of freedom on a face of any dimension
+  and its subfaces determine the tangential trace on the face (the facet case is the element
+  axiom);
 * `PolyKind.finrank_space_eq_sum`: `dim = Σ_m C(n+1, m+1) dim(test forms on m-faces)`, the
   count `PolyKind.finrank_form_eq_sum` over `ℝ`.
 
@@ -770,8 +773,60 @@ theorem isUnisolvent_dof (T : Affine.Simplex ℝ (Fin n → ℝ) n) (k : ℕ) :
   refine h.trans ?_
   simpa using vertexMoment_smul_left (p' ∘ ⇑e) η 0 0
 
-/-- **Trace determination**: on a facet `F` of `T`, two forms of the local space with the same
-degrees of freedom on the faces of `F` have the same tangential trace on `F`. -/
+/-- **Trace determination on any face**: two fields of `P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`) with the
+same degrees of freedom on the subfaces of a face `g` of an `n`-simplex `T` have the same pullback
+along the lexicographic parametrization of `g` (on tangential traces,
+`PolySeq.tangentialTraceEq_of_dof_eq_face`). -/
+theorem affinePullback_lexEnum_eq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    {g : Finset (Fin n → ℝ)} {k m : ℕ} (hT : g ⊆ vertexSet T) (hc : #g = m + 1)
+    {w η : FormField n} (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
+    (hdof : ∀ g' ⊆ g, ∀ i : S.DofIdx g' k, S.dof g' k i ⟨w, S.space_le_contForms n k hw⟩ =
+      S.dof g' k i ⟨η, S.space_le_contForms n k hη⟩) :
+    affinePullback (simplexMatrix (lexEnum g m)) (lexEnum g m 0) w =
+      affinePullback (simplexMatrix (lexEnum g m)) (lexEnum g m 0) η := by
+  set p' := lexEnum (vertexSet T) n
+  have hp' := isUnit_det_edgeMatrix_lexEnum T
+  have hmono := strictMono_lexEnum (card_vertexSet T)
+  obtain ⟨eF, heF⟩ := exists_orderEmb_comp_eq_lexEnum hmono hc fun x hx =>
+    exists_lexEnum_eq_of_mem_vertexSet T (hT hx)
+  have htr := PolyKind.faceTrace_eq (S.kind k) hp' (S.one_le_deg k) (Face.ofEmb eF) hw hη
+    fun g'' hg ζ hζ => by
+      obtain ⟨hcard, hG⟩ := lexEnum_image_comp hmono g''.emb.strictMono
+      have hGF : Finset.univ.image (p' ∘ g''.emb) ⊆ g := fun x hx => by
+        obtain ⟨j, -, rfl⟩ := mem_image.1 hx
+        have hj := hg (orderEmbOfFin_mem g''.2.1 g''.2.2 j)
+        obtain ⟨a, -, ha⟩ := mem_map.1 hj
+        change p' (g''.2.1.orderEmbOfFin g''.2.2 j) ∈ g
+        rw [← ha]
+        change (p' ∘ eF) a ∈ g
+        rw [heF]
+        exact lexEnum_mem hc a
+      have h := S.degMoment_eq_of_dof_eq hcard (fun i => hdof _ hGF i) hζ
+      rw [hG, degField_eq_self (PolyKind.isDeg_of_mem_space hw),
+        degField_eq_self (PolyKind.isDeg_of_mem_space hη)] at h
+      exact h
+  rw [Face.emb_ofEmb, faceTrace_apply, faceTrace_apply] at htr
+  rw [heF, show lexEnum (vertexSet T) n (eF 0) = lexEnum g m 0 from congrFun heF 0] at htr
+  exact htr
+
+/-- **Trace determination on faces of every dimension**: on a face `F` of `T`, two forms of the
+local space with the same degrees of freedom on the faces of `F` have the same tangential trace
+on `F`. -/
+theorem tangentialTraceEq_of_dof_eq_face {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    {F : Finset (Fin n → ℝ)} {k j : ℕ} (hT : F ⊆ vertexSet T) (hc : #F = j + 1)
+    {w η : FormField n} (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
+    (hdof : ∀ g ⊆ F, ∀ i : S.DofIdx g k, S.dof g k i ⟨w, S.space_le_contForms n k hw⟩ =
+      S.dof g k i ⟨η, S.space_le_contForms n k hη⟩) :
+    ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TangentialTraceEq F k (w x) (η x) := by
+  have htr := S.affinePullback_lexEnum_eq_of_dof_eq hT hc hw hη hdof
+  intro x hx
+  rw [← range_lexEnum hc] at hx
+  obtain ⟨y, -, rfl⟩ := exists_simplexMap_eq_of_mem_convexHull (lexEnum F j) hx
+  refine tangentialTraceEq_of_pullback_eq _ (range_lexEnum hc) ?_
+  have := congrFun htr y
+  simpa [affinePullback_apply, simplexMap] using this
+
+/-- **Trace determination on facets** (`tangentialTraceEq_of_dof_eq_face` for `#F = n`). -/
 theorem tangentialTraceEq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
     {F : Finset (Fin n → ℝ)} {k : ℕ} (hT : F ⊆ vertexSet T) (hc : #F = n) {w η : FormField n}
     (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
@@ -782,37 +837,7 @@ theorem tangentialTraceEq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
   · intro x hx
     have : F = ∅ := Finset.card_eq_zero.1 hc
     simp [this] at hx
-  set p' := lexEnum (vertexSet T) (m + 1)
-  have hp' := isUnit_det_edgeMatrix_lexEnum T
-  have hmono := strictMono_lexEnum (card_vertexSet T)
-  obtain ⟨eF, heF⟩ := exists_orderEmb_comp_eq_lexEnum hmono hc fun x hx =>
-    exists_lexEnum_eq_of_mem_vertexSet T (hT hx)
-  set q := lexEnum F m
-  have hq : Set.range q = F := range_lexEnum hc
-  have htr := PolyKind.faceTrace_eq (S.kind k) hp' (S.one_le_deg k) (Face.ofEmb eF) hw hη
-    fun g hg ζ hζ => by
-      obtain ⟨hcard, hG⟩ := lexEnum_image_comp hmono g.emb.strictMono
-      have hGF : Finset.univ.image (p' ∘ g.emb) ⊆ F := fun x hx => by
-        obtain ⟨j, -, rfl⟩ := mem_image.1 hx
-        have hj := hg (orderEmbOfFin_mem g.2.1 g.2.2 j)
-        obtain ⟨a, -, ha⟩ := mem_map.1 hj
-        change p' (g.2.1.orderEmbOfFin g.2.2 j) ∈ F
-        rw [← ha]
-        change (p' ∘ eF) a ∈ F
-        rw [heF]
-        exact lexEnum_mem hc a
-      have h := S.degMoment_eq_of_dof_eq hcard (fun i => hdof _ hGF i) hζ
-      rw [hG, degField_eq_self (PolyKind.isDeg_of_mem_space hw),
-        degField_eq_self (PolyKind.isDeg_of_mem_space hη)] at h
-      exact h
-  rw [Face.emb_ofEmb, faceTrace_apply, faceTrace_apply] at htr
-  rw [heF, show lexEnum (vertexSet T) (m + 1) (eF 0) = q 0 from congrFun heF 0] at htr
-  intro x hx
-  rw [← hq] at hx
-  obtain ⟨y, -, rfl⟩ := exists_simplexMap_eq_of_mem_convexHull q hx
-  refine tangentialTraceEq_of_pullback_eq q hq ?_
-  have := congrFun htr y
-  simpa [affinePullback_apply, simplexMap] using this
+  exact S.tangentialTraceEq_of_dof_eq_face hT hc hw hη hdof
 
 /-- **The degrees of freedom of `g` only see the tangential traces on `g`.** -/
 theorem dof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : S.DofIdx g k) {w η : contForms n}

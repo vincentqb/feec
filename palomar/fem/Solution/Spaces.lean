@@ -12,8 +12,9 @@ On a mesh `M` of `Ω`, the glued spaces `Vₕᵏ`, `V̊ₕᵏ` of the element fa
 freedom agree on shared faces, resp. also vanish on boundary faces) are the spaces `femSpace`,
 `femSpaceMin` of the challenge (`mem_V_iff`, `mem_V₀_iff`): degrees of freedom agree on a face
 iff the tangential traces do (`Feec.FiniteElement.PolySeq.dof_congr` and trace determination on
-faces of every dimension, `PolySeq.tangentialTraceEq_of_dof_eq_face`), and the glued field is the
-element field almost everywhere on each simplex (the frontiers of simplices are null).
+faces of every dimension, `Feec.FiniteElement.PolySeq.tangentialTraceEq_of_dof_eq_face`), and the
+glued field is the element field almost everywhere on each simplex (the frontiers of simplices are
+null).
 
 ## References
 
@@ -89,6 +90,7 @@ theorem mem_space_iff {T : Affine.Simplex ℝ (Fin n → ℝ) n} (k : ℕ) (w : 
   change w ∈ S.toFeec.space n k ↔ _
   rw [S.space_eq]
 
+omit [NeZero n] in
 /-- The traces on the common faces of two simplices of a global field agree. -/
 theorem traceEq_of_mem_globalSpace {k : ℕ}
     {v : (polyElement n S.toFeec).Piecewise (M.toFeec Ω hdom) k}
@@ -107,7 +109,7 @@ theorem traceEq_of_mem_globalSpace {k : ℕ}
     rw [← vertexSet_eq]; exact inter_subset_left
   have hcT' : vertexSet T ∩ vertexSet T' ⊆ Feec.Mesh.vertexSet T' := by
     rw [← vertexSet_eq]; exact inter_subset_right
-  exact PolySeq.tangentialTraceEq_of_dof_eq_face S.toFeec hcT hj (v ⟨T, hT⟩).2 (v ⟨T', hT'⟩).2
+  exact S.toFeec.tangentialTraceEq_of_dof_eq_face hcT hj (v ⟨T, hT⟩).2 (v ⟨T', hT'⟩).2
     (fun g hg i => hv ⟨T, hT⟩ ⟨T', hT'⟩ g (hg.trans hcT) (hg.trans hcT') i) x hx
 
 /-- The piecewise field of finite element pieces `p`. -/
@@ -139,6 +141,7 @@ theorem glue_ofPieces {k : ℤ} {u : L2Form Ω k} {p : Affine.Simplex ℝ (Fin n
   rw [LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT]
   exact (hp.2.1 T hT s).symm
 
+omit [NeZero n] in
 theorem isFemPieces_glue {k : ℤ}
     (v : (polyElement n S.toFeec).globalSpace (M.toFeec Ω hdom) k.toNat) :
     IsFemPieces Ω M S k ((polyElement n S.toFeec).glue (M.toFeec Ω hdom) k v)
@@ -151,6 +154,7 @@ theorem isFemPieces_glue {k : ℤ}
       LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT']
     exact traceEq_of_mem_globalSpace S M Ω hdom v.2 hT hT'
 
+omit [NeZero n] in
 /-- **The glued space `Vₕᵏ` is the finite element space of the challenge.** -/
 theorem mem_V_iff {k : ℤ} (u : L2Form Ω k) :
     u ∈ (polyElement n S.toFeec).V (M.toFeec Ω hdom) k ↔ u ∈ femSpace Ω M S k := by
@@ -188,6 +192,7 @@ theorem eq_of_isBoundaryFacet {F : Finset (Fin n → ℝ)} (hF : (M.toFeec Ω hd
   intro T' h1 h2
   rw [hmem T' h1 h2, hmem T hT hFT]
 
+omit [NeZero n] in
 /-- **The glued space `V̊ₕᵏ` is the finite element space with vanishing boundary traces.** -/
 theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
     u ∈ (polyElement n S.toFeec).V₀ (M.toFeec Ω hdom) k ↔ u ∈ femSpaceMin Ω M S k := by

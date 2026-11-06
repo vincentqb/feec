@@ -12,8 +12,8 @@ The mesh-independent ingredients of the smoothed-projection estimates for an adm
 (`Feec.Models.StarShaped.PolySmoothing`) and on the cube
 (`Feec.Models.Cube.PolySmoothingEstimates`):
 
-* **Trace determination on every face** (`PolySeq.affinePullback_lexEnum_eq_of_dof_eq`, the
-  facet case being `PolySeq.tangentialTraceEq_of_dof_eq`): fields of the global space have the
+* **Trace determination on every face** (`PolySeq.pullback_eq_of_dof_eq`, from
+  `PolySeq.affinePullback_lexEnum_eq_of_dof_eq`): fields of the global space have the
   same trace on every common face of two simplices (`PolySeq.pullback_eq_of_mem_globalSpace`).
 * **Degrees of freedom as integrals of the values** (`PolySeq.dof_eq_integral`): the moment DOF
   `ℓ_{g,i}(ω) = ∫_{T̂_m} F_q^* ω_k ∧ ηᵢ` (`q` the lexicographic parametrization of the face `g`) is
@@ -46,42 +46,6 @@ variable {n : ℕ}
 namespace PolySeq
 
 variable (S : PolySeq)
-
-/-- **Trace determination on any face**: two fields of `P_{r_k}Λᵏ` (resp. `P_{r_k}⁻Λᵏ`) with the
-same degrees of freedom on the subfaces of a face `g` of an `n`-simplex `T` have the same pullback
-along the lexicographic parametrization of `g` (the facet case is
-`PolySeq.tangentialTraceEq_of_dof_eq`). -/
-theorem affinePullback_lexEnum_eq_of_dof_eq {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    {g : Finset (Fin n → ℝ)} {k m : ℕ} (hT : g ⊆ vertexSet T) (hc : #g = m + 1)
-    {w η : FormField n} (hw : w ∈ S.space n k) (hη : η ∈ S.space n k)
-    (hdof : ∀ g' ⊆ g, ∀ i : S.DofIdx g' k, S.dof g' k i ⟨w, S.space_le_contForms n k hw⟩ =
-      S.dof g' k i ⟨η, S.space_le_contForms n k hη⟩) :
-    affinePullback (simplexMatrix (lexEnum g m)) (lexEnum g m 0) w =
-      affinePullback (simplexMatrix (lexEnum g m)) (lexEnum g m 0) η := by
-  set p' := lexEnum (vertexSet T) n
-  have hp' := isUnit_det_edgeMatrix_lexEnum T
-  have hmono := strictMono_lexEnum (card_vertexSet T)
-  obtain ⟨eF, heF⟩ := exists_orderEmb_comp_eq_lexEnum hmono hc fun x hx =>
-    exists_lexEnum_eq_of_mem_vertexSet T (hT hx)
-  have htr := PolyKind.faceTrace_eq (S.kind k) hp' (S.one_le_deg k) (Face.ofEmb eF) hw hη
-    fun g'' hg ζ hζ => by
-      obtain ⟨hcard, hG⟩ := lexEnum_image_comp hmono g''.emb.strictMono
-      have hGF : Finset.univ.image (p' ∘ g''.emb) ⊆ g := fun x hx => by
-        obtain ⟨j, -, rfl⟩ := mem_image.1 hx
-        have hj := hg (orderEmbOfFin_mem g''.2.1 g''.2.2 j)
-        obtain ⟨a, -, ha⟩ := mem_map.1 hj
-        change p' (g''.2.1.orderEmbOfFin g''.2.2 j) ∈ g
-        rw [← ha]
-        change (p' ∘ eF) a ∈ g
-        rw [heF]
-        exact lexEnum_mem hc a
-      have h := S.degMoment_eq_of_dof_eq hcard (fun i => hdof _ hGF i) hζ
-      rw [hG, degField_eq_self (PolyKind.isDeg_of_mem_space hw),
-        degField_eq_self (PolyKind.isDeg_of_mem_space hη)] at h
-      exact h
-  rw [Face.emb_ofEmb, faceTrace_apply, faceTrace_apply] at htr
-  rw [heF, show lexEnum (vertexSet T) n (eF 0) = lexEnum g m 0 from congrFun heF 0] at htr
-  exact htr
 
 /-- The pointwise form of `affinePullback_lexEnum_eq_of_dof_eq`: at every point of the
 parametrized face, the pullbacks of the values agree. -/

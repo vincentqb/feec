@@ -8,7 +8,6 @@ public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.Normed.Lp.PiLp
 public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
-public import Mathlib.LinearAlgebra.Determinant
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
@@ -49,6 +48,14 @@ The theorems, with no hypothesis beyond the data:
   carries such a mesh family, and `d` has closed range in every degree on `HΛ(Ω)` and on `H̊Λ(Ω)`,
   so the static FEEC theorem of `palomar/feec` applies to the families of `FEEC.fem` and
   `FEEC.femMin` on it with no remaining hypothesis.
+* `FEEC.maxwell` ([QuennevilleBelair2015], Ch. 4; [AFW2010], §4; [Monk2003]): for `n = 3`, the
+  vector proxies `V_N⁰ ⊆ H¹(Ω)`, `V_N¹ ⊆ H(curl, Ω)`, `V_N² ⊆ H(div, Ω)` of `S_0(M_N)`,
+  `S_1(M_N)`, `S_2(M_N)` (`proxy0`, `proxy1`, `proxy2`) discretize Maxwell's equations
+  `σ' = -grad* E`, `E' = grad σ - curl* B`, `B' = curl E` (`IsMaxwellSolution`; the weak `grad`,
+  `curl`, `div` of `weakOp`): for data in the domain of the Maxwell operator there is a unique
+  strong solution, it conserves the energy and the Gauss laws `σ = 0`, `grad* E = 0`,
+  `div B = 0`, and every family of Galerkin solutions (`IsMaxwellGalerkin`) with converging
+  initial data converges to it uniformly on `[0, T]`.
 
 ## Conventions
 
@@ -57,10 +64,10 @@ coefficients `ω_s` on `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s = {s₁ < ⋯
 (`FormIdx n k`; a form field `ω : FormField n` has a coefficient for every subset);
 `L²(Ω; Λᵏ)` is the `ℓ²` sum of a copy of `L²(Ω)` per coefficient (`L2Form`). With the sign
 `ε(j, s) = (-1)^{#{l ∈ s | l < j}}`, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` and
-`(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` is its formal adjoint. Shape regularity is stated
-for the edge matrix `B_T` (columns `vᵢ - v₀`) of each simplex: `‖B_T‖ ≤ C h_T`,
-`‖B_T⁻¹‖ ≤ C / h_T`, `c h_Tⁿ ≤ |det B_T|` ([Ciarlet2002], §3.1, equivalent to a bound on
-`h_T / ρ_T`).
+`(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` is its formal adjoint. Diameters and balls are
+those of the sup norm; for the Euclidean norm the shape-regularity constant `h_T / ρ_T` changes by
+a factor depending only on `n`. In `ℝ³` a scalar field has one component (`Fin 1`) and a vector
+field three (`Fin 3`).
 
 ## References
 
@@ -73,8 +80,9 @@ for the edge matrix `B_T` (columns `vᵢ - v₀`) of each simplex: `‖B_T‖ �
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1–§3.2
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 4, 5
+  Ch. 4 (§4.4, §4.6, Prop. 4.16), Ch. 5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -350,17 +358,10 @@ def diam {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : ℝ := Metric.di
 def meshSize (M : SimplicialMesh n) : ℝ :=
   ⨆ T : M.simplices, diam (T : Affine.Simplex ℝ (Fin n → ℝ) n)
 
-/-- The **edge matrix** `B_T` of the simplex `T = [v₀, …, vₙ]`: `B_T x = Σᵢ xᵢ (vᵢ₊₁ - v₀)`, the
-linear part of the affine map from the reference simplex onto `T`. -/
-def edgeMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ) :=
-  Fintype.linearCombination ℝ fun i => T.points i.succ - T.points 0
-
-/-- The mesh is **shape regular** with constants `C, c` ([Ciarlet2002], §3.1): for every simplex,
-`‖B_T x‖ ≤ C h_T ‖x‖`, `‖x‖ ≤ (C / h_T) ‖B_T x‖` (that is `‖B_T‖ ≤ C h_T`,
-`‖B_T⁻¹‖ ≤ C / h_T`) and `c h_Tⁿ ≤ |det B_T|`. -/
-def IsShapeRegular (M : SimplicialMesh n) (C c : ℝ) : Prop :=
-  ∀ T ∈ M.simplices, (∀ x, ‖edgeMap T x‖ ≤ C * diam T * ‖x‖) ∧
-    (∀ x, ‖x‖ ≤ C / diam T * ‖edgeMap T x‖) ∧ c * diam T ^ n ≤ |LinearMap.det (edgeMap T)|
+/-- The mesh is **shape regular** with constant `σ` ([Ciarlet2002], §3.1): every simplex `T`
+contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T`. -/
+def IsShapeRegular (M : SimplicialMesh n) (σ : ℝ) : Prop :=
+  ∀ T ∈ M.simplices, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ
 
 /-- The mesh is **quasi-uniform** with constant `q`: `q h ≤ h_T` for every simplex. -/
 def IsQuasiUniform (M : SimplicialMesh n) (q : ℝ) : Prop :=
@@ -369,8 +370,8 @@ def IsQuasiUniform (M : SimplicialMesh n) (q : ℝ) : Prop :=
 /-- `M_N` is a **shape-regular, quasi-uniform family of meshes of `Ω`** with mesh size `h_N → 0`:
 meshes of `Ω`, shape regular and quasi-uniform with constants independent of `N`. -/
 def IsMeshFamily (Ω : Set (Fin n → ℝ)) (M : ℕ → SimplicialMesh n) : Prop :=
-  (∀ N, (M N).domain = Ω) ∧ (∃ C c q : ℝ, 0 ≤ C ∧ 0 < c ∧ 0 < q ∧
-    ∀ N, IsShapeRegular (M N) C c ∧ IsQuasiUniform (M N) q) ∧
+  (∀ N, (M N).domain = Ω) ∧
+    (∃ σ q : ℝ, 0 < q ∧ ∀ N, IsShapeRegular (M N) σ ∧ IsQuasiUniform (M N) q) ∧
     (∀ N, 0 < meshSize (M N)) ∧ Tendsto (fun N => meshSize (M N)) atTop (𝓝 0)
 
 /-- `Ω` is a **bounded open domain star-shaped with respect to a ball** `B(x₀, s₀)`: the segment
@@ -447,6 +448,72 @@ def IsCsFormMin (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
 
+/-! ### Maxwell's equations in vector proxies (`n = 3`) -/
+
+/-- `L²(Ω; ℝ^ι)`: the square-integrable fields on `Ω ⊆ ℝ³` with components indexed by `ι`
+(`Fin 1`: scalar fields, `Fin 3`: vector fields), an `ℓ²` sum of copies of `L²(Ω)`. -/
+abbrev L2Field (Ω : Set (Fin 3 → ℝ)) (ι : Type) [Fintype ι] : Type :=
+  PiLp 2 fun _ : ι => Lp ℝ 2 (volume.restrict Ω)
+
+/-- The **weak realization** `A : L²(Ω; ℝ^ι) → L²(Ω; ℝ^κ)` of the first-order operator with
+formal adjoint `Aᵗ` (as `dMax`): the adjoint of the closure of `Aᵗ` on test fields, so that
+`u ∈ D(A)` iff some `w` has `⟪w, ψ⟫ = ⟪u, Aᵗψ⟫` for every test field `ψ`, and then `A u = w`. -/
+def weakOp (Ω : Set (Fin 3 → ℝ)) {ι κ : Type} [Fintype ι] [Fintype κ]
+    (At : ((Fin 3 → ℝ) → κ → ℝ) → (Fin 3 → ℝ) → ι → ℝ) : L2Field Ω ι →ₗ.[ℝ] L2Field Ω κ :=
+  (Submodule.span ℝ {p : L2Field Ω κ × L2Field Ω ι | ∃ ψ : (Fin 3 → ℝ) → κ → ℝ,
+    (∀ j, IsTestFn Ω fun x => ψ x j) ∧ (∀ j, ⇑(p.1 j) =ᵐ[volume.restrict Ω] fun x => ψ x j) ∧
+    ∀ i, ⇑(p.2 i) =ᵐ[volume.restrict Ω] fun x => At ψ x i}).topologicalClosure.toLinearPMap†
+
+/-- The **weak gradient** `grad : H¹(Ω) ⊆ L²(Ω) → L²(Ω; ℝ³)` (formal adjoint `-div`). -/
+def grad (Ω : Set (Fin 3 → ℝ)) : L2Field Ω (Fin 1) →ₗ.[ℝ] L2Field Ω (Fin 3) :=
+  weakOp Ω fun ψ x _ => -∑ j, partialDeriv j (fun y => ψ y j) x
+
+/-- The **weak curl** `curl : H(curl, Ω) ⊆ L²(Ω; ℝ³) → L²(Ω; ℝ³)`,
+`(curl v)ᵢ = ∂_{i+1} v_{i+2} - ∂_{i+2} v_{i+1}` (indices mod 3; formally self-adjoint). -/
+def curl (Ω : Set (Fin 3 → ℝ)) : L2Field Ω (Fin 3) →ₗ.[ℝ] L2Field Ω (Fin 3) :=
+  weakOp Ω fun ψ x i =>
+    partialDeriv (i + 1) (fun y => ψ y (i + 2)) x - partialDeriv (i + 2) (fun y => ψ y (i + 1)) x
+
+/-- The **weak divergence** `div : H(div, Ω) ⊆ L²(Ω; ℝ³) → L²(Ω)` (formal adjoint `-grad`). -/
+def div (Ω : Set (Fin 3 → ℝ)) : L2Field Ω (Fin 3) →ₗ.[ℝ] L2Field Ω (Fin 1) :=
+  weakOp Ω fun ψ x j => -partialDeriv j (fun y => ψ y 0) x
+
+/-- The **vector proxy** of a `0`-form: the scalar `f_∅`. -/
+def proxy0 {Ω : Set (Fin 3 → ℝ)} (u : L2Form Ω 0) : L2Field Ω (Fin 1) :=
+  WithLp.toLp 2 fun _ => u ⟨∅, rfl⟩
+
+/-- The **vector proxy** of a `1`-form `Σⱼ vⱼ dxⱼ`: the vector `v`. -/
+def proxy1 {Ω : Set (Fin 3 → ℝ)} (u : L2Form Ω 1) : L2Field Ω (Fin 3) :=
+  WithLp.toLp 2 fun j => u ⟨{j}, by simp⟩
+
+/-- The **vector proxy** of a `2`-form `ω`: the vector `(ω₁₂, -ω₀₂, ω₀₁)`. -/
+def proxy2 {Ω : Set (Fin 3 → ℝ)} (u : L2Form Ω 2) : L2Field Ω (Fin 3) :=
+  WithLp.toLp 2 fun i => (-1 : ℝ) ^ (i : ℕ) • u ⟨Finset.univ.erase i, by simp⟩
+
+/-- `(σ, E, B)` is a **strong solution of Maxwell's equations** on `[0, T]`: `σ' = -grad* E`,
+`E' = grad σ - curl* B`, `B' = curl E` for the weak `grad`, `curl` and their adjoints
+(`grad* = -div` with `E · n = 0`, `curl* = curl` with `B × n = 0`), the derivatives in `L²`;
+`B ∈ L²(Ω; ℝ³)` is the last space of the window `H¹ → H(curl) → L²(Ω; ℝ³)`. -/
+def IsMaxwellSolution (Ω : Set (Fin 3 → ℝ)) (T : ℝ) (σ : ℝ → L2Field Ω (Fin 1))
+    (E B : ℝ → L2Field Ω (Fin 3)) : Prop :=
+  ∀ t ∈ Icc 0 T, ∃ σ' E' B' g c, HasDerivWithinAt σ σ' (Icc 0 T) t ∧
+    HasDerivWithinAt E E' (Icc 0 T) t ∧ HasDerivWithinAt B B' (Icc 0 T) t ∧
+    (E t, -σ') ∈ (grad Ω)†.graph ∧ (σ t, g) ∈ (grad Ω).graph ∧ (B t, c) ∈ (curl Ω)†.graph ∧
+    E' = g - c ∧ (E t, B') ∈ (curl Ω).graph
+
+/-- `(σ, E, B)` is a **semi-discrete (Galerkin) solution of Maxwell's equations** on `[0, T]` in
+`V⁰ × V¹ × V²`: `⟪σ', τ⟫ + ⟪E', F⟫ + ⟪B', G⟫ = ⟪grad σ, F⟫ + ⟪curl E, G⟫ - ⟪E, grad τ⟫ -
+⟪B, curl F⟫` for all `τ ∈ V⁰`, `F ∈ V¹`, `G ∈ V²`. -/
+def IsMaxwellGalerkin (Ω : Set (Fin 3 → ℝ)) (V₀ : Set (L2Field Ω (Fin 1)))
+    (V₁ V₂ : Set (L2Field Ω (Fin 3))) (T : ℝ) (σ : ℝ → L2Field Ω (Fin 1))
+    (E B : ℝ → L2Field Ω (Fin 3)) : Prop :=
+  ∀ t ∈ Icc 0 T, σ t ∈ V₀ ∧ E t ∈ V₁ ∧ B t ∈ V₂ ∧ ∃ σ' E' B', HasDerivWithinAt σ σ' (Icc 0 T) t ∧
+    HasDerivWithinAt E E' (Icc 0 T) t ∧ HasDerivWithinAt B B' (Icc 0 T) t ∧
+    ∀ τ ∈ V₀, ∀ F ∈ V₁, ∀ G ∈ V₂, ∀ gσ gτ cE cF, (σ t, gσ) ∈ (grad Ω).graph →
+      (τ, gτ) ∈ (grad Ω).graph → (E t, cE) ∈ (curl Ω).graph → (F, cF) ∈ (curl Ω).graph →
+        ⟪σ', τ⟫_ℝ + ⟪E', F⟫_ℝ + ⟪B', G⟫_ℝ =
+          ⟪gσ, F⟫_ℝ + ⟪cE, G⟫_ℝ - ⟪E t, gτ⟫_ℝ - ⟪B t, cF⟫_ℝ
+
 /-! ### The theorems -/
 
 /-- **The finite element de Rham complexes of `HΛ(Ω)`** ([AFW2006], §5; [AFW2010], §5.2, §5.5;
@@ -501,6 +568,45 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
           Set (L2Form (parallelepiped A b) (k + 1))) ∧
         IsClosed (LinearMap.range (dMin (parallelepiped A b) k).toFun :
           Set (L2Form (parallelepiped A b) (k + 1))) := by
+  sorry
+
+/-- **Maxwell's equations** ([QuennevilleBelair2015], Ch. 4; [AFW2010], §4; [Monk2003]): on
+`Ω ⊆ ℝ³` star-shaped with respect to a ball, with a shape-regular, quasi-uniform family of meshes
+`M_N` and an admissible sequence `S`, the vector proxies `V_N⁰`, `V_N¹`, `V_N²` of `S_k(M_N)`
+(for `S = P₁⁻`: the Lagrange, Nédélec edge and Raviart–Thomas face elements) lie in `H¹(Ω)`,
+`H(curl, Ω)` and `H(div, Ω)`. Maxwell's equations are in Hodge-wave form: with `H = -B` they are
+`E' = curl H`, `H' = -curl E` with perfect-magnetic-conductor walls. For data `(σ₀, E₀, B₀)` in the domain of the Maxwell operator and every `T`:
+there is a unique strong solution on `[0, T]`, it conserves the energy, it satisfies the Gauss
+laws `σ = 0`, `grad* E = 0`, `div B = 0` if the data do, and it is the uniform limit on `[0, T]`
+of every family of Galerkin solutions in `V_N⁰ × V_N¹ × V_N²` whose initial data converge to the
+data, `N → ∞`; such families exist. -/
+theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ → SimplicialMesh 3}
+    (hM : IsMeshFamily Ω M) (S : PolySeq) :
+    (∀ N, proxy0 '' femSpace Ω (M N) S 0 ⊆ (grad Ω).domain ∧
+      proxy1 '' femSpace Ω (M N) S 1 ⊆ (curl Ω).domain ∧
+      proxy2 '' femSpace Ω (M N) S 2 ⊆ (div Ω).domain) ∧
+    ∀ σ₀ E₀ B₀, σ₀ ∈ (grad Ω).domain → E₀ ∈ (curl Ω).domain → E₀ ∈ (grad Ω)†.domain →
+      B₀ ∈ (curl Ω)†.domain → ∀ T, ∃ σ E B, σ 0 = σ₀ ∧ E 0 = E₀ ∧ B 0 = B₀ ∧
+        IsMaxwellSolution Ω T σ E B ∧
+        (∀ σ₁ E₁ B₁, σ₁ 0 = σ₀ → E₁ 0 = E₀ → B₁ 0 = B₀ → IsMaxwellSolution Ω T σ₁ E₁ B₁ →
+          ∀ t ∈ Icc 0 T, σ₁ t = σ t ∧ E₁ t = E t ∧ B₁ t = B t) ∧
+        (∀ t ∈ Icc 0 T, ‖σ t‖ ^ 2 + ‖E t‖ ^ 2 + ‖B t‖ ^ 2 = ‖σ₀‖ ^ 2 + ‖E₀‖ ^ 2 + ‖B₀‖ ^ 2) ∧
+        (σ₀ = 0 → (E₀, 0) ∈ (grad Ω)†.graph → (B₀, 0) ∈ (div Ω).graph → ∀ t ∈ Icc 0 T,
+          σ t = 0 ∧ (E t, 0) ∈ (grad Ω)†.graph ∧ (B t, 0) ∈ (div Ω).graph) ∧
+        (∀ (σh : ℕ → ℝ → L2Field Ω (Fin 1)) (Eh Bh : ℕ → ℝ → L2Field Ω (Fin 3)),
+          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0)
+            (proxy1 '' femSpace Ω (M N) S 1) (proxy2 '' femSpace Ω (M N) S 2) T
+            (σh N) (Eh N) (Bh N)) →
+          Tendsto (fun N => σh N 0) atTop (𝓝 σ₀) → Tendsto (fun N => Eh N 0) atTop (𝓝 E₀) →
+          Tendsto (fun N => Bh N 0) atTop (𝓝 B₀) →
+          TendstoUniformlyOn σh σ atTop (Icc 0 T) ∧ TendstoUniformlyOn Eh E atTop (Icc 0 T) ∧
+            TendstoUniformlyOn Bh B atTop (Icc 0 T)) ∧
+        ∃ (σh : ℕ → ℝ → L2Field Ω (Fin 1)) (Eh Bh : ℕ → ℝ → L2Field Ω (Fin 3)),
+          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0)
+            (proxy1 '' femSpace Ω (M N) S 1) (proxy2 '' femSpace Ω (M N) S 2) T
+            (σh N) (Eh N) (Bh N)) ∧
+          Tendsto (fun N => σh N 0) atTop (𝓝 σ₀) ∧ Tendsto (fun N => Eh N 0) atTop (𝓝 E₀) ∧
+          Tendsto (fun N => Bh N 0) atTop (𝓝 B₀) := by
   sorry
 
 end FEEC

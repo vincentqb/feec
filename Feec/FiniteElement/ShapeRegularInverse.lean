@@ -256,18 +256,6 @@ theorem sqrt_abs_det_mul_le {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n)
 
 /-! ### Transfer of reference estimates to shape-regular simplices -/
 
-/-- `0 < h_T` for an `n`-simplex of `ℝⁿ`, `n ≥ 1`. -/
-theorem diam_pos [NeZero n] (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 < diam T := by
-  have h01 : (0 : Fin (n + 1)) ≠ 1 := by
-    intro h
-    have := congrArg Fin.val h
-    rw [Fin.val_zero, Fin.val_one', Nat.one_mod_eq_one.2 (by have := NeZero.ne n; omega)] at this
-    exact zero_ne_one this
-  have hne : T.points 0 ≠ T.points 1 := fun h => h01 (T.independent.injective h)
-  calc 0 < dist (T.points 0) (T.points 1) := dist_pos.2 hne
-    _ ≤ diam T := Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded
-        (T.point_mem_closedInterior 0) (T.point_mem_closedInterior 1)
-
 /-- The constant of the transferred inverse estimates. -/
 def invConst (n k : ℕ) (A₀ C c : ℝ) : ℝ :=
   2 ^ n * A₀ * √(8 ^ n) * ((n : ℝ) ^ 2 * C ^ 2) ^ k / √c * (1 + C)

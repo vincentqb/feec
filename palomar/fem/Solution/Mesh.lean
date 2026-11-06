@@ -8,8 +8,9 @@ public import Feec.Models.StarShaped.FiniteElement
 
 A mesh of the challenge is a `Feec.Mesh.SimplicialMesh` with the same simplices
 (`SimplicialMesh.toFeec`, its domain replaced by an equal set), with the same diameters, mesh
-size and edge matrices; shape regularity and quasi-uniformity are those of `Feec`
-(`isShapeRegular_toFeec`, `isQuasiUniform_toFeec`). A domain star-shaped with respect to a ball
+size; shape regularity by inscribed balls gives that of `Feec` by edge matrices
+(`isShapeRegular_toFeec`, from `Feec.Mesh.isShapeRegular_of_ball`) and quasi-uniformity is that
+of `Feec` (`isQuasiUniform_toFeec`). A domain star-shaped with respect to a ball
 is a `Feec.Models.StarShaped.StarDomain` (`starDomainOf`) and a mesh family of the challenge is a
 `Feec.Models.StarShaped.MeshFamily` (`meshFamilyOf`).
 
@@ -63,23 +64,27 @@ end SimplicialMesh
 
 theorem diam_eq {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : diam T = Feec.Mesh.diam T := rfl
 
-theorem edgeMap_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) : edgeMap T = T.linearPart := rfl
-
-theorem isShapeRegular_toFeec {M : SimplicialMesh n} {Ω : Set (Fin n → ℝ)} (h : M.domain = Ω)
-    {C c : ℝ} (hC : 0 ≤ C) (hM : IsShapeRegular M C c) :
+/-- A mesh shape regular with constant `σ` (inscribed balls) is shape regular in the sense of
+`Feec` (edge matrices), with constants `max n σ` and `1 / (n! σⁿ)`
+(`Feec.Mesh.isShapeRegular_of_ball`). -/
+theorem isShapeRegular_toFeec [NeZero n] {M : SimplicialMesh n} {Ω : Set (Fin n → ℝ)}
+    (h : M.domain = Ω) {σ : ℝ} (hM : IsShapeRegular M σ) :
     Feec.Mesh.IsShapeRegular ((M.toFeec Ω h).simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n))
-      C c := by
-  intro T hT
-  obtain ⟨h1, h2, h3⟩ := hM T hT
-  have hd : 0 ≤ diam T := Metric.diam_nonneg
-  refine ⟨?_, ?_, h3⟩
-  · refine ContinuousLinearMap.opNorm_le_bound _ (mul_nonneg hC hd) fun x => ?_
-    exact h1 x
-  · refine ContinuousLinearMap.opNorm_le_bound _ (div_nonneg hC hd) fun y => ?_
-    have e : T.linearEquiv (T.linearEquiv.symm y) = y := T.linearEquiv.apply_symm_apply y
-    have := h2 (T.linearEquiv.symm y)
-    rw [edgeMap_eq, ← Affine.Simplex.linearEquiv_apply, e] at this
-    exact this
+      (max n σ) (1 / ((n.factorial : ℝ) * σ ^ n)) :=
+  Feec.Mesh.isShapeRegular_of_ball hM
+
+/-- The shape-regularity constant of a mesh with a simplex is positive. -/
+theorem pos_of_isShapeRegular [NeZero n] {M : SimplicialMesh n} {σ : ℝ} (hM : IsShapeRegular M σ)
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) : 0 < σ := by
+  obtain ⟨-, ρ, hρ, -, hd⟩ := hM T hT
+  exact pos_of_mul_pos_left ((Feec.Mesh.diam_pos T).trans_le hd) hρ.le
+
+/-- A mesh of positive mesh size has a simplex. -/
+theorem exists_mem_simplices {M : SimplicialMesh n} (hM : 0 < meshSize M) :
+    ∃ T, T ∈ M.simplices := by
+  by_contra h
+  have : IsEmpty M.simplices := ⟨fun T => h ⟨T, T.2⟩⟩
+  simp [meshSize] at hM
 
 theorem isQuasiUniform_toFeec {M : SimplicialMesh n} {Ω : Set (Fin n → ℝ)} (h : M.domain = Ω)
     {q : ℝ} (hM : IsQuasiUniform M q) : Feec.FiniteElement.IsQuasiUniform (M.toFeec Ω h) q :=
@@ -105,24 +110,26 @@ def starDomainOf {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω) :
     (starDomainOf hΩ).Ω = Ω := rfl
 
 /-- A mesh family of the challenge as a `Feec` mesh family of the star domain. -/
-def meshFamilyOf {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ → SimplicialMesh n}
-    (hM : IsMeshFamily Ω M) : Feec.Models.StarShaped.MeshFamily (starDomainOf hΩ) where
+def meshFamilyOf [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
+    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) :
+    Feec.Models.StarShaped.MeshFamily (starDomainOf hΩ) where
   mesh N := (M N).toFeec Ω (hM.1 N)
-  C := hM.2.1.choose
-  c := hM.2.1.choose_spec.choose
-  q := hM.2.1.choose_spec.choose_spec.choose
-  C_nonneg := hM.2.1.choose_spec.choose_spec.choose_spec.1
-  c_pos := hM.2.1.choose_spec.choose_spec.choose_spec.2.1
-  q_pos := hM.2.1.choose_spec.choose_spec.choose_spec.2.2.1
+  C := max n hM.2.1.choose
+  c := 1 / ((n.factorial : ℝ) * hM.2.1.choose ^ n)
+  q := hM.2.1.choose_spec.choose
+  C_nonneg := le_trans n.cast_nonneg (le_max_left _ _)
+  c_pos := by
+    obtain ⟨T, hT⟩ := exists_mem_simplices (hM.2.2.1 0)
+    have := pos_of_isShapeRegular (hM.2.1.choose_spec.choose_spec.2 0).1 hT
+    positivity
+  q_pos := hM.2.1.choose_spec.choose_spec.1
   domain_eq _ := rfl
   data N :=
-    ⟨isShapeRegular_toFeec (hM.1 N) hM.2.1.choose_spec.choose_spec.choose_spec.1
-      (hM.2.1.choose_spec.choose_spec.choose_spec.2.2.2 N).1,
-      isQuasiUniform_toFeec (hM.1 N) (hM.2.1.choose_spec.choose_spec.choose_spec.2.2.2 N).2,
-      hM.2.2.1 N⟩
+    ⟨isShapeRegular_toFeec (hM.1 N) (hM.2.1.choose_spec.choose_spec.2 N).1,
+      isQuasiUniform_toFeec (hM.1 N) (hM.2.1.choose_spec.choose_spec.2 N).2, hM.2.2.1 N⟩
   tendsto_meshSize := hM.2.2.2
 
-@[simp] theorem meshFamilyOf_mesh {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
+@[simp] theorem meshFamilyOf_mesh [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (N : ℕ) :
     (meshFamilyOf hΩ hM).mesh N = (M N).toFeec Ω (hM.1 N) := rfl
 

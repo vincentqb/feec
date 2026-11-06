@@ -13,10 +13,10 @@ project:
     Mathlib with the definitions of the Palomar entry palomar/feec (Hilbert complexes, subcomplex
     families with cochain projections, graph-norm bounds and approximation, Jackson estimates)
     copied verbatim, so that the families of this entry are families in the sense of the theorem
-    FEEC.feec of palomar/feec. Three compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
+    FEEC.feec of palomar/feec. Four compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
     bounded open domain star-shaped with respect to a ball, M_N conforming simplicial meshes of
-    Omega (Mathlib's Affine.Simplex), uniformly shape regular (||B_T|| <= C h_T,
-    ||B_T^-1|| <= C / h_T, c h_T^n <= |det B_T| for the edge matrix B_T) and quasi-uniform
+    Omega (Mathlib's Affine.Simplex), uniformly shape regular (every simplex T contains a ball of
+    radius rho with h_T <= sigma rho, i.e. h_T / rho_T <= sigma) and quasi-uniform
     (q h_N <= h_T), with mesh size h_N -> 0, and S an admissible sequence of polynomial families
     (P_(r_k) Lambda^k or P_(r_k)^- Lambda^k in each degree, r_k >= 1, consecutive degrees
     related by the transitions of AFW2006 §5 / AFW2010 §5.2). Then the L^2 de Rham complex
@@ -37,9 +37,20 @@ project:
     and the weak and the minimal exterior derivatives have closed range in every degree; so the
     static FEEC theorem of palomar/feec (discrete Poincare inequality, stability and
     quasi-optimality of the mixed Hodge Laplacian, cohomology) and its rates apply to the
-    families of FEEC.fem and FEEC.femMin there with no remaining hypothesis. The proof is the
-    library Feec of this repository (Feec.FiniteElement, Feec.Models.StarShaped,
-    Feec.Models.Parallelepiped, Feec.Mesh).
+    families of FEEC.fem and FEEC.femMin there with no remaining hypothesis. FEEC.maxwell: for
+    n = 3, the vector proxies V_N^0, V_N^1, V_N^2 of S_0(M_N), S_1(M_N), S_2(M_N) (scalar fields,
+    vector fields v_j = omega_j, vector fields (omega_12, -omega_02, omega_01); for S = P_1^-
+    the Lagrange, Nedelec edge and Raviart-Thomas face elements) lie in the domains of the weak
+    gradient, curl and divergence (each defined as the adjoint of the closure of its formal
+    adjoint on test fields, as the weak exterior derivative), and they discretize Maxwell's
+    equations sigma' = -grad* E, E' = grad sigma - curl* B, B' = curl E (the Hodge wave equation
+    of the window H^1 -> H(curl) -> L^2(Omega; R^3)): for data in the domain of the Maxwell
+    operator and every T there is a unique strong solution on [0, T], it conserves the energy,
+    satisfies the Gauss laws sigma = 0, grad* E = 0, div B = 0 for all t if the data do, and is
+    the uniform limit on [0, T] of every family of Galerkin solutions in V_N^0 x V_N^1 x V_N^2
+    whose initial data converge to the data; such families exist. The proof is the library Feec
+    of this repository (Feec.FiniteElement, Feec.Models.StarShaped, Feec.Models.Parallelepiped,
+    Feec.Mesh, Feec.Instances.Maxwell).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -110,6 +121,17 @@ sources:
     location: "§3.1-§3.2 (shape-regular families, interpolation error)"
     relationship: "background"
     author_endorsement: "not-contacted"
+  - title: "Finite Element Methods for Maxwell's Equations"
+    authors:
+      - "Peter Monk"
+    id: "doi:10.1093/acprof:oso/9780198508885.001.0001"
+    type: "book"
+    location: "Oxford University Press (2003), the spaces H(curl), H(div), the Nedelec and Raviart-Thomas elements, semi-discrete Maxwell"
+    relationship: "background"
+    note: >-
+      Background for FEEC.maxwell; the compared statement is the Hodge wave equation of the
+      Maxwell window in vector proxies, not Monk's (E, H) formulation.
+    author_endorsement: "not-contacted"
   - title: "Simplizialzerlegungen von beschränkter Flachheit"
     authors:
       - "Hans Freudenthal"
@@ -123,7 +145,7 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 (finite element approximation of Hilbert complexes), Ch. 5 (finite element spaces on the cube)"
+    location: "Ch. 4 (finite element approximation of Hilbert complexes; §4.4 Thms 4.6, 4.7 and §4.6 Thm 4.14 for the Hodge wave equation, §4.9 Prop. 4.16 for reducing constraints such as the Gauss laws), Ch. 5 (finite element spaces on the cube)"
     relationship: "background"
     note: >-
       The thesis of the formalization's author uses these finite element complexes for the
@@ -137,11 +159,13 @@ status:
     Formalized and compared: FEEC.fem and FEEC.femMin for every dimension n >= 1, every bounded
     open domain star-shaped with respect to a ball, every shape-regular quasi-uniform family of
     conforming simplicial meshes of it with h_N -> 0, and every admissible sequence with r_k >= 1;
-    FEEC.fem_parallelepiped for every parallelepiped. Not compared (proved in Feec, outside the
+    FEEC.fem_parallelepiped for every parallelepiped; FEEC.maxwell for n = 3 on the same domains
+    and meshes. Not compared (proved in Feec, outside the
     statement): the Whitney forms as a separate family (they are the sequence P_1^- in every
     degree), the dimension counts and unisolvence of the degrees of freedom, the finite element
     theory of the cube with mixed boundary conditions, the cubical and weak-symmetry elements,
-    the Maxwell and Einstein-Bianchi instances, the H^1 approximation of the smoothed projections;
+    the Einstein-Bianchi instances, the perfect-electric-conductor Maxwell discretization (the
+    minimal complex), the Maxwell rates, the H^1 approximation of the smoothed projections;
     the closed range on general star-shaped domains (a hypothesis of the static theory there,
     true on Lipschitz domains by Costabel-McIntosh 2010, not formalized).
   sorry_count: 0
@@ -178,7 +202,7 @@ automation:
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written by an AI agent for this submission, to be reviewed by the author; the Solution
     identifies them with the definitions of the library Feec (Solution/Forms.lean, Poly.lean,
-    Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean) and applies its theorems.
+    Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean, Maxwell.lean) and applies its theorems.
 
 fidelity:
   divergences: >-
@@ -196,9 +220,11 @@ fidelity:
     forms in H Lambda^k(Omega). The equivalence with the degrees of freedom is proved in the
     solution; the equivalence with membership in H Lambda^k is not stated (the conformity
     direction is a consequence of the subcomplex property, which is compared).
-    (4) Shape regularity is stated through the edge matrix (||B_T|| <= C h_T,
-    ||B_T^-1|| <= C / h_T, c h_T^n <= |det B_T|), equivalent to a bound on h_T / rho_T
-    (Ciarlet §3.1); the equivalence is not stated. Quasi-uniformity is assumed (the smoothed
+    (4) Shape regularity is the bound h_T / rho_T <= sigma (Ciarlet §3.1), stated as: every
+    simplex contains a ball of radius rho with h_T <= sigma rho, for the sup norm of Fin n -> R
+    (Euclidean balls change sigma by a factor depending on n); Feec works with the equivalent
+    edge-matrix bounds, and the two directions are proved there (Feec.Mesh.isShapeRegular_of_ball,
+    Feec.Mesh.exists_ball_of_isShapeRegular). Quasi-uniformity is assumed (the smoothed
     projections of Feec use a fixed mollification scale h_N); the sources' local variants for
     merely shape-regular meshes are not formalized.
     (5) Admissible sequences have r_k >= 1 in every degree; the piecewise constants
@@ -216,13 +242,25 @@ fidelity:
     derivatives up to order s+2 vanish on the boundary: a smaller class than the usual one
     (vanishing tangential trace only).
     (8) The boundary facets of femSpaceMin are the facets of a single simplex of the mesh.
+    (9) The uniform L^2 bound of the cochain projections is stated on the domain D(d) of the
+    complex (where the projections of a subcomplex family are defined), not as an extension to
+    all of L^2.
+    (10) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
+    natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy): E . n = 0
+    and B x n = 0 enter through the adjoints grad* and curl*; the perfect electric conductor
+    (the minimal complex) is not compared. Scalar fields are L^2 fields with one component
+    (Fin 1), and the state is the triple (sigma, E, B) with the scalar potential sigma of the
+    Hodge wave equation (sigma = 0 is one of the Gauss laws). Data lie in the domain of the
+    Maxwell operator; the statement has no rate (the Jackson estimate of FEEC.fem with the rates
+    of palomar/feec gives them, not restated here). The Galerkin solutions are differentiable
+    in L^2 on [0, T] with values in V_N; their derivatives are not required to lie in V_N.
 
 review:
   status: "self-assessed"
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the three compared theorems and
+    Not yet reviewed by the author: the Challenge statement (the four compared theorems and
     their definitions, 2026-11-06). Every merge of the library was gated by a full build (zero
     warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
     review. No external mathematical review.
@@ -243,6 +281,17 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "As FEEC.fem with the Min versions; the spaces through mem_V₀_iff."
+    - source: "[QuennevilleBelair2015] §4.4, §4.6, Prop. 4.16; [AFW2010] §4; [Monk2003]"
+      lean: "FEEC.maxwell"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.Instances.Maxwell.maxwellFEEC for the vector proxies of
+        Feec.Models.StarShaped.MeshFamily.polyFamily (Solution/Maxwell.lean: the weak operators
+        are maximal realizations, weakOp_eq; the vector-proxy complex is the unitary transport of
+        H Lambda(Omega), vC_maximalComplex_eq; strong and Galerkin solutions of the challenge
+        are those of the Hodge wave equation of the window, isMaxwellSolution_of,
+        isStrongSolution_of, galerkin_of_semidiscrete, semidiscrete_of_galerkin).
     - source: "[Freudenthal1942]; [AFW2010] §4 (closed range)"
       lean: "FEEC.fem_parallelepiped"
       module: "Challenge"

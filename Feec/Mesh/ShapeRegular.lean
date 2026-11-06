@@ -1,6 +1,7 @@
 module
 
 public import Feec.Mesh.Freudenthal
+public import Mathlib.LinearAlgebra.Matrix.AbsoluteValue
 
 /-!
 # Shape regularity
@@ -12,8 +13,12 @@ Every `n`-simplex `T` of `ℝⁿ` is the image `T = F_T(T̂)` of the reference s
 `‖B_T‖ ≤ C h_T`, `‖B_T⁻¹‖ ≤ C / h_T` and `|det B_T| ≥ c h_Tⁿ` for all its members
 ([Ciarlet2002], §3.1; [Arnold2018], Ch. 7). Here `ℝⁿ` carries Mathlib's
 sup norm, `h_T` is the sup-norm diameter and `‖·‖` the induced operator norm; changing the norm
-changes only the constants. The classical equivalent formulation by a bound on `h_T / ρ_T`
-(`ρ_T` the inradius) is not formalized.
+changes only the constants. This is equivalent to the classical formulation by a bound on
+`h_T / ρ_T`, `ρ_T` the inradius: if `T` contains a ball of radius `ρ` with `h_T ≤ σ ρ`, then
+`‖B_T‖ ≤ n h_T` (the edges have length at most `h_T`), `‖B_T⁻¹‖ ≤ 1 / ρ` (`B_T⁻¹` maps
+differences of points of `T` to differences of points of `T̂ ⊆ [0, 1]ⁿ`) and
+`|det B_T| ≥ ρⁿ / n!` (`|det B_T⁻¹| ≤ n! ‖B_T⁻¹‖ⁿ`); conversely `T` contains the ball of radius
+`h_T / (2 n C)` around the image of `(1/(2n), …, 1/(2n)) ∈ T̂`.
 
 The level-`N` Freudenthal simplex `T = b + (s/N)(m + K_σ)` has `B_T = (s/N) B_σ`, where `B_σ` is
 the triangular `0/1` matrix of `Feec.Mesh.kuhnMap`; `‖B_σ‖ ≤ n`, `‖B_σ⁻¹‖ ≤ 2` (the rows of
@@ -28,6 +33,8 @@ the level `N`.
 
 ## Main results
 
+* `isShapeRegular_of_ball`, `exists_ball_of_isShapeRegular`: shape regularity is a uniform bound
+  on `h_T / ρ_T` (inscribed balls of radius `ρ ≥ h_T / σ`).
 * `abs_det_kuhnMap`: `|det B_σ| = 1`;
   `norm_kuhnMap_apply_le`, `norm_le_two_mul_norm_kuhnMap`.
 * `linearPart_freudenthalMesh_simplex`: `B_T = (s/N) B_σ` for the Freudenthal simplices.
@@ -65,6 +72,179 @@ def IsShapeRegular (S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)) (C c : ℝ) 
   ∀ T ∈ S, ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C * diam T ∧
     ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C / diam T ∧
     c * diam T ^ n ≤ |LinearMap.det T.linearPart|
+
+/-- `0 < h_T` for an `n`-simplex of `ℝⁿ`, `n ≥ 1`. -/
+theorem diam_pos [NeZero n] (T : Affine.Simplex ℝ (Fin n → ℝ) n) : 0 < diam T := by
+  have h01 : (0 : Fin (n + 1)) ≠ 1 := by
+    intro h
+    have := congrArg Fin.val h
+    rw [Fin.val_zero, Fin.val_one', Nat.one_mod_eq_one.2 (by have := NeZero.ne n; omega)] at this
+    exact zero_ne_one this
+  have hne : T.points 0 ≠ T.points 1 := fun h => h01 (T.independent.injective h)
+  calc 0 < dist (T.points 0) (T.points 1) := dist_pos.2 hne
+    _ ≤ diam T := Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded
+        (T.point_mem_closedInterior 0) (T.point_mem_closedInterior 1)
+
+/-! ### Inscribed balls -/
+
+/-- `‖B_T‖ ≤ n h_T`: the edges `pᵢ₊₁ - p₀` have length at most `h_T`. -/
+theorem norm_linearEquiv_le_mul_diam (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ n * diam T := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (mul_nonneg n.cast_nonneg (diam_nonneg T))
+    fun x => ?_
+  rw [ContinuousLinearEquiv.coe_coe, Affine.Simplex.linearEquiv_apply,
+    Affine.Simplex.linearPart_apply]
+  calc ‖∑ i, x i • (T.points i.succ - T.points 0)‖
+        ≤ ∑ i, ‖x i • (T.points i.succ - T.points 0)‖ := norm_sum_le _ _
+    _ ≤ ∑ _i : Fin n, ‖x‖ * diam T := Finset.sum_le_sum fun i _ => by
+        rw [norm_smul, ← dist_eq_norm]
+        exact mul_le_mul (norm_le_pi_norm x i)
+          (Metric.dist_le_diam_of_mem T.isCompact_closedInterior.isBounded
+            (T.point_mem_closedInterior _) (T.point_mem_closedInterior _))
+          dist_nonneg (norm_nonneg _)
+    _ = n * diam T * ‖x‖ := by simp; ring
+
+/-- `‖B_T⁻¹‖ ≤ 1 / ρ` if `T` contains a ball of radius `ρ`: `B_T⁻¹` maps differences of points of
+`T` to differences of points of `T̂ ⊆ [0, 1]ⁿ`. -/
+theorem norm_linearEquiv_symm_le_of_ball_subset {T : Affine.Simplex ℝ (Fin n → ℝ) n}
+    {x : Fin n → ℝ} {ρ : ℝ} (hρ : 0 < ρ) (hB : Metric.ball x ρ ⊆ T.closedInterior) :
+    ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ 1 / ρ := by
+  have hcB : Metric.closedBall x ρ ⊆ T.closedInterior := by
+    rw [← closure_ball x hρ.ne']
+    exact closure_minimal hB T.isCompact_closedInterior.isClosed
+  have hunit : ∀ a ∈ (refSimplex n).closedInterior, ∀ i, 0 ≤ a i ∧ a i ≤ 1 := fun a ha i => by
+    rw [mem_closedInterior_refSimplex] at ha
+    exact ⟨ha.1 i, (Finset.single_le_sum (fun j _ => ha.1 j) (Finset.mem_univ i)).trans ha.2⟩
+  have key : ∀ y, ‖y‖ ≤ ρ → ‖T.linearEquiv.symm y‖ ≤ 1 := by
+    intro y hy
+    have h1 : x + y ∈ T.closedInterior :=
+      hcB (by rwa [Metric.mem_closedBall, dist_eq_norm, add_sub_cancel_left])
+    have h0 : x ∈ T.closedInterior := hcB (Metric.mem_closedBall_self hρ.le)
+    rw [T.closedInterior_eq_image_refMap] at h1 h0
+    obtain ⟨a, ha, hax⟩ := h1
+    obtain ⟨b, hb, hbx⟩ := h0
+    have hy' : T.linearEquiv.symm y = a - b := by
+      rw [ContinuousLinearEquiv.symm_apply_eq, Affine.Simplex.linearEquiv_apply, map_sub]
+      rw [Affine.Simplex.refMap_apply] at hax hbx
+      calc y = (x + y) - x := by abel
+        _ = _ := by rw [← hax, ← hbx]; abel
+    rw [hy']
+    refine (pi_norm_le_iff_of_nonneg zero_le_one).2 fun i => ?_
+    rw [Pi.sub_apply, Real.norm_eq_abs, abs_le]
+    constructor <;> linarith [hunit a ha i, hunit b hb i]
+  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun y => ?_
+  rcases eq_or_ne y 0 with rfl | hy0
+  · simp
+  have hy : 0 < ‖y‖ := norm_pos_iff.2 hy0
+  have h := key ((ρ / ‖y‖) • y) (by
+    rw [norm_smul, Real.norm_of_nonneg (by positivity), div_mul_cancel₀ _ hy.ne'])
+  rw [map_smul, norm_smul, Real.norm_of_nonneg (by positivity)] at h
+  rw [ContinuousLinearEquiv.coe_coe]
+  calc ‖T.linearEquiv.symm y‖ = (ρ / ‖y‖ * ‖T.linearEquiv.symm y‖) * (‖y‖ / ρ) := by
+        field_simp
+    _ ≤ 1 * (‖y‖ / ρ) := by gcongr
+    _ = 1 / ρ * ‖y‖ := by ring
+
+/-- `|det B_T| ≥ 1 / (n! Cⁿ)` if `‖B_T⁻¹‖ ≤ C`: the entries of `B_T⁻¹` are bounded by `C`, so
+`|det B_T⁻¹| ≤ n! Cⁿ`. -/
+theorem one_div_le_abs_det_of_norm_symm_le {T : Affine.Simplex ℝ (Fin n → ℝ) n} {C : ℝ}
+    (h : ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ ≤ C) :
+    1 / ((n.factorial : ℝ) * C ^ n) ≤ |LinearMap.det T.linearPart| := by
+  set f : (Fin n → ℝ) →ₗ[ℝ] (Fin n → ℝ) := T.linearEquiv.symm.toLinearEquiv.toLinearMap
+  have hentry : ∀ i j, |LinearMap.toMatrix' f i j| ≤ C := fun i j => by
+    rw [LinearMap.toMatrix'_apply]
+    have hv : ‖(Pi.single j 1 : Fin n → ℝ)‖ ≤ 1 :=
+      (pi_norm_le_iff_of_nonneg zero_le_one).2 fun j' => by
+        by_cases hj : j' = j <;> simp [hj]
+    calc |f (Pi.single j 1) i|
+          ≤ ‖f (Pi.single j 1)‖ := by
+            rw [← Real.norm_eq_abs]; exact norm_le_pi_norm _ i
+      _ ≤ ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ * 1 := by
+          change ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) (Pi.single j 1)‖ ≤ _
+          exact (ContinuousLinearMap.le_opNorm _ _).trans (by gcongr)
+      _ ≤ C := by rw [mul_one]; exact h
+  have hdet := Matrix.det_le (abv := AbsoluteValue.abs) hentry
+  rw [LinearMap.det_toMatrix', Fintype.card_fin, nsmul_eq_mul] at hdet
+  have hf : LinearMap.det f = (LinearMap.det T.linearPart)⁻¹ :=
+    LinearEquiv.det_coe_symm T.linearEquiv.toLinearEquiv
+  change |LinearMap.det f| ≤ _ at hdet
+  rw [hf, abs_inv] at hdet
+  have hne : LinearMap.det T.linearPart ≠ 0 :=
+    (LinearEquiv.isUnit_det' T.linearEquiv.toLinearEquiv).ne_zero
+  have hpos : 0 < |LinearMap.det T.linearPart| := abs_pos.2 hne
+  rcases le_or_gt ((n.factorial : ℝ) * C ^ n) 0 with h0 | h0
+  · exact (one_div_nonpos.2 h0).trans hpos.le
+  · rw [div_le_iff₀ h0]
+    calc 1 = |LinearMap.det T.linearPart| * |LinearMap.det T.linearPart|⁻¹ :=
+          (mul_inv_cancel₀ hpos.ne').symm
+      _ ≤ |LinearMap.det T.linearPart| * (n.factorial * C ^ n) := by gcongr
+
+/-- **Shape regularity from inscribed balls** ([Ciarlet2002], §3.1): if every `T ∈ S` contains a
+ball of radius `ρ` with `h_T ≤ σ ρ` (`h_T / ρ_T ≤ σ`), then `S` is shape regular with constants
+`max n σ` and `1 / (n! σⁿ)`. -/
+theorem isShapeRegular_of_ball [NeZero n] {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)} {σ : ℝ}
+    (hS : ∀ T ∈ S, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ) :
+    IsShapeRegular S (max n σ) (1 / ((n.factorial : ℝ) * σ ^ n)) := by
+  intro T hT
+  obtain ⟨x, ρ, hρ, hB, hd⟩ := hS T hT
+  have hh := diam_pos T
+  have hσ : 0 < σ := pos_of_mul_pos_left (hh.trans_le hd) hρ.le
+  have hinv := norm_linearEquiv_symm_le_of_ball_subset hρ hB
+  have hinv' : 1 / ρ ≤ σ / diam T := by
+    rw [div_le_div_iff₀ hρ hh]; linarith
+  refine ⟨(norm_linearEquiv_le_mul_diam T).trans (by gcongr; exact le_max_left _ _),
+    hinv.trans (hinv'.trans (by gcongr; exact le_max_right _ _)), ?_⟩
+  have hdet := one_div_le_abs_det_of_norm_symm_le (hinv.trans hinv')
+  calc 1 / ((n.factorial : ℝ) * σ ^ n) * diam T ^ n
+        = 1 / ((n.factorial : ℝ) * (σ / diam T) ^ n) := by rw [div_pow]; field_simp
+    _ ≤ _ := hdet
+
+/-- **Inscribed balls from shape regularity**: a shape-regular `T` contains the ball of radius
+`h_T / (2 n C)` around the image of `(1/(2n), …, 1/(2n)) ∈ T̂`, so `h_T / ρ_T ≤ 2 n C`. -/
+theorem exists_ball_of_isShapeRegular [NeZero n] {S : Set (Affine.Simplex ℝ (Fin n → ℝ) n)}
+    {C c : ℝ} (hS : IsShapeRegular S C c) :
+    ∀ T ∈ S, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ 2 * n * C * ρ := by
+  intro T hT
+  obtain ⟨-, h2, -⟩ := hS T hT
+  have hh := diam_pos T
+  have hn : (0 : ℝ) < n := Nat.cast_pos.2 (Nat.pos_of_ne_zero (NeZero.ne n))
+  have hC : 0 < C := by
+    have hne : (T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) ≠ 0 := fun h0 => by
+      have := congrArg (fun f : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ) => f (T.linearEquiv 1)) h0
+      simp only [ContinuousLinearEquiv.coe_coe, ContinuousLinearEquiv.symm_apply_apply,
+        zero_apply] at this
+      exact one_ne_zero (congrFun this ⟨0, Nat.pos_of_ne_zero (NeZero.ne n)⟩)
+    have := (norm_pos_iff.2 hne).trans_le h2
+    exact (div_pos_iff.1 this).elim (fun h => h.1) fun h => absurd h.2 (not_lt.2 hh.le)
+  set c₀ : Fin n → ℝ := fun _ => 1 / (2 * n)
+  refine ⟨T.refMap c₀, diam T / (2 * n * C), by positivity, fun z hz => ?_,
+    le_of_eq (by field_simp)⟩
+  rw [T.closedInterior_eq_image_refMap]
+  set w := T.linearEquiv.symm (z - T.refMap c₀)
+  have hw : ‖w‖ < 1 / (2 * n) := by
+    have hle := ContinuousLinearMap.le_opNorm
+      (T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) (z - T.refMap c₀)
+    rw [ContinuousLinearEquiv.coe_coe] at hle
+    rw [Metric.mem_ball, dist_eq_norm] at hz
+    calc ‖w‖ ≤ C / diam T * ‖z - T.refMap c₀‖ := hle.trans (by gcongr)
+      _ < C / diam T * (diam T / (2 * n * C)) := by gcongr
+      _ = 1 / (2 * n) := by field_simp
+  have hwi : ∀ i, |w i| < 1 / (2 * n) := fun i =>
+    (Real.norm_eq_abs (w i) ▸ norm_le_pi_norm w i).trans_lt hw
+  refine ⟨c₀ + w, ?_, ?_⟩
+  · rw [mem_closedInterior_refSimplex]
+    refine ⟨fun i => ?_, ?_⟩
+    · have := (abs_lt.1 (hwi i)).1
+      simp only [Pi.add_apply, c₀]; linarith
+    · calc ∑ i, (c₀ + w) i ≤ ∑ _i : Fin n, 1 / (n : ℝ) := Finset.sum_le_sum fun i _ => by
+            have := (abs_lt.1 (hwi i)).2
+            have e : 1 / (2 * (n : ℝ)) + 1 / (2 * n) = 1 / n := by field_simp; ring
+            simp only [Pi.add_apply, c₀]; linarith
+        _ = 1 := by simp [hn.ne']
+  · have hBw : T.linearPart w = z - T.refMap c₀ := by
+      rw [← Affine.Simplex.linearEquiv_apply]; exact T.linearEquiv.apply_symm_apply _
+    rw [Affine.Simplex.refMap_apply, map_add, hBw, Affine.Simplex.refMap_apply]
+    abel
 
 /-! ### The matrix `B_σ` -/
 

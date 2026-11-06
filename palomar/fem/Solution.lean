@@ -4,6 +4,7 @@ public import Solution.Complex
 public import Solution.Forms
 public import Solution.Spaces
 public import Solution.Regularity
+public import Solution.Maxwell
 public import Feec.Models.Parallelepiped.StarShaped
 
 /-!
@@ -31,7 +32,8 @@ of `A (0, ½)ⁿ + b`, here with the matrix `2 A`) and `Feec.Models.Parallelepip
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open Filter Topology Set MeasureTheory
+open scoped InnerProductSpace
+open Filter Topology Set MeasureTheory LinearPMap
 
 @[expose] public noncomputable section
 
@@ -154,24 +156,13 @@ def SimplicialMesh.ofFeec (M : Feec.Mesh.SimplicialMesh n) : SimplicialMesh n wh
   inter_closedInterior T hT T' hT' := by
     rw [vertexSet_eq, vertexSet_eq]; exact M.inter_closedInterior T hT T' hT'
 
-/-- A `Feec` mesh family is a mesh family of the challenge. -/
-theorem isMeshFamily_ofFeec {D : StarDomain n} (F : MeshFamily D) :
-    IsMeshFamily D.Ω fun N => SimplicialMesh.ofFeec (F.mesh N) := by
-  refine ⟨F.domain_eq, ⟨F.C, F.c, F.q, F.C_nonneg, F.c_pos, F.q_pos, fun N => ⟨?_, ?_⟩⟩,
+/-- A `Feec` mesh family is a mesh family of the challenge: its simplices contain balls of radius
+`h_T / (2 n C)` (`Feec.Mesh.exists_ball_of_isShapeRegular`). -/
+theorem isMeshFamily_ofFeec [NeZero n] {D : StarDomain n} (F : MeshFamily D) :
+    IsMeshFamily D.Ω fun N => SimplicialMesh.ofFeec (F.mesh N) :=
+  ⟨F.domain_eq, ⟨2 * n * F.C, F.q, F.q_pos, fun N =>
+    ⟨Feec.Mesh.exists_ball_of_isShapeRegular (F.data N).shape, (F.data N).quasi⟩⟩,
     fun N => (F.data N).meshSize_pos, F.tendsto_meshSize⟩
-  · intro T hT
-    obtain ⟨h1, h2, h3⟩ := (F.data N).shape T hT
-    refine ⟨fun x => ?_, fun x => ?_, h3⟩
-    · calc ‖edgeMap T x‖ = ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) x‖ := rfl
-        _ ≤ ‖(T.linearEquiv : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ * ‖x‖ :=
-          ContinuousLinearMap.le_opNorm _ _
-        _ ≤ F.C * diam T * ‖x‖ := mul_le_mul_of_nonneg_right h1 (norm_nonneg _)
-    · calc ‖x‖ = ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ)) (T.linearEquiv x)‖ := by
-            rw [ContinuousLinearEquiv.coe_coe, ContinuousLinearEquiv.symm_apply_apply]
-        _ ≤ ‖(T.linearEquiv.symm : (Fin n → ℝ) →L[ℝ] (Fin n → ℝ))‖ * ‖T.linearEquiv x‖ :=
-          ContinuousLinearMap.le_opNorm _ _
-        _ ≤ F.C / diam T * ‖edgeMap T x‖ := mul_le_mul_of_nonneg_right h2 (norm_nonneg _)
-  · exact (F.data N).quasi
 
 theorem parallelepiped_eq (A : Matrix (Fin n) (Fin n) ℝ) (hA2 : IsUnit ((2 : ℝ) • A).det)
     (b : Fin n → ℝ) :
@@ -216,5 +207,97 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
     rw [Feec.HilbertComplex.ClosedRangeAt, Feec.HilbertComplex.boundaries_eq _ rfl,
       deRham_minimalComplex_d, ← dMin_eq] at h
     exact h
+
+/-! ### Maxwell's equations -/
+
+theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ → SimplicialMesh 3}
+    (hM : IsMeshFamily Ω M) (S : PolySeq) :
+    (∀ N, proxy0 '' femSpace Ω (M N) S 0 ⊆ (grad Ω).domain ∧
+      proxy1 '' femSpace Ω (M N) S 1 ⊆ (curl Ω).domain ∧
+      proxy2 '' femSpace Ω (M N) S 2 ⊆ (div Ω).domain) ∧
+    ∀ σ₀ E₀ B₀, σ₀ ∈ (grad Ω).domain → E₀ ∈ (curl Ω).domain → E₀ ∈ (grad Ω)†.domain →
+      B₀ ∈ (curl Ω)†.domain → ∀ T, ∃ σ E B, σ 0 = σ₀ ∧ E 0 = E₀ ∧ B 0 = B₀ ∧
+        IsMaxwellSolution Ω T σ E B ∧
+        (∀ σ₁ E₁ B₁, σ₁ 0 = σ₀ → E₁ 0 = E₀ → B₁ 0 = B₀ → IsMaxwellSolution Ω T σ₁ E₁ B₁ →
+          ∀ t ∈ Icc 0 T, σ₁ t = σ t ∧ E₁ t = E t ∧ B₁ t = B t) ∧
+        (∀ t ∈ Icc 0 T, ‖σ t‖ ^ 2 + ‖E t‖ ^ 2 + ‖B t‖ ^ 2 = ‖σ₀‖ ^ 2 + ‖E₀‖ ^ 2 + ‖B₀‖ ^ 2) ∧
+        (σ₀ = 0 → (E₀, 0) ∈ (grad Ω)†.graph → (B₀, 0) ∈ (div Ω).graph → ∀ t ∈ Icc 0 T,
+          σ t = 0 ∧ (E t, 0) ∈ (grad Ω)†.graph ∧ (B t, 0) ∈ (div Ω).graph) ∧
+        (∀ (σh : ℕ → ℝ → L2Field Ω (Fin 1)) (Eh Bh : ℕ → ℝ → L2Field Ω (Fin 3)),
+          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0)
+            (proxy1 '' femSpace Ω (M N) S 1) (proxy2 '' femSpace Ω (M N) S 2) T
+            (σh N) (Eh N) (Bh N)) →
+          Tendsto (fun N => σh N 0) atTop (𝓝 σ₀) → Tendsto (fun N => Eh N 0) atTop (𝓝 E₀) →
+          Tendsto (fun N => Bh N 0) atTop (𝓝 B₀) →
+          TendstoUniformlyOn σh σ atTop (Icc 0 T) ∧ TendstoUniformlyOn Eh E atTop (Icc 0 T) ∧
+            TendstoUniformlyOn Bh B atTop (Icc 0 T)) ∧
+        ∃ (σh : ℕ → ℝ → L2Field Ω (Fin 1)) (Eh Bh : ℕ → ℝ → L2Field Ω (Fin 3)),
+          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0)
+            (proxy1 '' femSpace Ω (M N) S 1) (proxy2 '' femSpace Ω (M N) S 2) T
+            (σh N) (Eh N) (Bh N)) ∧
+          Tendsto (fun N => σh N 0) atTop (𝓝 σ₀) ∧ Tendsto (fun N => Eh N 0) atTop (𝓝 E₀) ∧
+          Tendsto (fun N => Bh N 0) atTop (𝓝 B₀) := by
+  have hO : IsOpen Ω := hΩ.1
+  let F : Feec.HilbertComplex.ConformingFamily ((deRham ℝ 3).maximalComplex hO) ℕ :=
+    (meshFamilyOf hΩ hM).polyFamily S.toFeec
+  let G := vFamily hO F
+  have V := Feec.Instances.Maxwell.maxwellFEEC G 0
+  have hA₀ : ∀ N u, u ∈ proxy0 '' femSpace Ω (M N) S 0 ↔ u ∈ (G.V N).V 0 := fun N =>
+    mem_proxy0_iff hO F N fun w => (mem_V_iff S (M N) Ω (hM.1 N) w).symm
+  have hA₁ : ∀ N u, u ∈ proxy1 '' femSpace Ω (M N) S 1 ↔ u ∈ (G.V N).V 1 := fun N =>
+    mem_proxy1_iff hO F N fun w => (mem_V_iff S (M N) Ω (hM.1 N) w).symm
+  have hA₂ : ∀ N u, u ∈ proxy2 '' femSpace Ω (M N) S 2 ↔ u ∈ (G.V N).V 2 := fun N =>
+    mem_proxy2_iff hO F N fun w => (mem_V_iff S (M N) Ω (hM.1 N) w).symm
+  refine ⟨fun N => ⟨fun u hu => (mem_grad_domain hO).2 ((G.V N).le_domain 0 1 ((hA₀ N u).1 hu)),
+    fun u hu => (mem_curl_domain hO).2 ((G.V N).le_domain 1 2 ((hA₁ N u).1 hu)),
+    fun u hu => (mem_div_domain hO).2 ((G.V N).le_domain 2 3 ((hA₂ N u).1 hu))⟩,
+    fun σ₀ E₀ B₀ hσ₀ hE₀ hE₀' hB₀ T => ?_⟩
+  set x : MX Ω := pack σ₀ E₀ B₀
+  have hx : x ∈ (Win hO).wave.domain :=
+    Feec.HilbertComplex.mem_wave_domain_fin3 (Win hO) ((mem_grad_domain hO).1 hσ₀)
+      ((mem_curl_domain hO).1 hE₀) ((mem_grad_adj_domain hO).1 hE₀')
+      ((mem_curl_adj_domain hO).1 hB₀)
+  obtain ⟨hcl, huniq, -, hnorm⟩ := V.wellPosed hx T
+  set Sg := (Win hO).waveGroup.S
+  have h0 : Sg 0 x = x := by
+    rw [show Sg 0 = 1 from (Win hO).waveGroup.map_zero]; rfl
+  refine ⟨fun t => (Sg t x : MX Ω) 0, fun t => (Sg t x : MX Ω) 1, fun t => (Sg t x : MX Ω) 2,
+    congrArg (fun z : MX Ω => z 0) h0, congrArg (fun z : MX Ω => z 1) h0,
+    congrArg (fun z : MX Ω => z 2) h0, isMaxwellSolution_of hO hcl.toIsStrongSolution, ?_, ?_, ?_,
+    ?_, ?_⟩
+  · intro σ₁ E₁ B₁ h0σ h0E h0B hsol t ht
+    have hU := isStrongSolution_of hO hsol
+    have hU0 : pack (σ₁ 0) (E₁ 0) (B₁ 0) = x := by rw [h0σ, h0E, h0B]
+    have e := huniq _ hU0 hU ht
+    exact ⟨congrArg (fun z : MX Ω => z 0) e, congrArg (fun z : MX Ω => z 1) e,
+      congrArg (fun z : MX Ω => z 2) e⟩
+  · intro t _
+    calc _ = ‖(Sg t x : MX Ω)‖ ^ 2 := (norm_sq_MX _).symm
+      _ = ‖x‖ ^ 2 := by rw [show ‖(Sg t x : MX Ω)‖ = ‖x‖ from hnorm t]
+      _ = _ := norm_sq_MX x
+  · intro hσ0 hEg hBg t ht
+    have hK : Sg 0 x ∈ (Feec.Instances.Maxwell.feec G 0).K := by
+      rw [h0]; exact (mem_windowGauss_iff hO x).2 ⟨hσ0, hEg, hBg⟩
+    exact (mem_windowGauss_iff hO _).1 (V.gauss_propagates_strong hK hcl.toIsStrongSolution t ht)
+  · intro σh Eh Bh hgal h0σ h0E h0B
+    rcases lt_or_ge T 0 with hT | hT
+    · rw [Set.Icc_eq_empty (not_le.2 hT)]
+      exact ⟨tendstoUniformlyOn_empty, tendstoUniformlyOn_empty, tendstoUniformlyOn_empty⟩
+    choose ξ ξ' hsemi hfst using fun N =>
+      semidiscrete_of_galerkin hO G (hA₀ N) (hA₁ N) (hA₂ N) (hgal N)
+    have hξ0 : Tendsto (fun N => (Win hO).totalD.graphFst (ξ N 0)) atTop (𝓝 x) :=
+      (tendsto_pack h0σ h0E h0B).congr fun N => (hfst N 0 ⟨le_rfl, hT⟩).symm
+    have hc : TendstoUniformlyOn (fun N t => pack (σh N t) (Eh N t) (Bh N t)) (fun t => Sg t x)
+        atTop (Icc 0 T) :=
+      (V.converges_of_tendsto x ξ ξ' hsemi hξ0).congr
+        (Eventually.of_forall fun N t ht => hfst N t ht)
+    exact ⟨tendstoUniformlyOn_apply_MX hc 0, tendstoUniformlyOn_apply_MX hc 1,
+      tendstoUniformlyOn_apply_MX hc 2⟩
+  · obtain ⟨ξ, ξ', hsemi, hξ0⟩ := V.exists_tendsto x T
+    exact ⟨fun N t => (Win hO).totalD.graphFst (ξ N t) 0,
+      fun N t => (Win hO).totalD.graphFst (ξ N t) 1,
+      fun N t => (Win hO).totalD.graphFst (ξ N t) 2,
+      fun N => galerkin_of_semidiscrete hO G (hA₀ N) (hA₁ N) (hA₂ N) (hsemi N),
+      tendsto_apply_MX hξ0 0, tendsto_apply_MX hξ0 1, tendsto_apply_MX hξ0 2⟩
 
 end FEEC

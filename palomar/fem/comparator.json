@@ -1,7 +1,8 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.fem", "FEEC.femMin", "FEEC.fem_parallelepiped", "FEEC.maxwell"],
+  "theorem_names": ["FEEC.fem", "FEEC.femMin", "FEEC.fem_parallelepiped", "FEEC.fem_cube",
+    "FEEC.maxwell"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

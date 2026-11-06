@@ -15,7 +15,7 @@ project:
     windows of degrees with the wave operator L = d - d*, and the conclusions of its FEEC
     theorem for the Hodge wave and heat equations, EvolutionVerdict, WaveVerdict,
     DynamicVerdict) copied verbatim, so that the families of this entry are families in the
-    sense of the theorem FEEC.feec of palomar/feec. Four compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
+    sense of the theorem FEEC.feec of palomar/feec. Five compared theorems. FEEC.fem: let Omega in R^n (n >= 1) be a
     bounded open domain star-shaped with respect to a ball, M_N conforming simplicial meshes of
     Omega (Mathlib's Affine.Simplex), uniformly shape regular (every simplex T contains a ball of
     radius rho with h_T <= sigma rho, i.e. h_T / rho_T <= sigma) and quasi-uniform
@@ -53,7 +53,15 @@ project:
     static FEEC theorem of palomar/feec (discrete Poincare inequality, stability and
     quasi-optimality of the mixed Hodge Laplacian, cohomology) and its rates, and the heat
     verdicts of FEEC.fem and FEEC.femMin, apply to their families there with no remaining
-    hypothesis. FEEC.maxwell, the window [0, 3) of FEEC.fem for n = 3 read in vector proxies:
+    hypothesis. FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries such a mesh family
+    (the Freudenthal meshes) for which, for every admissible sequence S, the spaces S_k(M_N) are
+    those of a family of subcomplexes of H Lambda(Omega) with a Jackson estimate of order
+    h_N^(s+1) for Sobolev data: if x and dx lie in H^(s+1)(Omega) with norm at most L
+    (H^m(Omega) the restrictions to Omega of the forms whose coefficients have weak derivatives
+    in L^2(R^n) along all words of length at most m, with the norm of the extension), then x is
+    approximated in S_j(M_N) to within B L h_N^(s+1) in L^2 and for d, in the degrees j where S
+    contains P_s Lambda^j and P_s Lambda^(j+1), in every dimension n (no condition 2(s+1) > n).
+    FEEC.maxwell, the window [0, 3) of FEEC.fem for n = 3 read in vector proxies:
     the vector proxies V_N^0, V_N^1, V_N^2 of S_0(M_N), S_1(M_N), S_2(M_N) (scalar fields,
     vector fields v_j = omega_j, vector fields (omega_12, -omega_02, omega_01); for S = P_1^-
     the Lagrange, Nedelec edge and Raviart-Thomas face elements) lie in the domains of the weak
@@ -68,7 +76,8 @@ project:
     the uniform limit on [0, T] of every family of Galerkin solutions in V_N^0 x V_N^1 x V_N^2
     whose initial data converge to the data; such families exist. The proof is the library Feec
     of this repository (Feec.FiniteElement, Feec.Models.StarShaped, Feec.Models.Parallelepiped,
-    Feec.Mesh, Feec.HilbertComplex.Approximation.Crown, Feec.Instances.Maxwell).
+    Feec.Mesh, Feec.HilbertComplex.Approximation.Crown, Feec.Instances.Maxwell,
+    Feec.Models.Cube.SobolevRateHigh).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -150,6 +159,18 @@ sources:
       Background for FEEC.maxwell; the compared statement is the Hodge wave equation of the
       Maxwell window in vector proxies, not Monk's (E, H) formulation.
     author_endorsement: "not-contacted"
+  - title: "Partial Differential Equations"
+    authors:
+      - "Lawrence C. Evans"
+    id: "doi:10.1090/gsm/019"
+    type: "book"
+    location: "AMS Graduate Studies in Mathematics 19, 2nd ed. (2010), §5.2 (weak derivatives, H^m), §5.4 (extensions)"
+    relationship: "background"
+    note: >-
+      The Sobolev spaces of FEEC.fem_cube: weak derivatives in L^2(R^n), restricted to the
+      domain (equal to the weak-derivative space H^m(Omega) on Lipschitz domains by the
+      extension theorem, which is not formalized).
+    author_endorsement: "not-contacted"
   - title: "Simplizialzerlegungen von beschränkter Flachheit"
     authors:
       - "Hans Freudenthal"
@@ -221,7 +242,8 @@ status:
     open domain star-shaped with respect to a ball, every shape-regular quasi-uniform family of
     conforming simplicial meshes of it with h_N -> 0, and every admissible sequence with r_k >= 1,
     including the wave and heat verdicts on every window of degrees; FEEC.fem_parallelepiped for
-    every parallelepiped; FEEC.maxwell for n = 3 on the same domains
+    every parallelepiped; FEEC.fem_cube for the cube (0, 1/2)^n, every n >= 1, every admissible
+    sequence and every s; FEEC.maxwell for n = 3 on the same domains as FEEC.fem
     and meshes. Not compared (proved in Feec, outside the
     statement): the Whitney forms as a separate family (they are the sequence P_1^- in every
     degree), the dimension counts and unisolvence of the degrees of freedom, the finite element
@@ -301,12 +323,16 @@ fidelity:
     domains, which are not covered (the extension-dilation construction of the
     smoothed projections in Feec uses star-shapedness). The closed range of d, needed by the
     static theory, is proved only on parallelepipeds (FEEC.fem_parallelepiped).
-    (7) The Jackson estimate is for C^(s+2) forms with bounded (s+1)-st derivatives on the
-    closure of Omega (one more derivative than the order requires), not for Sobolev data; the
-    Sobolev rates proved in Feec on the cube are not compared.
-    For femMin the smooth form must vanish outside Omega and be C^(s+2) on R^n, so its
-    derivatives up to order s+2 vanish on the boundary: a smaller class than the usual one
-    (vanishing tangential trace only).
+    (7) Sobolev data are compared only on the cube (0, 1/2)^n, with its Freudenthal meshes (the
+    mesh family is existential in FEEC.fem_cube), and only for H Lambda: H^m(Omega) is
+    defined by restriction of H^m(R^n) (weak derivatives in L^2(R^n) along words, the norm a
+    sum over words, equivalent to the multi-index norm), which equals the weak-derivative space
+    of Omega on Lipschitz domains (not formalized). On general star-shaped domains, for every
+    mesh family, and for the minimal complex the Jackson estimates of FEEC.fem and FEEC.femMin are for
+    C^(s+2) forms with bounded (s+1)-st derivatives on the closure of Omega (one more derivative
+    than the order requires); for femMin the smooth form must vanish outside Omega and be
+    C^(s+2) on R^n, so its derivatives up to order s+2 vanish on the boundary: a smaller class
+    than the usual one (vanishing tangential trace only).
     (8) The boundary facets of femSpaceMin are the facets of a single simplex of the mesh.
     (9) The window verdicts are stated for every window; the heat verdict keeps the closed-range
     hypothesis of palomar/feec in the window (proved here on parallelepipeds by
@@ -330,7 +356,7 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the four compared theorems and
+    Not yet reviewed by the author: the Challenge statement (the five compared theorems and
     their definitions, 2026-11-06). Every merge of the library was gated by a full build (zero
     warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
     review. No external mathematical review.
@@ -355,6 +381,18 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "As FEEC.fem with the Min versions; the spaces through mem_V₀_iff."
+    - source: "[AFW2010] §5; [Arnold2018] Ch. 7 (approximation estimates for Sobolev data); [Evans2010] §5.2"
+      lean: "FEEC.fem_cube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        The family of FEEC.fem on the cube with the Freudenthal meshes
+        (Feec.Models.StarShaped.CubeWitness); the best approximation from
+        Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high (periodic Sobolev spaces of the torus),
+        reached from H^m(R^n) data by Solution/Sobolev.lean (Leibniz's rule for weak derivatives
+        with a cutoff, periodization, weak derivatives on the torus, the Fourier norm bounded by
+        the pure derivatives, exists_qNorm_le), and the graph-norm bound through the uniformly
+        L^2-bounded cochain projections of FEEC.fem.
     - source: "[QuennevilleBelair2015] Ch. 4, Prop. 4.16; [AFW2010] §4; [Monk2003]"
       lean: "FEEC.maxwell"
       module: "Challenge"

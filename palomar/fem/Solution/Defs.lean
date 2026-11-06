@@ -35,6 +35,7 @@ that their elaborated values are those of the challenge. The solution imports th
   §3.3–§3.5, §4, §5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -643,6 +644,23 @@ def IsCsFormMin (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
+
+/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
+restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
+Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
+coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
+`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
+(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
+`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
+def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
+    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
+      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
+    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
+    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+
+/-- The cube `(0, ½)ⁿ` (half a period of the torus `ℝⁿ/ℤⁿ` of the proof's Fourier series). -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
 
 /-! ### Maxwell's equations in vector proxies (`n = 3`) -/
 

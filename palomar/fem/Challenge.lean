@@ -60,6 +60,10 @@ The theorems, with no hypothesis beyond the data:
   box), is such a domain, carries such a mesh family, and `d` has closed range in every degree
   on `HΛ(Ω)` and on `H̊Λ(Ω)`, so the static FEEC theorem of `palomar/feec` and the heat verdicts
   of `FEEC.fem` and `FEEC.femMin` apply on it with no remaining hypothesis.
+* `FEEC.fem_cube` ([AFW2010], §5; [Arnold2018], Ch. 7): the cube `(0, ½)ⁿ` has a mesh family
+  (the proof uses the Freudenthal meshes) whose spaces `S_k(M_N)` of `HΛ(Ω)` have a Jackson
+  estimate of order `h_N^{s+1}` for `x, dx ∈ H^{s+1}(Ω)`, the restrictions of `H^{s+1}(ℝⁿ)`
+  (`IsSobolevForm`), in the degrees where `S` reproduces `P_sΛ`, in every dimension.
 * `FEEC.maxwell` ([QuennevilleBelair2015], Ch. 4; [AFW2010], §4; [Monk2003]): the window
   `[0, 3)` of `FEEC.fem` for `n = 3` in vector proxies: `V_N⁰ ⊆ H¹(Ω)`, `V_N¹ ⊆ H(curl, Ω)`,
   `V_N² ⊆ H(div, Ω)`, the proxies of `S_0(M_N)`, `S_1(M_N)`, `S_2(M_N)` (`proxy0`, `proxy1`,
@@ -92,6 +96,7 @@ field three (`Fin 3`).
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1–§3.2
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2 (weak derivatives, `Hᵐ`)
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
 * [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
@@ -703,6 +708,23 @@ def IsCsFormMin (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
 
+/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
+restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
+Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
+coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
+`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
+(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
+`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
+def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
+    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
+      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
+    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
+    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+
+/-- The cube `(0, ½)ⁿ` (half a period of the torus `ℝⁿ/ℤⁿ` of the proof's Fourier series). -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+
 /-! ### Maxwell's equations in vector proxies (`n = 3`) -/
 
 /-- `L²(Ω; ℝ^ι)`: the square-integrable fields on `Ω ⊆ ℝ³` with components indexed by `ι`
@@ -830,6 +852,23 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
           Set (L2Form (parallelepiped A b) (k + 1))) ∧
         IsClosed (LinearMap.range (dMin (parallelepiped A b) k).toFun :
           Set (L2Form (parallelepiped A b) (k + 1))) := by
+  sorry
+
+/-- **Sobolev rates on the cube** ([AFW2010], §5.4–§5.5; [Arnold2018], Ch. 7): the cube
+`Ω = (0, ½)ⁿ` carries some shape-regular, quasi-uniform family of meshes `M_N` with `h_N → 0`
+(the proof uses the Freudenthal meshes; the statement does not cover every family) such that,
+for every admissible sequence `S`, the spaces `S_k(M_N)` are those of a family of subcomplexes of
+`HΛ(Ω)` with a Jackson estimate of order `h_N^{s+1}` for the forms `x` with `x, dx ∈ H^{s+1}(Ω)`
+of norm at most `L`, in the degrees where `S` reproduces `P_sΛ` (`H^{s+1} ⊆ D(d)`, so the clause
+on `dx` always applies). -/
+theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cube n) M ∧
+    ∀ S : PolySeq, ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ)
+      (J : F.Jackson ℕ), (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
+      (∀ N k, ((F.V N).V k : Set (L2Form (cube n) k)) = femSpace (cube n) (M N) S k) ∧
+      (∀ N, J.meshSize N = meshSize (M N)) ∧ (∀ s, J.ord s = s + 1) ∧
+      ∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsSobolevForm (cube n) (s + 1) j L x ∧
+        ∀ hx : x ∈ (dMax (cube n) j).domain,
+          IsSobolevForm (cube n) (s + 1) (j + 1) L (dMax (cube n) j ⟨x, hx⟩) := by
   sorry
 
 /-- **Maxwell's equations** ([QuennevilleBelair2015], Ch. 4; [AFW2010], §4; [Monk2003]): on

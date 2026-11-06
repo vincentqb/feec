@@ -28,6 +28,8 @@ elaborated values are those of the challenge. The solution imports this module a
   §3, §5
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3–§3.5, §4, §5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -403,4 +405,3 @@ def IsCsFormMin (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2
 /-! ### The theorems -/
 
 end FEEC
-

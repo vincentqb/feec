@@ -13,6 +13,12 @@ size and edge matrices; shape regularity and quasi-uniformity are those of `Feec
 is a `Feec.Models.StarShaped.StarDomain` (`starDomainOf`) and a mesh family of the challenge is a
 `Feec.Models.StarShaped.MeshFamily` (`meshFamilyOf`).
 
+## References
+
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3–§3.5, §4, §5
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

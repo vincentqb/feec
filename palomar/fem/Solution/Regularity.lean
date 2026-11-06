@@ -11,6 +11,12 @@ public import Feec.Models.StarShaped.PolyFiniteElement
 field `w` is a `j`-form, and `x` is the `L²` class of `w` iff its coefficients agree with those
 of `w` almost everywhere (`Feec.FiniteElement.coeFn_formL2`).
 
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3–§3.5, §4, §5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

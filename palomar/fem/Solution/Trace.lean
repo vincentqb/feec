@@ -13,6 +13,12 @@ sequence on a face of any dimension and its subfaces determine the tangential tr
 (`PolySeq.tangentialTraceEq_of_dof_eq_face`; `Feec` states the facet case,
 `Feec.FiniteElement.PolySeq.tangentialTraceEq_of_dof_eq`).
 
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3, §5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

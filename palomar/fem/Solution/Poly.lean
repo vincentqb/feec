@@ -12,6 +12,11 @@ public import Feec.FiniteElement.PolyOrder
 `Feec.FiniteElement.PolySeq` (`PolySeq.toFeec`) with the same spaces (`PolySeq.space_eq`) and the
 same orders (`PolySeq.polyOrderAt_iff`).
 
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3, §5
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

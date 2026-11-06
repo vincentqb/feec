@@ -11,6 +11,12 @@ of `dᵗ` on test forms are the test graphs of `Feec.Domain.extDerivOp` and of i
 (`testGraph_eq`, `codiffGraph_eq`), so `dMin` and `dMax` are `Feec`'s minimal and maximal
 realizations of the exterior derivative (`dMin_eq`, `dMax_eq`).
 
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3–§3.5, §4, §5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

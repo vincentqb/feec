@@ -12,6 +12,11 @@ cochain projection, defined on `W`, restricts to the domain complex (`CochainPro
 The graph-norm bounds and the graph-norm approximation of `Feec` give those of the challenge
 (`isGraphBoundedBy_of_feec`, `approximates_of_eventually`).
 
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3.3–§3.5, §4, §5
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

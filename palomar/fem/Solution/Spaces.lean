@@ -15,6 +15,12 @@ iff the tangential traces do (`Feec.FiniteElement.PolySeq.dof_congr` and trace d
 faces of every dimension, `PolySeq.tangentialTraceEq_of_dof_eq_face`), and the glued field is the
 element field almost everywhere on each simplex (the frontiers of simplices are null).
 
+## References
+
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3, §5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 

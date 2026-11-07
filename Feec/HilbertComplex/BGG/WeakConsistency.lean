@@ -398,15 +398,19 @@ theorem S1_sub_S1h_harmonic {k : Vt1} (hk : k ∈ Hh) : (D.S1 - Q.S1h) k = 0 := 
 
 open Discrete
 
-/-- **Weak consistency of `S₁,ₕ` from regular potentials, modulo harmonic forms**: the bound of
-`Feec.BGG.Discrete.weakConsistency_of_regularPotential` (with `z ∈ D(d¹*)` as a functional bound)
-when the discrete exactness at `Ṽₕ¹` holds only modulo `𝔥 ⊆ Ṽₕ¹`: the harmonic part `k` of
-`v − Π̃¹Ry` has `(S₁ − S₁,ₕ)k = 0` and `‖dψ‖ ≤ ‖dψ + k‖` (`𝔥 ⊥ dṼ⁰`).
+/-- **Weak consistency of `S₁,ₕ` from pointwise regular potentials, modulo harmonic forms**:
+every `d̃v`, `v ∈ Ṽₕ¹`, has a potential `w`, `d̃w = d̃v`, with `‖w‖ ≤ C_inc C_reg ‖d̃v‖` on which
+`π̃¹` and `S₁,ₕ` are accurate, `‖(1 − Π̃¹)w‖, ‖(S₁ − S₁,ₕ)w‖ ≤ C_app h C_reg ‖d̃v‖`. Then for
+`z ∈ D(d¹*)` (as a functional bound) `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V` on `Ṽₕ¹`; the harmonic
+part `k` of `v − Π̃¹w` has `(S₁ − S₁,ₕ)k = 0` and `‖dψ‖ ≤ ‖dψ + k‖` (`𝔥 ⊥ dṼ⁰`). The potentials
+of a `Discrete.RegularPotential` are such (`weakConsistency_of_regularPotential_of_bound`).
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
-theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
-    (hH : Hh ≤ Q.Vt1h) (B : Q.Bounded CP) {Xr : Type*} [NormedAddCommGroup Xr]
-    [NormedSpace ℝ Xr] {Cinc Creg h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
-    (Rg : Q.RegularPotential Xr Cinc Creg Capp h)
+theorem weakConsistency_of_potential_of_bound {CP : ℝ}
+    (hH : Hh ≤ Q.Vt1h) (B : Q.Bounded CP) {Cinc Creg h Capp : ℝ} (hι : 0 ≤ Cinc) (hr : 0 ≤ Creg)
+    (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
+    (hpot : ∀ v ∈ Q.Vt1h, ∃ w, D.dt1 w = D.dt1 v ∧ ‖w‖ ≤ Cinc * Creg * ‖D.dt1 v‖ ∧
+      ‖w - Q.Pt1 w‖ ≤ Capp * h * (Creg * ‖D.dt1 v‖) ∧
+      ‖(D.S1 - Q.S1h) w‖ ≤ Capp * h * (Creg * ‖D.dt1 v‖))
     (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
     {z : W2} {M : ℝ} (hM : 0 ≤ M) (hz : ∀ w, |⟪z, D.d1 w⟫| ≤ M * ‖w‖) :
     ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
@@ -414,9 +418,7 @@ theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
         √(graphSq D.dt1 v) := by
   intro v hv
   have hp := HS.Cp_nonneg; have hS := HS.CS_nonneg; have hP := B.CP_nonneg
-  have hι := Rg.Cinc_nonneg; have hr := Rg.Creg_nonneg
-  obtain ⟨y, hy1, hy2⟩ := Rg.exists_potential v hv
-  set w := Rg.R y with hw
+  obtain ⟨w, hy1, hwn, hPt, hSw⟩ := hpot v hv
   set G := √(graphSq D.dt1 v) with hG
   have hvG : ‖v‖ ≤ G := (Real.le_sqrt (norm_nonneg _) (graphSq_nonneg _ _)).2 (by
     unfold graphSq; nlinarith [sq_nonneg ‖D.dt1 v‖])
@@ -443,8 +445,6 @@ theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
     apply Real.sqrt_le_sqrt
     have := pow_le_pow_left₀ (norm_nonneg _) (HS.poinct0 ψ) 2
     unfold graphSq; nlinarith
-  have hwn : ‖w‖ ≤ Cinc * Creg * ‖D.dt1 v‖ := (Rg.norm_R_le y).trans (by
-    rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hy2 hι)
   have hPw : ‖Q.Pt1 w‖ ≤ CP * (1 + Cinc * Creg) * ‖D.dt1 v‖ := by
     have hg := B.Pt1 w
     have hgw : graphSq D.dt1 w ≤ ((1 + Cinc * Creg) * ‖D.dt1 v‖) ^ 2 := by
@@ -465,7 +465,7 @@ theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
           add_le_add hvG (hPw.trans (mul_le_mul_of_nonneg_left hdG (by positivity)))
       _ = _ := by ring
   have hx : D.dt1 (w - Q.Pt1 w) = 0 := by rw [map_sub, hdPw, hy1, sub_self]
-  have hSx : ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤ (1 + CP) * CS * (Capp * h * ‖y‖) := by
+  have hSx : ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤ (1 + CP) * CS * (Capp * h * (Creg * ‖D.dt1 v‖)) := by
     have hS1x : ‖D.S1 (w - Q.Pt1 w)‖ ≤ CS * ‖w - Q.Pt1 w‖ := by
       have := HS.boundS1 (w - Q.Pt1 w)
       unfold graphSq at this; rw [hx, norm_zero] at this
@@ -478,15 +478,16 @@ theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
       _ = (1 + CP) * ‖D.S1 (w - Q.Pt1 w)‖ := by ring
       _ ≤ (1 + CP) * (CS * ‖w - Q.Pt1 w‖) :=
           mul_le_mul_of_nonneg_left hS1x (by linarith)
-      _ ≤ (1 + CP) * (CS * (Capp * h * ‖y‖)) := by
-          gcongr; exact Rg.approx_Pt1 y
+      _ ≤ (1 + CP) * (CS * (Capp * h * (Creg * ‖D.dt1 v‖))) := by
+          gcongr
       _ = _ := by ring
   have hco : ‖(D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)‖ ≤
       (1 + (1 + CP) * CS) * (Capp * h) * (Creg * G) := by
-    have hyG : ‖y‖ ≤ Creg * G := hy2.trans (mul_le_mul_of_nonneg_left hdG hr)
+    have hyG : Creg * ‖D.dt1 v‖ ≤ Creg * G := mul_le_mul_of_nonneg_left hdG hr
     calc _ ≤ ‖(D.S1 - Q.S1h) w‖ + ‖(D.S1 - Q.S1h) (w - Q.Pt1 w)‖ := norm_sub_le _ _
-      _ ≤ Capp * h * ‖y‖ + (1 + CP) * CS * (Capp * h * ‖y‖) := add_le_add (Rg.approx_S1 y) hSx
-      _ = (1 + (1 + CP) * CS) * (Capp * h) * ‖y‖ := by ring
+      _ ≤ Capp * h * (Creg * ‖D.dt1 v‖) + (1 + CP) * CS * (Capp * h * (Creg * ‖D.dt1 v‖)) :=
+          add_le_add hSw hSx
+      _ = (1 + (1 + CP) * CS) * (Capp * h) * (Creg * ‖D.dt1 v‖) := by ring
       _ ≤ _ := mul_le_mul_of_nonneg_left hyG (by positivity)
   rw [hsplit, inner_add_right]
   calc |⟪z, D.d1 (Q.S0h ψ - D.S0 ψ)⟫ + ⟪z, (D.S1 - Q.S1h) w - (D.S1 - Q.S1h) (w - Q.Pt1 w)⟫|
@@ -502,6 +503,30 @@ theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
         exact hψg.trans (mul_le_mul_of_nonneg_left hdψ (Real.sqrt_nonneg _))
     _ = _ := by unfold weakConsistencyConst; ring
 
+/-- **Weak consistency of `S₁,ₕ` from regular potentials, modulo harmonic forms**: the bound of
+`Feec.BGG.Discrete.weakConsistency_of_regularPotential` (with `z ∈ D(d¹*)` as a functional bound)
+when the discrete exactness at `Ṽₕ¹` holds only modulo `𝔥 ⊆ Ṽₕ¹`; the potentials `w = R y` of `Rg`
+satisfy the hypothesis of `weakConsistency_of_potential_of_bound`.
+See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
+theorem weakConsistency_of_regularPotential_of_bound {CP : ℝ}
+    (hH : Hh ≤ Q.Vt1h) (B : Q.Bounded CP) {Xr : Type*} [NormedAddCommGroup Xr]
+    [NormedSpace ℝ Xr] {Cinc Creg h Capp : ℝ} (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
+    (Rg : Q.RegularPotential Xr Cinc Creg Capp h)
+    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
+    {z : W2} {M : ℝ} (hM : 0 ≤ M) (hz : ∀ w, |⟪z, D.d1 w⟫| ≤ M * ‖w‖) :
+    ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
+      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ M *
+        √(graphSq D.dt1 v) :=
+  HS.weakConsistency_of_potential_of_bound hH B Rg.Cinc_nonneg Rg.Creg_nonneg hh hCapp
+    (fun v hv => by
+      obtain ⟨y, hy1, hy2⟩ := Rg.exists_potential v hv
+      have hah : 0 ≤ Capp * h := mul_nonneg hCapp hh
+      exact ⟨Rg.R y, hy1, (Rg.norm_R_le y).trans (by
+          rw [mul_assoc]; exact mul_le_mul_of_nonneg_left hy2 Rg.Cinc_nonneg),
+        (Rg.approx_Pt1 y).trans (mul_le_mul_of_nonneg_left hy2 hah),
+        (Rg.approx_S1 y).trans (mul_le_mul_of_nonneg_left hy2 hah)⟩)
+    happ0 hM hz
+
 end HarmonicStability
 
 end Feec.BGG
@@ -516,6 +541,21 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
   [NormedAddCommGroup Vt1] [InnerProductSpace ℝ Vt1]
   [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
   {D : Segment ℝ V0 V1 W2 Vt0 Vt1 Wt2} {Q : Discrete D}
+
+/-- **Weak consistency from pointwise regular potentials, `d¹*`-regularity as a functional
+bound**: the case `𝔥 = ⊥` of `Feec.BGG.HarmonicStability.weakConsistency_of_potential_of_bound`. -/
+theorem weakConsistency_of_potential_of_bound {Cp CR CS CP : ℝ}
+    (H : Stability D Cp CR CS) (B : Q.Bounded CP) {Cinc Creg h Capp : ℝ} (hι : 0 ≤ Cinc)
+    (hr : 0 ≤ Creg) (hh : 0 ≤ h) (hCapp : 0 ≤ Capp)
+    (hpot : ∀ v ∈ Q.Vt1h, ∃ w, D.dt1 w = D.dt1 v ∧ ‖w‖ ≤ Cinc * Creg * ‖D.dt1 v‖ ∧
+      ‖w - Q.Pt1 w‖ ≤ Capp * h * (Creg * ‖D.dt1 v‖) ∧
+      ‖(D.S1 - Q.S1h) w‖ ≤ Capp * h * (Creg * ‖D.dt1 v‖))
+    (happ0 : ∀ ψ ∈ Q.Vt0h, ‖D.S0 ψ - Q.S0h ψ‖ ^ 2 ≤ (Capp * h) ^ 2 * graphSq D.dt0 ψ)
+    {z : W2} {M : ℝ} (hM : 0 ≤ M) (hz : ∀ w, |⟪z, D.d1 w⟫| ≤ M * ‖w‖) :
+    ∀ v ∈ Q.Vt1h, |⟪z, (D.S1 - Q.S1h) v⟫| ≤
+      Capp * h * weakConsistencyConst Cp CS CP Cinc Creg ‖z‖ M * √(graphSq D.dt1 v) :=
+  H.toHarmonicStability.weakConsistency_of_potential_of_bound bot_le B hι hr hh hCapp hpot happ0
+    hM hz
 
 /-- **Weak consistency from regular potentials, `d¹*`-regularity as a functional bound**: the
 variant of `weakConsistency_of_regularPotential` with the hypothesis `⟪z, d w⟫ = ⟪z', w⟫`

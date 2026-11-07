@@ -330,7 +330,7 @@ LEAN_CC=$(which clang) LIBRARY_PATH="$(lean --print-prefix)/lib" lake exe feec-g
 
 ## Palomar submission
 
-`palomar/` holds five entries for the [Palomar registry](https://palomar-registry.org): one
+`palomar/` holds six entries for the [Palomar registry](https://palomar-registry.org): one
 repository and one library, with one comparator configuration, hence one entry, per package. Each
 package is a nested Lake project sharing the dependencies of the root
 (`packagesDir = "../../.lake/packages"`). Its `Challenge.lean` states the theorems over Mathlib
@@ -351,6 +351,7 @@ submission, judge a package with the comparator (several minutes), e.g.
 | `palomar/timestepping/` | Time stepping for uniformly stable semigroup families on Banach spaces: Brenner–Thomée, von Neumann, sub-Markov generators, the finite-difference heat equation | `TimeStepping.hilleYosida`, `TimeStepping.backwardEuler`, `TimeStepping.stable`, `TimeStepping.error`, `TimeStepping.stable_of_bounded`, `TimeStepping.error_of_bounded`, `TimeStepping.converges`, `TimeStepping.converges_backwardEuler`, `TimeStepping.vonNeumann`, `TimeStepping.vonNeumann_rational`, `TimeStepping.contractive`, `TimeStepping.subMarkov`, `TimeStepping.isSubMarkovGenerator_fdLaplacian`, `TimeStepping.fdHeat`, `TimeStepping.backwardEuler_isAStable`, `TimeStepping.crankNicolson_isAStable` | 411 |
 | `palomar/periodic/` | Classification of invariant spaces of polynomial differential forms | `FEEC.periodicTable`, `FEEC.affineInvariantForms`, `FEEC.charZero_iff_classification`, `FEEC.charZero_iff_closed_eq_exact` | 448 |
 | `palomar/bgg/` | Bernstein–Gelfand–Gelfand complexes of [ArnoldHu2021] (algebraic and Hilbert; no finite elements) | `FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum`, `FEEC.bggExplicit`, `FEEC.bggHilbert`, `FEEC.bggOrthogonal` | 645 |
+| `palomar/weaksymmetry/` | Finite element exterior calculus for the complex with weak symmetry of the BGG construction (mixed elasticity with weakly imposed symmetry [AFW2007], linearized gravity [QuennevilleBelair2015]): unique solvability and quasi-optimality up to consistency of the method `Sₕ = πS` for abstract BGG data; on the cube with the elements of Table 5.1, the hypotheses with one constant, the static rate `h`, uniqueness and the rate `(1 + t) h` of the semi-discrete wave problem, non-vacuity | `FEEC.weakSymmetry`, `FEEC.weakSymmetry_cube`, `FEEC.weakSymmetry_cube_nonvacuous` | 703 |
 
 Open before a submission (the author's): a root `LICENSE` whose SPDX identifier is
 `project.license` of every `formalization.yaml`; a public repository; the author's review of each

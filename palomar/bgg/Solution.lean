@@ -173,7 +173,8 @@ theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
     (hR : ∀ i < J, IsClosed (Set.range (s i))) :
     let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
     let P := fun i => (BGG.rangeS S i : Submodule 𝕜 (H i))ᗮ.starProjection
-    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ) (e : ∀ i, Y.X i ≃ₗ[𝕜] BGG.Υ (hd := hd) (hdt := hdt) s hs J i)
+    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ)
+      (e : ∀ i, Y.X i ≃ₗ[𝕜] BGG.Υ (hd := hd) (hdt := hdt) s hs J i)
       (κ : BGG.twisted (0 : BGG.ofBounded dt hdt ⟶ (BGG.ofBounded d hd)⟦(1 : ℤ)⟧) ⟶ Y),
       (∀ i < J, ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
         (P (i + 1) (d i (e i y : H i × Ht i).1), 0)) ∧

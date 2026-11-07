@@ -179,11 +179,6 @@ theorem finiteDimensional_comap {E : Type*} [NormedAddCommGroup E] [InnerProduct
       have e := congrArg Subtype.val h
       exact Subtype.ext (Subtype.ext e)
 
-
-theorem norm_comp_le {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E] [NormedAddCommGroup F]
-    [NormedSpace ℝ F] (A : E →L[ℝ] F) {C : ℝ} (hA : ‖A‖ ≤ C) (x : E) : ‖A x‖ ≤ C * ‖x‖ :=
-  (A.le_opNorm x).trans (mul_le_mul_of_nonneg_right hA (norm_nonneg _))
-
 /-- **Projections bounded by `C` are `Feec`'s `Bounded C`** (graph-norm bounds from `d π = π d`). -/
 theorem IsBounded.toBounded {C : ℝ} (hB : Q.IsBounded C) : (Q.toDiscrete hD).Bounded C where
   CP_nonneg := (norm_nonneg _).trans hB.1
@@ -191,16 +186,16 @@ theorem IsBounded.toBounded {C : ℝ} (hB : Q.IsBounded C) : (Q.toDiscrete hD).B
     rw [graphSq_d1, graphSq_d1, coe_P1]
     change ‖Q.π1 x‖ ^ 2 + ‖D.d1 ⟨Q.π1 x, Q.le1 (Q.π1_mem x)⟩‖ ^ 2 ≤ _
     rw [Q.comm1]
-    have := pow_le_pow_left₀ (norm_nonneg _) (norm_comp_le Q.π1 hB.2.1 (x : W1)) 2
-    have := pow_le_pow_left₀ (norm_nonneg _) (norm_comp_le Q.π2 hB.2.2.1 (D.d1 x)) 2
+    have := pow_le_pow_left₀ (norm_nonneg _) (Q.π1.le_of_opNorm_le hB.2.1 (x : W1)) 2
+    have := pow_le_pow_left₀ (norm_nonneg _) (Q.π2.le_of_opNorm_le hB.2.2.1 (D.d1 x)) 2
     nlinarith
-  P2 z := norm_comp_le Q.π2 hB.2.2.1 z
+  P2 z := Q.π2.le_of_opNorm_le hB.2.2.1 z
   Pt1 v := by
     rw [graphSq_dt1, graphSq_dt1, coe_Pt1]
     change ‖Q.πt1 v‖ ^ 2 + ‖D.dt1 ⟨Q.πt1 v, Q.let1 (Q.πt1_mem v)⟩‖ ^ 2 ≤ _
     rw [Q.commt1]
-    have := pow_le_pow_left₀ (norm_nonneg _) (norm_comp_le Q.πt1 hB.2.2.2.2.1 (v : Wt1)) 2
-    have := pow_le_pow_left₀ (norm_nonneg _) (norm_comp_le Q.πt2 hB.2.2.2.2.2 (D.dt1 v)) 2
+    have := pow_le_pow_left₀ (norm_nonneg _) (Q.πt1.le_of_opNorm_le hB.2.2.2.2.1 (v : Wt1)) 2
+    have := pow_le_pow_left₀ (norm_nonneg _) (Q.πt2.le_of_opNorm_le hB.2.2.2.2.2 (D.dt1 v)) 2
     nlinarith
 
 theorem Compatible.toCompatible (h : Q.Compatible) : (Q.toDiscrete hD).Compatible := fun ψ =>

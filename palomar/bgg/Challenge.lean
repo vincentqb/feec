@@ -56,7 +56,7 @@ Complexes of any length are included (rows vanishing outside a window). Non-vacu
 `d̃ⁱ = -dⁱ⁺¹`) satisfy the hypotheses at every `J`.
 
 **Discretization with weak symmetry** ([QuennevilleBelair2015], Ch. 5). For unbounded rows
-(segments `W⁰ → W¹ → W²`, `W̃⁰ → W̃¹ → W̃²` of densely defined operators, `WeakSymmetryData`),
+(segments `W⁰ → W¹ → W²`, `W̃⁰ → W̃¹ → W̃²` of unbounded operators, `WeakSymmetryData`),
 eliminating `V¹` against `Ṽ⁰` weakly, by a Lagrange multiplier `λ`, gives the complex with weak
 symmetry `Γ → Ṽ¹ → W² × W̃²`, `Γ = {(σ, φ) | dσ = S⁰φ}` ([QuennevilleBelair2015], (5.1)), and
 its mixed Hodge Laplacian, the saddle point problem (5.3): find `σ ∈ V⁰`, `φ ∈ Ṽ⁰`, `u ∈ Ṽ¹`
@@ -526,10 +526,11 @@ end BGG
 
 /-! ### The complex with weak symmetry and its discretization ([QuennevilleBelair2015], Ch. 5) -/
 
-/-- **BGG data**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of complexes of densely
-defined operators `d`, `d̃` between Hilbert spaces (unbounded, `LinearPMap`s; their domains
-`V = D(d)` carry the inner product of `W`), with bounded connecting maps `S⁰ : W̃⁰ → W¹`,
-`S¹ : W̃¹ → W²`. The complex and anticommutation laws are `WeakSymmetryData.IsBGG`. -/
+/-- **BGG data with weak symmetry**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of
+operators `d`, `d̃` between real Hilbert spaces (unbounded, `LinearPMap`s; their domains
+`V = D(d)` carry the inner product of `W`; in the application densely defined and closed, which
+is not required), with bounded connecting maps `S⁰ : W̃⁰ → W¹`, `S¹ : W̃¹ → W²`. The complex and
+anticommutation laws are `WeakSymmetryData.IsBGG`. -/
 structure WeakSymmetryData (W0 W1 W2 Wt0 Wt1 Wt2 : Type*) [NormedAddCommGroup W0]
     [InnerProductSpace ℝ W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0]
@@ -561,11 +562,11 @@ def IsBGG : Prop :=
     ∀ ψ : D.dt0.domain, ∃ h : D.S0 ψ ∈ D.d1.domain, D.d1 ⟨_, h⟩ = -D.S1 (D.dt0 ψ)
 
 /-- **The continuous hypotheses with constant `C`** ([QuennevilleBelair2015], §5.1, Prop 5.3):
-Poincaré inequalities on `V⁰` and `Ṽ⁰` (so `d⁰`, `d̃⁰` are injective with closed range), exactness
-of the top row at `V¹`, the Hodge decomposition `v = d̃ψ + w`, `‖w‖ ≤ C ‖d̃v‖`, on `Ṽ¹` (exactness
-of the bottom row at `Ṽ¹` and the Poincaré inequality), the **regular decomposition** `d¹V¹ =
-d¹S⁰Ṽ⁰` with the bound `‖d̃φ‖ ≤ C ‖d¹x‖` ([Hiptmair2002], Lemma 2.4, in the application), and
-`‖S⁰‖, ‖S¹‖ ≤ C`. -/
+Poincaré inequalities on `V⁰` and `Ṽ⁰` (so `d⁰`, `d̃⁰` are injective, with closed range when
+closed), exactness of the top row at `V¹`, the Hodge decomposition `v = d̃ψ + w`,
+`‖w‖ ≤ C ‖d̃v‖`, on `Ṽ¹` (exactness of the bottom row at `Ṽ¹` and the Poincaré inequality), the
+**regular decomposition** `d¹V¹ = d¹S⁰Ṽ⁰` with the bound `‖d̃φ‖ ≤ C ‖d¹x‖` ([Hiptmair2002],
+Lemma 2.4, in the application), and `‖S⁰‖, ‖S¹‖ ≤ C`. -/
 structure IsStable (C : ℝ) : Prop where
   poincare : ∀ σ : D.d0.domain, ‖(σ : W0)‖ ≤ C * ‖D.d0 σ‖
   poincare_t : ∀ φ : D.dt0.domain, ‖(φ : Wt0)‖ ≤ C * ‖D.dt0 φ‖
@@ -818,7 +819,8 @@ theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
     (hR : ∀ i < J, IsClosed (Set.range (s i))) :
     let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
     let P := fun i => (BGG.rangeS S i : Submodule 𝕜 (H i))ᗮ.starProjection
-    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ) (e : ∀ i, Y.X i ≃ₗ[𝕜] BGG.Υ (hd := hd) (hdt := hdt) s hs J i)
+    ∃ (Y : CochainComplex (ModuleCat.{v} 𝕜) ℤ)
+      (e : ∀ i, Y.X i ≃ₗ[𝕜] BGG.Υ (hd := hd) (hdt := hdt) s hs J i)
       (κ : BGG.twisted (0 : BGG.ofBounded dt hdt ⟶ (BGG.ofBounded d hd)⟦(1 : ℤ)⟧) ⟶ Y),
       (∀ i < J, ∀ y, (e (i + 1) (Y.d i (i + 1) y) : H (i + 1) × Ht (i + 1)) =
         (P (i + 1) (d i (e i y : H i × Ht i).1), 0)) ∧
@@ -843,7 +845,8 @@ constant `C` there is `K` such that, for all BGG data `D` satisfying the continu
 with constant `C` and every discretization `Q` with projections bounded by `C` satisfying (5.4):
 the discrete problem (5.6) has exactly one solution for every datum `F` (Prop 5.4); and if `Sₕ`
 is consistent at the order `h` with constant `C`, then for every solution `(σ, φ, u, λ)` of (5.3)
-with `‖λ‖ ≤ Λ` and `S¹u ∈ D(d¹*)`, `‖d¹*S¹u‖ ≤ Λ`, and the solution of (5.6) with the same
+with `‖λ‖ ≤ Λ` and `|⟪S¹u, d¹w⟫| ≤ Λ ‖w‖` on `V¹` (for densely defined `d¹`: `S¹u ∈ D(d¹*)`,
+`‖d¹*S¹u‖ ≤ Λ`), and the solution of (5.6) with the same
 datum, the squared error is at most `K` times the squared projection error of `(σ, φ, u)` plus
 `h² (Λ² + ‖S¹u‖²)` plus the consistency error `‖(S¹ - S¹ₕ)u‖²` (Thm 5.5). -/
 theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Type u}

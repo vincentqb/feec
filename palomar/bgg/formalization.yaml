@@ -59,8 +59,9 @@ project:
     the linearized Einstein equations, Gamma = {(sigma, grad sigma) | sigma in H^2_0}, whose
     conforming elements are C^1; the multiplier lets sigma and phi be discretized separately).
     FEEC.bggWeakSymmetry (thesis Prop 5.4 and Thm 5.5): BGG data are two segments
-    W^0 -> W^1 -> W^2 and W~^0 -> W~^1 -> W~^2 of complexes of densely defined operators
-    between real Hilbert spaces (Mathlib's LinearPMap), with bounded connecting maps
+    W^0 -> W^1 -> W^2 and W~^0 -> W~^1 -> W~^2 of complexes of unbounded operators between
+    real Hilbert spaces (Mathlib's LinearPMap; density and closedness not required), with
+    bounded connecting maps
     S^0 : W~^0 -> W^1, S^1 : W~^1 -> W^2, d^1 S^0 = -S^1 d~^0. The mixed problem (5.3): find
     sigma in V^0, phi in V~^0, u in V~^1 and a multiplier lambda in W^1 with
     <sigma, tau> - <u, d~psi> - <lambda, d tau - S^0 psi> = 0,
@@ -77,7 +78,8 @@ project:
     potentials of the discrete fields of V~_h^1), the squared error of the solution of (5.6) in
     the graph norms is at most K times the squared projection error of the exact solution plus
     h^2 (Lambda^2 + ||S^1 u||^2) plus ||(S^1 - S^1_h) u||^2, where ||lambda|| <= Lambda and
-    S^1 u lies in the domain of the adjoint of d^1 with ||d^1* S^1 u|| <= Lambda.
+    |<S^1 u, d^1 w>| <= Lambda ||w|| for w in V^1 (for densely defined d^1: S^1 u lies in the
+    domain of the adjoint of d^1 with ||d^1* S^1 u|| <= Lambda).
     FEEC.bggWeakSymmetry_nonvacuous: BGG data on R in every degree (d^0 = d~^0 = id,
     d^1 = d~^1 = 0, S^0 = id, S^1 = 0) with the discretization by the full spaces satisfy all its
     hypotheses with C = 1, consistency at every order h >= 0 included, and (5.3) has a solution
@@ -232,9 +234,10 @@ status:
     FEEC.bggWeakSymmetry_nonvacuous.
     Proved in Feec, not compared: the cube instance of the weak-symmetry theorem (thesis §5.3,
     Table 5.1, Ch. 6: the Freudenthal meshes and the elements of Table 5.1 satisfying all
-    hypotheses with one constant, the static and semi-discrete wave rates; Feec.Models.Cube.WeakSymmetry*),
-    outside this entry because it needs differential forms and finite element spaces; the general elimination theorem on any complex shape with
-    arbitrary eliminated index sets (Feec.BGG.Data.derivedHomologyIso) and the general
+    hypotheses with one constant, the static and semi-discrete wave rates;
+    Feec.Models.Cube.WeakSymmetry*), outside this entry because it needs differential forms and
+    finite element spaces; the general elimination theorem on any complex shape with arbitrary
+    eliminated index sets (Feec.BGG.Data.derivedHomologyIso) and the general
     subquotient of a complex of bounded operators as a Hilbert complex
     (Feec.HilbertComplex.Subquotient.complex, complexIso, cohomologyEquiv), of which
     FEEC.bggHilbert is the instance Gamma / Delta; the connecting map of 0 -> V -> T -> V~ -> 0
@@ -399,15 +402,19 @@ fidelity:
     constructed (the discretization with weak symmetry, FEEC.bggWeakSymmetry, is abstract).
     (10) The name BGG follows Arnold-Hu; the representation-theoretic BGG resolution
     [BernsteinGelfandGelfand1975] and the BGG sequences of Čap-Slovák-Souček are background only.
-    Weak symmetry. (11) The weak-symmetry rows are segments of densely defined (unbounded)
-    operators (WeakSymmetryData), not the bounded rows of FEEC.bggHilbert or the module
+    Weak symmetry. (11) The weak-symmetry rows are segments of unbounded operators
+    (WeakSymmetryData; not required densely defined or closed, so the theorem is stated for more
+    data than the thesis' closed densely defined rows, and the bound on d^1* S^1 u is the weak
+    bound |<S^1 u, d^1 w>| <= Lambda ||w||), not the bounded rows of FEEC.bggHilbert or the module
     complexes of the other theorems: the L^2 domain complexes are unbounded, and the analysis
     needs only the degrees 0..2. The complex with weak symmetry is not formed as a complex in
     the challenge; it enters through the mixed problem (5.3), its Hodge Laplacian. (12) The
     multiplier lambda is assumed in W^1 (an L^2 multiplier) and bounded by Lambda, and the
-    error bound assumes S^1 u in the domain of the adjoint of d^1 with ||d^1* S^1 u|| <= Lambda.
-    (13) One constant C bounds the Poincaré inequalities, the Hodge and regular decompositions,
-    ||S||, the projections and the consistency; K depends only on C. (14) Consistency (cf. Prop
+    error bound assumes |<S^1 u, d^1 w>| <= Lambda ||w|| on V^1 (S^1 u in the domain of the
+    adjoint of d^1 with ||d^1* S^1 u|| <= Lambda, for densely defined d^1). The solvability of
+    the continuous problem (5.3) is not stated; the estimate holds for every solution. (13) One
+    constant C bounds the Poincaré inequalities, the Hodge and regular decompositions, ||S||,
+    the projections and the consistency; K depends only on C. (14) Consistency (cf. Prop
     5.9) is a hypothesis (Discretization.IsConsistent): ||(S^0 - S^0_h) psi|| <= C h ||d~psi|| on
     V~_h^0, and every d~v, v in V~_h^1, has a regular potential w (d~w = d~v,
     ||w|| <= C ||d~v||) on which pi~^1 and S^1_h are accurate to order h. (15) The discrete
@@ -482,7 +489,7 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: >-
-        Not yet reviewed by the author (moved from the former entry palomar/weaksymmetry).
+        Not yet reviewed by the author (FEEC.weakSymmetry of palomar/weaksymmetry, renamed).
         Solution/WeakSymmetry.lean (weakSymmetry_of): the data and discretizations as
         Feec.BGG.Segment, Feec.BGG.Discrete; Feec.BGG.Discrete.existsUnique_mixed_h and
         Feec.BGG.Discrete.error_estimate_of_weakConsistency, with the consistency on regular

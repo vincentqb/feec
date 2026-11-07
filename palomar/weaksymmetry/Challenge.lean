@@ -20,16 +20,21 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 The BGG construction ([ArnoldHu2021]) couples two de Rham complexes by connecting maps
 `S : Ṽⁱ → Vⁱ⁺¹` with `d S = -S d̃`. Eliminating `Ṽ⁰` against `V¹` weakly, by a Lagrange multiplier,
 gives the **complex with weak symmetry** `Γ → Ṽ¹ → W² × W̃²`, `Γ = {(σ, φ) | dσ = S⁰φ}`
-([QuennevilleBelair2015], (5.1)); it is the mechanism of the mixed finite element methods for
-linear elasticity with weakly imposed symmetry ([AFW2007], where the multiplier imposes the
-symmetry of the stress), and in `ℝ³`, with the rows `H̊¹ → H̊(curl) → L²` and `S⁰ = I`,
-`S¹ = 2 vskw` in vector proxies, the complex of the linearized Einstein (Einstein–Bianchi)
-equations of [QuennevilleBelair2015], Ch. 5–6. Its mixed Hodge Laplacian is the saddle point
-problem (5.3) of [QuennevilleBelair2015]: find `σ ∈ V⁰`, `φ ∈ Ṽ⁰`, `u ∈ Ṽ¹` and a multiplier `λ` with
+([QuennevilleBelair2015], (5.1)), whose mixed Hodge Laplacian is the saddle point problem (5.3)
+of [QuennevilleBelair2015]: find `σ ∈ V⁰`, `φ ∈ Ṽ⁰`, `u ∈ Ṽ¹` and a multiplier `λ` with
 
 * `⟪σ, τ⟫ - ⟪u, d̃ψ⟫ - ⟪λ, dτ - S⁰ψ⟫ = 0` for all `τ ∈ V⁰`, `ψ ∈ Ṽ⁰`,
 * `⟪d̃φ, v⟫ + ⟪S¹u, S¹v⟫ + ⟪d̃u, d̃v⟫ = F(v)` for all `v ∈ Ṽ¹`,
 * `dσ = S⁰φ`.
+
+In `ℝ³`, with the rows `H̊¹ → H̊(curl) → L²` and, in vector proxies, `S⁰ = I`, `S¹ = 2 vskw`,
+this is the complex of the linearized Einstein (Einstein–Bianchi) equations of
+[QuennevilleBelair2015], Ch. 5–6, and `Γ = {(σ, grad σ) | σ ∈ H̊²}`: a conforming discretization
+of `Γ` needs `C¹` elements, which the multiplier avoids (`σ` and `φ` are discretized separately,
+by Lagrange elements). [AFW2007] derived the mixed methods for linear elasticity with weakly
+imposed symmetry from the same two-row diagram, at its other end (stress in `HΛⁿ⁻¹ ⊗ ℝⁿ`,
+displacement and rotation in `L²`, the rotation being the multiplier for the symmetry of the
+stress); the elasticity system and the elements of [AFW2007] are not formalized here.
 
 A **discretization** (`WeakSymmetryData.Discretization`) consists of finite element subcomplexes of
 both rows with cochain projections `π`, `π̃`; the method (5.6) replaces `S` by `Sₕ = πS`, so the
@@ -52,12 +57,15 @@ The theorems:
   realizations `d̊` in both rows, `S⁰v = Σₐ dxₐ ∧ vₐ`, `S¹v = Σₐ dxₐ ∧ vₐ`) and its Freudenthal
   meshes, the elements of Table 5.1 (`P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ²` in the top row, `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ²`
   componentwise in the bottom row, vanishing boundary traces) carry projections satisfying all
-  hypotheses of `FEEC.weakSymmetry`; the method converges at the rate `h` for exact solutions
-  that are `C²` up to `∂Q` with vanishing tangential traces (`IsTangentialC2`) with an `L²`
-  multiplier, and the solutions of the semi-discrete scheme (6.5) of the wave problem (6.2) are
-  determined by their initial data and converge at the rate `(1 + t) h`.
-* `FEEC.weakSymmetry_cube_nonvacuous`: the hypotheses of the rates of `FEEC.weakSymmetry_cube`
-  are met by a static solution with all four unknowns nonzero and by a nontrivial wave solution.
+  hypotheses of `FEEC.weakSymmetry`, consistency included; the method converges at the rate `h`
+  for exact solutions that are `C²` up to `∂Q` with vanishing tangential traces
+  (`IsTangentialC2`), and for exact solutions in `H¹(Q)` (`IsSobolevForm`, with their
+  differentials), with an `L²` multiplier; the solutions of the semi-discrete scheme (6.5) of the
+  wave problem (6.2) are determined by their initial data and converge at the rate `(1 + t) h`
+  for `C²` and for `H¹` states.
+* `FEEC.weakSymmetry_cube_nonvacuous`: the hypotheses of the `C²` rates of
+  `FEEC.weakSymmetry_cube` are met by a static solution with all four unknowns nonzero and by a
+  nontrivial wave solution.
 
 ## Conventions
 
@@ -82,6 +90,7 @@ forms, simplicial meshes and finite element spaces are those of the Palomar entr
 * [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -597,6 +606,35 @@ def IsRegularState (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u
   IsTangentialC2 0 L σ ∧ (∀ a, IsTangentialC2 0 L (φ a)) ∧ (∀ a, IsTangentialC2 1 L (u a)) ∧
     IsTangentialC2 2 L M ∧ ∀ a, IsTangentialC2 2 L (ρ a)
 
+/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
+restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
+Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
+coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
+`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
+(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
+`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
+def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
+    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
+      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
+    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
+    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+
+/-- A state `(σ, φ, u, M, ρ)` of the cube is **of class `H¹` with bound `L`**: `σ`, the `uₐ`, `M`
+and the `ρₐ` lie in `H¹(Q)` with norms at most `L` (`IsSobolevForm`), so do the `d̊φₐ` and `d̊uₐ`
+(when `φₐ`, `uₐ` lie in the domain of `dMin`), and `M` and the `ρₐ` have vanishing tangential
+traces: they lie in `H̊Λ²(Q)`, the domain of `dMin`. -/
+def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2Vec (cube 3) 1)
+    (M : L2Form (cube 3) 2) (ρ : L2Vec (cube 3) 2) : Prop :=
+  IsSobolevForm (cube 3) 1 0 L σ ∧
+    (∀ a (h : φ a ∈ (dMin (cube 3) 0).domain),
+      IsSobolevForm (cube 3) 1 1 L (dMin (cube 3) 0 ⟨φ a, h⟩)) ∧
+    (∀ a, IsSobolevForm (cube 3) 1 1 L (u a)) ∧
+    (∀ a (h : u a ∈ (dMin (cube 3) 1).domain),
+      IsSobolevForm (cube 3) 1 2 L (dMin (cube 3) 1 ⟨u a, h⟩)) ∧
+    IsSobolevForm (cube 3) 1 2 L M ∧ (∀ a, IsSobolevForm (cube 3) 1 2 L (ρ a)) ∧
+    M ∈ (dMin (cube 3) 2).domain ∧ ∀ a, ρ a ∈ (dMin (cube 3) 2).domain
+
 /-! ### The theorems -/
 
 /-- **Stability and convergence of the discretizations of the complex with weak symmetry**
@@ -636,15 +674,20 @@ each component), such that, for one constant `C`:
 * the hypotheses of `FEEC.weakSymmetry` hold: `cubeData` is BGG data satisfying the continuous
   hypotheses, and every `Q_N` has projections bounded by `C` satisfying (5.4) and is consistent
   at the order `h_N`;
-* **(static rate)** for every solution of (5.3) whose components `σ`, `φₐ`, `uₐ` are `C²` up to
-  `∂Q` with vanishing tangential traces and bound `L` and whose multiplier has `‖λ‖ ≤ L`, the
-  solution of (5.6) has `errorSq ≤ (K L h_N)²`;
+* **(static rates)** for every solution of (5.3) with `‖λ‖ ≤ L` whose components `σ`, `φₐ`, `uₐ`
+  are `C²` up to `∂Q` with vanishing tangential traces and bound `L`, or whose components `σ`,
+  `φₐ`, `d̃φₐ`, `uₐ`, `d̃uₐ` lie in `H¹(Q)` with norms at most `L`, the solution of (5.6) has
+  `errorSq ≤ (K L h_N)²`;
 * **(wave)** solutions of the semi-discrete problem (6.5) are determined on `[0, T]` by
   `(σₕ, uₕ, Mₕ, ρₕ)(0)` (and `φₕ`, `λₕ` on `[0, T)`), and for every classical solution of
-  (6.2) whose states and their time derivatives are regular with bound `L` and whose multipliers
-  are bounded by `L`, some solution of (6.5) (the one starting from the elliptic projection of
-  the exact data, [QuennevilleBelair2015], (6.4)) has
-  `(‖σ - σₕ‖² + ‖u - uₕ‖² + ‖M - Mₕ‖² + ‖ρ - ρₕ‖²)^{1/2} ≤ K L (1 + t) h_N` on `[0, T]`. -/
+  (6.2) whose states and their time derivatives are regular (`IsRegularState`) or of class `H¹`
+  (`IsH1State`) with bound `L` and whose multipliers are bounded by `L`, some solution of (6.5)
+  (the one starting from the elliptic projection of the exact data, [QuennevilleBelair2015],
+  (6.4)) has `(‖σ - σₕ‖² + ‖u - uₕ‖² + ‖M - Mₕ‖² + ‖ρ - ρₕ‖²)^{1/2} ≤ K L (1 + t) h_N` on
+  `[0, T]`.
+
+The projections are asserted, not named (in the proof, the smoothed projections of one smoother
+for both rows); the method (5.6) depends on them through `Sₕ = πS`. -/
 theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → cubeData.Discretization)
     (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
     (∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin 3 → Fin (N + 1)) (σ : Equiv.Perm (Fin 3)), ∀ j i,
@@ -666,15 +709,31 @@ theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → c
       (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) → ‖lam‖ ≤ L →
       (Q N).IsDiscreteSolution F σh φh uh lamh →
       (Q N).errorSq σ σh φ φh u uh ≤ (K * L * meshSize (𝒯 N)) ^ 2) ∧
+    (∃ K, ∀ N F σ φ u lam σh φh uh lamh L, cubeData.IsSolution F σ φ u lam →
+      IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) →
+      (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 1 L (cubeData.dt0 φ a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 2 L (cubeData.dt1 u a)) → ‖lam‖ ≤ L →
+      (Q N).IsDiscreteSolution F σh φh uh lamh →
+      (Q N).errorSq σ σh φ φh u uh ≤ (K * L * meshSize (𝒯 N)) ^ 2) ∧
     (∀ N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T → ContinuousOn f (Icc 0 T) →
       (Q N).IsDiscreteWave T f σ φ u M ρ lam → (Q N).IsDiscreteWave T f σ' φ' u' M' ρ' lam' →
       σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
       (∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
         ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
-    ∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
+    (∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
       cubeData.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
       (∀ t ∈ Icc 0 T, IsRegularState L (σ t) (φ t) (u t) (M t) (ρ t) ∧
         IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) →
+      ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T f σh φh uh Mh ρh lamh ∧
+        ∀ t ∈ Icc 0 T, √(‖(σ t : L2Form (cube 3) 0) - σh t‖ ^ 2 +
+          ‖(u t : L2Vec (cube 3) 1) - uh t‖ ^ 2 + ‖M t - Mh t‖ ^ 2 + ‖ρ t - ρh t‖ ^ 2) ≤
+            K * L * (1 + t) * meshSize (𝒯 N)) ∧
+    ∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
+      cubeData.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
+      (∀ t ∈ Icc 0 T, IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) →
       ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T f σh φh uh Mh ρh lamh ∧
         ∀ t ∈ Icc 0 T, √(‖(σ t : L2Form (cube 3) 0) - σh t‖ ^ 2 +
           ‖(u t : L2Vec (cube 3) 1) - uh t‖ ^ 2 + ‖M t - Mh t‖ ^ 2 + ‖ρ t - ρh t‖ ^ 2) ≤

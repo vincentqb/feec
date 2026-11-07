@@ -1,6 +1,7 @@
 module
 
 public import Solution.CubeMain
+public import Solution.CubeSobolev
 public import Solution.CubeNonvac
 public import Solution.CubeUnique
 
@@ -70,6 +71,7 @@ theorem ofSmooth {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv 
     (isTangentialC2_iff zero_le_two L _).2 h.2.2.2.1,
     fun a => (isTangentialC2_iff zero_le_two L _).2 (h.2.2.2.2 a)⟩
 
+set_option maxHeartbeats 2000000 in
 theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → cubeData.Discretization)
     (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
     (∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin 3 → Fin (N + 1)) (σ : Equiv.Perm (Fin 3)), ∀ j i,
@@ -91,15 +93,31 @@ theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → c
       (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) → ‖lam‖ ≤ L →
       (Q N).IsDiscreteSolution F σh φh uh lamh →
       (Q N).errorSq σ σh φ φh u uh ≤ (K * L * meshSize (𝒯 N)) ^ 2) ∧
+    (∃ K, ∀ N F σ φ u lam σh φh uh lamh L, cubeData.IsSolution F σ φ u lam →
+      IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) →
+      (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 1 L (cubeData.dt0 φ a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 2 L (cubeData.dt1 u a)) → ‖lam‖ ≤ L →
+      (Q N).IsDiscreteSolution F σh φh uh lamh →
+      (Q N).errorSq σ σh φ φh u uh ≤ (K * L * meshSize (𝒯 N)) ^ 2) ∧
     (∀ N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T → ContinuousOn f (Icc 0 T) →
       (Q N).IsDiscreteWave T f σ φ u M ρ lam → (Q N).IsDiscreteWave T f σ' φ' u' M' ρ' lam' →
       σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
       (∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
         ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
-    ∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
+    (∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
       cubeData.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
       (∀ t ∈ Icc 0 T, IsRegularState L (σ t) (φ t) (u t) (M t) (ρ t) ∧
         IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) →
+      ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T f σh φh uh Mh ρh lamh ∧
+        ∀ t ∈ Icc 0 T, √(‖(σ t : L2Form (cube 3) 0) - σh t‖ ^ 2 +
+          ‖(u t : L2Vec (cube 3) 1) - uh t‖ ^ 2 + ‖M t - Mh t‖ ^ 2 + ‖ρ t - ρh t‖ ^ 2) ≤
+            K * L * (1 + t) * meshSize (𝒯 N)) ∧
+    ∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
+      cubeData.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
+      (∀ t ∈ Icc 0 T, IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) →
       ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T f σh φh uh Mh ρh lamh ∧
         ∀ t ∈ Icc 0 T, √(‖(σ t : L2Form (cube 3) 0) - σh t‖ ^ 2 +
           ‖(u t : L2Vec (cube 3) 1) - uh t‖ ^ 2 + ‖M t - Mh t‖ ^ 2 + ‖ρ t - ρh t‖ ^ 2) ≤
@@ -107,20 +125,40 @@ theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → c
   rw [cubeData_eq]
   obtain ⟨p, C₀, hT, hB, C, hS, hQ⟩ := cube_hyps
   obtain ⟨K, hK⟩ := cube_static_rate hT hB hS (fun N => (hQ N).1) (fun N => (hQ N).2.2)
+  obtain ⟨Ks, hKs⟩ := cube_static_rate_sob hT hB hS (fun N => (hQ N).1) (fun N => (hQ N).2.2)
+  obtain ⟨cs, hcs, hcsH⟩ := isSobolevStaticTr_of
   refine ⟨cubeMesh, cubeQ hT hB, C, isMeshFamily_cube, points_cube, cubeQ_spaces hT hB,
     isBGG_𝒟, hS, fun N => ?_, ⟨K, fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hu hl hd => ?_⟩,
+    ⟨Ks * cs, fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hdφ hu hdu hl hd => ?_⟩,
     fun N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam' hT0 _ h1 h2 e0' e1' e2' e3' =>
-      cube_wave_unique hT hB N hT0 h1 h2 e0' e1' e2' e3', ?_⟩
+      cube_wave_unique hT hB N hT0 h1 h2 e0' e1' e2' e3', ?_, ?_⟩
   · rw [meshSize_cubeMesh]; exact hQ N
   · rw [meshSize_cubeMesh]
     exact hK N F σ φ u lam σh φh uh lamh L hs ((isTangentialC2_iff le_rfl L _).1 hσ)
       (fun a => (isTangentialC2_iff le_rfl L _).1 (hφ a))
       (fun a => (isTangentialC2_iff zero_le_one L _).1 (hu a)) hl hd
+  · rw [meshSize_cubeMesh]
+    have hL0 : 0 ≤ L := (norm_nonneg _).trans hl
+    have h := hKs N F σ φ u lam σh φh uh lamh (cs * L) hs
+      (hcsH hL0 hs.2.2 hσ hφ hdφ hu hdu) (hl.trans (le_mul_of_one_le_left hL0 hcs)) hd
+    exact h.trans_eq (by ring)
   · obtain ⟨K', hK'⟩ := cube_wave_rate hT hB
     refine ⟨K', fun N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L hT0 hf hw hreg => ?_⟩
     rw [meshSize_cubeMesh]
     exact hK' N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L hT0 hf hw fun t ht =>
       ⟨toSmooth (hreg t ht).1, toSmooth (hreg t ht).2.1, (hreg t ht).2.2.1, (hreg t ht).2.2.2⟩
+  · obtain ⟨K', hK'⟩ := cube_wave_rate_sob hT hB
+    obtain ⟨cw, hcw, hcwH⟩ := isSobolevStateTr_of
+    refine ⟨K' * cw, fun N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L hT0 hf hw hreg => ?_⟩
+    rw [meshSize_cubeMesh]
+    have hL0 : 0 ≤ L := (norm_nonneg _).trans (hreg 0 ⟨le_rfl, hT0.le⟩).2.2.1
+    obtain ⟨σh, φh, uh, Mh, ρh, lamh, hd, hr⟩ :=
+      hK' N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' (cw * L) hT0 hf hw fun t ht =>
+        ⟨hcwH (φ := e0 (φ t)) (u := e1 (u t)) hL0 (hreg t ht).1,
+          hcwH (φ := e0 (φ' t)) (u := e1 (u' t)) hL0 (hreg t ht).2.1,
+          (hreg t ht).2.2.1.trans (le_mul_of_one_le_left hL0 hcw),
+          (hreg t ht).2.2.2.trans (le_mul_of_one_le_left hL0 hcw)⟩
+    exact ⟨σh, φh, uh, Mh, ρh, lamh, hd, fun t ht => (hr t ht).trans_eq (by ring)⟩
 
 theorem weakSymmetry_cube_nonvacuous :
     (∃ F σ φ u lam L, cubeData.IsSolution F σ φ u lam ∧ (σ : L2Form (cube 3) 0) ≠ 0 ∧

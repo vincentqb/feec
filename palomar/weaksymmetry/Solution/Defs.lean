@@ -34,6 +34,7 @@ imports this module and the bridges to `Feec`, and proves the theorems (`Solutio
 * [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
 * [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -548,6 +549,35 @@ def IsRegularState (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u
     (M : L2Form (cube 3) 2) (ρ : L2Vec (cube 3) 2) : Prop :=
   IsTangentialC2 0 L σ ∧ (∀ a, IsTangentialC2 0 L (φ a)) ∧ (∀ a, IsTangentialC2 1 L (u a)) ∧
     IsTangentialC2 2 L M ∧ ∀ a, IsTangentialC2 2 L (ρ a)
+
+/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
+restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
+Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
+coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
+`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
+(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
+`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
+def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
+    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
+      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
+    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
+    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+
+/-- A state `(σ, φ, u, M, ρ)` of the cube is **of class `H¹` with bound `L`**: `σ`, the `uₐ`, `M`
+and the `ρₐ` lie in `H¹(Q)` with norms at most `L` (`IsSobolevForm`), so do the `d̊φₐ` and `d̊uₐ`
+(when `φₐ`, `uₐ` lie in the domain of `dMin`), and `M` and the `ρₐ` have vanishing tangential
+traces: they lie in `H̊Λ²(Q)`, the domain of `dMin`. -/
+def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2Vec (cube 3) 1)
+    (M : L2Form (cube 3) 2) (ρ : L2Vec (cube 3) 2) : Prop :=
+  IsSobolevForm (cube 3) 1 0 L σ ∧
+    (∀ a (h : φ a ∈ (dMin (cube 3) 0).domain),
+      IsSobolevForm (cube 3) 1 1 L (dMin (cube 3) 0 ⟨φ a, h⟩)) ∧
+    (∀ a, IsSobolevForm (cube 3) 1 1 L (u a)) ∧
+    (∀ a (h : u a ∈ (dMin (cube 3) 1).domain),
+      IsSobolevForm (cube 3) 1 2 L (dMin (cube 3) 1 ⟨u a, h⟩)) ∧
+    IsSobolevForm (cube 3) 1 2 L M ∧ (∀ a, IsSobolevForm (cube 3) 1 2 L (ρ a)) ∧
+    M ∈ (dMin (cube 3) 2).domain ∧ ∀ a, ρ a ∈ (dMin (cube 3) 2).domain
 
 /-! ### The theorems -/
 

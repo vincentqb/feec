@@ -8,15 +8,20 @@
 version: "v0.4"
 
 project:
-  name: "Finite element exterior calculus for the complex with weak symmetry: mixed elasticity and linearized gravity"
+  name: "Finite element exterior calculus for the complex with weak symmetry (linearized gravity)"
   description: >-
     The mixed finite element method for the complex with weak symmetry obtained from the
     Bernstein-Gelfand-Gelfand construction (Arnold-Hu 2021) by eliminating the bottom space
-    Ṽ^0 against V^1 weakly with a Lagrange multiplier, the mechanism of the mixed methods for
-    linear elasticity with weakly imposed symmetry (Arnold-Falk-Winther 2007), and, on the cube
-    in R^3, of the linearized Einstein (Einstein-Bianchi) equations of the thesis
-    (Quenneville-Bélair 2015, Ch. 5-6). Stated over Mathlib with the definitions of differential
-    forms, polynomial forms, simplicial meshes and finite element spaces of the Palomar entry
+    V~^0 against V^1 weakly, with a Lagrange multiplier: on the cube in R^3, the complex of the
+    linearized Einstein (Einstein-Bianchi) equations of the thesis (Quenneville-Bélair 2015,
+    Ch. 5-6), the counterpart of palomar/fem for a BGG complex. In vector proxies the
+    constrained space Gamma = {(sigma, phi) | d sigma = S^0 phi} is {(sigma, grad sigma) | sigma
+    in H^2_0}, whose conforming elements are C^1; the multiplier lets sigma and phi be
+    discretized separately by Lagrange elements. Arnold-Falk-Winther 2007 derived the mixed
+    methods for elasticity with weakly imposed symmetry from the same two-row diagram at its
+    other end (stress in H Lambda^{n-1} ⊗ R^n, displacement and rotation in L^2); those are not
+    formalized here. Stated over Mathlib with the definitions of differential forms, polynomial
+    forms, simplicial meshes, finite element spaces and Sobolev spaces of the Palomar entry
     palomar/fem copied verbatim. Three compared theorems. FEEC.weakSymmetry (thesis Prop 5.4
     and Thm 5.5): BGG data are two segments W^0 -> W^1 -> W^2 and W~^0 -> W~^1 -> W~^2 of
     complexes of densely defined operators between real Hilbert spaces (Mathlib's LinearPMap),
@@ -44,18 +49,23 @@ project:
     boundary traces (top row P_1 Lambda^0 -> P_1^- Lambda^1 -> P_1^- Lambda^2, bottom row
     P_2 Lambda^0 -> P_2^- Lambda^1 -> P_1 Lambda^2 in each of the three components), there are
     discretizations with these spaces and one constant C for which all hypotheses of
-    FEEC.weakSymmetry hold; the static error is at most (K L h_N)^2 for exact solutions whose
-    sigma, phi_a, u_a are C^2 up to the boundary with vanishing tangential traces and bound L
-    and whose multiplier has ||lambda|| <= L; solutions of the semi-discrete wave problem (6.5)
-    are determined by (sigma_h, u_h, M_h, rho_h)(0); and for every classical solution of the
-    wave problem (6.2) whose states and time derivatives are of that class with bound L and
-    whose multiplier and its derivative are bounded by L, some solution of (6.5) is within
-    K L (1 + t) h_N of it in (||sigma||^2 + ||u||^2 + ||M||^2 + ||rho||^2)^(1/2) on [0, T].
-    FEEC.weakSymmetry_cube_nonvacuous: the static rate applies to a solution with sigma, phi,
-    u, lambda all nonzero, and for every T > 0 the wave rate applies to a classical solution of
-    (6.2) with u(t) != 0 for all t and sigma(t), phi(t) != 0 for t in (0, T]. The proof is the
-    library Feec of this repository (Feec.HilbertComplex.BGG.WeakSymmetry, Discrete,
-    WeakConsistency, DiscreteWave, EllipticProjection, Feec.Models.Cube.WeakSymmetry*).
+    FEEC.weakSymmetry hold, consistency included; the static error is at most (K L h_N)^2 for
+    exact solutions with ||lambda|| <= L whose sigma, phi_a, u_a are C^2 up to the boundary
+    with vanishing tangential traces and bound L, and also for those whose sigma, phi_a, d~phi_a,
+    u_a, d~u_a lie in H^1(Q) (restrictions of H^1(R^3), IsSobolevForm) with norms at most L;
+    solutions of the semi-discrete wave problem (6.5) are determined by
+    (sigma_h, u_h, M_h, rho_h)(0); and for every classical solution of the wave problem (6.2)
+    whose states and time derivatives are of the C^2 class, or of the H^1 class (sigma,
+    d~phi_a, u_a, d~u_a, M, rho_a in H^1(Q) with norms at most L, M and rho_a with vanishing
+    tangential traces), and whose multiplier and its derivative are bounded by L, some
+    solution of (6.5) is within K L (1 + t) h_N of it in
+    (||sigma||^2 + ||u||^2 + ||M||^2 + ||rho||^2)^(1/2) on [0, T].
+    FEEC.weakSymmetry_cube_nonvacuous: the C^2 static rate applies to a solution with sigma, phi,
+    u, lambda all nonzero, and for every T > 0 the C^2 wave rate applies to a classical solution
+    of (6.2) with u(t) != 0 for all t and sigma(t), phi(t) != 0 for t in (0, T]. The proof is
+    the library Feec of this repository (Feec.HilbertComplex.BGG.WeakSymmetry, Discrete,
+    WeakConsistency, DiscreteWave, EllipticProjection, Feec.Models.Cube.WeakSymmetry*, the
+    Sobolev rates of Feec.Models.Cube.WeakSymmetrySobolevRate).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -77,8 +87,8 @@ sources:
     relationship: "formalizes"
     note: >-
       The abstract theorem and the cube instance are the thesis' analysis of the complex with
-      weak symmetry, in the formulation stated in the challenge (the consistency hypothesis on
-      regular potentials, an L^2 multiplier). The formalization is by the thesis author.
+      weak symmetry, with the hypotheses stated in the challenge. The formalization is by the
+      thesis author.
     author_endorsement: "participated"
   - title: "Mixed finite element methods for linear elasticity with weakly imposed symmetry"
     authors:
@@ -90,8 +100,10 @@ sources:
     location: "Math. Comp. 76 (2007), the mixed method with weakly imposed symmetry and its stability analysis"
     relationship: "background"
     note: >-
-      The mechanism (a multiplier for the coupling S, a variational crime S_h = pi S); the
-      elasticity elements of AFW2007 themselves are not formalized.
+      The two-row diagram with a weakly imposed coupling, used there at the other end of the
+      diagram (stress, displacement and rotation; lowest order in 3D: BDM_1 stresses with
+      piecewise constant displacements and rotations). Neither the elasticity system nor the
+      AFW2007 elements are formalized; the elements here are those of the thesis' Table 5.1.
     author_endorsement: "not-contacted"
   - title: "Complexes from complexes"
     authors:
@@ -110,9 +122,12 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
     type: "article"
-    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3 (bounded cochain projections, the abstract error analysis), §5.5 (smoothed projections)"
-    relationship: "formalizes"
-    note: "Locators as cited in Feec, not rechecked for this entry."
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3 (abstract error analysis), §4.3 (Gaffney), §5.5"
+    relationship: "background"
+    note: >-
+      The abstract error analysis that the thesis' Thm 5.5 adapts to S_h = pi S, and the
+      smoothed projections of the cube discretizations; no theorem of AFW2010 is compared here.
+      Locators as cited in Feec, not rechecked for this entry.
     author_endorsement: "not-contacted"
   - title: "Smoothed projections in finite element exterior calculus"
     authors:
@@ -152,6 +167,17 @@ sources:
     location: "Acta Numerica 15 (2006), §3, §5 (the spaces P_r Lambda^k, P_r^- Lambda^k), §11 (elasticity with weak symmetry)"
     relationship: "background"
     author_endorsement: "not-contacted"
+  - title: "Partial Differential Equations"
+    authors:
+      - "Lawrence C. Evans"
+    id: "doi:10.1090/gsm/019"
+    type: "book"
+    location: "AMS Graduate Studies in Mathematics 19, 2nd ed. (2010), §5.2 (weak derivatives, H^m)"
+    relationship: "background"
+    note: >-
+      The Sobolev spaces of the H^1 rates (IsSobolevForm, as in palomar/fem): weak derivatives in
+      L^2(R^n), restricted to the cube.
+    author_endorsement: "not-contacted"
   - title: "Simplizialzerlegungen von beschränkter Flachheit"
     authors:
       - "Hans Freudenthal"
@@ -176,14 +202,15 @@ status:
     Formalized and compared: FEEC.weakSymmetry for all BGG data on real Hilbert spaces in one
     universe and all discretizations satisfying its hypotheses; FEEC.weakSymmetry_cube for the
     cube (0, 1/2)^3, its Freudenthal meshes and the elements of Table 5.1 with vanishing
-    boundary traces (the static rate, the uniqueness of the semi-discrete wave solutions and the
-    wave rate); FEEC.weakSymmetry_cube_nonvacuous. Not compared (proved in Feec, outside the
-    statement): the elasticity elements of AFW2007, the mirror (mixed) boundary conditions of the
-    thesis and their convergence, the Sobolev-data rates of the weak-symmetry scheme
-    (Feec.Models.Cube.WeakSymmetrySobolevRate), the fully discrete schemes, the constraint
-    propagation of the Einstein-Bianchi system, the existence of semi-discrete solutions for
-    arbitrary initial data (only the one starting from the elliptic projection of the exact data
-    is asserted, existentially).
+    boundary traces (the hypotheses with one constant, consistency included; the static rates
+    for C^2 and for H^1 data; the uniqueness of the semi-discrete wave solutions; the wave rates
+    for C^2 and for H^1 states); FEEC.weakSymmetry_cube_nonvacuous. Not compared (proved in
+    Feec, outside the statement): the mirror (mixed) boundary conditions of the thesis and their
+    convergence, the fractional Sobolev rates h^min(s,1) (Feec.Models.Cube.WeakSymmetrySobolevRate),
+    the fully discrete schemes, the constraint propagation of the Einstein-Bianchi system, the
+    existence of semi-discrete solutions for arbitrary initial data (only the one starting from
+    the elliptic projection of the exact data is asserted, existentially). Not formalized: the
+    elasticity system and elements of AFW2007.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -225,28 +252,35 @@ automation:
 
 fidelity:
   divergences: >-
-    (1) Coordinates and definitions of forms, meshes and finite element spaces as in palomar/fem
-    (divergences (1)-(5), (8) there); W~^k = L^2(Omega; Lambda^k) ⊗ R^3 is the l^2 sum of three
-    copies (L2Vec).
-    (2) The multiplier lambda is assumed in L^2 = W^1 (the thesis allows a multiplier in a dual
-    space); the rates require ||lambda|| <= L and, in the abstract theorem, a bound Lambda on
-    d^1* S^1 u.
+    (1) Coordinates and definitions of forms, meshes, finite element spaces and H^m as in
+    palomar/fem (divergences (1)-(5), (8) there); W~^k = L^2(Omega; Lambda^k) ⊗ R^3 is the l^2
+    sum of three copies (L2Vec).
+    (2) The multiplier lambda is assumed in L^2 = W^1: the theorems apply to the solutions of
+    (5.3) and (6.2) that have an L^2 multiplier (in vector proxies lambda = -div u row by row,
+    so this asks u_a in H(div)). The rates also assume ||lambda|| <= L; on the cube this bound
+    follows, up to a constant, from the regularity of u (S^0* lambda = d~^0* u), which is not
+    used to remove it. The abstract theorem assumes a bound Lambda on d^1* S^1 u; on the cube it
+    is derived from the regularity of u.
     (3) The abstract hypotheses use one constant C for the Poincaré inequalities, the Hodge and
     regular decompositions, ||S||, the bounds of the projections and the consistency; K depends
     only on C.
-    (4) Consistency (cf. Prop 5.9) is a hypothesis of the abstract theorem stated on V~_h^0 and
-    on regular potentials of the fields of V~_h^1 (a potential w with d~w = d~v,
-    ||w|| <= C ||d~v||, on which pi~^1 and S^1_h are accurate to order h), not on all of
-    V~_h^1; it is proved for the cube discretizations.
+    (4) Consistency (cf. Prop 5.9) is the hypothesis Discretization.IsConsistent of the abstract
+    theorem: ||(S^0 - S^0_h) psi|| <= C h ||d~psi|| on V~_h^0, and every d~v, v in V~_h^1, has a
+    regular potential w (d~w = d~v, ||w|| <= C ||d~v||) on which pi~^1 and S^1_h are accurate to
+    order h. It is proved for the cube discretizations (part of FEEC.weakSymmetry_cube).
     (5) The cube discretizations are asserted existentially: their spaces are named (Table 5.1
     with vanishing boundary traces on the Freudenthal meshes), their projections are not (Feec
     uses the smoothed projections of one smoother for both rows, bounded uniformly). The method
     (5.6) depends on pi through S_h = pi S, so the statement covers the method for one admissible
-    choice of projections, not for a canonical one such as the canonical interpolants.
-    (6) Regularity: the static and wave rates are stated for exact solutions C^2 up to the
-    boundary with vanishing tangential traces (IsTangentialC2: values and first derivatives of w
-    and dw bounded by L on the closed cube), not for the Sobolev classes of the thesis; the
-    Sobolev-data rates proved in Feec are not compared.
+    choice of projections, not for a canonical one; naming the smoothed projections would need
+    their construction (mollification, extension, canonical interpolants) in the challenge.
+    (6) Regularity: the rates are stated for exact solutions C^2 up to the boundary with
+    vanishing tangential traces (IsTangentialC2), and for solutions in H^1(Q) with their
+    differentials (IsSobolevForm, IsH1State: sigma, phi_a, d~phi_a, u_a, d~u_a for the static
+    rate; sigma, d~phi_a, u_a, d~u_a, M, rho_a for the wave rate, with M, rho_a in H̊Λ^2(Q));
+    the traces of the other fields vanish through their operator domains, S^0 phi = d sigma and
+    S^1 u are derived. The fractional rates h^min(s,1) of Feec are not compared; h is the
+    optimal order for these elements. The non-vacuity theorem covers the C^2 classes only.
     (7) The wave problem: classical solutions are paths in the operator domains with continuous
     right derivatives in L^2 (and of d~phi, d~u); the wave rate asserts some semi-discrete
     solution (in Feec, the one starting from the elliptic projection (6.4) of the exact data)
@@ -289,9 +323,15 @@ alignment:
         The cube data are Feec's bggSegment (cubeData_eq); the discretizations from
         Feec.Models.Cube.WeakSymmetry.tableRows_uniform_cochainProjection and cubeFEM, the
         continuous hypotheses from exists_curlPotential_bound, the consistency from the cube
-        interpolation estimates; the static rate is FEEC.weakSymmetry with cubeFEM_err_*_tr and
-        exists_isCsFormTr_segS1; the wave clauses from cubeWave_rate_tr' and
-        Feec.BGG.DiscreteSolution.unique (Solution/CubeWave.lean, CubeUnique.lean).
+        interpolation estimates; the C^2 static rate is FEEC.weakSymmetry with cubeFEM_err_*_tr
+        and exists_isCsFormTr_segS1; the wave clauses from cubeWave_rate_tr' and
+        Feec.BGG.DiscreteSolution.unique (Solution/CubeWave.lean, CubeUnique.lean). The H^1
+        classes enter Feec's relative parity class H^1_univ by Gaffney's identity on the cube
+        (sobRel_zero_of_mem, sobRel_one_of_mem, sobRel_two_of_mem), d* of H^1(R^n) data being
+        computed by integration by parts (Solution/H1.lean, H1Ops.lean, Sobolev.lean); then the
+        H^1 static rate is FEEC.weakSymmetry with norm_sub_proj_le_sobStateConst and
+        abs_inner_D1_le_of_sobRel_one, and the H^1 wave rate cubeWave_rate_sobolev_of_one_le
+        (Solution/CubeSobolev.lean).
     - source: "[QuennevilleBelair2015] Thm 5.5, §6.3"
       lean: "FEEC.weakSymmetry_cube_nonvacuous"
       module: "Challenge"

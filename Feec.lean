@@ -91,6 +91,7 @@ public import Feec.FiniteElement.CubeInterpolation
 public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.GlobalInterpolation
+public import Feec.FiniteElement.GlobalInverseEstimate
 public import Feec.FiniteElement.InterpolationError
 public import Feec.FiniteElement.InvariantForm
 public import Feec.FiniteElement.InverseEstimate

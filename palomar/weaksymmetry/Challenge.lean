@@ -63,8 +63,8 @@ The theorems:
   differentials), with an `L²` multiplier; the solutions of the semi-discrete scheme (6.5) of the
   wave problem (6.2) are determined by their initial data and converge at the rate `(1 + t) h`
   for `C²` and for `H¹` states.
-* `FEEC.weakSymmetry_cube_nonvacuous`: the hypotheses of the `C²` rates of
-  `FEEC.weakSymmetry_cube` are met by a static solution with all four unknowns nonzero and by a
+* `FEEC.weakSymmetry_cube_nonvacuous`: the hypotheses of the rates of `FEEC.weakSymmetry_cube`,
+  `C²` and `H¹` alike, are met by a static solution with all four unknowns nonzero and by a
   nontrivial wave solution.
 
 ## Conventions
@@ -741,20 +741,27 @@ theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → c
   sorry
 
 /-- **Non-vacuity of the rates of `FEEC.weakSymmetry_cube`**: (5.3) on the cube has a smooth
-solution with `σ`, `φ`, `u` and `λ` all nonzero satisfying the
-hypotheses of the static rate for some `L`; and for every `T > 0`, (6.2) has a classical
-solution on `[0, T]`, with `u(t) ≠ 0` for all `t` and `σ(t), φ(t) ≠ 0` for `t ∈ (0, T]`,
-satisfying the hypotheses of the wave rate for some `L`. -/
+solution with `σ`, `φ`, `u` and `λ` all nonzero satisfying the hypotheses of both static rates
+(`C²` and `H¹`) for some `L`; and for every `T > 0`, (6.2) has a classical solution on `[0, T]`,
+with `u(t) ≠ 0` for all `t` and `σ(t), φ(t) ≠ 0` for `t ∈ (0, T]`, satisfying the hypotheses of
+both wave rates (`IsRegularState` and `IsH1State`) for some `L`. -/
 theorem weakSymmetry_cube_nonvacuous :
     (∃ F σ φ u lam L, cubeData.IsSolution F σ φ u lam ∧ (σ : L2Form (cube 3) 0) ≠ 0 ∧
       (φ : L2Vec (cube 3) 0) ≠ 0 ∧ (u : L2Vec (cube 3) 1) ≠ 0 ∧ lam ≠ 0 ∧
       IsTangentialC2 0 L (σ : L2Form (cube 3) 0) ∧
       (∀ a, IsTangentialC2 0 L ((φ : L2Vec (cube 3) 0) a)) ∧
-      (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) ∧ ‖lam‖ ≤ L) ∧
+      (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) ∧ ‖lam‖ ≤ L ∧
+      IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 1 L (cubeData.dt0 φ a)) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) ∧
+      ∀ a, IsSobolevForm (cube 3) 1 2 L (cubeData.dt1 u a)) ∧
     ∀ T, 0 < T → ∃ f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, ContinuousOn f (Icc 0 T) ∧
       cubeData.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' ∧
       (∀ t ∈ Icc 0 T, IsRegularState L (σ t) (φ t) (u t) (M t) (ρ t) ∧
-        IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) ∧
+        IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧
+        IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) ∧
       (∀ t, (u t : L2Vec (cube 3) 1) ≠ 0) ∧
       ∀ t ∈ Ioc 0 T, (σ t : L2Form (cube 3) 0) ≠ 0 ∧ (φ t : L2Vec (cube 3) 0) ≠ 0 := by
   sorry

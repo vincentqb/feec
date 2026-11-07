@@ -1,6 +1,8 @@
 module
 
 public import Solution.CubeWave
+public import Solution.Sobolev
+public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
 
 /-!
 # Non-vacuity of the rates on the cube
@@ -8,7 +10,9 @@ public import Solution.CubeWave
 The manufactured solutions of `Feec`: the coupled static solution
 (`Feec.Models.Cube.WeakSymmetry.exists_coupled_manufactured_solution`: `λ = dg`, `σ = dᵗλ`,
 `φₐ = ∂ₐσ`, `uₐ = −g dxₐ` for a bump `g`) and the wave solution `waveManufactured`
-(`waveManufactured_hyps`), as solutions of the challenge.
+(`waveManufactured_hyps`), as solutions of the challenge. Their fields are test fields (times
+functions of `t`), so they also lie in the `H¹` classes (`cube_static_h1`, `cube_wave_h1`, from
+`Feec.Domain.exists_h1Data_testField`).
 
 ## References
 
@@ -35,7 +39,8 @@ def coupledF : 𝒟.dt1.domain →ₗ[ℝ] ℝ := coupledDatum ∘ₗ e1.toLinea
 
 /-- **A coupled nontrivial smooth solution of (5.3) on the cube.** -/
 theorem cube_static_nonvacuous : ∃ L, 𝒟.IsSolution coupledF coupledσ (e0.symm coupledφ)
-    (ofWv1 coupledu) coupledMult ∧ (coupledσ : W0) ≠ 0 ∧ ((e0.symm coupledφ : 𝒟.dt0.domain) : Wv W0) ≠ 0 ∧
+    (ofWv1 coupledu) coupledMult ∧ (coupledσ : W0) ≠ 0 ∧
+    ((e0.symm coupledφ : 𝒟.dt0.domain) : Wv W0) ≠ 0 ∧
     ((ofWv1 coupledu : 𝒟.dt1.domain) : Wv W1) ≠ 0 ∧ coupledMult ≠ 0 ∧
     IsCsFormTr 0 0 L (coupledσ : W0) ∧ (∀ a, IsCsFormTr 0 0 L ((coupledφ a : U0) : W0)) ∧
     (∀ a, IsCsFormTr 0 1 L ((coupledu a : U1) : W1)) ∧ ‖coupledMult‖ ≤ L := by
@@ -81,7 +86,8 @@ def waveF (t : ℝ) : Wv W1 := incl1 (t • (bggSegment.dt0 coupledφ + waveCurl
 /-- **A nontrivial classical solution of (6.2) on the cube** satisfying the hypotheses of the
 wave rate. -/
 theorem cube_wave_nonvacuous {T : ℝ} (hT : 0 < T) : ∃ L, ContinuousOn waveF (Icc 0 T) ∧
-    𝒟.IsWaveSolution T waveF (fun t => (waveManufactured T).σ t) (fun t => (waveManufactured T).σ' t)
+    𝒟.IsWaveSolution T waveF (fun t => (waveManufactured T).σ t)
+      (fun t => (waveManufactured T).σ' t)
       (fun t => e0.symm ((waveManufactured T).φ t)) (fun t => e0.symm ((waveManufactured T).φ' t))
       (fun t => ofWv1 ((waveManufactured T).u t)) (fun t => ofWv1 ((waveManufactured T).u' t))
       (waveManufactured T).M (waveManufactured T).M' (waveManufactured T).ρ
@@ -122,5 +128,118 @@ theorem cube_wave_nonvacuous {T : ℝ} (hT : 0 < T) : ∃ L, ContinuousOn waveF 
     · exact eq_of_inner fun z => s.ed t ht z
     · exact congrArg Subtype.val (s.ee t ht)
     · exact congrArg Subtype.val (s.ee' t ht)
+
+/-! ### The `H¹` classes -/
+
+theorem IsH1State.mono {L L' : ℝ} (hL : 0 ≤ L) (h : L ≤ L') {σ : L2Form (cube 3) 0}
+    {φ : L2Vec (cube 3) 0} {u : L2Vec (cube 3) 1} {M : L2Form (cube 3) 2} {ρ : L2Vec (cube 3) 2}
+    (hs : IsH1State L σ φ u M ρ) : IsH1State L' σ φ u M ρ :=
+  ⟨isSobolevForm_mono hL h hs.1, fun a ha => isSobolevForm_mono hL h (hs.2.1 a ha),
+    fun a => isSobolevForm_mono hL h (hs.2.2.1 a),
+    fun a ha => isSobolevForm_mono hL h (hs.2.2.2.1 a ha), isSobolevForm_mono hL h hs.2.2.2.2.1,
+    fun a => isSobolevForm_mono hL h (hs.2.2.2.2.2.1 a), hs.2.2.2.2.2.2⟩
+
+/-- **A state with `H¹(ℝ³)` data is of class `H¹`.** -/
+theorem isH1State_of {B : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2}
+    (hσ : H1Data (cubeDomain 3) (σ : W0) B) (hφ : ∀ a, H1Data (cubeDomain 3) (D0 (φ a)) B)
+    (hu : ∀ a, H1Data (cubeDomain 3) ((u a : U1) : W1) B)
+    (hdu : ∀ a, H1Data (cubeDomain 3) (D1 (u a)) B) (hM : H1Data (cubeDomain 3) M B)
+    (hρ : ∀ a, H1Data (cubeDomain 3) (ρ a) B) (hMd : M ∈ D2min.domain)
+    (hρd : ∀ a, ρ a ∈ D2min.domain) :
+    IsH1State (16 * B) (σ : W0) (incl0 φ) (incl1 u) M ρ := by
+  refine ⟨isSobolevForm_of_h1Data hσ, fun a h => ?_, fun a => isSobolevForm_of_h1Data (hu a),
+    fun a h => ?_, isSobolevForm_of_h1Data hM, fun a => isSobolevForm_of_h1Data (hρ a),
+    by rw [dMin_eq]; exact hMd, fun a => by rw [dMin_eq]; exact hρd a⟩
+  · rw [LinearPMap.apply_of_eq' (dMin_eq (cube 3) 0)]
+    exact isSobolevForm_of_h1Data (hφ a)
+  · rw [LinearPMap.apply_of_eq' (dMin_eq (cube 3) 1)]
+    exact isSobolevForm_of_h1Data (hdu a)
+
+/-- `H¹(ℝ³)` data of the fields of the manufactured solutions, with one bound. -/
+theorem exists_coupled_h1Data : ∃ B, 0 ≤ B ∧ Nonempty (H1Data (cubeDomain 3) (coupledσ : W0) B) ∧
+    (∀ a, Nonempty (H1Data (cubeDomain 3) ((coupledφ a : U0) : W0) B)) ∧
+    (∀ a, Nonempty (H1Data (cubeDomain 3) (D0 (coupledφ a)) B)) ∧
+    (∀ a, Nonempty (H1Data (cubeDomain 3) ((coupledu a : U1) : W1) B)) ∧
+    ∀ a, Nonempty (H1Data (cubeDomain 3) (D1 (coupledu a)) B) := by
+  obtain ⟨Bσ, ⟨hσ⟩⟩ := exists_h1Data_testField isTestField_coupledSigFn
+  choose Bφ hφ using fun a => exists_h1Data_testField (isTestField_coupledPhiFn a)
+  choose Bdφ hdφ using fun a => exists_h1Data_testField
+    ((extDerivOp ℝ 3 0).isTestField_apply (isTestField_coupledPhiFn a))
+  choose Bu hu using fun a => exists_h1Data_testField (isTestField_coupledU a)
+  choose Bdu hdu using fun a => exists_h1Data_testField (isTestField_waveCurlU a)
+  set B := |Bσ| + ∑ a, (|Bφ a| + |Bdφ a| + |Bu a| + |Bdu a|)
+  have hle : ∀ a, |Bφ a| + |Bdφ a| + |Bu a| + |Bdu a| ≤ B - |Bσ| := fun a => by
+    have := Finset.single_le_sum (f := fun a => |Bφ a| + |Bdφ a| + |Bu a| + |Bdu a|)
+      (fun a _ => by positivity) (Finset.mem_univ a)
+    simp only [B]; linarith
+  have hσB : |Bσ| ≤ B := by
+    have : 0 ≤ ∑ a, (|Bφ a| + |Bdφ a| + |Bu a| + |Bdu a|) := by positivity
+    simp only [B]; linarith
+  have hb : ∀ a, |Bφ a| ≤ B ∧ |Bdφ a| ≤ B ∧ |Bu a| ≤ B ∧ |Bdu a| ≤ B := fun a => by
+    have := hle a
+    have := abs_nonneg Bσ
+    have := abs_nonneg (Bφ a); have := abs_nonneg (Bdφ a)
+    have := abs_nonneg (Bu a); have := abs_nonneg (Bdu a)
+    refine ⟨?_, ?_, ?_, ?_⟩ <;> linarith
+  refine ⟨B, (abs_nonneg _).trans hσB, ⟨hσ.mono ((le_abs_self _).trans hσB)⟩, fun a => ⟨?_⟩,
+    fun a => ⟨?_⟩, fun a => ⟨?_⟩, fun a => ⟨?_⟩⟩
+  · exact (hφ a).some.mono ((le_abs_self _).trans (hb a).1)
+  · have e : D0 (coupledφ a) = testField
+        ((extDerivOp ℝ 3 0).isTestField_apply (isTestField_coupledPhiFn a)) :=
+      (extDerivOp ℝ 3 0).minimal_testField (isOpen_cubeDomain 3) (isTestField_coupledPhiFn a)
+    rw [e]
+    exact (hdφ a).some.mono ((le_abs_self _).trans (hb a).2.1)
+  · exact (hu a).some.mono ((le_abs_self _).trans (hb a).2.2.1)
+  · rw [D1_coupledu]
+    exact (hdu a).some.mono ((le_abs_self _).trans (hb a).2.2.2)
+
+/-- **The static manufactured solution is of class `H¹`.** -/
+theorem cube_static_h1 : ∃ L, 0 ≤ L ∧ IsSobolevForm (cube 3) 1 0 L (coupledσ : W0) ∧
+    (∀ a, IsSobolevForm (cube 3) 1 0 L ((coupledφ a : U0) : W0)) ∧
+    (∀ a, IsSobolevForm (cube 3) 1 1 L (D0 (coupledφ a))) ∧
+    (∀ a, IsSobolevForm (cube 3) 1 1 L ((coupledu a : U1) : W1)) ∧
+    ∀ a, IsSobolevForm (cube 3) 1 2 L (D1 (coupledu a)) := by
+  obtain ⟨B, hB, ⟨hσ⟩, hφ, hdφ, hu, hdu⟩ := exists_coupled_h1Data
+  exact ⟨16 * B, by positivity, isSobolevForm_of_h1Data hσ,
+    fun a => isSobolevForm_of_h1Data (hφ a).some, fun a => isSobolevForm_of_h1Data (hdφ a).some,
+    fun a => isSobolevForm_of_h1Data (hu a).some, fun a => isSobolevForm_of_h1Data (hdu a).some⟩
+
+/-- **The manufactured wave solution is of class `H¹`** on `[0, T]`. -/
+theorem cube_wave_h1 (T : ℝ) : ∃ L, 0 ≤ L ∧ ∀ t ∈ Icc 0 T,
+    IsH1State L ((waveManufactured T).σ t : W0) (incl0 ((waveManufactured T).φ t))
+      (incl1 ((waveManufactured T).u t)) ((waveManufactured T).M t) ((waveManufactured T).ρ t) ∧
+    IsH1State L ((waveManufactured T).σ' t : W0) (incl0 ((waveManufactured T).φ' t))
+      (incl1 ((waveManufactured T).u' t)) ((waveManufactured T).M' t)
+      ((waveManufactured T).ρ' t) := by
+  obtain ⟨B, hB, ⟨hσ⟩, -, hdφ', hu', hdu'⟩ := exists_coupled_h1Data
+  have hdφ := fun a => (hdφ' a).some
+  have hu := fun a => (hu' a).some
+  have hdu := fun a => (hdu' a).some
+  set B' := (|T| + 1) * B
+  have hB' : 0 ≤ B' := by positivity
+  have hBB' : B ≤ B' := le_mul_of_one_le_left hB (by linarith [abs_nonneg T])
+  have sc : ∀ {k : ℕ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 k)} {t : ℝ}, t ∈ Icc 0 T →
+      H1Data (cubeDomain 3) x B → H1Data (cubeDomain 3) (t • x) B' := fun {k x t} ht h =>
+    (h.smul t).mono (mul_le_mul_of_nonneg_right (by
+      rw [abs_of_nonneg ht.1]; linarith [ht.2, le_abs_self T]) hB)
+  have z : ∀ {k : ℕ}, H1Data (cubeDomain 3) (0 : L2F ℝ (cubeDomain 3) (formIdx 3 k)) B' :=
+    H1Data.zero.mono hB'
+  refine ⟨16 * B', by positivity, fun t ht => ⟨?_, ?_⟩⟩
+  · refine isH1State_of (sc ht hσ) (fun a => ?_) (fun a => (hu a).mono hBB')
+      (fun a => (hdu a).mono hBB') z (fun a => sc ht (hdu a)) (Submodule.zero_mem _)
+      (fun a => ?_)
+    · change H1Data _ (D0 (t • coupledφ a)) B'
+      rw [LinearPMap.map_smul]
+      exact sc ht (hdφ a)
+    · change t • D1 (coupledu a) ∈ D2min.domain
+      exact Submodule.smul_mem _ _ (Feec.EinsteinBianchi.WaveFEM.D1_mem_D2min _)
+  · refine isH1State_of (hσ.mono hBB') (fun a => (hdφ a).mono hBB') (fun a => ?_)
+      (fun a => ?_) z (fun a => (hdu a).mono hBB') (Submodule.zero_mem _)
+      (fun a => Feec.EinsteinBianchi.WaveFEM.D1_mem_D2min _)
+    · change H1Data _ (0 : W1) B'
+      exact z
+    · change H1Data _ (D1 0) B'
+      rw [LinearPMap.map_zero]
+      exact z
 
 end FEEC

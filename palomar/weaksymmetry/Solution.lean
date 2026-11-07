@@ -18,8 +18,11 @@ smoother satisfy the hypotheses of `FEEC.weakSymmetry` with one constant (`cube_
 spaces are the elements of Table 5.1 (`cubeQ_spaces`) on the Freudenthal meshes (`cubeMesh`), the
 static rate is the abstract theorem with the interpolation estimates (`cube_static_rate`), and the
 wave clauses are `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` and `cubeWave_exists_unique`
-(`Solution.CubeWave`). `FEEC.weakSymmetry_cube_nonvacuous` from
-`Feec.Models.Cube.WeakSymmetry.exists_coupled_manufactured_solution` and `waveManufactured_hyps`.
+(`Solution.CubeWave`). The `H¹` rates (`Solution.CubeSobolev`) put the `H¹` classes in `Feec`'s
+relative class `H¹_univ` (`Feec.Models.Cube.WeakSymmetry.sobRel_of_h1_zero` and its siblings) and
+apply `cube_static_rate_sob` and `cube_wave_rate_sob`. `FEEC.weakSymmetry_cube_nonvacuous` from
+`Feec.Models.Cube.WeakSymmetry.exists_coupled_manufactured_solution` and `waveManufactured_hyps`,
+with `cube_static_h1` and `cube_wave_h1` for the `H¹` classes.
 
 ## References
 
@@ -165,21 +168,38 @@ theorem weakSymmetry_cube_nonvacuous :
       (φ : L2Vec (cube 3) 0) ≠ 0 ∧ (u : L2Vec (cube 3) 1) ≠ 0 ∧ lam ≠ 0 ∧
       IsTangentialC2 0 L (σ : L2Form (cube 3) 0) ∧
       (∀ a, IsTangentialC2 0 L ((φ : L2Vec (cube 3) 0) a)) ∧
-      (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) ∧ ‖lam‖ ≤ L) ∧
+      (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) ∧ ‖lam‖ ≤ L ∧
+      IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 1 L (cubeData.dt0 φ a)) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) ∧
+      ∀ a, IsSobolevForm (cube 3) 1 2 L (cubeData.dt1 u a)) ∧
     ∀ T, 0 < T → ∃ f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, ContinuousOn f (Icc 0 T) ∧
       cubeData.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' ∧
       (∀ t ∈ Icc 0 T, IsRegularState L (σ t) (φ t) (u t) (M t) (ρ t) ∧
-        IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) ∧
+        IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧
+        IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) ∧
       (∀ t, (u t : L2Vec (cube 3) 1) ≠ 0) ∧
       ∀ t ∈ Ioc 0 T, (σ t : L2Form (cube 3) 0) ≠ 0 ∧ (φ t : L2Vec (cube 3) 0) ≠ 0 := by
   rw [cubeData_eq]
   obtain ⟨L, hs, h1, h2, h3, h4, c1, c2, c3, c4⟩ := cube_static_nonvacuous
-  refine ⟨⟨_, _, _, _, _, L, hs, h1, h2, h3, h4, (isTangentialC2_iff le_rfl L _).2 c1,
-    fun a => (isTangentialC2_iff le_rfl L _).2 (c2 a),
-    fun a => (isTangentialC2_iff zero_le_one L _).2 (c3 a), c4⟩, fun T hT => ?_⟩
+  obtain ⟨L₁, hL₁, s1, s2, s3, s4, s5⟩ := cube_static_h1
+  have m := fun {j : ℤ} {x : L2Form (cube 3) j} (h : IsSobolevForm (cube 3) 1 j L₁ x) =>
+    isSobolevForm_mono hL₁ (le_max_right L L₁) h
+  refine ⟨⟨_, _, _, _, _, max L L₁, hs, h1, h2, h3, h4,
+    (isTangentialC2_iff le_rfl _ _).2 (c1.mono (le_max_left _ _)),
+    fun a => (isTangentialC2_iff le_rfl _ _).2 ((c2 a).mono (le_max_left _ _)),
+    fun a => (isTangentialC2_iff zero_le_one _ _).2 ((c3 a).mono (le_max_left _ _)),
+    c4.trans (le_max_left _ _), m s1, fun a => m (s2 a), fun a => m (s3 a), fun a => m (s4 a),
+    fun a => m (s5 a)⟩, fun T hT => ?_⟩
   obtain ⟨L', hf, hw, hreg, hu, hne⟩ := cube_wave_nonvacuous hT
-  exact ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, L', hf, hw, fun t ht =>
-    ⟨ofSmooth (hreg t ht).1, ofSmooth (hreg t ht).2.1, (hreg t ht).2.2.1, (hreg t ht).2.2.2⟩,
+  obtain ⟨L₂, hL₂, hH⟩ := cube_wave_h1 T
+  exact ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, max L' L₂, hf, hw, fun t ht =>
+    ⟨ofSmooth ((hreg t ht).1.mono (le_max_left _ _)),
+      ofSmooth ((hreg t ht).2.1.mono (le_max_left _ _)),
+      (hH t ht).1.mono hL₂ (le_max_right _ _), (hH t ht).2.mono hL₂ (le_max_right _ _),
+      (hreg t ht).2.2.1.trans (le_max_left _ _), (hreg t ht).2.2.2.trans (le_max_left _ _)⟩,
     hu, hne⟩
 
 end FEEC

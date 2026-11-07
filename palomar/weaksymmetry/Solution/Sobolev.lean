@@ -1,23 +1,19 @@
 module
 
 public import Solution.Cube
-public import Solution.H1Ops
-public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
+public import Feec.Models.Cube.WeakSymmetryH1
 
 /-!
-# The `H¹` classes of the challenge and `Feec`'s relative parity class
+# The `H¹` classes of the challenge and `Feec`'s `H¹(ℝⁿ)` data
 
-A form `x ∈ H¹(Q)` (`IsSobolevForm (cube 3) 1`) has `H¹(ℝⁿ)` data (`h1Data_of_isSobolevForm`), so
-it lies in the domain of `d_min†` (`H1Data.mem_adjoint`); if it also lies in the domain of `d_min`
-(vanishing tangential traces), Gaffney's identity on the cube (`sobRel_zero_of_mem`,
-`sobRel_one_of_mem`, `sobRel_two_of_mem`) puts it in `Feec`'s relative parity class `H¹_univ`
-with norm `O(L)` (`sobRel_of_h1_zero`, `_one`, `_two`). `S⁰φ` and `S¹u` are of that class when the
-`φₐ`, `uₐ` are (`sobRel_wsL2_of_h1`).
+`IsSobolevForm (cube 3) 1` is `Feec.Domain.H1Data` on the cube: a form `x ∈ H¹(Q)` has `H¹(ℝⁿ)`
+data with bound `|L|` (`h1Data_of_isSobolevForm`), and `H¹(ℝⁿ)` data with bound `B` give
+`x ∈ H¹(Q)` with norm at most `16 B` (`isSobolevForm_of_h1Data`). Feec's Gaffney transfer
+(`Feec.Models.Cube.WeakSymmetry.sobRel_of_h1_zero` and its siblings) then puts the `H¹` classes
+of the challenge in Feec's relative parity class `H¹_univ` (`Solution.CubeSobolev`).
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4.3 (Gaffney's inequality)
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -32,17 +28,25 @@ namespace FEEC
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry
 
-/-! ### From `IsSobolevForm` to `H1Data` -/
+/-! ### `IsSobolevForm` and `H1Data` -/
+
+/-- `T x = T' x` along `T = T'`. -/
+theorem LinearPMap.apply_of_eq' {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
+    [Module ℝ F] {T T' : E →ₗ.[ℝ] F} (h : T = T') (x : T.domain) :
+    T x = T' ⟨x, h ▸ x.2⟩ := by
+  subst h; rfl
+
+theorem norm_toLp_sq {f : (Fin 3 → ℝ) → ℝ} (hf : MemLp f 2 volume) :
+    ‖hf.toLp f‖ ^ 2 = ∫ y, f y ^ 2 := by
+  rw [← real_inner_self_eq_norm_sq, L2.inner_def]
+  refine integral_congr_ae ?_
+  filter_upwards [hf.coeFn_toLp] with y hy
+  rw [hy, real_inner_eq_re_inner, RCLike.inner_apply]
+  simp [sq]
 
 theorem norm_toLp_le_of_integral_sq_le {f : (Fin 3 → ℝ) → ℝ} (hf : MemLp f 2 volume) {L : ℝ}
     (h : ∫ y, f y ^ 2 ≤ L ^ 2) : ‖hf.toLp f‖ ≤ |L| := by
-  have e : ‖hf.toLp f‖ ^ 2 = ∫ y, f y ^ 2 := by
-    rw [← real_inner_self_eq_norm_sq, L2.inner_def]
-    refine integral_congr_ae ?_
-    filter_upwards [hf.coeFn_toLp] with y hy
-    rw [hy, real_inner_eq_re_inner, RCLike.inner_apply]
-    simp [sq]
-  have h2 : ‖hf.toLp f‖ ^ 2 ≤ L ^ 2 := e ▸ h
+  have h2 : ‖hf.toLp f‖ ^ 2 ≤ L ^ 2 := (norm_toLp_sq hf) ▸ h
   have := sq_le_sq.1 h2
   rwa [abs_norm] at this
 
@@ -79,145 +83,49 @@ theorem h1Data_of_isSobolevForm {k : ℕ} {L : ℝ} {x : L2Form (cube 3) k}
     normF := fun t => norm_toLp_le_of_integral_sq_le _ (hle t [] (h0 t))
     normG := fun t m => norm_toLp_le_of_integral_sq_le _ (hle t [m] (h1 m)) }⟩
 
-/-! ### Gaffney: `H¹` forms with vanishing tangential traces are in the relative class -/
+/-- The words of length `≤ 1` of `H¹(ℝⁿ)` data: `[] ↦ F`, `[m] ↦ G m`. -/
+def h1Word {j : ℤ} {x : L2F ℝ (cubeDomain 3) (formIdx 3 j)} {B : ℝ}
+    (h : H1Data (cubeDomain 3) x B) : FormIdx 3 j → List (Fin 3) → (Fin 3 → ℝ) → ℝ
+  | t, [] => h.F t
+  | t, [m] => h.G t m
+  | _, _ => 0
 
-theorem sqrt_sq_add_sq_le' {a b : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) : √(a ^ 2 + b ^ 2) ≤ a + b :=
-  Real.sqrt_le_iff.2 ⟨by positivity, by nlinarith⟩
+/-- **`H¹(ℝⁿ)` data give `H¹(Q)`**, with norm at most `16 B`. -/
+theorem isSobolevForm_of_h1Data {j : ℤ} {B : ℝ} {x : L2Form (cube 3) j}
+    (h : H1Data (cubeDomain 3) (x : L2F ℝ (cubeDomain 3) (formIdx 3 j)) B) :
+    IsSobolevForm (cube 3) 1 j (16 * B) x := by
+  have hl : ∀ t (l : List (Fin 3)), l.length ≤ 1 → MemLp (h1Word h t l) 2 volume ∧
+      ∫ y, h1Word h t l y ^ 2 ≤ B ^ 2 := by
+    intro t l hl
+    match l, hl with
+    | [], _ => exact ⟨h.memF t, (norm_toLp_sq (h.memF t)) ▸
+        pow_le_pow_left₀ (norm_nonneg _) (h.normF t) 2⟩
+    | [m], _ => exact ⟨h.memG t m, (norm_toLp_sq (h.memG t m)) ▸
+        pow_le_pow_left₀ (norm_nonneg _) (h.normG t m) 2⟩
+    | _ :: _ :: _, hl => simp at hl
+  refine ⟨h1Word h, fun t l hl' => ⟨(hl t l hl').1, fun φ hφ => ?_⟩, ?_, h.ae⟩
+  · match l, hl' with
+    | [], _ => simp [h1Word]
+    | [m], _ =>
+      have := h.weak t m φ (isTest_of hφ)
+      simpa [h1Word, partialDeriv, coordDir] using this
+    | _ :: _ :: _, hl => simp at hl
+  · have hle : ∀ t, ∀ p ∈ Finset.range (1 + 1), ∀ l : Fin p → Fin 3,
+        ∫ y, h1Word h t (List.ofFn l) y ^ 2 ≤ B ^ 2 := fun t p hp l =>
+      (hl t _ (by simpa using Nat.lt_succ_iff.1 (Finset.mem_range.1 hp))).2
+    refine (Finset.sum_le_sum fun t _ => Finset.sum_le_sum fun p hp =>
+      Finset.sum_le_sum fun l _ => hle t p hp l).trans ?_
+    have hc : Fintype.card (FormIdx 3 j) ≤ 8 :=
+      (Fintype.card_subtype_le _).trans (by simp)
+    have hc' : (Fintype.card (FormIdx 3 j) : ℝ) ≤ 8 := by exact_mod_cast hc
+    simp only [Finset.sum_const, Finset.card_univ, Fintype.card_fun, Fintype.card_fin,
+      Finset.sum_range_succ, Finset.range_zero, Finset.sum_empty, nsmul_eq_mul]
+    norm_num
+    nlinarith [sq_nonneg B, mul_le_mul_of_nonneg_right hc' (sq_nonneg B)]
 
-theorem sqrt_sq_add_sq_add_sq_le' {a b c : ℝ} (ha : 0 ≤ a) (hb : 0 ≤ b) (hc : 0 ≤ c) :
-    √(a ^ 2 + b ^ 2 + c ^ 2) ≤ a + b + c :=
-  Real.sqrt_le_iff.2 ⟨by positivity, by
-    nlinarith [mul_nonneg ha hb, mul_nonneg hb hc, mul_nonneg ha hc]⟩
-
-/-- The coefficient sum `Σ |a|` of `H1Data.norm_weak_le`. -/
-def coefSum {ι κ : Type*} [Fintype ι] [Fintype κ] (a : κ → ι → Fin 3 → ℝ) : ℝ :=
-  ∑ j, ∑ i, ∑ m, |a j i m|
-
-theorem coefSum_nonneg {ι κ : Type*} [Fintype ι] [Fintype κ] (a : κ → ι → Fin 3 → ℝ) :
-    0 ≤ coefSum a := by unfold coefSum; positivity
-
-theorem H1Data.norm_weak_le' {ι κ : Type*} [Fintype ι] [Fintype κ] {Ω : Set (Fin 3 → ℝ)}
-    {u : L2F ℝ Ω ι} {B : ℝ} (h : H1Data Ω u B) (a : κ → ι → Fin 3 → ℝ) :
-    ‖h.weak' a‖ ≤ coefSum a * B := by
-  refine (h.norm_weak_le a).trans (le_of_eq ?_)
-  simp only [coefSum, Finset.sum_mul]
-
-theorem H1Data.norm_le' {ι : Type*} [Fintype ι] {Ω : Set (Fin 3 → ℝ)}
-    {u : L2F ℝ Ω ι} {B : ℝ} (h : H1Data Ω u B) : ‖u‖ ≤ Fintype.card ι * B := by
-  refine h.norm_le.trans (le_of_eq ?_)
-  rw [Finset.sum_const, nsmul_eq_mul, Finset.card_univ]
-
-/-- **Degree `0`**: `x ∈ H̊Λ⁰(Q)` with `H¹` data is in `H¹_univ`. -/
-theorem sobRel_of_h1_zero : ∃ c : ℝ, 0 ≤ c ∧ ∀ {B : ℝ} {x : W0}, 0 ≤ B → x ∈ D0.domain →
-    H1Data (cubeDomain 3) x B → Feec.Models.Cube.WeakSymmetry.SobRel 1 (c * B) 0 x := by
-  refine ⟨Fintype.card (formIdx 3 0) + coefSum (dCoef (n := 3) 0), by
-    have := coefSum_nonneg (dCoef (n := 3) 0); positivity, fun {B x} hB hx h => ?_⟩
-  refine (sobRel_zero_of_mem hx).mono ?_
-  have e := h.minimal_apply (isOpen_cubeDomain 3) hx
-  have h1 : ‖D0 ⟨x, hx⟩‖ ≤ coefSum (dCoef (n := 3) 0) * B := by
-    change ‖(extDerivOp ℝ 3 0).minimal (cubeDomain 3) ⟨x, hx⟩‖ ≤ _
-    rw [e]; exact h.norm_weak_le' _
-  refine (sqrt_sq_add_sq_le' (norm_nonneg _) (norm_nonneg _)).trans ?_
-  have := h.norm_le'
-  linarith
-
-/-- **Degree `1`**: `x ∈ H̊Λ¹(Q)` with `H¹` data is in `H¹_univ`. -/
-theorem sobRel_of_h1_one : ∃ c : ℝ, 0 ≤ c ∧ ∀ {B : ℝ} {x : W1}, 0 ≤ B → x ∈ D1.domain →
-    H1Data (cubeDomain 3) x B → Feec.Models.Cube.WeakSymmetry.SobRel 1 (c * B) 1 x := by
-  refine ⟨Fintype.card (formIdx 3 1) + coefSum (dCoef (n := 3) 1) +
-    coefSum (fun r t m => -dCoef (n := 3) 0 t r m), by
-      have := coefSum_nonneg (dCoef (n := 3) 1)
-      have := coefSum_nonneg (fun r t m => -dCoef (n := 3) 0 t r m)
-      positivity, fun {B x} hB hx h => ?_⟩
-  obtain ⟨hx', e'⟩ := h.mem_adjoint (isOpen_cubeDomain 3) (k := 0)
-  refine (sobRel_one_of_mem hx hx').mono ?_
-  have e := h.minimal_apply (isOpen_cubeDomain 3) hx
-  have h1 : ‖D1 ⟨x, hx⟩‖ ≤ coefSum (dCoef (n := 3) 1) * B := by
-    change ‖(extDerivOp ℝ 3 1).minimal (cubeDomain 3) ⟨x, hx⟩‖ ≤ _
-    rw [e]; exact h.norm_weak_le' _
-  have h2 : ‖D0† ⟨x, hx'⟩‖ ≤ coefSum (fun r t m => -dCoef (n := 3) 0 t r m) * B := by
-    change ‖((extDerivOp ℝ 3 0).minimal (cubeDomain 3))† ⟨x, hx'⟩‖ ≤ _
-    rw [e']; exact h.norm_weak_le' _
-  refine (sqrt_sq_add_sq_add_sq_le' (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)).trans ?_
-  have := h.norm_le'
-  linarith
-
-/-- **Degree `2`**: `x ∈ H̊Λ²(Q)` with `H¹` data is in `H¹_univ`. -/
-theorem sobRel_of_h1_two : ∃ c : ℝ, 0 ≤ c ∧ ∀ {B : ℝ} {x : W2}, 0 ≤ B → x ∈ D2min.domain →
-    H1Data (cubeDomain 3) x B → Feec.Models.Cube.WeakSymmetry.SobRel 1 (c * B) 2 x := by
-  refine ⟨Fintype.card (formIdx 3 2) + coefSum (dCoef (n := 3) 2) +
-    coefSum (fun r t m => -dCoef (n := 3) 1 t r m), by
-      have := coefSum_nonneg (dCoef (n := 3) 2)
-      have := coefSum_nonneg (fun r t m => -dCoef (n := 3) 1 t r m)
-      positivity, fun {B x} hB hx h => ?_⟩
-  obtain ⟨hx', e'⟩ := h.mem_adjoint (isOpen_cubeDomain 3) (k := 1)
-  refine (sobRel_two_of_mem hx hx').mono ?_
-  have e := h.minimal_apply (isOpen_cubeDomain 3) hx
-  have h1 : ‖D2min ⟨x, hx⟩‖ ≤ coefSum (dCoef (n := 3) 2) * B := by
-    change ‖(extDerivOp ℝ 3 2).minimal (cubeDomain 3) ⟨x, hx⟩‖ ≤ _
-    rw [e]; exact h.norm_weak_le' _
-  have h2 : ‖D1† ⟨x, hx'⟩‖ ≤ coefSum (fun r t m => -dCoef (n := 3) 1 t r m) * B := by
-    change ‖((extDerivOp ℝ 3 1).minimal (cubeDomain 3))† ⟨x, hx'⟩‖ ≤ _
-    rw [e']; exact h.norm_weak_le' _
-  refine (sqrt_sq_add_sq_add_sq_le' (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)).trans ?_
-  have := h.norm_le'
-  linarith
-
-theorem norm_le_three_mul {V : Type*} [NormedAddCommGroup V] {v : PiLp 2 (fun _ : Fin 3 => V)}
-    {B : ℝ} (h : ∀ a, ‖v a‖ ≤ B) : ‖v‖ ≤ 3 * B := by
-  refine (H1Data.norm_le_sum v).trans ?_
-  calc ∑ a, ‖v a‖ ≤ ∑ _a : Fin 3, B := Finset.sum_le_sum fun a _ => h a
-    _ = 3 * B := by simp
-
-/-- **`S⁰φ` in degree `1`**: a closed `x = S⁰v ∈ H̊Λ¹(Q)` with `H¹` data `vₐ` is in `H¹_univ`. -/
-theorem sobRel_wsL2_zero : ∃ c : ℝ, 0 ≤ c ∧ ∀ {B : ℝ} {v : Wv W0} {x : W1}, 0 ≤ B →
-    (∀ a, H1Data (cubeDomain 3) (v a) B) → x = wsL2 (Ω := cubeDomain 3) 0 v →
-    ∀ hx : x ∈ D1.domain, D1 ⟨x, hx⟩ = 0 →
-      Feec.Models.Cube.WeakSymmetry.SobRel 1 (c * B) 1 x := by
-  obtain ⟨cS, hcS⟩ := mem_adjoint_wsL2 (isOpen_cubeDomain 3) (n := 3) (k := 0)
-  refine ⟨‖wsL2 (Ω := cubeDomain 3) (n := 3) 0‖ * (3 * Fintype.card (formIdx 3 0)) + |cS|,
-    by positivity, fun {B v x} hB hv hxv hx h0 => ?_⟩
-  subst hxv
-  obtain ⟨hx', h2⟩ := hcS hv
-  refine (sobRel_one_of_mem hx hx').mono ?_
-  rw [h0, norm_zero]
-  have h1 : ‖wsL2 (Ω := cubeDomain 3) (n := 3) 0 v‖ ≤
-      ‖wsL2 (Ω := cubeDomain 3) (n := 3) 0‖ * (3 * (Fintype.card (formIdx 3 0) * B)) :=
-    (ContinuousLinearMap.le_opNorm _ _).trans (mul_le_mul_of_nonneg_left
-      (norm_le_three_mul fun a => (hv a).norm_le') (norm_nonneg _))
-  have h2' : ‖D0† ⟨_, hx'⟩‖ ≤ |cS| * B := h2.trans (mul_le_mul_of_nonneg_right (le_abs_self _) hB)
-  refine (sqrt_sq_add_sq_add_sq_le' (norm_nonneg _) le_rfl (norm_nonneg _)).trans ?_
-  nlinarith [norm_nonneg (wsL2 (Ω := cubeDomain 3) (n := 3) 0)]
-
-/-- **`S¹u` in degree `2`**: `S¹v` for `vₐ ∈ H̊Λ¹(Q)` with `H¹` data is in `H¹_univ`. -/
-theorem sobRel_wsL2_one : ∃ c : ℝ, 0 ≤ c ∧ ∀ {B : ℝ} {v : Wv W1}, 0 ≤ B →
-    (∀ a, v a ∈ D1.domain) → (∀ a, H1Data (cubeDomain 3) (v a) B) →
-      Feec.Models.Cube.WeakSymmetry.SobRel 1 (c * B) 2 (wsL2 (Ω := cubeDomain 3) 1 v) := by
-  obtain ⟨cS, hcS⟩ := mem_adjoint_wsL2 (isOpen_cubeDomain 3) (n := 3) (k := 1)
-  refine ⟨‖wsL2 (Ω := cubeDomain 3) (n := 3) 1‖ * (3 * Fintype.card (formIdx 3 1)) +
-    ‖wsL2 (Ω := cubeDomain 3) (n := 3) 2‖ * (3 * coefSum (dCoef (n := 3) 1)) + |cS|, by
-      have := coefSum_nonneg (dCoef (n := 3) 1); positivity, fun {B v} hB hvD hv => ?_⟩
-  obtain ⟨hx', h3⟩ := hcS hv
-  obtain ⟨hx, e⟩ := wsL2_mem_minimal (isOpen_cubeDomain 3) 1 (v := v) hvD
-  have hx2 : wsL2 (Ω := cubeDomain 3) (n := 3) 1 v ∈ D2min.domain := hx
-  refine (sobRel_two_of_mem hx2 hx').mono ?_
-  have h1 : ‖wsL2 (Ω := cubeDomain 3) (n := 3) 1 v‖ ≤
-      ‖wsL2 (Ω := cubeDomain 3) (n := 3) 1‖ * (3 * (Fintype.card (formIdx 3 1) * B)) :=
-    (ContinuousLinearMap.le_opNorm _ _).trans (mul_le_mul_of_nonneg_left
-      (norm_le_three_mul fun a => (hv a).norm_le') (norm_nonneg _))
-  have h2 : ‖D2min ⟨_, hx2⟩‖ ≤
-      ‖wsL2 (Ω := cubeDomain 3) (n := 3) 2‖ * (3 * (coefSum (dCoef (n := 3) 1) * B)) := by
-    change ‖(extDerivOp ℝ 3 ((1 : ℕ) + 1)).minimal (cubeDomain 3) ⟨_, hx⟩‖ ≤ _
-    rw [e, norm_neg]
-    refine (ContinuousLinearMap.le_opNorm _ _).trans (mul_le_mul_of_nonneg_left
-      (norm_le_three_mul fun a => ?_) (norm_nonneg _))
-    change ‖(extDerivOp ℝ 3 1).minimal (cubeDomain 3) ⟨v a, hvD a⟩‖ ≤ _
-    rw [(hv a).minimal_apply (isOpen_cubeDomain 3) (hvD a)]
-    exact (hv a).norm_weak_le' _
-  have h3' : ‖D1† ⟨_, hx'⟩‖ ≤ |cS| * B := h3.trans (mul_le_mul_of_nonneg_right (le_abs_self _) hB)
-  refine (sqrt_sq_add_sq_add_sq_le' (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)).trans ?_
-  have := coefSum_nonneg (dCoef (n := 3) 1)
-  nlinarith [norm_nonneg (wsL2 (Ω := cubeDomain 3) (n := 3) 1),
-    norm_nonneg (wsL2 (Ω := cubeDomain 3) (n := 3) 2)]
+theorem isSobolevForm_mono {j : ℤ} {L L' : ℝ} (hL : 0 ≤ L) (h : L ≤ L') {x : L2Form (cube 3) j}
+    (hx : IsSobolevForm (cube 3) 1 j L x) : IsSobolevForm (cube 3) 1 j L' x := by
+  obtain ⟨D, hD, hs, hx⟩ := hx
+  exact ⟨D, hD, hs.trans (pow_le_pow_left₀ hL h 2), hx⟩
 
 end FEEC

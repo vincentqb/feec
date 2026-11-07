@@ -183,7 +183,8 @@ theorem norm_le_dt0 (φ : 𝒟.dt0.domain) : ‖(φ : Wv W0)‖ ≤ ‖𝒟.dt0 
   rw [hn, hd] at hp
   have h0 : (2 * Real.pi)⁻¹ ≤ 1 := by
     rw [inv_le_one₀ (by positivity)]; nlinarith [Real.two_le_pi]
-  exact hp.trans (by nlinarith [norm_nonneg (𝒟.dt0 φ), inv_nonneg.2 (by positivity : (0 : ℝ) ≤ 2 * Real.pi)])
+  exact hp.trans (by
+    nlinarith [norm_nonneg (𝒟.dt0 φ), inv_nonneg.2 (by positivity : (0 : ℝ) ≤ 2 * Real.pi)])
 
 set_option maxHeartbeats 2000000 in
 /-- **Consistency of the elements of Table 5.1** at the order `h_N`, for every constant

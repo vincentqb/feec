@@ -121,7 +121,8 @@ def ofPieces {k : ℤ} (p : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n
 omit [NeZero n] in
 theorem ofPieces_mem {k : ℤ} {u : L2Form Ω k} {p : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n}
     (hp : IsFemPieces Ω M S k u p) :
-    ofPieces S M Ω hdom p hp.1 ∈ (polyElement n S.toFeec).globalSpace (M.toFeec Ω hdom) k.toNat := by
+    ofPieces S M Ω hdom p hp.1 ∈
+      (polyElement n S.toFeec).globalSpace (M.toFeec Ω hdom) k.toNat := by
   intro T T' g hg hg' i
   rw [LocalElement.localDof_apply, LocalElement.localDof_apply]
   refine S.toFeec.dof_congr i fun x hx => ?_
@@ -205,7 +206,8 @@ theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
     have hFT' : F ⊆ vertexSet (T : Affine.Simplex ℝ (Fin n → ℝ) n) := by
       rw [vertexSet_eq]; exact hFT
     have h := S.toFeec.dof_congr i
-      (w := ⟨p T, S.toFeec.space_le_contForms n k.toNat ((mem_space_iff S (T := T) _ _).2 (hp.1 T T.2))⟩)
+      (w := ⟨p T, S.toFeec.space_le_contForms n k.toNat
+        ((mem_space_iff S (T := T) _ _).2 (hp.1 T T.2))⟩)
       (η := 0) fun x hx => by
       have := hb T T.2 F hFT' hF.1.1 (eq_of_isBoundaryFacet M Ω hdom hF T.2 hFT') x
         (convexHull_mono (Finset.coe_subset.2 hg) hx)

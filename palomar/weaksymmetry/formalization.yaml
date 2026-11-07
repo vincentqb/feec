@@ -60,12 +60,13 @@ project:
     tangential traces), and whose multiplier and its derivative are bounded by L, some
     solution of (6.5) is within K L (1 + t) h_N of it in
     (||sigma||^2 + ||u||^2 + ||M||^2 + ||rho||^2)^(1/2) on [0, T].
-    FEEC.weakSymmetry_cube_nonvacuous: the C^2 static rate applies to a solution with sigma, phi,
-    u, lambda all nonzero, and for every T > 0 the C^2 wave rate applies to a classical solution
-    of (6.2) with u(t) != 0 for all t and sigma(t), phi(t) != 0 for t in (0, T]. The proof is
-    the library Feec of this repository (Feec.HilbertComplex.BGG.WeakSymmetry, Discrete,
+    FEEC.weakSymmetry_cube_nonvacuous: both static rates (C^2 and H^1) apply to a solution with
+    sigma, phi, u, lambda all nonzero, and for every T > 0 both wave rates apply to a classical
+    solution of (6.2) with u(t) != 0 for all t and sigma(t), phi(t) != 0 for t in (0, T]. The
+    proof is the library Feec of this repository (Feec.HilbertComplex.BGG.WeakSymmetry, Discrete,
     WeakConsistency, DiscreteWave, EllipticProjection, Feec.Models.Cube.WeakSymmetry*, the
-    Sobolev rates of Feec.Models.Cube.WeakSymmetrySobolevRate).
+    Sobolev rates of Feec.Models.Cube.WeakSymmetrySobolevRate, the H^1(R^n) data of
+    Feec.Domain.H1Restriction).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -280,7 +281,8 @@ fidelity:
     rate; sigma, d~phi_a, u_a, d~u_a, M, rho_a for the wave rate, with M, rho_a in H̊Λ^2(Q));
     the traces of the other fields vanish through their operator domains, S^0 phi = d sigma and
     S^1 u are derived. The fractional rates h^min(s,1) of Feec are not compared; h is the
-    optimal order for these elements. The non-vacuity theorem covers the C^2 classes only.
+    optimal order for these elements. The non-vacuity theorem covers the C^2 and the H^1 classes
+    (its witnesses are built from test fields, so they lie in both).
     (7) The wave problem: classical solutions are paths in the operator domains with continuous
     right derivatives in L^2 (and of d~phi, d~u); the wave rate asserts some semi-discrete
     solution (in Feec, the one starting from the elliptic projection (6.4) of the exact data)
@@ -305,7 +307,7 @@ review:
 alignment:
   namespace: "FEEC"
   statements:
-    - source: "[QuennevilleBelair2015] Prop 5.4, Thm 5.5; [AFW2007]; [AFW2010] §3"
+    - source: "[QuennevilleBelair2015] Prop 5.4, Thm 5.5"
       lean: "FEEC.weakSymmetry"
       module: "Challenge"
       status: "proved"
@@ -328,7 +330,9 @@ alignment:
         Feec.BGG.DiscreteSolution.unique (Solution/CubeWave.lean, CubeUnique.lean). The H^1
         classes enter Feec's relative parity class H^1_univ by Gaffney's identity on the cube
         (sobRel_zero_of_mem, sobRel_one_of_mem, sobRel_two_of_mem), d* of H^1(R^n) data being
-        computed by integration by parts (Solution/H1.lean, H1Ops.lean, Sobolev.lean); then the
+        computed by integration by parts (Feec.Domain.H1Restriction and
+        Feec.Models.Cube.WeakSymmetryH1, added to Feec for this entry; IsSobolevForm is
+        Feec.Domain.H1Data on the cube by Solution/Sobolev.lean); then the
         H^1 static rate is FEEC.weakSymmetry with norm_sub_proj_le_sobStateConst and
         abs_inner_D1_le_of_sobRel_one, and the H^1 wave rate cubeWave_rate_sobolev_of_one_le
         (Solution/CubeSobolev.lean).
@@ -338,6 +342,8 @@ alignment:
       status: "proved"
       note: >-
         From Feec.Models.Cube.WeakSymmetry.exists_coupled_manufactured_solution and
-        waveManufactured_hyps (Solution/CubeNonvac.lean).
+        waveManufactured_hyps (Solution/CubeNonvac.lean); the H^1 classes from
+        Feec.Domain.exists_h1Data_testField, the manufactured fields being test fields times
+        functions of t.
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

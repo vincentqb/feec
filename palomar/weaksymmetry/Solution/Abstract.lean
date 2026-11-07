@@ -317,7 +317,8 @@ theorem weakSymmetry_of (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Typ
       ring
     have hP0 : D.d0 ⟨Q.π0 σ, Q.le0 (Q.π0_mem σ)⟩ = Q.π1 (D.d0 σ) := Q.comm0 σ
     have hR : Feec.BGG.graphSq (D.toSegment hD).d0 ((Q.toDiscrete hD).P0 σ - σ) +
-        Feec.BGG.graphSq (D.toSegment hD).dt0 ((Q.toDiscrete hD).Pt0 φ - φ) + (Q.toDiscrete hD).gnSq ((Q.toDiscrete hD).Pt1 u - u) =
+        Feec.BGG.graphSq (D.toSegment hD).dt0 ((Q.toDiscrete hD).Pt0 φ - φ) +
+          (Q.toDiscrete hD).gnSq ((Q.toDiscrete hD).Pt1 u - u) =
         Q.projErrorSq σ φ u := by
       unfold Discretization.projErrorSq Feec.BGG.Discrete.gnSq
       rw [graphSq_d0, graphSq_dt0]

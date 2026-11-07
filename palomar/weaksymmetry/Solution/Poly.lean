@@ -70,7 +70,8 @@ theorem homForm_eq (r k : ℕ) : homForm (n := n) r k = Feec.Koszul.homForm ℝ 
 
 theorem koszul_eq : koszul (n := n) = Feec.Koszul.koszulₗ ℝ (Fin n) := by
   refine LinearMap.ext fun p => funext fun s => ?_
-  rw [koszul, LinearMap.pi_apply, LinearMap.sum_apply, Feec.Koszul.koszulₗ_apply, Feec.Koszul.koszul_apply]
+  rw [koszul, LinearMap.pi_apply, LinearMap.sum_apply, Feec.Koszul.koszulₗ_apply,
+    Feec.Koszul.koszul_apply]
   refine Finset.sum_congr rfl fun j _ => ?_
   rw [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.proj_apply, LinearMap.mulLeft_apply,
     sgn, Feec.ExteriorFibre.sgn, smul_eq_C_mul, map_pow, map_neg, map_one, mul_assoc]

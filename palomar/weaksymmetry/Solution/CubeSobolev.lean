@@ -3,6 +3,7 @@ module
 public import Solution.Sobolev
 public import Solution.CubeWave
 public import Solution.CubeStatic
+public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
 
 /-!
 # The `H¹` rates on the cube
@@ -33,12 +34,6 @@ namespace FEEC
 
 open Feec.Domain Feec.FiniteElement Feec.HilbertComplex Feec.Models.Cube.FEM
   Feec.Models.Cube.WeakSymmetry
-
-/-- `T x = T' x` along `T = T'`. -/
-theorem LinearPMap.apply_of_eq' {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
-    [Module ℝ F] {T T' : E →ₗ.[ℝ] F} (h : T = T') (x : T.domain) :
-    T x = T' ⟨x, h ▸ x.2⟩ := by
-  subst h; rfl
 
 /-- `H¹(Q)` data with bound `L ≥ 0`. -/
 theorem h1Data_of_isSobolevForm' {k : ℕ} {L : ℝ} (hL : 0 ≤ L) {x : L2Form (cube 3) k}

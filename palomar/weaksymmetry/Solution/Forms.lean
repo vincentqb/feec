@@ -8,7 +8,8 @@ public import Feec.Domain.DeRham
 
 The challenge's `L²(Ω; Λᵏ)` is `Feec`'s `L2F ℝ Ω (formIdx n k)` (`rfl`), its graphs of `d` and
 of `dᵗ` on test forms are the test graphs of `Feec.Domain.extDerivOp` and of its formal adjoint
-(`testGraph_eq`, `codiffGraph_eq`), so `dMin` is `Feec`'s minimal realization of the exterior derivative (`dMin_eq`).
+(`testGraph_eq`, `codiffGraph_eq`), so `dMin` is `Feec`'s minimal realization of the exterior
+derivative (`dMin_eq`).
 
 ## References
 

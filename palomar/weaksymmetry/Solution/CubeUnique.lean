@@ -181,8 +181,8 @@ theorem exists_toDS {T T' : ℝ} (hTT : T' < T) {f : ℝ → Wv W1} {σ : ℝ �
     exact sub_eq_zero.2 h
   · have ht' := hsub ht
     have hc := (hmem t ht').2.2.2.2.2.2
-    have e : (cubeWave hT hB N).d0 (fe0 hT hB N (σ t)) - (cubeWave hT hB N).S0 (fet0 hT hB N (φ t)) =
-        0 := by
+    have e : (cubeWave hT hB N).d0 (fe0 hT hB N (σ t)) -
+        (cubeWave hT hB N).S0 (fet0 hT hB N (φ t)) = 0 := by
       refine Subtype.ext (Subtype.ext ?_)
       change D0 (fe0 hT hB N (σ t) : U0) - (hT.proj N).π 1 (wsL2 (Ω := cubeDomain 3) 0
         (incl0 (fet0 hT hB N (φ t) : Wv U0))) = 0
@@ -255,9 +255,11 @@ theorem cube_wave_unique {T : ℝ} {f : ℝ → Wv W1} {σ σ₂ : ℝ → 𝒟.
     rw [(hs1 t).2.2.2.1, (hs2 t).2.2.2.1] at d
     rw [(hs1 t).2.2.2.2.1, (hs2 t).2.2.2.2.1] at e
     rw [(hs1 t).2.2.2.2.2, (hs2 t).2.2.2.2.2] at g
-    exact ⟨Subtype.ext (fe0_inj hT hB N m1.1 m2.1 a), Subtype.ext (fet1_inj hT hB N m1.2.2.1 m2.2.2.1 b),
+    exact ⟨Subtype.ext (fe0_inj hT hB N m1.1 m2.1 a),
+      Subtype.ext (fet1_inj hT hB N m1.2.2.1 m2.2.2.1 b),
       fe2_inj hT hB N m1.2.2.2.1 m2.2.2.2.1 c, fet2_inj hT hB N m1.2.2.2.2.1 m2.2.2.2.2.1 d,
-      Subtype.ext (fet0_inj hT hB N m1.2.1 m2.2.1 g), fe1_inj hT hB N m1.2.2.2.2.2.1 m2.2.2.2.2.2.1 e⟩
+      Subtype.ext (fet0_inj hT hB N m1.2.1 m2.2.1 g),
+      fe1_inj hT hB N m1.2.2.2.2.2.1 m2.2.2.2.2.2.1 e⟩
   have hcl : Icc 0 T ⊆ closure (Ico 0 T) := (closure_Ico hT0.ne).symm.subset
   have eσ : EqOn (fun t => (σ t : W0)) (fun t => (σ₂ t : W0)) (Icc 0 T) :=
     EqOn.of_subset_closure (fun t ht => congrArg Subtype.val (key t ht).1) h1.1 h2.1

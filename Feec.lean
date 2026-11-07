@@ -48,6 +48,7 @@ public import Feec.Domain.Constrained
 public import Feec.Domain.ConstrainedComplex
 public import Feec.Domain.Cutoff
 public import Feec.Domain.DeRham
+public import Feec.Domain.H1Restriction
 public import Feec.Domain.DiagonalPullback
 public import Feec.Domain.DivDivBGG
 public import Feec.Domain.DivDivComplex
@@ -378,6 +379,7 @@ public import Feec.Models.Cube.WeakSymmetryComplex
 public import Feec.Models.Cube.WeakSymmetryConvergence
 public import Feec.Models.Cube.WeakSymmetryEstimates
 public import Feec.Models.Cube.WeakSymmetryFEM
+public import Feec.Models.Cube.WeakSymmetryH1
 public import Feec.Models.Cube.WeakSymmetrySobolevRate
 public import Feec.Models.Cube.WeakSymmetryTangentialRate
 public import Feec.Models.Cube.WeakSymmetryWave

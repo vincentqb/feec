@@ -345,6 +345,7 @@ public import Feec.Models.Cube.MaxNormHeat
 public import Feec.Models.Cube.MaxNormNeumann
 public import Feec.Models.Cube.MaximalRegularDecomposition
 public import Feec.Models.Cube.InhomogeneousError
+public import Feec.Models.Cube.InhomogeneousLeapfrog
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
 public import Feec.Models.Cube.MirrorBase

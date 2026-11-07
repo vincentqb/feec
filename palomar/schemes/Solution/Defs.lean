@@ -675,4 +675,3 @@ def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2
 /-! ### The theorems -/
 
 end FEEC
-

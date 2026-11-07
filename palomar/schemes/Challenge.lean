@@ -17,12 +17,18 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 /-!
 # Error guarantees for fully discrete finite element schemes on simplicial meshes
 
-Two finite element schemes on the cube `Q = (0, ½)³` with its **Freudenthal meshes** `𝒯_N`
-(every simplex a Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`), with explicit spaces, an
-explicit scheme and error bounds with constants independent of the mesh, the time step and the
+Fully discrete finite element schemes on the cube `Q = (0, ½)³` with its **Freudenthal meshes**
+`𝒯_N` (every simplex a Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`), with explicit spaces,
+explicit schemes and error bounds with constants independent of the mesh, the time step and the
 solution: the numerical-analysis counterpart of the structure theory of `palomar/fem` and of the
-time stepping of `palomar/timestepping`.
+time stepping of `palomar/timestepping`. The time-dependent theorems compare the **implicit**
+Crank–Nicolson rule (stable for every time step) with the **explicit** leapfrog rule (stable
+under a CFL condition `Δt ≲ h`, made concrete by the inverse estimate) for the same elements, the
+same boundary data and the same smooth solutions.
 
+* `FEEC.inverse_estimate` (**the global inverse estimate**, [Ciarlet2002], §3.2;
+  [BrennerScott2008], §4.5): on a shape-regular, quasi-uniform family of meshes,
+  `h ‖d v‖_{L²} ≤ C ‖v‖_{L²}` for the finite element spaces of every admissible sequence.
 * `FEEC.crankNicolson_cube` (**the Crank–Nicolson Whitney scheme with Dirichlet degrees of
   freedom**, [QuennevilleBelair2015], Ch. 7): the Hodge wave equation of the de Rham window
   `HΛ⁰ → HΛ¹ → L²Λ²`, `σ' = -dᵗE`, `E' = dσ - dᵗB`, `B' = dE` (in vector proxies `σ' = div E`,
@@ -32,6 +38,12 @@ time stepping of `palomar/timestepping`.
   integrals are unisolvent on the Whitney spaces, every step is uniquely solvable, and from the
   interpolant of the initial value the error after `M` steps of size `Δt ≤ T / M` is at most
   `C L (1 + T) (h_N + Δt²)` for smooth solutions (`RowSolution`, no boundary condition imposed).
+* `FEEC.leapfrog_cube` (**the leapfrog Whitney scheme under a CFL condition**, [Joly2003]): the
+  same equation, elements and boundary data with the explicit three-level rule
+  `uₙ₊₂ = uₙ + 2 Δt Aₕ uₙ₊₁` (`IsLeapfrogStep`). With `C₀` the constant of the inverse estimate
+  `h_N ‖𝐝ₕ v‖ ≤ C₀ ‖v‖` on the Whitney row, under `2 C₀ Δt ≤ c h_N`, `c < 1`, the scheme is
+  stable (the energy bound) and its error from the interpolants of `U(0)`, `U(Δt)` is at most
+  `C L (1 + T) (h_N + Δt²) / (1 - c)`.
 * `FEEC.weakSymmetry_cube` (**the elements of Table 5.1 for the complex with weak symmetry**,
   [QuennevilleBelair2015], §5.3, §6.3): the mixed method (5.6) with `Sₕ = πS` for the complex
   `Γ → Ṽ¹ → W² × W̃²`, `Γ = {(σ, φ) | dσ = S⁰φ}`, of the linearized Einstein–Bianchi equations,
@@ -80,9 +92,10 @@ Palomar entry `palomar/fem`.
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
-  Ch. 3, 4
+  Ch. 3, 4, §4.5
 * [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -425,6 +438,18 @@ def IsRowInterp (M : SimplicialMesh 3) (w : Fin 3 → FormField 3) (x : Row) : P
   IsWhitneyInterp (cube 3) M 0 (w 0) x.1 ∧ IsWhitneyInterp (cube 3) M 1 (w 1) x.2.1 ∧
     IsWhitneyInterp (cube 3) M 2 (w 2) x.2.2
 
+/-- The `L²` norm `‖x‖ = (‖σ‖² + ‖E‖² + ‖B‖²)^{1/2}` of a row `x = (σ, E, B)`. -/
+def rowNorm (x : Row) : ℝ := √(‖x.1‖ ^ 2 + ‖x.2.1‖ ^ 2 + ‖x.2.2‖ ^ 2)
+
+/-- **One leapfrog step with prescribed boundary degrees of freedom** on the mesh `M`
+([Joly2003]): from `u`, `u'` to `u'' ∈ Vₕ` with the boundary degrees of freedom of `g`
+(`u'' - g ∈ V̊ₕ`), `⟪u'' - u, v⟫ = 2 Δt ⟪A u', v⟫` for all `v ∈ V̊ₕ`: the explicit three-level
+scheme `uₙ₊₂ = uₙ + 2 Δt Aₕ uₙ₊₁` on the interior degrees of freedom (one solve with the mass
+matrix). -/
+def IsLeapfrogStep (M : SimplicialMesh 3) (Δt : ℝ) (g u u' u'' : Row) : Prop :=
+  RowMem M false u'' ∧ RowMem M true (u'' - g) ∧
+    ∀ v, RowMem M true v → rowInner (u'' - u) v = 2 * Δt * waveForm u' v
+
 /-! ### Vector-valued forms and the connecting maps -/
 
 /-- `L²(Ω; Λᵏ ⊗ ℝⁿ)`: the vectors `v = (v₀, …, v_{n-1})` of `k`-forms of `L²(Ω; Λᵏ)`, an `ℓ²`
@@ -701,6 +726,18 @@ def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2
 
 /-! ### The theorems -/
 
+/-- **The global inverse estimate** ([Ciarlet2002], §3.2; [BrennerScott2008], §4.5; [AFW2010],
+§5.5): for a shape-regular, quasi-uniform family of meshes `M_N` of an open `Ω` whose open
+simplices lie in `Ω`, every admissible sequence `S` and every form degree `k`, there is `C` such
+that every `v` of the finite element space `S_k(M_N)` lies in `HΛᵏ(Ω)` and
+`h_N ‖dv‖_{L²} ≤ C ‖v‖_{L²}`, `C` independent of `N`. -/
+theorem inverse_estimate [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
+    (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :
+    ∃ C, ∀ N, ∀ v ∈ femSpace Ω (M N) S k, ∃ hv : v ∈ (dMax Ω k).domain,
+      meshSize (M N) * ‖dMax Ω k ⟨v, hv⟩‖ ≤ C * ‖v‖ := by
+  sorry
+
 /-- **`O(h + Δt²)` convergence of the Crank–Nicolson Whitney scheme with Dirichlet degrees of
 freedom** ([QuennevilleBelair2015], Ch. 7; [Arnold2018], Ch. 7; [Monk2003]; [Thomee2006],
 Ch. 1). The cube `Q = (0, ½)³` carries a shape-regular, quasi-uniform family of Freudenthal
@@ -727,8 +764,46 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
         RowMem (𝒯 N) true (g (m + 1) - w)) →
       IsRowInterp (𝒯 N) (X.u 0) (u 0) → ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
         IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
-        √(‖(u M - U).1‖ ^ 2 + ‖(u M - U).2.1‖ ^ 2 + ‖(u M - U).2.2‖ ^ 2) ≤
-          C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
+        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
+  sorry
+
+/-- **The explicit leapfrog Whitney scheme under a CFL condition** ([Joly2003];
+[QuennevilleBelair2015], Ch. 7; [Ciarlet2002], §3.2). On the shape-regular, quasi-uniform
+Freudenthal meshes `𝒯_N` of the cube `Q = (0, ½)³`, `h_N → 0`, with the Whitney row
+`Vₕ = P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` of `FEEC.crankNicolson_cube`:
+
+* (**the inverse estimate**) `h_N ‖𝐝ₕ v‖ ≤ C₀ ‖v‖` for every `v ∈ Vₕ`, `𝐝(σ, E, B) = (0, dσ, dE)`,
+  so `‖Aₕ‖ ≤ 2 C₀ / h_N` and `2 C₀ Δt ≤ c h_N` is a CFL condition `Δt ‖Aₕ‖ ≤ c`;
+* (**explicit**) for every time step `Δt` and all rows `g, u, u'` of `Vₕ` the leapfrog step has
+  exactly one solution;
+* (**stability**) under the CFL condition with `c < 1`, leapfrog iterates with vanishing boundary
+  degrees of freedom from `u₀, u₁ ∈ V̊ₕ` satisfy `√(1 - c) ‖u_{m+1}‖ ≤ √((1 + c)(‖u₀‖² + ‖u₁‖²))`
+  for every `m`;
+* (**the error**) there is `C` such that, under the CFL condition with `c < 1`, for every smooth
+  solution `U` of the Hodge wave equation on `[0, T] × cl Q` with bound `L` (`RowSolution`),
+  `Δt > 0` and `M Δt ≤ T`, the iterates started from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` with the
+  boundary degrees of freedom of `Π_h U(tₙ)` satisfy
+  `‖u_M - U(t_M)‖_{L²} ≤ C L (1 + T) (h_N + Δt²) / (1 - c)`, `C` independent of `N`, `Δt`, `c`,
+  `T`, `L`, `U`. -/
+theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C₀ C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
+    IsFreudenthal 𝒯 ∧
+    (∀ N v, RowMem (𝒯 N) false v →
+      meshSize (𝒯 N) * √(‖wd 0 v.1‖ ^ 2 + ‖wd 1 v.2.1‖ ^ 2) ≤ C₀ * rowNorm v) ∧
+    (∀ N Δt g u u', RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → RowMem (𝒯 N) false u' →
+      ∃! u'', IsLeapfrogStep (𝒯 N) Δt g u u' u'') ∧
+    (∀ N Δt c (u : ℕ → Row) m, 0 ≤ Δt → c < 1 → 2 * C₀ * Δt ≤ c * meshSize (𝒯 N) →
+      (∀ k < m, IsLeapfrogStep (𝒯 N) Δt 0 (u k) (u (k + 1)) (u (k + 2))) →
+      RowMem (𝒯 N) true (u 0) → RowMem (𝒯 N) true (u 1) →
+      √(1 - c) * rowNorm (u (m + 1)) ≤ √((1 + c) * (rowNorm (u 0) ^ 2 + rowNorm (u 1) ^ 2))) ∧
+    ∀ N T L (X : RowSolution T L) (Δt c : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → c < 1 →
+      2 * C₀ * Δt ≤ c * meshSize (𝒯 N) → M * Δt ≤ T →
+      (∀ m, m + 2 ≤ M → IsLeapfrogStep (𝒯 N) Δt (g (m + 2)) (u m) (u (m + 1)) (u (m + 2))) →
+      (∀ m, m + 2 ≤ M → ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 2 : ℕ) * Δt)) w ∧
+        RowMem (𝒯 N) true (g (m + 2) - w)) →
+      IsRowInterp (𝒯 N) (X.u 0) (u 0) → IsRowInterp (𝒯 N) (X.u Δt) (u 1) →
+      ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
+        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
+        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) / (1 - c) := by
   sorry
 
 /-- **The finite element method of Table 5.1 for the complex with weak symmetry on the cube**

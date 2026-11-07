@@ -18,7 +18,8 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.crankNicolson_cube`, `FEEC.weakSymmetry_cube` and `FEEC.weakSymmetry_cube_nonvacuous`),
+`FEEC.inverse_estimate`, `FEEC.crankNicolson_cube`, `FEEC.leapfrog_cube`, `FEEC.weakSymmetry_cube`
+and `FEEC.weakSymmetry_cube_nonvacuous`),
 compiled against Mathlib alone so that their elaborated values are those of the challenge. The
 solution imports this module and the bridges to `Feec`, and proves the theorems
 (`Solution.lean`).
@@ -42,6 +43,7 @@ solution imports this module and the bridges to `Feec`, and proves the theorems
   Ch. 3, 4
 * [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -384,6 +386,18 @@ def IsRowInterp (M : SimplicialMesh 3) (w : Fin 3 → FormField 3) (x : Row) : P
   IsWhitneyInterp (cube 3) M 0 (w 0) x.1 ∧ IsWhitneyInterp (cube 3) M 1 (w 1) x.2.1 ∧
     IsWhitneyInterp (cube 3) M 2 (w 2) x.2.2
 
+/-- The `L²` norm `‖x‖ = (‖σ‖² + ‖E‖² + ‖B‖²)^{1/2}` of a row `x = (σ, E, B)`. -/
+def rowNorm (x : Row) : ℝ := √(‖x.1‖ ^ 2 + ‖x.2.1‖ ^ 2 + ‖x.2.2‖ ^ 2)
+
+/-- **One leapfrog step with prescribed boundary degrees of freedom** on the mesh `M`
+([Joly2003]): from `u`, `u'` to `u'' ∈ Vₕ` with the boundary degrees of freedom of `g`
+(`u'' - g ∈ V̊ₕ`), `⟪u'' - u, v⟫ = 2 Δt ⟪A u', v⟫` for all `v ∈ V̊ₕ`: the explicit three-level
+scheme `uₙ₊₂ = uₙ + 2 Δt Aₕ uₙ₊₁` on the interior degrees of freedom (one solve with the mass
+matrix). -/
+def IsLeapfrogStep (M : SimplicialMesh 3) (Δt : ℝ) (g u u' u'' : Row) : Prop :=
+  RowMem M false u'' ∧ RowMem M true (u'' - g) ∧
+    ∀ v, RowMem M true v → rowInner (u'' - u) v = 2 * Δt * waveForm u' v
+
 /-! ### Vector-valued forms and the connecting maps -/
 
 /-- `L²(Ω; Λᵏ ⊗ ℝⁿ)`: the vectors `v = (v₀, …, v_{n-1})` of `k`-forms of `L²(Ω; Λᵏ)`, an `ℓ²`
@@ -661,3 +675,4 @@ def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2
 /-! ### The theorems -/
 
 end FEEC
+

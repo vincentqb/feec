@@ -10,13 +10,19 @@ version: "v0.4"
 project:
   name: "Error guarantees for fully discrete finite element schemes on simplicial meshes"
   description: >-
-    Two finite element schemes on the cube Q = (0, 1/2)^3 with its Freudenthal meshes (every
-    simplex a Kuhn simplex h (z + K_sigma), h = 1/(2(N+1)), named by its vertices), stated with
-    explicit spaces and an explicit scheme, with error bounds whose constants are independent of
-    the mesh, the time step and the solution. Stated over Mathlib with the definitions of
-    differential forms, polynomial forms, simplicial meshes, finite element spaces and Sobolev
-    spaces of the Palomar entry palomar/fem copied verbatim. Three compared theorems.
-    FEEC.crankNicolson_cube (thesis Ch. 7): the Hodge wave equation of the de Rham window
+    Fully discrete finite element schemes on the cube Q = (0, 1/2)^3 with its Freudenthal meshes
+    (every simplex a Kuhn simplex h (z + K_sigma), h = 1/(2(N+1)), named by its vertices),
+    stated with explicit spaces and explicit schemes, with error bounds whose constants are
+    independent of the mesh, the time step and the solution. The time-dependent topic is the
+    comparison of the implicit Crank-Nicolson rule (stable for every time step) with the
+    explicit leapfrog rule, stable only under a CFL condition made concrete by the global
+    inverse estimate, for the same Whitney elements, boundary data and smooth solutions. Stated
+    over Mathlib with the definitions of differential forms, polynomial forms, simplicial
+    meshes, finite element spaces and Sobolev spaces of the Palomar entry palomar/fem copied
+    verbatim. Five compared theorems. FEEC.inverse_estimate: for a shape-regular, quasi-uniform
+    family of meshes of an open set whose open simplices lie in it, every admissible sequence
+    and every degree k, there is C with h_N ||dv||_{L^2} <= C ||v||_{L^2} for every v of the
+    finite element space (v in H Lambda^k). FEEC.crankNicolson_cube (thesis Ch. 7): the Hodge wave equation of the de Rham window
     H Lambda^0 -> H Lambda^1 -> L^2 Lambda^2 on Q (sigma' = -d^t E, E' = d sigma - d^t B,
     B' = d E; in vector proxies sigma' = div E, E' = grad sigma - curl B, B' = curl E), with no
     boundary condition imposed on the exact solution, discretized by the Whitney elements
@@ -30,7 +36,16 @@ project:
     bound L (C^2 in space, C^3 in time, first derivatives of u and du bounded by L and
     L-Lipschitz in time, third time derivative bounded by L), every Delta t > 0 and
     M Delta t <= T, the iterates from the interpolant of the initial value satisfy
-    ||u_M - U(t_M)||_{L^2} <= C L (1 + T) (h_N + Delta t^2). FEEC.weakSymmetry_cube (thesis
+    ||u_M - U(t_M)||_{L^2} <= C L (1 + T) (h_N + Delta t^2). FEEC.leapfrog_cube: on the same
+    meshes and Whitney row, the inverse estimate h_N ||d_h v|| <= C_0 ||v|| (d_h(sigma, E, B) =
+    (0, d sigma, d E)), so ||A_h|| <= 2 C_0 / h_N; the leapfrog step u'' - g in V_h with
+    vanishing traces, <u'' - u, v> = 2 Delta t <A u', v> for all such v, is uniquely solvable for
+    every Delta t (explicit); under the CFL condition 2 C_0 Delta t <= c h_N, c < 1, iterates
+    with vanishing boundary degrees of freedom satisfy sqrt(1 - c) ||u_{m+1}|| <=
+    sqrt((1 + c)(||u_0||^2 + ||u_1||^2)), and there is C such that for every smooth solution with
+    bound L, Delta t > 0, M Delta t <= T, the iterates from the interpolants of U(0) and U(Delta t)
+    with the boundary degrees of freedom of the interpolant of the exact solution satisfy
+    ||u_M - U(t_M)||_{L^2} <= C L (1 + T) (h_N + Delta t^2) / (1 - c). FEEC.weakSymmetry_cube (thesis
     §5.3, Table 5.1, Thm 5.5, §6.3, Prop 6.2): the mixed method (5.6) with S_h = pi S for the
     complex with weak symmetry of the BGG construction (the linearized Einstein-Bianchi
     complex; the constraint d sigma = S^0 phi imposed by a Lagrange multiplier instead of C^1
@@ -49,7 +64,8 @@ project:
     the C^2 class or of the H^1 class and whose multiplier and its derivative are bounded by L,
     some solution of (6.5) is within K L (1 + t) h_N of it. FEEC.weakSymmetry_cube_nonvacuous:
     the static and wave rates apply to nontrivial solutions. The proof is the library Feec of
-    this repository (Feec.Models.Cube.InhomogeneousError, Inhomogeneous, the Whitney element
+    this repository (Feec.FiniteElement.GlobalInverseEstimate, Feec.TimeStepping.Leapfrog,
+    Feec.Models.Cube.InhomogeneousLeapfrog, InhomogeneousError, Inhomogeneous, the Whitney element
     Feec.FiniteElement.WhitneyComplex, Feec.HilbertComplex.BGG.*, Feec.Models.Cube.WeakSymmetry*,
     Feec.Domain.H1Restriction).
   authors:
@@ -119,7 +135,7 @@ sources:
       - "L. Ridgway Scott"
     id: "doi:10.1007/978-0-387-75934-0"
     type: "book"
-    location: "Texts in Applied Mathematics 15, 3rd ed. (2008), Ch. 3-4 (finite elements, interpolation)"
+    location: "Texts in Applied Mathematics 15, 3rd ed. (2008), Ch. 3-4 (finite elements, interpolation), §4.5 (inverse estimates)"
     relationship: "background"
     author_endorsement: "not-contacted"
   - title: "The Finite Element Method for Elliptic Problems"
@@ -127,7 +143,7 @@ sources:
       - "Philippe G. Ciarlet"
     id: "doi:10.1137/1.9780898719208"
     type: "book"
-    location: "§3.1 (shape-regular families)"
+    location: "§3.1 (shape-regular families), §3.2 (inverse inequalities)"
     relationship: "background"
     author_endorsement: "not-contacted"
   - title: "Finite Element Methods for Maxwell's Equations"
@@ -146,6 +162,15 @@ sources:
     location: "Springer Series in Computational Mathematics 25, 2nd ed. (2006), Ch. 1 (the Crank-Nicolson method and its error analysis)"
     relationship: "background"
     note: "The Crank-Nicolson error argument (stability plus consistency); here for a skew operator."
+    author_endorsement: "not-contacted"
+  - title: "Variational Methods for Time-Dependent Wave Propagation Problems"
+    authors:
+      - "Patrick Joly"
+    id: "doi:10.1007/978-3-642-55483-4_6"
+    type: "book chapter"
+    location: "Topics in Computational Wave Propagation, LNCSE 31 (2003) (leapfrog, discrete energy, CFL stability)"
+    relationship: "background"
+    note: "The energy argument for leapfrog under the CFL condition; locator not rechecked for this entry."
     author_endorsement: "not-contacted"
   - title: "Mixed finite element methods for linear elasticity with weakly imposed symmetry"
     authors:
@@ -200,7 +225,11 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: FEEC.crankNicolson_cube (one row of the thesis' Ch. 7 scheme, the
+    Formalized and compared: FEEC.inverse_estimate (every admissible sequence, every degree,
+    general shape-regular quasi-uniform families); FEEC.leapfrog_cube (the same row, elements,
+    boundary data and solutions as Crank-Nicolson: inverse estimate on the Whitney row, explicit
+    well-posedness, stability and the O((h + Delta t^2)/(1 - c)) error under the concrete CFL
+    condition 2 C_0 Delta t <= c h_N); FEEC.crankNicolson_cube (one row of the thesis' Ch. 7 scheme, the
     Hodge wave equation of the de Rham window on the cube, with the Whitney elements and
     boundary degrees of freedom from the exact solution: unisolvence, well-posedness, V_h^1 != 0,
     the O(h + Delta t^2) error); FEEC.weakSymmetry_cube for the elements of Table 5.1 (bounded
@@ -212,9 +241,11 @@ status:
     P_1 heat equation in the maximum norm (discrete maximum principle, O(h^2) Dirichlet and
     O(h) Neumann nodal and L^infinity errors, backward Euler and A-stable rational schemes),
     the mesh-level tools (unisolvence of the P_r and P_r^- degrees of freedom, Bramble-Hilbert
-    interpolation errors, local inverse estimates on shape-regular meshes) and explicit leapfrog
-    under the abstract CFL condition tau ||L_h|| <= c, the mirror boundary conditions and
-    fractional Sobolev rates of the weak-symmetry elements.
+    interpolation errors, local inverse estimates on shape-regular meshes), the abstract leapfrog
+    second-order bound against e^{tL_h} and the explicit constants (the leapfrog error constant
+    Feec.Models.Cube.Inhomogeneous.leapfrogConst = 12 sum B_i + sum #Lambda^i |Q|^{1/2}; the
+    inverse-estimate constant 2^n n A from the local Lipschitz constant A), the mirror boundary
+    conditions and fractional Sobolev rates of the weak-symmetry elements.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -270,6 +301,18 @@ fidelity:
     divergence and the other constraint monitors are not stated. The weak exterior derivative
     of the scheme is written as a total function wd (0 off its domain), only applied to finite
     element forms.
+    (2a) Leapfrog: the three-level scheme with the same boundary data as Crank-Nicolson and the
+    two starting values u_0 = Pi_h U(0), u_1 = Pi_h U(Delta t) (interpolants of the exact
+    solution; no one-step starting procedure). The CFL condition is stated with C_0 the
+    constant of the compared row inverse estimate (C_0 asserted, not explicit); the error
+    carries the factor 1/(1 - c) of the energy argument, and the stability clause is for
+    vanishing boundary degrees of freedom. The time step is not required to satisfy the CFL
+    condition for well-posedness (the step is explicit). Sharpness of the CFL condition
+    (instability beyond it) is not stated.
+    (2b) Inverse estimate: the hypothesis that the open simplices lie in Omega (automatic for
+    star-shaped or convex Omega, and for the cube) replaces regularity of Omega; quasi-uniformity
+    enters through h_N <= h_T / q, so C depends on n, S, k and the shape-regularity and
+    quasi-uniformity constants of the family.
     Non-vacuity of RowSolution is not a compared theorem: the structure is visibly inhabited
     (constant fields; in Feec the plane waves of Ch. 7 are row solutions,
     Feec.Numerics.PlaneWaveCube.planeWaveRows).
@@ -298,8 +341,9 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the three compared theorems and
-    their definitions, 2026-11-07; the weak-symmetry theorems moved from the former entry
+    Not yet reviewed by the author: the Challenge statement (the five compared theorems and
+    their definitions, 2026-11-07; FEEC.inverse_estimate, FEEC.leapfrog_cube, rowNorm and
+    IsLeapfrogStep added the same day; the weak-symmetry theorems moved from the former entry
     palomar/weaksymmetry, restated without the abstract hypotheses). Every merge of the library
     was gated by a full build (zero warnings), an axiom audit (propext, Classical.choice,
     Quot.sound only) and an independent AI review. No external mathematical review.
@@ -320,6 +364,26 @@ alignment:
         canonical interpolant (Solution/WhitneyInterp.lean, through
         exists_sign_simplexIntegral_eq), its step Feec.TimeStepping.IsDirichletCNStep
         (Solution/WhitneyScheme.lean); V_h^1 != 0 is whitneyMin_one_ne_bot.
+    - source: "[Ciarlet2002] §3.2; [BrennerScott2008] §4.5"
+      lean: "FEEC.inverse_estimate"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.FiniteElement.PolySeq.exists_mul_norm_d_le (Feec.FiniteElement.GlobalInverseEstimate:
+        the local Lipschitz bounds of ShapeRegularInverse bound du on each simplex, summed with
+        LocalElement.norm_sq_glue) on the Feec meshes M.toFeec, whose spaces are the
+        challenge's (Solution/Spaces.lean, mem_V_iff).
+    - source: "[Joly2003]; [QuennevilleBelair2015] Ch. 7"
+      lean: "FEEC.leapfrog_cube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.Models.Cube.Inhomogeneous.exists_mul_norm_discreteD_whitneyRow_le (inverse
+        estimate), Feec.TimeStepping.existsUnique_isDirichletLeapfrogStep,
+        whitney_leapfrog_stable and RowSolution.whitney_leapfrog_error_le_row (from
+        norm_succ_sub_le_of_isDirichletLeapfrogStep, the CFL estimate for the skew operator
+        P_0 A P_0, and exists_leapfrog_comparison, the Crank-Nicolson comparison fields with the
+        centred difference remainder); the step is identified in Solution/Leapfrog.lean.
     - source: "[QuennevilleBelair2015] §5.3, Table 5.1, Prop 5.4, Thm 5.5, §6.3, Prop 6.2"
       lean: "FEEC.weakSymmetry_cube"
       module: "Challenge"

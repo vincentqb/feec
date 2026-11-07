@@ -5,6 +5,7 @@ public import Solution.CubeSobolev
 public import Solution.CubeNonvac
 public import Solution.CubeUnique
 public import Solution.CrankNicolson
+public import Solution.Leapfrog
 
 /-!
 # Error guarantees for fully discrete finite element schemes on simplicial meshes (solution)
@@ -69,8 +70,7 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
         RowMem (𝒯 N) true (g (m + 1) - w)) →
       IsRowInterp (𝒯 N) (X.u 0) (u 0) → ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
         IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
-        √(‖(u M - U).1‖ ^ 2 + ‖(u M - U).2.1‖ ^ 2 + ‖(u M - U).2.2‖ ^ 2) ≤
-          C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
+        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
   refine ⟨cubeMesh, cnConst, isMeshFamily_cube, points_cube, ?_, ?_, ?_, ?_⟩
   · intro N k w hw
     exact ⟨FEMInterp.canonicalInterp N k ⟨w, hw⟩, (isWhitneyInterp_cube_iff N k ⟨w, hw⟩ _).2 rfl,
@@ -131,7 +131,145 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
     have hu0' : a 0 = X.toFeec.interp N 0 :=
       ofD_injective N ((ha 0 (Nat.zero_le M)).symm.trans (ofD_interp X hu0))
     have key := X.toFeec.whitney_cn_error_le_row N hΔt hL0 hM hstep' hg' hu0'
-    rw [toRow_field X hU0 hU1 hU2, ha M le_rfl, ofD, ← toRow_sub, norm_toRow, meshSize_cubeMesh]
+    rw [toRow_field X hU0 hU1 hU2, ha M le_rfl, ofD, ← toRow_sub, rowNorm, norm_toRow,
+      meshSize_cubeMesh]
+    exact key
+
+theorem inverse_estimate {n : ℕ} [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
+    (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :
+    ∃ C, ∀ N, ∀ v ∈ femSpace Ω (M N) S k, ∃ hv : v ∈ (dMax Ω k).domain,
+      meshSize (M N) * ‖dMax Ω k ⟨v, hv⟩‖ ≤ C * ‖v‖ := by
+  obtain ⟨hdom, ⟨σ, q, hq, hsq⟩, hpos, -⟩ := hM
+  obtain ⟨T₀, hT₀⟩ := exists_mem_simplices (hpos 0)
+  have hσ := pos_of_isShapeRegular (hsq 0).1 hT₀
+  obtain ⟨K, -, hK⟩ := S.toFeec.exists_mul_norm_d_le (n := n) k (C := max n σ)
+    (c := 1 / ((n.factorial : ℝ) * σ ^ n)) (le_max_of_le_right hσ.le) (by positivity)
+  refine ⟨K / q, fun N v hv => ?_⟩
+  set m := (M N).toFeec Ω (hdom N)
+  have hv' : v ∈ (S.toFeec.subcomplex m hΩ).V k := (mem_V_iff S (M N) Ω (hdom N) v).2 hv
+  have hd : v ∈ ((extDerivOp ℝ n k).maximal m.domain).domain :=
+    (polyElement n S.toFeec).V_le_maximal_domain m hΩ k hv'
+  have hdM : dMax Ω k = (extDerivOp ℝ n k).maximal Ω := dMax_eq Ω k
+  refine ⟨hdM ▸ hd, ?_⟩
+  have hb := hK m hΩ (hint N) (isShapeRegular_toFeec (hdom N) (hsq N).1)
+    (h := q * meshSize (M N)) (mul_pos hq (hpos N)) (fun T hT => (hsq N).2 T hT) ⟨v, hd⟩ hv'
+  have e : dMax Ω k ⟨v, hdM ▸ hd⟩ = (extDerivOp ℝ n k).maximal m.domain ⟨v, hd⟩ :=
+    LinearPMap.apply_of_eq' hdM _
+  have hb' : q * meshSize (M N) * ‖(extDerivOp ℝ n k).maximal m.domain ⟨v, hd⟩‖ ≤ K * ‖v‖ := hb
+  rw [e, div_mul_eq_mul_div, le_div_iff₀ hq]
+  rw [mul_comm _ q, ← mul_assoc]
+  exact hb'
+
+open Feec.Models.Cube.Inhomogeneous hiding RowSolution in
+theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C₀ C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
+    IsFreudenthal 𝒯 ∧
+    (∀ N v, RowMem (𝒯 N) false v →
+      meshSize (𝒯 N) * √(‖wd 0 v.1‖ ^ 2 + ‖wd 1 v.2.1‖ ^ 2) ≤ C₀ * rowNorm v) ∧
+    (∀ N Δt g u u', RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → RowMem (𝒯 N) false u' →
+      ∃! u'', IsLeapfrogStep (𝒯 N) Δt g u u' u'') ∧
+    (∀ N Δt c (u : ℕ → Row) m, 0 ≤ Δt → c < 1 → 2 * C₀ * Δt ≤ c * meshSize (𝒯 N) →
+      (∀ k < m, IsLeapfrogStep (𝒯 N) Δt 0 (u k) (u (k + 1)) (u (k + 2))) →
+      RowMem (𝒯 N) true (u 0) → RowMem (𝒯 N) true (u 1) →
+      √(1 - c) * rowNorm (u (m + 1)) ≤ √((1 + c) * (rowNorm (u 0) ^ 2 + rowNorm (u 1) ^ 2))) ∧
+    ∀ N T L (X : RowSolution T L) (Δt c : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → c < 1 →
+      2 * C₀ * Δt ≤ c * meshSize (𝒯 N) → M * Δt ≤ T →
+      (∀ m, m + 2 ≤ M → IsLeapfrogStep (𝒯 N) Δt (g (m + 2)) (u m) (u (m + 1)) (u (m + 2))) →
+      (∀ m, m + 2 ≤ M → ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 2 : ℕ) * Δt)) w ∧
+        RowMem (𝒯 N) true (g (m + 2) - w)) →
+      IsRowInterp (𝒯 N) (X.u 0) (u 0) → IsRowInterp (𝒯 N) (X.u Δt) (u 1) →
+      ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
+        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
+        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) / (1 - c) := by
+  obtain ⟨K, hK0, hK⟩ := exists_mul_norm_discreteD_whitneyRow_le
+  refine ⟨cubeMesh, K, leapfrogConst, isMeshFamily_cube, points_cube, ?_, ?_, ?_, ?_⟩
+  · intro N v hv
+    obtain ⟨a, rfl⟩ := (rowMem_false_iff N v).1 hv
+    rw [meshSize_cubeMesh, rowNorm_ofD, ← norm_discreteD_eq]
+    exact hK N a
+  · intro N Δt g u u' hg hu hu'
+    obtain ⟨g', rfl⟩ := (rowMem_false_iff N g).1 hg
+    obtain ⟨u₀, rfl⟩ := (rowMem_false_iff N u).1 hu
+    obtain ⟨u₁, rfl⟩ := (rowMem_false_iff N u').1 hu'
+    obtain ⟨a, ha, hau⟩ := Feec.TimeStepping.existsUnique_isDirichletLeapfrogStep
+      (V₀ := whitneyInterior N) (A := discreteWave (whitneyRow N)) Δt g' u₀ u₁
+    refine ⟨ofD N a, (isLeapfrogStep_ofD_iff N Δt g' u₀ u₁ _).2 ⟨a, rfl, ha⟩, fun x hx => ?_⟩
+    obtain ⟨b, rfl, hb⟩ := (isLeapfrogStep_ofD_iff N Δt g' u₀ u₁ x).1 hx
+    rw [hau b hb]
+  · intro N Δt c u m hΔt hc1 hcfl hstep hu0 hu1
+    have hmem : ∀ k ≤ m + 1, RowMem (cubeMesh N) false (u k) := by
+      intro k hk
+      rcases k with _ | _ | k
+      · exact rowMem_false_of_true N hu0
+      · exact rowMem_false_of_true N hu1
+      · exact (hstep k (by omega)).1
+    obtain ⟨a, ha⟩ := exists_seq_ofD N hmem
+    have hstep' : ∀ k < m, Feec.TimeStepping.IsDirichletLeapfrogStep (whitneyInterior N)
+        (discreteWave (whitneyRow N)) Δt 0 (a k) (a (k + 1)) (a (k + 2)) := by
+      intro k hk
+      have h := hstep k hk
+      rw [← ofD_zero N, ha k (by omega), ha (k + 1) (by omega), ha (k + 2) (by omega)] at h
+      obtain ⟨u', hu', h'⟩ := (isLeapfrogStep_ofD_iff N Δt _ _ _ _).1 h
+      rwa [← ofD_injective N hu'] at h'
+    have ha0 : a 0 ∈ whitneyInterior N := by
+      have h := hu0; rw [ha 0 (by omega)] at h; exact (rowMem_true_ofD_iff N _).1 h
+    have ha1 : a 1 ∈ whitneyInterior N := by
+      have h := hu1; rw [ha 1 (by omega)] at h; exact (rowMem_true_ofD_iff N _).1 h
+    rw [meshSize_cubeMesh] at hcfl
+    have key := whitney_leapfrog_stable N hK0 (hK N) hΔt hc1 hcfl hstep' ha0 ha1
+    rwa [ha 0 (by omega), ha 1 (by omega), ha (m + 1) le_rfl, rowNorm_ofD, rowNorm_ofD,
+      rowNorm_ofD]
+  · intro N T L X Δt c M u g hΔt hc1 hcfl hM hstep hg hu0 hu1 U hU0 hU1 hU2
+    have hL0 := zero_le_L X hΔt hM
+    have hmem : ∀ k ≤ M, RowMem (cubeMesh N) false (u k) := by
+      intro k hk
+      rcases k with _ | _ | k
+      · rw [ofD_interp X hu0]; exact (rowMem_false_iff N _).2 ⟨_, rfl⟩
+      · rw [ofD_interp X hu1]; exact (rowMem_false_iff N _).2 ⟨_, rfl⟩
+      · exact (hstep k hk).1
+    obtain ⟨a, ha⟩ := exists_seq_ofD N hmem
+    have hgm : ∀ k, k + 2 ≤ M → ∃ e ∈ whitneyInterior N,
+        g (k + 2) = ofD N (e + X.toFeec.interp N ((k + 2 : ℕ) * Δt)) := by
+      intro k hk
+      obtain ⟨w, hw, hgw⟩ := hg k hk
+      obtain ⟨e, he, hee⟩ := (rowMem_true_iff N _).1 hgw
+      refine ⟨e, he, ?_⟩
+      rw [ofD_add, ← hee, ← ofD_interp X hw, sub_add_cancel]
+    choose! e he hge using hgm
+    set gD : ℕ → DState (whitneyRow N) := fun j => e (j - 2) + X.toFeec.interp N (j * Δt)
+    have hgD : ∀ k, gD (k + 2) = e k + X.toFeec.interp N ((k + 2 : ℕ) * Δt) := fun k => by
+      simp only [gD, Nat.add_sub_cancel]
+    have hstep' : ∀ k, k + 2 ≤ M → Feec.TimeStepping.IsDirichletLeapfrogStep (whitneyInterior N)
+        (discreteWave (whitneyRow N)) Δt (gD (k + 2)) (a k) (a (k + 1)) (a (k + 2)) := by
+      intro k hk
+      have h := hstep k hk
+      rw [hge k hk, ha k (by omega), ha (k + 1) (by omega), ha (k + 2) hk] at h
+      obtain ⟨u', hu', h'⟩ := (isLeapfrogStep_ofD_iff N Δt _ _ _ _).1 h
+      rw [← ofD_injective N hu'] at h'
+      rwa [hgD]
+    have hg' : ∀ k, k + 2 ≤ M →
+        gD (k + 2) - X.toFeec.interp N ((k + 2 : ℕ) * Δt) ∈ whitneyInterior N := by
+      intro k hk
+      rw [hgD, add_sub_cancel_right]
+      exact he k hk
+    have hu0' : a 0 = X.toFeec.interp N 0 :=
+      ofD_injective N ((ha 0 (Nat.zero_le M)).symm.trans (ofD_interp X hu0))
+    rcases Nat.eq_zero_or_pos M with hM0 | hM0
+    · subst hM0
+      set a' := Function.update a 1 (X.toFeec.interp N Δt)
+      have key := X.toFeec.whitney_leapfrog_error_le_row N hK0 (hK N) hΔt hc1
+        (by rwa [meshSize_cubeMesh] at hcfl) hL0 hM (u := a') (g := gD)
+        (fun k hk => absurd hk (by omega)) (fun k hk => absurd hk (by omega))
+        (by simp [a', hu0']) (by simp [a'])
+      rw [toRow_field X hU0 hU1 hU2, ha 0 le_rfl, ofD, ← toRow_sub, rowNorm, norm_toRow,
+        meshSize_cubeMesh]
+      simpa [a'] using key
+    have hu1' : a 1 = X.toFeec.interp N Δt :=
+      ofD_injective N ((ha 1 hM0).symm.trans (ofD_interp X hu1))
+    have key := X.toFeec.whitney_leapfrog_error_le_row N hK0 (hK N) hΔt hc1
+      (by rwa [meshSize_cubeMesh] at hcfl) hL0 hM hstep' hg' hu0' hu1'
+    rw [toRow_field X hU0 hU1 hU2, ha M le_rfl, ofD, ← toRow_sub, rowNorm, norm_toRow,
+      meshSize_cubeMesh]
     exact key
 
 set_option maxHeartbeats 2000000 in

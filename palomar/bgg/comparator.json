@@ -1,7 +1,7 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.bggCohomology", "FEEC.bggIdentification", "FEEC.bggFinrank", "FEEC.bggSum", "FEEC.bggExplicit", "FEEC.bggHilbert", "FEEC.bggOrthogonal"],
+  "theorem_names": ["FEEC.bggCohomology", "FEEC.bggIdentification", "FEEC.bggFinrank", "FEEC.bggSum", "FEEC.bggExplicit", "FEEC.bggHilbert", "FEEC.bggOrthogonal", "FEEC.bggWeakSymmetry", "FEEC.bggWeakSymmetry_nonvacuous"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

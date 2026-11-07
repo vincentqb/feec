@@ -11,6 +11,7 @@ public import Mathlib.Topology.MetricSpace.Antilipschitz
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.InnerProductSpace.ProdL2
 public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.LinearAlgebra.LinearPMap
 
 /-!
 # The definitions of the challenge
@@ -23,11 +24,15 @@ theorems (`Solution.lean`).
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 and §5
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 5
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open CategoryTheory
+open scoped InnerProductSpace
 
 @[expose] public noncomputable section
 
@@ -449,6 +454,169 @@ abbrev QuotL (s : ∀ i, Ht i →L[𝕜] H (i + 1))
     (ΔL (hd := hd) (hdt := hdt) s hs J i).comap (ΓL (hd := hd) (hdt := hdt) s hs J i).subtype
 
 end BGG
+
+/-! ### The complex with weak symmetry and its discretization ([QuennevilleBelair2015], Ch. 5) -/
+
+/-- **BGG data**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of complexes of densely
+defined operators `d`, `d̃` between Hilbert spaces (unbounded, `LinearPMap`s; their domains
+`V = D(d)` carry the inner product of `W`), with bounded connecting maps `S⁰ : W̃⁰ → W¹`,
+`S¹ : W̃¹ → W²`. The complex and anticommutation laws are `WeakSymmetryData.IsBGG`. -/
+structure WeakSymmetryData (W0 W1 W2 Wt0 Wt1 Wt2 : Type*) [NormedAddCommGroup W0]
+    [InnerProductSpace ℝ W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1]
+    [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0]
+    [InnerProductSpace ℝ Wt0] [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1]
+    [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2] where
+  /-- the top row -/
+  d0 : W0 →ₗ.[ℝ] W1
+  d1 : W1 →ₗ.[ℝ] W2
+  /-- the bottom row -/
+  dt0 : Wt0 →ₗ.[ℝ] Wt1
+  dt1 : Wt1 →ₗ.[ℝ] Wt2
+  /-- the connecting maps -/
+  S0 : Wt0 →L[ℝ] W1
+  S1 : Wt1 →L[ℝ] W2
+
+namespace WeakSymmetryData
+
+variable {W0 W1 W2 Wt0 Wt1 Wt2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+  [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
+  [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0]
+  [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2]
+  [InnerProductSpace ℝ Wt2] (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2)
+
+/-- The rows are complexes, `R(d⁰) ⊆ D(d¹)`, `d¹d⁰ = 0` and `R(d̃⁰) ⊆ D(d̃¹)`, `d̃¹d̃⁰ = 0`, and
+`S` anticommutes with them: `S⁰D(d̃⁰) ⊆ D(d¹)` and `d¹S⁰ = -S¹d̃⁰` (a morphism `Ṽ → V[1]`). -/
+def IsBGG : Prop :=
+  (∀ x : D.d0.domain, ∃ h : D.d0 x ∈ D.d1.domain, D.d1 ⟨_, h⟩ = 0) ∧
+    (∀ x : D.dt0.domain, ∃ h : D.dt0 x ∈ D.dt1.domain, D.dt1 ⟨_, h⟩ = 0) ∧
+    ∀ ψ : D.dt0.domain, ∃ h : D.S0 ψ ∈ D.d1.domain, D.d1 ⟨_, h⟩ = -D.S1 (D.dt0 ψ)
+
+/-- **The continuous hypotheses with constant `C`** ([QuennevilleBelair2015], §5.1, Prop 5.3):
+Poincaré inequalities on `V⁰` and `Ṽ⁰` (so `d⁰`, `d̃⁰` are injective with closed range), exactness
+of the top row at `V¹`, the Hodge decomposition `v = d̃ψ + w`, `‖w‖ ≤ C ‖d̃v‖`, on `Ṽ¹` (exactness
+of the bottom row at `Ṽ¹` and the Poincaré inequality), the **regular decomposition** `d¹V¹ =
+d¹S⁰Ṽ⁰` with the bound `‖d̃φ‖ ≤ C ‖d¹x‖` ([Hiptmair2002], Lemma 2.4, in the application), and
+`‖S⁰‖, ‖S¹‖ ≤ C`. -/
+structure IsStable (C : ℝ) : Prop where
+  poincare : ∀ σ : D.d0.domain, ‖(σ : W0)‖ ≤ C * ‖D.d0 σ‖
+  poincare_t : ∀ φ : D.dt0.domain, ‖(φ : Wt0)‖ ≤ C * ‖D.dt0 φ‖
+  exact : ∀ μ : D.d1.domain, D.d1 μ = 0 → ∃ ρ : D.d0.domain, D.d0 ρ = μ
+  hodge_t : ∀ v : D.dt1.domain, ∃ (ψ : D.dt0.domain) (w : D.dt1.domain),
+    (v : Wt1) = D.dt0 ψ + w ∧ ‖(w : Wt1)‖ ≤ C * ‖D.dt1 v‖
+  regular : ∀ x : D.d1.domain, ∃ (φ : D.dt0.domain) (h : D.S0 φ ∈ D.d1.domain),
+    D.d1 ⟨_, h⟩ = D.d1 x ∧ ‖D.dt0 φ‖ ≤ C * ‖D.d1 x‖
+  norm_S0 : ‖D.S0‖ ≤ C
+  norm_S1 : ‖D.S1‖ ≤ C
+
+/-- `(σ, φ, u)` with the multiplier `λ ∈ W¹` solves **the mixed problem (5.3)** with datum `F`
+([QuennevilleBelair2015], (5.3), with an `L²` multiplier): `⟪σ, τ⟫ - ⟪u, d̃ψ⟫ - ⟪λ, dτ - S⁰ψ⟫ = 0`,
+`⟪d̃φ, v⟫ + ⟪S¹u, S¹v⟫ + ⟪d̃u, d̃v⟫ = F v` for all `τ ∈ V⁰`, `ψ ∈ Ṽ⁰`, `v ∈ Ṽ¹`, and `dσ = S⁰φ`. -/
+def IsSolution (F : D.dt1.domain →ₗ[ℝ] ℝ) (σ : D.d0.domain) (φ : D.dt0.domain)
+    (u : D.dt1.domain) (lam : W1) : Prop :=
+  (∀ (τ : D.d0.domain) (ψ : D.dt0.domain),
+      ⟪(σ : W0), τ⟫_ℝ - ⟪(u : Wt1), D.dt0 ψ⟫_ℝ - ⟪lam, D.d0 τ - D.S0 ψ⟫_ℝ = 0) ∧
+    (∀ v : D.dt1.domain,
+      ⟪D.dt0 φ, v⟫_ℝ + ⟪D.S1 u, D.S1 v⟫_ℝ + ⟪D.dt1 u, D.dt1 v⟫_ℝ = F v) ∧
+    D.d0 σ = D.S0 φ
+
+/-- **A discretization** of `D` ([QuennevilleBelair2015], §5.2): finite-dimensional subspaces of
+the domains forming subcomplexes of both rows, with bounded cochain projections `π : W → W` onto
+them (identity on the subspaces, `d π = π d` on the domains). The method (5.6) couples the rows by
+`S⁰ₕ = π¹S⁰`, `S¹ₕ = π²S¹`. -/
+structure Discretization where
+  /-- the finite element spaces -/
+  V0 : Submodule ℝ W0
+  V1 : Submodule ℝ W1
+  V2 : Submodule ℝ W2
+  Vt0 : Submodule ℝ Wt0
+  Vt1 : Submodule ℝ Wt1
+  Vt2 : Submodule ℝ Wt2
+  [fd0 : FiniteDimensional ℝ V0]
+  [fd1 : FiniteDimensional ℝ V1]
+  [fd2 : FiniteDimensional ℝ V2]
+  [fdt0 : FiniteDimensional ℝ Vt0]
+  [fdt1 : FiniteDimensional ℝ Vt1]
+  [fdt2 : FiniteDimensional ℝ Vt2]
+  le0 : V0 ≤ D.d0.domain
+  le1 : V1 ≤ D.d1.domain
+  let0 : Vt0 ≤ D.dt0.domain
+  let1 : Vt1 ≤ D.dt1.domain
+  d0_mem : ∀ x : D.d0.domain, (x : W0) ∈ V0 → D.d0 x ∈ V1
+  d1_mem : ∀ x : D.d1.domain, (x : W1) ∈ V1 → D.d1 x ∈ V2
+  dt0_mem : ∀ x : D.dt0.domain, (x : Wt0) ∈ Vt0 → D.dt0 x ∈ Vt1
+  dt1_mem : ∀ x : D.dt1.domain, (x : Wt1) ∈ Vt1 → D.dt1 x ∈ Vt2
+  /-- the cochain projections -/
+  π0 : W0 →L[ℝ] W0
+  π1 : W1 →L[ℝ] W1
+  π2 : W2 →L[ℝ] W2
+  πt0 : Wt0 →L[ℝ] Wt0
+  πt1 : Wt1 →L[ℝ] Wt1
+  πt2 : Wt2 →L[ℝ] Wt2
+  π0_mem : ∀ x, π0 x ∈ V0
+  π1_mem : ∀ x, π1 x ∈ V1
+  π2_mem : ∀ x, π2 x ∈ V2
+  πt0_mem : ∀ x, πt0 x ∈ Vt0
+  πt1_mem : ∀ x, πt1 x ∈ Vt1
+  πt2_mem : ∀ x, πt2 x ∈ Vt2
+  π0_id : ∀ x ∈ V0, π0 x = x
+  π1_id : ∀ x ∈ V1, π1 x = x
+  π2_id : ∀ x ∈ V2, π2 x = x
+  πt0_id : ∀ x ∈ Vt0, πt0 x = x
+  πt1_id : ∀ x ∈ Vt1, πt1 x = x
+  πt2_id : ∀ x ∈ Vt2, πt2 x = x
+  comm0 : ∀ x : D.d0.domain, D.d0 ⟨π0 x, le0 (π0_mem x)⟩ = π1 (D.d0 x)
+  comm1 : ∀ x : D.d1.domain, D.d1 ⟨π1 x, le1 (π1_mem x)⟩ = π2 (D.d1 x)
+  commt0 : ∀ x : D.dt0.domain, D.dt0 ⟨πt0 x, let0 (πt0_mem x)⟩ = πt1 (D.dt0 x)
+  commt1 : ∀ x : D.dt1.domain, D.dt1 ⟨πt1 x, let1 (πt1_mem x)⟩ = πt2 (D.dt1 x)
+
+namespace Discretization
+
+variable {D} (Q : D.Discretization)
+
+/-- The projections are **bounded by `C`**: `‖π‖ ≤ C`, `‖π̃‖ ≤ C` in every degree. -/
+def IsBounded (C : ℝ) : Prop :=
+  ‖Q.π0‖ ≤ C ∧ ‖Q.π1‖ ≤ C ∧ ‖Q.π2‖ ≤ C ∧ ‖Q.πt0‖ ≤ C ∧ ‖Q.πt1‖ ≤ C ∧ ‖Q.πt2‖ ≤ C
+
+/-- **The compatibility condition (5.4)** `π¹S⁰π̃⁰ = π¹S⁰` ([QuennevilleBelair2015], (5.4)). -/
+def Compatible : Prop := ∀ ψ, Q.π1 (D.S0 (Q.πt0 ψ)) = Q.π1 (D.S0 ψ)
+
+/-- **Consistency of `Sₕ` at the order `h`** with constant `C` (cf. [QuennevilleBelair2015],
+Prop 5.9): `‖(S⁰ - S⁰ₕ)ψ‖ ≤ C h ‖d̃ψ‖` on `Ṽₕ⁰`, and every `d̃v`, `v ∈ Ṽₕ¹`, has a **regular
+potential** `w`, `d̃w = d̃v`, `‖w‖ ≤ C ‖d̃v‖`, on which `π̃¹` and `S¹ₕ` are accurate,
+`‖(1 - π̃¹)w‖, ‖(S¹ - S¹ₕ)w‖ ≤ C h ‖d̃v‖`. -/
+def IsConsistent (C h : ℝ) : Prop :=
+  (∀ ψ : D.dt0.domain, (ψ : Wt0) ∈ Q.Vt0 → ‖D.S0 ψ - Q.π1 (D.S0 ψ)‖ ≤ C * h * ‖D.dt0 ψ‖) ∧
+    ∀ v : D.dt1.domain, (v : Wt1) ∈ Q.Vt1 → ∃ w : D.dt1.domain, D.dt1 w = D.dt1 v ∧
+      ‖(w : Wt1)‖ ≤ C * ‖D.dt1 v‖ ∧ ‖(w : Wt1) - Q.πt1 w‖ ≤ C * h * ‖D.dt1 v‖ ∧
+      ‖D.S1 w - Q.π2 (D.S1 w)‖ ≤ C * h * ‖D.dt1 v‖
+
+/-- `(σₕ, φₕ, uₕ, λₕ) ∈ Vₕ⁰ × Ṽₕ⁰ × Ṽₕ¹ × Vₕ¹` solves **the discrete problem (5.6)** with datum
+`F`: (5.3) on the discrete spaces with `S⁰ₕ = π¹S⁰`, `S¹ₕ = π²S¹` in place of `S⁰`, `S¹`. -/
+def IsDiscreteSolution (F : D.dt1.domain →ₗ[ℝ] ℝ) (σ : D.d0.domain) (φ : D.dt0.domain)
+    (u : D.dt1.domain) (lam : W1) : Prop :=
+  (σ : W0) ∈ Q.V0 ∧ (φ : Wt0) ∈ Q.Vt0 ∧ (u : Wt1) ∈ Q.Vt1 ∧ lam ∈ Q.V1 ∧
+    (∀ (τ : D.d0.domain) (ψ : D.dt0.domain), (τ : W0) ∈ Q.V0 → (ψ : Wt0) ∈ Q.Vt0 →
+      ⟪(σ : W0), τ⟫_ℝ - ⟪(u : Wt1), D.dt0 ψ⟫_ℝ - ⟪lam, D.d0 τ - Q.π1 (D.S0 ψ)⟫_ℝ = 0) ∧
+    (∀ v : D.dt1.domain, (v : Wt1) ∈ Q.Vt1 → ⟪D.dt0 φ, v⟫_ℝ +
+      ⟪Q.π2 (D.S1 u), Q.π2 (D.S1 v)⟫_ℝ + ⟪D.dt1 u, D.dt1 v⟫_ℝ = F v) ∧
+    D.d0 σ = Q.π1 (D.S0 φ)
+
+/-- The squared **error** in the graph norms of `V⁰`, `Ṽ⁰` and in `‖w‖² + ‖S¹ₕw‖² + ‖d̃w‖²` on
+`Ṽ¹`. -/
+def errorSq (σ σh : D.d0.domain) (φ φh : D.dt0.domain) (u uh : D.dt1.domain) : ℝ :=
+  ‖((σ - σh : D.d0.domain) : W0)‖ ^ 2 + ‖D.d0 (σ - σh)‖ ^ 2 +
+    ‖((φ - φh : D.dt0.domain) : Wt0)‖ ^ 2 + ‖D.dt0 (φ - φh)‖ ^ 2 +
+    ‖((u - uh : D.dt1.domain) : Wt1)‖ ^ 2 + ‖Q.π2 (D.S1 (u - uh))‖ ^ 2 + ‖D.dt1 (u - uh)‖ ^ 2
+
+/-- The squared **projection error** of `(σ, φ, u)` in the norms of `errorSq` (with `d π = π d`). -/
+def projErrorSq (σ : D.d0.domain) (φ : D.dt0.domain) (u : D.dt1.domain) : ℝ :=
+  ‖Q.π0 σ - σ‖ ^ 2 + ‖Q.π1 (D.d0 σ) - D.d0 σ‖ ^ 2 + ‖Q.πt0 φ - φ‖ ^ 2 +
+    ‖Q.πt1 (D.dt0 φ) - D.dt0 φ‖ ^ 2 + ‖Q.πt1 u - u‖ ^ 2 + ‖Q.π2 (D.S1 (Q.πt1 u - u))‖ ^ 2 +
+    ‖Q.πt2 (D.dt1 u) - D.dt1 u‖ ^ 2
+
+end Discretization
+
+end WeakSymmetryData
 
 /-! ### The theorems -/
 

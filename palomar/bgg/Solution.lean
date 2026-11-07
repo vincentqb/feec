@@ -1,9 +1,10 @@
 module
 
 public import Solution.Bridge
+public import Solution.WeakSymmetry
 
 /-!
-# The BGG construction (solution)
+# The BGG construction and its discretization with weak symmetry (solution)
 
 `FEEC.bggCohomology`, `FEEC.bggIdentification`, `FEEC.bggFinrank`, `FEEC.bggSum`,
 `FEEC.bggExplicit`, `FEEC.bggHilbert` and `FEEC.bggOrthogonal` of
@@ -15,17 +16,27 @@ from `Feec.BGG.Data.quasiIso_Γ`, `Feec.BGG.Data.quasiIso_derived`,
 `Feec.BGG.Data.quasiIso_of_Γι_comp`, `HomologicalComplex.Represents.map`,
 `Feec.HilbertComplex.Subquotient.toQuotEquiv`, `Feec.HilbertComplex.Subquotient.quotD_toQuot`,
 `Feec.HilbertComplex.Subquotient.cohomologyEquiv`, `Feec.BGG.BoundedData.quasiIso_orthSumMap` and
-`Feec.BGG.BoundedData.orth_represents`.
+`Feec.BGG.BoundedData.orth_represents`. `FEEC.bggWeakSymmetry` and
+`FEEC.bggWeakSymmetry_nonvacuous` through `Solution.WeakSymmetry`
+(`FEEC.WeakSymmetryData.weakSymmetry_of`: the data as `Feec.BGG.Segment`, the discretizations as
+`Feec.BGG.Discrete`, then `Feec.BGG.Discrete.existsUnique_mixed_h` and
+`Feec.BGG.Discrete.error_estimate_of_weakConsistency`; `FEEC.WeakSymmetryData.nonvacuous`).
 
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (24)–(31), Theorems 6 and 7,
   Corollary 1 and §5
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 5 (Prop 5.4, Thm 5.5)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open CategoryTheory
+open scoped InnerProductSpace
 
 @[expose] public noncomputable section
 
@@ -180,5 +191,40 @@ theorem bggOrthogonal {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
         BGG.Represents (BGG.ofBounded d hd) i A → BGG.Represents (BGG.ofBounded dt hdt) i At →
           BGG.Represents Y i ((A.prod At).map (κ.f i).hom) :=
   BGG.orthogonal d hd dt hdt s hs K hK J hinj hsurj hR
+
+/-- **Stability and convergence of the discretizations of the complex with weak symmetry**
+([QuennevilleBelair2015], Prop 5.4 and Thm 5.5; [AFW2007]; [AFW2010], §3). For every
+constant `C` there is `K` such that, for all BGG data `D` satisfying the continuous hypotheses
+with constant `C` and every discretization `Q` with projections bounded by `C` satisfying (5.4):
+the discrete problem (5.6) has exactly one solution for every datum `F` (Prop 5.4); and if `Sₕ`
+is consistent at the order `h` with constant `C`, then for every solution `(σ, φ, u, λ)` of (5.3)
+with `‖λ‖ ≤ Λ` and `S¹u ∈ D(d¹*)`, `‖d¹*S¹u‖ ≤ Λ`, and the solution of (5.6) with the same
+datum, the squared error is at most `K` times the squared projection error of `(σ, φ, u)` plus
+`h² (Λ² + ‖S¹u‖²)` plus the consistency error `‖(S¹ - S¹ₕ)u‖²` (Thm 5.5). -/
+theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Type u}
+    [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [NormedAddCommGroup W1]
+    [InnerProductSpace ℝ W1] [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+    [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0] [NormedAddCommGroup Wt1]
+    [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+    (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2) (Q : D.Discretization), D.IsBGG →
+    D.IsStable C → Q.IsBounded C → Q.Compatible →
+    (∀ F, ∃! x : D.d0.domain × D.dt0.domain × D.dt1.domain × W1,
+      Q.IsDiscreteSolution F x.1 x.2.1 x.2.2.1 x.2.2.2) ∧
+    ∀ (h Λ : ℝ), 0 ≤ h → Q.IsConsistent C h → ∀ F σ φ u lam σh φh uh lamh,
+      D.IsSolution F σ φ u lam → ‖lam‖ ≤ Λ →
+      (∀ w : D.d1.domain, |⟪D.S1 u, D.d1 w⟫_ℝ| ≤ Λ * ‖(w : W1)‖) →
+      Q.IsDiscreteSolution F σh φh uh lamh →
+      Q.errorSq σ σh φ φh u uh ≤ K * (Q.projErrorSq σ φ u + h ^ 2 * (Λ ^ 2 + ‖D.S1 u‖ ^ 2) +
+        ‖D.S1 u - Q.π2 (D.S1 u)‖ ^ 2) :=
+  WeakSymmetryData.weakSymmetry_of C
+
+/-- **Non-vacuity of `FEEC.bggWeakSymmetry`**: BGG data on `ℝ` in every degree and a
+discretization of them satisfy all its hypotheses with `C = 1`, consistency at every order
+`h ≥ 0` included, and (5.3) has a solution with `σ`, `φ`, `u` and `λ` all nonzero. -/
+theorem bggWeakSymmetry_nonvacuous : ∃ (D : WeakSymmetryData ℝ ℝ ℝ ℝ ℝ ℝ) (Q : D.Discretization),
+    D.IsBGG ∧ D.IsStable 1 ∧ Q.IsBounded 1 ∧ Q.Compatible ∧ (∀ h, 0 ≤ h → Q.IsConsistent 1 h) ∧
+    ∃ F σ φ u lam, D.IsSolution F σ φ u lam ∧ (σ : ℝ) ≠ 0 ∧ (φ : ℝ) ≠ 0 ∧ (u : ℝ) ≠ 0 ∧
+      lam ≠ 0 :=
+  WeakSymmetryData.nonvacuous
 
 end FEEC

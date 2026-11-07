@@ -1,12 +1,13 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
-# formalization.yaml v0.4 for the Palomar submission of the BGG complexes of Arnold and Hu (`palomar/bgg/`).
+# formalization.yaml v0.4 for the Palomar submission of the BGG complexes of Arnold and Hu and their
+# discretization with weak symmetry (`palomar/bgg/`).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
-  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, and the output Hilbert complex with the quotient norm"
+  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, the output Hilbert complex with the quotient norm, and the discretization of the complex with weak symmetry"
   description: >-
     A Lean 4 formalization of the Bernstein-Gelfand-Gelfand construction of Arnold and Hu (2021),
     §3 and §5, the abstract construction from which they derive the elasticity, Hessian and
@@ -50,6 +51,37 @@ project:
     P_(R^perp)(omega + K mu) up to J and P_N(d~ t omega + (I + d~ t K) mu) after J, is a
     quasi-isomorphism from the sum complex to it which carries cohomology representatives H x H~
     of the rows to cohomology representatives of the output complex (Corollary 1, (31)).
+    The discretization with weak symmetry (Quenneville-Bélair 2015, Ch. 5), the numerical
+    analysis of the construction: for unbounded rows (L^2 domain complexes) the BGG elimination
+    of V^1 against V~^0 is imposed weakly, by a Lagrange multiplier, giving the complex with weak
+    symmetry Gamma -> V~^1 -> W^2 x W~^2, Gamma = {(sigma, phi) | d sigma = S^0 phi} (in R^3 with
+    the rows H^1_0 -> H_0(curl) -> L^2 and S^0 = I, S^1 = 2 vskw in vector proxies, the complex of
+    the linearized Einstein equations, Gamma = {(sigma, grad sigma) | sigma in H^2_0}, whose
+    conforming elements are C^1; the multiplier lets sigma and phi be discretized separately).
+    FEEC.bggWeakSymmetry (thesis Prop 5.4 and Thm 5.5): BGG data are two segments
+    W^0 -> W^1 -> W^2 and W~^0 -> W~^1 -> W~^2 of complexes of densely defined operators
+    between real Hilbert spaces (Mathlib's LinearPMap), with bounded connecting maps
+    S^0 : W~^0 -> W^1, S^1 : W~^1 -> W^2, d^1 S^0 = -S^1 d~^0. The mixed problem (5.3): find
+    sigma in V^0, phi in V~^0, u in V~^1 and a multiplier lambda in W^1 with
+    <sigma, tau> - <u, d~psi> - <lambda, d tau - S^0 psi> = 0,
+    <d~phi, v> + <S^1 u, S^1 v> + <d~u, d~v> = F(v), d sigma = S^0 phi. A discretization is a
+    pair of finite-dimensional subcomplexes of both rows with bounded cochain projections pi
+    (idempotent onto the spaces, commuting with d on the domains); the method (5.6) replaces S
+    by S_h = pi S. For every constant C there is K such that for all BGG data with Poincaré
+    inequalities on V^0 and V~^0, exactness of the top row at V^1, the Hodge decomposition with
+    bound on V~^1, the regular decomposition d^1 V^1 = d^1 S^0 V~^0 with
+    ||d~phi|| <= C ||d^1 x||, and ||S^0||, ||S^1|| <= C, and every discretization with
+    projections bounded by C satisfying the compatibility condition (5.4)
+    pi^1 S^0 pi~^0 = pi^1 S^0: the discrete problem (5.6) has exactly one solution for every
+    datum; and if S_h is consistent at the order h with constant C (on V~_h^0, and on regular
+    potentials of the discrete fields of V~_h^1), the squared error of the solution of (5.6) in
+    the graph norms is at most K times the squared projection error of the exact solution plus
+    h^2 (Lambda^2 + ||S^1 u||^2) plus ||(S^1 - S^1_h) u||^2, where ||lambda|| <= Lambda and
+    S^1 u lies in the domain of the adjoint of d^1 with ||d^1* S^1 u|| <= Lambda.
+    FEEC.bggWeakSymmetry_nonvacuous: BGG data on R in every degree (d^0 = d~^0 = id,
+    d^1 = d~^1 = 0, S^0 = id, S^1 = 0) with the discretization by the full spaces satisfy all its
+    hypotheses with C = 1, consistency at every order h >= 0 included, and (5.3) has a solution
+    with sigma, phi, u, lambda all nonzero.
     The statement is self-contained over Mathlib (ModuleCat, CochainComplex, QuasiIso,
     ShortComplex.ShortExact, Module.finrank, IsIso, ContinuousLinearMap, AntilipschitzWith,
     IsClosed, WithLp, the quotient norm of Submodule quotients, LinearIsometryEquiv,
@@ -61,7 +93,9 @@ project:
     Feec.HilbertComplex.Subquotient.toQuotEquiv, quotD_toQuot, cohomologyEquiv,
     Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology,
     Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth,
-    Feec.BGG.BoundedData.orth_represents).
+    Feec.BGG.BoundedData.orth_represents; for the weak symmetry Feec.BGG.Segment,
+    Feec.BGG.Discrete.existsUnique_mixed_h, Feec.BGG.Discrete.error_estimate_of_weakConsistency,
+    Feec.BGG.Discrete.weakConsistency_of_potential_of_bound).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -71,9 +105,22 @@ project:
 
 classification:
   arxiv: ["math.CT", "math.NA"]
-  msc2020: ["18G35", "58J10", "65N30"]
+  msc2020: ["18G35", "58J10", "65N30", "83C05"]
 
 sources:
+  - title: "A New Approach to Finite Element Simulations of General Relativity"
+    authors:
+      - "Vincent Quenneville-Bélair"
+    id: "http://hdl.handle.net/11299/175309"
+    type: "PhD thesis, University of Minnesota, 2015"
+    location: "Ch. 5 ((5.1)-(5.6), Props 5.3, 5.4, Thm 5.5)"
+    relationship: "formalizes"
+    note: >-
+      The complex with weak symmetry and the abstract analysis of its discretization
+      (FEEC.bggWeakSymmetry), with the hypotheses stated in the challenge. The cube instance of
+      the thesis (§5.3, Table 5.1, Ch. 6) is not part of this entry. The formalization is by the
+      thesis author.
+    author_endorsement: "participated"
   - title: "Complexes from complexes"
     authors:
       - "Douglas N. Arnold"
@@ -128,6 +175,42 @@ sources:
     relationship: "background"
     note: "The elasticity complex derived from two de Rham complexes, an instance of the construction."
     author_endorsement: "not-contacted"
+  - title: "Mixed finite element methods for linear elasticity with weakly imposed symmetry"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0025-5718-07-01998-9"
+    type: "article"
+    location: "Math. Comp. 76 (2007), the mixed method with weakly imposed symmetry and its stability analysis"
+    relationship: "background"
+    note: >-
+      The two-row diagram with a weakly imposed coupling, used there at the other end of the
+      diagram (stress, displacement and rotation). Neither the elasticity system nor the AFW2007
+      elements are formalized.
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3 (abstract error analysis)"
+    relationship: "background"
+    note: >-
+      The abstract error analysis that the thesis' Thm 5.5 adapts to S_h = pi S; no theorem of
+      AFW2010 is compared here. Locators as cited in Feec, not rechecked for this entry.
+    author_endorsement: "not-contacted"
+  - title: "Finite elements in computational electromagnetism"
+    authors:
+      - "Ralf Hiptmair"
+    id: "doi:10.1017/S0962492902000041"
+    type: "article"
+    location: "Acta Numerica 11 (2002), Lemma 2.4 (regular decompositions)"
+    relationship: "background"
+    note: "The regular decomposition hypothesis of FEEC.bggWeakSymmetry."
+    author_endorsement: "not-contacted"
 
 related_formalizations: []
 
@@ -144,8 +227,13 @@ status:
     bounded operators on Hilbert spaces over R or C with bounded connecting maps, bounded below
     before J and onto modulo d from J on, every J and every degree, including the quotient norm
     of Gamma / Delta (an isometry with the Hilbert space Gamma (-) Delta, bounded quotient
-    differentials, closed range).
-    Proved in Feec, not compared: the general elimination theorem on any complex shape with
+    differentials, closed range); FEEC.bggWeakSymmetry for all BGG data on real Hilbert spaces
+    in one universe and all discretizations satisfying its hypotheses, with
+    FEEC.bggWeakSymmetry_nonvacuous.
+    Proved in Feec, not compared: the cube instance of the weak-symmetry theorem (thesis §5.3,
+    Table 5.1, Ch. 6: the Freudenthal meshes and the elements of Table 5.1 satisfying all
+    hypotheses with one constant, the static and semi-discrete wave rates; Feec.Models.Cube.WeakSymmetry*),
+    outside this entry because it needs differential forms and finite element spaces; the general elimination theorem on any complex shape with
     arbitrary eliminated index sets (Feec.BGG.Data.derivedHomologyIso) and the general
     subquotient of a complex of bounded operators as a Hilbert complex
     (Feec.HilbertComplex.Subquotient.complex, complexIso, cohomologyEquiv), of which
@@ -229,7 +317,10 @@ automation:
     Feec.BGG.Data.quasiIso_of_Γι_comp, HomologicalComplex.Represents.map, the general
     subquotient of Feec.HilbertComplex.Quotient (Gamma / Delta on the l2 products as a
     Feec.HilbertComplex.Subquotient), Feec.BGG.BoundedData.isClosed_bgg_Δ,
-    Feec.BGG.BoundedData.quasiIso_orthSumMap, isIso_toOrth and orth_represents.
+    Feec.BGG.BoundedData.quasiIso_orthSumMap, isIso_toOrth and orth_represents;
+    Solution/WeakSymmetry.lean translates the weak-symmetry data and discretizations to
+    Feec.BGG.Segment and Feec.BGG.Discrete and applies Feec.BGG.Discrete.existsUnique_mixed_h
+    and Feec.BGG.Discrete.error_estimate_of_weakConsistency.
 
 fidelity:
   divergences: >-
@@ -304,9 +395,28 @@ fidelity:
     and div div complexes) and the uniform representation of cohomology of §2
     (Costabel-McIntosh); the regular decompositions of the L^2 de Rham rows on boxes and
     parallelepipeds (Theorem 3 of §2 there) are proved in Feec but not stated in the challenge,
-    which has no differential operators (see status.scope); no finite element discretization.
+    which has no differential operators (see status.scope); no finite element space is
+    constructed (the discretization with weak symmetry, FEEC.bggWeakSymmetry, is abstract).
     (10) The name BGG follows Arnold-Hu; the representation-theoretic BGG resolution
     [BernsteinGelfandGelfand1975] and the BGG sequences of Čap-Slovák-Souček are background only.
+    Weak symmetry. (11) The weak-symmetry rows are segments of densely defined (unbounded)
+    operators (WeakSymmetryData), not the bounded rows of FEEC.bggHilbert or the module
+    complexes of the other theorems: the L^2 domain complexes are unbounded, and the analysis
+    needs only the degrees 0..2. The complex with weak symmetry is not formed as a complex in
+    the challenge; it enters through the mixed problem (5.3), its Hodge Laplacian. (12) The
+    multiplier lambda is assumed in W^1 (an L^2 multiplier) and bounded by Lambda, and the
+    error bound assumes S^1 u in the domain of the adjoint of d^1 with ||d^1* S^1 u|| <= Lambda.
+    (13) One constant C bounds the Poincaré inequalities, the Hodge and regular decompositions,
+    ||S||, the projections and the consistency; K depends only on C. (14) Consistency (cf. Prop
+    5.9) is a hypothesis (Discretization.IsConsistent): ||(S^0 - S^0_h) psi|| <= C h ||d~psi|| on
+    V~_h^0, and every d~v, v in V~_h^1, has a regular potential w (d~w = d~v,
+    ||w|| <= C ||d~v||) on which pi~^1 and S^1_h are accurate to order h. (15) The discrete
+    complex with S_h = pi S is not a subcomplex of the continuous one (a variational crime).
+    (16) The non-vacuity witness is one-dimensional in every degree with d^1 = d~^1 = 0,
+    S^1 = 0 and the discretization by the full spaces (pi = id, S_h = S); it shows the
+    hypotheses consistent with a nonzero solution, not a nontrivial variational crime. The
+    instance with proper finite element spaces (the cube, Table 5.1) is proved in Feec but not
+    compared here (see status.scope).
 
 review:
   status: "self-assessed"
@@ -319,7 +429,9 @@ review:
     particular the statements FEEC.bggOrthogonal (with its new Corollary 1 conclusion) and
     FEEC.bggHilbert (new: the quotient norm, which at J is equivalent but not equal to the norm of
     Arnold-Hu, see fidelity (3)) and their definitions FEEC.BGG.moorePenrose,
-    FEEC.BGG.Υ, FEEC.BGG.ΓL, FEEC.BGG.ΔL and FEEC.BGG.QuotL.
+    FEEC.BGG.Υ, FEEC.BGG.ΓL, FEEC.BGG.ΔL and FEEC.BGG.QuotL; and FEEC.bggWeakSymmetry with
+    FEEC.bggWeakSymmetry_nonvacuous and their definitions (FEEC.WeakSymmetryData and its
+    Discretization, 2026-11-07).
 
 alignment:
   namespace: "FEEC"
@@ -364,5 +476,21 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "New; statement (and FEEC.BGG.moorePenrose, FEEC.BGG.Υ) not yet reviewed by the author. Proved through FEEC.BGG.orthogonal from Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth and Feec.BGG.BoundedData.orth_represents."
+
+    - source: "[QuennevilleBelair2015] Prop 5.4, Thm 5.5"
+      lean: "FEEC.bggWeakSymmetry"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Not yet reviewed by the author (moved from the former entry palomar/weaksymmetry).
+        Solution/WeakSymmetry.lean (weakSymmetry_of): the data and discretizations as
+        Feec.BGG.Segment, Feec.BGG.Discrete; Feec.BGG.Discrete.existsUnique_mixed_h and
+        Feec.BGG.Discrete.error_estimate_of_weakConsistency, with the consistency on regular
+        potentials through Feec.BGG.Discrete.weakConsistency_of_potential_of_bound.
+    - source: "Non-vacuity of [QuennevilleBelair2015] Prop 5.4, Thm 5.5"
+      lean: "FEEC.bggWeakSymmetry_nonvacuous"
+      module: "Challenge"
+      status: "proved"
+      note: "New; Solution/WeakSymmetry.lean (nonvacuous: realData, realQ)."
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

@@ -156,6 +156,16 @@ theorem isFemPieces_glue {k : ℤ}
     exact traceEq_of_mem_globalSpace S M Ω hdom v.2 hT hT'
 
 omit [NeZero n] in
+/-- **The glued space `Vₕᵏ` is the finite element space of the challenge.** -/
+theorem mem_V_iff {k : ℤ} (u : L2Form Ω k) :
+    u ∈ (polyElement n S.toFeec).V (M.toFeec Ω hdom) k ↔ u ∈ femSpace Ω M S k := by
+  constructor
+  · rintro ⟨v, rfl⟩
+    exact ⟨_, isFemPieces_glue S M Ω hdom v⟩
+  · rintro ⟨p, hp⟩
+    exact ⟨⟨_, ofPieces_mem S M Ω hdom hp⟩, glue_ofPieces S M Ω hdom hp⟩
+
+omit [NeZero n] in
 /-- A facet of a single simplex of the mesh is a boundary facet. -/
 theorem isBoundaryFacet_of {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices)
     {F : Finset (Fin n → ℝ)} (hFT : F ⊆ vertexSet T) (hF : F.card = n)

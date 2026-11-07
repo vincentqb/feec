@@ -4,7 +4,7 @@ public import Solution.CubeStatic
 public import Feec.Models.Cube.PolyFiniteElementConvergence
 
 /-!
-# The hypotheses of `FEEC.weakSymmetry` on the cube, with one constant
+# The hypotheses of `FEEC.WeakSymmetryData.weakSymmetry_of` on the cube, with one constant
 
 With the smoothers of `Feec.Models.Cube.WeakSymmetry.tableRows_uniform_cochainProjection` and the
 regularity constant of `Feec.Models.Cube.WeakSymmetry.exists_curlPotential_bound`, one constant
@@ -32,7 +32,7 @@ theorem IsBounded.mono {Q : 𝒟.Discretization} {C C' : ℝ} (h : Q.IsBounded C
   ⟨h.1.trans hC, h.2.1.trans hC, h.2.2.1.trans hC, h.2.2.2.1.trans hC, h.2.2.2.2.1.trans hC,
     h.2.2.2.2.2.trans hC⟩
 
-/-- **The hypotheses of `FEEC.weakSymmetry` on the cube with one constant.** -/
+/-- **The hypotheses of `FEEC.WeakSymmetryData.weakSymmetry_of` on the cube with one constant.** -/
 theorem cube_hyps : ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C₀ : ℝ)
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C₀)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C₀) (C : ℝ),

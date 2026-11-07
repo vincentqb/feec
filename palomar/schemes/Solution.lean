@@ -4,30 +4,32 @@ public import Solution.CubeMain
 public import Solution.CubeSobolev
 public import Solution.CubeNonvac
 public import Solution.CubeUnique
+public import Solution.CrankNicolson
 
 /-!
-# Finite element exterior calculus for the complex with weak symmetry (solution)
+# Error guarantees for fully discrete finite element schemes on simplicial meshes (solution)
 
-`FEEC.weakSymmetry` is `FEEC.WeakSymmetryData.weakSymmetry_of` (`Solution.Abstract`: the BGG data
-and discretizations of the challenge as `Feec.BGG.Segment` and `Feec.BGG.Discrete`, then
-`Feec.BGG.Discrete.existsUnique_mixed_h` and `Feec.BGG.Discrete.error_estimate_of_weakConsistency`
-with the pointwise regular potentials of
-`Feec.BGG.Discrete.weakConsistency_of_potential_of_bound`). `FEEC.weakSymmetry_cube`: the cube
-data are `Feec`'s (`cubeData_eq`), the discretizations `cubeQ` of the smoothed projections of one
-smoother satisfy the hypotheses of `FEEC.weakSymmetry` with one constant (`cube_hyps`), their
-spaces are the elements of Table 5.1 (`cubeQ_spaces`) on the Freudenthal meshes (`cubeMesh`), the
-static rate is the abstract theorem with the interpolation estimates (`cube_static_rate`), and the
-wave clauses are `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` and `cubeWave_exists_unique`
+`FEEC.crankNicolson_cube`: the Freudenthal meshes are `Feec`'s (`cubeMesh`), the challenge's
+Whitney spaces, interpolant and Crank–Nicolson step are `Feec`'s (`Solution.WhitneySpaces`,
+`Solution.WhitneyInterp`, `Solution.WhitneyScheme`), and the error is
+`Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row` (`Solution.CrankNicolson`).
+`FEEC.weakSymmetry_cube`: the cube data are `Feec`'s (`cubeData_eq`), the discretizations `cubeQ`
+of the smoothed projections of one smoother satisfy the hypotheses of the abstract theorem
+`FEEC.WeakSymmetryData.weakSymmetry_of` (`Solution.Abstract`, not compared here) with one
+constant (`cube_hyps`), which gives unique solvability; their spaces are the elements of
+Table 5.1 (`cubeQ_spaces`), the static rate is the abstract theorem with the interpolation
+estimates (`cube_static_rate`), and the wave clauses are
+`Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` and `cubeWave_exists_unique`
 (`Solution.CubeWave`). The `H¹` rates (`Solution.CubeSobolev`) put the `H¹` classes in `Feec`'s
-relative class `H¹_univ` (`Feec.Models.Cube.WeakSymmetry.sobRel_of_h1_zero` and its siblings) and
-apply `cube_static_rate_sob` and `cube_wave_rate_sob`. `FEEC.weakSymmetry_cube_nonvacuous` from
+relative class `H¹_univ` (`Feec.Models.Cube.WeakSymmetry.sobRel_of_h1_zero` and its siblings).
+`FEEC.weakSymmetry_cube_nonvacuous` from
 `Feec.Models.Cube.WeakSymmetry.exists_coupled_manufactured_solution` and `waveManufactured_hyps`,
 with `cube_static_h1` and `cube_wave_h1` for the `H¹` classes.
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5, 6
+  Ch. 5–7
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -37,28 +39,9 @@ open Set Filter
 
 @[expose] public noncomputable section
 
-universe u
-
 namespace FEEC
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry
-
-theorem weakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Type u}
-    [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [NormedAddCommGroup W1]
-    [InnerProductSpace ℝ W1] [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
-    [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0] [NormedAddCommGroup Wt1]
-    [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
-    (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2) (Q : D.Discretization), D.IsBGG →
-    D.IsStable C → Q.IsBounded C → Q.Compatible →
-    (∀ F, ∃! x : D.d0.domain × D.dt0.domain × D.dt1.domain × W1,
-      Q.IsDiscreteSolution F x.1 x.2.1 x.2.2.1 x.2.2.2) ∧
-    ∀ (h Λ : ℝ), 0 ≤ h → Q.IsConsistent C h → ∀ F σ φ u lam σh φh uh lamh,
-      D.IsSolution F σ φ u lam → ‖lam‖ ≤ Λ →
-      (∀ w : D.d1.domain, |⟪D.S1 u, D.d1 w⟫_ℝ| ≤ Λ * ‖(w : W1)‖) →
-      Q.IsDiscreteSolution F σh φh uh lamh →
-      Q.errorSq σ σh φ φh u uh ≤ K * (Q.projErrorSq σ φ u + h ^ 2 * (Λ ^ 2 + ‖D.S1 u‖ ^ 2) +
-        ‖D.S1 u - Q.π2 (D.S1 u)‖ ^ 2) :=
-  WeakSymmetryData.weakSymmetry_of C
 
 theorem toSmooth {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv W2}
     (h : IsRegularState L (σ : W0) (incl0 φ) (incl1 u) M ρ) : IsSmoothStateTr L σ φ u M ρ :=
@@ -74,11 +57,86 @@ theorem ofSmooth {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2} {ρ : Wv 
     (isTangentialC2_iff zero_le_two L _).2 h.2.2.2.1,
     fun a => (isTangentialC2_iff zero_le_two L _).2 (h.2.2.2.2 a)⟩
 
+open Feec.Models.Cube.Inhomogeneous hiding RowSolution in
+theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
+    IsFreudenthal 𝒯 ∧
+    (∀ N k (w : FormField 3), Continuous w → ∃! x, IsWhitneyInterp (cube 3) (𝒯 N) k w x) ∧
+    (∀ N Δt g u, RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → ∃! u', IsCNStep (𝒯 N) Δt g u u') ∧
+    (∀ N, ∃ v ∈ femSpaceMin (cube 3) (𝒯 N) topSeq 1, v ≠ 0) ∧
+    ∀ N T L (X : RowSolution T L) (Δt : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → M * Δt ≤ T →
+      (∀ m < M, IsCNStep (𝒯 N) Δt (g (m + 1)) (u m) (u (m + 1))) →
+      (∀ m < M, ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 1 : ℕ) * Δt)) w ∧
+        RowMem (𝒯 N) true (g (m + 1) - w)) →
+      IsRowInterp (𝒯 N) (X.u 0) (u 0) → ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
+        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
+        √(‖(u M - U).1‖ ^ 2 + ‖(u M - U).2.1‖ ^ 2 + ‖(u M - U).2.2‖ ^ 2) ≤
+          C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
+  refine ⟨cubeMesh, cnConst, isMeshFamily_cube, points_cube, ?_, ?_, ?_, ?_⟩
+  · intro N k w hw
+    exact ⟨FEMInterp.canonicalInterp N k ⟨w, hw⟩, (isWhitneyInterp_cube_iff N k ⟨w, hw⟩ _).2 rfl,
+      fun x hx => (isWhitneyInterp_cube_iff N k ⟨w, hw⟩ _).1 hx⟩
+  · intro N Δt g u hg hu
+    obtain ⟨g', rfl⟩ := (rowMem_false_iff N g).1 hg
+    obtain ⟨u', rfl⟩ := (rowMem_false_iff N u).1 hu
+    obtain ⟨a, ha, hau⟩ := whitney_existsUnique_cnStep N (Δt / 2) 0 g' u'
+    refine ⟨ofD N a, (isCNStep_ofD_iff N Δt g' u' _).2 ⟨a, rfl, ha⟩, fun x hx => ?_⟩
+    obtain ⟨b, rfl, hb⟩ := (isCNStep_ofD_iff N Δt g' u' x).1 hx
+    rw [hau b hb]
+  · intro N
+    obtain ⟨v, hv, hv0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot (whitneyMin_one_ne_bot N)
+    exact ⟨v, (mem_whitneyMin N 1).1 hv, hv0⟩
+  · intro N T L X Δt M u g hΔt hM hstep hg hu0 U hU0 hU1 hU2
+    have hL0 := zero_le_L X hΔt hM
+    have hu : ∀ m ≤ M, RowMem (cubeMesh N) false (u m) := by
+      intro m hm
+      rcases m with _ | m
+      · rw [ofD_interp X hu0]; exact (rowMem_false_iff N _).2 ⟨_, rfl⟩
+      · exact (hstep m hm).1
+    have hgm : ∀ m < M, ∃ c ∈ whitneyInterior N,
+        g (m + 1) = ofD N (c + X.toFeec.interp N ((m + 1 : ℕ) * Δt)) := by
+      intro m hm
+      obtain ⟨w, hw, hgw⟩ := hg m hm
+      obtain ⟨c, hc, hce⟩ := (rowMem_true_iff N _).1 hgw
+      refine ⟨c, hc, ?_⟩
+      rw [ofD_add, ← hce, ← ofD_interp X hw, sub_add_cancel]
+    classical
+    set a : ℕ → DState (whitneyRow N) := fun m =>
+      if h : RowMem (cubeMesh N) false (u m) then ((rowMem_false_iff N _).1 h).choose else 0
+      with hadef
+    have ha : ∀ m ≤ M, u m = ofD N (a m) := fun m hm => by
+      rw [hadef]; dsimp only; rw [dite_eq_left (hu m hm)]
+      exact ((rowMem_false_iff N _).1 (hu m hm)).choose_spec
+    set b : ℕ → DState (whitneyRow N) := fun m =>
+      if h : RowMem (cubeMesh N) false (g m) then ((rowMem_false_iff N _).1 h).choose else 0
+      with hbdef
+    have hgM : ∀ m < M, RowMem (cubeMesh N) false (g (m + 1)) := fun m hm => by
+      obtain ⟨c, -, hc⟩ := hgm m hm
+      exact (rowMem_false_iff N _).2 ⟨_, hc⟩
+    have hb : ∀ m < M, g (m + 1) = ofD N (b (m + 1)) := fun m hm => by
+      rw [hbdef]; dsimp only; rw [dite_eq_left (hgM m hm)]
+      exact ((rowMem_false_iff N _).1 (hgM m hm)).choose_spec
+    have hstep' : ∀ m < M, Feec.TimeStepping.IsDirichletCNStep (whitneyInterior N)
+        (discreteWave (whitneyRow N)) (Δt / 2) 0 (b (m + 1)) (a m) (a (m + 1)) := by
+      intro m hm
+      have h := hstep m hm
+      rw [hb m hm, ha m hm.le, ha (m + 1) hm] at h
+      obtain ⟨u', hu', h'⟩ := (isCNStep_ofD_iff N Δt _ _ _).1 h
+      rwa [← ofD_injective N hu'] at h'
+    have hg' : ∀ m < M, b (m + 1) - X.toFeec.interp N ((m + 1 : ℕ) * Δt) ∈ whitneyInterior N := by
+      intro m hm
+      obtain ⟨c, hc, hce⟩ := hgm m hm
+      rw [hb m hm] at hce
+      rw [ofD_injective N hce, add_sub_cancel_right]
+      exact hc
+    have hu0' : a 0 = X.toFeec.interp N 0 :=
+      ofD_injective N ((ha 0 (Nat.zero_le M)).symm.trans (ofD_interp X hu0))
+    have key := X.toFeec.whitney_cn_error_le_row N hΔt hL0 hM hstep' hg' hu0'
+    rw [toRow_field X hU0 hU1 hU2, ha M le_rfl, ofD, ← toRow_sub, norm_toRow, meshSize_cubeMesh]
+    exact key
+
 set_option maxHeartbeats 2000000 in
 theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → cubeData.Discretization)
-    (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    (∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin 3 → Fin (N + 1)) (σ : Equiv.Perm (Fin 3)), ∀ j i,
-      T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))) ∧
+    (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧ IsFreudenthal 𝒯 ∧
     (∀ N, ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpaceMin (cube 3) (𝒯 N) topSeq 0 ∧
       ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpaceMin (cube 3) (𝒯 N) topSeq 1 ∧
       ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpaceMin (cube 3) (𝒯 N) topSeq 2 ∧
@@ -88,8 +146,9 @@ theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → c
         {v | ∀ a, v a ∈ femSpaceMin (cube 3) (𝒯 N) bottomSeq 1} ∧
       ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) =
         {v | ∀ a, v a ∈ femSpaceMin (cube 3) (𝒯 N) bottomSeq 2}) ∧
-    cubeData.IsBGG ∧ cubeData.IsStable C ∧
     (∀ N, (Q N).IsBounded C ∧ (Q N).Compatible ∧ (Q N).IsConsistent C (meshSize (𝒯 N))) ∧
+    (∀ N F, ∃! x : cubeData.d0.domain × cubeData.dt0.domain × cubeData.dt1.domain ×
+      L2Form (cube 3) 1, (Q N).IsDiscreteSolution F x.1 x.2.1 x.2.2.1 x.2.2.2) ∧
     (∃ K, ∀ N F σ φ u lam σh φh uh lamh L, cubeData.IsSolution F σ φ u lam →
       IsTangentialC2 0 L (σ : L2Form (cube 3) 0) →
       (∀ a, IsTangentialC2 0 L ((φ : L2Vec (cube 3) 0) a)) →
@@ -131,11 +190,13 @@ theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → c
   obtain ⟨Ks, hKs⟩ := cube_static_rate_sob hT hB hS (fun N => (hQ N).1) (fun N => (hQ N).2.2)
   obtain ⟨cs, hcs, hcsH⟩ := isSobolevStaticTr_of
   refine ⟨cubeMesh, cubeQ hT hB, C, isMeshFamily_cube, points_cube, cubeQ_spaces hT hB,
-    isBGG_𝒟, hS, fun N => ?_, ⟨K, fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hu hl hd => ?_⟩,
+    fun N => ?_, fun N F => ?_, ⟨K, fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hu hl hd => ?_⟩,
     ⟨Ks * cs, fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hdφ hu hdu hl hd => ?_⟩,
     fun N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam' hT0 _ h1 h2 e0' e1' e2' e3' =>
       cube_wave_unique hT hB N hT0 h1 h2 e0' e1' e2' e3', ?_, ?_⟩
   · rw [meshSize_cubeMesh]; exact hQ N
+  · obtain ⟨K₀, hK₀⟩ := WeakSymmetryData.weakSymmetry_of C
+    exact (hK₀ _ (cubeQ hT hB N) isBGG_𝒟 hS (hQ N).1 (hQ N).2.1).1 F
   · rw [meshSize_cubeMesh]
     exact hK N F σ φ u lam σh φh uh lamh L hs ((isTangentialC2_iff le_rfl L _).1 hσ)
       (fun a => (isTangentialC2_iff le_rfl L _).1 (hφ a))

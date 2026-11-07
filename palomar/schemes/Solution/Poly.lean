@@ -9,8 +9,7 @@ public import Feec.FiniteElement.PolyOrder
 `P_rΛᵏ`, `H_rΛᵏ`, `κ`, `P_r⁻Λᵏ` and the evaluation of the challenge are `Feec.Koszul.polyForm`,
 `Feec.Koszul.homForm`, `Feec.Koszul.koszulₗ`, `Feec.Koszul.polyFormMinus` and
 `Feec.FiniteElement.evalForm` (`polyForm_eq`, …); an admissible sequence of the challenge is a
-`Feec.FiniteElement.PolySeq` (`PolySeq.toFeec`) with the same spaces (`PolySeq.space_eq`) and the
-same orders (`PolySeq.polyOrderAt_iff`).
+`Feec.FiniteElement.PolySeq` (`PolySeq.toFeec`) with the same spaces (`PolySeq.space_eq`).
 
 ## References
 
@@ -115,12 +114,6 @@ theorem space_eq (k : ℕ) : S.space n k = S.toFeec.space n k := by
     rw [polyFormMinus_eq, evalForm_eq]; rfl
   · simp only [↓reduceIte, Feec.FiniteElement.PolyKind.space_full]
     rw [polyForm_eq, evalForm_eq]; rfl
-
-theorem polyOrderAt_iff (s : ℕ) (j : ℤ) :
-    S.PolyOrderAt n s j ↔ Feec.FiniteElement.PolyOrderAt n S.toFeec s j := by
-  unfold PolyOrderAt Feec.FiniteElement.PolyOrderAt
-  simp only [space_eq, polyForm_eq, evalForm_eq]
-  rfl
 
 end PolySeq
 

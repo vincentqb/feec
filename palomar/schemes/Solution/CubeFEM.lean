@@ -5,7 +5,7 @@ public import Solution.Spaces
 public import Feec.Models.Cube.RegularDecomposition
 
 /-!
-# The elements of Table 5.1 on the cube satisfy the hypotheses of `FEEC.weakSymmetry`
+# The elements of Table 5.1 on the cube satisfy the hypotheses of the abstract theorem
 
 For smoothed projections `hT`, `hB` of the two rows from one smoother, `cubeQ hT hB N` is the
 discretization of `𝒟 = cubeDataOf D0 D1` by the spaces of `Feec.Models.Cube.FEM.polyMin` with the

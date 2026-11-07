@@ -30,12 +30,6 @@ open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSy
 
 /-! ### `IsSobolevForm` and `H1Data` -/
 
-/-- `T x = T' x` along `T = T'`. -/
-theorem LinearPMap.apply_of_eq' {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
-    [Module ℝ F] {T T' : E →ₗ.[ℝ] F} (h : T = T') (x : T.domain) :
-    T x = T' ⟨x, h ▸ x.2⟩ := by
-  subst h; rfl
-
 theorem norm_toLp_sq {f : (Fin 3 → ℝ) → ℝ} (hf : MemLp f 2 volume) :
     ‖hf.toLp f‖ ^ 2 = ∫ y, f y ^ 2 := by
   rw [← real_inner_self_eq_norm_sq, L2.inner_def]

@@ -18,28 +18,18 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.weakSymmetry`, `FEEC.weakSymmetry_cube` and `FEEC.weakSymmetry_cube_nonvacuous`), compiled
-against Mathlib alone so that their elaborated values are those of the challenge. The solution
-imports this module and the bridges to `Feec`, and proves the theorems (`Solution.lean`).
+`FEEC.crankNicolson_cube`, `FEEC.weakSymmetry_cube` and `FEEC.weakSymmetry_cube_nonvacuous`),
+compiled against Mathlib alone so that their elaborated values are those of the challenge. The
+solution imports this module and the bridges to `Feec`, and proves the theorems
+(`Solution.lean`).
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3, §5, §11
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3, §4, §5.5
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [F. Brezzi, *On the existence, uniqueness and approximation of saddle-point problems arising from Lagrangian multipliers*][Brezzi1974]
-* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5 ((5.1)–(5.6), Props 5.3, 5.4, 5.7, Thm 5.5, Table 5.1), Ch. 6 ((6.2)–(6.5), Prop 6.2,
-  Table 6.1)
+  Ch. 5–7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3–5
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -49,11 +39,9 @@ open Filter Topology Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 
-universe u
-
 namespace FEEC
 
-/-! ### Differential forms on `ℝⁿ` and the minimal `L²` de Rham complex (from `palomar/fem`) -/
+/-! ### Differential forms on `ℝⁿ` and the `L²` de Rham complexes (from `palomar/fem`) -/
 
 variable {n : ℕ}
 
@@ -82,6 +70,11 @@ def partialDeriv (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) :
 def extDeriv (w : FormField n) : FormField n :=
   fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
 
+/-- The **formal adjoint** of `d`, the codifferential `δ`,
+`(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`: `∫ ⟨dφ, ψ⟩ = ∫ ⟨φ, dᵗψ⟩` for test forms. -/
+def codiff (ψ : FormField n) : FormField n :=
+  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
+
 /-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
 def IsTestFn (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
   ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
@@ -93,12 +86,30 @@ def testGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω k 
     (∀ s : FormIdx n k, ⇑(p.1 s) =ᵐ[volume.restrict Ω] fun x => φ x s.1) ∧
     ∀ t : FormIdx n (k + 1), ⇑(p.2 t) =ᵐ[volume.restrict Ω] fun x => extDeriv φ x t.1}
 
+/-- The graph `{(ψ, dᵗψ)}` of the formal adjoint on the test `(k + 1)`-forms, as a subspace of
+`L²(Ω; Λᵏ⁺¹) × L²(Ω; Λᵏ)`. -/
+def codiffGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω (k + 1) × L2Form Ω k) :=
+  Submodule.span ℝ {p | ∃ ψ : FormField n, (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
+    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
+
 /-- The **minimal exterior derivative** `d̊ : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the closure of `d` on
 test forms (the closure of the graph is a graph: `d` is closable, its formal adjoint being
 densely defined): its domain is `H̊Λᵏ(Ω)` (for Lipschitz `Ω`, the forms of `HΛᵏ(Ω)` with vanishing
 tangential trace) ([AFW2010], §4; [Arnold2018], Ch. 6). -/
 def dMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
   (testGraph Ω k).topologicalClosure.toLinearPMap
+
+/-- The closure of the formal adjoint `dᵗ` on test `(k + 1)`-forms. -/
+def codiffMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω (k + 1) →ₗ.[ℝ] L2Form Ω k :=
+  (codiffGraph Ω k).topologicalClosure.toLinearPMap
+
+/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the adjoint of the formal
+adjoint on test forms: `u ∈ D(d)` iff some `w ∈ L²(Ω; Λᵏ⁺¹)` has `⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every
+test `(k + 1)`-form `ψ`, and then `du = w`. Its domain is `HΛᵏ(Ω)` ([AFW2010], §4;
+[Arnold2018], Ch. 6). -/
+def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (codiffMin Ω k)†
 
 /-! ### Polynomial differential forms ([AFW2006], §3) -/
 
@@ -148,21 +159,9 @@ structure PolySeq where
   transition : ∀ k, (full (k + 1) = false ∧ deg (k + 1) = deg k) ∨
     (full (k + 1) = true ∧ deg (k + 1) + 1 = deg k)
 
-namespace PolySeq
-
-variable (S : PolySeq)
-
 /-- The space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of form fields on `ℝⁿ` of the sequence in degree `k`. -/
-def space (n k : ℕ) : Submodule ℝ (FormField n) :=
+def PolySeq.space (S : PolySeq) (n k : ℕ) : Submodule ℝ (FormField n) :=
   (if S.full k then polyForm (n := n) (S.deg k) k else polyFormMinus (S.deg k) k).map evalForm
-
-/-- `S` **reproduces polynomial forms of degree `s`** in the form degrees `j` and `j + 1`:
-`P_sΛʲ ⊆ S_j` and `P_sΛʲ⁺¹ ⊆ S_{j+1}` (vacuous for `j < 0`). -/
-def PolyOrderAt (n s : ℕ) (j : ℤ) : Prop :=
-  ∀ k : ℕ, (k : ℤ) = j → (polyForm (n := n) s k).map evalForm ≤ S.space n k ∧
-    (polyForm (n := n) s (k + 1)).map evalForm ≤ S.space n (k + 1)
-
-end PolySeq
 
 /-! ### Simplicial meshes -/
 
@@ -210,6 +209,16 @@ def IsMeshFamily (Ω : Set (Fin n → ℝ)) (M : ℕ → SimplicialMesh n) : Pro
     (∃ σ q : ℝ, 0 < q ∧ ∀ N, IsShapeRegular (M N) σ ∧ IsQuasiUniform (M N) q) ∧
     (∀ N, 0 < meshSize (M N)) ∧ Tendsto (fun N => meshSize (M N)) atTop (𝓝 0)
 
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+
+/-- `𝒯` are **Freudenthal meshes** of the cube ([Freudenthal1942]): every simplex of `𝒯 N` is a
+Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`, `z ∈ {0, …, N}ⁿ`, `σ ∈ 𝔖ₙ`, with vertices
+`v_j = h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`, `j = 0, …, n` (a mesh of `(0, ½)ⁿ` of such
+simplices consists of all of them). -/
+def IsFreudenthal (𝒯 : ℕ → SimplicialMesh n) : Prop :=
+  ∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
+    T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
 
 /-! ### The finite element spaces -/
 
@@ -237,6 +246,13 @@ def IsFemPieces (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) 
       ∀ x ∈ convexHull ℝ ((vertexSet T ∩ vertexSet T' : Finset (Fin n → ℝ)) : Set (Fin n → ℝ)),
         TraceEq (vertexSet T ∩ vertexSet T') k.toNat (p T x) (p T' x)
 
+/-- **The finite element space** `S_k(M) ⊆ L²(Ω; Λᵏ)` of the admissible sequence `S` on the mesh
+`M` ([AFW2006], §5; [Arnold2018], Ch. 7): the forms that are on every simplex a polynomial form
+of `S_k`, with single-valued tangential traces on the faces of the mesh. -/
+def femSpace (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    Set (L2Form Ω k) :=
+  {u | ∃ p, IsFemPieces Ω M S k u p}
+
 /-- **The finite element space with vanishing boundary traces** `S̊_k(M)`: the forms of
 `S_k(M)` whose tangential traces vanish on the boundary facets (the facets of a single simplex of
 the mesh). -/
@@ -246,9 +262,114 @@ def femSpaceMin (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) 
     (∀ T' ∈ M.simplices, F ⊆ vertexSet T' → T' = T) →
       ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
 
-/-- The cube `(0, ½)ⁿ` (half a period of the torus `ℝⁿ/ℤⁿ` of the proof's Fourier series). -/
-def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+/-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³` (Lagrange, Nédélec edge,
+Raviart–Thomas face elements and piecewise constants; [Whitney1957], [AFW2006], §3–4). -/
+def topSeq : PolySeq where
+  full k := k == 0
+  deg _ := 1
+  one_le_deg _ := le_rfl
+  transition _ := Or.inl ⟨rfl, rfl⟩
 
+/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
+restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
+Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
+coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
+`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
+(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
+`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
+def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
+    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
+      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
+    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
+    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+
+/-! ### The Crank–Nicolson Whitney scheme ([QuennevilleBelair2015], Ch. 7) -/
+
+/-- **The integral of a `k`-form over the oriented `k`-simplex** `p = (p₀, …, p_k)` in `ℝⁿ`:
+`∫_p w = ∫_{T̂_k} w(F(x))(p₁ - p₀, …, p_k - p₀) dx` over the reference simplex
+`T̂_k = {x ∈ ℝᵏ | xᵢ ≥ 0, Σ xᵢ ≤ 1}`, `F(x) = p₀ + Σᵢ xᵢ (pᵢ₊₁ - p₀)`. -/
+def simplexIntegral {k : ℕ} (p : Fin (k + 1) → Fin n → ℝ) (w : FormField n) : ℝ :=
+  ∫ x in {x : Fin k → ℝ | (∀ i, 0 ≤ x i) ∧ ∑ i, x i ≤ 1},
+    covEval (w (p 0 + ∑ i, x i • (p i.succ - p 0))) fun i => p i.succ - p 0
+
+/-- `x ∈ L²(Ω; Λᵏ)` is **the Whitney interpolant** `Π_h w` of the form field `w` on the mesh `M`
+([Whitney1957], Ch. IV; [Arnold2018], Ch. 7): `x` lies in the Whitney space `P₁⁻Λᵏ(M)` with
+pieces `p_T` having the degrees of freedom of `w`, `∫_f p_T = ∫_f w` on every oriented
+`k`-face `f` of every simplex `T`. -/
+def IsWhitneyInterp (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (k : ℕ) (w : FormField n)
+    (x : L2Form Ω k) : Prop :=
+  ∃ p, IsFemPieces Ω M topSeq k x p ∧ ∀ T ∈ M.simplices, ∀ q : Fin (k + 1) → Fin (n + 1),
+    Function.Injective q → simplexIntegral (T.points ∘ q) (p T) = simplexIntegral (T.points ∘ q) w
+
+/-- `x ∈ L²(Ω; Λᵏ)` is (almost everywhere) the form field `w` on `Ω`. -/
+def IsRepr (Ω : Set (Fin n → ℝ)) (k : ℤ) (w : FormField n) (x : L2Form Ω k) : Prop :=
+  ∀ s : FormIdx n k, ⇑(x s) =ᵐ[volume.restrict Ω] fun y => w y s.1
+
+/-- A **row** `(σ, E, B)`: a `0`-form, a `1`-form and a `2`-form of `L²(Q)`, `Q = (0, ½)³`. -/
+abbrev Row : Type := L2Form (cube 3) 0 × L2Form (cube 3) 1 × L2Form (cube 3) 2
+
+/-- The `L²` inner product of rows. -/
+def rowInner (x y : Row) : ℝ := ⟪x.1, y.1⟫_ℝ + ⟪x.2.1, y.2.1⟫_ℝ + ⟪x.2.2, y.2.2⟫_ℝ
+
+open Classical in
+/-- The weak exterior derivative `dx`, for `x` in its domain `HΛᵏ(Q)` (and `0` elsewhere; it is
+only applied to finite element forms, which lie in `HΛᵏ(Q)`). -/
+def wd (k : ℤ) (x : L2Form (cube 3) k) : L2Form (cube 3) (k + 1) :=
+  if h : x ∈ (dMax (cube 3) k).domain then dMax (cube 3) k ⟨x, h⟩ else 0
+
+/-- **The form of the Hodge wave operator** `A = 𝐝 - 𝐝*` on rows, `⟪A x, y⟫ = ⟪𝐝x, y⟫ - ⟪x, 𝐝y⟫`
+for `𝐝(σ, E, B) = (0, dσ, dE)`: in vector proxies
+`(grad σ, C) - (E, grad τ) + (curl E, D) - (B, curl C)`. -/
+def waveForm (x y : Row) : ℝ :=
+  ⟪wd 0 x.1, y.2.1⟫_ℝ + ⟪wd 1 x.2.1, y.2.2⟫_ℝ - ⟪x.2.1, wd 0 y.1⟫_ℝ - ⟪x.2.2, wd 1 y.2.1⟫_ℝ
+
+/-- The row `x` lies in the Whitney spaces `Vₕ = P₁Λ⁰(M) × P₁⁻Λ¹(M) × P₁⁻Λ²(M)` (`b = false`),
+or in the spaces `V̊ₕ` with vanishing boundary traces (`b = true`). -/
+def RowMem (M : SimplicialMesh 3) (b : Bool) (x : Row) : Prop :=
+  let V := if b then femSpaceMin (cube 3) M topSeq else femSpace (cube 3) M topSeq
+  x.1 ∈ V 0 ∧ x.2.1 ∈ V 1 ∧ x.2.2 ∈ V 2
+
+/-- **One Crank–Nicolson step with prescribed boundary degrees of freedom** on the mesh `M`
+([QuennevilleBelair2015], Ch. 7): from `u` to `u' ∈ Vₕ` with the boundary degrees of freedom of
+`g` (`u' - g ∈ V̊ₕ`), `⟪u' - u, v⟫ = (Δt / 2) ⟪A (u' + u), v⟫` for all `v ∈ V̊ₕ`. -/
+def IsCNStep (M : SimplicialMesh 3) (Δt : ℝ) (g u u' : Row) : Prop :=
+  RowMem M false u' ∧ RowMem M true (u' - g) ∧
+    ∀ v, RowMem M true v → rowInner (u' - u) v = Δt / 2 * waveForm (u' + u) v
+
+/-- A **smooth solution of the Hodge wave equation** `U' = (d - dᵗ) U` on the window
+`Λ⁰ → Λ¹ → Λ²` of `ℝ³` (no boundary condition): forms `u t i` of degree `i` (`σ`, `E`, `B`), `C²`
+in space and `C³` in time with jointly continuous time derivatives `u₁, u₂, u₃`, solving
+`σ' = -dᵗE`, `E' = dσ - dᵗB`, `B' = dE` pointwise, with `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, these
+`L`-Lipschitz in `t ∈ [0, T]`, and `|∂ₜ³u| ≤ L` on `[0, T] × Q`. -/
+structure RowSolution (T L : ℝ) where
+  /-- the fields and their first three time derivatives -/
+  u : ℝ → Fin 3 → FormField 3
+  u₁ : ℝ → Fin 3 → FormField 3
+  u₂ : ℝ → Fin 3 → FormField 3
+  u₃ : ℝ → Fin 3 → FormField 3
+  isDeg : ∀ t (i : Fin 3) y (s : Finset (Fin 3)), s.card ≠ i → u t i y s = 0
+  contDiff : ∀ t i, ContDiff ℝ 2 (u t i)
+  continuous₁ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₁ p.1 i p.2 s
+  continuous₂ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₂ p.1 i p.2 s
+  continuous₃ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₃ p.1 i p.2 s
+  hasDerivAt₁ : ∀ t i y s, HasDerivAt (fun τ => u τ i y s) (u₁ t i y s) t
+  hasDerivAt₂ : ∀ t i y s, HasDerivAt (fun τ => u₁ τ i y s) (u₂ t i y s) t
+  hasDerivAt₃ : ∀ t i y s, HasDerivAt (fun τ => u₂ τ i y s) (u₃ t i y s) t
+  pde₀ : ∀ t, u₁ t 0 = -codiff (u t 1)
+  pde₁ : ∀ t, u₁ t 1 = extDeriv (u t 0) - codiff (u t 2)
+  pde₂ : ∀ t, u₁ t 2 = extDeriv (u t 1)
+  bound : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cube 3),
+    ‖fderiv ℝ (u t i) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (u t i)) y‖ ≤ L
+  lipschitz : ∀ t ∈ Icc 0 T, ∀ t' ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cube 3),
+    ‖fderiv ℝ (u t' i) y - fderiv ℝ (u t i) y‖ ≤ L * |t' - t| ∧
+      ‖fderiv ℝ (extDeriv (u t' i)) y - fderiv ℝ (extDeriv (u t i)) y‖ ≤ L * |t' - t|
+  bound₃ : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ cube 3, ∀ s, |u₃ t i y s| ≤ L
+
+/-- `x` is the Whitney interpolant of the row of form fields `w`. -/
+def IsRowInterp (M : SimplicialMesh 3) (w : Fin 3 → FormField 3) (x : Row) : Prop :=
+  IsWhitneyInterp (cube 3) M 0 (w 0) x.1 ∧ IsWhitneyInterp (cube 3) M 1 (w 1) x.2.1 ∧
+    IsWhitneyInterp (cube 3) M 2 (w 2) x.2.2
 
 /-! ### Vector-valued forms and the connecting maps -/
 
@@ -285,10 +406,9 @@ def wedge (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Form Ω 
 
 /-! ### BGG data with weak symmetry and their discretization -/
 
-/-- **BGG data**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of complexes of densely
-defined operators `d`, `d̃` between Hilbert spaces (unbounded, `LinearPMap`s; their domains
-`V = D(d)` carry the inner product of `W`), with bounded connecting maps `S⁰ : W̃⁰ → W¹`,
-`S¹ : W̃¹ → W²`. The complex and anticommutation laws are `WeakSymmetryData.IsBGG`. -/
+/-- **BGG data**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of densely defined operators
+`d`, `d̃` between Hilbert spaces (`LinearPMap`s; their domains `V = D(d)` carry the inner product
+of `W`), with bounded connecting maps `S⁰ : W̃⁰ → W¹`, `S¹ : W̃¹ → W²`. -/
 structure WeakSymmetryData (W0 W1 W2 Wt0 Wt1 Wt2 : Type*) [NormedAddCommGroup W0]
     [InnerProductSpace ℝ W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0]
@@ -311,30 +431,6 @@ variable {W0 W1 W2 Wt0 Wt1 Wt2 : Type*} [NormedAddCommGroup W0] [InnerProductSpa
   [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0]
   [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2]
   [InnerProductSpace ℝ Wt2] (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2)
-
-/-- The rows are complexes, `R(d⁰) ⊆ D(d¹)`, `d¹d⁰ = 0` and `R(d̃⁰) ⊆ D(d̃¹)`, `d̃¹d̃⁰ = 0`, and
-`S` anticommutes with them: `S⁰D(d̃⁰) ⊆ D(d¹)` and `d¹S⁰ = -S¹d̃⁰` (a morphism `Ṽ → V[1]`). -/
-def IsBGG : Prop :=
-  (∀ x : D.d0.domain, ∃ h : D.d0 x ∈ D.d1.domain, D.d1 ⟨_, h⟩ = 0) ∧
-    (∀ x : D.dt0.domain, ∃ h : D.dt0 x ∈ D.dt1.domain, D.dt1 ⟨_, h⟩ = 0) ∧
-    ∀ ψ : D.dt0.domain, ∃ h : D.S0 ψ ∈ D.d1.domain, D.d1 ⟨_, h⟩ = -D.S1 (D.dt0 ψ)
-
-/-- **The continuous hypotheses with constant `C`** ([QuennevilleBelair2015], §5.1, Prop 5.3):
-Poincaré inequalities on `V⁰` and `Ṽ⁰` (so `d⁰`, `d̃⁰` are injective with closed range), exactness
-of the top row at `V¹`, the Hodge decomposition `v = d̃ψ + w`, `‖w‖ ≤ C ‖d̃v‖`, on `Ṽ¹` (exactness
-of the bottom row at `Ṽ¹` and the Poincaré inequality), the **regular decomposition** `d¹V¹ =
-d¹S⁰Ṽ⁰` with the bound `‖d̃φ‖ ≤ C ‖d¹x‖` ([Hiptmair2002], Lemma 2.4, in the application), and
-`‖S⁰‖, ‖S¹‖ ≤ C`. -/
-structure IsStable (C : ℝ) : Prop where
-  poincare : ∀ σ : D.d0.domain, ‖(σ : W0)‖ ≤ C * ‖D.d0 σ‖
-  poincare_t : ∀ φ : D.dt0.domain, ‖(φ : Wt0)‖ ≤ C * ‖D.dt0 φ‖
-  exact : ∀ μ : D.d1.domain, D.d1 μ = 0 → ∃ ρ : D.d0.domain, D.d0 ρ = μ
-  hodge_t : ∀ v : D.dt1.domain, ∃ (ψ : D.dt0.domain) (w : D.dt1.domain),
-    (v : Wt1) = D.dt0 ψ + w ∧ ‖(w : Wt1)‖ ≤ C * ‖D.dt1 v‖
-  regular : ∀ x : D.d1.domain, ∃ (φ : D.dt0.domain) (h : D.S0 φ ∈ D.d1.domain),
-    D.d1 ⟨_, h⟩ = D.d1 x ∧ ‖D.dt0 φ‖ ≤ C * ‖D.d1 x‖
-  norm_S0 : ‖D.S0‖ ≤ C
-  norm_S1 : ‖D.S1‖ ≤ C
 
 /-- `(σ, φ, u)` with the multiplier `λ ∈ W¹` solves **the mixed problem (5.3)** with datum `F`
 ([QuennevilleBelair2015], (5.3), with an `L²` multiplier): `⟪σ, τ⟫ - ⟪u, d̃ψ⟫ - ⟪λ, dτ - S⁰ψ⟫ = 0`,
@@ -436,15 +532,7 @@ def errorSq (σ σh : D.d0.domain) (φ φh : D.dt0.domain) (u uh : D.dt1.domain)
     ‖((φ - φh : D.dt0.domain) : Wt0)‖ ^ 2 + ‖D.dt0 (φ - φh)‖ ^ 2 +
     ‖((u - uh : D.dt1.domain) : Wt1)‖ ^ 2 + ‖Q.π2 (D.S1 (u - uh))‖ ^ 2 + ‖D.dt1 (u - uh)‖ ^ 2
 
-/-- The squared **projection error** of `(σ, φ, u)` in the norms of `errorSq` (with `d π = π d`). -/
-def projErrorSq (σ : D.d0.domain) (φ : D.dt0.domain) (u : D.dt1.domain) : ℝ :=
-  ‖Q.π0 σ - σ‖ ^ 2 + ‖Q.π1 (D.d0 σ) - D.d0 σ‖ ^ 2 + ‖Q.πt0 φ - φ‖ ^ 2 +
-    ‖Q.πt1 (D.dt0 φ) - D.dt0 φ‖ ^ 2 + ‖Q.πt1 u - u‖ ^ 2 + ‖Q.π2 (D.S1 (Q.πt1 u - u))‖ ^ 2 +
-    ‖Q.πt2 (D.dt1 u) - D.dt1 u‖ ^ 2
-
 end Discretization
-
-/-! ### The wave problem with weak symmetry ([QuennevilleBelair2015], Ch. 6) -/
 
 /-- `x` is **continuous on `[0, T]` with right derivative `x'` on `[0, T)`**, `x'` continuous on
 `[0, T]`. -/
@@ -498,14 +586,6 @@ end WeakSymmetryData
 
 /-! ### The cube: the BGG data (4.16) and the elements of Table 5.1 -/
 
-/-- **The top row of Table 5.1**, `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³` (Lagrange, Nédélec edge,
-Raviart–Thomas face elements and piecewise constants). -/
-def topSeq : PolySeq where
-  full k := k == 0
-  deg _ := 1
-  one_le_deg _ := le_rfl
-  transition _ := Or.inl ⟨rfl, rfl⟩
-
 /-- **The bottom row of Table 5.1**, `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₁⁻Λ³` (Lagrange `P₂`, second-order
 Nédélec edge elements of the first kind, `BDM₁` and piecewise constants). -/
 def bottomSeq : PolySeq where
@@ -549,20 +629,6 @@ def IsRegularState (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u
     (M : L2Form (cube 3) 2) (ρ : L2Vec (cube 3) 2) : Prop :=
   IsTangentialC2 0 L σ ∧ (∀ a, IsTangentialC2 0 L (φ a)) ∧ (∀ a, IsTangentialC2 1 L (u a)) ∧
     IsTangentialC2 2 L M ∧ ∀ a, IsTangentialC2 2 L (ρ a)
-
-/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
-restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
-Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
-coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
-`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
-(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
-`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
-def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
-  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
-    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
-      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
-    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
-    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
 
 /-- A state `(σ, φ, u, M, ρ)` of the cube is **of class `H¹` with bound `L`**: `σ`, the `uₐ`, `M`
 and the `ρₐ` lie in `H¹(Q)` with norms at most `L` (`IsSobolevForm`), so do the `d̊φₐ` and `d̊uₐ`

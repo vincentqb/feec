@@ -842,6 +842,17 @@ level-`(N + 1)` Freudenthal mesh of the cube: one row of the `fem4gr` spaces
 `(CG₁)³ × (N1curl)³ × (RT)³` of (4.14) (the row-wise operators decouple the three rows). -/
 abbrev whitneyRow (N : ℕ) := (whitney 3 N).window 0 3
 
+/-- The fields of one Whitney row with vanishing boundary DOFs, `V̊ₕ⁰ × V̊ₕ¹ × V̊ₕ²`. -/
+abbrev whitneyInterior (N : ℕ) :=
+  interior (whitneyRow N) fun i => (whitneyMin 3 N).V (0 + (i : ℤ))
+
+/-- **Well-posedness of the one-row Whitney scheme** `P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` with prescribed
+boundary DOFs, for every time step. -/
+theorem whitney_existsUnique_cnStep (N : ℕ) (s : ℝ) (f g' u : DState (whitneyRow N)) :
+    ∃! u', TimeStepping.IsDirichletCNStep (whitneyInterior N) (discreteWave (whitneyRow N)) s f
+      g' u u' :=
+  existsUnique_isDirichletCNStep _ _ s f g' u
+
 /-! ### The three-row Whitney space and the `fem4gr` constraint monitors -/
 
 /-- The three-row fields with vanishing boundary DOFs on the Freudenthal Whitney spaces. -/

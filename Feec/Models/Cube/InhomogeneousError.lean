@@ -1416,6 +1416,62 @@ theorem whitney_cn_error_le (N : ℕ) {Δt : ℝ} (hΔt : 0 < Δt) (hL0 : 0 ≤ 
     (by rw [cnConst]; nlinarith [mul_nonneg (mul_nonneg hR hL0) hh])
     (by rw [cnConst]; nlinarith [mul_nonneg hR hL0, mul_nonneg hB hL0])
 
+/-- **`O(h + Δt²)` convergence of the one-row Crank–Nicolson Whitney scheme with Dirichlet
+DOFs**: `whitney_cn_error_le` for a single row `P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` (the Hodge wave equation
+of the de Rham window `HΛ⁰ → HΛ¹ → L²Λ²`): for a smooth `RowSolution` with bound `L`, the
+iterates from `u₀ = Π_h U(0)` with the boundary DOFs of `Π_h U(tₙ)` satisfy
+`‖u_M − U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`, `C = cnConst`. -/
+theorem RowSolution.whitney_cn_error_le_row (X : RowSolution T L) (N : ℕ) {Δt : ℝ}
+    (hΔt : 0 < Δt) (hL0 : 0 ≤ L) {M : ℕ} (hM : (M : ℝ) * Δt ≤ T)
+    {u g : ℕ → DState (whitneyRow N)}
+    (hstep : ∀ n < M, TimeStepping.IsDirichletCNStep (whitneyInterior N)
+      (discreteWave (whitneyRow N)) (Δt / 2) 0 (g (n + 1)) (u n) (u (n + 1)))
+    (hg : ∀ n < M, g (n + 1) - X.interp N ((n + 1 : ℕ) * Δt) ∈ whitneyInterior N)
+    (hu0 : u 0 = X.interp N 0) :
+    ‖dEmb (whitneyRow N) (u M) - X.field (M * Δt)‖ ≤
+      cnConst * L * (1 + T) * (meshSize N + Δt ^ 2) := by
+  have hh := (meshSize_pos N).le
+  have hB := rowBound_nonneg
+  have hR := rowL2Const_nonneg
+  have hx0 : 0 ≤ rowBound * L * meshSize N := mul_nonneg (mul_nonneg hB hL0) hh
+  have hmem : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → (n : ℝ) * Δt ∈ Icc 0 T := fun n hn =>
+    ⟨mul_nonneg (Nat.cast_nonneg n) hΔt.le, hn⟩
+  have hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(dEmb (whitneyRow N) (X.interp N ((n + 1 : ℕ) * Δt)) - X.field ((n + 1 : ℕ) * Δt)) -
+        (dEmb (whitneyRow N) (X.interp N (n * Δt)) - X.field (n * Δt))‖ ≤
+        3 * (rowBound * L * meshSize N) * Δt := by
+    intro n hn
+    have hn1 : (n : ℝ) * Δt ≤ ((n + 1 : ℕ) : ℝ) * Δt := by push_cast; nlinarith
+    have hd : |((n + 1 : ℕ) : ℝ) * Δt - n * Δt| = Δt := by
+      rw [show ((n + 1 : ℕ) : ℝ) * Δt - n * Δt = Δt by push_cast; ring, abs_of_pos hΔt]
+    have := X.norm_interp_sub_sub_le N (hmem n (hn1.trans hn)) (hmem (n + 1) hn) hL0
+    rw [hd] at this
+    refine this.trans ?_
+    have : 0 ≤ rowBound * L * meshSize N * Δt := mul_nonneg hx0 hΔt.le
+    nlinarith
+  obtain ⟨-, -, -, h⟩ := norm_cn_error_le_of_eq (emb := dEmb (whitneyRow N))
+    (D := discreteD (whitneyRow N)) (V₀ := whitneyInterior N) (A := discreteWave (whitneyRow N))
+    (T := T) (L₃ := rowL2Const * L) (a := 3 * (rowBound * L * meshSize N))
+    (w := fun n => X.interp N (n * Δt)) (M := M) (u := u) (g := g) (U := X.field)
+    (U₁ := X.field₁) (U₂ := X.field₂) (U₃ := X.field₃)
+    (DU := fun t => rowComplex.totalD ⟨X.field t, X.field_mem_totalDomain t⟩)
+    (Δt := Δt) (K := cnConst * L) (h := meshSize N) (inner_dEmb (whitneyRow N))
+    (fun v hv => discreteD_mem_interior (whitneyRow N) rowComplexMin_d_le
+      ((whitneyMin 3 N).window 0 3) hv)
+    (fun v _ => discreteD_discreteD (whitneyRow N) v) (inner_discreteWave (whitneyRow N)) hΔt
+    (fun t _ => (X.hasDerivAt_field t).hasDerivWithinAt)
+    (fun t _ => (X.hasDerivAt_field₁ t).hasDerivWithinAt)
+    (fun t _ => (X.hasDerivAt_field₂ t).hasDerivWithinAt)
+    (fun t ht => X.norm_field₃_le ht hL0)
+    (fun t _ v hv => (inner_of_mem_graph_waveMax (whitneyRow N) rowComplexMin_d_le
+      ((whitneyMin 3 N).window 0 3) (X.mem_graph_waveMax t) hv).choose_spec)
+    (fun n hn => (X.norm_interp_sub_le N (hmem n hn) hL0).trans (by linarith))
+    (fun n hn => X.norm_d_interp_sub_le N (hmem n hn) hL0)
+    hA3 hM hstep hg (hu0.trans (congrArg (X.interp N) (by simp)))
+    (by rw [cnConst]; nlinarith [mul_nonneg (mul_nonneg hR hL0) hh])
+    (by rw [cnConst]; nlinarith [mul_nonneg hR hL0, mul_nonneg hB hL0])
+  exact h
+
 end WhitneyError
 
 /-! ## The interior Whitney spaces are nonzero -/

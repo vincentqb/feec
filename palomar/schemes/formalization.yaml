@@ -69,7 +69,7 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 5 ((5.1)-(5.6), Thm 5.5, Table 5.1), Ch. 6 ((6.2)-(6.5), Prop 6.2), Ch. 7 (the Crank-Nicolson runs with boundary data from the exact solution)"
+    location: "Ch. 5 ((5.1)-(5.6), Thm 5.5, Table 5.1), Ch. 6 ((6.2)-(6.5), Prop 6.2), Ch. 7 (the Crank-Nicolson Whitney scheme; the boundary data from the exact solution are those of the thesis' runs, implemented in its code fem4gr)"
     relationship: "formalizes"
     note: >-
       The schemes are the thesis' (Ch. 5-7); the Crank-Nicolson error estimate O(h + Delta t^2)
@@ -212,9 +212,9 @@ status:
     P_1 heat equation in the maximum norm (discrete maximum principle, O(h^2) Dirichlet and
     O(h) Neumann nodal and L^infinity errors, backward Euler and A-stable rational schemes),
     the mesh-level tools (unisolvence of the P_r and P_r^- degrees of freedom, Bramble-Hilbert
-    interpolation errors, inverse estimates on shape-regular meshes) and explicit leapfrog under
-    a CFL condition, the mirror boundary conditions and fractional Sobolev rates of the
-    weak-symmetry elements.
+    interpolation errors, local inverse estimates on shape-regular meshes) and explicit leapfrog
+    under the abstract CFL condition tau ||L_h|| <= c, the mirror boundary conditions and
+    fractional Sobolev rates of the weak-symmetry elements.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -270,6 +270,9 @@ fidelity:
     divergence and the other constraint monitors are not stated. The weak exterior derivative
     of the scheme is written as a total function wd (0 off its domain), only applied to finite
     element forms.
+    Non-vacuity of RowSolution is not a compared theorem: the structure is visibly inhabited
+    (constant fields; in Feec the plane waves of Ch. 7 are row solutions,
+    Feec.Numerics.PlaneWaveCube.planeWaveRows).
     (3) Weak symmetry: the multiplier lambda is assumed in L^2 = W^1 (in vector proxies this
     asks u_a in H(div)) and ||lambda|| <= L in the rates.
     (4) The weak-symmetry discretizations are asserted existentially: their spaces are named
@@ -277,7 +280,10 @@ fidelity:
     smoothed projections of one smoother for both rows); the method (5.6) depends on pi through
     S_h = pi S, so the statement covers the method for one admissible choice of projections.
     Their boundedness, (5.4) and the consistency at the order h_N (cf. thesis Prop 5.9) are
-    stated as properties of these projections.
+    stated as properties of these projections. The continuous hypotheses of the abstract theorem
+    on cubeData (the BGG anticommutation, Poincare inequalities, exactness, the Hodge and regular
+    decompositions; IsBGG and IsStable of the former entry palomar/weaksymmetry) are not stated
+    here; they are proved and used in the Solution (Solution/Abstract.lean).
     (5) Regularity of the weak-symmetry rates: C^2 up to the boundary with vanishing tangential
     traces (IsTangentialC2), or H^1(Q) with the differentials (IsSobolevForm, IsH1State); h is
     the optimal order for these elements.
@@ -294,9 +300,9 @@ review:
   notes: >-
     Not yet reviewed by the author: the Challenge statement (the three compared theorems and
     their definitions, 2026-11-07; the weak-symmetry theorems moved from the former entry
-    palomar/weaksymmetry, restated without the abstract hypotheses). Every merge of the library was gated by a full build (zero
-    warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
-    review. No external mathematical review.
+    palomar/weaksymmetry, restated without the abstract hypotheses). Every merge of the library
+    was gated by a full build (zero warnings), an axiom audit (propext, Classical.choice,
+    Quot.sound only) and an independent AI review. No external mathematical review.
 
 alignment:
   namespace: "FEEC"

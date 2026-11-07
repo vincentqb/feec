@@ -702,9 +702,9 @@ def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2
 /-! ### The theorems -/
 
 /-- **`O(h + Δt²)` convergence of the Crank–Nicolson Whitney scheme with Dirichlet degrees of
-freedom** ([QuennevilleBelair2015], Ch. 7; [Arnold2018], Ch. 7; [Monk2003]; [Thomee2006], Ch. 1). The cube
-`Q = (0, ½)³` carries a shape-regular, quasi-uniform family of Freudenthal meshes `𝒯_N`,
-`h_N → 0`, on which:
+freedom** ([QuennevilleBelair2015], Ch. 7; [Arnold2018], Ch. 7; [Monk2003]; [Thomee2006],
+Ch. 1). The cube `Q = (0, ½)³` carries a shape-regular, quasi-uniform family of Freudenthal
+meshes `𝒯_N`, `h_N → 0`, on which:
 
 * (**unisolvence**) every continuous form field `w` has exactly one Whitney interpolant `Π_h w`
   in each degree `k` (the form of `P₁⁻Λᵏ(𝒯_N)` with the face integrals of `w`);

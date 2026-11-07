@@ -158,7 +158,8 @@ theorem waveForm_ofD (a b : DState (whitneyRow N)) :
   have z : ∀ i j : Fin 3, ¬ (i.val + 1 = j.val) → ∀ x, (whitneyRow N).dLin i j x = 0 :=
     fun i j h x => by rw [Subcomplex.dLin_eq_zero_of_not_rel _ h]; rfl
   simp only [hD, Fin.sum_univ_three, z 0 0 (by decide), z 1 0 (by decide), z 2 0 (by decide),
-    z 1 1 (by decide), z 2 1 (by decide), z 0 2 (by decide), z 2 2 (by decide), zero_add, add_zero, inner_zero_left, inner_zero_right]
+    z 1 1 (by decide), z 2 1 (by decide), z 0 2 (by decide), z 2 2 (by decide), zero_add,
+    add_zero, inner_zero_left, inner_zero_right]
   have e01 : ∀ c : DState (whitneyRow N),
       ((whitneyRow N).dLin 0 1 (c 0)).val = wd 0 (c 0).val :=
     fun c => (wd_eq 0 ⟨_, (whitneyRow N).le_domain 0 1 (c 0).2⟩).symm

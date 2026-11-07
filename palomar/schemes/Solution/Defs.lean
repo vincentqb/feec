@@ -26,10 +26,23 @@ solution imports this module and the bridges to `Feec`, and proves the theorems
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5–7
+  Ch. 5 ((5.1)–(5.6), Thm 5.5, Table 5.1), Ch. 6 ((6.2)–(6.5), Prop 6.2), Ch. 7
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3–5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §3, §4, §5.5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
+  Ch. 3, 4
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1
+* [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/

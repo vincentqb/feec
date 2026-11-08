@@ -2,7 +2,7 @@
   "challenge_module": "Challenge",
   "solution_module": "Solution",
   "theorem_names": ["FEEC.inverse_estimate", "FEEC.crankNicolson_cube", "FEEC.leapfrog_cube",
-    "FEEC.weakSymmetry_cube", "FEEC.weakSymmetry_cube_nonvacuous"],
+    "FEEC.timeStepping_nonvacuous", "FEEC.weakSymmetry_cube", "FEEC.weakSymmetry_cube_nonvacuous"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

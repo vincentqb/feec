@@ -6,6 +6,7 @@ public import Solution.CubeNonvac
 public import Solution.CubeUnique
 public import Solution.CrankNicolson
 public import Solution.Leapfrog
+public import Solution.PlaneWave
 
 /-!
 # Finite element error estimates on Freudenthal meshes: implicit versus explicit time stepping for the Hodge wave equation, and the weak-symmetry Einstein–Bianchi method (solution)
@@ -23,7 +24,8 @@ estimates (`cube_static_rate`), and the wave clauses are
 `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` and `cubeWave_exists_unique`
 (`Solution.CubeWave`). The `H¹` rates (`Solution.CubeSobolev`) put the `H¹` classes in `Feec`'s
 relative class `H¹_univ` (`Feec.Models.Cube.WeakSymmetry.sobRel_of_h1_zero` and its siblings).
-`FEEC.weakSymmetry_cube_nonvacuous` from
+`FEEC.timeStepping_nonvacuous`: row `0` of `Feec`'s plane wave `planeWaveRows`
+(`Solution.PlaneWave`). `FEEC.weakSymmetry_cube_nonvacuous` from
 `Feec.Models.Cube.WeakSymmetry.exists_coupled_manufactured_solution` and `waveManufactured_hyps`,
 with `cube_static_h1` and `cube_wave_h1` for the `H¹` classes.
 
@@ -400,5 +402,9 @@ theorem weakSymmetry_cube_nonvacuous :
       (hH t ht).1.mono hL₂ (le_max_right _ _), (hH t ht).2.mono hL₂ (le_max_right _ _),
       (hreg t ht).2.2.1.trans (le_max_left _ _), (hreg t ht).2.2.2.trans (le_max_left _ _)⟩,
     hu, hne⟩
+
+theorem timeStepping_nonvacuous (T : ℝ) :
+    ∃ L, ∃ X : RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 :=
+  exists_rowSolution T
 
 end FEEC

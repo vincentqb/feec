@@ -22,7 +22,7 @@ project:
     solutions; and the mixed method with weak symmetry of the thesis for the linearized
     Einstein-Bianchi complex, with static and semi-discrete (continuous in time) error rates. Stated
     over Mathlib with the definitions of differential forms, polynomial forms, simplicial meshes,
-    finite element spaces and Sobolev spaces of the Palomar entry palomar/fem copied verbatim. Five
+    finite element spaces and Sobolev spaces of the Palomar entry palomar/fem copied verbatim. Six
     compared theorems. FEEC.inverse_estimate: for a shape-regular, quasi-uniform family of meshes of
     an open set whose open simplices lie in it, every admissible sequence and every degree k, there
     is C with h_N ||dv||_{L^2} <= C ||v||_{L^2} for every v of the finite element space (v in H
@@ -48,7 +48,10 @@ project:
     ||u_1||^2)), and there is C such that for every smooth solution with bound L, Delta t > 0, M
     Delta t <= T, the iterates from the interpolants of U(0) and U(Delta t) with the boundary
     degrees of freedom of the interpolant of the exact solution satisfy ||u_M - U(t_M)||_{L^2} <= C
-    L (1 + T) (h_N + Delta t^2) / (1 - c). FEEC.weakSymmetry_cube (thesis §5.3, Table 5.1, Thm 5.5,
+    L (1 + T) (h_N + Delta t^2) / (1 - c). FEEC.timeStepping_nonvacuous: for every T the smooth
+    solutions of both error bounds include a wave (row 0 of the thesis' Ch. 7 plane wave) whose
+    electric field and its time derivative are nonzero at some point of Q at every time.
+    FEEC.weakSymmetry_cube (thesis §5.3, Table 5.1, Thm 5.5,
     §6.3, Prop 6.2): the mixed method (5.6) with S_h = pi S for the complex with weak symmetry of
     the BGG construction (the linearized Einstein-Bianchi complex; the constraint d sigma = S^0 phi
     imposed by a Lagrange multiplier instead of C^1 elements), with the minimal exterior derivative
@@ -240,7 +243,9 @@ status:
     condition 2 C_0 Delta t <= c h_N); FEEC.crankNicolson_cube (one row of the thesis' Ch. 7
     scheme, the Hodge wave equation of the de Rham window on the cube, with the Whitney elements and
     boundary degrees of freedom from the exact solution: unisolvence, well-posedness, V_h^1 != 0,
-    the O(h + Delta t^2) error); FEEC.weakSymmetry_cube for the elements of Table 5.1 (bounded
+    the O(h + Delta t^2) error); FEEC.timeStepping_nonvacuous (a plane wave, neither zero nor
+    stationary, satisfies every hypothesis on the exact solution of both error bounds);
+    FEEC.weakSymmetry_cube for the elements of Table 5.1 (bounded
     projections with (5.4), consistency, unique solvability, static rates for C^2 and H^1 data,
     uniqueness and rates of the semi-discrete wave problem); FEEC.weakSymmetry_cube_nonvacuous.
     Not compared here (proved in Feec): the abstract theorem behind the weak-symmetry rates (it
@@ -323,9 +328,9 @@ fidelity:
     the global estimate is stated with the mesh size h_N, not elementwise; quasi-uniformity
     enters through h_N <= h_T / q, so C depends on n, S, k and the shape-regularity and
     quasi-uniformity constants of the family.
-    Non-vacuity of RowSolution is not a compared theorem: the structure is visibly inhabited
-    (constant fields; in Feec the plane waves of Ch. 7 are row solutions,
-    Feec.Numerics.PlaneWaveCube.planeWaveRows).
+    Non-vacuity of RowSolution is the compared theorem FEEC.timeStepping_nonvacuous (constant
+    fields inhabit it too; the witness is a plane wave, with nonzero time derivative). It asserts
+    no nonzero discrete iterates: the iterates are determined by the scheme's unique solvability.
     (3) Weak symmetry: the multiplier lambda is assumed in L^2 = W^1 (in vector proxies this
     asks u_a in H(div)) and ||lambda|| <= L in the rates.
     (4) The weak-symmetry discretizations are asserted existentially: their spaces are named
@@ -351,10 +356,11 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the five compared theorems and
+    Not yet reviewed by the author: the Challenge statement (the six compared theorems and
     their definitions, 2026-11-07; FEEC.inverse_estimate, FEEC.leapfrog_cube, rowNorm and
-    IsLeapfrogStep added the same day; the weak-symmetry theorems moved from the former entry
-    palomar/weaksymmetry, restated without the abstract hypotheses). Every merge of the library
+    IsLeapfrogStep added the same day; FEEC.timeStepping_nonvacuous 2026-11-08; the
+    weak-symmetry theorems moved from the former entry palomar/weaksymmetry, restated without the
+    abstract hypotheses). Every merge of the library
     was gated by a full build (zero warnings), an axiom audit (propext, Classical.choice,
     Quot.sound only) and an independent AI review. No external mathematical review.
 
@@ -394,6 +400,15 @@ alignment:
         norm_succ_sub_le_of_isDirichletLeapfrogStep, the CFL estimate for the skew operator
         P_0 A P_0, and exists_leapfrog_comparison, the Crank-Nicolson comparison fields with the
         centred difference remainder); the step is identified in Solution/Leapfrog.lean.
+    - source: "[QuennevilleBelair2015] Ch. 7"
+      lean: "FEEC.timeStepping_nonvacuous"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Row 0 of Feec.Numerics.PlaneWaveCube.planeWaveRows (A_+ = 1, A_x = 0, omega = 1), a Feec
+        row solution, as the challenge's (RowSolution.ofFeec); its dx_0 coefficient is
+        -sin (y_2 - t) with time derivative cos (y_2 - t), and one of y_2 = 1/8, 1/4 has
+        sin (2 (y_2 - t)) != 0 (Solution/PlaneWave.lean).
     - source: "[QuennevilleBelair2015] §5.3, Table 5.1, Prop 5.4, Thm 5.5, §6.3, Prop 6.2"
       lean: "FEEC.weakSymmetry_cube"
       module: "Challenge"

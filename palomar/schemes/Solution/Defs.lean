@@ -18,8 +18,8 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.inverse_estimate`, `FEEC.crankNicolson_cube`, `FEEC.leapfrog_cube`, `FEEC.weakSymmetry_cube`
-and `FEEC.weakSymmetry_cube_nonvacuous`),
+`FEEC.inverse_estimate`, `FEEC.crankNicolson_cube`, `FEEC.leapfrog_cube`,
+`FEEC.timeStepping_nonvacuous`, `FEEC.weakSymmetry_cube` and `FEEC.weakSymmetry_cube_nonvacuous`),
 compiled against Mathlib alone so that their elaborated values are those of the challenge. The
 solution imports this module and the bridges to `Feec`, and proves the theorems
 (`Solution.lean`).

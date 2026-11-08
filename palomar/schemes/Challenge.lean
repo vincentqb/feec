@@ -47,6 +47,8 @@ Whitney elements, boundary data and smooth solutions. **The mixed method with we
   `h_N ‖𝐝ₕ v‖ ≤ C₀ ‖v‖` on the Whitney row, under `2 C₀ Δt ≤ c h_N`, `c < 1`, the scheme is
   stable (the energy bound) and its error from the interpolants of `U(0)`, `U(Δt)` is at most
   `C L (1 + T) (h_N + Δt²) / (1 - c)`.
+* `FEEC.timeStepping_nonvacuous`: the smooth solutions of both error bounds include waves that
+  are neither zero nor stationary (a plane wave).
 * `FEEC.weakSymmetry_cube` (**the elements of Table 5.1 for the complex with weak symmetry**,
   [QuennevilleBelair2015], §5.3, §6.3): the mixed method (5.6) with `Sₕ = πS` for the complex
   `Γ → Ṽ¹ → W² × W̃²`, `Γ = {(σ, φ) | dσ = S⁰φ}`, of the linearized Einstein–Bianchi equations,
@@ -810,6 +812,15 @@ theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C₀ C : ℝ), Is
       ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
         IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
         rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) / (1 - c) := by
+  sorry
+
+/-- **Non-vacuity of the error bounds of `FEEC.crankNicolson_cube` and `FEEC.leapfrog_cube`**: for
+every `T` the smooth solutions they quantify over include genuine waves: some `RowSolution T L`
+(in the proof, row `0` of the plane wave of [QuennevilleBelair2015], Ch. 7) has at every time `t`
+a point of `Q` where the electric field `E(t)` and its time derivative `∂ₜE(t)` are nonzero (so
+`U` is neither zero nor stationary). -/
+theorem timeStepping_nonvacuous (T : ℝ) :
+    ∃ L, ∃ X : RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 := by
   sorry
 
 /-- **The finite element method of Table 5.1 for the complex with weak symmetry on the cube**

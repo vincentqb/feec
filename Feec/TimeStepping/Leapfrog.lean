@@ -402,8 +402,8 @@ def IsDirichletLeapfrogStep (V₀ : Submodule ℝ V) (A : V →ₗ[ℝ] V) (τ :
     Prop :=
   u'' - g'' ∈ V₀ ∧ ∀ v ∈ V₀, ⟪u'' - u, v⟫ = 2 * τ * ⟪A u', v⟫
 
-/-- **Well-posedness of the leapfrog step**, for every time step: `u'' = g'' + P₀ (u + 2 τ A u' − g'')`
-with `P₀` the orthogonal projection onto `V₀`. -/
+/-- **Well-posedness of the leapfrog step**, for every time step:
+`u'' = g'' + P₀ (u + 2 τ A u' − g'')` with `P₀` the orthogonal projection onto `V₀`. -/
 theorem existsUnique_isDirichletLeapfrogStep (τ : ℝ) (g'' u u' : V) :
     ∃! u'', IsDirichletLeapfrogStep V₀ A τ g'' u u' u'' := by
   refine ⟨g'' + V₀.starProjection (u + (2 * τ) • A u' - g''),

@@ -269,7 +269,8 @@ theorem PolySeq.exists_mul_norm_d_le [NeZero n] (S : PolySeq) (k : ℕ) {C c : �
       ∀ {h : ℝ}, 0 < h → (∀ T ∈ M.simplices, h ≤ diam T) →
         ∀ v : ((extDerivOp ℝ n k).maximal M.domain).domain,
           (v : L2F ℝ M.domain (formIdx n k)) ∈ (S.subcomplex M hΩ).V k →
-          h * ‖(extDerivOp ℝ n k).maximal M.domain v‖ ≤ K * ‖(v : L2F ℝ M.domain (formIdx n k))‖ := by
+          h * ‖(extDerivOp ℝ n k).maximal M.domain v‖ ≤
+            K * ‖(v : L2F ℝ M.domain (formIdx n k))‖ := by
   obtain ⟨K, hK, hb⟩ := S.exists_mul_norm_glue_dPiecewise_le k hC hc
   refine ⟨K, hK, fun M hΩ hint hS h hh hdiam v hv => ?_⟩
   obtain ⟨u, hu⟩ := hv

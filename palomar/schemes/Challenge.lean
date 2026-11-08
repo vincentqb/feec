@@ -17,14 +17,17 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 /-!
 # Error guarantees for fully discrete finite element schemes on simplicial meshes
 
-Fully discrete finite element schemes on the cube `Q = (0, ½)³` with its **Freudenthal meshes**
-`𝒯_N` (every simplex a Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`), with explicit spaces,
-explicit schemes and error bounds with constants independent of the mesh, the time step and the
-solution: the numerical-analysis counterpart of the structure theory of `palomar/fem` and of the
-time stepping of `palomar/timestepping`. The time-dependent theorems compare the **implicit**
-Crank–Nicolson rule (stable for every time step) with the **explicit** leapfrog rule (stable
-under a CFL condition `Δt ≲ h`, made concrete by the inverse estimate) for the same elements, the
-same boundary data and the same smooth solutions.
+Finite element schemes on the cube `Q = (0, ½)³` with its **Freudenthal meshes** `𝒯_N` (every
+simplex a Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`), with explicit spaces, explicit
+schemes and error bounds with constants independent of the mesh, the time step and the solution:
+the numerical-analysis counterpart of the structure theory of `palomar/fem` and of the time
+stepping of `palomar/timestepping`. Two themes share the meshes and the elements. **Fully discrete
+time stepping** for the Hodge wave equation of the de Rham window: the **implicit**
+Crank–Nicolson rule (stable for every time step) against the **explicit** leapfrog rule (stable
+under a CFL condition `Δt ≲ h`, made concrete by the global inverse estimate), for the same
+Whitney elements, boundary data and smooth solutions. **The mixed method with weak symmetry** of
+[QuennevilleBelair2015] for the linearized Einstein–Bianchi complex: static and semi-discrete
+(continuous in time) error rates.
 
 * `FEEC.inverse_estimate` (**the global inverse estimate**, [Ciarlet2002], §3.2;
   [BrennerScott2008], §4.5): on a shape-regular, quasi-uniform family of meshes,
@@ -726,11 +729,13 @@ def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2
 
 /-! ### The theorems -/
 
-/-- **The global inverse estimate** ([Ciarlet2002], §3.2; [BrennerScott2008], §4.5; [AFW2010],
-§5.5): for a shape-regular, quasi-uniform family of meshes `M_N` of an open `Ω` whose open
-simplices lie in `Ω`, every admissible sequence `S` and every form degree `k`, there is `C` such
-that every `v` of the finite element space `S_k(M_N)` lies in `HΛᵏ(Ω)` and
-`h_N ‖dv‖_{L²} ≤ C ‖v‖_{L²}`, `C` independent of `N`. -/
+/-- **The global inverse estimate** ([Ciarlet2002], §3.2; [BrennerScott2008], §4.5): for a
+shape-regular, quasi-uniform family of meshes `M_N` of an open `Ω` whose open simplices lie in `Ω`,
+every admissible sequence `S` and every form degree `k`, there is `C` such that every `v` of the
+finite element space `S_k(M_N)` lies in `HΛᵏ(Ω)` and `h_N ‖dv‖_{L²} ≤ C ‖v‖_{L²}`, `C`
+independent of `N`. (A mesh of `Ω` covers `cl Ω`; that its open simplices lie in `Ω`, true when
+`Ω` is the interior of its closure, e.g. for convex or Lipschitz `Ω`, makes `‖v‖²_{L²(Ω)}` the sum
+of the norms of `v` on the whole simplices.) -/
 theorem inverse_estimate [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
     (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :
@@ -781,8 +786,9 @@ Freudenthal meshes `𝒯_N` of the cube `Q = (0, ½)³`, `h_N → 0`, with the W
   for every `m`;
 * (**the error**) there is `C` such that, under the CFL condition with `c < 1`, for every smooth
   solution `U` of the Hodge wave equation on `[0, T] × cl Q` with bound `L` (`RowSolution`),
-  `Δt > 0` and `M Δt ≤ T`, the iterates started from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` with the
-  boundary degrees of freedom of `Π_h U(tₙ)` satisfy
+  `Δt > 0` and `M Δt ≤ T`, the iterates started from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` (the
+  second starting value from the exact solution; no one-step starting procedure is analysed) with
+  the boundary degrees of freedom of `Π_h U(tₙ)` satisfy
   `‖u_M - U(t_M)‖_{L²} ≤ C L (1 + T) (h_N + Δt²) / (1 - c)`, `C` independent of `N`, `Δt`, `c`,
   `T`, `L`, `U`. -/
 theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C₀ C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧

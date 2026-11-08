@@ -424,7 +424,8 @@ section InverseEstimate
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Mesh HilbertComplex
 
-theorem apply_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F] [Module ℝ F]
+private theorem apply_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [AddCommGroup F]
+    [Module ℝ F]
     {f g : E →ₗ.[ℝ] F} (h : f = g) (y : f.domain) (z : g.domain) (hz : (z : E) = y) :
     f y = g z := by
   subst h; rw [show z = y from Subtype.ext hz]
@@ -442,24 +443,17 @@ theorem mul_norm_d_le_of_maximalSubcomplexOfEq {n : ℕ} {M : SimplicialMesh n}
   subst h
   exact hS a b y hy
 
-theorem subsingleton_L2F_of_lt {n : ℕ} (S : Set (Fin n → ℝ)) {j : ℤ} (hj : (n : ℤ) < j) :
-    Subsingleton (L2F ℝ S (formIdx n j)) := by
+private theorem subsingleton_L2F_of_lt {n : ℕ} (S : Set (Fin n → ℝ)) {j : ℤ}
+    (hj : (n : ℤ) < j) : Subsingleton (L2F ℝ S (formIdx n j)) := by
   constructor
   intro x y
   refine PiLp.ext fun s => absurd s.2 ?_
   have : (s.1.card : ℤ) ≤ n := by exact_mod_cast (Finset.card_le_univ s.1).trans (by simp)
   omega
 
-theorem diam_mesh_simplex {n : ℕ} [NeZero n] (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) : diam T = meshSize N := by
-  obtain ⟨m, σ, rfl⟩ := mem_freudenthalMesh_simplices.1 hT
-  rw [diam_freudenthalMesh_simplex 0 (by positivity : (0 : ℝ) < 1 / 2 / ((N + 1 : ℕ) : ℝ))]
-  unfold meshSize
-  push_cast
-  rfl
-
-theorem interior_subset_mesh_domain {n : ℕ} (N : ℕ) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ (mesh n N).simplices) : _root_.interior T.closedInterior ⊆ (mesh n N).domain := by
+private theorem interior_subset_mesh_domain {n : ℕ} (N : ℕ)
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ (mesh n N).simplices) :
+    _root_.interior T.closedInterior ⊆ (mesh n N).domain := by
   have hc : Convex ℝ (mesh n N).domain := by rw [mesh_domain]; exact convex_cubeDomain n
   have hne : (_root_.interior (mesh n N).domain).Nonempty := by
     rw [(isOpen_mesh_domain n N).interior_eq, mesh_domain]
@@ -506,7 +500,7 @@ theorem exists_mul_norm_d_whitney_le :
   have hS : IsShapeRegular (Mh.simplices : Set (Affine.Simplex ℝ (Fin 3 → ℝ) 3)) (max 3 2) 1 :=
     fun T hT => isShapeRegular_freudenthalMesh 0 (1 / 2) (by norm_num) T ⟨N, hT⟩
   have hb := hK k Mh (fun T hT => interior_subset_mesh_domain N hT) hS (meshSize_pos N)
-    (fun T hT => (diam_mesh_simplex N hT).ge) u.1
+    (fun T hT => (mesh_shape 3 N hT).2.ge) u.1
   rcases lt_or_ge k 3 with hk | hk
   · have hle : K k ≤ K 0 + K 1 + K 2 := by
       interval_cases k <;> linarith [hK0 0, hK0 1, hK0 2]

@@ -15,7 +15,7 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 
 /-!
-# Error guarantees for fully discrete finite element schemes on simplicial meshes
+# Finite element error estimates on Freudenthal meshes: implicit versus explicit time stepping for the Hodge wave equation, and the weak-symmetry Einstein–Bianchi method
 
 Finite element schemes on the cube `Q = (0, ½)³` with its **Freudenthal meshes** `𝒯_N` (every
 simplex a Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`), with explicit spaces, explicit

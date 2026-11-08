@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
-# formalization.yaml v0.4 for the Palomar submission of error guarantees for fully discrete finite
-# element schemes on simplicial meshes (`palomar/schemes/`), the numerical-analysis counterpart of
+# formalization.yaml v0.4 for the Palomar submission of finite element error estimates on
+# Freudenthal meshes (`palomar/schemes/`), the numerical-analysis counterpart of
 # `palomar/fem/` (structure theory) and `palomar/timestepping/` (time stepping).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
@@ -8,7 +8,9 @@
 version: "v0.4"
 
 project:
-  name: "Error guarantees for fully discrete finite element schemes on simplicial meshes"
+  name: >-
+    Finite element error estimates on Freudenthal meshes: implicit versus explicit time stepping
+    for the Hodge wave equation, and the weak-symmetry Einstein-Bianchi method
   description: >-
     Finite element schemes on the cube Q = (0, 1/2)^3 with its Freudenthal meshes (every simplex a
     Kuhn simplex h (z + K_sigma), h = 1/(2(N+1)), named by its vertices), stated with explicit

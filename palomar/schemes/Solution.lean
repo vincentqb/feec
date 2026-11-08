@@ -8,7 +8,7 @@ public import Solution.CrankNicolson
 public import Solution.Leapfrog
 
 /-!
-# Error guarantees for fully discrete finite element schemes on simplicial meshes (solution)
+# Finite element error estimates on Freudenthal meshes: implicit versus explicit time stepping for the Hodge wave equation, and the weak-symmetry Einstein–Bianchi method (solution)
 
 `FEEC.crankNicolson_cube`: the Freudenthal meshes are `Feec`'s (`cubeMesh`), the challenge's
 Whitney spaces, interpolant and Crank–Nicolson step are `Feec`'s (`Solution.WhitneySpaces`,

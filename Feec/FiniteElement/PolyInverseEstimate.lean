@@ -160,6 +160,19 @@ theorem exists_norm_le_mul_norm_of_ker_le {V E F : Type*} [AddCommGroup V] [Modu
 `dx_s`). -/
 def formL2Sq (S : Set (Fin n → ℝ)) (u : FormField n) : ℝ := ∑ s, ∫ x in S, (u x s) ^ 2
 
+/-- For `k`-forms, the coefficients of degree `k` carry the whole `L²(S)` norm:
+`Σ_{#s = k} ∫_S u_s² = ‖u‖²_{L²(S)}`. -/
+theorem sum_formIdx_integral_sq {k : ℕ} {j : ℤ} (hkj : (k : ℤ) = j) {S : Set (Fin n → ℝ)}
+    {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
+    ∑ s : Feec.Domain.formIdx n j, ∫ x in S, (u x s.1) ^ 2 = formL2Sq S u := by
+  subst hkj
+  unfold formL2Sq
+  rw [← Finset.sum_subtype (univ.filter fun s : Finset (Fin n) => (#s : ℤ) = k)
+    (fun s => by simp) (fun s => ∫ x in S, (u x s) ^ 2)]
+  refine Finset.sum_subset (filter_subset _ _) fun s _ hs => ?_
+  have hk : #s ≠ k := fun h => hs (by simp [h])
+  simp [hu _ s hk]
+
 /-- The squared `L²(S)` norm `Σ_j Σ_s ∫_S (∂_j u_s)²` of the first derivatives of a form
 field. -/
 def formGradL2Sq (S : Set (Fin n → ℝ)) (u : FormField n) : ℝ :=

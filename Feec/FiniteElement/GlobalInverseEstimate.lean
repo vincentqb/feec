@@ -151,19 +151,6 @@ theorem diam_sq_mul_formL2Sq_extDeriv_le {T : Affine.Simplex ℝ (Fin n → ℝ)
 
 /-! ### The `L²` norm of glued fields -/
 
-/-- For `k`-forms, the coefficients of degree `k` carry the whole `L²(S)` norm:
-`Σ_{#s = k} ∫_S u_s² = ‖u‖²_{L²(S)}`. -/
-theorem sum_formIdx_integral_sq {k : ℕ} {j : ℤ} (hkj : (k : ℤ) = j) {S : Set (Fin n → ℝ)}
-    {u : FormField n} (hu : ∀ x, IsDeg k (u x)) :
-    ∑ s : formIdx n j, ∫ x in S, (u x s.1) ^ 2 = formL2Sq S u := by
-  subst hkj
-  unfold formL2Sq
-  rw [← Finset.sum_subtype (univ.filter fun s : Finset (Fin n) => (#s : ℤ) = k)
-    (fun s => by simp) (fun s => ∫ x in S, (u x s) ^ 2)]
-  refine Finset.sum_subset (filter_subset _ _) fun s _ hs => ?_
-  have hk : #s ≠ k := fun h => hs (by simp [h])
-  simp [hu _ s hk]
-
 namespace LocalElement
 
 variable (E : LocalElement n) (M : SimplicialMesh n)

@@ -3,6 +3,7 @@ module
 public import Feec.Models.Cube.WeakSymmetryComplex
 public import Feec.Models.Cube.SmoothingEstimates
 public import Feec.Models.Cube.PolySmoothingEstimates
+public import Feec.FiniteElement.GlobalInverseEstimate
 
 /-!
 # The weak-symmetry maps on the Freudenthal meshes of the cube: Props 5.8 and 5.9
@@ -271,28 +272,15 @@ theorem interior_subset_mesh_domain {N : ℕ} :
     ∀ T ∈ (mesh n N).simplices, interior T.closedInterior ⊆ (mesh n N).domain := fun T hT => by
   rw [mesh_domain]; exact interior_closedInterior_subset_cubeDomain hT
 
-/-- `Σ_{#s = k} ∫ u_s² = formL2Sq` for a field of degree `k`. -/
-theorem sum_formIdx_integral_eq_formL2Sq {k : ℕ} {S : Set (Fin n → ℝ)} {u : FormField n}
-    (hu : ∀ x, IsDeg k (u x)) :
-    ∑ s : formIdx n k, ∫ x in S, (u x s.1) ^ 2 = formL2Sq S u := by
-  unfold formL2Sq
-  refine (sum_eq_sum_formIdx (f := fun s => ∫ x in S, (u x s) ^ 2) fun s hs => ?_).symm
-  have : ∀ x, (u x s) ^ 2 = 0 := fun x => by rw [hu x s hs]; ring
-  simp_rw [this]; simp
-
-/-- **`‖glue u‖² = Σ_T ‖u_T‖²_{L²(T)}`** on the Freudenthal meshes of the cube. -/
+/-- **`‖glue u‖² = Σ_T ‖u_T‖²_{L²(T)}`** on the Freudenthal meshes of the cube
+(`LocalElement.norm_sq_glue`). -/
 theorem norm_sq_glue_eq (E : LocalElement n) {N k : ℕ} (u : E.Piecewise (mesh n N) k) :
     ‖E.glue (mesh n N) k u‖ ^ 2 =
       ∑ T : (mesh n N).simplices, formL2Sq (T : Affine.Simplex ℝ (Fin n → ℝ) n).closedInterior
         ((u T : E.space T k) : FormField n) := by
-  change ‖pieceL2 (mesh n N) (mesh n N).domain (fun T => formComp (k := (k : ℤ))
-    (E.extendPW (mesh n N) u T)) (fun T hT s => continuous_formComp
-      (E.contDiff_extendPW (mesh n N) u hT).continuous s)‖ ^ 2 = _
-  rw [norm_sq_pieceL2_eq _ interior_subset_mesh_domain, ← Finset.sum_coe_sort]
-  refine Finset.sum_congr rfl fun T _ => ?_
-  rw [← sum_formIdx_integral_eq_formL2Sq (E.isDeg_of_mem (u T).2)]
-  refine Finset.sum_congr rfl fun s _ => ?_
-  simp only [formComp, E.extendPW_of_mem _ u T.2]
+  rw [E.norm_sq_glue (mesh n N) interior_subset_mesh_domain (j := k) k.cast_nonneg u,
+    ← Finset.sum_coe_sort]
+  exact Finset.sum_congr rfl fun T _ => by rw [E.extendPW_of_mem _ u T.2]
 
 /-- `norm_sq_glue_eq` for integer degrees `k ≥ 0`. -/
 theorem norm_sq_glue_eq_int (E : LocalElement n) {N : ℕ} {k : ℤ} (hk : 0 ≤ k)
@@ -848,7 +836,7 @@ theorem norm_sq_wsL2_sub_glue_le {N k : ℕ} (E E' : LocalElement n)
     simp only [Pi.sub_apply]
     rw [isDeg_coordWedgeField (fun a x => E.isDeg_of_mem (ψ a T).2 x) x s hs,
       E'.isDeg_of_mem (u T).2 x s hs, sub_zero]
-  refine Eq.trans ?_ (sum_formIdx_integral_eq_formL2Sq hdeg)
+  refine Eq.trans ?_ (sum_formIdx_integral_sq rfl hdeg)
   refine Finset.sum_congr rfl fun i _ => ?_
   simp only [formComp, E.extendPW_of_mem _ _ T.2, E'.extendPW_of_mem _ _ T.2,
     coordWedgeField_apply, Pi.sub_apply]
@@ -1675,7 +1663,7 @@ theorem norm_sq_wsL2_sub_glue_eq {n N k : ℕ} (E E' : LocalElement n)
     simp only [Pi.sub_apply]
     rw [isDeg_coordWedgeField (fun a x => E.isDeg_of_mem (ψ a T).2 x) x s hs,
       E'.isDeg_of_mem (u T).2 x s hs, sub_zero]
-  refine Eq.trans ?_ (sum_formIdx_integral_eq_formL2Sq hdeg)
+  refine Eq.trans ?_ (sum_formIdx_integral_sq rfl hdeg)
   refine Finset.sum_congr rfl fun i _ => ?_
   simp only [formComp, E.extendPW_of_mem _ _ T.2, E'.extendPW_of_mem _ _ T.2,
     coordWedgeField_apply, Pi.sub_apply]

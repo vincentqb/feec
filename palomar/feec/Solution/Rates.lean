@@ -201,7 +201,7 @@ theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated₀ J where
         mul_le_mul_of_nonneg_left key (le_max_right C 0)
       _ = _ := by ring
   wave a m ha r hr p hp s := by
-    have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
+    have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
     obtain ⟨S, hS⟩ := F.waveVerdict a m (F.approximates_window a m ha.1 ha.2)
     obtain ⟨K, hK⟩ := hS.evolution.rational_temporal r hr hp
     refine ⟨S, hS, 2 * (1 + 4 * √3) * ((1 + m) * ∑ i : Fin m, |J.B s (a + (i : ℕ))|), K,

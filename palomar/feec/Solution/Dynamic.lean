@@ -55,20 +55,6 @@ def SubcomplexFamily.single (F : H.SubcomplexFamily κ) (h : κ) :
 
 end HilbertComplex
 
-/-- **A real normed-space structure on a normed `𝕜`-space is the restricted one**
-(`IsScalarTower ℝ 𝕜 E`): `t • x` and `(t : 𝕜) • x` are continuous in `t` and agree on `ℚ`. -/
-theorem isScalarTower_of_normedSpace {E : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-    [NormedSpace ℝ E] : IsScalarTower ℝ 𝕜 E := by
-  refine ⟨fun r k x => ?_⟩
-  have := Continuous.ext_on Rat.denseRange_cast (continuous_id.smul continuous_const)
-    ((RCLike.continuous_ofReal (K := 𝕜)).smul continuous_const) (by
-      rintro _ ⟨q, rfl⟩
-      change (q : ℝ) • (k • x) = ((q : ℝ) : 𝕜) • (k • x)
-      rw [RCLike.ofReal_ratCast]
-      exact ratCast_smul_eq ℝ 𝕜 q (k • x))
-  rw [Algebra.smul_def, mul_smul]
-  exact (congrFun this r).symm
-
 /-! ### Evolutions -/
 
 section Evolution
@@ -362,21 +348,14 @@ theorem Lh_eq (h : κ) : F.Lh a m h = (F.feecWindow a m happrox K hK).discreteWa
 theorem Lh_sq_eq (h : κ) :
     (F.Lh a m h ^ 2 : F.Xh a m h →L[𝕜] F.Xh a m h) = (F.feecWindow a m happrox K hK).heatGen h := by
   set G := F.feecWindow a m happrox K hK
-  set D := G.discreteD h
-  have hdh : (G.totalSubcomplex h).dh () () = D := ContinuousLinearMap.ext fun _ => rfl
-  have hD : D * D = 0 := ContinuousLinearMap.ext fun x => Subtype.ext
+  have hdh : (G.totalSubcomplex h).dh () () = G.discreteD h := ContinuousLinearMap.ext fun _ => rfl
+  have hD : G.discreteD h ∘L G.discreteD h = 0 := ContinuousLinearMap.ext fun x => Subtype.ext
     ((H.toFeec.window a m).totalD_comp_totalD ⟨x, G.Xh_mem_domain h x⟩)
-  have hD' : D.adjoint * D.adjoint = 0 := by
-    rw [ContinuousLinearMap.mul_def, ← ContinuousLinearMap.adjoint_comp,
-      ← ContinuousLinearMap.mul_def, hD]
-    exact LinearIsometryEquiv.map_zero _
   rw [pow_two, F.Lh_eq a m happrox K hK]
   show (G.discreteWave h * G.discreteWave h : G.Xh h →L[𝕜] G.Xh h) = _
-  rw [Feec.HilbertComplex.ConstrainedFEEC.discreteWave, sub_mul,
-    mul_sub, mul_sub, hD, hD', Feec.HilbertComplex.ConstrainedFEEC.heatGen,
-    Feec.HilbertComplex.Subcomplex.laplacian, hdh, ← ContinuousLinearMap.mul_def,
-    ← ContinuousLinearMap.mul_def]
-  abel
+  rw [← pow_two, Feec.HilbertComplex.ConstrainedFEEC.discreteWave,
+    ContinuousLinearMap.sub_adjoint_sq hD, Feec.HilbertComplex.ConstrainedFEEC.heatGen,
+    Feec.HilbertComplex.Subcomplex.laplacian, hdh]
 
 omit [∀ i, CompleteSpace (W i)] in
 theorem isClosed_top : IsClosed ((⊤ : Submodule 𝕜 (Total W a m)) : Set (Total W a m)) := by

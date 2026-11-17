@@ -95,7 +95,8 @@ project:
     the hypotheses of FEEC.feec hold for a real finite element family. FEEC.bggCohomology
     ([ArnoldHu2021] §5.2): for a stacked diagram S : V~ -> V[1] over any ring with S^i injective
     for i < J and onto modulo d for i >= J, the inclusion Gamma -> T into the twisted complex and
-    the projection Gamma -> Gamma / Delta onto the BGG complex are quasi-isomorphisms.
+    the projection Gamma -> Gamma / Delta onto the BGG complex are quasi-isomorphisms, so the BGG
+    complex has the cohomology of T in every degree and is exact when both rows are.
     FEEC.bggFinrank (Theorem 6, (27)): over a field, dim H^i(BGG) <= dim H^i(V) + dim H^i(V~), with
     equality iff S^(i-1) and S^i induce zero on cohomology. FEEC.bggHilbert (Theorem 6 and the
     remark after it): for bounded Hilbert rows, Gamma and Delta are closed, the quotient norm is a
@@ -243,8 +244,8 @@ sources:
     relationship: "formalizes"
     note: >-
       §5 proves Theorem 6 in two steps; the challenge states the second, the splitting of the
-      twisted complex into the BGG complex and an exact subcomplex, as two quasi-isomorphisms
-      (FEEC.bggCohomology), the dimension bound and the equality criterion (27) of Theorem 6
+      twisted complex into the BGG complex and an exact subcomplex, as two quasi-isomorphisms with
+      their consequences (FEEC.bggCohomology), the dimension bound and the equality criterion (27) of Theorem 6
       (FEEC.bggFinrank), and the Hilbert-complex conclusions of Theorem 6 and of the paragraph
       after it, with the quotient norm (FEEC.bggHilbert).
     author_endorsement: "not-contacted"
@@ -288,17 +289,18 @@ status:
     Formalized and compared: FEEC.feec, FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, FEEC.crimeFEEC,
     FEEC.crime_nonvacuous, FEEC.feec_cube, FEEC.bggCohomology, FEEC.bggFinrank and
-    FEEC.bggHilbert (Challenge.lean, 997 lines; the definitions were redesigned to fit the limit,
+    FEEC.bggHilbert (Challenge.lean, 999 lines; the definitions were redesigned to fit the limit,
     see review.notes). The weak-symmetry theorems of the former
     palomar/bgg (FEEC.bggWeakSymmetry, FEEC.bggWeakSymmetry_nonvacuous and their definitions
     WeakSymmetryData, Discretization) moved to palomar/einsteinbianchi, next to their finite
     element instance on the cube (Table 5.1). Not compared, proved in Feec: of the former
     palomar/bgg, the identification of Gamma / Delta with the output complex (24)-(26), Theorem 7,
     Proposition 1, Corollary 1 and the Moore-Penrose form of (30) (FEEC.bggIdentification,
-    FEEC.bggSum, FEEC.bggExplicit, FEEC.bggOrthogonal; near-definitional bookkeeping), and the
-    homology, shortExact and acyclic fields of the BGG verdict (consequences of the two
-    quasi-isomorphisms); the higher-order families on general meshes (palomar/fem); the wave rate
-    on the cube; Arnold-Hu §2 and §4; and, as before, the explicit constants, the spatial heat
+    FEEC.bggSum, FEEC.bggExplicit, FEEC.bggOrthogonal; near-definitional bookkeeping, compared in
+    the former palomar/bgg and no longer compared), and the shortExact field of the former BGG
+    verdict (the twisted complex is an extension 0 -> V -> T -> V~ -> 0, for every S; it holds
+    with no hypothesis and is proved in Feec, Feec.BGG.Data.twistShortComplex_shortExact); the
+    higher-order families on general meshes (palomar/fem); the wave rate on the cube; Arnold-Hu §2 and §4; and, as before, the explicit constants, the spatial heat
     rates, the uniform fully discrete rates, leapfrog, Runge-Kutta, bounded perturbations, the
     wave equation with crimes, the residual splitting, and the physical instances
     (Feec/Physics/EinsteinBianchi, Feec/Models/Cube, palomar/einsteinbianchi).
@@ -446,8 +448,8 @@ fidelity:
     sign convention for the shift (differential -d on V[1]); for Hilbert rows it is built from the
     bounded maps (FEEC.BGG.ofBoundedHom). (13) Bounded Hilbert complex (Theorem 6): Arnold-Hu give
     the output complex the norm of the orthogonal complements; FEEC.bggHilbert gives
-    Gamma^i / Delta^i the quotient norm of the l2 norm of V^i (+) V~^i (FEEC.BGG.ΓL, FEEC.BGG.ΔL,
-    FEEC.BGG.QuotL) and proves that y -> [y] is an isometry of Gamma^i ∩ (Delta^i)^perp onto it.
+    Gamma^i / Delta^i the quotient norm of the l2 norm of V^i (+) V~^i (the let-bindings ΓL, ΔL and
+    Q of the statement) and proves that y -> [y] is an isometry of Gamma^i ∩ (Delta^i)^perp onto it.
     For i != J this is the norm of Arnold-Hu; at J the quotient norm is
     inf_psi (||sigma + S psi||^2 + ||phi - d~ psi||^2)^(1/2), which is >= ||P_(R^perp) sigma|| and,
     under (23), <= (1 + ||(S^J)^(-1) d||^2)^(1/2) ||P_(R^perp) sigma||: equivalent, not equal.
@@ -465,10 +467,12 @@ review:
   notes: >-
     Not yet reviewed by the author: the challenge merges the former palomar/feec challenge
     (statements equivalent, definitions redesigned as below) and the BGG part of the
-    former palomar/bgg (FEEC.bggCohomology stated as the two quasi-isomorphisms; the other fields
-    of the former BGG verdict, the identification and Theorem 7 are not compared), with the L2 de
-    Rham definitions of palomar/fem (shortened docstrings) and the new FEEC.feec_cube. REDESIGN
-    for the 1000-line limit (1311 -> 997 lines, no compared theorem or conclusion dropped): one
+    former palomar/bgg (FEEC.bggCohomology states the two quasi-isomorphisms, the cohomology of T
+    and exactness, the homology and acyclic fields of the former BGG verdict; its shortExact field,
+    the identification FEEC.bggIdentification, FEEC.bggSum, FEEC.bggExplicit and FEEC.bggOrthogonal
+    are not compared, see status.scope), with the L2 de Rham definitions of palomar/fem (shortened
+    docstrings) and the new FEEC.feec_cube. REDESIGN for the 1000-line limit (1311 -> 999 lines,
+    no compared theorem of the first merged challenge and no conclusion dropped): one
     mixed problem of a pair of closed operators on a Galerkin space (FEEC.MixedSpace, mixedForm,
     galerkin, IsMixedSolution: x in X and B(x; y) = <v, f> for all y in X, on a Galerkin space
     equivalent to the three equations; HilbertComplex.mixedSpace, Subcomplex.mixedSpace,

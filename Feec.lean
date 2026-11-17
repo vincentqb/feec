@@ -148,6 +148,7 @@ public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.SecondDifference
 public import Feec.ForMathlib.Calculus.TimeSlice
 public import Feec.ForMathlib.Homology.Subcomplex
+public import Feec.ForMathlib.InnerProductSpace.Basic
 public import Feec.ForMathlib.InnerProductSpace.Complexification
 public import Feec.ForMathlib.InnerProductSpace.Diagonal
 public import Feec.ForMathlib.InnerProductSpace.Isometry
@@ -348,6 +349,7 @@ public import Feec.Models.Cube.MaxNormNeumann
 public import Feec.Models.Cube.MaximalRegularDecomposition
 public import Feec.Models.Cube.InhomogeneousError
 public import Feec.Models.Cube.InhomogeneousLeapfrog
+public import Feec.Models.Cube.KuhnPieces
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
 public import Feec.Models.Cube.MirrorBase

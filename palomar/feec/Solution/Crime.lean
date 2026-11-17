@@ -460,19 +460,6 @@ theorem cochainVerdict
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
-omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- `(𝐝ₕ - 𝐝ₕ*)² = -(𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ)`, since `𝐝ₕ² = 0`. -/
-theorem diffWave_sq (h : κ) : ((S.D h - (S.D h).adjoint) ^ 2 : S.X h →L[𝕜] S.X h) =
-    -(S.D h ∘L (S.D h).adjoint + (S.D h).adjoint ∘L S.D h) := by
-  have h1 : S.D h ∘L S.D h = 0 := ContinuousLinearMap.ext (S.D_D h)
-  have h2 : (S.D h).adjoint ∘L (S.D h).adjoint = 0 := by
-    rw [← ContinuousLinearMap.adjoint_comp, h1, _root_.map_zero]
-  rw [pow_two]
-  change (S.D h - (S.D h).adjoint) ∘L (S.D h - (S.D h).adjoint) = _
-  rw [ContinuousLinearMap.sub_comp, ContinuousLinearMap.comp_sub, ContinuousLinearMap.comp_sub,
-    h1, h2]
-  abel
-
 /-- **The heat verdict with crimes** from `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`
 (no constraint, `K = W`) and the fully discrete FEEC theorem on its heat core. -/
 theorem heatVerdict
@@ -503,7 +490,8 @@ theorem heatVerdict
   have hZ : ∀ x, x ∈ (F.heatCore hcr' hcP hP' hconv').Data.topologicalClosure := fun x => by
     rw [F.dense_heatCore_data hcr' hcP hP' hconv']; exact Submodule.mem_top
   have hL : (fun h => (S.D h - (S.D h).adjoint) ^ 2) = fun h => F.toHeat.L h :=
-    funext fun h => (S.diffWave_sq h).trans rfl
+    funext fun h =>
+      (ContinuousLinearMap.sub_adjoint_sq (ContinuousLinearMap.ext (S.D_D h))).trans rfl
   let _ : ∀ h, NormedSpace ℝ (S.X h) := S.normedSpaceReal
   have _ : ∀ h, IsScalarTower ℝ 𝕜 (S.X h) := S.isScalarTower
   refine ⟨F.toHeat.S, ?_⟩

@@ -112,7 +112,7 @@ theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
 of subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
 (`HilbertComplex.SubcomplexFamily.Verdict`). -/
 theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) : F.Verdict :=
-  have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
+  have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
   ⟨fun a m => by
     rw [HilbertComplex.wave_eq]; exact (H.toFeec.window a m).isSkewAdjoint_wave,
     fun j hπ hπ' hj hj' => (F.exists_staticVerdict j hπ hπ' hj hj').imp fun _ V =>
@@ -126,7 +126,7 @@ their hypotheses (`HilbertComplex.CrimeFamily.Verdict`). -/
 theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) : S.Verdict :=
-  have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
+  have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
   ⟨fun hP => (S.staticVerdict hcr hP).imp fun _ V => V.toStaticVerdict,
     fun hi _ P => (S.cochainVerdict hcr hi P).toCochainVerdict,
     fun hP hJ hconv => S.heatVerdict hcr hP hJ hconv⟩
@@ -228,8 +228,8 @@ theorem feec_cube (n : ℕ) [NeZero n] :
         exact ⟨v, hv, e ▸ h1, fun j hxj => e ▸ h2 j hxj⟩ }
   have hR := (F.rated J).toRated
   refine ⟨H, F, fun k => dMax_cube k, rfl, fun N k u hu z σ => ?_, hB, hA, hcr, fun j => ?_⟩
-  · obtain ⟨T, hT, hpts⟩ := exists_kuhn N z σ
-    obtain ⟨w, hw, hae⟩ := exists_piece_of_mem_poly (FEM.mesh n N) (Fm.domain_eq N)
+  · obtain ⟨T, hT, hpts⟩ := FEM.exists_mem_simplices_points_eq N z σ
+    obtain ⟨w, hw, hae⟩ := PolySeq.exists_piece_of_mem_subcomplex (FEM.mesh n N) (Fm.domain_eq N)
       (Fm.isOpen_domain N) D.isOpen whitney hu hT
     obtain ⟨a, A, haff⟩ := exists_affine_of_mem_polySpace_one
       (polyMinusSpace_le_polySpace (r := 1) (k := k.toNat) hw)
@@ -262,14 +262,16 @@ open CategoryTheory
 cochain complexes of modules over any ring, with `Sⁱ` injective for `i < J` and onto modulo `d`
 for `i ≥ J` (`R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`; in particular when `Sⁱ` is surjective, [ArnoldHu2021], (23)),
 the inclusion `Γ → T` and the projection `Γ → Γ / Δ` are quasi-isomorphisms: the BGG complex has
-the cohomology of the twisted complex. -/
+the cohomology of the twisted complex, and is exact when both rows are (`BGG.verdict`). -/
 theorem bggCohomology {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
     (hsurj : ∀ i, J ≤ i →
       LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
-    QuasiIso (BGG.bggΓι S J) ∧ QuasiIso (BGG.bggπ S J) := by
-  have h := BGG.eliminates_toData S hinj hsurj
-  exact ⟨BGG.quasiIso_bggΓι h, BGG.quasiIso_bggπ h⟩
+    QuasiIso (BGG.bggΓι S J) ∧ QuasiIso (BGG.bggπ S J) ∧
+      (∀ i, Nonempty ((BGG.bgg S J).homology i ≅ (BGG.twisted S).homology i)) ∧
+      (V.Acyclic → Vt.Acyclic → (BGG.bgg S J).Acyclic) := by
+  have V := BGG.verdict (S := S) hinj hsurj
+  exact ⟨V.quasiIso_ι, V.quasiIso_π, V.homology, V.acyclic⟩
 
 /-- **The cohomology of the BGG complex** ([ArnoldHu2021], Theorem 6). Over a field, under the
 hypotheses of `FEEC.bggCohomology`, if both rows have finite-dimensional cohomology in degree `i`,

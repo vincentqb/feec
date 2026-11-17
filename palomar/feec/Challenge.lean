@@ -94,8 +94,10 @@ def mixedForm (x y : MixedSpace d₀ d₁) : 𝕜 :=
 def galerkin (A : Submodule 𝕜 E₀) (B Q : Submodule 𝕜 E₁) : Submodule 𝕜 (MixedSpace d₀ d₁) :=
   (A.comap d₀.domain.subtype).prod ((B.comap d₁.domain.subtype).prod Q)
 variable {d₀ d₁} in
-/-- `x` solves the **mixed problem** with data `f` in `X`: `x ∈ X` and `B(x; y) = ⟪v, f⟫` for all
-`y = (τ, v, q) ∈ X` (on a Galerkin space the three equations of [AFW2010], §3.2). -/
+/-- `x = (σ, u, p)` solves the **mixed problem** with data `f` in `X`: `x ∈ X`, `B(x; y) = ⟪v, f⟫`
+for all `y = (τ, v, q) ∈ X`; on a Galerkin space `A × B × Q` (test `(τ, 0, 0)`, `(0, v, 0)`,
+`(0, 0, q)`) the equations `⟪τ, σ⟫ = ⟪d₀τ, u⟫`, `⟪v, d₀σ⟫ + ⟪d₁v, d₁u⟫ + ⟪v, p⟫ = ⟪v, f⟫` and
+`u ⊥ Q` of [AFW2010], §3.2. -/
 def IsMixedSolution (X : Submodule 𝕜 (MixedSpace d₀ d₁)) (f : E₁) (x : MixedSpace d₀ d₁) : Prop :=
   x ∈ X ∧ ∀ y ∈ X, mixedForm d₀ d₁ x y = ⟪(y.2.1 : E₁), f⟫_𝕜
 
@@ -144,15 +146,15 @@ variable [NormedSpace ℝ E]
 def IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (u : ℝ → E) : Prop :=
   ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A.graph ∧ HasDerivWithinAt u v I t
 /-- The semidiscrete evolution `exp(t B)`. -/
-def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X)
-    (t : ℝ) : X →L[𝕜] X :=
-  NormedSpace.exp ((t : 𝕜) • B)
+def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X) (t : ℝ) :
+    X →L[𝕜] X := NormedSpace.exp ((t : 𝕜) • B)
 
-/-- **The FEEC theorem for an evolution** `u' = A u` approximated by `uₕ' = Bₕ uₕ` on spaces `Xₕ`
-read in `E` by `ιₕ`, exact evolution `S`: `S t x` is the unique strong solution from `x ∈ D(A)`
-(dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; for `ιₕ vₕ → x`, `ιₕ exp(t Bₕ) vₕ` and `ιₕ r(τₕ Bₕ)ⁿ vₕ` (`r`
-A-stable of order `p ≥ 1`) converge, with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` (`K` independent
-of `h`, `τ`, `n`, `w`); a closed `K` reduces `A` iff `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`. -/
+/-- **The conclusions of the FEEC theorem for an evolution** `u' = A u` approximated by
+`uₕ' = Bₕ uₕ` on spaces `Xₕ` read in `E` by `ιₕ`, exact evolution `S`: `S t x` is the unique strong
+solution from `x ∈ D(A)` (dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; for `ιₕ vₕ → x`, `ιₕ exp(t Bₕ) vₕ →
+S t x` uniformly on `[0, T]` and `ιₕ r(τₕ Bₕ)ⁿ vₕ → S(nτₕ) x` (`r` A-stable of order `p ≥ 1`),
+with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` (`K` independent of `h`, `τ`, `n`, `w`); a closed `K`
+reduces `A` iff `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`. -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Type*)
     [∀ h, NormedAddCommGroup (X h)] [∀ h, InnerProductSpace 𝕜 (X h)] (ι : ∀ h, X h →L[𝕜] E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
@@ -581,10 +583,10 @@ def residual (h : κ) (f : Total W a m) (x y : S.X h × S.X h × S.X h) : 𝕜 :
 the residual vanishes at every `y ∈ Xₕ × Xₕ × ℌₕ`. -/
 def IsSolution (h : κ) (f : Total W a m) (x : S.X h × S.X h × S.X h) : Prop :=
   x.2.2 ∈ S.harmonic h ∧ ∀ y, y.2.2 ∈ S.harmonic h → S.residual h f x y = 0
-/-- `x' ∈ Xₕ × Xₕ × ℌₕ` has **residual at most `ε`** at the data `f` (dual discrete graph norm). -/
+/-- `x' ∈ Xₕ × Xₕ × ℌₕ` has **residual at most `ε`** at `f` in the dual discrete graph norm. -/
 def ResidualLE (h : κ) (f : Total W a m) (x' : S.X h × S.X h × S.X h) (ε : ℝ) : Prop :=
   x'.2.2 ∈ S.harmonic h ∧ ∀ y, y.2.2 ∈ S.harmonic h → ‖S.residual h f x' y‖ ≤ ε * S.graphNorm h y
-/-- The **read error** `‖y - iₕ v‖ + ‖z - iₕ 𝐝ₕ v‖` of `v ∈ Xₕ` against a form `y` with `𝐝y = z`. -/
+/-- The **read gap** `‖y - iₕ v‖ + ‖z - iₕ 𝐝ₕ v‖` of `v ∈ Xₕ` from a form `y` with `𝐝y = z`. -/
 def readGap (h : κ) (y z : Total W a m) (v : S.X h) : ℝ :=
   ‖y - S.incl h v‖ + ‖z - S.incl h (S.D h v)‖
 /-- The **read error** `‖σ - iₕ σ'‖ + ‖𝐝σ - iₕ 𝐝ₕ σ'‖ + ‖u - iₕ u'‖ + ‖𝐝u - iₕ 𝐝ₕ u'‖ + ‖p - iₕ p'‖`
@@ -732,9 +734,7 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
       S.IsSolution n f xh → 0 < S.readError n x xh := by
   sorry
 
-/-! ### A finite element instance: Whitney forms on the cube
-
-The `L²` de Rham complex as in `palomar/fem` (the `P_rΛ`, `P_r⁻Λ` theory on star domains). -/
+/-! ### A finite element instance: Whitney forms on the cube, in the `L²` de Rham complex -/
 
 section Cube
 variable {n : ℕ}
@@ -801,12 +801,11 @@ end Cube
 
 /-! ### BGG complexes ([ArnoldHu2021])
 
-A **stacked diagram** over a ring `R`: cochain complexes `(V, d)`, `(Ṽ, d̃)` on `ℤ` with
-`Sⁱ : Ṽⁱ → Vⁱ⁺¹`, `d S = -S d̃`, i.e. (Mathlib's shift: `(V⟦1⟧)ⁱ = Vⁱ⁺¹`, differential `-d`) a
-morphism `S : Ṽ ⟶ V⟦1⟧`. The **twisted complex** `T`: `Tⁱ = Vⁱ × Ṽⁱ`, `(σ, φ) ↦ (dσ - Sφ, d̃φ)`
-([ArnoldHu2021], (58)–(59)). The **BGG complex** at `J` eliminates `Vⁱ`, `i > J`, against `Ṽⁱ⁻¹`
-and `Ṽⁱ`, `i < J`, against `Vⁱ⁺¹` ((24)–(26)): the subquotient `Γ / Δ` of `T` (`Vⁱ / R(Sⁱ⁻¹)`
-before `J`, `N(Sⁱ)` after). -/
+A **stacked diagram** over a ring `R`: cochain complexes `(V, d)`, `(Ṽ, d̃)` on `ℤ` and a morphism
+`S : Ṽ ⟶ V⟦1⟧`, i.e. `Sⁱ : Ṽⁱ → Vⁱ⁺¹` with `d S = -S d̃` (Mathlib's shift has differential `-d`).
+The **twisted complex** `T`: `Tⁱ = Vⁱ × Ṽⁱ`, `(σ, φ) ↦ (dσ - Sφ, d̃φ)` ([ArnoldHu2021], (58)–(59)).
+The **BGG complex** at `J` eliminates `Vⁱ`, `i > J`, against `Ṽⁱ⁻¹` and `Ṽⁱ`, `i < J`, against
+`Vⁱ⁺¹` ((24)–(26)): the subquotient `Γ / Δ` of `T` (`Vⁱ / R(Sⁱ⁻¹)` before `J`, `N(Sⁱ)` after). -/
 
 section Sub
 variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
@@ -881,13 +880,13 @@ def twisted : CochainComplex (ModuleCat.{v} R) ℤ where
   shape i j h := by rw [twist_of_ne S h]; rfl
   d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => twist_twist S i j k x)
 
-/-- `Γⁱ = {(σ, φ) | σ = 0 if i > J, (dσ - Sφ)ʲ = 0 for all j > J}` (only `j = i + 1` is a
-condition): the elimination of the top spaces after `J`. -/
+/-- `Γⁱ = {(σ, φ) | σ = 0 if i > J, dσ = Sφ if i + 1 > J}`, the elimination of the top spaces
+after `J` (stated through `twist i j` for all `j > J`; it is zero unless `j = i + 1`). -/
 def Γ (J i : ℤ) : Submodule R (V.X i × Vt.X i) :=
   (⨅ _ : J < i, LinearMap.ker (LinearMap.fst R _ _)) ⊓
     ⨅ (j) (_ : J < j), LinearMap.ker (LinearMap.fst R _ _ ∘ₗ twist S i j)
-/-- `Δⁱ = Eⁱ + Σ_{k < J} twist (Eᵏ)`, `Eᵏ = 0 × Ṽᵏ` (`k < J`; only `k = i - 1` contributes): the
-exact part `0 × Ṽⁱ` (`i < J`) and `{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` (`i - 1 < J`) of the bottom spaces. -/
+/-- `Δⁱ = 0 × Ṽⁱ (i < J) + {(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹} (i - 1 < J)`, the exact part of the bottom
+spaces before `J` (the second term as `Σ_{k < J} twist k i (0 × Ṽᵏ)`, zero unless `k = i - 1`). -/
 def Δ (J i : ℤ) : Submodule R (V.X i × Vt.X i) :=
   (⨆ _ : i < J, LinearMap.range (LinearMap.inr R _ _)) ⊔
     ⨆ (k) (_ : k < J), (LinearMap.range (LinearMap.inr R _ _)).map (twist S k i)
@@ -944,12 +943,15 @@ def ofBoundedHom : ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧ where
 end BGG
 
 /-- **The BGG construction** ([ArnoldHu2021], §5.2): for `Sⁱ` injective for `i < J` and onto
-modulo `d` for `i ≥ J` (weaker than (23)), `Γ → T` and `Γ → Γ / Δ` are quasi-isomorphisms. -/
+modulo `d` for `i ≥ J` (weaker than (23)), `Γ → T` and `Γ → Γ / Δ` are quasi-isomorphisms; so the
+BGG complex has the cohomology of `T` and is exact when both rows are. -/
 theorem bggCohomology {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
     (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
     (hsurj : ∀ i, J ≤ i →
       LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
-    QuasiIso (BGG.bggΓι S J) ∧ QuasiIso (BGG.bggπ S J) := by
+    QuasiIso (BGG.bggΓι S J) ∧ QuasiIso (BGG.bggπ S J) ∧
+      (∀ i, Nonempty ((BGG.bgg S J).homology i ≅ (BGG.twisted S).homology i)) ∧
+      (V.Acyclic → Vt.Acyclic → (BGG.bgg S J).Acyclic) := by
   sorry
 
 /-- **The cohomology of the BGG complex** ([ArnoldHu2021], Theorem 6, (27)): over a field,

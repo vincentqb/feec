@@ -4,7 +4,7 @@ public import Solution.Rates
 public import Solution.Forms
 public import Solution.OfFeec
 public import Feec.Models.Parallelepiped.StarShaped
-public import Feec.FiniteElement.AffinePieces
+public import Feec.Models.Cube.KuhnPieces
 
 /-!
 # The Whitney forms on the cube meet the hypotheses of the FEEC theorem
@@ -17,7 +17,8 @@ trimmed sequence `P₁⁻Λ` (`Feec.FiniteElement.PolySeq.trimmed 1`, the Whitne
 (`MeshFamily.eventually_exists_poly_graph`), the interpolation error
 (`MeshFamily.exists_mem_poly_le_of_isCsForm`, a Jackson estimate of order `h`), the closed ranges
 from the Poincaré inequality (`CubeWitness.hasPoincare`), the static rate of `Solution.Rates`, and
-the affine pieces (`Feec.FiniteElement.LocalElement.exists_piece_of_mem_V`,
+the affine pieces (`Feec.FiniteElement.PolySeq.exists_piece_of_mem_subcomplex`,
+`Feec.Models.Cube.FEM.exists_mem_simplices_points_eq`,
 `Feec.FiniteElement.exists_affine_of_mem_polySpace_one`). As in `palomar/fem/Solution.lean`.
 
 ## References
@@ -70,30 +71,6 @@ theorem isCsForm_cube (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form (cube n) j) :
         (eq_formL2_iff _ _ x ⟨w, hw.continuous⟩).2 hx⟩
     · rintro ⟨k, hk, w, hw, hdeg, h1, h2, hx⟩
       exact ⟨w, hw, (isDeg_iff hk w).1 hdeg, h1, h2, (eq_formL2_iff _ _ x _).1 hx⟩
-
-/-- The pieces of a form of the subcomplex of an admissible sequence on a mesh. -/
-theorem exists_piece_of_mem_poly [NeZero n] {Ω : Set (Fin n → ℝ)} (m : Feec.Mesh.SimplicialMesh n)
-    (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω) (S : PolySeq) {k : ℤ}
-    {u : L2F ℝ Ω (formIdx n k)}
-    (hu : u ∈ ((deRham ℝ n).maximalSubcomplexOfEq h hm hΩ (S.subcomplex m hm)).V k)
-    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ m.simplices) :
-    ∃ w ∈ S.space n k.toNat, ∀ s : formIdx n k,
-      ⇑(u s) =ᵐ[volume.restrict (Ω ∩ T.closedInterior)] fun x => w x s.1 := by
-  obtain ⟨Ts, d, h1, h2, h3⟩ := m
-  subst h
-  exact (polyElement n S).exists_piece_of_mem_V _ hu hT
-
-/-- The Kuhn simplex `h (z + K_σ)` of the Freudenthal mesh `M_N` of the cube. -/
-theorem exists_kuhn [NeZero n] (N : ℕ) (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)) :
-    ∃ T ∈ (FEM.mesh n N).simplices, ∀ j i,
-      T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1)) := by
-  refine ⟨_, (Feec.Mesh.mem_freudenthalMesh_simplices (hs := by norm_num)).2 ⟨z, σ, rfl⟩,
-    fun j i => ?_⟩
-  simp only [Feec.Mesh.mapEquiv_points, Feec.Mesh.freudenthalSimplex_points,
-    Feec.Mesh.boxMap_apply, Pi.add_apply, Pi.smul_apply, smul_eq_mul, Pi.zero_apply, zero_add,
-    Feec.Mesh.latticePoint_apply, Feec.Mesh.finLattice, Feec.Mesh.kuhnVertex]
-  push_cast
-  field_simp
 
 /-- The trimmed sequence `P₁⁻Λ` of the Whitney forms. -/
 abbrev whitney : PolySeq := PolySeq.trimmed 1 le_rfl

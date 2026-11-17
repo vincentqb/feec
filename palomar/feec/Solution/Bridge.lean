@@ -2,6 +2,7 @@ module
 
 public import Solution.Legacy
 public import Feec.HilbertComplex.Approximation.StaticFEEC
+public import Feec.ForMathlib.InnerProductSpace.Basic
 
 /-!
 # The bridge from the challenge to `Feec`
@@ -366,16 +367,6 @@ theorem IsMixedSolution.sub {j : ℤ} {A : Submodule 𝕜 (W (j - 1))} {B Q : Su
   harm q hq := by
     rw [Submodule.coe_sub, inner_sub_right, hs.harm q hq, hs'.harm q hq, sub_zero]
 
-omit [∀ i, CompleteSpace (W i)] in
-theorem eq_zero_of_inner_self_add {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-    [NormedAddCommGroup F] [InnerProductSpace 𝕜 F] {x : E} {y : F}
-    (h : ⟪x, x⟫_𝕜 + ⟪y, y⟫_𝕜 = 0) : x = 0 ∧ y = 0 := by
-  rw [inner_self_eq_norm_sq_to_K, inner_self_eq_norm_sq_to_K, ← RCLike.ofReal_pow,
-    ← RCLike.ofReal_pow, ← RCLike.ofReal_add, RCLike.ofReal_eq_zero] at h
-  have hx : ‖x‖ = 0 := by nlinarith [norm_nonneg x, norm_nonneg y]
-  have hy : ‖y‖ = 0 := by nlinarith [norm_nonneg x, norm_nonneg y]
-  exact ⟨norm_eq_zero.1 hx, norm_eq_zero.1 hy⟩
-
 /-- **Uniqueness for the mixed problem**: a solution with zero data vanishes when the harmonic
 space `Q` is made of cycles of `B` and contains every cycle of `B` orthogonal to `d A`. -/
 theorem IsMixedSolution.eq_zero {j : ℤ} {A : Submodule 𝕜 (W (j - 1))} {B Q : Submodule 𝕜 (W j)}
@@ -394,7 +385,7 @@ theorem IsMixedSolution.eq_zero {j : ℤ} {A : Submodule 𝕜 (W (j - 1))} {B Q 
   have e4 : ⟪(u : W j), H.d (j - 1) j σ⟫_𝕜 = ⟪(σ : W (j - 1)), σ⟫_𝕜 := by
     rw [← inner_conj_symm, ← sub_eq_zero.1 e1, inner_conj_symm]
   rw [e3', e4, add_zero] at e2
-  obtain ⟨hσ0, hdu⟩ := eq_zero_of_inner_self_add e2
+  obtain ⟨hσ0, hdu⟩ := inner_self_add_inner_self_eq_zero e2
   have hσ0' : σ = 0 := Subtype.ext hσ0
   subst hσ0'
   obtain ⟨hpd, hpB, hdp⟩ := hQ p hp

@@ -571,20 +571,6 @@ def topSeq : PolySeq where
   one_le_deg _ := le_rfl
   transition _ := Or.inl ⟨rfl, rfl⟩
 
-/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
-restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
-Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
-coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
-`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
-(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
-`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
-def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
-  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
-    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
-      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
-    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
-    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
-
 /-! ### The Crank–Nicolson Whitney scheme ([QuennevilleBelair2015], Ch. 7) -/
 
 /-- **The integral of a `k`-form over the oriented `k`-simplex** `p = (p₀, …, p_k)` in `ℝⁿ`:

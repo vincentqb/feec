@@ -18,6 +18,12 @@ cube `b + (0, s)ⁿ` and of class `C^{2m+2}`, it is at most `n^{m+1} B'`, `B'` a
 * `Dₕ` commutes with partial derivatives (`partialDeriv_diffLap`) and
   `|Dₕ g| ≤ n sup_i |∂ᵢ² g|` (`abs_diffLap_le`, the second difference), so
   `|Dₕᵏ f| ≤ nᵏ B'` (`abs_iterate_diffLap_le`).
+
+## References
+
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open Set Finset

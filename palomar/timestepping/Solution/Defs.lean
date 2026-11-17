@@ -42,6 +42,35 @@ imports, opens and definitions, the rational schemes of semigroups (`TimeSteppin
 (`TimeStepping.femSpace`, `TimeStepping.IsCNStep`, `TimeStepping.IsLeapfrogStep`,
 `TimeStepping.RowSolution` and their companions). The solution imports this module and the
 bridges to `Feec`, and proves the theorems (`Solution.lean`).
+
+## References
+
+* [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
+* [A. Gomilko, Y. Tomilov, *Rational Approximation of Operator Semigroups via the B-Calculus*][GomilkoTomilov2024],
+  Thm 1.1
+* [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
+  §1.4, §1.5, §3.4
+* [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3,
+  §IV.11
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1, 7, 15
+* [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 7
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3–5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §4, §5.2
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1, §3.2
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
+  §4.5
+
+Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology
@@ -340,20 +369,6 @@ def topSeq : PolySeq where
   deg _ := 1
   one_le_deg _ := le_rfl
   transition _ := Or.inl ⟨rfl, rfl⟩
-
-/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
-restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
-Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
-coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
-`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
-(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
-`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
-def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
-  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
-    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
-      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
-    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
-    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
 
 /-! ### The Crank–Nicolson Whitney scheme ([QuennevilleBelair2015], Ch. 7) -/
 

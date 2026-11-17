@@ -4,15 +4,15 @@ public import Solution.CrankNicolson
 public import Feec.Models.Cube.InhomogeneousLeapfrog
 
 /-!
-# `FEEC.leapfrog_cube` and `FEEC.inverse_estimate`
+# `TimeStepping.leapfrog_cube` and `TimeStepping.inverse_estimate`
 
 The challenge's leapfrog step is `Feec`'s `TimeStepping.IsDirichletLeapfrogStep` on the Whitney
 row (`isLeapfrogStep_ofD_iff`, as `isCNStep_ofD_iff`), the norm of a row is the norm of the
 Whitney state (`rowNorm_ofD`), and the challenge's `𝐝ₕ v = (0, dσ, dE)` is `Feec`'s `discreteD`
-(`norm_discreteD_eq`). `FEEC.leapfrog_cube` is then
+(`norm_discreteD_eq`). `TimeStepping.leapfrog_cube` is then
 `Feec.Models.Cube.Inhomogeneous.exists_mul_norm_discreteD_whitneyRow_le` (the inverse estimate),
 `TimeStepping.existsUnique_isDirichletLeapfrogStep`, `whitney_leapfrog_stable` and
-`RowSolution.whitney_leapfrog_error_le_row`. `FEEC.inverse_estimate` is
+`RowSolution.whitney_leapfrog_error_le_row`. `TimeStepping.inverse_estimate` is
 `Feec.FiniteElement.PolySeq.exists_mul_norm_d_le` on the `Feec` meshes `M.toFeec Ω` (shape
 regularity from the inscribed balls, `isShapeRegular_toFeec`), whose spaces are the challenge's
 (`mem_V_iff`).
@@ -30,7 +30,7 @@ open Set MeasureTheory
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.Inhomogeneous
   Feec.HilbertComplex
@@ -116,4 +116,4 @@ theorem exists_mem_simplices {M : SimplicialMesh n} (hM : 0 < meshSize M) :
   have : IsEmpty M.simplices := ⟨fun T => h ⟨T, T.2⟩⟩
   simp [meshSize] at hM
 
-end FEEC
+end TimeStepping

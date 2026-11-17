@@ -29,7 +29,7 @@ open MeasureTheory Set Finset
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Domain Feec.FiniteElement Feec.ExteriorFibre
 
@@ -224,4 +224,4 @@ theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
       exact ((traceEq_iff _ _ _ _).1 this).mono hg
     exact h.trans (map_zero _)
 
-end FEEC
+end TimeStepping

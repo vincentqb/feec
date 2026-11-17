@@ -24,13 +24,13 @@ open Set
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Numerics.PlaneWaveCube Feec.Numerics.CrankNicolson
 
 /-- A `Feec` row solution as a smooth row solution of the challenge. -/
 def RowSolution.ofFeec {T L : ℝ} (X : Feec.Models.Cube.Inhomogeneous.RowSolution T L) :
-    FEEC.RowSolution T L where
+    TimeStepping.RowSolution T L where
   u := X.u
   u₁ := X.u₁
   u₂ := X.u₂
@@ -86,7 +86,7 @@ theorem exists_sin_two_mul_ne_zero (t : ℝ) :
 /-- Row `0` of the plane wave is a smooth row solution whose electric field `E` and its time
 derivative are nonzero at some point of the cube at every time. -/
 theorem exists_rowSolution (T : ℝ) :
-    ∃ L, ∃ X : FEEC.RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 := by
+    ∃ L, ∃ X : TimeStepping.RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 := by
   refine ⟨_, RowSolution.ofFeec (planeWaveRows 1 0 1 T 0), fun t => ?_⟩
   obtain ⟨a, ha, hsin⟩ := exists_sin_two_mul_ne_zero t
   rw [Real.sin_two_mul] at hsin
@@ -102,4 +102,4 @@ theorem exists_rowSolution (T : ℝ) :
     have hc : Real.cos (a - t) = 0 := by simpa using this
     simp [hc]
 
-end FEEC
+end TimeStepping

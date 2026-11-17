@@ -3,12 +3,12 @@ module
 public import Solution.WhitneyScheme
 
 /-!
-# `FEEC.crankNicolson_cube`
+# `TimeStepping.crankNicolson_cube`
 
 A smooth row solution of the challenge is `Feec`'s `RowSolution` (`RowSolution.toFeec`: the
 challenge's `codiff` is `Feec`'s formal adjoint `formalAdjD`). The Whitney interpolant of a row
 is `RowSolution.interp` (`ofD_interp`), the representatives of `U(t)` are `RowSolution.field`
-(`toRow_field`), and `FEEC.crankNicolson_cube` is
+(`toRow_field`), and `TimeStepping.crankNicolson_cube` is
 `Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row` on the Freudenthal meshes,
 with the well-posedness `whitney_existsUnique_cnStep`, the unisolvence of the face integrals
 (`isWhitneyInterp_cube_iff`) and `V̊ₕ¹ ≠ 0` (`whitneyMin_one_ne_bot`).
@@ -26,15 +26,13 @@ open Set MeasureTheory
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.Inhomogeneous
   Feec.HilbertComplex
 
-theorem codiff_eq_formalAdjD {n : ℕ} (ψ : FormField n) : codiff ψ = formalAdjD ψ := rfl
-
 /-- A smooth row solution of the challenge as a `Feec` row solution. -/
-def RowSolution.toFeec {T L : ℝ} (X : FEEC.RowSolution T L) :
+def RowSolution.toFeec {T L : ℝ} (X : TimeStepping.RowSolution T L) :
     Feec.Models.Cube.Inhomogeneous.RowSolution T L where
   u := X.u
   u₁ := X.u₁
@@ -55,7 +53,7 @@ def RowSolution.toFeec {T L : ℝ} (X : FEEC.RowSolution T L) :
   lipschitz := X.lipschitz
   bound₃ := X.bound₃
 
-variable {T L : ℝ} (X : FEEC.RowSolution T L)
+variable {T L : ℝ} (X : TimeStepping.RowSolution T L)
 
 /-- The Whitney interpolant of the challenge's row is `Feec`'s row interpolant. -/
 theorem ofD_interp {N : ℕ} {t : ℝ} {w : Row} (h : IsRowInterp (cubeMesh N) (X.u t) w) :
@@ -65,12 +63,6 @@ theorem ofD_interp {N : ℕ} {t : ℝ} {w : Row} (h : IsRowInterp (cubeMesh N) (
   have e1 := (isWhitneyInterp_cube_iff N 1 ⟨X.u t 1, X.toFeec.continuous t 1⟩ _).1 h1
   have e2 := (isWhitneyInterp_cube_iff N 2 ⟨X.u t 2, X.toFeec.continuous t 2⟩ _).1 h2
   exact Prod.ext e0 (Prod.ext e1 e2)
-
-theorem isRowInterp_interp (N : ℕ) (t : ℝ) :
-    IsRowInterp (cubeMesh N) (X.u t) (ofD N (X.toFeec.interp N t)) :=
-  ⟨(isWhitneyInterp_cube_iff N 0 ⟨X.u t 0, X.toFeec.continuous t 0⟩ _).2 rfl,
-    (isWhitneyInterp_cube_iff N 1 ⟨X.u t 1, X.toFeec.continuous t 1⟩ _).2 rfl,
-    (isWhitneyInterp_cube_iff N 2 ⟨X.u t 2, X.toFeec.continuous t 2⟩ _).2 rfl⟩
 
 /-- The representatives of `U(t)` are `Feec`'s `RowSolution.field`. -/
 theorem toRow_field {t : ℝ} {U : Row} (h0 : IsRepr (cube 3) 0 (X.u t 0) U.1)
@@ -89,4 +81,4 @@ theorem zero_le_L {Δt : ℝ} {M : ℕ} (hΔt : 0 < Δt) (hM : (M : ℝ) * Δt �
     subset_closure fun i _ => by norm_num
   exact (norm_nonneg _).trans (X.bound 0 ⟨le_rfl, hT⟩ 0 _ hy).1
 
-end FEEC
+end TimeStepping

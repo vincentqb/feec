@@ -21,11 +21,7 @@ The challenge is stated over Mathlib's polynomials and bounded operators. The di
   `p(τL) q(τL)⁻¹` (`TimeStepping.step_eq`, from `Feec.TimeStepping.resolventEval_eq_mul_aeval`);
 * a `TimeStepping.IsC0Semigroup` is a `Feec.C0Semigroup` (`TimeStepping.IsC0Semigroup.toC0`),
   whose generator has the graph `TimeStepping.generatorGraph` (`TimeStepping.mem_graph_iff`);
-* a bounded `L` with `‖e^{tL}‖ ≤ M` is a one-member `Feec.TimeStepping.StableFamily`
-  (`TimeStepping.single`), and backward Euler `(1 - τL)⁻¹` is its resolvent
-  (`TimeStepping.inverse_eq_res`);
-* the sub-Markov generators and the finite difference Laplacian are those of `Feec`
-  (`TimeStepping.IsSubMarkovGenerator.toFeec`, `TimeStepping.fdLaplacian_eq`).
+* the finite difference Laplacian is that of `Feec` (`TimeStepping.fdLaplacian_eq`).
 
 `TimeStepping.enorm_le_iSup` and `TimeStepping.enorm_pow_le_iSup_pow` pass from real bounds to
 suprema in `[0, ∞]`.
@@ -162,23 +158,6 @@ section Bounded
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-- A bounded `L` with `‖e^{tL}‖ ≤ M` as a one-member uniformly stable family. -/
-def single {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X]
-    [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) {M : ℝ}
-    (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) : StableFamily 𝕜 Unit where
-  X _ := X
-  L _ := L
-  M := M
-  M_nonneg := (norm_nonneg _).trans (hL 0 le_rfl)
-  norm_exp_le _ t ht := hL t ht
-
-/-- `Ring.inverse A = R` for a two-sided inverse `R` of `A`. -/
-theorem _root_.Ring.inverse_eq_of_mul_eq_one {M : Type*} [MonoidWithZero M] {R A : M}
-    (h1 : R * A = 1) (h2 : A * R = 1) : Ring.inverse A = R := by
-  have hu : IsUnit A := ⟨⟨A, R, h2, h1⟩, rfl⟩
-  calc Ring.inverse A = Ring.inverse A * (A * R) := by rw [h2, mul_one]
-    _ = R := by rw [← mul_assoc, Ring.inverse_mul_cancel _ hu, one_mul]
-
 variable {κ : Type*} (F : StableFamily 𝕜 κ) {τ : ℝ} (hτ : 0 < τ) (h : κ)
 include hτ
 
@@ -189,21 +168,6 @@ theorem res_mul : F.res τ h * (1 - (τ : 𝕜) • F.L h) = 1 := by
 theorem mul_res : (1 - (τ : 𝕜) • F.L h) * F.res τ h = 1 := by
   ext x
   simpa using F.res_sub_smul_apply_res hτ h x
-
-/-- **Backward Euler is the discrete resolvent**: `(1 - τLₕ)⁻¹ = Rₕ`. -/
-theorem inverse_eq_res : Ring.inverse (1 - (τ : 𝕜) • F.L h) = F.res τ h :=
-  Ring.inverse_eq_of_mul_eq_one (res_mul F hτ h) (mul_res F hτ h)
-
-omit hτ in
-/-- **The resolvent of a bounded `L` with `‖e^{tL}‖ ≤ M`**: a two-sided inverse of `1 - τL`, of
-norm at most `M`. -/
-theorem exists_res {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X]
-    [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) {M : ℝ}
-    (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) {τ : ℝ} (hτ : 0 < τ) :
-    ∃ R : X →L[𝕜] X, R * (1 - (τ : 𝕜) • L) = 1 ∧ (1 - (τ : 𝕜) • L) * R = 1 ∧ ‖R‖ ≤ M :=
-  ⟨(single L hL).res τ (), res_mul (single L hL) hτ (), mul_res (single L hL) hτ (), by
-    have := (single L hL).norm_res_pow_le hτ () 1
-    rwa [pow_one] at this⟩
 
 /-- **For a bounded generator the resolvent form is `p(τL) q(τL)⁻¹`**, and `q(τL)` is
 invertible. -/
@@ -242,11 +206,6 @@ theorem step_eq (r : RationalScheme) :
 end Bounded
 
 /-! ### The maximum norm -/
-
-/-- A sub-Markov generator of the challenge is one of `Feec`. -/
-theorem IsSubMarkovGenerator.toFeec {ι : Type*} [Fintype ι] {L : (ι → ℝ) →L[ℝ] (ι → ℝ)}
-    (hL : IsSubMarkovGenerator L) : _root_.IsSubMarkovGenerator L :=
-  ⟨hL.1, hL.2⟩
 
 /-- The finite difference Laplacian of the challenge is `FiniteDifference.laplacian`. -/
 theorem fdLaplacian_eq {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ) :

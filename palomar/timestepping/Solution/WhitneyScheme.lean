@@ -26,7 +26,7 @@ open Set
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.Inhomogeneous
   Feec.HilbertComplex
@@ -56,8 +56,6 @@ def ofRow (x : Row) : RowSpace := WithLp.toLp 2 fun i => match i with
   | 0 => x.1
   | 1 => x.2.1
   | 2 => x.2.2
-
-theorem toRow_ofRow (x : Row) : toRow (ofRow x) = x := rfl
 
 theorem inner_toRow (z z' : RowSpace) : rowInner (toRow z) (toRow z') = ⟪z, z'⟫ := by
   rw [PiLp.inner_apply, Fin.sum_univ_three]
@@ -190,4 +188,4 @@ theorem isCNStep_ofD_iff (Δt : ℝ) (g u : DState (whitneyRow N)) (x : Row) :
     · obtain ⟨v', hv'', rfl⟩ := (rowMem_true_iff N v).1 hv'
       rw [← ofD_sub, ← ofD_add, rowInner_ofD, waveForm_ofD, hv v' hv'', inner_zero_left, add_zero]
 
-end FEEC
+end TimeStepping

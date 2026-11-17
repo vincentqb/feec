@@ -23,7 +23,7 @@ open MvPolynomial
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 variable {n : ℕ}
 
@@ -117,4 +117,4 @@ theorem space_eq (k : ℕ) : S.space n k = S.toFeec.space n k := by
 
 end PolySeq
 
-end FEEC
+end TimeStepping

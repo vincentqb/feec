@@ -25,7 +25,7 @@ open Finset
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.FiniteElement Feec.ExteriorFibre Feec.Mesh
 
@@ -61,4 +61,4 @@ theorem traceEq_iff (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin 
     rw [covEval_eq, covEval_eq]
     exact h (fun i l => v l i) hv
 
-end FEEC
+end TimeStepping

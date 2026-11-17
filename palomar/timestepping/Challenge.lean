@@ -1,5 +1,17 @@
 module
 
+public import Mathlib.Algebra.MvPolynomial.PDeriv
+public import Mathlib.Analysis.Calculus.ContDiff.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Convex.Hull
+public import Mathlib.Analysis.InnerProductSpace.LinearPMap
+public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.Normed.Lp.PiLp
+public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
+public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
+public import Mathlib.MeasureTheory.Function.L2Space
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Algebra.Polynomial.AlgebraMap
 public import Mathlib.Analysis.Normed.Operator.Mul
@@ -16,9 +28,10 @@ public import Mathlib.Data.Int.Interval
 public import Mathlib.Data.Fintype.Pi
 public import Mathlib.Analysis.LocallyConvex.AbsConvexOpen
 public import Mathlib.Order.CompletePartialOrder
+public import Mathlib.Analysis.CStarAlgebra.Classes
 
 /-!
-# Time stepping for uniformly stable semigroup families on Banach spaces
+# Rational time stepping on Banach spaces, with finite difference and finite element instances
 
 A one-step method for `u' = A u` replaces the exact evolution `e^{τA}` by `r(τA)`, `r = p/q` a
 rational function with real coefficients; it is **A-stable** (`IsAStable`) if `q` has no zero
@@ -26,9 +39,10 @@ and `|r| ≤ 1` on the closed left half-plane, and of **order `m`** (`HasOrder`)
 `r(z) - e^z = O(z^{m+1})` at `0`. On a Hilbert space von Neumann's inequality makes A-stable
 schemes contractive; on a Banach space, e.g. for the heat equation in the maximum norm, they need
 not be power bounded. Brenner and Thomée showed that they are nevertheless nearly stable and
-converge at their order for smooth data, with constants depending on `r` only. The estimates
-therefore hold uniformly over families of space discretizations, and stability with consistency
-gives convergence for every datum; finite differences for the heat equation are the example.
+converge at their order for smooth data, with constants depending on `r` only, hence uniformly
+over every family of space discretizations with uniformly bounded semigroups. Two such families
+are the instances here: finite differences for the heat equation in the maximum norm, and
+Whitney finite elements for the Hodge wave equation on the Freudenthal meshes of a cube.
 
 Mathlib has no `C₀`-semigroups: `IsC0Semigroup` is the definition and `generatorGraph` the graph
 of the generator (right derivatives at `0`). For a bounded `L`, `r(τL) = p(τL) q(τL)⁻¹`
@@ -40,27 +54,40 @@ For every A-stable `r`, `|r(∞)| = 1` included, and every bounded strongly cont
 (`‖S(t)‖ ≤ M`) of a real or complex Banach space, `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` (`stable`), and for
 `r` of order `m`, `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖` (`error`), `C`, `K` depending
 on `r`, `m` only. The Hille–Yosida estimates (`hilleYosida`, [Pazy1983], §1.5) make backward
-Euler power bounded also under growth `‖S(t)‖ ≤ M e^{ωt}` (`backwardEuler`).
-
-**Uniformly stable families** ([Thomee2006], Ch. 7, 9). The same bounds for every bounded `L`
-with `‖e^{tL}‖ ≤ M` (`stable_of_bounded`, `error_of_bounded`, the latter also along a
-trajectory with a defect). For bounded generators `Lₕ` on Banach spaces `Xₕ`, uniformly stable
-and read in `E` by uniformly bounded `ιₕ` with uniformly bounded left inverses: if the
-semidiscrete solutions converge to `S(t) x`, so do the fully discrete solutions of every
-power-bounded scheme consistent of order `p ≥ 1`, for every datum (`converges`); backward Euler
-is always one (`converges_backwardEuler`).
+Euler power bounded also under growth `‖S(t)‖ ≤ M e^{ωt}`. For space discretizations `Lₕ` with
+uniformly bounded semigroups, stability and consistency give convergence for every datum
+(`converges`, [Thomee2006], Ch. 7).
 
 **Hilbert spaces** ([VonNeumann1951]; [HairerWanner1996], §IV.11). Von Neumann's inequality
-(`vonNeumann`, `vonNeumann_rational`); for m-dissipative `A`,
-`‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` (`contractive`).
+(`vonNeumann`); for m-dissipative `A`, `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` (`contractive`).
 
-**The maximum norm** ([CiarletRaviart1973]; [Thomee2006], Ch. 15). A sub-Markov generator
-(`IsSubMarkovGenerator`) generates positive contractions and has positive contractive backward
-Euler steps (`subMarkov`); the finite difference Laplacian `fdLaplacian` on every finite grid of
-`ℤ^ι` is one (`isSubMarkovGenerator_fdLaplacian`). On a cube, every A-stable scheme of order `m`
-approximates every classical solution of the heat equation with bounded fourth derivatives to
-`O(h²) + O(τᵐ)` in the maximum norm (`fdHeat`). Backward Euler and Crank–Nicolson satisfy the
-hypotheses on `r` (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
+**Finite differences in the maximum norm** ([Thomee2006], Ch. 15). The finite difference
+Laplacian `fdLaplacian` satisfies the discrete maximum principle, `‖e^{tΔₕ}‖_∞ ≤ 1`, so `error`
+applies with `M = 1` uniformly in `h`: on a cube every A-stable scheme of order `m`, started from
+the nodal interpolant, approximates every classical solution of the heat equation whose initial
+value satisfies the compatibility conditions to `O(h² + τᵐ)` in the maximum norm (`fdHeat`).
+
+**Whitney elements for the Hodge wave equation** ([QuennevilleBelair2015], Ch. 7; [Joly2003]).
+On the Freudenthal meshes of `Q = (0, ½)³` the Whitney spaces `P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` discretize
+`σ' = -dᵗE`, `E' = dσ - dᵗB`, `B' = dE`; on the fields `V̊ₕ` with vanishing boundary degrees of
+freedom the discrete operator `Aₕ` is skew-adjoint for the `L²` product. The implicit
+Crank–Nicolson rule is `r(ΔtAₕ)` for the A-stable `r(z) = (2 + z)/(2 - z)`
+(`crankNicolson_isAStable`, `|r(iy)| = 1`), the Hilbert case of `contractive`: stable for every
+time step, of error `O(h + Δt²)` (`crankNicolson_cube`). The explicit leapfrog rule is a two-step
+method outside the one-step class; it is stable under the CFL condition `Δt ≲ h` that the
+global inverse estimate (`inverse_estimate`) makes concrete, with the same error
+(`leapfrog_cube`). A plane wave meets the hypotheses of both error bounds
+(`rowSolution_nonvacuous`), as backward Euler and Crank–Nicolson meet those on `r`
+(`backwardEuler_isAStable`, `crankNicolson_isAStable`).
+
+## Conventions
+
+Points of `ℝⁿ` are `Fin n → ℝ` (Lebesgue measure, sup norm). A `k`-form is given by its
+coefficients `ω_s` on `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s = {s₁ < ⋯ < s_k} ⊆ Fin n`
+(`FormIdx n k`); `L²(Ω; Λᵏ)` is the `ℓ²` sum of a copy of `L²(Ω)` per coefficient (`L2Form`).
+With `ε(j, s) = (-1)^{#{l ∈ s | l < j}}`, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. The
+definitions of differential forms, polynomial forms, simplicial meshes and finite element spaces
+are those of the Palomar entry `palomar/fem`.
 
 ## References
 
@@ -72,14 +99,28 @@ hypotheses on `r` (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3,
   §IV.11
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9, 15
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 1, 7, 15
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  Ch. 7
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
+* [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3–5
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §4, §5.2
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1, §3.2
+* [S. C. Brenner, L. R. Scott, *The Mathematical Theory of Finite Element Methods*][BrennerScott2008],
+  §4.5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace Topology
-open Polynomial Asymptotics Filter Set
+open Polynomial Asymptotics Filter Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 
@@ -134,32 +175,15 @@ def HasOrder (p q : ℝ[X]) (m : ℕ) : Prop :=
 semigroup of a complex Banach space (real ones are covered by complexification in `Feec`, not
 here) with `‖S t‖ ≤ M e^{ωt}`, generator `A`. Every `z` with
 `re z > ω` is in the resolvent set of `A`: there is a bounded `R` with `R (z x - A x) = x` on
-`D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. -/
+`D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. At
+`z = 1/τ`, `ωτ < 1`, backward Euler `(1 - τA)⁻¹ = z R` is power bounded, `‖(1 - τA)⁻ᵏ‖ ≤
+M/(1 - ωτ)ᵏ`, for every step: the stability hypothesis of `converges`. -/
 theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
     (S : ℝ → E →L[ℂ] E) (hS : IsC0Semigroup S) {M ω : ℝ}
     (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) (z : ℂ) (hz : ω < z.re) :
     ∃ R : E →L[ℂ] E, (∀ x y : E, (x, y) ∈ generatorGraph S → R (z • x - y) = x) ∧
       (∀ y : E, (R y, z • R y - y) ∈ generatorGraph S) ∧
       ∀ m : ℕ, ‖R ^ m‖ ≤ M / (z.re - ω) ^ m := by
-  sorry
-
-/-- **Backward Euler on Banach spaces** ([BrennerThomee1979]; [Pazy1983], §1.5). Let `S` be a
-strongly continuous semigroup of a real or complex Banach space with `‖S t‖ ≤ M e^{ωt}`
-(`ω ≥ 0`), generator `A`, `τ > 0` with `ωτ < 1`, and `R` with `R (x - τAx) = x` on `D(A)`, so
-that `r(τA) = R` for `r(z) = 1/(1 - z)`. Then `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` (Hille–Yosida), and for every
-`n` and `x ∈ D(A²)` (a chain `u 0 = x, u 1 = A x, u 2 = A² x` in the graph of `A`)
-`‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`. -/
-theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
-    (hS : IsC0Semigroup S) {M ω : ℝ} (hω : 0 ≤ ω)
-    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) {τ : ℝ} (hτ : 0 < τ)
-    (hωτ : ω * τ < 1) (R : E →L[𝕜] E)
-    (hR : ∀ x y : E, (x, y) ∈ generatorGraph S → R (x - (τ : 𝕜) • y) = x) :
-    (∀ k : ℕ, ‖R ^ k‖ ≤ M / (1 - ω * τ) ^ k) ∧
-      ∀ (n : ℕ) (u : ℕ → E), (∀ j < 2, (u j, u (j + 1)) ∈ generatorGraph S) →
-        ‖(R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤ M / (1 - ω * τ) ^ n *
-          (M / (1 - ω * τ) + M * Real.exp (ω * (n * τ)) / 2) * (M * Real.exp (ω * (n * τ))) *
-            (n * τ) * τ * ‖u 2‖ := by
   sorry
 
 /-- **Brenner–Thomée's stability bound** ([BrennerThomee1979]). For every A-stable `r = p/q`
@@ -195,41 +219,6 @@ theorem error (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m
             K * M * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
   sorry
 
-/-! ### Uniformly stable families of bounded generators -/
-
-/-- **Brenner–Thomée's stability bound for bounded generators**, uniformly in the generator.
-For every A-stable `r = p/q` there is `C ≥ 0`, depending on `r` only, such that for every
-bounded operator `L` of a real or complex Banach space with `‖e^{tL}‖ ≤ M` (`t ≥ 0`) and every
-`τ > 0`, `q(τL)` is invertible and `‖r(τL)ⁿ‖ ≤ M (1 + C √n)` for every `n`. -/
-theorem stable_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) :
-    ∃ C : ℝ, 0 ≤ C ∧ ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-      [CompleteSpace X] (L : X →L[𝕜] X) (M : ℝ),
-      (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
-        IsUnit (aeval ((τ : 𝕜) • L) (q.map (algebraMap ℝ 𝕜))) ∧
-        ∀ n : ℕ, ‖rationalApply p q ((τ : 𝕜) • L) ^ n‖ ≤ M * (1 + C * √n) := by
-  sorry
-
-/-- **The error of A-stable schemes for bounded generators**, uniformly in the generator. For
-every A-stable `r = p/q` of order `m` there is `K`, depending on `r` and `m` only, such that for
-every bounded operator `L` of a real or complex Banach space with `‖e^{tL}‖ ≤ M` (`t ≥ 0`), every
-`τ > 0`, `n` and `v`: `‖r(τL)ⁿ v - e^{nτL} v‖ ≤ K M nτ τᵐ ‖L^{m+1} v‖`, and for every curve `U`
-(a trajectory, e.g. the interpolant of an exact solution) with derivative `U'` at every point
-of `[0, nτ]` (two-sided, so `U` is defined around the endpoints) and defect `‖U' - L U‖ ≤ D`
-there,
-`‖U(nτ) - r(τL)ⁿ v‖ ≤ M ‖U(0) - v‖ + M nτ D + K M nτ τᵐ ‖L^{m+1} v‖`. -/
-theorem error_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
-    ∃ K : ℝ, ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-      [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) (M : ℝ),
-      (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
-      ∀ (n : ℕ) (v : X),
-        ‖(rationalApply p q ((τ : 𝕜) • L) ^ n) v - NormedSpace.exp (((n * τ : ℝ) : 𝕜) • L) v‖ ≤
-          K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ ∧
-        ∀ (U U' : ℝ → X) (D : ℝ), (∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s) →
-          (∀ s ∈ Icc 0 (n * τ), ‖U' s - L (U s)‖ ≤ D) →
-          ‖U (n * τ) - (rationalApply p q ((τ : 𝕜) • L) ^ n) v‖ ≤
-            M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ := by
-  sorry
-
 /-- **Stability and consistency give convergence** (the sufficiency half of the Lax equivalence
 theorem, for the time discretization; [Thomee2006], Ch. 7, 9; [Pazy1983], §3.4). Let `S` be a
 strongly continuous semigroup of a Banach space `E` over `𝕜 = ℝ` or `ℂ` with `‖S t‖ ≤ M`, and
@@ -260,38 +249,13 @@ theorem converges {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedS
     ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T → ‖S (n * τ h) x - ι h ((P h ^ n) (v h))‖ < ε := by
   sorry
 
-/-- **Backward Euler converges for every datum**: in the setting of `converges`, with no
-assumption on the scheme, `Pₕ = (1 - τₕLₕ)⁻¹` (stable by Hille–Yosida, of order `1`). -/
-theorem converges_backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
-    [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-    (S : ℝ → E →L[𝕜] E) (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
-    [∀ h, NormedAddCommGroup (X h)] [∀ h, NormedSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
-    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h) (M : ℝ)
-    (hL : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ M)
-    (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h)
-    (hπι : ∀ h x, π h (ι h x) = x) (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ)
-    (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (x : E) (v : ∀ h, X h)
-    (hsd : ∀ T : ℝ, TendstoUniformlyOn
-      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
-    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
-      ‖S (n * τ h) x - ι h ((Ring.inverse (1 - (τ h : 𝕜) • L h) ^ n) (v h))‖ < ε := by
-  sorry
-
 /-! ### Hilbert spaces -/
 
-/-- **Von Neumann's inequality** ([VonNeumann1951]). For a contraction `T` of a complex inner
-product space, not necessarily complete, and a complex polynomial `p`,
-`‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|` (suprema in `[0, ∞]`). -/
-theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] {T : E →L[ℂ] E}
-    (hT : ‖T‖ ≤ 1) (p : ℂ[X]) :
-    ‖aeval T p‖ₑ ≤ ⨆ ζ ∈ Metric.sphere (0 : ℂ) 1, ‖p.eval ζ‖ₑ := by
-  sorry
-
-/-- **Von Neumann's inequality for rational functions** ([VonNeumann1951]). For a contraction
+/-- **Von Neumann's inequality** ([VonNeumann1951]), for rational functions. For a contraction
 `T` of a complex Hilbert space and complex polynomials `p`, `q` with `q` free of zeros in the
-closed unit disc, `q(T)` is invertible and `‖p(T) q(T)⁻¹‖ ≤ sup_{|ζ| = 1} |p(ζ)/q(ζ)|`. -/
-theorem vonNeumann_rational {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+closed unit disc, `q(T)` is invertible and `‖p(T) q(T)⁻¹‖ ≤ sup_{|ζ| = 1} |p(ζ)/q(ζ)|` (for
+`q = 1`, `‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|`). -/
+theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
     [CompleteSpace E] {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) (p q : ℂ[X])
     (hq : ∀ z : ℂ, ‖z‖ ≤ 1 → q.eval z ≠ 0) :
     IsUnit (aeval T q) ∧
@@ -319,24 +283,6 @@ theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [Inner
 
 /-! ### The maximum norm -/
 
-/-- `L` is a **sub-Markov generator** on `ℝ^ι` (`ι` finite, maximum norm): `L + c` is positive
-for some `c ≥ 0` and `L 𝟙 ≤ 0`. For a matrix: nonnegative off-diagonal entries and nonpositive
-row sums. -/
-def IsSubMarkovGenerator {ι : Type*} [Fintype ι] (L : (ι → ℝ) →L[ℝ] (ι → ℝ)) : Prop :=
-  (∃ c : ℝ, 0 ≤ c ∧ ∀ v : ι → ℝ, 0 ≤ v → 0 ≤ L v + c • v) ∧ ∀ i, L (fun _ => 1) i ≤ 0
-
-/-- **The discrete maximum principle gives contractions in the maximum norm**
-([CiarletRaviart1973]; [Thomee2006], Ch. 15). For a sub-Markov generator `L` on `ℝ^ι` with the
-maximum norm, `e^{tL}` (`t ≥ 0`) is positive and `‖e^{tL}‖ ≤ 1`, and for `τ > 0` backward Euler
-`(1 - τL)⁻¹` exists, is positive and `‖(1 - τL)⁻¹‖ ≤ 1`. -/
-theorem subMarkov {ι : Type*} [Fintype ι] {L : (ι → ℝ) →L[ℝ] (ι → ℝ)}
-    (hL : IsSubMarkovGenerator L) :
-    (∀ t : ℝ, 0 ≤ t → (∀ v, 0 ≤ v → 0 ≤ NormedSpace.exp (t • L) v) ∧
-      ‖NormedSpace.exp (t • L)‖ ≤ 1) ∧
-    ∀ τ : ℝ, 0 < τ → IsUnit (1 - τ • L) ∧ (∀ v, 0 ≤ v → 0 ≤ Ring.inverse (1 - τ • L) v) ∧
-      ‖Ring.inverse (1 - τ • L)‖ ≤ 1 := by
-  sorry
-
 /-- **The finite difference Laplacian** on a finite grid `G ⊆ ℤ^ι` with mesh size `h` and
 homogeneous Dirichlet data: `(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`, the values
 off `G` taken to be `0`. -/
@@ -347,12 +293,6 @@ def fdLaplacian {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → �
         ⟨_, hq⟩ else 0) - (2 : ℝ) • LinearMap.proj (R := ℝ) (φ := fun _ : G => ℝ) p +
       (if hq : (p : ι → ℤ) - Pi.single i 1 ∈ G then LinearMap.proj (R := ℝ) (φ := fun _ : G => ℝ)
         ⟨_, hq⟩ else 0))
-
-/-- **The discrete maximum principle for finite differences** ([Thomee2006], Ch. 15): the finite
-difference Laplacian on every finite grid, for every mesh size, is a sub-Markov generator. -/
-theorem isSubMarkovGenerator_fdLaplacian {ι : Type*} [Fintype ι] [DecidableEq ι]
-    (G : Finset (ι → ℤ)) (h : ℝ) : IsSubMarkovGenerator (fdLaplacian G h) := by
-  sorry
 
 /-- The `Nⁿ` interior nodes `q ∈ {1, …, N}ⁿ` of the uniform grid of a cube. -/
 def gridNodes (n N : ℕ) : Finset (Fin n → ℤ) :=
@@ -373,14 +313,20 @@ def partialDeriv {n : ℕ} (i : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n 
 and `m` only, such that: let `u` be a classical solution of `uₜ = Δu` on the cube
 `Q = b + (0, s)ⁿ` for `t ∈ [0, T]` (`u(t)` of class `C⁴` on `ℝⁿ`, with two-sided time
 derivative `u₁ = Δu` at the points of `Q` and of `[0, T]`), vanishing on `∂Q`, with pure fourth
-derivatives `|∂ᵢ⁴ u(t)| ≤ B` on `Q̄`. On the grid of the `Nⁿ` interior nodes `b + h q`,
-`q ∈ {1, …, N}ⁿ` (`gridNodes`), `h = s/(N + 1)`, with the nodal interpolant `Iₕ` (`gridInterp`),
-the finite difference Laplacian `Δₕ` and every `τ > 0`, `kτ ≤ T` and discrete datum `v`,
-`‖Iₕ u(kτ) - r(τΔₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B h²/12 + K kτ τᵐ ‖Δₕ^{m+1} v‖_∞`. The
-last term is of the discrete datum (for `v = Iₕ u(0)` it is bounded in `h` only under the usual
-compatibility conditions at `∂Q`). -/
+derivatives `|∂ᵢ⁴ u(t)| ≤ B` on `Q̄`, whose initial value satisfies the **compatibility
+conditions of order `m`**: `u(0)` is on `Q̄` a function `ũ` of class `C^{2m+2}` on `ℝⁿ` that is
+odd under the reflections in the faces of `Q` (`xᵢ ↦ 2bᵢ - xᵢ`, `xᵢ ↦ 2(bᵢ + s) - xᵢ`: `ũ` is
+the odd `2s`-periodic extension of `u(0)`; for `n = 1`, `u(0) ∈ C^{2m+2}(Q̄)` with
+`∂^{2j} u(0) = 0` at both ends for `j ≤ m + 1`), with
+`|∂²_{i₁} ⋯ ∂²_{i_{m+1}} ũ| ≤ B'` for all `i₁, …, i_{m+1}`. On the grid of the `Nⁿ` interior
+nodes `b + h q`, `q ∈ {1, …, N}ⁿ` (`gridNodes`), `h = s/(N + 1)`, with the nodal interpolant
+`Iₕ` (`gridInterp`) and the finite difference Laplacian `Δₕ`, the scheme started from
+`Iₕ u(0)` satisfies, for every `τ > 0` and `kτ ≤ T`,
+`‖Iₕ u(kτ) - r(τΔₕ)ᵏ Iₕ u(0)‖_∞ ≤ kτ (n B h²/12 + K nᵐ⁺¹ B' τᵐ)`: `O(h² + τᵐ)` with `K`
+independent of `h`, `τ`, the dimension and `u`. -/
 theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
-    ∃ K : ℝ, ∀ (n : ℕ) (b : Fin n → ℝ) (s T B : ℝ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ), 0 < s →
+    ∃ K : ℝ, ∀ (n : ℕ) (b : Fin n → ℝ) (s T B B' : ℝ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
+      (ũ : (Fin n → ℝ) → ℝ), 0 < s →
       (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (u t)) →
       (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Ioo (b i) (b i + s),
         HasDerivAt (fun t => u t x) (u₁ t x) t ∧
@@ -389,13 +335,16 @@ theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q 
         x ∉ univ.pi (fun i => Ioo (b i) (b i + s)) → u t x = 0) →
       (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ∀ i,
         |(partialDeriv i)^[4] (u t) x| ≤ B) →
-      ∀ (N : ℕ) (τ : ℝ), 0 < τ → ∀ k : ℕ, k * τ ≤ T → ∀ v : gridNodes n N → ℝ,
+      ContDiff ℝ (2 * m + 2) ũ → (∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ũ x = u 0 x) →
+      (∀ i x, ũ (Function.update x i (2 * b i - x i)) = -ũ x ∧
+        ũ (Function.update x i (2 * (b i + s) - x i)) = -ũ x) →
+      (∀ (l : Fin (m + 1) → Fin n) x,
+        |(List.ofFn l).foldr (fun i f => partialDeriv i (partialDeriv i f)) ũ x| ≤ B') →
+      ∀ (N : ℕ) (τ : ℝ), 0 < τ → ∀ k : ℕ, k * τ ≤ T →
         ‖gridInterp b (s / (N + 1 : ℕ)) N (u (k * τ)) -
-            (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k) v‖ ≤
-          ‖gridInterp b (s / (N + 1 : ℕ)) N (u 0) - v‖ +
-            k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12) +
-            K * (k * τ) * τ ^ m *
-              ‖(fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ)) ^ (m + 1)) v‖ := by
+            (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k)
+              (gridInterp b (s / (N + 1 : ℕ)) N (u 0))‖ ≤
+          k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m) := by
   sorry
 
 /-! ### The hypotheses on `r` are met -/
@@ -407,5 +356,439 @@ theorem backwardEuler_isAStable : IsAStable 1 (1 - X) ∧ HasOrder 1 (1 - X) 1 :
 /-- **Crank–Nicolson** `r(z) = (2 + z)/(2 - z)` is A-stable (with `|r(∞)| = 1`) of order `2`. -/
 theorem crankNicolson_isAStable : IsAStable (2 + X) (2 - X) ∧ HasOrder (2 + X) (2 - X) 2 := by
   sorry
+
+section FiniteElements
+
+/-! ### Differential forms on `ℝⁿ` and the `L²` de Rham complexes (from `palomar/fem`) -/
+
+variable {n : ℕ}
+
+/-- The index set of the coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets
+`s = {s₁ < ⋯ < s_k}` of `Fin n`, `s` indexing `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (empty unless
+`0 ≤ k ≤ n`). -/
+abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
+
+/-- `L²(Ω; Λᵏ)`: the square-integrable `k`-forms on `Ω ⊆ ℝⁿ` (Lebesgue measure), the `ℓ²` sum
+of a copy of `L²(Ω)` for each coefficient. -/
+abbrev L2Form (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
+  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
+
+/-- A **form field** on `ℝⁿ`: at each point, a coefficient for every subset `s` of `Fin n` (the
+coefficient of `dx_s`); it is a `k`-form when the coefficients off the `k`-subsets vanish. -/
+abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
+
+/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
+def sgn (j : Fin n) (s : Finset (Fin n)) : ℝ := (-1) ^ (s.filter fun l => l < j).card
+
+/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
+def extDeriv (w : FormField n) : FormField n :=
+  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
+
+/-- The **formal adjoint** of `d`, the codifferential `δ`,
+`(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`: `∫ ⟨dφ, ψ⟩ = ∫ ⟨φ, dᵗψ⟩` for test forms. -/
+def codiff (ψ : FormField n) : FormField n :=
+  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
+
+open scoped ContDiff in
+/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
+def IsTestFn (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
+  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
+
+/-- The graph `{(ψ, dᵗψ)}` of the formal adjoint on the test `(k + 1)`-forms, as a subspace of
+`L²(Ω; Λᵏ⁺¹) × L²(Ω; Λᵏ)`. -/
+def codiffGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω (k + 1) × L2Form Ω k) :=
+  Submodule.span ℝ {p | ∃ ψ : FormField n, (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
+    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
+
+/-- The closure of the formal adjoint `dᵗ` on test `(k + 1)`-forms. -/
+def codiffMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω (k + 1) →ₗ.[ℝ] L2Form Ω k :=
+  (codiffGraph Ω k).topologicalClosure.toLinearPMap
+
+/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the adjoint of the formal
+adjoint on test forms: `u ∈ D(d)` iff some `w ∈ L²(Ω; Λᵏ⁺¹)` has `⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every
+test `(k + 1)`-form `ψ`, and then `du = w`. Its domain is `HΛᵏ(Ω)` ([AFW2010], §4;
+[Arnold2018], Ch. 6). -/
+def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (codiffMin Ω k)†
+
+/-! ### Polynomial differential forms ([AFW2006], §3) -/
+
+/-- **Polynomial differential forms** on `ℝⁿ` in coordinates: a polynomial coefficient `ω_s` for
+every subset `s` of `Fin n`, the form `Σ_s ω_s dx_s`. -/
+abbrev PolyForm (n : ℕ) : Type := Finset (Fin n) → MvPolynomial (Fin n) ℝ
+
+/-- `P_rΛᵏ`: the polynomial `k`-forms (`ω_s = 0` unless `#s = k`) with coefficients of degree at
+most `r`. -/
+def polyForm (r k : ℕ) : Submodule ℝ (PolyForm n) :=
+  Submodule.pi Set.univ fun s =>
+    if s.card = k then MvPolynomial.restrictTotalDegree (Fin n) ℝ r else ⊥
+
+/-- `H_rΛᵏ`: the polynomial `k`-forms with coefficients homogeneous of degree `r`. -/
+def homForm (r k : ℕ) : Submodule ℝ (PolyForm n) :=
+  Submodule.pi Set.univ fun s =>
+    if s.card = k then MvPolynomial.homogeneousSubmodule (Fin n) ℝ r else ⊥
+
+/-- The **Koszul differential** `κ`, the contraction with the position vector field `x`:
+`(κω)_s = Σ_{j ∉ s} ε(j, s) x_j ω_{s ∪ j}`. -/
+def koszul : PolyForm n →ₗ[ℝ] PolyForm n :=
+  LinearMap.pi fun s => ∑ j ∈ sᶜ,
+    sgn j s • (LinearMap.mulLeft ℝ (MvPolynomial.X j) ∘ₗ LinearMap.proj (insert j s))
+
+/-- `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}`, the trimmed polynomial `k`-forms (`r ≥ 1`), and
+`P_0⁻Λᵏ = 0` ([AFW2006], §3.3). -/
+def polyFormMinus : ℕ → ℕ → Submodule ℝ (PolyForm n)
+  | 0, _ => ⊥
+  | r + 1, k => polyForm r k ⊔ (homForm r (k + 1)).map koszul
+
+/-- The **evaluation** of a polynomial form: the form field `x ↦ (ω_s(x))_s`. -/
+def evalForm : PolyForm n →ₗ[ℝ] FormField n :=
+  LinearMap.pi fun x => LinearMap.pi fun s =>
+    (MvPolynomial.aeval x).toLinearMap ∘ₗ LinearMap.proj s
+
+/-- **An admissible sequence** of polynomial families ([AFW2006], §5; [AFW2010], §5.2): in every
+form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
+`r_k ≥ 1`, followed in degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. (The piecewise
+constants `P_0Λⁿ` are represented by the equal space `P_1⁻Λⁿ`; the spaces of degree `k > n`
+are `0`.) -/
+structure PolySeq where
+  /-- `P_{r_k}Λᵏ` (`true`) or `P_{r_k}⁻Λᵏ` (`false`) in degree `k` -/
+  full : ℕ → Bool
+  /-- the polynomial degree `r_k` -/
+  deg : ℕ → ℕ
+  one_le_deg : ∀ k, 1 ≤ deg k
+  transition : ∀ k, (full (k + 1) = false ∧ deg (k + 1) = deg k) ∨
+    (full (k + 1) = true ∧ deg (k + 1) + 1 = deg k)
+
+/-- The space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of form fields on `ℝⁿ` of the sequence in degree `k`. -/
+def PolySeq.space (S : PolySeq) (n k : ℕ) : Submodule ℝ (FormField n) :=
+  (if S.full k then polyForm (n := n) (S.deg k) k else polyFormMinus (S.deg k) k).map evalForm
+
+/-! ### Simplicial meshes -/
+
+/-- The vertex set `{v₀, …, v_k}` of a simplex. -/
+def vertexSet {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : Finset (Fin n → ℝ) :=
+  Finset.univ.image T.points
+
+/-- A **conforming simplicial mesh** of `closure domain ⊆ ℝⁿ`: a finite set of `n`-simplices
+whose closed simplices cover `closure domain`, have pairwise disjoint interiors, and meet face to
+face (the intersection of two closed simplices is the convex hull of their common vertices). -/
+structure SimplicialMesh (n : ℕ) where
+  /-- the `n`-simplices -/
+  simplices : Finset (Affine.Simplex ℝ (Fin n → ℝ) n)
+  /-- the meshed set `Ω`; the mesh covers its closure -/
+  domain : Set (Fin n → ℝ)
+  biUnion_closedInterior : ⋃ T ∈ simplices, T.closedInterior = closure domain
+  pairwise_disjoint_interior :
+    (simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)).Pairwise fun T T' =>
+      Disjoint (interior T.closedInterior) (interior T'.closedInterior)
+  inter_closedInterior : ∀ T ∈ simplices, ∀ T' ∈ simplices,
+    T.closedInterior ∩ T'.closedInterior =
+      convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
+
+/-- `h_T`: the diameter of the closed simplex `T`. -/
+def diam {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : ℝ := Metric.diam T.closedInterior
+
+/-- The **mesh size** `h = max_T h_T`. -/
+def meshSize (M : SimplicialMesh n) : ℝ :=
+  ⨆ T : M.simplices, diam (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+
+/-- The mesh is **shape regular** with constant `σ` ([Ciarlet2002], §3.1): every simplex `T`
+contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T` (the
+largest radius of a ball in `T`). Balls and `h_T` are those of the sup norm (Conventions). -/
+def IsShapeRegular (M : SimplicialMesh n) (σ : ℝ) : Prop :=
+  ∀ T ∈ M.simplices, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ
+
+/-- The mesh is **quasi-uniform** with constant `q`: `q h ≤ h_T` for every simplex. -/
+def IsQuasiUniform (M : SimplicialMesh n) (q : ℝ) : Prop :=
+  ∀ T ∈ M.simplices, q * meshSize M ≤ diam T
+
+/-- `M_N` is a **shape-regular, quasi-uniform family of meshes of `Ω`** with mesh size `h_N → 0`:
+meshes of `Ω`, shape regular and quasi-uniform with constants independent of `N`. -/
+def IsMeshFamily (Ω : Set (Fin n → ℝ)) (M : ℕ → SimplicialMesh n) : Prop :=
+  (∀ N, (M N).domain = Ω) ∧
+    (∃ σ q : ℝ, 0 < q ∧ ∀ N, IsShapeRegular (M N) σ ∧ IsQuasiUniform (M N) q) ∧
+    (∀ N, 0 < meshSize (M N)) ∧ Tendsto (fun N => meshSize (M N)) atTop (𝓝 0)
+
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+
+/-- `𝒯` are **Freudenthal meshes** of the cube ([Freudenthal1942]): every simplex of `𝒯 N` is a
+Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`, `z ∈ {0, …, N}ⁿ`, `σ ∈ 𝔖ₙ`, with vertices
+`v_j = h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`, `j = 0, …, n` (a mesh of `(0, ½)ⁿ` of such
+simplices consists of all of them). -/
+def IsFreudenthal (𝒯 : ℕ → SimplicialMesh n) : Prop :=
+  ∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
+    T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
+
+/-! ### The finite element spaces -/
+
+/-- The value `α(v₁, …, v_k) = Σ_{#s = k} α_s det (v_l(s_i))_{i,l}` of the `k`-covector `α` on
+the vectors `v₁, …, v_k`. -/
+def covEval {k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) : ℝ :=
+  ∑ s : Finset (Fin n), if h : s.card = k then
+    α s * (Matrix.of fun i l => v l (s.orderEmbOfFin h i)).det else 0
+
+/-- The `k`-covectors `α`, `β` have the **same tangential trace** on the face spanned by the
+points `g`: they agree on all `k`-tuples of vectors tangent to the face. -/
+def TraceEq (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=
+  ∀ v : Fin k → Fin n → ℝ, (∀ l, v l ∈ vectorSpan ℝ (g : Set (Fin n → ℝ))) →
+    covEval α v = covEval β v
+
+/-- `p = (p_T)_T` are **finite element pieces** of `u ∈ L²(Ω; Λᵏ)` on the mesh `M` for the
+sequence `S`: on every simplex `T`, `u` is (almost everywhere) the polynomial form `p_T ∈ S_k`,
+and the tangential traces of `p_T` and `p_{T'}` agree on the common face of any two simplices. -/
+def IsFemPieces (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ)
+    (u : L2Form Ω k) (p : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n) : Prop :=
+  (∀ T ∈ M.simplices, p T ∈ S.space n k.toNat) ∧
+    (∀ T ∈ M.simplices, ∀ s : FormIdx n k,
+      ⇑(u s) =ᵐ[volume.restrict (Ω ∩ T.closedInterior)] fun x => p T x s.1) ∧
+    ∀ T ∈ M.simplices, ∀ T' ∈ M.simplices,
+      ∀ x ∈ convexHull ℝ ((vertexSet T ∩ vertexSet T' : Finset (Fin n → ℝ)) : Set (Fin n → ℝ)),
+        TraceEq (vertexSet T ∩ vertexSet T') k.toNat (p T x) (p T' x)
+
+/-- **The finite element space** `S_k(M) ⊆ L²(Ω; Λᵏ)` of the admissible sequence `S` on the mesh
+`M` ([AFW2006], §5; [Arnold2018], Ch. 7): the forms that are on every simplex a polynomial form
+of `S_k`, with single-valued tangential traces on the faces of the mesh. -/
+def femSpace (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    Set (L2Form Ω k) :=
+  {u | ∃ p, IsFemPieces Ω M S k u p}
+
+/-- **The finite element space with vanishing boundary traces** `S̊_k(M)`: the forms of
+`S_k(M)` whose tangential traces vanish on the boundary facets (the facets of a single simplex of
+the mesh). -/
+def femSpaceMin (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    Set (L2Form Ω k) :=
+  {u | ∃ p, IsFemPieces Ω M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T, F.card = n →
+    (∀ T' ∈ M.simplices, F ⊆ vertexSet T' → T' = T) →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
+
+/-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³` (Lagrange, Nédélec edge,
+Raviart–Thomas face elements and piecewise constants; [Whitney1957], [AFW2006], §3–4). -/
+def topSeq : PolySeq where
+  full k := k == 0
+  deg _ := 1
+  one_le_deg _ := le_rfl
+  transition _ := Or.inl ⟨rfl, rfl⟩
+
+/-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
+restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
+Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
+coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak derivatives `D t l` in
+`L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
+(-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
+`|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
+def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
+    (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
+      ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
+    ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
+    ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+
+/-! ### The Crank–Nicolson Whitney scheme ([QuennevilleBelair2015], Ch. 7) -/
+
+/-- **The integral of a `k`-form over the oriented `k`-simplex** `p = (p₀, …, p_k)` in `ℝⁿ`:
+`∫_p w = ∫_{T̂_k} w(F(x))(p₁ - p₀, …, p_k - p₀) dx` over the reference simplex
+`T̂_k = {x ∈ ℝᵏ | xᵢ ≥ 0, Σ xᵢ ≤ 1}`, `F(x) = p₀ + Σᵢ xᵢ (pᵢ₊₁ - p₀)`. -/
+def simplexIntegral {k : ℕ} (p : Fin (k + 1) → Fin n → ℝ) (w : FormField n) : ℝ :=
+  ∫ x in {x : Fin k → ℝ | (∀ i, 0 ≤ x i) ∧ ∑ i, x i ≤ 1},
+    covEval (w (p 0 + ∑ i, x i • (p i.succ - p 0))) fun i => p i.succ - p 0
+
+/-- `x ∈ L²(Ω; Λᵏ)` is **the Whitney interpolant** `Π_h w` of the form field `w` on the mesh `M`
+([Whitney1957], Ch. IV; [Arnold2018], Ch. 7): `x` lies in the Whitney space `P₁⁻Λᵏ(M)` with
+pieces `p_T` having the degrees of freedom of `w`, `∫_f p_T = ∫_f w` on every oriented
+`k`-face `f` of every simplex `T`. -/
+def IsWhitneyInterp (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (k : ℕ) (w : FormField n)
+    (x : L2Form Ω k) : Prop :=
+  ∃ p, IsFemPieces Ω M topSeq k x p ∧ ∀ T ∈ M.simplices, ∀ q : Fin (k + 1) → Fin (n + 1),
+    Function.Injective q → simplexIntegral (T.points ∘ q) (p T) = simplexIntegral (T.points ∘ q) w
+
+/-- `x ∈ L²(Ω; Λᵏ)` is (almost everywhere) the form field `w` on `Ω`. -/
+def IsRepr (Ω : Set (Fin n → ℝ)) (k : ℤ) (w : FormField n) (x : L2Form Ω k) : Prop :=
+  ∀ s : FormIdx n k, ⇑(x s) =ᵐ[volume.restrict Ω] fun y => w y s.1
+
+/-- A **row** `(σ, E, B)`: a `0`-form, a `1`-form and a `2`-form of `L²(Q)`, `Q = (0, ½)³`. -/
+abbrev Row : Type := L2Form (cube 3) 0 × L2Form (cube 3) 1 × L2Form (cube 3) 2
+
+/-- The `L²` inner product of rows. -/
+def rowInner (x y : Row) : ℝ := ⟪x.1, y.1⟫_ℝ + ⟪x.2.1, y.2.1⟫_ℝ + ⟪x.2.2, y.2.2⟫_ℝ
+
+open Classical in
+/-- The weak exterior derivative `dx`, for `x` in its domain `HΛᵏ(Q)` (and `0` elsewhere; it is
+only applied to finite element forms, which lie in `HΛᵏ(Q)`). -/
+def wd (k : ℤ) (x : L2Form (cube 3) k) : L2Form (cube 3) (k + 1) :=
+  if h : x ∈ (dMax (cube 3) k).domain then dMax (cube 3) k ⟨x, h⟩ else 0
+
+/-- **The form of the Hodge wave operator** `A = 𝐝 - 𝐝*` on rows, `⟪A x, y⟫ = ⟪𝐝x, y⟫ - ⟪x, 𝐝y⟫`
+for `𝐝(σ, E, B) = (0, dσ, dE)`: in vector proxies
+`(grad σ, C) - (E, grad τ) + (curl E, D) - (B, curl C)`. -/
+def waveForm (x y : Row) : ℝ :=
+  ⟪wd 0 x.1, y.2.1⟫_ℝ + ⟪wd 1 x.2.1, y.2.2⟫_ℝ - ⟪x.2.1, wd 0 y.1⟫_ℝ - ⟪x.2.2, wd 1 y.2.1⟫_ℝ
+
+/-- The row `x` lies in the Whitney spaces `Vₕ = P₁Λ⁰(M) × P₁⁻Λ¹(M) × P₁⁻Λ²(M)` (`b = false`),
+or in the spaces `V̊ₕ` with vanishing boundary traces (`b = true`). -/
+def RowMem (M : SimplicialMesh 3) (b : Bool) (x : Row) : Prop :=
+  let V := if b then femSpaceMin (cube 3) M topSeq else femSpace (cube 3) M topSeq
+  x.1 ∈ V 0 ∧ x.2.1 ∈ V 1 ∧ x.2.2 ∈ V 2
+
+/-- **One Crank–Nicolson step with prescribed boundary degrees of freedom** on the mesh `M`
+([QuennevilleBelair2015], Ch. 7): from `u` to `u' ∈ Vₕ` with the boundary degrees of freedom of
+`g` (`u' - g ∈ V̊ₕ`), `⟪u' - u, v⟫ = (Δt / 2) ⟪A (u' + u), v⟫` for all `v ∈ V̊ₕ`. -/
+def IsCNStep (M : SimplicialMesh 3) (Δt : ℝ) (g u u' : Row) : Prop :=
+  RowMem M false u' ∧ RowMem M true (u' - g) ∧
+    ∀ v, RowMem M true v → rowInner (u' - u) v = Δt / 2 * waveForm (u' + u) v
+
+/-- A **smooth solution of the Hodge wave equation** `U' = (d - dᵗ) U` on the window
+`Λ⁰ → Λ¹ → Λ²` of `ℝ³` (no boundary condition): forms `u t i` of degree `i` (`σ`, `E`, `B`), `C²`
+in space and `C³` in time with jointly continuous time derivatives `u₁, u₂, u₃`, solving
+`σ' = -dᵗE`, `E' = dσ - dᵗB`, `B' = dE` pointwise, with `‖Du‖, ‖D du‖ ≤ L` on `cl Q`, these
+`L`-Lipschitz in `t ∈ [0, T]`, and `|∂ₜ³u| ≤ L` on `[0, T] × Q`. -/
+structure RowSolution (T L : ℝ) where
+  /-- the fields and their first three time derivatives -/
+  u : ℝ → Fin 3 → FormField 3
+  u₁ : ℝ → Fin 3 → FormField 3
+  u₂ : ℝ → Fin 3 → FormField 3
+  u₃ : ℝ → Fin 3 → FormField 3
+  isDeg : ∀ t (i : Fin 3) y (s : Finset (Fin 3)), s.card ≠ i → u t i y s = 0
+  contDiff : ∀ t i, ContDiff ℝ 2 (u t i)
+  continuous₁ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₁ p.1 i p.2 s
+  continuous₂ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₂ p.1 i p.2 s
+  continuous₃ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₃ p.1 i p.2 s
+  hasDerivAt₁ : ∀ t i y s, HasDerivAt (fun τ => u τ i y s) (u₁ t i y s) t
+  hasDerivAt₂ : ∀ t i y s, HasDerivAt (fun τ => u₁ τ i y s) (u₂ t i y s) t
+  hasDerivAt₃ : ∀ t i y s, HasDerivAt (fun τ => u₂ τ i y s) (u₃ t i y s) t
+  pde₀ : ∀ t, u₁ t 0 = -codiff (u t 1)
+  pde₁ : ∀ t, u₁ t 1 = extDeriv (u t 0) - codiff (u t 2)
+  pde₂ : ∀ t, u₁ t 2 = extDeriv (u t 1)
+  bound : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cube 3),
+    ‖fderiv ℝ (u t i) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (u t i)) y‖ ≤ L
+  lipschitz : ∀ t ∈ Icc 0 T, ∀ t' ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cube 3),
+    ‖fderiv ℝ (u t' i) y - fderiv ℝ (u t i) y‖ ≤ L * |t' - t| ∧
+      ‖fderiv ℝ (extDeriv (u t' i)) y - fderiv ℝ (extDeriv (u t i)) y‖ ≤ L * |t' - t|
+  bound₃ : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ cube 3, ∀ s, |u₃ t i y s| ≤ L
+
+/-- `x` is the Whitney interpolant of the row of form fields `w`. -/
+def IsRowInterp (M : SimplicialMesh 3) (w : Fin 3 → FormField 3) (x : Row) : Prop :=
+  IsWhitneyInterp (cube 3) M 0 (w 0) x.1 ∧ IsWhitneyInterp (cube 3) M 1 (w 1) x.2.1 ∧
+    IsWhitneyInterp (cube 3) M 2 (w 2) x.2.2
+
+/-- The `L²` norm `‖x‖ = (‖σ‖² + ‖E‖² + ‖B‖²)^{1/2}` of a row `x = (σ, E, B)`. -/
+def rowNorm (x : Row) : ℝ := √(‖x.1‖ ^ 2 + ‖x.2.1‖ ^ 2 + ‖x.2.2‖ ^ 2)
+
+/-- **One leapfrog step with prescribed boundary degrees of freedom** on the mesh `M`
+([Joly2003]): from `u`, `u'` to `u'' ∈ Vₕ` with the boundary degrees of freedom of `g`
+(`u'' - g ∈ V̊ₕ`), `⟪u'' - u, v⟫ = 2 Δt ⟪A u', v⟫` for all `v ∈ V̊ₕ`: the explicit three-level
+scheme `uₙ₊₂ = uₙ + 2 Δt Aₕ uₙ₊₁` on the interior degrees of freedom (one solve with the mass
+matrix). -/
+def IsLeapfrogStep (M : SimplicialMesh 3) (Δt : ℝ) (g u u' u'' : Row) : Prop :=
+  RowMem M false u'' ∧ RowMem M true (u'' - g) ∧
+    ∀ v, RowMem M true v → rowInner (u'' - u) v = 2 * Δt * waveForm u' v
+
+/-! ### The Whitney schemes on the cube -/
+
+/-- **The global inverse estimate** ([Ciarlet2002], §3.2; [BrennerScott2008], §4.5): for a
+shape-regular, quasi-uniform family of meshes `M_N` of an open `Ω` whose open simplices lie in `Ω`,
+every admissible sequence `S` and every form degree `k`, there is `C` such that every `v` of the
+finite element space `S_k(M_N)` lies in `HΛᵏ(Ω)` and `h_N ‖dv‖_{L²} ≤ C ‖v‖_{L²}`, `C`
+independent of `N`. (A mesh of `Ω` covers `cl Ω`; that its open simplices lie in `Ω`, true when
+`Ω` is the interior of its closure, e.g. for convex or Lipschitz `Ω`, makes `‖v‖²_{L²(Ω)}` the sum
+of the norms of `v` on the whole simplices.) On the Whitney spaces it bounds the discrete wave
+operator, `‖Aₕ‖ ≤ 2C/h_N`, the CFL constant of `leapfrog_cube`. -/
+theorem inverse_estimate [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
+    (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :
+    ∃ C, ∀ N, ∀ v ∈ femSpace Ω (M N) S k, ∃ hv : v ∈ (dMax Ω k).domain,
+      meshSize (M N) * ‖dMax Ω k ⟨v, hv⟩‖ ≤ C * ‖v‖ := by
+  sorry
+
+/-- **`O(h + Δt²)` convergence of the Crank–Nicolson Whitney scheme with Dirichlet degrees of
+freedom** ([QuennevilleBelair2015], Ch. 7; [Arnold2018], Ch. 7; [Monk2003]; [Thomee2006]). The
+cube `Q = (0, ½)³` carries a shape-regular, quasi-uniform family of Freudenthal meshes `𝒯_N`,
+`h_N → 0`, on which:
+
+* (**unisolvence**) every continuous form field `w` has exactly one Whitney interpolant `Π_h w`
+  in each degree `k` (the form of `P₁⁻Λᵏ(𝒯_N)` with the face integrals of `w`);
+* (**well-posedness**) for every time step `Δt` and all rows `g`, `u` of the Whitney spaces `Vₕ`
+  the Crank–Nicolson step from `u` with the boundary degrees of freedom of `g` has exactly one
+  solution, and `V̊ₕ¹ ≠ 0`;
+* (**the error**) there is `C` such that, for every smooth solution `U` of the Hodge wave equation
+  on `[0, T] × cl Q` with bound `L` (`RowSolution`), every `Δt > 0` and `M Δt ≤ T`, the iterates
+  `uₙ` of the scheme started from `u₀ = Π_h U(0)` with the boundary degrees of freedom of
+  `Π_h U(tₙ)` (`gₙ - Π_h U(tₙ) ∈ V̊ₕ`, `tₙ = n Δt`) satisfy
+  `‖u_M - U(t_M)‖_{L²} ≤ C L (1 + T) (h_N + Δt²)`, `C` independent of `N`, `Δt`, `T`, `L`, `U`.
+
+With vanishing boundary data a step is `u' = r(ΔtAₕ) u` on `V̊ₕ`, `r(z) = (2 + z)/(2 - z)`, `Aₕ`
+skew-adjoint: the setting of `contractive`, `‖r(ΔtAₕ)ⁿ‖ ≤ 1`, which is the stability behind the
+error bound. -/
+theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
+    IsFreudenthal 𝒯 ∧
+    (∀ N k (w : FormField 3), Continuous w → ∃! x, IsWhitneyInterp (cube 3) (𝒯 N) k w x) ∧
+    (∀ N Δt g u, RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → ∃! u', IsCNStep (𝒯 N) Δt g u u') ∧
+    (∀ N, ∃ v ∈ femSpaceMin (cube 3) (𝒯 N) topSeq 1, v ≠ 0) ∧
+    ∀ N T L (X : RowSolution T L) (Δt : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → M * Δt ≤ T →
+      (∀ m < M, IsCNStep (𝒯 N) Δt (g (m + 1)) (u m) (u (m + 1))) →
+      (∀ m < M, ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 1 : ℕ) * Δt)) w ∧
+        RowMem (𝒯 N) true (g (m + 1) - w)) →
+      IsRowInterp (𝒯 N) (X.u 0) (u 0) → ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
+        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
+        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
+  sorry
+
+/-- **The explicit leapfrog Whitney scheme under a CFL condition** ([Joly2003];
+[QuennevilleBelair2015], Ch. 7). On the shape-regular, quasi-uniform Freudenthal meshes `𝒯_N` of
+the cube `Q = (0, ½)³`, `h_N → 0`, with the Whitney row `Vₕ = P₁Λ⁰ × P₁⁻Λ¹ × P₁⁻Λ²` of
+`crankNicolson_cube`:
+
+* (**the inverse estimate**) some `C₀` has `h_N ‖𝐝ₕ v‖ ≤ C₀ ‖v‖` for every `v ∈ Vₕ` and every `N`,
+  `𝐝(σ, E, B) = (0, dσ, dE)` (`inverse_estimate`), so `‖Aₕ‖ ≤ 2 C₀ / h_N` and
+  `2 C₀ Δt ≤ c h_N` is a CFL condition `Δt ‖Aₕ‖ ≤ c`;
+* (**explicit**) for every time step `Δt` and all rows `g, u, u'` of `Vₕ` the leapfrog step has
+  exactly one solution;
+
+and there is `C` such that for **every** constant `C₀ ≥ 0` of the inverse estimate (so the CFL
+condition is that of any computed `C₀`, the existence of one having no explicit value):
+
+* (**stability**) under the CFL condition with `c < 1`, leapfrog iterates with vanishing boundary
+  degrees of freedom from `u₀, u₁ ∈ V̊ₕ` satisfy `√(1 - c) ‖u_{m+1}‖ ≤ √((1 + c)(‖u₀‖² + ‖u₁‖²))`
+  for every `m`;
+* (**the error**) under the CFL condition with `c < 1`, for every smooth solution `U` of the Hodge
+  wave equation on `[0, T] × cl Q` with bound `L` (`RowSolution`), `Δt > 0` and `M Δt ≤ T`, the
+  iterates started from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` (the second starting value from the
+  exact solution; no one-step starting procedure is analysed) with the boundary degrees of
+  freedom of `Π_h U(tₙ)` satisfy `‖u_M - U(t_M)‖_{L²} ≤ C L (1 + T) (h_N + Δt²) / (1 - c)`, `C`
+  independent of `C₀`, `N`, `Δt`, `c`, `T`, `L`, `U`. -/
+theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
+    IsFreudenthal 𝒯 ∧
+    (∃ C₀, ∀ N v, RowMem (𝒯 N) false v →
+      meshSize (𝒯 N) * √(‖wd 0 v.1‖ ^ 2 + ‖wd 1 v.2.1‖ ^ 2) ≤ C₀ * rowNorm v) ∧
+    (∀ N Δt g u u', RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → RowMem (𝒯 N) false u' →
+      ∃! u'', IsLeapfrogStep (𝒯 N) Δt g u u' u'') ∧
+    ∀ C₀, 0 ≤ C₀ → (∀ N v, RowMem (𝒯 N) false v →
+      meshSize (𝒯 N) * √(‖wd 0 v.1‖ ^ 2 + ‖wd 1 v.2.1‖ ^ 2) ≤ C₀ * rowNorm v) →
+    (∀ N Δt c (u : ℕ → Row) m, 0 ≤ Δt → c < 1 → 2 * C₀ * Δt ≤ c * meshSize (𝒯 N) →
+      (∀ k < m, IsLeapfrogStep (𝒯 N) Δt 0 (u k) (u (k + 1)) (u (k + 2))) →
+      RowMem (𝒯 N) true (u 0) → RowMem (𝒯 N) true (u 1) →
+      √(1 - c) * rowNorm (u (m + 1)) ≤ √((1 + c) * (rowNorm (u 0) ^ 2 + rowNorm (u 1) ^ 2))) ∧
+    ∀ N T L (X : RowSolution T L) (Δt c : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → c < 1 →
+      2 * C₀ * Δt ≤ c * meshSize (𝒯 N) → M * Δt ≤ T →
+      (∀ m, m + 2 ≤ M → IsLeapfrogStep (𝒯 N) Δt (g (m + 2)) (u m) (u (m + 1)) (u (m + 2))) →
+      (∀ m, m + 2 ≤ M → ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 2 : ℕ) * Δt)) w ∧
+        RowMem (𝒯 N) true (g (m + 2) - w)) →
+      IsRowInterp (𝒯 N) (X.u 0) (u 0) → IsRowInterp (𝒯 N) (X.u Δt) (u 1) →
+      ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
+        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
+        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) / (1 - c) := by
+  sorry
+
+/-- **Non-vacuity of the error bounds of `crankNicolson_cube` and `leapfrog_cube`**: for every
+`T` the smooth solutions they quantify over include genuine waves: some `RowSolution T L` (in the
+proof, row `0` of the plane wave of [QuennevilleBelair2015], Ch. 7) has at every time `t` a point
+of `Q` where the electric field `E(t)` and its time derivative `∂ₜE(t)` are nonzero (so `U` is
+neither zero nor stationary). -/
+theorem rowSolution_nonvacuous (T : ℝ) :
+    ∃ L, ∃ X : RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 := by
+  sorry
+
+end FiniteElements
 
 end TimeStepping

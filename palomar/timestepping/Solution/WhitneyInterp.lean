@@ -25,7 +25,7 @@ open Set Finset
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.ExteriorFibre
 
@@ -33,8 +33,8 @@ variable {n : ℕ}
 
 /-- **The challenge's integral over an oriented simplex is `Feec`'s.** -/
 theorem simplexIntegral_eq {k : ℕ} (p : Fin (k + 1) → Fin n → ℝ) (w : FormField n) :
-    FEEC.simplexIntegral p w = Feec.FiniteElement.simplexIntegral p w := by
-  unfold FEEC.simplexIntegral Feec.FiniteElement.simplexIntegral
+    TimeStepping.simplexIntegral p w = Feec.FiniteElement.simplexIntegral p w := by
+  unfold TimeStepping.simplexIntegral Feec.FiniteElement.simplexIntegral
   have hs : {x : Fin k → ℝ | (∀ i, 0 ≤ x i) ∧ ∑ i, x i ≤ 1} = refSimplex k := by
     ext x; exact mem_refSimplex_iff.symm
   rw [hs]
@@ -121,7 +121,7 @@ theorem isWhitneyInterp_iff (k : ℕ) (w : contForms n) (x : L2Form M.domain k) 
     rw [hg] at hpieces
     refine ⟨_, isFemPieces_topSeq.2 hpieces, fun T hT q hq => ?_⟩
     rw [LocalElement.extendPW_of_mem _ ((SimplicialMesh.ofFeec M).toFeec M.domain rfl) _ hT]
-    change FEEC.simplexIntegral _
+    change TimeStepping.simplexIntegral _
       (((whitneyElement n).globalInterp M k w : (whitneyElement n).Piecewise M k) ⟨T, hT⟩ :
         FormField n) = _
     have hinj : Function.Injective (T.points ∘ q) := T.independent.injective.comp hq
@@ -150,4 +150,4 @@ theorem isWhitneyInterp_cube_iff (N k : ℕ) (w : contForms 3) (x : L2Form (cube
       IsWhitneyInterp Ω (cubeMesh N) k (w : FormField 3) x ↔ x = f w)
     (fun x => isWhitneyInterp_iff (mesh 3 N) k w x) x
 
-end FEEC
+end TimeStepping

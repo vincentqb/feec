@@ -25,7 +25,7 @@ open Set
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM
 
@@ -106,4 +106,4 @@ theorem whitneyMin_V_eq (N : ℕ) (k : ℤ) :
   rw [femSpaceMin_topSeq, e]
   exact h
 
-end FEEC
+end TimeStepping

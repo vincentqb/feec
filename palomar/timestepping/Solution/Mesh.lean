@@ -25,7 +25,7 @@ open Filter Topology Set
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
 variable {n : ℕ}
 
@@ -71,4 +71,4 @@ theorem isQuasiUniform_toFeec {M : SimplicialMesh n} {Ω : Set (Fin n → ℝ)} 
     {q : ℝ} (hM : IsQuasiUniform M q) : Feec.FiniteElement.IsQuasiUniform (M.toFeec Ω h) q :=
   hM
 
-end FEEC
+end TimeStepping

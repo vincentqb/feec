@@ -1,21 +1,18 @@
 module
 
-public import Solution.CubeFEM
+public import Solution.Spaces
 public import Feec.Models.Parallelepiped.StarShaped
 
 /-!
-# The meshes and spaces of the cube
+# The Freudenthal meshes of the cube
 
 The Freudenthal meshes of `Feec.Models.Cube.FEM.mesh` are a mesh family of the challenge
 (`isMeshFamily_cube`, from `Feec.Models.StarShaped.CubeWitness.meshFamily`) named by their
-vertices (`points_cube`), and the spaces of `cubeQ` are the challenge's `femSpaceMin` of
-`topSeq` and `bottomSeq` (`cubeQ_spaces`, from `mem_V₀_iff`), these being `Feec`'s
-`PolySeq.lowestOrder` and `PolySeq.lagrangeP2` (`topSeq_toFeec`, `bottomSeq_toFeec`).
+vertices (`points_cube`), and the finite element spaces with vanishing boundary DOFs of a `Feec`
+mesh are the challenge's `femSpaceMin` (`minimalSubcomplexOfEq_V`, from `mem_V₀_iff`).
 
 ## References
 
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3, Table 5.1
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 
 Bibliography: [references.bib](../../../docs/references.bib)
@@ -25,10 +22,9 @@ open Set Filter
 
 @[expose] public noncomputable section
 
-namespace FEEC
+namespace TimeStepping
 
-open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry
-  Feec.Models.StarShaped
+open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.StarShaped
 
 variable {n : ℕ}
 
@@ -56,7 +52,7 @@ theorem isMeshFamily_cube : IsMeshFamily (cubeDomain 3) cubeMesh :=
   isMeshFamily_ofFeec (CubeWitness.meshFamily 3)
 
 theorem meshSize_cubeMesh (N : ℕ) :
-    FEEC.meshSize (cubeMesh N) = Feec.Models.Cube.FEM.meshSize N :=
+    TimeStepping.meshSize (cubeMesh N) = Feec.Models.Cube.FEM.meshSize N :=
   (Feec.Models.Cube.FEM.meshSize_mesh N).trans (Feec.Models.Cube.FEM.hN_eq_meshSize N)
 
 /-- The simplices of the Freudenthal meshes are the Kuhn simplices `h (z + K_σ)`. -/
@@ -73,18 +69,6 @@ theorem points_cube (N : ℕ) : ∀ T ∈ (cubeMesh N).simplices, ∃ (z : Fin 3
   push_cast
   field_simp
 
-theorem topSeq_toFeec : topSeq.toFeec = Feec.FiniteElement.PolySeq.lowestOrder := by
-  unfold PolySeq.toFeec Feec.FiniteElement.PolySeq.lowestOrder
-  congr 1
-  funext k
-  rcases k with _ | k <;> simp [PolySeq.kind, topSeq]
-
-theorem bottomSeq_toFeec : bottomSeq.toFeec = Feec.FiniteElement.PolySeq.lagrangeP2 := by
-  unfold PolySeq.toFeec Feec.FiniteElement.PolySeq.lagrangeP2
-  congr 1
-  funext k
-  rcases k with _ | _ | _ | k <;> simp [PolySeq.kind, bottomSeq]
-
 /-- The finite element spaces with vanishing boundary DOFs of a `Feec` mesh, transported to its
 domain, are the challenge's. -/
 theorem minimalSubcomplexOfEq_V (S : PolySeq) (m : Feec.Mesh.SimplicialMesh 3)
@@ -100,10 +84,4 @@ theorem minimalSubcomplexOfEq_V (S : PolySeq) (m : Feec.Mesh.SimplicialMesh 3)
   ext u
   exact mem_V₀_iff S (SimplicialMesh.ofFeec ⟨T, d, h1, h2, h3⟩) _ rfl u
 
-/-- The cube's finite element spaces with vanishing boundary DOFs are the challenge's. -/
-theorem polyMin_V_eq (S : PolySeq) (N : ℕ) (k : ℤ) :
-    (SetLike.coe ((polyMin 3 S.toFeec N).V k) : Set (L2Form (cubeDomain 3) k)) =
-      femSpaceMin (cubeDomain 3) (cubeMesh N) S k :=
-  minimalSubcomplexOfEq_V S _ _ _ _ _ _ k
-
-end FEEC
+end TimeStepping

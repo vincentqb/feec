@@ -1,63 +1,66 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
-# formalization.yaml v0.4 for the Palomar submission of time stepping for uniformly stable
-# semigroup families on Banach spaces (`palomar/timestepping/`).
+# formalization.yaml v0.4 for the Palomar submission of rational time stepping on Banach spaces
+# and its finite difference and finite element instances (`palomar/timestepping/`).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
-  name: "Time stepping for uniformly stable semigroup families on Banach spaces"
+  name: "Rational time stepping on Banach spaces, with finite difference and finite element instances"
   description: >-
     To solve an evolution equation u' = A u numerically, a one-step method replaces the exact
     evolution e^(tau A) over a time step tau by a rational function r(tau A) of the step, for
     instance backward Euler r(z) = 1/(1 - z) or Crank-Nicolson r(z) = (2 + z)/(2 - z). The
     method is A-stable if |r(z)| <= 1 on the closed left half-plane. On a Hilbert space and for
-    a dissipative A, von Neumann's inequality makes every A-stable scheme a contraction. Most
+    a dissipative A, von Neumann's inequality makes every A-stable scheme a contraction. Many
     discretizations of interest are not Hilbert-contractive, however: the heat equation in the
     maximum norm is the standard example. There, Brenner and Thomee (1979) showed that every
     A-stable scheme is nearly stable, ||r(tau A)^n|| <= M (1 + C sqrt(n)) for any semigroup with
     ||e^(tA)|| <= M on any Banach space, and that its error for smooth data is of the order of the
     scheme, with no sqrt(n) loss. Because the constants depend only on r, the bounds hold
-    uniformly over whole families of discretizations, and stability plus consistency then gives
-    convergence for every initial datum.
+    uniformly over whole families of space discretizations. The entry states this abstract theory
+    and two concrete instances on meshes of a cube.
     In Lean 4 over Mathlib: (1) Brenner-Thomee's stability bound for every A-stable real rational
     r (|r(infinity)| = 1 included) and every bounded strongly continuous semigroup of a real or
     complex Banach space, with the resolvent (1 - tau A)^(-1) shown to exist and be unique and
     r(tau A) defined through it; (2) the sharp smooth-data error estimate
     ||r(tau A)^n x - S(n tau) x|| <= K M n tau tau^m ||A^(m+1) x|| for r of order m
-    (Gomilko-Tomilov 2024, Thm 1.1(ii)); (3) the Hille-Yosida resolvent estimates and backward
-    Euler on Banach spaces with growth M e^(omega t), unconditionally stable with an explicit
-    error bound; (4) the same stability and error bounds for bounded generators L with
-    ||e^(tL)|| <= M, uniformly in L, with p(tau L) q(tau L)^(-1), plus the error along a
-    trajectory with a space-discretization defect; (5) the convergence half of the Lax
-    equivalence theorem for families of bounded generators on Banach spaces X_h read in a Banach space E: if the
-    semidiscrete solutions converge to S(t) x uniformly on bounded time intervals, the fully
-    discrete solutions of every power-bounded time scheme consistent of order p >= 1 converge to
-    S(n tau_h) x, uniformly over the time levels, for every datum; backward Euler always
-    qualifies; (6) von Neumann's inequality for polynomials of contractions and its rational
-    form, and the contractivity ||r(tau A)^n|| <= (sup_y |r(iy)|)^n of A-stable schemes for
-    m-dissipative, possibly unbounded, operators on real or complex Hilbert spaces; (7) the
-    maximum norm: a sub-Markov generator on R^iota (nonnegative off-diagonal entries,
-    nonpositive row sums) generates a positive contraction semigroup and has positive
-    contractive backward Euler steps; the classical (2|iota| + 1)-point finite difference
-    Laplacian on every finite grid of Z^iota is one; on a cube, against every classical solution
-    of the heat equation with bounded fourth derivatives, every A-stable scheme of order m has
-    the maximum-norm error ||I_h u(k tau) - r(tau Delta_h)^k v|| <= ||I_h u(0) - v|| +
-    k tau n B h^2/12 + K k tau tau^m ||Delta_h^(m+1) v||, K independent of h, tau, the
-    dimension and the solution; (8) backward Euler (order 1) and Crank-Nicolson (order 2,
-    |r(infinity)| = 1) satisfy the hypotheses. The statements use Mathlib's polynomials, bounded
-    operators, LinearPMap, Ring.inverse, NormedSpace.exp, Asymptotics.IsBigO, HasDerivWithinAt,
-    fderiv and TendstoUniformlyOn, with twelve small definitions (TimeStepping.IsC0Semigroup,
-    generatorGraph, resolventPoly, rationalOfResolvent, rationalApply, IsAStable, HasOrder,
-    IsSubMarkovGenerator, fdLaplacian, gridNodes, gridInterp, partialDeriv); the proof is the library Feec of this
-    repository (Feec.TimeStepping.StableFamily, Feec.TimeStepping.BanachFEEC,
-    Feec.TimeStepping.TimeScheme, Feec.TimeStepping.RationalAStable,
-    Feec.TimeStepping.RationalSharp, Feec.TimeStepping.RationalHilleYosida,
-    Feec.TimeStepping.RationalHillePhillipsReal, Feec.TimeStepping.Rational,
-    Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.ForMathlib.Analysis.SubMarkov,
-    Feec.ForMathlib.Analysis.FiniteDifference, Feec.Models.Cube.MaxNormHeat,
-    Feec.Models.Cube.FiniteDifferenceHeat and their imports).
+    (Gomilko-Tomilov 2024, Thm 1.1(ii)); (3) the Hille-Yosida resolvent estimates; (4) the
+    convergence half of the Lax equivalence theorem for families of bounded generators on
+    Banach spaces X_h read in a Banach space E: if the semidiscrete solutions converge to
+    S(t) x uniformly on bounded time intervals, the fully discrete solutions of every
+    power-bounded time scheme consistent of order p >= 1 converge to S(n tau_h) x, uniformly over
+    the time levels, for every datum; (5) von Neumann's inequality for rational functions of
+    contractions and the contractivity ||r(tau A)^n|| <= (sup_y |r(iy)|)^n of A-stable schemes for
+    m-dissipative, possibly unbounded, operators on real or complex Hilbert spaces; (6) the
+    heat equation on a cube by finite differences in the maximum norm: for every A-stable r of
+    order m, every classical solution u with bounded fourth derivatives whose initial value
+    satisfies the compatibility conditions of order m (its odd 2s-periodic extension is of class
+    C^(2m+2), with the words d^2_(i_1) ... d^2_(i_(m+1)) of its derivatives bounded by B'), the
+    scheme started from the nodal interpolant has maximum-norm error
+    ||I_h u(k tau) - r(tau Delta_h)^k I_h u(0)|| <= k tau (n B h^2/12 + K n^(m+1) B' tau^m),
+    O(h^2 + tau^m) with K depending on r and m only; (7) the Hodge wave equation of the de Rham
+    window H Lambda^0 -> H Lambda^1 -> L^2 Lambda^2 on the cube (0, 1/2)^3 by the Whitney
+    elements P_1 Lambda^0 -> P_1^- Lambda^1 -> P_1^- Lambda^2 on its Freudenthal meshes, with
+    boundary degrees of freedom from the exact solution: the implicit Crank-Nicolson rule
+    (unisolvent face integrals, a uniquely solvable step for every time step, error
+    C L (1 + T)(h + Delta t^2)) and the explicit leapfrog rule (stable and of error
+    C L (1 + T)(h + Delta t^2)/(1 - c) under the CFL condition 2 C_0 Delta t <= c h, for every
+    constant C_0 of the inverse estimate h ||d_h v|| <= C_0 ||v|| on the Whitney row), with the
+    global inverse estimate h ||dv|| <= C ||v|| on every shape-regular, quasi-uniform family of
+    meshes for every admissible sequence of finite element spaces, and a plane wave meeting the
+    hypotheses of both error bounds; (8) backward Euler (order 1) and Crank-Nicolson (order 2,
+    |r(infinity)| = 1) satisfy the hypotheses on r. The statements use Mathlib's polynomials,
+    bounded operators, LinearPMap, Ring.inverse, NormedSpace.exp, Asymptotics.IsBigO,
+    HasDerivWithinAt, fderiv, Lp spaces, affine simplices and TendstoUniformlyOn; the
+    definitions of differential forms, simplicial meshes and finite element spaces are those of
+    palomar/fem. The proof is the library Feec of this repository (Feec.TimeStepping.*,
+    Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.Models.Cube.MaxNormHeat,
+    Feec.Models.Cube.FiniteDifferenceHeat, Feec.FiniteElement.GlobalInverseEstimate,
+    Feec.Models.Cube.Inhomogeneous, Feec.Models.Cube.InhomogeneousError,
+    Feec.Models.Cube.InhomogeneousLeapfrog, Feec.Numerics.PlaneWaveCubeError and their
+    imports).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -67,7 +70,7 @@ project:
 
 classification:
   arxiv: ["math.FA", "math.NA"]
-  msc2020: ["47D06", "65J08", "65M12", "65M06", "65L20", "47A60"]
+  msc2020: ["47D06", "65J08", "65M12", "65M06", "65M60", "65L20", "47A60"]
 
 sources:
   - title: "On Rational Approximations of Semigroups"
@@ -80,20 +83,19 @@ sources:
     relationship: "formalizes"
     note: >-
       The stability bound ||r(tau A)^n|| <= C M sqrt(n) for bounded semigroups and A-stable
-      r (Thm 1, as restated in Gomilko-Tomilov 2024, Thm 1.1(i)), formalized as M (1 + C sqrt(n)) with C
-      depending on r only (TimeStepping.stable, TimeStepping.stable_of_bounded), on real or
-      complex Banach spaces (real ones through the complexification) and for every A-stable r,
-      |r(infinity)| = 1 included; the proof is the Hille-Phillips calculus r(tau A) = Phi(mu_r)
-      and a Fourier bound on the total variation of mu_r^n (Plancherel and Carlson's inequality
-      on a dyadic decomposition; whether this is the paper's proof was not checked). The
-      smooth-data estimate ||r(tau A)^n x - S(n tau) x|| <= C M n tau tau^m ||A^(m+1) x|| for r
-      of order m (TimeStepping.error, TimeStepping.error_of_bounded), as stated in
-      Gomilko-Tomilov 2024, Thm 1.1(ii) with s = m + 1, which attributes it to Thms 1 and 4 and
-      the remarks of this paper; the proof (translates of kernels in the Hille-Phillips calculus
-      and an L^1 bound O(n) of the error kernel) is not the paper's. The convergence for every
-      datum from stability and consistency (TimeStepping.converges), in the form for families of
-      discretizations. The paper itself was not consulted beyond its abstract; Thms 1 and 4 were
-      checked as restated in Gomilko-Tomilov 2024, Thm 1.1 (arXiv:2403.14411v2).
+      r (Thm 1, as restated in Gomilko-Tomilov 2024, Thm 1.1(i)), formalized as M (1 + C sqrt(n))
+      with C depending on r only (TimeStepping.stable), on real or complex Banach spaces (real
+      ones through the complexification) and for every A-stable r, |r(infinity)| = 1 included;
+      the proof is the Hille-Phillips calculus r(tau A) = Phi(mu_r) and a Fourier bound on the
+      total variation of mu_r^n (Plancherel and Carlson's inequality on a dyadic decomposition;
+      whether this is the paper's proof was not checked). The smooth-data estimate
+      ||r(tau A)^n x - S(n tau) x|| <= C M n tau tau^m ||A^(m+1) x|| for r of order m
+      (TimeStepping.error), as stated in Gomilko-Tomilov 2024, Thm 1.1(ii) with s = m + 1, which
+      attributes it to Thms 1 and 4 and the remarks of this paper; the proof (translates of
+      kernels in the Hille-Phillips calculus and an L^1 bound O(n) of the error kernel) is not the
+      paper's. Its maximum-norm application to finite differences for the heat equation
+      (TimeStepping.fdHeat). The paper itself was not consulted beyond its abstract; Thms 1 and 4
+      were checked as restated in Gomilko-Tomilov 2024, Thm 1.1 (arXiv:2403.14411v2).
     author_endorsement: "not-contacted"
   - title: "Rational Approximation of Operator Semigroups via the B-Calculus"
     authors:
@@ -122,9 +124,8 @@ sources:
     relationship: "formalizes"
     note: >-
       The Hille-Yosida resolvent estimates ||(z - A)^(-m)|| <= M/(re z - omega)^m (§1.5;
-      TimeStepping.hilleYosida), the stability of backward Euler that follows
-      (TimeStepping.backwardEuler), m-dissipative operators (§1.4; TimeStepping.contractive) and
-      the approximation of semigroups by families of discrete spaces (§3.4, background for
+      TimeStepping.hilleYosida), m-dissipative operators (§1.4; TimeStepping.contractive) and the
+      approximation of semigroups by families of discrete spaces (§3.4, background for
       TimeStepping.converges). Section numbers recalled, not checked against the printed book.
     author_endorsement: "not-contacted"
   - title: "Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes"
@@ -136,9 +137,8 @@ sources:
     relationship: "formalizes"
     note: >-
       Von Neumann's inequality: the closed unit disc is a spectral set of every contraction of a
-      Hilbert space (TimeStepping.vonNeumann for polynomials on every complex inner product
-      space, TimeStepping.vonNeumann_rational for rational functions with poles outside the
-      closed disc on Hilbert spaces). Paper not consulted; the statement as recalled in
+      Hilbert space (TimeStepping.vonNeumann, for rational functions with poles outside the closed
+      disc; q = 1 gives polynomials). Paper not consulted; the statement as recalled in
       Hairer-Wanner, §IV.11.
     author_endorsement: "n/a"
   - title: "Solving Ordinary Differential Equations II"
@@ -163,15 +163,16 @@ sources:
       - "Vidar Thomée"
     id: "doi:10.1007/3-540-33122-0"
     type: "book"
-    location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 7, 9, 15"
+    location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 1, 7, 9, 15"
     relationship: "background"
     note: >-
       Ch. 7 (Single Step Fully Discrete Schemes for the Homogeneous Equation) and Ch. 9 (Single
       Step Methods and Rational Approximations of Semigroups): stability and consistency give
-      convergence, the background of TimeStepping.converges and TimeStepping.error_of_bounded;
-      Ch. 15 (The Method of Lumped Masses): the discrete maximum principle, background of
-      TimeStepping.subMarkov, TimeStepping.isSubMarkovGenerator_fdLaplacian and
-      TimeStepping.fdHeat. Chapter titles checked against Crossref; contents not consulted.
+      convergence, the background of TimeStepping.converges; Ch. 15 (The Method of Lumped
+      Masses): the discrete maximum principle behind TimeStepping.fdHeat; Ch. 1 (The Standard
+      Galerkin Method): the Crank-Nicolson error argument (stability plus consistency), here for
+      the skew operator of TimeStepping.crankNicolson_cube. Chapter numbers and titles checked
+      against Crossref (DOIs 10.1007/3-540-33122-0_1, _7, _9, _15); contents not consulted.
     author_endorsement: "not-contacted"
   - title: "Maximum principle and uniform convergence for the finite element method"
     authors:
@@ -182,46 +183,137 @@ sources:
     location: "Comput. Methods Appl. Mech. Engrg. 2 (1973)"
     relationship: "background"
     note: >-
-      The discrete maximum principle for non-obtuse meshes, of which the sub-Markov property is
-      the matrix form (nonnegative off-diagonal entries, nonpositive row sums). The library proves
-      that the lumped-mass P1 Laplacian of every non-obtuse mesh is a sub-Markov generator and
-      derives maximum-norm heat estimates on every family of non-obtuse meshes
-      (Feec.FiniteElement.NonobtuseMeshes.maxNormHeat); that corollary is not compared, since its
-      statement needs simplicial meshes and P1 spaces (see fidelity). Paper not consulted.
+      The discrete maximum principle for non-obtuse meshes: the finite difference Laplacian of the
+      cube is the lumped-mass P1 Laplacian of its Freudenthal mesh, a sub-Markov generator, so
+      ||e^(t Delta_h)|| <= 1 in the maximum norm and TimeStepping.error applies with M = 1
+      (used in the proof of TimeStepping.fdHeat, not compared). Paper not consulted.
     author_endorsement: "not-contacted"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
     authors:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 (the semidiscrete Hodge wave and heat equations)"
+    location: "Ch. 4 (the semidiscrete Hodge wave and heat equations), Ch. 7 (the Crank-Nicolson Whitney scheme; the boundary data from the exact solution are those of the thesis' runs, implemented in its code fem4gr)"
+    relationship: "formalizes"
+    note: >-
+      The Crank-Nicolson Whitney scheme is one row of the thesis' Ch. 7 scheme; its error
+      estimate O(h + Delta t^2), the unisolvence and well-posedness clauses, the leapfrog
+      variant and its CFL analysis are proved in Feec for this formalization (not in the thesis).
+      The Banach-space statements are not from the thesis. The formalization is by the thesis
+      author.
+    author_endorsement: "participated"
+  - title: "Variational Methods for Time-Dependent Wave Propagation Problems"
+    authors:
+      - "Patrick Joly"
+    id: "doi:10.1007/978-3-642-55483-4_6"
+    type: "book chapter"
+    location: "Topics in Computational Wave Propagation, LNCSE 31 (2003), pp. 201-264"
     relationship: "background"
     note: >-
-      The semidiscrete finite element exterior calculus discretizations whose time
-      discretization motivated this entry; the statements compared here are not taken from the
-      thesis. The formalization is by the thesis author.
-    author_endorsement: "participated"
+      The energy argument for leapfrog under the CFL condition (TimeStepping.leapfrog_cube).
+      Title, volume and pages checked against Crossref; no section locator (contents not
+      rechecked for this entry).
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Methods for Maxwell's Equations"
+    authors:
+      - "Peter Monk"
+    id: "doi:10.1093/acprof:oso/9780198508885.001.0001"
+    type: "book"
+    location: "Oxford University Press (2003)"
+    relationship: "background"
+    note: >-
+      The Nedelec edge elements (the chapter "Finite Elements on Tetrahedra", pp. 99-154, title
+      and pages checked against Crossref); the book treats time-harmonic problems, so it is
+      background for the elements only, not for the time stepping.
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus, homological techniques, and applications"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1017/S0962492906210018"
+    type: "article"
+    location: "Acta Numerica 15 (2006), §3-5 (the spaces P_r Lambda^k, P_r^- Lambda^k, degrees of freedom)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §4 (L^2 de Rham complexes), §5.2 (admissible sequences)"
+    relationship: "background"
+    note: "Locators as cited in Feec, not rechecked for this entry."
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Exterior Calculus"
+    authors:
+      - "Douglas N. Arnold"
+    id: "doi:10.1137/1.9781611975543"
+    type: "book"
+    location: "CBMS-NSF 93 (2018), Ch. 6, 7 (L^2 de Rham complexes, finite element spaces, canonical interpolants)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Geometric Integration Theory"
+    authors:
+      - "Hassler Whitney"
+    id: "doi:10.1515/9781400877577"
+    type: "book"
+    location: "Ch. IV (Whitney forms, face integrals as degrees of freedom)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "The Mathematical Theory of Finite Element Methods"
+    authors:
+      - "Susanne C. Brenner"
+      - "L. Ridgway Scott"
+    id: "doi:10.1007/978-0-387-75934-0"
+    type: "book"
+    location: "Texts in Applied Mathematics 15, 3rd ed. (2008), §4.5 (inverse estimates)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "The Finite Element Method for Elliptic Problems"
+    authors:
+      - "Philippe G. Ciarlet"
+    id: "doi:10.1137/1.9780898719208"
+    type: "book"
+    location: "§3.1 (shape-regular families), §3.2 (inverse inequalities)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Simplizialzerlegungen von beschränkter Flachheit"
+    authors:
+      - "Hans Freudenthal"
+    id: "doi:10.2307/1968813"
+    type: "article"
+    location: "Ann. of Math. 43 (1942) (the Freudenthal triangulations of the cube)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
 
 related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared (Challenge.lean): TimeStepping.hilleYosida,
-    TimeStepping.backwardEuler, TimeStepping.stable, TimeStepping.error,
-    TimeStepping.stable_of_bounded, TimeStepping.error_of_bounded, TimeStepping.converges,
-    TimeStepping.converges_backwardEuler, TimeStepping.vonNeumann,
-    TimeStepping.vonNeumann_rational, TimeStepping.contractive, TimeStepping.subMarkov,
-    TimeStepping.isSubMarkovGenerator_fdLaplacian, TimeStepping.fdHeat,
-    TimeStepping.backwardEuler_isAStable and TimeStepping.crankNicolson_isAStable.
-    Proved in Feec but not compared: the maximum-norm heat estimates on every family of
-    non-obtuse simplicial meshes for the lumped-mass P1 method
-    (Feec.FiniteElement.NonobtuseMeshes.maxNormHeat) and the equality of the finite difference
-    Laplacian with the lumped-mass P1 Laplacian of the Freudenthal mesh of the cube
-    (Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq); the error bounds for
-    m-dissipative and quasi-contractive generators on Hilbert spaces with the semigroup
-    characterized by strong solutions, conditional error bounds on Banach spaces with stability
-    assumed, complex-coefficient forms and the Cayley transform (formerly compared in the
-    palomar/vonneumann entry, which this entry replaces; see fidelity).
+    Formalized and compared (Challenge.lean): TimeStepping.hilleYosida, TimeStepping.stable,
+    TimeStepping.error, TimeStepping.converges, TimeStepping.vonNeumann,
+    TimeStepping.contractive, TimeStepping.fdHeat, TimeStepping.backwardEuler_isAStable,
+    TimeStepping.crankNicolson_isAStable, TimeStepping.inverse_estimate,
+    TimeStepping.crankNicolson_cube, TimeStepping.leapfrog_cube and
+    TimeStepping.rowSolution_nonvacuous. This entry absorbs the time-stepping half of the former
+    palomar/schemes entry (the weak-symmetry Einstein-Bianchi method moves to its own entry).
+    Proved in Feec but no longer compared, as routine corollaries of the compared theorems or
+    finite-dimensional facts: backward Euler on Banach spaces with growth M e^(omega t) and its
+    first-order error bound (stability is hilleYosida at z = 1/tau); the stability and error
+    bounds for bounded generators with ||e^(tL)|| <= M written with p(tau L) q(tau L)^(-1), and
+    the error along a trajectory with a defect; convergence of backward Euler for every datum
+    (backward Euler meets the hypotheses of converges); von Neumann's inequality for polynomials
+    on incomplete inner product spaces; the sub-Markov property of the finite difference
+    Laplacian and the positive contraction semigroups it generates; the maximum-norm heat
+    estimates for arbitrary discrete data and on every family of non-obtuse meshes
+    (Feec.FiniteElement.NonobtuseMeshes.maxNormHeat). Also proved in Feec, not compared: the
+    three-row Einstein-Bianchi Crank-Nicolson scheme and its constraint monitors, the
+    plane-wave computation of the thesis' Ch. 7, the explicit constant of the leapfrog error
+    (Feec.Models.Cube.Inhomogeneous.leapfrogConst), the mesh-level tools (unisolvence,
+    Bramble-Hilbert interpolation errors, local inverse estimates).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -250,12 +342,19 @@ automation:
         wall_time: "not tracked"
         spend_usd: "n/a"
   notes: >-
-    The challenge was assembled by an agent from the earlier palomar/vonneumann challenge (its
-    Banach-space and Hilbert-space statements, rephrased with the definitions above) and new
-    statements for uniformly stable families, sub-Markov generators and finite differences. The
-    bridge (Solution/Bridge.lean) translates the definitions to Feec; the only new mathematics in
-    it is that P(R) Q(R)^(-1) = p(tau L) q(tau L)^(-1) for bounded L (TimeStepping.step_eq) and
-    that divisibility of p - q T_m by X^(m+1) gives the order (TimeStepping.hasOrder_of_dvd).
+    The challenge was assembled by agents from the earlier palomar/vonneumann challenge (its
+    Banach-space and Hilbert-space statements, rephrased with the definitions above), new
+    statements for families of discretizations and finite differences, and the time-stepping
+    statements of the former palomar/schemes entry with their definitions (copied from
+    palomar/fem). The bridges translate the definitions to Feec: Solution/Bridge.lean (the
+    rational schemes; new mathematics there: P(R) Q(R)^(-1) = p(tau L) q(tau L)^(-1) for bounded
+    L, TimeStepping.step_eq, and the order from divisibility of p - q T_m by X^(m+1),
+    TimeStepping.hasOrder_of_dvd); Solution/FdHeat.lean (new for this entry: for f odd in the
+    faces of the cube, Delta_h^k I_h f = I_h D_h^k f with D_h the difference Laplacian on R^n,
+    and |D_h^k f| <= n^k B' by the second-difference bound and commuting D_h with partial
+    derivatives); Solution/CubeSpaces, WhitneySpaces, WhitneyInterp, WhitneyScheme,
+    CrankNicolson, Leapfrog, PlaneWave (the Whitney spaces, interpolant, steps and the plane
+    wave; Forms, Poly, Mesh, Trace, Spaces adapted from palomar/fem).
 
 fidelity:
   divergences: >-
@@ -271,61 +370,94 @@ fidelity:
     R = (1 - tau A)^(-1), P(R) = sum_(k <= N) p_k (R - 1)^k R^(N-k), N = deg q
     (TimeStepping.rationalOfResolvent; that is R^N p(1 - R^(-1)), and 1 - R^(-1) = tau A).
     Mathlib's NormedSpace.exp gives e^(tL) for bounded L, and r(tau L) = p(tau L) q(tau L)^(-1)
-    (TimeStepping.rationalApply); the two agree for bounded L (proved in the bridge, not
-    compared). Suprema in von Neumann's inequality and in TimeStepping.contractive are in
-    [0, infinity] (the extended norm).
+    (TimeStepping.rationalApply, used by fdHeat); the two agree for bounded L (proved in the
+    bridge, not compared). Suprema in von Neumann's inequality and in TimeStepping.contractive
+    are in [0, infinity] (the extended norm).
     (2) Constants. "C depending on r only" is "exists C, for all spaces": Lean quantifies the
     universe of the spaces outside the statement, so each universe has its own constant; the
-    proof gives the same one in every universe. In TimeStepping.error, error_of_bounded and
-    fdHeat the constant depends on r and m. In TimeStepping.fdHeat it is moreover independent of
-    the dimension n, the cube, the grid and the solution.
-    (3) Uniformly stable families. The uniformity of the stability and error bounds over a family
-    of discretizations L_h is expressed by the order of quantifiers (the constants come before
-    the operator) rather than by a structure of families; TimeStepping.converges states the
-    families explicitly (spaces X_h, generators L_h, reading maps iota_h with left inverses pi_h,
-    a filter on the index set). Its hypotheses: S is a strongly continuous semigroup with
-    ||S(t)|| <= M and ||e^(t L_h)|| <= M with the same M (take the larger), ||iota_h||,
-    ||pi_h|| <= C, the scheme power bounded on every horizon by Ms(T) and consistent of order
-    p >= 1 with a constant K >= 0, and tau_h -> 0; the semidiscrete convergence is a hypothesis,
-    so the theorem is the time-discretization half of a Lax equivalence theorem. For a rational
-    A-stable scheme without uniform power bounds (only M (1 + C sqrt(n))) it does not apply, and
-    convergence for every datum is not claimed (it fails in general on Banach spaces).
-    (4) The maximum norm. TimeStepping.IsSubMarkovGenerator is stated for operators on R^iota
-    with the maximum norm: L + c is positive for some c >= 0 and L 1 <= 0, the
-    coordinate-free form of a matrix with nonnegative off-diagonal entries and nonpositive row
-    sums. TimeStepping.fdHeat: the classical solution is stated by its hypotheses (u(t) of class
+    proof gives the same one in every universe. In TimeStepping.error and fdHeat the constant
+    depends on r and m; in fdHeat it is moreover independent of the dimension n, the cube, the
+    grid and the solution. The constants C of the Whitney error bounds and of the inverse
+    estimates are asserted (explicit in Feec for the error bounds, leapfrogConst; the
+    inverse-estimate constant 2^n n A has A from a norm equivalence on the reference simplex, by
+    compactness, so it has no explicit value). TimeStepping.leapfrog_cube therefore states the
+    CFL condition for every constant C_0 >= 0 of the inverse estimate on the Whitney row, one
+    existing: any computed C_0 gives a concrete time-step restriction.
+    (3) Families. The uniformity of the stability and error bounds over families of
+    discretizations L_h is expressed by the order of quantifiers (the constants come before
+    the operator); TimeStepping.converges states the families explicitly (spaces X_h, generators
+    L_h, reading maps iota_h with left inverses pi_h, a filter on the index set). Its
+    hypotheses: ||S(t)|| <= M and ||e^(t L_h)|| <= M with the same M, ||iota_h||, ||pi_h|| <= C,
+    the scheme power bounded on every horizon by Ms(T) and consistent of order p >= 1 with
+    K >= 0, tau_h -> 0; the semidiscrete convergence is a hypothesis, so the theorem is the
+    time-discretization half of a Lax equivalence theorem. For an A-stable scheme on a Banach
+    space without uniform power bounds (only M (1 + C sqrt(n))) it does not apply, and
+    convergence for every datum is not claimed (it fails in general on Banach spaces); backward
+    Euler satisfies its hypotheses (hilleYosida), the exact flow trivially.
+    (4) TimeStepping.fdHeat. The classical solution is stated by its hypotheses (u(t) of class
     C^4 on all of R^n, two-sided time derivative u_1 = Delta u at the points of the open cube and
-    of [0, T] (so u is defined slightly beyond [0, T]; likewise the trajectories of
-    TimeStepping.error_of_bounded are differentiable two-sidedly on [0, n tau]), u = 0 on the
-    boundary, |d_i^4 u(t)| <= B on the closed cube), only for t in [0, T]; the discrete datum v is
-    arbitrary (v = I_h u(0) gives the consistency error); the bound contains ||Delta_h^(m+1) v||,
-    which is not bounded uniformly in h by the statement. The general corollary for the
-    lumped-mass P1 method on every family of non-obtuse meshes, and the identity of the finite
-    difference and lumped P1 Laplacians on the cube, are proved in Feec but not compared: their
-    statements need simplicial meshes, non-obtuseness and P1 spaces, which would roughly double
-    the challenge.
-    TimeStepping.contractive assumes only that q has no zero in the closed left half-plane; its
-    bound (sup_y |r(iy)|)^n is <= 1 exactly for A-stable r, and infinite when deg p > deg q (then
-    rationalOfResolvent drops the coefficients of p above deg q, harmlessly).
-    (5) Relation to palomar/vonneumann, which this entry replaces. Kept, restated with the new
-    definitions: von Neumann's inequality and its rational form; the real-coefficient
-    contractivity for m-dissipative A (now TimeStepping.contractive, without the unused
-    hypothesis deg p <= deg q); the Hille-Yosida estimates; backward Euler on Banach spaces;
-    Brenner-Thomee's stability bound (split from its sqrt(n)-lossy error bound, dropped as
-    weaker than the sharp estimate) and the sharp error estimate (now for every R with
-    R(x - tau A x) = x, the stability theorem giving its existence and uniqueness). Dropped: the
-    complex-coefficient forms, the bounded-operator forms on Hilbert spaces (special cases of
-    the m-dissipative and bounded-generator forms up to the identification of (1) for bounded
-    A), the Cayley transform, the error bounds for m-dissipative and quasi-contractive Hilbert
-    generators with the semigroup characterized by strong solutions (for m-dissipative A the
-    contraction semigroup case of TimeStepping.error, M = 1, given the Lumer-Phillips
-    semigroup), and the two conditional Banach error bounds with stability assumed. All remain
-    proved in Feec.
-    (6) Stronger than the sources. Real or complex Banach spaces throughout (real ones through
-    the complexification); every A-stable r, including |r(infinity)| = 1; von Neumann's
-    inequality for polynomials on incomplete inner product spaces; contractivity for unbounded
-    m-dissipative A with the supremum over the imaginary axis only. Less smooth data
-    (x in D(A^s), s < m + 1, Gomilko-Tomilov) are not covered.
+    of [0, T] (so u is defined slightly beyond [0, T]), u = 0 on the boundary, |d_i^4 u(t)| <= B
+    on the closed cube), only for t in [0, T]. The compatibility conditions are stated as the
+    existence of the odd 2s-periodic extension u~ of u(0) (u~ = u(0) on the closed cube, odd
+    under the 2n face reflections) of class C^(2m+2), with |d^2_(i_1) ... d^2_(i_(m+1)) u~| <= B'
+    on R^n; this is the usual Fourier-type condition (for n = 1: the even derivatives of u(0) of
+    order <= 2m + 2 vanish at both ends), stronger than the vanishing of Delta^j u(0) on the
+    boundary in general. The scheme starts from the nodal interpolant I_h u(0). The temporal term
+    is controlled through the discrete datum, ||Delta_h^(m+1) I_h u(0)|| <= n^(m+1) B'; no bound
+    on the time derivatives of u beyond those implied is assumed. The discrete maximum principle
+    (||e^(t Delta_h)|| <= 1) is used in the proof, not stated. TimeStepping.contractive assumes
+    only that q has no zero in the closed left half-plane; its bound (sup_y |r(iy)|)^n is <= 1
+    exactly for A-stable r, and infinite when deg p > deg q.
+    (5) The Whitney schemes. Coordinates and definitions of forms, meshes and finite element
+    spaces as in palomar/fem; the Freudenthal meshes are asserted existentially, named by their
+    vertices (IsFreudenthal; a mesh of the cube by such simplices contains all of them).
+    Crank-Nicolson: one row of the thesis' three-row Einstein-Bianchi scheme (the rows
+    decouple); the exact solution is a classical solution on R^3 with the stated bounds on
+    [0, T] (RowSolution), and no boundary condition is imposed on it: the boundary degrees of
+    freedom of the scheme are those of the Whitney interpolant of the exact solution at every
+    step for all three fields (any g_n with g_n - Pi_h U(t_n) in V_h with vanishing traces), the
+    initial value is the interpolant of U(0), the load is zero. This is an interior error
+    estimate with exact Dirichlet data everywhere, not the natural boundary conditions of a
+    well-posed initial-boundary value problem. The error is in L^2 at t_M = M Delta t; rates for
+    finite Sobolev regularity and the constraint monitors are not stated. The weak exterior
+    derivative of the scheme is a total function wd (0 off its domain), only applied to finite
+    element forms. Everything is on one domain, (0, 1/2)^3, and one mesh family, except the
+    inverse estimate.
+    (5a) The relation to the abstract theorems is explained, not compared: with vanishing
+    boundary data a Crank-Nicolson step is r(Delta t A_h) on V_h with vanishing traces,
+    r(z) = (2 + z)/(2 - z) (TimeStepping.crankNicolson_isAStable) and A_h skew-adjoint for the
+    L^2 product, the setting of TimeStepping.contractive; the Lean proof of
+    TimeStepping.crankNicolson_cube uses the energy identity of the Cayley transform in Feec
+    (Feec.TimeStepping.Cayley) rather than TimeStepping.contractive, and the identification of
+    the step with r(Delta t A_h) is not a compared statement. Leapfrog is a two-step method, not
+    a rational one-step scheme.
+    (5b) Leapfrog: the three-level scheme with the same boundary data and the two starting values
+    u_0 = Pi_h U(0), u_1 = Pi_h U(Delta t) (interpolants of the exact solution; no one-step
+    starting procedure). The error carries the factor 1/(1 - c) of the energy argument, and the
+    stability clause is for vanishing boundary degrees of freedom. The time step need not satisfy
+    the CFL condition for well-posedness (the step is explicit). Sharpness of the CFL condition
+    (instability beyond it) is not stated.
+    (5c) Inverse estimate: the hypothesis that the open simplices lie in Omega (true when Omega is
+    the interior of its closure, e.g. for convex Omega and the cube; it makes the L^2(Omega) norm
+    the sum of the norms on whole simplices) replaces regularity of Omega; the global estimate is
+    stated with the mesh size h_N, not elementwise; C depends on n, S, k and the
+    shape-regularity and quasi-uniformity constants of the family.
+    Non-vacuity of RowSolution is TimeStepping.rowSolution_nonvacuous (constant fields inhabit
+    it too; the witness is a plane wave with nonzero time derivative). The hypotheses of fdHeat
+    are explicit and met by the first Dirichlet eigenmode e^(-lambda t) prod_i sin(pi (x_i - b_i)/s)
+    (odd and 2s-periodic), not stated as a compared theorem.
+    (6) Relation to the former entries. From palomar/vonneumann (replaced earlier): von Neumann's
+    inequality (now only its rational form), contractivity for m-dissipative A, Hille-Yosida,
+    Brenner-Thomee's stability bound and the sharp error estimate. From palomar/schemes
+    (deleted): the inverse estimate, the Crank-Nicolson and leapfrog Whitney schemes (leapfrog
+    now for every inverse-estimate constant) and their non-vacuity, under new names in the
+    TimeStepping namespace. Dropped from the compared list (all remain proved in Feec): see
+    status.scope.
+    (7) Stronger than the sources. Real or complex Banach spaces throughout (real ones through
+    the complexification); every A-stable r, including |r(infinity)| = 1; contractivity for
+    unbounded m-dissipative A with the supremum over the imaginary axis only; the inverse
+    estimate for every admissible sequence of FEEC spaces. Less smooth data (x in D(A^s),
+    s < m + 1, Gomilko-Tomilov) are not covered.
 
 review:
   status: "self-assessed"
@@ -333,11 +465,16 @@ review:
     - "none"
   notes: >-
     Not yet reviewed by the author: the statements of this entry are new or restated from
-    palomar/vonneumann (whose von Neumann and Hilbert-space statements the author had reviewed in
-    their earlier form). An independent agent editorial review checked the statements against
-    the definitions and Gomilko-Tomilov 2024, Thm 1.1 (arXiv v2), and found no hidden hypotheses;
-    it is not an author or external review. Every merge of the library was gated by a full build (zero warnings), an
-    axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI review. No
+    palomar/vonneumann and palomar/schemes (the von Neumann and Hilbert-space statements were
+    reviewed by the author in their earlier form). TimeStepping.fdHeat was restated 2026-11-17
+    after an independent cold audit found that its earlier form (an arbitrary discrete datum v,
+    with the temporal term K k tau tau^m ||Delta_h^(m+1) v||) was advertised as O(h^2 + tau^m):
+    it now starts from I_h u(0) and bounds the temporal term by the compatible initial value.
+    TimeStepping.leapfrog_cube was restated the same day to quantify over every inverse-estimate
+    constant. Independent agent editorial reviews checked the Banach statements against
+    Gomilko-Tomilov 2024, Thm 1.1 (arXiv v2) and audited the merged entry; they are not author
+    or external reviews. Every merge of the library was gated by a full build (zero warnings),
+    an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI review. No
     external mathematical review.
 
 alignment:
@@ -347,12 +484,7 @@ alignment:
       lean: "TimeStepping.hilleYosida"
       module: "Challenge"
       status: "proved"
-      note: "Hille-Yosida estimates at complex z, re z > omega, complex Banach spaces."
-    - source: "[BrennerThomee1979]; [Pazy1983], §1.5"
-      lean: "TimeStepping.backwardEuler"
-      module: "Challenge"
-      status: "proved"
-      note: "Backward Euler on real or complex Banach spaces, growth M e^(omega t): stability from Hille-Yosida and an explicit first-order error bound."
+      note: "Hille-Yosida estimates at complex z, re z > omega, complex Banach spaces; at z = 1/tau the power-boundedness of backward Euler."
     - source: "[BrennerThomee1979] (the sqrt(n) stability bound)"
       lean: "TimeStepping.stable"
       module: "Challenge"
@@ -363,56 +495,30 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Every A-stable r of order m: ||r(tau A)^n x - S(n tau) x|| <= K M n tau tau^m ||A^(m+1) x||."
-    - source: "[BrennerThomee1979]"
-      lean: "TimeStepping.stable_of_bounded"
-      module: "Challenge"
-      status: "proved"
-      note: "Bounded generators with ||e^(tL)|| <= M, uniformly in L: q(tau L) invertible, ||r(tau L)^n|| <= M (1 + C sqrt(n))."
-    - source: "[BrennerThomee1979]; [Thomee2006], Ch. 7, 9"
-      lean: "TimeStepping.error_of_bounded"
-      module: "Challenge"
-      status: "proved"
-      note: "Bounded generators, uniformly in L: the sharp temporal error and the error along a trajectory with defect D."
     - source: "[Thomee2006], Ch. 7, 9; [Pazy1983], §3.4"
       lean: "TimeStepping.converges"
       module: "Challenge"
       status: "proved"
       note: "Families of discretizations on Banach spaces: stability and consistency of order p >= 1 give fully discrete convergence for every datum, uniformly over the time levels."
-    - source: "[BrennerThomee1979]; [Pazy1983], §1.5"
-      lean: "TimeStepping.converges_backwardEuler"
-      module: "Challenge"
-      status: "proved"
-      note: "The same for backward Euler, with no hypothesis on the scheme."
     - source: "[VonNeumann1951]"
       lean: "TimeStepping.vonNeumann"
       module: "Challenge"
       status: "proved"
-      note: "Polynomials of contractions, every complex inner product space."
-    - source: "[VonNeumann1951]"
-      lean: "TimeStepping.vonNeumann_rational"
-      module: "Challenge"
-      status: "proved"
-      note: "Rational functions with poles outside the closed unit disc, complex Hilbert spaces."
+      note: "Rational functions of contractions with poles outside the closed unit disc, complex Hilbert spaces."
     - source: "[HairerWanner1996], §IV.11; [Pazy1983], §1.4"
       lean: "TimeStepping.contractive"
       module: "Challenge"
       status: "proved"
       note: "Real rational r, m-dissipative A on real or complex Hilbert spaces: ||r(tau A)^n|| <= (sup_y |r(iy)|)^n."
-    - source: "[CiarletRaviart1973]; [Thomee2006], Ch. 15"
-      lean: "TimeStepping.subMarkov"
-      module: "Challenge"
-      status: "proved"
-      note: "Sub-Markov generators: positive maximum-norm contraction semigroups, positive contractive backward Euler steps."
-    - source: "[Thomee2006], Ch. 15"
-      lean: "TimeStepping.isSubMarkovGenerator_fdLaplacian"
-      module: "Challenge"
-      status: "proved"
-      note: "The finite difference Laplacian on every finite grid is a sub-Markov generator."
     - source: "[Thomee2006], Ch. 15; [BrennerThomee1979]"
       lean: "TimeStepping.fdHeat"
       module: "Challenge"
       status: "proved"
-      note: "The heat equation on a cube by finite differences and any A-stable scheme of order m: maximum-norm error O(h^2) plus the sharp temporal error."
+      note: >-
+        Finite differences for the heat equation on a cube, any A-stable scheme of order m,
+        compatible initial data, started from I_h u(0): maximum-norm error
+        k tau (n B h^2/12 + K n^(m+1) B' tau^m). Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat
+        at v = I_h u(0) with TimeStepping.norm_fdLaplacian_pow_gridInterp_le (Solution/FdHeat.lean).
     - source: "[HairerWanner1996], §IV.3"
       lean: "TimeStepping.backwardEuler_isAStable"
       module: "Challenge"
@@ -422,6 +528,40 @@ alignment:
       lean: "TimeStepping.crankNicolson_isAStable"
       module: "Challenge"
       status: "proved"
-      note: "Non-vacuity: Crank-Nicolson is A-stable, |r(infinity)| = 1, of order 2."
+      note: "Non-vacuity: Crank-Nicolson is A-stable, |r(infinity)| = 1, of order 2; the rule of TimeStepping.crankNicolson_cube."
+    - source: "[Ciarlet2002] §3.2; [BrennerScott2008] §4.5"
+      lean: "TimeStepping.inverse_estimate"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.FiniteElement.PolySeq.exists_mul_norm_d_le (Feec.FiniteElement.GlobalInverseEstimate)
+        on the Feec meshes M.toFeec, whose spaces are the challenge's (Solution/Spaces.lean).
+    - source: "[QuennevilleBelair2015] Ch. 7; [Thomee2006], Ch. 1"
+      lean: "TimeStepping.crankNicolson_cube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row and
+        whitney_existsUnique_cnStep; the challenge's spaces are Feec.Models.Cube.FEM.whitney and
+        whitneyMin (Solution/WhitneySpaces.lean), its interpolant the canonical interpolant
+        (Solution/WhitneyInterp.lean), its step Feec.TimeStepping.IsDirichletCNStep
+        (Solution/WhitneyScheme.lean).
+    - source: "[Joly2003]; [QuennevilleBelair2015] Ch. 7"
+      lean: "TimeStepping.leapfrog_cube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.Models.Cube.Inhomogeneous.exists_mul_norm_discreteD_whitneyRow_le (an inverse
+        constant), Feec.TimeStepping.existsUnique_isDirichletLeapfrogStep,
+        whitney_leapfrog_stable and RowSolution.whitney_leapfrog_error_le_row, the last two for an
+        arbitrary inverse constant K >= 0 (Solution/Leapfrog.lean).
+    - source: "[QuennevilleBelair2015] Ch. 7"
+      lean: "TimeStepping.rowSolution_nonvacuous"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Row 0 of Feec.Numerics.PlaneWaveCube.planeWaveRows (A_+ = 1, A_x = 0, omega = 1), whose
+        dx_0 coefficient is -sin (y_2 - t) with time derivative cos (y_2 - t)
+        (Solution/PlaneWave.lean).
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

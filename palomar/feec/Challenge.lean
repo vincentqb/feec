@@ -1,86 +1,84 @@
 module
 
+public import Mathlib.Algebra.Category.ModuleCat.Abelian
+public import Mathlib.Algebra.Homology.HomologicalComplexAbelian
+public import Mathlib.Algebra.Homology.HomologySequenceLemmas
+public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
+public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.Algebra.Polynomial.AlgebraMap
+public import Mathlib.Analysis.Calculus.ContDiff.Basic
 public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Convex.Hull
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.Analysis.Normed.Operator.Banach
 public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.MeasureTheory.Function.L2Space
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+public import Mathlib.Topology.MetricSpace.Antilipschitz
 public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 /-!
-# Finite element exterior calculus for Hilbert complexes
+# Finite element exterior calculus: Hilbert complexes, crimes, Whitney forms, BGG complexes
 
-Finite element exterior calculus ([AFW2006], [AFW2010]) approximates a Hilbert complex
-`⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely defined operators `d` by finite-dimensional subcomplexes
-`Vₕ` of its domain complex `Vⁱ = D(dⁱ)` (graph norm `‖x‖_V = (‖x‖² + ‖d x‖²)^½`) with commuting
-cochain projections `πₕ`. This file states its approximation theory as one theorem family, for
-every Hilbert complex and every family: the static theory of [AFW2010], §3.3–§3.4; the evolutions
-on a window of consecutive degrees, the Hodge wave equation of [QuennevilleBelair2015], Ch. 4,
-and the heat equation, with the propagation of constraints; their fully discrete A-stable time
-stepping; rates under a Jackson estimate; and the variational crimes of [HolstStern2012], §3.
+FEEC ([AFW2006], [AFW2010]) approximates a Hilbert complex `⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely
+defined operators by finite-dimensional subcomplexes `Vₕ` of its domain complex `V = D(d)` (graph
+norm `‖x‖_V = (‖x‖² + ‖d x‖²)^½`) with commuting cochain projections `πₕ`. The compared theorems:
 
-* `FEEC.feec` (`HilbertComplex.SubcomplexFamily.Verdict`):
-  - static: for bounded `πₕ` and closed ranges, the gaps between `ℌʲ` and `ℌₕʲ`,
-    `Hʲ ≅ Hʲ(Vₕ)`, the uniform discrete Poincaré and inf-sup conditions and quasi-optimality of
-    the mixed method ([AFW2010], Thms 3.4–3.6, 3.8, 3.9);
-  - evolution: the wave operator `L = 𝐝 - 𝐝*` of every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` is
-    skew-adjoint; on every window which `Vₕ` approximates, the wave equation `ξ' = L ξ` is well
-    posed with a convergent Galerkin approximation and an error bound by the best approximation
-    of the trajectory ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.17), and so
-    is the heat equation `u' = L² u = -Δ u` ([GilletteHolstZhu2017]);
-  - constraints: a closed constraint `K` propagates under the wave equation iff it reduces `L`
-    (in the sense of [Kato1995], §III.5.6); the data that stay in `K` form its invariant core
-    `K*`, the largest closed subspace of `K` reducing `L`; the constraint of a reducing
-    subcomplex propagates ([QuennevilleBelair2015], Prop 4.16); and for the wave and the heat
-    equation, `K` reduces the generator iff `K` and `Kᗮ` propagate forward in time;
-  - fully discrete: for both equations, every A-stable rational scheme of order `p` (θ-schemes,
-    `θ ≥ 1/2`, included) converges with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` ([BrennerThomee1979]).
-* `FEEC.feec_rated`: for a Jackson estimate, the mixed method is `O(L hᵒʳᵈ⁽ˢ⁾)` and the fully
-  discrete wave error `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖`.
-* `FEEC.staticFEEC_uniform`: the static constant depends only on the bound of `πₕ` and the
-  Poincaré constant. `FEEC.exists_cochainProjection`, `FEEC.exists_subcomplexFamily_iff`
-  ([AFW2010], Thm 3.7): bounded cochain projections exist iff the discrete Poincaré inequality
-  and the harmonic bound `‖q‖ ≤ c ‖P_ℌ q‖` hold uniformly.
-* `FEEC.crimeFEEC` (`HilbertComplex.CrimeFamily.Verdict`): discrete differential spaces
-  `(Xₕ, 𝐝ₕ)` with their own inner products, read in a window by maps `iₕ` that need be neither
-  isometric nor cochain maps: well-posedness, stability, the Strang lemma and convergence of the
-  mixed method with load `iₕ* f`, the heat equation, and for cochain maps the Poincaré
-  inequality, convergence, cohomology and rates. `FEEC.crime_nonvacuous`: a genuine crime meets
-  the hypotheses.
+* `FEEC.feec` (`HilbertComplex.SubcomplexFamily.Verdict`), for every complex and family: the
+  static theory ([AFW2010], Thms 3.4–3.6, 3.8, 3.9: harmonic gaps, `Hʲ ≅ Hʲ(Vₕ)`, discrete
+  Poincaré and inf-sup conditions, quasi-optimality); on every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` that
+  `Vₕ` approximates, the Hodge wave equation `ξ' = L ξ`, `L = 𝐝 - 𝐝*` ([QuennevilleBelair2015],
+  Ch. 4: well-posedness, convergence, the error bound by the best approximation of the trajectory),
+  constraint propagation ([Kato1995], §III.5.6), the heat equation `u' = L² u`
+  ([GilletteHolstZhu2017]) and A-stable rational time stepping ([BrennerThomee1979]). The
+  load-bearing fields are `static`, `WaveVerdict.error` and `EvolutionVerdict.semidiscrete`.
+* `FEEC.feec_rated` (rates of a Jackson estimate), `FEEC.staticFEEC_uniform` (constants depend
+  only on the bound of `πₕ` and the Poincaré constant), `FEEC.exists_cochainProjection`,
+  `FEEC.exists_subcomplexFamily_iff` ([AFW2010], Thm 3.7, (30)).
+* `FEEC.crimeFEEC`, `FEEC.crime_nonvacuous`: variational crimes ([HolstStern2012], §3).
+* `FEEC.feec_cube`: a finite element family meets the hypotheses: the Whitney forms on the
+  Freudenthal meshes of the cube, with smoothed projections and the rate `O(h)`.
+* BGG complexes ([ArnoldHu2021]): `FEEC.bggCohomology`, `FEEC.bggFinrank`, `FEEC.bggHilbert`.
 
 The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero unless `j = i + 1` (windows
-need no casts). Mathlib has no `C₀`-semigroups: the exact evolutions are operator families the
+need no casts). Mathlib has no `C₀`-semigroups: exact evolutions are operator families the
 theorems assert to exist, characterized by their strong solutions.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.3–§3.5
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 4
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012],
-  §3
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
-open Filter Topology Set LinearPMap
 
 universe u v w
 
 @[expose] public noncomputable section
 
 namespace FEEC
+
+section Crown
+
+open Filter Topology Set LinearPMap
 
 /-! ### Hilbert complexes and families of subcomplexes -/
 
@@ -876,9 +874,8 @@ end HilbertComplex
 
 /-! ### The theorems -/
 
-/-- **The constants of the static FEEC theorem** depend only on the bound `c` of the cochain
-projections and the Poincaré constant `c_P` ([AFW2010], §3.3–§3.4): one function `Φ` serves every
-Hilbert complex, family of subcomplexes and degree. -/
+/-- **The static constants depend only on the bound `c` of `πₕ` and the Poincaré constant
+`c_P`** ([AFW2010], §3.3–§3.4): one `Φ` for every complex, family and degree. -/
 theorem staticFEEC_uniform : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike 𝕜] {W : ℤ → Type v}
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     {κ : Type w} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ},
@@ -886,10 +883,8 @@ theorem staticFEEC_uniform : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [
     H.PoincareBy (j - 1) cP → H.PoincareBy j cP → F.StaticVerdict j (Φ c cP) := by
   sorry
 
-/-- **Bounded cochain projections from discrete stability** ([AFW2010], Thm 3.7). Let `S` be a
-finite-dimensional subcomplex. If in every degree `i` the discrete Poincaré inequality
-`‖v‖_V ≤ c₁ⁱ ‖d v‖` holds on `Vⁱ ⊥ 𝔷ₕⁱ` and `‖q‖ ≤ c₂ⁱ ‖P_ℌ q‖` holds on `ℌₕⁱ`, then `S` has a
-cochain projection bounded in the graph norm by `(1 + c₁ⁱ)(1 + c₂ⁱ)` in every degree `i`. -/
+/-- **Bounded cochain projections from discrete stability** ([AFW2010], Thm 3.7), with no
+closed-range hypothesis. -/
 theorem exists_cochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex)
     [∀ i, FiniteDimensional 𝕜 (S.V i)] {c₁ c₂ : ℤ → ℝ} (hc₁ : ∀ i, 0 ≤ c₁ i)
     (hc₂ : ∀ i, 0 ≤ c₂ i) (hP : ∀ i, S.PoincareBy i (c₁ i))
@@ -900,10 +895,7 @@ theorem exists_cochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex)
   sorry
 
 /-- **Uniformly bounded cochain projections exist iff discrete stability holds uniformly**
-([AFW2010], Thms 3.6, 3.7 and (30)). Let `Vₕ` be finite-dimensional subcomplexes of a complex
-whose ranges are closed. A family of subcomplexes on `Vₕ` with cochain projections bounded in
-the graph norm uniformly in `h` in every degree exists iff in every degree the discrete Poincaré
-inequality and the harmonic bound hold with constants independent of `h`. -/
+([AFW2010], Thms 3.6, 3.7, (30)), for complexes with closed ranges. -/
 theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
     (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
     (hcr : ∀ i, IsClosed (H.boundaries i : Set (W i))) :
@@ -914,35 +906,26 @@ theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l 
 variable [∀ i, NormedSpace ℝ (W i)]
 
 /-- **The FEEC theorem with rates** ([AFW2010], Thm 3.9, §3.5; [QuennevilleBelair2015],
-Thm 4.14; [BrennerThomee1979]): for every Jackson estimate `J` of `F`, the static error is
-`O(L hᵒʳᵈ⁽ˢ⁾)` and, on every window `F` approximates, the fully discrete wave error
-`O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)` (`HilbertComplex.SubcomplexFamily.Rated`). -/
+Thm 4.14; [BrennerThomee1979]) for every Jackson estimate. -/
 theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
     (J : F.Jackson ρ) : F.Rated J := by
   sorry
 
-/-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
-4.7, 4.14, Props 4.13, 4.16, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family
-of subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
-(`HilbertComplex.SubcomplexFamily.Verdict`). -/
+/-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Ch. 4;
+[GilletteHolstZhu2017]; [BrennerThomee1979]). -/
 theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) : F.Verdict := by
   sorry
 
-/-- **The FEEC theorem with variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8):
-on a window with closed ranges (degrees `a + 1, …, a + m - 1`), every approximating family of
-discrete differential spaces satisfies the static, cochain and heat verdicts with crimes under
-their hypotheses (`HilbertComplex.CrimeFamily.Verdict`). -/
+/-- **The FEEC theorem with variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8), on
+a window with closed ranges in the degrees `a + 1, …, a + m - 1`. -/
 theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) : S.Verdict := by
   sorry
 
-/-- **Non-vacuity of the crimes** ([HolstStern2012], §3): on the complex `ℝ` in every degree with
-`d⁰ = id` and all other differentials `0`, on the window `ℝ --id--> ℝ --0--> ℝ` (harmonic forms
-`ℝ (0, 0, 1) ≠ 0`), a family of cochain reading maps `iₙ` with cochain projections `πₙ`,
-`iₙ πₙ = 1`, satisfies the hypotheses of the cochain verdict: closed ranges, `iₙ* iₙ ≠ 1` (not
-isometric) but `‖1 - iₙ* iₙ‖ → 0`; some discrete harmonic form is read off `ℌ`, and the error at
-some datum is positive at every level. -/
+/-- **Non-vacuity of the crimes**: on `ℝ --id--> ℝ --0--> ℝ` (harmonic forms `ℝ (0, 0, 1)`), cochain
+reading maps `iₙ`, `iₙ πₙ = 1`, not isometric but `‖1 - iₙ* iₙ‖ → 0`, read a discrete harmonic
+form off `ℌ`, and the error at some datum is positive at every level. -/
 theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     (S : H.CrimeFamily.{0} 0 3 ℕ) (P : S.CochainProj 2),
     (∀ i : Fin 3, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℝ)) ∧
@@ -954,5 +937,375 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     ∃ f, ∀ σ u p, H.IsTotalMixedSolution 0 3 f σ u p → ∀ n σh uh ph,
       S.IsMixedSolution n f σh uh ph → 0 < S.readError n σ u p σh uh ph := by
   sorry
+
+end Crown
+
+/-! ### A finite element instance: Whitney forms on the cube
+
+The `L²` de Rham complex as in `palomar/fem` (the `P_rΛ`, `P_r⁻Λ` theory on star domains). -/
+
+section Cube
+
+open Filter Topology Set LinearPMap MeasureTheory
+open scoped ContDiff
+
+variable {n : ℕ}
+
+/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s` of `Fin n` (`dx_s`). -/
+abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
+
+/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, `ℓ²` sum. -/
+abbrev L2Form (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
+  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
+
+/-- A **form field** on `ℝⁿ`: at each point, a coefficient for every subset `s` of `Fin n`. -/
+abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
+
+/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
+def sgn (j : Fin n) (s : Finset (Fin n)) : ℝ := (-1) ^ (s.filter fun l => l < j).card
+
+/-- The partial derivative `∂_j f(x)`. -/
+def partialDeriv (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
+  fderiv ℝ f x (Pi.single j 1)
+
+/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
+def extDeriv (w : FormField n) : FormField n :=
+  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
+
+/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, the formal adjoint of `d`. -/
+def codiff (ψ : FormField n) : FormField n :=
+  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
+
+/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
+def IsTestFn (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
+  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
+
+/-- The graph `{(ψ, dᵗψ)}` of the codifferential on the test `(k + 1)`-forms. -/
+def codiffGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω (k + 1) × L2Form Ω k) :=
+  Submodule.span ℝ {p | ∃ ψ : FormField n, (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
+    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
+
+/-- The closure of the codifferential on test `(k + 1)`-forms. -/
+def codiffMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω (k + 1) →ₗ.[ℝ] L2Form Ω k :=
+  (codiffGraph Ω k).topologicalClosure.toLinearPMap
+
+/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the adjoint of the
+codifferential on test forms: `du = w` iff `⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`. Its
+domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
+def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (codiffMin Ω k)†
+
+/-- `x ∈ L²(Ω; Λʲ)` is (almost everywhere) a `C^{s+2}` form `w` of degree `j` whose
+`(s+1)`-st derivative and that of `dw` are bounded by `L` on `cl Ω` (true in negative degrees):
+the regularity class of the order `h^{s+1}`. -/
+def IsCsForm (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
+    (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧
+    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
+    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
+    ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
+
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+
+/-- **A finite element family meets the hypotheses of `FEEC.feec`: Whitney forms on the cube**
+([AFW2010], §5.2, §5.5; [ChristiansenWinther2008]; [Freudenthal1942]). On `Q = (0, ½)ⁿ`, `HΛ(Q)`
+has closed ranges and the Whitney forms `P₁⁻Λ` of the Freudenthal meshes, `h = 1 / (2 (N + 1))`,
+a.e. affine on every Kuhn simplex (vertices `h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`), form a family
+with uniformly graph-bounded smoothed projections, approximating, with the mixed-method rate
+`C L / (N + 1)` for `C²` data with first derivatives of `w`, `dw` bounded by `L`. -/
+theorem feec_cube (n : ℕ) [NeZero n] :
+    ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ),
+      (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
+      (∀ N k, ∀ u ∈ (F.V N).V k, ∀ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)),
+        ∃ (a : Finset (Fin n) → ℝ) (A : Finset (Fin n) → Fin n → ℝ), ∀ s : FormIdx n k,
+          ⇑(u s) =ᵐ[volume.restrict (cube n ∩ convexHull ℝ (range fun (j : Fin (n + 1)) i =>
+            ((z i : ℝ) + if (σ.symm i : ℕ) < j then 1 else 0) / (2 * (N + 1))))]
+            fun x => a s.1 + ∑ i, A s.1 i * x i) ∧
+      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
+      (∀ i, IsClosed (H.boundaries i : Set (L2Form (cube n) i))) ∧
+      ∀ j, ∃ C, ∀ {f : L2Form (cube n) j} {σ : (H.d (j - 1) j).domain}
+        {u : (H.d j (j + 1)).domain} {p : L2Form (cube n) j},
+        H.IsMixedSolution j ⊤ ⊤ (H.harmonic j) f σ u p → ∀ {L : ℝ}, 0 ≤ L →
+        IsCsForm (cube n) 0 (j - 1) L σ → IsCsForm (cube n) 0 j L u → IsCsForm (cube n) 0 j L p →
+        IsCsForm (cube n) 0 j L ((H.boundaries j).topologicalClosure.starProjection u) →
+        ∀ (N : ℕ) {σh : (H.d (j - 1) j).domain} {uh : (H.d j (j + 1)).domain} {ph},
+          H.IsMixedSolution j ((F.V N).V (j - 1)) ((F.V N).V j) ((F.V N).harmonic j) f σh uh ph →
+          H.mixedError j σ σh u uh p ph ≤ C * L / (N + 1) := by
+  sorry
+
+end Cube
+
+/-! ### BGG complexes ([ArnoldHu2021])
+
+A **stacked diagram** over a ring `R` is a pair of cochain complexes `(V, d)`, `(Ṽ, d̃)` on `ℤ`
+with connecting maps `Sⁱ : Ṽⁱ → Vⁱ⁺¹`, `d S = -S d̃`: with Mathlib's sign convention for the shift
+(`(V⟦1⟧)ⁱ = Vⁱ⁺¹`, differential `-d`), a morphism `S : Ṽ ⟶ V⟦1⟧`. The **twisted complex** `T` has
+`Tⁱ = Vⁱ × Ṽⁱ` and differential `(σ, φ) ↦ (dσ - Sφ, d̃φ)` ([ArnoldHu2021], (58)–(59)). The **BGG
+complex** at `J` eliminates the top spaces `Vⁱ`, `i > J`, against `Ṽⁱ⁻¹`, and the bottom spaces
+`Ṽⁱ`, `i < J`, against `Vⁱ⁺¹` ((24)–(26)): it is the subquotient `Γ / Δ` of `T`, with
+`Γⁱ = {(σ, φ) | σ = 0 if i > J, dσ = Sφ if i + 1 > J}` and `Δⁱ` spanned by `0 × Ṽⁱ` (`i < J`) and
+`{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` (`i - 1 < J`); for `i ≠ J` it is `Vⁱ / R(Sⁱ⁻¹)` before `J` and `N(Sⁱ)`
+after `J`. -/
+
+section BGGSection
+
+open CategoryTheory
+
+section Sub
+
+variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
+  (K : HomologicalComplex (ModuleCat.{v} R) c) (P : ∀ i, Submodule R (K.X i))
+  (hP : ∀ i j, ∀ x ∈ P i, K.d i j x ∈ P j)
+
+/-- The **subcomplex** of a family of submodules `P i ⊆ Kⁱ` stable under the differentials. -/
+def subcomplex : HomologicalComplex (ModuleCat.{v} R) c where
+  X i := ModuleCat.of R (P i)
+  d i j := ModuleCat.ofHom ((K.d i j).hom.restrict (hP i j))
+  shape i j h := ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (by
+    change K.d i j x = 0; rw [K.shape i j h]; rfl))
+  d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (by
+    change K.d j k (K.d i j x) = 0; rw [← ModuleCat.comp_apply, K.d_comp_d]; rfl))
+
+/-- The **quotient complex** `K / P` by a family of submodules stable under the differentials. -/
+def quotient : HomologicalComplex (ModuleCat.{v} R) c where
+  X i := ModuleCat.of R (K.X i ⧸ P i)
+  d i j := ModuleCat.ofHom ((P i).mapQ (P j) (K.d i j).hom (hP i j))
+  shape i j h := ModuleCat.hom_ext (Submodule.linearMap_qext _ (LinearMap.ext fun x =>
+    (Submodule.Quotient.mk_eq_zero _).2 (by
+      change K.d i j x ∈ P j; rw [K.shape i j h]; exact (P j).zero_mem)))
+  d_comp_d' i j k _ _ := ModuleCat.hom_ext (Submodule.linearMap_qext _ (LinearMap.ext fun x =>
+    (Submodule.Quotient.mk_eq_zero _).2 (by
+      change K.d j k (K.d i j x) ∈ P k; rw [← ModuleCat.comp_apply, K.d_comp_d]
+      exact (P k).zero_mem)))
+
+/-- The inclusion of the subcomplex. -/
+def subcomplexι : subcomplex K P hP ⟶ K where
+  f i := ModuleCat.ofHom (P i).subtype
+  comm' _ _ _ := rfl
+
+/-- The projection onto the quotient complex. -/
+def quotientπ : K ⟶ quotient K P hP where
+  f i := ModuleCat.ofHom (P i).mkQ
+  comm' _ _ _ := rfl
+
+end Sub
+
+namespace BGG
+
+variable {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+  (S : Vt ⟶ V⟦(1 : ℤ)⟧)
+
+/-- The connecting map `Sⁱ : Ṽⁱ → Vⁱ⁺¹` as a map `Ṽⁱ → Vʲ`, zero unless `j = i + 1`. -/
+def conn (i j : ℤ) : Vt.X i →ₗ[R] V.X j :=
+  if h : i + 1 = j then (S.f i ≫ (V.XIsoOfEq h).hom).hom else 0
+
+/-- `d S = -S d̃`: `S` is a morphism `Ṽ ⟶ V⟦1⟧`. -/
+theorem d_conn (i j k : ℤ) (φ : Vt.X i) :
+    V.d j k (conn S i j φ) = -conn S j k (Vt.d i j φ) := by
+  by_cases hij : i + 1 = j
+  · subst hij
+    by_cases hjk : i + 1 + 1 = k
+    · subst hjk
+      have := congrArg (fun f => f.hom φ) (S.comm i (i + 1))
+      simp only [CochainComplex.shiftFunctor_obj_d', Int.negOnePow_one, ModuleCat.hom_comp,
+        LinearMap.comp_apply, Units.neg_smul, one_smul] at this
+      simp only [conn, dite_eq_left, HomologicalComplex.XIsoOfEq_rfl, Iso.refl_hom]
+      exact neg_eq_iff_eq_neg.1 this
+    · simp [conn, hjk]
+  · simp [conn, hij]
+
+/-- The twisted differential `(σ, φ) ↦ (dσ - Sφ, d̃φ)` on `Vⁱ × Ṽⁱ`. -/
+def twist (i j : ℤ) : V.X i × Vt.X i →ₗ[R] V.X j × Vt.X j :=
+  ((V.d i j).hom ∘ₗ LinearMap.fst R _ _ - conn S i j ∘ₗ LinearMap.snd R _ _).prod
+    ((Vt.d i j).hom ∘ₗ LinearMap.snd R _ _)
+
+theorem twist_twist (i j k : ℤ) (x : V.X i × Vt.X i) : twist S j k (twist S i j x) = 0 := by
+  refine Prod.ext ?_ ?_
+  · change V.d j k (V.d i j x.1 - conn S i j x.2) - conn S j k (Vt.d i j x.2) = 0
+    rw [map_sub, d_conn, ← ModuleCat.comp_apply, V.d_comp_d]; simp
+  · change Vt.d j k (Vt.d i j x.2) = 0
+    rw [← ModuleCat.comp_apply, Vt.d_comp_d]; rfl
+
+theorem twist_of_ne {i j : ℤ} (h : i + 1 ≠ j) : twist S i j = 0 := by
+  ext x <;> simp [twist, conn, h]
+
+/-- **The twisted complex** `T`, `Tⁱ = Vⁱ × Ṽⁱ`, `(σ, φ) ↦ (dσ - Sφ, d̃φ)`. -/
+def twisted : CochainComplex (ModuleCat.{v} R) ℤ where
+  X i := ModuleCat.of R (V.X i × Vt.X i)
+  d i j := ModuleCat.ofHom (twist S i j)
+  shape i j h := by rw [twist_of_ne S h]; rfl
+  d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => twist_twist S i j k x)
+
+
+/-- `Γⁱ = {(σ, φ) | σ = 0 if i > J, dσ = Sφ if i + 1 > J}`: the elimination of the top spaces
+after `J`. -/
+def Γ (J i : ℤ) : Submodule R (V.X i × Vt.X i) :=
+  (⨅ _ : J < i, LinearMap.ker (LinearMap.fst R _ _)) ⊓
+    ⨅ _ : J < i + 1, LinearMap.ker (LinearMap.fst R _ _ ∘ₗ twist S i (i + 1))
+
+/-- `Δⁱ = 0 × Ṽⁱ (i < J) + {(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹} (i - 1 < J)`: the exact part carried by the
+bottom spaces before `J`. -/
+def Δ (J i : ℤ) : Submodule R (V.X i × Vt.X i) :=
+  (⨆ _ : i < J, LinearMap.range (LinearMap.inr R _ _)) ⊔
+    ⨆ _ : i - 1 < J, (LinearMap.range (LinearMap.inr R _ _)).map (twist S (i - 1) i)
+
+theorem twist_mem_Γ (J i j : ℤ) {x : V.X i × Vt.X i} (hx : x ∈ Γ S J i) :
+    twist S i j x ∈ Γ S J j := by
+  by_cases hij : i + 1 = j
+  · subst hij
+    refine Submodule.mem_inf.2 ⟨(Submodule.mem_iInf _).2 fun h => ?_,
+      (Submodule.mem_iInf _).2 fun _ => ?_⟩
+    · exact (Submodule.mem_iInf _).1 (Submodule.mem_inf.1 hx).2 h
+    · change (twist S (i + 1) (i + 1 + 1) (twist S i (i + 1) x)).1 = 0
+      rw [twist_twist]; rfl
+  · rw [twist_of_ne S hij]; exact zero_mem _
+
+theorem twist_mem_Δ (J i j : ℤ) {x : V.X i × Vt.X i} (hx : x ∈ Δ S J i) :
+    twist S i j x ∈ Δ S J j := by
+  by_cases hij : i + 1 = j
+  · subst hij
+    obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.mem_sup.1 hx
+    have hb : twist S i (i + 1) b = 0 := by
+      by_cases h : i - 1 < J
+      · rw [iSup_pos h] at hb; obtain ⟨y, -, rfl⟩ := hb; exact twist_twist S _ _ _ y
+      · rw [iSup_neg h, Submodule.mem_bot] at hb; rw [hb, map_zero]
+    rw [map_add, hb, add_zero]
+    by_cases h : i < J
+    · rw [iSup_pos h] at ha
+      obtain ⟨φ, rfl⟩ := ha
+      refine Submodule.mem_sup_right ?_
+      rw [iSup_pos (by rw [add_sub_cancel_right]; exact h)]
+      have key : ∀ i', i' = i → twist S i (i + 1) (LinearMap.inr R _ _ φ) ∈
+          (LinearMap.range (LinearMap.inr R _ _)).map (twist S i' (i + 1)) := by
+        rintro _ rfl; exact ⟨_, ⟨φ, rfl⟩, rfl⟩
+      exact key _ (add_sub_cancel_right i 1)
+    · rw [iSup_neg h, Submodule.mem_bot] at ha; rw [ha, map_zero]; exact zero_mem _
+  · rw [twist_of_ne S hij]; exact zero_mem _
+
+/-- The subcomplex `Γ ⊆ T`. -/
+def bggΓ (J : ℤ) : CochainComplex (ModuleCat.{v} R) ℤ :=
+  subcomplex (twisted S) (Γ S J) fun i j _ hx => twist_mem_Γ S J i j hx
+
+/-- **The BGG complex** `Γ / Δ` at `J` ([ArnoldHu2021], (24)–(26)). -/
+def bgg (J : ℤ) : CochainComplex (ModuleCat.{v} R) ℤ :=
+  quotient (bggΓ S J) (fun i => (Δ S J i).comap (Γ S J i).subtype)
+    fun i j _ hx => twist_mem_Δ S J i j hx
+
+/-- The inclusion `Γ → T`. -/
+def bggΓι (J : ℤ) : bggΓ S J ⟶ twisted S := subcomplexι _ _ _
+
+/-- The projection `Γ → Γ / Δ`. -/
+def bggπ (J : ℤ) : bggΓ S J ⟶ bgg S J := quotientπ _ _ _
+
+/-- **`Sᵏ` induces the zero map on cohomology**, `Sᵏ N(d̃ᵏ) ⊆ R(dᵏ)` ([ArnoldHu2021], (27)). -/
+def InducesZero (k : ℤ) : Prop :=
+  ∀ φ : Vt.X k, Vt.d k (k + 1) φ = 0 → conn S k (k + 1) φ ∈ LinearMap.range (V.d k (k + 1)).hom
+
+end BGG
+
+/-! ### Bounded Hilbert complexes -/
+
+namespace BGG
+
+variable {𝕜 : Type u} [RCLike 𝕜] {H : ℤ → Type v} [∀ i, NormedAddCommGroup (H i)]
+  [∀ i, InnerProductSpace 𝕜 (H i)]
+
+/-- The cochain complex of modules of bounded maps `dⁱ : Hⁱ → Hⁱ⁺¹` with `d d = 0`. -/
+abbrev ofBounded (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0) :
+    CochainComplex (ModuleCat.{v} 𝕜) ℤ :=
+  CochainComplex.of (fun i => ModuleCat.of 𝕜 (H i)) (fun i => ModuleCat.ofHom (d i))
+    fun i => ModuleCat.hom_ext (LinearMap.ext (hd i))
+
+variable {Ht : ℤ → Type v} [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+  {d : ∀ i, H i →L[𝕜] H (i + 1)} {hd : ∀ i x, d (i + 1) (d i x) = 0}
+  {dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)} {hdt : ∀ i x, dt (i + 1) (dt i x) = 0}
+
+variable (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+
+/-- Bounded connecting maps `sⁱ : H̃ⁱ → Hⁱ⁺¹` with `d s = -s d̃`, as a morphism
+`ofBounded dt hdt ⟶ (ofBounded d hd)⟦1⟧`. -/
+def ofBoundedHom : ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧ where
+  f i := ModuleCat.ofHom (s i)
+  comm' i j hij := by
+    obtain rfl : i + 1 = j := hij
+    ext x
+    simp [CochainComplex.shiftFunctor_obj_d', hs]
+
+/-- `Γⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`, of norm `(‖σ‖² + ‖φ‖²)^½`. -/
+def ΓL (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Γ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- `Δⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`. -/
+def ΔL (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Δ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- **`Γⁱ / Δⁱ` with the quotient norm** `‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖` of the `ℓ²` norm (for
+`i ≠ J` the norm of the output space of [ArnoldHu2021], (25); not that norm at `J`). -/
+abbrev QuotL (J i : ℤ) : Type v :=
+  ΓL (hd := hd) (hdt := hdt) s hs J i ⧸
+    (ΔL (hd := hd) (hdt := hdt) s hs J i).comap (ΓL (hd := hd) (hdt := hdt) s hs J i).subtype
+
+end BGG
+
+/-! ### The theorems on BGG complexes -/
+
+/-- **The BGG construction** ([ArnoldHu2021], §5.2): for `Sⁱ` injective for `i < J` and onto
+modulo `d` for `i ≥ J` (weaker than (23)), `Γ → T` and `Γ → Γ / Δ` are quasi-isomorphisms. -/
+theorem bggCohomology {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
+    (hsurj : ∀ i, J ≤ i →
+      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
+    QuasiIso (BGG.bggΓι S J) ∧ QuasiIso (BGG.bggπ S J) := by
+  sorry
+
+/-- **The cohomology of the BGG complex** ([ArnoldHu2021], Theorem 6, (27)): over a field,
+`dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, with equality iff `Sⁱ⁻¹`, `Sⁱ` induce zero on cohomology. -/
+theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} K) ℤ}
+    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
+    (hsurj : ∀ i, J ≤ i →
+      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) (i : ℤ)
+    [FiniteDimensional K (V.homology i)] [FiniteDimensional K (Vt.homology i)] :
+    FiniteDimensional K ((BGG.bgg S J).homology i) ∧
+      Module.finrank K ((BGG.bgg S J).homology i) ≤
+        Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) ∧
+      (Module.finrank K ((BGG.bgg S J).homology i) =
+          Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) ↔
+        BGG.InducesZero S (i - 1) ∧ BGG.InducesZero S i) := by
+  sorry
+
+/-- **Bounded Hilbert rows give a bounded Hilbert complex with closed ranges** ([ArnoldHu2021],
+Theorem 6 and the remark after it): `Γⁱ`, `Δⁱ` are closed, `y ↦ [y]` is an isometry of
+`Γⁱ ∩ (Δⁱ)ᗮ` onto `Γⁱ / Δⁱ` (quotient norm), the differentials are bounded, and their ranges are
+closed where the rows have finite-dimensional cohomology. -/
+theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
+    [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
+    [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+    [∀ i, CompleteSpace (Ht i)]
+    (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
+    (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
+    (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+    (J : ℤ) (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
+    (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
+      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
+    let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
+    let ΓL := BGG.ΓL (hd := hd) (hdt := hdt) s hs J
+    let ΔL := BGG.ΔL (hd := hd) (hdt := hdt) s hs J
+    let Q := BGG.QuotL (hd := hd) (hdt := hdt) s hs J
+    (∀ i, IsClosed (BGG.Γ S J i : Set (H i × Ht i)) ∧ IsClosed (BGG.Δ S J i : Set (H i × Ht i))) ∧
+      (∀ i, ∃ e : ↥(ΓL i ⊓ (ΔL i)ᗮ) ≃ₗᵢ[𝕜] Q i, ∀ y, e y = Submodule.Quotient.mk ⟨y, y.2.1⟩) ∧
+      ∃ D : ∀ i, Q i →L[𝕜] Q (i + 1),
+        (∀ i (x : ΓL i) (x' : ΓL (i + 1)), (x' : WithLp 2 (H (i + 1) × Ht (i + 1))).ofLp =
+          BGG.twist S i (i + 1) (x : WithLp 2 (H i × Ht i)).ofLp →
+            D i (Submodule.Quotient.mk x) = Submodule.Quotient.mk x') ∧
+        ∀ i, [FiniteDimensional 𝕜 ((BGG.ofBounded d hd).homology (i + 1))] →
+          [FiniteDimensional 𝕜 ((BGG.ofBounded dt hdt).homology (i + 1))] →
+          IsClosed (Set.range (D i)) := by
+  sorry
+
+end BGGSection
 
 end FEEC

@@ -81,6 +81,7 @@ public import Feec.Evolution.Tangent
 public import Feec.Evolution.WellPosed
 public import Feec.Examples.NonVacuity
 public import Feec.FiniteElement.AffineInvariantForm
+public import Feec.FiniteElement.AffinePieces
 public import Feec.FiniteElement.Assembly
 public import Feec.FiniteElement.BrambleHilbert
 public import Feec.FiniteElement.BrambleHilbertL2

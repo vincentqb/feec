@@ -1,14 +1,17 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of finite element exterior calculus for
 # Hilbert complexes (`palomar/feec/`; it replaces the former packages palomar/static,
-# palomar/dynamic and palomar/constraints, whose general compared theorems it contains).
+# palomar/dynamic and palomar/constraints, whose general compared theorems it contains, and absorbs
+# palomar/bgg, whose BGG theorems it contains; the weak-symmetry theorems of palomar/bgg,
+# FEEC.bggWeakSymmetry and FEEC.bggWeakSymmetry_nonvacuous, moved to palomar/einsteinbianchi,
+# next to their finite element instance on the cube).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
-  name: "Finite element exterior calculus for Hilbert complexes"
+  name: "Finite element exterior calculus: Hilbert complexes, variational crimes, Whitney forms on the cube, and BGG complexes"
   description: >-
     The approximation theory of finite element exterior calculus in one statement: the static theory
     of Arnold-Falk-Winther (cohomology, discrete stability, quasi-optimality of the mixed Hodge
@@ -17,7 +20,8 @@ project:
     Hodge heat equation, fully discrete A-stable time stepping, Jackson rates, and the variational
     crimes of Holst-Stern, for an arbitrary Hilbert complex of closed densely defined operators on Z
     (any RCLike field) and an arbitrary family of finite-dimensional subcomplexes of its domain
-    complex V = D(d) with commuting cochain projections, refined along any filter. Seven compared
+    complex V = D(d) with commuting cochain projections, refined along any filter; a compared finite
+    element family meeting its hypotheses; and the BGG construction of Arnold-Hu. Eleven compared
     theorems. FEEC.feec (the verdict SubcomplexFamily.Verdict): (skew-adjointness,
     [QuennevilleBelair2015] Thm 4.6) on every window the wave operator L = d - d* satisfies L* = -L
     (no closed-range hypothesis); (static, [AFW2010] Thms 3.4-3.6, 3.8, 3.9) in a degree j with
@@ -80,6 +84,21 @@ project:
     = 1), a discrete harmonic form is read off the harmonic forms, and the error at the datum (0, 0,
     1) is positive at every level. The statement is self-contained over Mathlib; the proof is the
     library Feec of this repository.
+    FEEC.feec_cube ([AFW2010] §5.2, §5.5; [ChristiansenWinther2008]): on the cube (0, 1/2)^n the L2
+    de Rham complex (the weak exterior derivative, from test forms) is a Hilbert complex with closed
+    range in every degree, and the Whitney forms on the Freudenthal meshes (h = 1/(2(N+1))) form a
+    family of subcomplexes whose forms are almost everywhere affine on every Kuhn simplex (named by
+    its vertices), with smoothed cochain projections bounded in every graph norm uniformly in N,
+    approximating in the graph norm, with the mixed-method rate C L / (N + 1) for C^2 solutions:
+    the hypotheses of FEEC.feec hold for a real finite element family. FEEC.bggCohomology
+    ([ArnoldHu2021] §5.2): for a stacked diagram S : V~ -> V[1] over any ring with S^i injective
+    for i < J and onto modulo d for i >= J, the inclusion Gamma -> T into the twisted complex and
+    the projection Gamma -> Gamma / Delta onto the BGG complex are quasi-isomorphisms.
+    FEEC.bggFinrank (Theorem 6, (27)): over a field, dim H^i(BGG) <= dim H^i(V) + dim H^i(V~), with
+    equality iff S^(i-1) and S^i induce zero on cohomology. FEEC.bggHilbert (Theorem 6 and the
+    remark after it): for bounded Hilbert rows, Gamma and Delta are closed, the quotient norm is a
+    Hilbert norm, the differentials are bounded, with closed range where the rows have
+    finite-dimensional cohomology.
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -88,7 +107,7 @@ project:
     - "Vincent Quenneville-Bélair"
 
 classification:
-  arxiv: ["math.NA", "math.FA"]
+  arxiv: ["math.NA", "math.FA", "math.KT"]
   msc2020: ["65N30", "65N12", "65M60", "65M12", "58A14", "47D06"]
 
 sources:
@@ -212,39 +231,75 @@ sources:
     relationship: "background"
     note: "The abstract setting of Hilbert complexes of closed densely defined operators."
     author_endorsement: "not-contacted"
+  - title: "Complexes from complexes"
+    authors:
+      - "Douglas N. Arnold"
+      - "Kaibo Hu"
+    id: "doi:10.1007/s10208-021-09498-9"
+    type: "article"
+    location: "Found. Comput. Math. 21 (2021), §3 (Theorem 6, (27)) and §5 ((58)-(59) the twisted complex, §5.2 splitting off an exact subcomplex); locators checked against arXiv:2005.12437"
+    relationship: "formalizes"
+    note: >-
+      §5 proves Theorem 6 in two steps; the challenge states the second, the splitting of the
+      twisted complex into the BGG complex and an exact subcomplex, as two quasi-isomorphisms
+      (FEEC.bggCohomology), the dimension bound and the equality criterion (27) of Theorem 6
+      (FEEC.bggFinrank), and the Hilbert-complex conclusions of Theorem 6 and of the paragraph
+      after it, with the quotient norm (FEEC.bggHilbert).
+    author_endorsement: "not-contacted"
+  - title: "Smoothed projections in finite element exterior calculus"
+    authors:
+      - "Snorre H. Christiansen"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0025-5718-07-02081-9"
+    type: "article"
+    location: "Math. Comp. 77 (2008)"
+    relationship: "formalizes"
+    note: >-
+      The smoothed cochain projections, bounded uniformly on shape-regular quasi-uniform meshes,
+      used (through Feec.Models.StarShaped) for the cochain projections of FEEC.feec_cube.
+    author_endorsement: "not-contacted"
+  - title: "Simplizialzerlegungen von beschränkter Flachheit"
+    authors:
+      - "Hans Freudenthal"
+    id: "doi:10.2307/1968813"
+    type: "article"
+    location: "Ann. of Math. (2) 43 (1942)"
+    relationship: "background"
+    note: "The Freudenthal (Kuhn) triangulation of the cube used by FEEC.feec_cube."
+    author_endorsement: "not-contacted"
+  - title: "Bernstein-Gelfand-Gelfand sequences"
+    authors:
+      - "Andreas Čap"
+      - "Jan Slovák"
+      - "Vladimír Souček"
+    id: "doi:10.2307/3062111"
+    type: "article"
+    location: "Ann. of Math. (2) 154 (2001)"
+    relationship: "background"
+    note: "BGG sequences in differential geometry; not formalized."
+    author_endorsement: "not-contacted"
 
 related_formalizations: []
 
 status:
   scope: >-
     Formalized and compared: FEEC.feec, FEEC.feec_rated, FEEC.staticFEEC_uniform,
-    FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, FEEC.crimeFEEC and
-    FEEC.crime_nonvacuous (Challenge.lean), for every RCLike field, every Hilbert complex on Z,
-    every family of subcomplexes (or of discrete differential spaces) along any filter, every
-    degree and every window. Proved in Feec but not compared: the explicit constants (the static
-    constant 256 (1 + K^2)(1 + max(c, 1))^2, K = max(c, 1)(1 + c_P^2)^(1/2), is used by the
-    solution of FEEC.staticFEEC_uniform), the spatial heat rates (ConstrainedFEEC.rate_heat), the
-    uniform fully discrete rate O(h^alpha + tau^(p/(p+2))) for every one-step scheme and the order
-    tau^p along smooth comparisons, the explicit theta-scheme temporal errors
-    (theta + 1/2) n tau tau ||B_h^2 w_0|| and, for Crank-Nicolson, 5/12 n tau tau^2 ||B_h^3 w_0||
-    (compared in the former palomar/dynamic, here subsumed by the rational schemes up to the
-    constant), the improved L2 estimate, the necessity of closed range,
-    leapfrog, Crank-Nicolson signed systems, Runge-Kutta stability functions, bounded perturbations
-    (damping, Ohmic loss) and the Dyson-Phillips semigroups, Brenner-Thomee on Banach spaces, the
-    wave equation with variational crimes (the approximating FEEC theorem of the crime front, its
-    defect estimates and rates), the residual splitting of the static error into inner-product,
-    cochain and harmonic defects, the BGG complexes, and the concrete finite element families and
-    physical instances. In particular the boundary-condition results for the linearized
-    Einstein-Bianchi system on a cube, compared in the former palomar/constraints, are proved in
-    Feec as instances of the constraint criterion of FEEC.feec and are not compared: with mirror
-    conditions the TSD constraint reduces the wave operator (K* = K; well-posedness and
-    propagation with forcing in the constraint), with electric (perfect conductor) conditions K*
-    is the stationary data and TSD data leave the constraint at once, and the absorbing
-    (Silver-Muller) generator is m-dissipative with K* != K (Feec/Physics/EinsteinBianchi,
-    Feec/Models/Cube/Mirror*, Feec/Models/Cube/Ident.lean, Feec/Models/Cube/Absorbing*,
-    Feec/Counterexamples/CubeStationary.lean). The general criterion for mild solutions
-    (integrated form) of skew-adjoint and m-dissipative generators on a Hilbert space is in Feec
-    (Feec.Semigroup.Invariance, Feec.Semigroup.DissipativeInvariance).
+    FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, FEEC.crimeFEEC,
+    FEEC.crime_nonvacuous, FEEC.feec_cube, FEEC.bggCohomology, FEEC.bggFinrank and
+    FEEC.bggHilbert (Challenge.lean, 1311 lines: OVER the Palomar limit of 1000 lines; the entry is
+    not submittable as it stands, see review.notes). The weak-symmetry theorems of the former
+    palomar/bgg (FEEC.bggWeakSymmetry, FEEC.bggWeakSymmetry_nonvacuous and their definitions
+    WeakSymmetryData, Discretization) moved to palomar/einsteinbianchi, next to their finite
+    element instance on the cube (Table 5.1). Not compared, proved in Feec: of the former
+    palomar/bgg, the identification of Gamma / Delta with the output complex (24)-(26), Theorem 7,
+    Proposition 1, Corollary 1 and the Moore-Penrose form of (30) (FEEC.bggIdentification,
+    FEEC.bggSum, FEEC.bggExplicit, FEEC.bggOrthogonal; near-definitional bookkeeping), and the
+    homology, shortExact and acyclic fields of the BGG verdict (consequences of the two
+    quasi-isomorphisms); the higher-order families on general meshes (palomar/fem); the wave rate
+    on the cube; Arnold-Hu §2 and §4; and, as before, the explicit constants, the spatial heat
+    rates, the uniform fully discrete rates, leapfrog, Runge-Kutta, bounded perturbations, the
+    wave equation with crimes, the residual splitting, and the physical instances
+    (Feec/Physics/EinsteinBianchi, Feec/Models/Cube, palomar/einsteinbianchi).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -281,7 +336,8 @@ automation:
     library Feec; the Solution translates them (Solution/Bridge.lean for the static theory,
     Solution/Existence.lean for the converse, Solution/Dynamic.lean for the windows and evolutions,
     Solution/Rates.lean for the rates, Solution/Crime.lean for the crimes, Solution/Witness.lean
-    for the witness) and applies Feec.HilbertComplex.SubcomplexFamily.staticFEEC,
+    for the witness, Solution/Forms.lean, Solution/OfFeec.lean and Solution/Cube.lean for the cube
+    instance, Solution/BGGBridge.lean for the BGG theorems) and applies Feec.HilbertComplex.SubcomplexFamily.staticFEEC,
     Feec.HilbertComplex.Subcomplex.exists_cochainProjection,
     Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff, Feec.HilbertComplex.approxFEEC,
     Feec.HilbertComplex.dissipFEEC_fullyDiscrete, Feec.HilbertComplex.ConstrainedFEEC.heatFEEC,
@@ -304,9 +360,9 @@ fidelity:
     condition (every x has a y with ||y|| <= ||x|| and ||x||^2 <= C |B(x; y)|) and of the gaps
     (W-norm quantities, equal to the V-norm ones on cycles); one constant C for all bounds of a
     degree; hypotheses localized to the degrees used; finite-dimensional harmonic forms for the
-    vanishing of the harmonic gap and the eventual isomorphisms (necessary). Thm 3.7 holds without
-    closed range and with degree-dependent constants; the source's proof inverts P_H on all of H,
-    which needs P_H(H_h) = H; the proof here inverts it on its range. (3) Windows, as in the former
+    vanishing of the harmonic gap and the eventual isomorphisms (necessary). Thm 3.7 is stated without
+    closed range and with degree-dependent constants (the proof inverts P_H on the range of P_H
+    restricted to the discrete harmonic forms); no gap in the source's proof is claimed. (3) Windows, as in the former
     palomar/dynamic: the evolutions live on the l2 sum of m consecutive degrees of the truncated
     complex (for an interior window L = d - d* is the Hodge-Dirac operator of the truncated
     complex). The wave conclusions assume no bound of the projections (the elliptic projections are
@@ -366,26 +422,62 @@ fidelity:
     is stated for both the wave and the heat generators. (9) The evolution statements assume a real
     structure [NormedSpace R (W i)] for derivatives in time, and nothing relating it to the
     K-structure: a real normed-space structure on a normed K-space is the restricted one (t x and (t
-    : K) x are continuous in t and agree on Q), which the solution proves. The finite element
-    families that satisfy the conforming hypotheses (Whitney forms, P_r and P_r^- families with
-    smoothed projections) are constructed in Feec but are not compared.
+    : K) x are continuous in t and agree on Q), which the solution proves. A compared finite
+    element family meeting the conforming hypotheses is FEEC.feec_cube (item (10)).
+    (10) Finite element instance. FEEC.feec_cube is stated on the cube
+    (0, 1/2)^n with its Freudenthal meshes and the Whitney forms only; palomar/fem states the
+    P_r-Λ and P_rΛ families of every admissible sequence on every shape-regular quasi-uniform mesh
+    family of a domain star-shaped with respect to a ball, with the identification of the spaces
+    with the conforming finite element spaces (femSpace). Here the spaces are described by a
+    necessary property only: they are subcomplexes of HΛ (so conforming) whose forms are almost
+    everywhere affine on every Kuhn simplex (the Whitney forms are the affine forms a + κ b,
+    a strict subspace of P1Λ in the degrees k >= 1; that they are exactly the Whitney forms is not
+    stated). The cochain projections are stated bounded in every graph norm uniformly in N (they
+    are moreover bounded in L2, not stated). The regularity class of the rate is IsCsForm 0 (C^2
+    forms with first derivatives of w and dw bounded by L on the closure), as in palomar/fem, and
+    the rate is that of the mixed method in every degree, for every solution of the continuous
+    problem (which exists and is unique by FEEC.feec, closed ranges being part of the
+    conclusion); the constant C depends on n and j only. HΛ is defined from test forms (the
+    adjoint of the closure of the codifferential on test forms), as in palomar/fem. (11) BGG complexes. The output complex: Arnold-Hu (24)-(26) realize V^i / R(S^(i-1)) as an orthogonal
+    complement with a projected differential; the challenge uses the subquotient Gamma / Delta of
+    the twisted complex (its identification with (24)-(26) is proved in Feec, not compared). (12) The anticommutation d S = -S d~ is a morphism of cochain complexes V~ -> V[1], with Mathlib's
+    sign convention for the shift (differential -d on V[1]); for Hilbert rows it is built from the
+    bounded maps (FEEC.BGG.ofBoundedHom). (13) Bounded Hilbert complex (Theorem 6): Arnold-Hu give
+    the output complex the norm of the orthogonal complements; FEEC.bggHilbert gives
+    Gamma^i / Delta^i the quotient norm of the l2 norm of V^i (+) V~^i (FEEC.BGG.ΓL, FEEC.BGG.ΔL,
+    FEEC.BGG.QuotL) and proves that y -> [y] is an isometry of Gamma^i ∩ (Delta^i)^perp onto it.
+    For i != J this is the norm of Arnold-Hu; at J the quotient norm is
+    inf_psi (||sigma + S psi||^2 + ||phi - d~ psi||^2)^(1/2), which is >= ||P_(R^perp) sigma|| and,
+    under (23), <= (1 + ||(S^J)^(-1) d||^2)^(1/2) ||P_(R^perp) sigma||: equivalent, not equal.
+    This equivalence is a pencil-and-paper remark; it is not proved in Feec and not stated. Closed
+    range is stated as IsClosed (range D^i) where both rows have finite-dimensional cohomology in
+    degree i + 1. (14) Generality beyond the source: the algebraic theorems hold over any ring, on
+    Z, for arbitrary S; the hypothesis is weaker than (23): S^i injective only for i < J and onto
+    modulo d for i >= J (bounded below for i < J in the Hilbert setting). (15) The equality
+    criterion (27) is stated degreewise, which implies Arnold-Hu's all-degree form.
 
 review:
   status: "self-assessed"
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the challenge of this package was written from the reviewed
-    challenges of palomar/static and palomar/dynamic (their definitions and statements are
-    contained, up to the changes recorded in fidelity.divergences (3), (4)); the statements of
-    rational schemes, Jackson rates and variational crimes are new, and the constraint fields
-    (skewAdjoint, invariantCore, subcomplex, EvolutionVerdict.reducing_iff) are folded in from the
-    former palomar/constraints. An independent agent editorial review checked the statements against
-    the definitions, [AFW2010] §3.3-§3.4 (arXiv:0906.4325) and [HolstStern2012] §3
-    (arXiv:1005.4455), and found no hidden hypotheses; it is not an author or external review. Every
-    merge of the library was gated by a full build (zero warnings), an axiom audit (propext,
-    Classical.choice, Quot.sound only), regression snapshots and an independent AI review. No
-    external mathematical review.
+    Not yet reviewed by the author: the challenge merges the former palomar/feec challenge
+    (definitions and statements unchanged up to shortened docstrings) and the BGG part of the
+    former palomar/bgg (FEEC.bggCohomology stated as the two quasi-isomorphisms; the other fields
+    of the former BGG verdict, the identification and Theorem 7 are not compared), with the L2 de
+    Rham definitions of palomar/fem (shortened docstrings) and the new FEEC.feec_cube. LINE LIMIT:
+    the challenge has 1311 lines, over the Palomar hard limit of 1000; compression (docstrings,
+    theorem docstrings that restated the statements) did not close the gap without cutting
+    content. Candidates: keep the BGG part as its own entry (about 310 lines with its header,
+    leaving about 1000 here before further docstring compression), or move the variational crimes
+    to their own entry (about 210 lines); a user decision. Audit A (2026-11-17, an AI editor's
+    read): the compared finite element family (FEEC.feec_cube) answers its main finding; the
+    per-h fully discrete wave bound (fidelity (4)) and the toy crime witness (fidelity (7)) are
+    disclosed; Feec proves Thm 3.7 of [AFW2010] with no closed-range hypothesis
+    (Feec.HilbertComplex.Subcomplex.exists_cochainProjection), and no gap in the source's proof is
+    claimed. Every merge of the library was gated by a full build (zero warnings), an axiom audit
+    (propext, Classical.choice, Quot.sound only), regression snapshots and an independent AI
+    review. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
@@ -445,5 +537,22 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Proved in Solution/Witness.lean and Solution.lean."
+    - source: "[AFW2010], §5.2, §5.5; [ChristiansenWinther2008]; [Freudenthal1942]"
+      lean: "FEEC.feec_cube"
+      module: "Challenge"
+      status: "proved"
+      note: "Proved in Solution.lean with Solution/Cube.lean and Solution/Rates.lean."
+    - source: "[ArnoldHu2021], §5.2"
+      lean: "FEEC.bggCohomology"
+      module: "Challenge"
+      status: "proved"
+    - source: "[ArnoldHu2021], Theorem 6, (27)"
+      lean: "FEEC.bggFinrank"
+      module: "Challenge"
+      status: "proved"
+    - source: "[ArnoldHu2021], Theorem 6 and the remark after it"
+      lean: "FEEC.bggHilbert"
+      module: "Challenge"
+      status: "proved"
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

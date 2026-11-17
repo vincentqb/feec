@@ -1,44 +1,65 @@
 module
 
+public import Mathlib.Algebra.Category.ModuleCat.Abelian
+public import Mathlib.Algebra.Homology.HomologicalComplexAbelian
+public import Mathlib.Algebra.Homology.HomologySequenceLemmas
+public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
+public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.Algebra.Polynomial.AlgebraMap
+public import Mathlib.Analysis.Calculus.ContDiff.Basic
 public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
+public import Mathlib.Analysis.Convex.Hull
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.ProdL2
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.Analysis.Normed.Operator.Banach
 public import Mathlib.Analysis.SpecialFunctions.Pow.Real
+public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.MeasureTheory.Function.L2Space
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+public import Mathlib.Topology.MetricSpace.Antilipschitz
 public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 /-!
 # The definitions of the challenge
 
-A verbatim copy of the definitions of `Challenge.lean` (everything but the compared theorems
-`FEEC.feec`, `FEEC.feec_rated`, `FEEC.staticFEEC_uniform`, `FEEC.exists_cochainProjection`,
-`FEEC.exists_subcomplexFamily_iff`, `FEEC.crimeFEEC` and `FEEC.crime_nonvacuous`), compiled
-against Mathlib alone so that their elaborated values are those of the challenge. The solution
-imports this module and the bridges to `Feec`, and proves the theorems (`Solution.lean`).
+A verbatim copy of the definitions of `Challenge.lean` (everything but the compared theorems of
+`comparator.json`), compiled against Mathlib alone so
+that their elaborated values are those of the challenge. The solution imports this module and the
+bridges to `Feec`, and proves the theorems (`Solution.lean`).
 
 ## References
 
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010], §3.3–§3.4
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012], §3
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015], Ch. 4
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
+* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
+* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995]
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
-open Filter Topology Set LinearPMap
 
 universe u v w
 
 @[expose] public noncomputable section
 
 namespace FEEC
+
+section Crown
+
+open Filter Topology Set LinearPMap
 
 /-! ### Hilbert complexes and families of subcomplexes -/
 
@@ -835,5 +856,296 @@ end HilbertComplex
 /-! ### The theorems -/
 
 variable [∀ i, NormedSpace ℝ (W i)]
+
+end Crown
+
+/-! ### A finite element instance: Whitney forms on the cube
+
+The `L²` de Rham complex as in `palomar/fem` (the `P_rΛ`, `P_r⁻Λ` theory on star domains). -/
+
+section Cube
+
+open Filter Topology Set LinearPMap MeasureTheory
+open scoped ContDiff
+
+variable {n : ℕ}
+
+/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s` of `Fin n` (`dx_s`). -/
+abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
+
+/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, `ℓ²` sum. -/
+abbrev L2Form (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
+  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
+
+/-- A **form field** on `ℝⁿ`: at each point, a coefficient for every subset `s` of `Fin n`. -/
+abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
+
+/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
+def sgn (j : Fin n) (s : Finset (Fin n)) : ℝ := (-1) ^ (s.filter fun l => l < j).card
+
+/-- The partial derivative `∂_j f(x)`. -/
+def partialDeriv (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
+  fderiv ℝ f x (Pi.single j 1)
+
+/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
+def extDeriv (w : FormField n) : FormField n :=
+  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
+
+/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, the formal adjoint of `d`. -/
+def codiff (ψ : FormField n) : FormField n :=
+  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
+
+/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
+def IsTestFn (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
+  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
+
+/-- The graph `{(ψ, dᵗψ)}` of the codifferential on the test `(k + 1)`-forms. -/
+def codiffGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω (k + 1) × L2Form Ω k) :=
+  Submodule.span ℝ {p | ∃ ψ : FormField n, (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
+    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
+
+/-- The closure of the codifferential on test `(k + 1)`-forms. -/
+def codiffMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω (k + 1) →ₗ.[ℝ] L2Form Ω k :=
+  (codiffGraph Ω k).topologicalClosure.toLinearPMap
+
+/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the adjoint of the
+codifferential on test forms: `du = w` iff `⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`. Its
+domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
+def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (codiffMin Ω k)†
+
+/-- `x ∈ L²(Ω; Λʲ)` is (almost everywhere) a `C^{s+2}` form `w` of degree `j` whose
+`(s+1)`-st derivative and that of `dw` are bounded by `L` on `cl Ω` (true in negative degrees):
+the regularity class of the order `h^{s+1}`. -/
+def IsCsForm (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
+    (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧
+    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
+    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
+    ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
+
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+
+end Cube
+
+/-! ### BGG complexes ([ArnoldHu2021])
+
+A **stacked diagram** over a ring `R` is a pair of cochain complexes `(V, d)`, `(Ṽ, d̃)` on `ℤ`
+with connecting maps `Sⁱ : Ṽⁱ → Vⁱ⁺¹`, `d S = -S d̃`: with Mathlib's sign convention for the shift
+(`(V⟦1⟧)ⁱ = Vⁱ⁺¹`, differential `-d`), a morphism `S : Ṽ ⟶ V⟦1⟧`. The **twisted complex** `T` has
+`Tⁱ = Vⁱ × Ṽⁱ` and differential `(σ, φ) ↦ (dσ - Sφ, d̃φ)` ([ArnoldHu2021], (58)–(59)). The **BGG
+complex** at `J` eliminates the top spaces `Vⁱ`, `i > J`, against `Ṽⁱ⁻¹`, and the bottom spaces
+`Ṽⁱ`, `i < J`, against `Vⁱ⁺¹` ((24)–(26)): it is the subquotient `Γ / Δ` of `T`, with
+`Γⁱ = {(σ, φ) | σ = 0 if i > J, dσ = Sφ if i + 1 > J}` and `Δⁱ` spanned by `0 × Ṽⁱ` (`i < J`) and
+`{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` (`i - 1 < J`); for `i ≠ J` it is `Vⁱ / R(Sⁱ⁻¹)` before `J` and `N(Sⁱ)`
+after `J`. -/
+
+section BGGSection
+
+open CategoryTheory
+
+section Sub
+
+variable {R : Type u} [Ring R] {ι : Type*} {c : ComplexShape ι}
+  (K : HomologicalComplex (ModuleCat.{v} R) c) (P : ∀ i, Submodule R (K.X i))
+  (hP : ∀ i j, ∀ x ∈ P i, K.d i j x ∈ P j)
+
+/-- The **subcomplex** of a family of submodules `P i ⊆ Kⁱ` stable under the differentials. -/
+def subcomplex : HomologicalComplex (ModuleCat.{v} R) c where
+  X i := ModuleCat.of R (P i)
+  d i j := ModuleCat.ofHom ((K.d i j).hom.restrict (hP i j))
+  shape i j h := ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (by
+    change K.d i j x = 0; rw [K.shape i j h]; rfl))
+  d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => Subtype.ext (by
+    change K.d j k (K.d i j x) = 0; rw [← ModuleCat.comp_apply, K.d_comp_d]; rfl))
+
+/-- The **quotient complex** `K / P` by a family of submodules stable under the differentials. -/
+def quotient : HomologicalComplex (ModuleCat.{v} R) c where
+  X i := ModuleCat.of R (K.X i ⧸ P i)
+  d i j := ModuleCat.ofHom ((P i).mapQ (P j) (K.d i j).hom (hP i j))
+  shape i j h := ModuleCat.hom_ext (Submodule.linearMap_qext _ (LinearMap.ext fun x =>
+    (Submodule.Quotient.mk_eq_zero _).2 (by
+      change K.d i j x ∈ P j; rw [K.shape i j h]; exact (P j).zero_mem)))
+  d_comp_d' i j k _ _ := ModuleCat.hom_ext (Submodule.linearMap_qext _ (LinearMap.ext fun x =>
+    (Submodule.Quotient.mk_eq_zero _).2 (by
+      change K.d j k (K.d i j x) ∈ P k; rw [← ModuleCat.comp_apply, K.d_comp_d]
+      exact (P k).zero_mem)))
+
+/-- The inclusion of the subcomplex. -/
+def subcomplexι : subcomplex K P hP ⟶ K where
+  f i := ModuleCat.ofHom (P i).subtype
+  comm' _ _ _ := rfl
+
+/-- The projection onto the quotient complex. -/
+def quotientπ : K ⟶ quotient K P hP where
+  f i := ModuleCat.ofHom (P i).mkQ
+  comm' _ _ _ := rfl
+
+end Sub
+
+namespace BGG
+
+variable {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
+  (S : Vt ⟶ V⟦(1 : ℤ)⟧)
+
+/-- The connecting map `Sⁱ : Ṽⁱ → Vⁱ⁺¹` as a map `Ṽⁱ → Vʲ`, zero unless `j = i + 1`. -/
+def conn (i j : ℤ) : Vt.X i →ₗ[R] V.X j :=
+  if h : i + 1 = j then (S.f i ≫ (V.XIsoOfEq h).hom).hom else 0
+
+/-- `d S = -S d̃`: `S` is a morphism `Ṽ ⟶ V⟦1⟧`. -/
+theorem d_conn (i j k : ℤ) (φ : Vt.X i) :
+    V.d j k (conn S i j φ) = -conn S j k (Vt.d i j φ) := by
+  by_cases hij : i + 1 = j
+  · subst hij
+    by_cases hjk : i + 1 + 1 = k
+    · subst hjk
+      have := congrArg (fun f => f.hom φ) (S.comm i (i + 1))
+      simp only [CochainComplex.shiftFunctor_obj_d', Int.negOnePow_one, ModuleCat.hom_comp,
+        LinearMap.comp_apply, Units.neg_smul, one_smul] at this
+      simp only [conn, dite_eq_left, HomologicalComplex.XIsoOfEq_rfl, Iso.refl_hom]
+      exact neg_eq_iff_eq_neg.1 this
+    · simp [conn, hjk]
+  · simp [conn, hij]
+
+/-- The twisted differential `(σ, φ) ↦ (dσ - Sφ, d̃φ)` on `Vⁱ × Ṽⁱ`. -/
+def twist (i j : ℤ) : V.X i × Vt.X i →ₗ[R] V.X j × Vt.X j :=
+  ((V.d i j).hom ∘ₗ LinearMap.fst R _ _ - conn S i j ∘ₗ LinearMap.snd R _ _).prod
+    ((Vt.d i j).hom ∘ₗ LinearMap.snd R _ _)
+
+theorem twist_twist (i j k : ℤ) (x : V.X i × Vt.X i) : twist S j k (twist S i j x) = 0 := by
+  refine Prod.ext ?_ ?_
+  · change V.d j k (V.d i j x.1 - conn S i j x.2) - conn S j k (Vt.d i j x.2) = 0
+    rw [map_sub, d_conn, ← ModuleCat.comp_apply, V.d_comp_d]; simp
+  · change Vt.d j k (Vt.d i j x.2) = 0
+    rw [← ModuleCat.comp_apply, Vt.d_comp_d]; rfl
+
+theorem twist_of_ne {i j : ℤ} (h : i + 1 ≠ j) : twist S i j = 0 := by
+  ext x <;> simp [twist, conn, h]
+
+/-- **The twisted complex** `T`, `Tⁱ = Vⁱ × Ṽⁱ`, `(σ, φ) ↦ (dσ - Sφ, d̃φ)`. -/
+def twisted : CochainComplex (ModuleCat.{v} R) ℤ where
+  X i := ModuleCat.of R (V.X i × Vt.X i)
+  d i j := ModuleCat.ofHom (twist S i j)
+  shape i j h := by rw [twist_of_ne S h]; rfl
+  d_comp_d' i j k _ _ := ModuleCat.hom_ext (LinearMap.ext fun x => twist_twist S i j k x)
+
+
+/-- `Γⁱ = {(σ, φ) | σ = 0 if i > J, dσ = Sφ if i + 1 > J}`: the elimination of the top spaces
+after `J`. -/
+def Γ (J i : ℤ) : Submodule R (V.X i × Vt.X i) :=
+  (⨅ _ : J < i, LinearMap.ker (LinearMap.fst R _ _)) ⊓
+    ⨅ _ : J < i + 1, LinearMap.ker (LinearMap.fst R _ _ ∘ₗ twist S i (i + 1))
+
+/-- `Δⁱ = 0 × Ṽⁱ (i < J) + {(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹} (i - 1 < J)`: the exact part carried by the
+bottom spaces before `J`. -/
+def Δ (J i : ℤ) : Submodule R (V.X i × Vt.X i) :=
+  (⨆ _ : i < J, LinearMap.range (LinearMap.inr R _ _)) ⊔
+    ⨆ _ : i - 1 < J, (LinearMap.range (LinearMap.inr R _ _)).map (twist S (i - 1) i)
+
+theorem twist_mem_Γ (J i j : ℤ) {x : V.X i × Vt.X i} (hx : x ∈ Γ S J i) :
+    twist S i j x ∈ Γ S J j := by
+  by_cases hij : i + 1 = j
+  · subst hij
+    refine Submodule.mem_inf.2 ⟨(Submodule.mem_iInf _).2 fun h => ?_,
+      (Submodule.mem_iInf _).2 fun _ => ?_⟩
+    · exact (Submodule.mem_iInf _).1 (Submodule.mem_inf.1 hx).2 h
+    · change (twist S (i + 1) (i + 1 + 1) (twist S i (i + 1) x)).1 = 0
+      rw [twist_twist]; rfl
+  · rw [twist_of_ne S hij]; exact zero_mem _
+
+theorem twist_mem_Δ (J i j : ℤ) {x : V.X i × Vt.X i} (hx : x ∈ Δ S J i) :
+    twist S i j x ∈ Δ S J j := by
+  by_cases hij : i + 1 = j
+  · subst hij
+    obtain ⟨a, ha, b, hb, rfl⟩ := Submodule.mem_sup.1 hx
+    have hb : twist S i (i + 1) b = 0 := by
+      by_cases h : i - 1 < J
+      · rw [iSup_pos h] at hb; obtain ⟨y, -, rfl⟩ := hb; exact twist_twist S _ _ _ y
+      · rw [iSup_neg h, Submodule.mem_bot] at hb; rw [hb, map_zero]
+    rw [map_add, hb, add_zero]
+    by_cases h : i < J
+    · rw [iSup_pos h] at ha
+      obtain ⟨φ, rfl⟩ := ha
+      refine Submodule.mem_sup_right ?_
+      rw [iSup_pos (by rw [add_sub_cancel_right]; exact h)]
+      have key : ∀ i', i' = i → twist S i (i + 1) (LinearMap.inr R _ _ φ) ∈
+          (LinearMap.range (LinearMap.inr R _ _)).map (twist S i' (i + 1)) := by
+        rintro _ rfl; exact ⟨_, ⟨φ, rfl⟩, rfl⟩
+      exact key _ (add_sub_cancel_right i 1)
+    · rw [iSup_neg h, Submodule.mem_bot] at ha; rw [ha, map_zero]; exact zero_mem _
+  · rw [twist_of_ne S hij]; exact zero_mem _
+
+/-- The subcomplex `Γ ⊆ T`. -/
+def bggΓ (J : ℤ) : CochainComplex (ModuleCat.{v} R) ℤ :=
+  subcomplex (twisted S) (Γ S J) fun i j _ hx => twist_mem_Γ S J i j hx
+
+/-- **The BGG complex** `Γ / Δ` at `J` ([ArnoldHu2021], (24)–(26)). -/
+def bgg (J : ℤ) : CochainComplex (ModuleCat.{v} R) ℤ :=
+  quotient (bggΓ S J) (fun i => (Δ S J i).comap (Γ S J i).subtype)
+    fun i j _ hx => twist_mem_Δ S J i j hx
+
+/-- The inclusion `Γ → T`. -/
+def bggΓι (J : ℤ) : bggΓ S J ⟶ twisted S := subcomplexι _ _ _
+
+/-- The projection `Γ → Γ / Δ`. -/
+def bggπ (J : ℤ) : bggΓ S J ⟶ bgg S J := quotientπ _ _ _
+
+/-- **`Sᵏ` induces the zero map on cohomology**, `Sᵏ N(d̃ᵏ) ⊆ R(dᵏ)` ([ArnoldHu2021], (27)). -/
+def InducesZero (k : ℤ) : Prop :=
+  ∀ φ : Vt.X k, Vt.d k (k + 1) φ = 0 → conn S k (k + 1) φ ∈ LinearMap.range (V.d k (k + 1)).hom
+
+end BGG
+
+/-! ### Bounded Hilbert complexes -/
+
+namespace BGG
+
+variable {𝕜 : Type u} [RCLike 𝕜] {H : ℤ → Type v} [∀ i, NormedAddCommGroup (H i)]
+  [∀ i, InnerProductSpace 𝕜 (H i)]
+
+/-- The cochain complex of modules of bounded maps `dⁱ : Hⁱ → Hⁱ⁺¹` with `d d = 0`. -/
+abbrev ofBounded (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0) :
+    CochainComplex (ModuleCat.{v} 𝕜) ℤ :=
+  CochainComplex.of (fun i => ModuleCat.of 𝕜 (H i)) (fun i => ModuleCat.ofHom (d i))
+    fun i => ModuleCat.hom_ext (LinearMap.ext (hd i))
+
+variable {Ht : ℤ → Type v} [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
+  {d : ∀ i, H i →L[𝕜] H (i + 1)} {hd : ∀ i x, d (i + 1) (d i x) = 0}
+  {dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)} {hdt : ∀ i x, dt (i + 1) (dt i x) = 0}
+
+variable (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
+
+/-- Bounded connecting maps `sⁱ : H̃ⁱ → Hⁱ⁺¹` with `d s = -s d̃`, as a morphism
+`ofBounded dt hdt ⟶ (ofBounded d hd)⟦1⟧`. -/
+def ofBoundedHom : ofBounded dt hdt ⟶ (ofBounded d hd)⟦(1 : ℤ)⟧ where
+  f i := ModuleCat.ofHom (s i)
+  comm' i j hij := by
+    obtain rfl : i + 1 = j := hij
+    ext x
+    simp [CochainComplex.shiftFunctor_obj_d', hs]
+
+/-- `Γⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`, of norm `(‖σ‖² + ‖φ‖²)^½`. -/
+def ΓL (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Γ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- `Δⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`. -/
+def ΔL (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Δ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- **`Γⁱ / Δⁱ` with the quotient norm** `‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖` of the `ℓ²` norm (for
+`i ≠ J` the norm of the output space of [ArnoldHu2021], (25); not that norm at `J`). -/
+abbrev QuotL (J i : ℤ) : Type v :=
+  ΓL (hd := hd) (hdt := hdt) s hs J i ⧸
+    (ΔL (hd := hd) (hdt := hdt) s hs J i).comap (ΓL (hd := hd) (hdt := hdt) s hs J i).subtype
+
+end BGG
+
+/-! ### The theorems on BGG complexes -/
+
+end BGGSection
 
 end FEEC

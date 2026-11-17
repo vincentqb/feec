@@ -1,11 +1,12 @@
 module
 
 public import Solution.Complex
-public import Solution.Dynamic
 public import Solution.Forms
 public import Solution.Spaces
 public import Solution.Regularity
 public import Solution.Maxwell
+public import Solution.Affine
+public import Solution.Dof
 public import Feec.Models.Parallelepiped.StarShaped
 public import Feec.Models.Cube.SobolevRestriction
 
@@ -20,10 +21,9 @@ challenge (`starDomainOf`, `meshFamilyOf`): the complexes `MeshFamily.poly` and
 (`MeshFamily.exists_uniform_polyProj`, `_Min`; defined on all of `L²`, so their `L²` extensions
 are themselves), the graph-norm density (`MeshFamily.eventually_exists_poly_graph`, `_Min`) and
 the interpolation error (`MeshFamily.exists_mem_poly_le_of_isCsForm`, `_Min`); the complexes are
-`Feec`'s `HΛ(Ω)` and `H̊Λ(Ω)` (`dMax_eq`, `dMin_eq`). The wave and heat verdicts on every window
-from `Feec`'s crown through `Solution.Dynamic` (`HilbertComplex.SubcomplexFamily.waveVerdict`,
-`heatVerdict`, as in `palomar/feec`), the window approximating by the graph-norm density
-(`approximates_window`, `tendsto_infDist`). `FEEC.fem_parallelepiped` from
+`Feec`'s `HΛ(Ω)` and `H̊Λ(Ω)` (`dMax_eq`, `dMin_eq`); the uniformly bounded projections attain
+the Jackson rate (`HilbertComplex.SubcomplexFamily.Jackson.projRate`). `FEEC.fem_parallelepiped`
+from
 `Feec.Models.StarShaped.ParallelepipedWitness` (the star domain and the image Freudenthal meshes
 of `A (0, ½)ⁿ + b`, here with the matrix `2 A`) and `Feec.Models.Parallelepiped.closedRangeAt`,
 `closedRangeAt_min`. `FEEC.fem_cube`: the family of `FEEC.fem` on the cube with the Freudenthal
@@ -31,10 +31,15 @@ meshes (`CubeWitness`), whose spaces are the cube's `Feec.Models.Cube.FEM.poly` 
 best approximation of `H^{s+1}` data (`exists_infDist_le_of_isSobolevForm`, from
 `Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high` and
 `Feec.Models.Cube.SobolevRestriction.exists_qNorm_le`) passes to the graph
-norm through the uniformly bounded projections.
+norm through the uniformly bounded projections. `FEEC.unisolvent` from
+`Feec.FiniteElement.LocalDof` through `Solution.Dof`; `FEEC.affineInvariantForms` and the
+characteristic-`0` theorems from `Feec.FiniteElement.AffineInvariantForm` and
+`Feec.Counterexamples.PositiveCharacteristic` through `Solution.Affine`.
 
 ## References
 
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
+  §3.4, §4
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §5.2, §5.5
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
@@ -48,6 +53,8 @@ open scoped InnerProductSpace
 open Filter Topology Set MeasureTheory LinearPMap
 
 @[expose] public noncomputable section
+
+universe u
 
 namespace FEEC
 
@@ -71,9 +78,9 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
       (∃ C : ℝ, ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ C ∧
         (∀ x, P x ∈ (F.V N).V i) ∧
           ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i)) ∧
-      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧ (∀ a m, F.DynamicVerdict a m) ∧
+      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
       (∀ N, J.meshSize N = meshSize (M N)) ∧ (∀ s, J.ord s = s + 1) ∧
-      ∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsCsForm Ω s j L x := by
+      (∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsCsForm Ω s j L x) ∧ J.ProjRate := by
   set D := starDomainOf hΩ
   set Fm := meshFamilyOf hΩ hM
   obtain ⟨K, hK1, hK⟩ := Fm.exists_uniform_polyProj S.toFeec
@@ -104,17 +111,17 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
   have hA : ∀ i, F.Approximates i := fun i =>
     H.approximates_of_eventually F i fun x ε hε =>
       Fm.eventually_exists_poly_graph S.toFeec i x.1 x.2 hε
-  refine ⟨H, F, J, fun k => dMax_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, fun N i =>
+  have hP : ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ K ∧ (∀ x, P x ∈ (F.V N).V i) ∧
+      ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i) := fun N i =>
     ⟨(π N).π i |>.mkContinuous K (hπ1 N i), LinearMap.mkContinuous_norm_le _ (by linarith) _,
-      (π N).mem i, fun x => rfl⟩⟩, fun i => ⟨K, fun N x => ?_⟩, hA, fun a m => ?_, fun N => rfl,
-    fun s => rfl, fun s j L x => Iff.rfl⟩
+      (π N).mem i, fun x => rfl⟩
+  refine ⟨H, F, J, fun k => dMax_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, hP⟩,
+    fun i => ⟨K, fun N x => ?_⟩, hA, fun N => rfl, fun s => rfl, fun s j L x => Iff.rfl,
+    J.projRate hP⟩
   · ext u
     exact mem_V_iff S (M N) Ω (hM.1 N) u
   · refine H.graphNorm_le_of_sq (by linarith) ?_
     exact hπ2 N i (i + 1) x
-  · have happ := F.approximates_window a m (fun i _ => hA _) fun i _ x =>
-      H.tendsto_infDist F (hA _) x
-    exact ⟨F.waveVerdict a m happ, fun hπ hπ' hcr => F.heatVerdict a m happ hπ hπ' hcr⟩
 
 theorem femMin [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) :
@@ -124,9 +131,9 @@ theorem femMin [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
       (∃ C : ℝ, ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ C ∧
         (∀ x, P x ∈ (F.V N).V i) ∧
           ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i)) ∧
-      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧ (∀ a m, F.DynamicVerdict a m) ∧
+      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
       (∀ N, J.meshSize N = meshSize (M N)) ∧ (∀ s, J.ord s = s + 1) ∧
-      ∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsCsFormMin Ω s j L x := by
+      (∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsCsFormMin Ω s j L x) ∧ J.ProjRate := by
   set D := starDomainOf hΩ
   set Fm := meshFamilyOf hΩ hM
   obtain ⟨K, hK1, hK⟩ := Fm.exists_uniform_polyProjMin S.toFeec
@@ -157,17 +164,17 @@ theorem femMin [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
   have hA : ∀ i, F.Approximates i := fun i =>
     H.approximates_of_eventually F i fun x ε hε =>
       Fm.eventually_exists_polyMin_graph S.toFeec i x.1 x.2 hε
-  refine ⟨H, F, J, fun k => dMin_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, fun N i =>
+  have hP : ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ K ∧ (∀ x, P x ∈ (F.V N).V i) ∧
+      ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i) := fun N i =>
     ⟨(π N).π i |>.mkContinuous K (hπ1 N i), LinearMap.mkContinuous_norm_le _ (by linarith) _,
-      (π N).mem i, fun x => rfl⟩⟩, fun i => ⟨K, fun N x => ?_⟩, hA, fun a m => ?_, fun N => rfl,
-    fun s => rfl, fun s j L x => Iff.rfl⟩
+      (π N).mem i, fun x => rfl⟩
+  refine ⟨H, F, J, fun k => dMin_eq_complex hΩ k, rfl, fun N k => ?_, ⟨K, hP⟩,
+    fun i => ⟨K, fun N x => ?_⟩, hA, fun N => rfl, fun s => rfl, fun s j L x => Iff.rfl,
+    J.projRate hP⟩
   · ext u
     exact mem_V₀_iff S (M N) Ω (hM.1 N) u
   · refine H.graphNorm_le_of_sq (by linarith) ?_
     exact hπ2 N i (i + 1) x
-  · have happ := F.approximates_window a m (fun i _ => hA _) fun i _ x =>
-      H.tendsto_infDist F (hA _) x
-    exact ⟨F.waveVerdict a m happ, fun hπ hπ' hcr => F.heatVerdict a m happ hπ hπ' hcr⟩
 
 /-! ### Parallelepipeds -/
 
@@ -321,10 +328,14 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
     ∀ S : PolySeq, ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ)
       (J : F.Jackson ℕ), (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
       (∀ N k, ((F.V N).V k : Set (L2Form (cube n) k)) = femSpace (cube n) (M N) S k) ∧
+      (∃ C : ℝ, ∀ N i, ∃ P : L2Form (cube n) i →L[ℝ] L2Form (cube n) i, ‖P‖ ≤ C ∧
+        (∀ x, P x ∈ (F.V N).V i) ∧
+          ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form (cube n) i)) ∧
+      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
       (∀ N, J.meshSize N = meshSize (M N)) ∧ (∀ s, J.ord s = s + 1) ∧
-      ∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsSobolevForm (cube n) (s + 1) j L x ∧
+      (∀ s j L x, J.Reg s j L x ↔ S.PolyOrderAt n s j ∧ IsSobolevForm (cube n) (s + 1) j L x ∧
         ∀ hx : x ∈ (dMax (cube n) j).domain,
-          IsSobolevForm (cube n) (s + 1) (j + 1) L (dMax (cube n) j ⟨x, hx⟩) := by
+          IsSobolevForm (cube n) (s + 1) (j + 1) L (dMax (cube n) j ⟨x, hx⟩)) ∧ J.ProjRate := by
   set D := CubeWitness.starDomain n
   have hΩ : IsStarShapedBall (cube n) := ⟨D.isOpen, D.isBounded, D.x₀, D.s₀, D.s₀_pos, D.starBall⟩
   have hM := isMeshFamily_ofFeec (CubeWitness.meshFamily n)
@@ -339,7 +350,8 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
       Feec.Mesh.latticePoint_apply, Feec.Mesh.finLattice, Feec.Mesh.kuhnVertex]
     push_cast
     field_simp
-  obtain ⟨H, F, -, hd, hl, hV, ⟨C, hP⟩, -⟩ := fem hΩ hM S
+  obtain ⟨H, F, -, hd, hl, hV, hPex, hGB, hA, -⟩ := fem hΩ hM S
+  obtain ⟨C, hP⟩ := hPex
   choose P hPC hPV hPπ using hP
   have hC : 0 ≤ C := (norm_nonneg _).trans (hPC 0 0)
   choose c hc0 hc using fun s j => exists_infDist_le_of_isSobolevForm (n := n) S s j
@@ -347,21 +359,13 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
   have key : ∀ (N : ℕ) (i : ℤ) (x : L2Form (cube n) i),
       ‖x - P N i x‖ ≤ (1 + C) * Metric.infDist x ((F.V N).V i : Set (L2Form (cube n) i)) := by
     intro N i x
-    have hne : ((F.V N).V i : Set (L2Form (cube n) i)).Nonempty := ⟨0, Submodule.zero_mem _⟩
     have h1 : 0 < 1 + C := by linarith
     have hb : ‖x - P N i x‖ / (1 + C) ≤ Metric.infDist x ((F.V N).V i : Set (L2Form (cube n) i)) :=
-      (Metric.le_infDist hne).2 fun w hw => by
-        rw [div_le_iff₀ h1, dist_eq_norm]
-        have hPw : P N i w = w := by
-          have := hPπ N i ⟨w, (F.V N).le_domain i (i + 1) hw⟩
-          simp only at this
-          rw [this]
-          exact (F.π N).proj i _ hw
-        have e : x - P N i x = (x - w) - P N i (x - w) := by rw [_root_.map_sub, hPw]; abel
-        rw [e]
-        calc ‖(x - w) - P N i (x - w)‖ ≤ ‖x - w‖ + ‖P N i (x - w)‖ := norm_sub_le _ _
-          _ ≤ ‖x - w‖ + C * ‖x - w‖ := by gcongr; exact (P N i).le_of_opNorm_le (hPC N i) _
-          _ = ‖x - w‖ * (1 + C) := by ring
+      (Metric.le_infDist ⟨0, Submodule.zero_mem _⟩).2 fun w hw => by
+        rw [div_le_iff₀ h1, dist_eq_norm, mul_comm]
+        refine (P N i).norm_sub_apply_le_of_apply_eq (hPC N i) ?_ x
+        rw [hPπ N i ⟨w, (F.V N).le_domain i (i + 1) hw⟩]
+        exact (F.π N).proj i _ hw
     calc ‖x - P N i x‖ = (1 + C) * (‖x - P N i x‖ / (1 + C)) := by field_simp
       _ ≤ _ := mul_le_mul_of_nonneg_left hb h1.le
   let J : F.Jackson ℕ :=
@@ -428,7 +432,9 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
             ring
           · rw [LinearPMap.apply_of_eq (H.shape _ _ hij), LinearPMap.zero_apply, norm_zero]
             exact mul_nonneg (mul_nonneg h1 (add_nonneg hc1 hc2)) (mul_nonneg hL hh) }
-  exact ⟨H, F, J, hd, hl, hV, fun N => rfl, fun s => rfl, fun s j L x => Iff.rfl⟩
+  exact ⟨H, F, J, hd, hl, hV, ⟨C, fun N i => ⟨P N i, hPC N i, hPV N i, hPπ N i⟩⟩, hGB, hA,
+    fun N => rfl, fun s => rfl, fun s j L x => Iff.rfl,
+    J.projRate fun N i => ⟨P N i, hPC N i, hPV N i, hPπ N i⟩⟩
 
 /-! ### Maxwell's equations -/
 
@@ -531,5 +537,37 @@ theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ 
       fun N t => (Win hO).totalD.graphFst (ξ N t) 2,
       fun N => galerkin_of_semidiscrete hO G (hA₀ N) (hA₁ N) (hA₂ N) (hsemi N),
       tendsto_apply_MX hξ0 0, tendsto_apply_MX hξ0 1, tendsto_apply_MX hξ0 2⟩
+
+/-! ### The shape functions -/
+
+theorem unisolvent (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
+    (∀ w ∈ (polyForm ℝ n r k).map evalForm, (∀ m (e : Fin (m + 1) ↪o Fin (n + 1)), k ≤ m →
+      m < r + k → ∀ η ∈ (polyFormMinus ℝ m (r + k - m) (m - k)).map evalForm,
+        faceMoment T.points e η w = 0) → w = 0) ∧
+    (∀ w ∈ (polyFormMinus ℝ n r k).map evalForm, (∀ m (e : Fin (m + 1) ↪o Fin (n + 1)), k ≤ m →
+      m < r + k → ∀ η ∈ (polyForm ℝ m (r + k - m - 1) (m - k)).map evalForm,
+        faceMoment T.points e η w = 0) → w = 0) ∧
+    Module.finrank ℝ (polyForm ℝ n r k) = ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) *
+      (if k ≤ m ∧ m < r + k then Module.finrank ℝ (polyFormMinus ℝ m (r + k - m) (m - k)) else 0) ∧
+    Module.finrank ℝ (polyFormMinus ℝ n r k) = ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) *
+      (if k ≤ m ∧ m < r + k then Module.finrank ℝ (polyForm ℝ m (r + k - m - 1) (m - k))
+        else 0) :=
+  unisolvent_of_feec T hr k
+
+theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
+    AffineInvariantForms K n :=
+  affineInvariantForms_of_feec K n
+
+theorem charZero_iff_classification (K : Type u) [Field K] :
+    CharZero K ↔ ∀ (n r k : ℕ) (W : Submodule K (PolyForm K n)), IsGLInvariant K n W →
+      W ≤ homForm K n (r + 1) (k + 1) →
+        W = ⊥ ∨ W = (homForm K n (r + 2) k).map (polyExtDeriv K n) ∨
+          W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1) :=
+  charZero_iff_classification_of_feec K
+
+theorem charZero_iff_closed_eq_exact (K : Type u) [Field K] :
+    CharZero K ↔ ∀ n r k : ℕ, LinearMap.ker (polyExtDeriv K n) ⊓ homForm K n r (k + 1) =
+      (homForm K n (r + 1) k).map (polyExtDeriv K n) :=
+  charZero_iff_closed_eq_exact_of_feec K
 
 end FEEC

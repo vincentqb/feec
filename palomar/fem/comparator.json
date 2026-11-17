@@ -1,8 +1,9 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.fem", "FEEC.femMin", "FEEC.fem_parallelepiped", "FEEC.fem_cube",
-    "FEEC.maxwell"],
+  "theorem_names": ["FEEC.affineInvariantForms", "FEEC.charZero_iff_classification",
+    "FEEC.charZero_iff_closed_eq_exact", "FEEC.unisolvent", "FEEC.fem", "FEEC.femMin",
+    "FEEC.fem_cube", "FEEC.fem_parallelepiped", "FEEC.maxwell"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

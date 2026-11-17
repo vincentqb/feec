@@ -29,7 +29,7 @@ namespace FEEC
 
 variable {n : ℕ}
 
-theorem sgn_eq (j : Fin n) (s : Finset (Fin n)) : sgn j s = Feec.ExteriorFibre.sgn j s := rfl
+theorem sgn_eq (j : Fin n) (s : Finset (Fin n)) : (sgn j s : ℝ) = Feec.ExteriorFibre.sgn j s := rfl
 
 /-- `(d φ')_t = (d φ)_t` when `φ'` reads the `k`-coefficients of the form field `φ`. -/
 theorem extDerivOp_apply_eq {k : ℤ} (φ : FormField n) (φ' : formIdx n k → (Fin n → ℝ) → ℝ)

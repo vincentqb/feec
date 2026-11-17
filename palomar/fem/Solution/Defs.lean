@@ -1,7 +1,6 @@
 module
 
 public import Mathlib.Algebra.MvPolynomial.PDeriv
-public import Mathlib.Algebra.Polynomial.AlgebraMap
 public import Mathlib.Analysis.Calculus.ContDiff.Basic
 public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.Calculus.FDeriv.Basic
@@ -9,11 +8,11 @@ public import Mathlib.Analysis.Convex.Hull
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
-public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
-public import Mathlib.Analysis.Normed.Algebra.Exponential
 public import Mathlib.Analysis.Normed.Lp.PiLp
 public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
+public import Mathlib.LinearAlgebra.Dimension.Finrank
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
+public import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup.Defs
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
@@ -22,10 +21,10 @@ public import Mathlib.Topology.UniformSpace.UniformConvergence
 /-!
 # The definitions of the challenge
 
-A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems `FEEC.fem`,
-`FEEC.femMin`, `FEEC.fem_parallelepiped` and `FEEC.maxwell`), compiled against Mathlib alone so
-that their elaborated values are those of the challenge. The solution imports this module and the bridges to
-`Feec`, and proves the theorems (`Solution.lean`).
+A verbatim copy of the definitions of `Challenge.lean` (everything but the compared theorems of
+`comparator.json`), compiled against Mathlib alone so that their elaborated values are those of
+the challenge. The solution imports this module and the bridges to `Feec`, and proves the
+theorems (`Solution.lean`).
 
 ## References
 
@@ -36,8 +35,6 @@ that their elaborated values are those of the challenge. The solution imports th
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995], §III.5.6
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 4
 
@@ -49,9 +46,11 @@ open Filter Topology Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 
+universe u
+
 namespace FEEC
 
-/-! ### Hilbert complexes and families of subcomplexes (verbatim from `palomar/feec`) -/
+/-! ### Hilbert complexes and families of subcomplexes (as in `palomar/feec`) -/
 
 /-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
 zero unless `j = i + 1`, with `R(d i j) ⊆ D(d j k)` and `d j k ∘ d i j = 0`. -/
@@ -106,9 +105,6 @@ structure SubcomplexFamily (κ : Type*) where
 
 attribute [instance] SubcomplexFamily.finiteDimensional
 
-/-- The boundaries `𝔅ⁱ = R(d (i - 1) i)`. -/
-def boundaries (i : ℤ) : Submodule 𝕜 (W i) := LinearMap.range (H.d (i - 1) i).toFun
-
 /-- The distance `E(x) = inf_{v ∈ Vⁱ} ‖x - v‖_V` from `x ∈ D(d i j)` to `Vⁱ` in the graph norm. -/
 def Subcomplex.graphDist {H : HilbertComplex 𝕜 W} (S : H.Subcomplex) (i j : ℤ)
     (x : (H.d i j).domain) : ℝ :=
@@ -116,17 +112,12 @@ def Subcomplex.graphDist {H : HilbertComplex 𝕜 W} (S : H.Subcomplex) (i j : �
 
 variable {H} {κ : Type*}
 
-/-- The cochain projections of `F` are **bounded in the graph norm by `C`** in degree `i`,
-uniformly in `h`: `‖πₕ x‖_V ≤ C ‖x‖_V` on `D(d i (i + 1))`. -/
-def SubcomplexFamily.IsGraphBoundedBy (F : H.SubcomplexFamily κ) (i : ℤ) (C : ℝ) : Prop :=
-  ∀ (h : κ) (x : (H.d i (i + 1)).domain),
+/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly in
+`h`: `‖πₕ x‖_V ≤ C ‖x‖_V` on `D(d i (i + 1))` for some `C`. -/
+def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∃ C : ℝ, ∀ (h : κ) (x : (H.d i (i + 1)).domain),
     H.graphNorm i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).π i x).2⟩ ≤
       C * H.graphNorm i (i + 1) x
-
-/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly in
-`h`. -/
-def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
-  ∃ C : ℝ, F.IsGraphBoundedBy i C
 
 /-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
 `Vₕⁱ` in the graph norm tends to `0`. -/
@@ -153,241 +144,17 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
       ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
         B s i * (L * meshSize h ^ ord s)
 
-end HilbertComplex
-
-/-! ### Evolutions and time schemes (verbatim from `palomar/feec`) -/
-
-section Evolution
-
-variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {κ : Type*}
-
-/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
-def sq (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
-  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
-    obtain ⟨y, hy, hyx⟩ := x.2.1
-    have : (⟨x, x.2.2⟩ : A.domain) = y := Subtype.ext hyx.symm
-    change A ⟨(x : E), x.2.2⟩ ∈ A.domain
-    rw [this]
-    exact hy
-
-/-- The closed subspace `K` **reduces** `A`: `P_K D(A) ⊆ D(A)` and `A P_K = P_K A` on `D(A)`. -/
-def IsReducing (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : Prop :=
-  ∀ x : A.domain, ∃ hx : K.starProjection (x : E) ∈ A.domain,
-    A ⟨_, hx⟩ = K.starProjection (A x)
-
-/-- A **rational time scheme** `r = n/d` ([HairerWanner1996], §IV.3): real polynomials with
-`deg n ≤ deg d` and `d(z) ≠ 0` for `re z ≤ 0`; a step is `wₙ₊₁ = r(τ B) wₙ`. The θ-scheme
-`wₙ₊₁ - wₙ = τ B (θ wₙ₊₁ + (1 - θ) wₙ)` is `n = 1 + (1 - θ) X`, `d = 1 - θ X`, A-stable for
-`θ ≥ 1/2`, of order 1, and 2 for Crank–Nicolson `θ = 1/2`. -/
-structure RationalScheme where
-  /-- the numerator -/
-  num : Polynomial ℝ
-  /-- the denominator -/
-  den : Polynomial ℝ
-  natDegree_num_le : num.natDegree ≤ den.natDegree
-  aeval_den_ne_zero : ∀ z : ℂ, z.re ≤ 0 → Polynomial.aeval z den ≠ 0
-
-namespace RationalScheme
-
-variable (r : RationalScheme)
-
-/-- **A-stability**: `|r(iy)| ≤ 1` for every real `y`; with no poles in `re z ≤ 0` and
-`deg n ≤ deg d`, equivalent to `|r(z)| ≤ 1` on `re z ≤ 0` by the maximum principle. -/
-def IsAStable : Prop :=
-  ∀ y : ℝ, ‖Polynomial.aeval ((y : ℂ) * Complex.I) r.num /
-    Polynomial.aeval ((y : ℂ) * Complex.I) r.den‖ ≤ 1
-
-/-- **Order `p`**: `r(z) - e^z = O(z^{p+1})` at `0`, i.e. `X^{p+1}` divides `n - d Tₚ`,
-`Tₚ = ∑_{j ≤ p} Xʲ/j!`. -/
-def HasOrder (p : ℕ) : Prop :=
-  Polynomial.X ^ (p + 1) ∣ r.num - r.den * ∑ j ∈ Finset.range (p + 1),
-    Polynomial.C (1 / (j.factorial : ℝ)) * Polynomial.X ^ j
-
-/-- `r(B) = n(B) d(B)⁻¹` for a bounded operator `B` (`d(B)` is invertible for dissipative `B`). -/
-def apply (B : E →L[𝕜] E) : E →L[𝕜] E :=
-  Polynomial.aeval B (r.num.map (algebraMap ℝ 𝕜)) *
-    Ring.inverse (Polynomial.aeval B (r.den.map (algebraMap ℝ 𝕜)))
-
-end RationalScheme
-
-variable [NormedSpace ℝ E]
-
-/-- `u` is a **strong solution** of `u' = A u` on `I`. -/
-def IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (u : ℝ → E) : Prop :=
-  ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A.graph ∧ HasDerivWithinAt u v I t
-
-/-- The semidiscrete evolution `exp(t B)`. -/
-def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X)
-    (t : ℝ) : X →L[𝕜] X :=
-  NormedSpace.exp ((t : 𝕜) • B)
-
-/-- **The FEEC theorem for an evolution** `u' = A u` approximated by `uₕ' = Bₕ uₕ` on the
-finite-dimensional `Xₕ ⊆ E`, with exact evolution `S`: `S t x` is the unique strong solution
-from `x ∈ D(A)` (`D(A)` dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; the semidiscrete solutions
-`exp(t Bₕ) vₕ` and the iterates `r(τₕ Bₕ)ⁿ vₕ` of every A-stable rational scheme of order
-`p ≥ 1` converge as `h, τₕ → 0`, the latter with the temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖`; and
-a closed `K` reduces `A` iff `S` keeps both `K` and `Kᗮ` forward in time. -/
-structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Submodule 𝕜 E)
-    (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
-  dense : Dense (A.domain : Set E)
-  solution (x : E) (hx : x ∈ A.domain) (T : ℝ) : IsStrongSolution A (Icc 0 T) fun t => S t x
-  unique (x : E) (hx : x ∈ A.domain) (T : ℝ) (u : ℝ → E) (hu0 : u 0 = x)
-    (hu : IsStrongSolution A (Icc 0 T) u) : EqOn u (fun t => S t x) (Icc 0 T)
-  initial (x : E) : S 0 x = x
-  contraction (x : E) {t : ℝ} (ht : 0 ≤ t) : ‖S t x‖ ≤ ‖x‖
-  semidiscrete (x : E) (v : ∀ h, X h) (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) :
-    TendstoUniformlyOn (fun h (t : ℝ) => (semiflow (B h) t (v h) : E))
-      (fun t => S t x) l (Icc 0 T)
-  rational (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (hp0 : 0 < p)
-    (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (x : E) (v : ∀ h, X h)
-    (hv : Tendsto (fun h => (v h : E)) l (𝓝 x)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
-      ‖S (n * τ h) x - ((r.apply ((τ h : 𝕜) • B h) ^ n) (v h) : E)‖ < ε
-  /-- `K` independent of `h`, `τ`, `n`, `w` -/
-  rational_temporal (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
-    ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
-      ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
-        K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
-  /-- a closed `K` reduces `A` iff `S t`, `t ≥ 0`, maps `K` into `K` and `Kᗮ` into `Kᗮ` (the
-  criterion for m-dissipative `A`; for a unitary group, `WaveVerdict.propagates_iff` asks `K`
-  alone, for all `t`) -/
-  reducing_iff (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : IsReducing A K ↔
-    (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ
-
-end Evolution
-
-/-! ### Windows and the wave and heat verdicts (verbatim from `palomar/feec`) -/
-
-/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of a window (an `ℓ²` sum). -/
-abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
-
-namespace HilbertComplex
-
-section Window
-
-variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
-
-/-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
-def totalDomain : Submodule 𝕜 (Total W a m) where
-  carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
-  add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
-  zero_mem' _ _ := (H.d _ _).domain.zero_mem
-  smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
-
-/-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
-def totalD : Total W a m →ₗ.[𝕜] Total W a m where
-  domain := H.totalDomain a m
-  toFun :=
-    { toFun := fun x => WithLp.toLp 2 fun j : Fin m =>
-        ∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, x.2 i j⟩
-      map_add' := fun x y => PiLp.ext fun j => by
-        rw [PiLp.add_apply, PiLp.toLp_apply, PiLp.toLp_apply, PiLp.toLp_apply,
-          ← Finset.sum_add_distrib]
-        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_add ⟨_, x.2 i j⟩ ⟨_, y.2 i j⟩
-      map_smul' := fun c x => PiLp.ext fun j => by
-        rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
-          Finset.smul_sum]
-        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
-
-/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
-def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
-
-end Window
-
-namespace SubcomplexFamily
-
-variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) (a : ℤ) (m : ℕ)
-
-/-- The discrete total space `Xₕ = Vₕᵃ ⊕ ⋯ ⊕ Vₕ^{a+m-1}`. -/
-def Xh (h : κ) : Submodule 𝕜 (Total W a m) where
-  carrier := {x | ∀ i : Fin m, x i ∈ (F.V h).V (a + (i : ℕ))}
-  add_mem' hx hy i := add_mem (hx i) (hy i)
-  zero_mem' _ := zero_mem _
-  smul_mem' c _ hx i := Submodule.smul_mem _ c (hx i)
-
-instance (h : κ) : FiniteDimensional 𝕜 (F.Xh a m h) :=
-  Module.Finite.of_injective
-    (LinearMap.pi fun i : Fin m => LinearMap.codRestrict ((F.V h).V (a + (i : ℕ)))
-      ((PiLp.projₗ 2 _ i).comp (F.Xh a m h).subtype) fun x => x.2 i)
-    fun _ _ hxy => Subtype.ext (PiLp.ext fun i => congrArg Subtype.val (congrFun hxy i))
-
-theorem Xh_le (h : κ) : F.Xh a m h ≤ H.totalDomain a m :=
-  fun _ hx _ _ => (F.V h).le_domain _ _ (hx _)
-
-/-- The discrete total differential `𝐝ₕ : Xₕ → Xₕ`. -/
-def Dh (h : κ) : F.Xh a m h →L[𝕜] F.Xh a m h :=
-  LinearMap.toContinuousLinearMap <| LinearMap.codRestrict _
-    ((H.totalD a m).toFun ∘ₗ Submodule.inclusion (F.Xh_le a m h)) fun x j =>
-      show (∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, _⟩) ∈ _ from
-        Submodule.sum_mem _ fun i _ => (F.V h).mapsTo _ _ _ (x.2 i)
-
-/-- The discrete wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*`. -/
-def Lh (h : κ) : F.Xh a m h →L[𝕜] F.Xh a m h := F.Dh a m h - (F.Dh a m h).adjoint
-
-/-- The distance `inf_{w ∈ Xₕ} ‖y - w‖ + ‖𝐝 y - 𝐝 w‖` from `y ∈ D(𝐝)` to `Xₕ` in the graph
-norm of the window. -/
-def graphDist (h : κ) (y : (H.totalD a m).domain) : ℝ :=
-  ⨅ w : F.Xh a m h, ‖(y : Total W a m) - w‖ +
-    ‖H.totalD a m y - H.totalD a m ⟨w, F.Xh_le a m h w.2⟩‖
-
-variable [∀ i, NormedSpace ℝ (W i)]
-
-/-- **The conclusions of the FEEC theorem for the Hodge wave equation** on the window, with
-exact evolution `S`. -/
-structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop where
-  /-- well-posedness and convergence of the semidiscrete and fully discrete solutions -/
-  evolution : EvolutionVerdict (H.wave a m) F.l (F.Xh a m) (F.Lh a m) S
-  /-- `S` is a unitary group -/
-  norm_eq (t : ℝ) (x : Total W a m) : ‖S t x‖ = ‖x‖
-  add (s t : ℝ) : S (s + t) = S s ∘L S t
-  /-- the semidiscrete error bound: for `x ∈ D(L²)`, if the graph-norm distances of `S(s) x` and
-  `S(s) L x` to `Xₕ` are at most `M` for `s ∈ [0, t]`, then
-  `‖S(t) x - exp(t Lₕ) v‖ ≤ ‖v - x‖ + 2 (1 + C_P) (1 + t) M`, `C_P = 4√3` the uniform bound of
-  the elliptic projections -/
-  error (x : Total W a m) (hx : x ∈ (H.wave a m).domain)
-    (hx2 : H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain) (h : κ) (v : F.Xh a m h) {t M : ℝ}
-    (ht : 0 ≤ t) (hM : ∀ s ∈ Icc 0 t, ∀ y : (H.totalD a m).domain,
-      (y : Total W a m) = S s x ∨ (y : Total W a m) = S s (H.wave a m ⟨x, hx⟩) →
-        F.graphDist a m h y ≤ M) :
-    ‖S t x - (semiflow (F.Lh a m h) t v : Total W a m)‖ ≤
-      ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
-  /-- a closed constraint `K` propagates (for all `t`, forward and backward) iff it reduces `L`
-  (`IsReducing`, [Kato1995], §III.5.6) -/
-  propagates_iff (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
-    IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K
-  /-- the invariant core: the data whose solutions stay in `K` form the largest closed subspace
-  `K* ⊆ K` reducing `L` -/
-  invariantCore (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection] :
-    ∃ (Ks : Submodule 𝕜 (Total W a m)) (_ : Ks.HasOrthogonalProjection),
-      (∀ x, x ∈ Ks ↔ ∀ t, S t x ∈ K) ∧ IsReducing (H.wave a m) Ks ∧
-      ∀ (M : Submodule 𝕜 (Total W a m)) [M.HasOrthogonalProjection], M ≤ K →
-        IsReducing (H.wave a m) M → M ≤ Ks
-  /-- the constraint of a reducing subcomplex propagates: closed `Zⁱ ⊆ Wⁱ` with
-  `P_{Zⁱ} D(d) ⊆ D(d)` and `d P_{Zⁱ} = P_{Zʲ} d` ([QuennevilleBelair2015], Prop 4.16) -/
-  subcomplex (Z : ∀ i, Submodule 𝕜 (W i)) [∀ i, (Z i).HasOrthogonalProjection]
-    (hZ : ∀ i j (x : (H.d i j).domain), ∃ hx : (Z i).starProjection (x : W i) ∈ (H.d i j).domain,
-      H.d i j ⟨_, hx⟩ = (Z j).starProjection (H.d i j x))
-    (t : ℝ) (x : Total W a m) (hx : ∀ i : Fin m, x i ∈ Z (a + (i : ℕ))) (i : Fin m) :
-    S t x i ∈ Z (a + (i : ℕ))
-
-/-- **The conclusions of the FEEC theorem for the Hodge wave and heat equations** on the
-window. -/
-structure DynamicVerdict : Prop where
-  /-- the wave equation `ξ' = L ξ` -/
-  wave : ∃ S, F.WaveVerdict a m S
-  /-- the heat equation `u' = L² u`, with projections bounded in the graph norm in the degrees
-  `a, …, a + m - 2` and in `W` in the last degree `a + m - 1` (which has no differential in the
-  window), and closed ranges in the window -/
-  heat (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ)))
-    (hπ' : ∀ i : Fin m, (i : ℕ) + 1 = m → ∃ C : ℝ, ∀ (h : κ)
-      (x : (H.d (a + (i : ℕ)) (a + (i : ℕ) + 1)).domain),
-        ‖((F.π h).π _ x : W (a + (i : ℕ)))‖ ≤ C * ‖(x : W (a + (i : ℕ)))‖)
-    (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
-    ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
-    EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S
-
-end SubcomplexFamily
+/-- The cochain projections of `F` **attain the rate of the Jackson estimate `J`**: for every
+`s`-regular `x ∈ D(d i (i + 1))` with bound `L`, `‖x - πₕ x‖ ≤ B' L hₕ^{ord s}` and
+`‖d x - d πₕ x‖ ≤ B' L hₕ^{ord s}`, with constants `B'` independent of `h`, `L` and `x`: the
+estimate of [AFW2010], §5.5 for the projections themselves, not only for some element of `Vₕ`
+(a definition of this entry). -/
+def SubcomplexFamily.Jackson.ProjRate {F : H.SubcomplexFamily κ} {ρ : Type*} (J : F.Jackson ρ) :
+    Prop :=
+  ∃ B' : ρ → ℤ → ℝ, ∀ s h i {L : ℝ} (x : (H.d i (i + 1)).domain), 0 ≤ L → J.Reg s i L x →
+    ‖(x : W i) - ((F.π h).π i x : W i)‖ ≤ B' s i * (L * J.meshSize h ^ J.ord s) ∧
+      ‖H.d i (i + 1) x - H.d i (i + 1) ⟨_, (F.V h).le_domain i (i + 1) ((F.π h).π i x).2⟩‖ ≤
+        B' s i * (L * J.meshSize h ^ J.ord s)
 
 end HilbertComplex
 
@@ -410,7 +177,8 @@ coefficient of `dx_s`); it is a `k`-form when the coefficients off the `k`-subse
 abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
 
 /-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn (j : Fin n) (s : Finset (Fin n)) : ℝ := (-1) ^ (s.filter fun l => l < j).card
+def sgn {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
+  (-1) ^ (s.filter fun l => l < j).card
 
 /-- The partial derivative `∂_j f(x)`. -/
 def partialDeriv (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
@@ -463,35 +231,113 @@ def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form 
 
 /-! ### Polynomial differential forms ([AFW2006], §3) -/
 
-/-- **Polynomial differential forms** on `ℝⁿ` in coordinates: a polynomial coefficient `ω_s` for
+section Poly
+
+variable (K : Type*) [Field K] (n : ℕ)
+
+/-- **Polynomial differential forms** on `Kⁿ` in coordinates: a polynomial coefficient `ω_s` for
 every subset `s` of `Fin n`, the form `Σ_s ω_s dx_s`. -/
-abbrev PolyForm (n : ℕ) : Type := Finset (Fin n) → MvPolynomial (Fin n) ℝ
+abbrev PolyForm : Type _ := Finset (Fin n) → MvPolynomial (Fin n) K
 
 /-- `P_rΛᵏ`: the polynomial `k`-forms (`ω_s = 0` unless `#s = k`) with coefficients of degree at
 most `r`. -/
-def polyForm (r k : ℕ) : Submodule ℝ (PolyForm n) :=
+def polyForm (r k : ℕ) : Submodule K (PolyForm K n) :=
   Submodule.pi Set.univ fun s =>
-    if s.card = k then MvPolynomial.restrictTotalDegree (Fin n) ℝ r else ⊥
+    if s.card = k then MvPolynomial.restrictTotalDegree (Fin n) K r else ⊥
 
 /-- `H_rΛᵏ`: the polynomial `k`-forms with coefficients homogeneous of degree `r`. -/
-def homForm (r k : ℕ) : Submodule ℝ (PolyForm n) :=
+def homForm (r k : ℕ) : Submodule K (PolyForm K n) :=
   Submodule.pi Set.univ fun s =>
-    if s.card = k then MvPolynomial.homogeneousSubmodule (Fin n) ℝ r else ⊥
+    if s.card = k then MvPolynomial.homogeneousSubmodule (Fin n) K r else ⊥
+
+/-- The **exterior derivative** of polynomial forms, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
+def polyExtDeriv : PolyForm K n →ₗ[K] PolyForm K n :=
+  LinearMap.pi fun s => ∑ j ∈ s,
+    (sgn j s : K) • ((MvPolynomial.pderiv j).toLinearMap ∘ₗ LinearMap.proj (s.erase j))
 
 /-- The **Koszul differential** `κ`, the contraction with the position vector field `x`:
 `(κω)_s = Σ_{j ∉ s} ε(j, s) x_j ω_{s ∪ j}`. -/
-def koszul : PolyForm n →ₗ[ℝ] PolyForm n :=
+def koszul : PolyForm K n →ₗ[K] PolyForm K n :=
   LinearMap.pi fun s => ∑ j ∈ sᶜ,
-    sgn j s • (LinearMap.mulLeft ℝ (MvPolynomial.X j) ∘ₗ LinearMap.proj (insert j s))
+    (sgn j s : K) • (LinearMap.mulLeft K (MvPolynomial.X j) ∘ₗ LinearMap.proj (insert j s))
 
 /-- `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}`, the trimmed polynomial `k`-forms (`r ≥ 1`), and
 `P_0⁻Λᵏ = 0` ([AFW2006], §3.3). -/
-def polyFormMinus : ℕ → ℕ → Submodule ℝ (PolyForm n)
+def polyFormMinus : ℕ → ℕ → Submodule K (PolyForm K n)
   | 0, _ => ⊥
-  | r + 1, k => polyForm r k ⊔ (homForm r (k + 1)).map koszul
+  | r + 1, k => polyForm K n r k ⊔ (homForm K n r (k + 1)).map (koszul K n)
+
+/-- The **pullback** of polynomial forms along the affine map `φ(x) = B x + b` of `Kⁿ`:
+`(φ^*ω)_t = Σ_{#s = #t} det B_{s,t} · (ω_s ∘ φ)`, `B_{s,t}` the submatrix of the rows `s` and the
+columns `t` (that is, `φ^* dx_i = Σ_l B_{il} dx_l`). -/
+def pullback (B : Matrix (Fin n) (Fin n) K) (b : Fin n → K) : PolyForm K n →ₗ[K] PolyForm K n :=
+  LinearMap.pi fun t => ∑ s : Finset (Fin n), if h : s.card = t.card then
+    (B.submatrix (s.orderEmbOfFin h) (t.orderEmbOfFin rfl)).det •
+      ((MvPolynomial.aeval fun i => ∑ l, MvPolynomial.C (B i l) * MvPolynomial.X l +
+        MvPolynomial.C (b i)).toLinearMap ∘ₗ LinearMap.proj s) else 0
+
+/-- `V` is **affinely invariant**: mapped into itself by the pullback along every affine map of
+`Kⁿ`, singular ones included. -/
+def IsAffineInvariant (V : Submodule K (PolyForm K n)) : Prop :=
+  ∀ B b, V.map (pullback K n B b) ≤ V
+
+/-- `V` is mapped into itself by the pullback along every linear map `x ↦ B x` of `Kⁿ`. -/
+def IsLinearInvariant (V : Submodule K (PolyForm K n)) : Prop :=
+  ∀ B, V.map (pullback K n B 0) ≤ V
+
+/-- `V` is mapped into itself by the pullback along every `g ∈ GL(n, K)`. -/
+def IsGLInvariant (V : Submodule K (PolyForm K n)) : Prop :=
+  ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
+
+/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5), used for `k ≥ 1` and
+`s ≥ 0`; the source's case `s = -1` is `dP_{r+1}Λ^{k-1}`. -/
+def invariantForm (r s k : ℕ) : Submodule K (PolyForm K n) :=
+  (polyForm K n (r + 1) (k - 1)).map (polyExtDeriv K n) ⊔
+    (polyForm K n s (k + 1)).map (koszul K n)
+
+/-- **The classification of the invariant spaces of polynomial forms** on `Kⁿ`, `K` of
+characteristic `0` ([AFW2006], §3.4). -/
+structure AffineInvariantForms [CharZero K] : Prop where
+  /-- the images `dH_rΛᵏ` and `κH_rΛᵏ` are linearly invariant, among them the summands
+  `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` (§3.4) -/
+  isLinearInvariant_map_homForm (r k : ℕ) :
+    IsLinearInvariant K n ((homForm K n r k).map (polyExtDeriv K n)) ∧
+      IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
+  /-- every `GL(n)`-invariant subspace of `H_{r+1}Λ^{k+1}` is `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}`
+  or `H_{r+1}Λ^{k+1}`: the summands of (3.10) are irreducible (§3.4, before Lemma 3.7) -/
+  eq_of_le_homForm (r k : ℕ) (W : Submodule K (PolyForm K n)) (hW : IsGLInvariant K n W)
+    (hle : W ≤ homForm K n (r + 1) (k + 1)) :
+    W = ⊥ ∨ W = (homForm K n (r + 2) k).map (polyExtDeriv K n) ∨
+      W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1)
+  /-- `dP_{r+1}Λ^{k-1}` is affinely invariant ((3.18)) -/
+  isAffineInvariant_map_extDeriv (r k : ℕ) :
+    IsAffineInvariant K n ((polyForm K n (r + 1) (k - 1)).map (polyExtDeriv K n))
+  /-- `X(r, s, k)` is affinely invariant for `s ≤ r`, `k ≥ 1` (Theorem 3.5) -/
+  isAffineInvariant_invariantForm (r s k : ℕ) (hk : 1 ≤ k) (hs : s ≤ r) :
+    IsAffineInvariant K n (invariantForm K n r s k)
+  /-- `X(r, r, k) = P_{r+1}⁻Λᵏ` (Theorem 3.5, case `s = r`) -/
+  invariantForm_eq_polyFormMinus (r k : ℕ) (hk : 1 ≤ k) :
+    invariantForm K n r r k = polyFormMinus K n (r + 1) k
+  /-- `X(r + 1, r, k) = P_{r+1}Λᵏ` (Theorem 3.5, case `s = r - 1`) -/
+  invariantForm_eq_polyForm (r k : ℕ) (hk : 1 ≤ k) :
+    invariantForm K n (r + 1) r k = polyForm K n (r + 1) k
+  /-- `dP_1Λ^{k-1} = P_0Λᵏ`, that is `X(0, -1, k) = P_0Λᵏ` (Theorem 3.5, case `s = r - 1`,
+  `r = 0`) -/
+  map_extDeriv_polyForm_one (k : ℕ) (hk : 1 ≤ k) :
+    (polyForm K n 1 (k - 1)).map (polyExtDeriv K n) = polyForm K n 0 k
+  /-- for `0 < k < n` every nonzero finite-dimensional space of `k`-forms mapped into itself by the
+  pullback along every invertible affine map is `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r`
+  (Theorem 3.6) -/
+  eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule K (PolyForm K n))
+    [FiniteDimensional K V] (hV : ∀ (g : GL (Fin n) K) b, V.map (pullback K n g b) ≤ V)
+    (hdeg : ∀ w ∈ V, ∀ s, s.card ≠ k → w s = 0) (hne : V ≠ ⊥) :
+    ∃ r, V = (polyForm K n (r + 1) (k - 1)).map (polyExtDeriv K n) ∨
+      ∃ s ≤ r, V = invariantForm K n r s k
+
+end Poly
 
 /-- The **evaluation** of a polynomial form: the form field `x ↦ (ω_s(x))_s`. -/
-def evalForm : PolyForm n →ₗ[ℝ] FormField n :=
+def evalForm : PolyForm ℝ n →ₗ[ℝ] FormField n :=
   LinearMap.pi fun x => LinearMap.pi fun s =>
     (MvPolynomial.aeval x).toLinearMap ∘ₗ LinearMap.proj s
 
@@ -499,7 +345,8 @@ def evalForm : PolyForm n →ₗ[ℝ] FormField n :=
 form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
 `r_k ≥ 1`, followed in degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. (The piecewise
 constants `P_0Λⁿ` are represented by the equal space `P_1⁻Λⁿ`; the spaces of degree `k > n`
-are `0`.) -/
+are `0`. A full space `P_0Λᵏ` with `k < n` is excluded: it is followed by `P_0⁻Λᵏ⁺¹ = 0`, and
+such a family could not approximate `HΛᵏ⁺¹(Ω)`.) -/
 structure PolySeq where
   /-- `P_{r_k}Λᵏ` (`true`) or `P_{r_k}⁻Λᵏ` (`false`) in degree `k` -/
   full : ℕ → Bool
@@ -515,13 +362,13 @@ variable (S : PolySeq)
 
 /-- The space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of form fields on `ℝⁿ` of the sequence in degree `k`. -/
 def space (n k : ℕ) : Submodule ℝ (FormField n) :=
-  (if S.full k then polyForm (n := n) (S.deg k) k else polyFormMinus (S.deg k) k).map evalForm
+  (if S.full k then polyForm ℝ n (S.deg k) k else polyFormMinus ℝ n (S.deg k) k).map evalForm
 
 /-- `S` **reproduces polynomial forms of degree `s`** in the form degrees `j` and `j + 1`:
 `P_sΛʲ ⊆ S_j` and `P_sΛʲ⁺¹ ⊆ S_{j+1}` (vacuous for `j < 0`). -/
 def PolyOrderAt (n s : ℕ) (j : ℤ) : Prop :=
-  ∀ k : ℕ, (k : ℤ) = j → (polyForm (n := n) s k).map evalForm ≤ S.space n k ∧
-    (polyForm (n := n) s (k + 1)).map evalForm ≤ S.space n (k + 1)
+  ∀ k : ℕ, (k : ℤ) = j → (polyForm ℝ n s k).map evalForm ≤ S.space n k ∧
+    (polyForm ℝ n s (k + 1)).map evalForm ≤ S.space n (k + 1)
 
 end PolySeq
 
@@ -622,6 +469,22 @@ def femSpaceMin (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) 
   {u | ∃ p, IsFemPieces Ω M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T, F.card = n →
     (∀ T' ∈ M.simplices, F ⊆ vertexSet T' → T' = T) →
       ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
+
+/-! ### Degrees of freedom ([AFW2006], §4) -/
+
+/-- The **moment** `∫_f tr_f w ∧ η` of a form field `w` on `ℝⁿ` against a form field `η` on
+`ℝᵐ`, over the `m`-face `f` of the simplex `p_0, …, p_n` with the vertices `p_{e 0}, …, p_{e m}`:
+`f` is parametrized by `φ(y) = p_{e 0} + Σ_l y_l (p_{e (l+1)} - p_{e 0})` on the reference
+simplex `T̂_m = {y ∈ ℝᵐ | y ≥ 0, Σ_l y_l ≤ 1}` (oriented by the order of its vertices), and the
+integrand is the `dy_0 ∧ ⋯ ∧ dy_{m-1}` coefficient `Σ_s ε(s, sᶜ) (φ^*w)_s η_{sᶜ}` of `φ^*w ∧ η`,
+with `(φ^*w)_s(y) = w(φ y)(∂_{s₁}φ, …, ∂_{s_j}φ)` and `ε(s, sᶜ) = Π_{a ∈ s} ε(a, sᶜ)` the sign
+of `dy_s ∧ dy_{sᶜ} = ε(s, sᶜ) dy_0 ∧ ⋯ ∧ dy_{m-1}`. -/
+def faceMoment (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1))
+    (η : FormField m) (w : FormField n) : ℝ :=
+  ∫ y in {y : Fin m → ℝ | (∀ l, 0 ≤ y l) ∧ ∑ l, y l ≤ 1}, ∑ s : Finset (Fin m),
+    (∏ a ∈ s, sgn a sᶜ) *
+      covEval (w fun i => p (e 0) i + ∑ l, y l * (p (e l.succ) i - p (e 0) i))
+        (fun j i => p (e (s.orderEmbOfFin rfl j).succ) i - p (e 0) i) * η y sᶜ
 
 /-! ### Smooth forms -/
 

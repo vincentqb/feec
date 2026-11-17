@@ -39,7 +39,7 @@ theorem univ_orderEmbOfFin_apply {k : ℕ} (h : (Finset.univ : Finset (Fin k)).c
 
 /-- **The value of a covector on vectors is the pullback along their matrix.** -/
 theorem covEval_eq {k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) :
-    covEval α v = pullback (fun i l => v l i) α univ := by
+    covEval α v = Feec.ExteriorFibre.pullback (fun i l => v l i) α univ := by
   rw [pullback_apply, covEval]
   refine Finset.sum_congr rfl fun s _ => ?_
   have hu : (univ : Finset (Fin k)).card = k := by simp

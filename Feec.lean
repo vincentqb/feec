@@ -140,6 +140,7 @@ public import Feec.ForMathlib.Analysis.Inequalities
 public import Feec.ForMathlib.Analysis.Complexification
 public import Feec.ForMathlib.Analysis.NormedComplexification
 public import Feec.ForMathlib.Analysis.Polynomial
+public import Feec.ForMathlib.Analysis.QuasiOptimal
 public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.Calculus.DifferenceLaplacian

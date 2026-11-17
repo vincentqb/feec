@@ -80,6 +80,13 @@ theorem bgg_hess (ξ : Freq) (c : ℂ) : bgg ξ (hessM ξ c) = 0 := by
   change WithLp.toLp 2 (0, curl ξ (grad ξ _)) = 0
   rw [curl_grad]; rfl
 
+/-- `(S₁, curl_ξ)† (0, N) = curl_ξ N`. -/
+theorem adjoint_bgg_inr (ξ : Freq) (N : Mat) :
+    ContinuousLinearMap.adjoint (bgg ξ) (WithLp.toLp 2 ((0 : Vec), N)) = curl ξ N := by
+  refine ext_inner_left ℂ fun M => ?_
+  rw [ContinuousLinearMap.adjoint_inner_right, bgg_apply, WithLp.prod_inner_apply,
+    WithLp.ofLp_toLp, WithLp.ofLp_toLp, inner_zero_right, zero_add, inner_curl]
+
 theorem inner_VM (v w : VM) :
     ⟪v, w⟫_ℂ = ⟪(WithLp.ofLp v).1, (WithLp.ofLp w).1⟫_ℂ + ⟪(WithLp.ofLp v).2, (WithLp.ofLp w).2⟫_ℂ :=
   WithLp.prod_inner_apply v w

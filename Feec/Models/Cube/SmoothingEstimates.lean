@@ -769,12 +769,12 @@ theorem cubeSimplex_points_apply (N : ℕ) (m : Fin n → Fin (N + 1)) (σ : Equ
     (cubeSimplex N m σ).points j i = hN N * ((m i : ℕ) + kuhnVertex σ j i) := by
   rw [cubeSimplex_points]; simp [finLattice]
 
-/-- **A face in the lower face `{yᵢ = 0}` of the cube lies in a boundary facet**. -/
+/-- **A face in the lower face `{yᵢ = 0}` of the cube lies in a boundary facet in that face**. -/
 theorem exists_boundaryFacet_of_lower {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n))
     (i : Fin n) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet (cubeSimplex N m σ))
     (hg0 : ∀ v ∈ g, v i = 0) (hgne : g.Nonempty) :
     ∃ T'' ∈ (mesh n N).simplices, ∃ F, (mesh n N).IsBoundaryFacet F ∧
-      F ⊆ vertexSet T'' ∧ g ⊆ F := by
+      F ⊆ vertexSet T'' ∧ g ⊆ F ∧ ∀ v ∈ F, v i = 0 := by
   classical
   have hh := hN_pos N
   set p := σ.symm i
@@ -829,7 +829,7 @@ theorem exists_boundaryFacet_of_lower {N : ℕ} (m : Fin n → Fin (N + 1)) (σ 
     rw [cubeSimplex_points_apply]
     simp only [kuhnVertex, hσi, hmi]
     simp [show ¬ (n - 1 < (j : ℕ)) by omega]
-  refine ⟨T'', cubeSimplex_mem N m σ'', F, ?_, hFT, ?_⟩
+  refine ⟨T'', cubeSimplex_mem N m σ'', F, ?_, hFT, ?_, hF0⟩
   · refine isBoundaryFacet_of_coord ⟨hFc, T'', cubeSimplex_mem N m σ'', hFT⟩ i 0 1 one_ne_zero
       (fun T hT v hv => ?_) hF0
     have := (apply_mem_Icc_of_mem_vertexSet hT hv i).1; linarith
@@ -843,12 +843,12 @@ theorem exists_boundaryFacet_of_lower {N : ℕ} (m : Fin n → Fin (N + 1)) (σ 
       omega
     · rw [← hsame j hjp]; exact points_mem_vertexSet _ _
 
-/-- **A face in the upper face `{yᵢ = ½}` of the cube lies in a boundary facet**. -/
+/-- **A face in the upper face `{yᵢ = ½}` of the cube lies in a boundary facet in that face**. -/
 theorem exists_boundaryFacet_of_upper {N : ℕ} (m : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n))
     (i : Fin n) {g : Finset (Fin n → ℝ)} (hgT : g ⊆ vertexSet (cubeSimplex N m σ))
     (hg0 : ∀ v ∈ g, v i = 1 / 2) (hgne : g.Nonempty) :
     ∃ T'' ∈ (mesh n N).simplices, ∃ F, (mesh n N).IsBoundaryFacet F ∧
-      F ⊆ vertexSet T'' ∧ g ⊆ F := by
+      F ⊆ vertexSet T'' ∧ g ⊆ F ∧ ∀ v ∈ F, v i = 1 / 2 := by
   classical
   have hh := hN_pos N
   have hhN : hN N * ((N : ℝ) + 1) = 1 / 2 := by
@@ -904,7 +904,7 @@ theorem exists_boundaryFacet_of_upper {N : ℕ} (m : Fin n → Fin (N + 1)) (σ 
     rw [cubeSimplex_points_apply]
     simp only [kuhnVertex, hσi, hmi]
     simp only [hj0, ite_true, ← hhN]
-  refine ⟨T'', cubeSimplex_mem N m σ'', F, ?_, hFT, ?_⟩
+  refine ⟨T'', cubeSimplex_mem N m σ'', F, ?_, hFT, ?_, hF0⟩
   · refine isBoundaryFacet_of_coord ⟨hFc, T'', cubeSimplex_mem N m σ'', hFT⟩ i (1 / 2) (-1)
       (by norm_num) (fun T hT v hv => ?_) hF0
     have := (apply_mem_Icc_of_mem_vertexSet hT hv i).2; linarith

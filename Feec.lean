@@ -350,6 +350,7 @@ public import Feec.Models.Cube.InhomogeneousLeapfrog
 public import Feec.Models.Cube.Mirror
 public import Feec.Models.Cube.MirrorBGG
 public import Feec.Models.Cube.MirrorBase
+public import Feec.Models.Cube.MirrorConstraint
 public import Feec.Models.Cube.MirrorDirichlet
 public import Feec.Models.Cube.MirrorExt
 public import Feec.Models.Cube.MirrorSym

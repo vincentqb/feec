@@ -587,8 +587,10 @@ theorem exists_isBoundaryFacet_of_plane [NeZero n] (N : ℕ) {T : Affine.Simplex
     exact ⟨T'', hT'', F, hF, hFT, Finset.empty_subset _⟩
   · obtain ⟨m, σ, rfl⟩ := mem_mesh_simplices.1 hT
     rcases hgc with h | h
-    · exact exists_boundaryFacet_of_lower m σ i hg h hne
-    · exact exists_boundaryFacet_of_upper m σ i hg h hne
+    · obtain ⟨T'', hT'', F, hF, hFT, hgF, -⟩ := exists_boundaryFacet_of_lower m σ i hg h hne
+      exact ⟨T'', hT'', F, hF, hFT, hgF⟩
+    · obtain ⟨T'', hT'', F, hF, hFT, hgF, -⟩ := exists_boundaryFacet_of_upper m σ i hg h hne
+      exact ⟨T'', hT'', F, hF, hFT, hgF⟩
 
 /-- **`J = univ` on the Freudenthal meshes: vanishing boundary DOFs are the partial spaces.** -/
 theorem globalSpacePartial_univ_eq [NeZero n] (E : LocalElement n) (N k : ℕ) :

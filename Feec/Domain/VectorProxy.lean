@@ -27,6 +27,9 @@ and vector fields: `f = ω_∅`, `v_j = ω_{j}`, `u_k = ±ω_{{k}ᶜ}` (`u = (ω
   (`ConstCoeffComplex.maximalComplex_ofMatrixCLM_comm`, from
   `ConstCoeffComplex.maximalComplex_comm`: maps intertwining the maximal operators degree by
   degree are cochain maps).
+* `ConstCoeffOp.minimal_ofMatrixCLM_of_comm`: the same intertwining maps minimal domains
+  (closures of the graphs on test fields), e.g. `H̊Λ¹(Ω)` and `d_min` into `H̊(curl, Ω)` and
+  `curl_min`.
 * **`deRhamVec_maximalComplex_eq_map`**: the maximal vector-proxy complex
   `H¹(Ω) --grad--> H(curl, Ω) --curl--> H(div, Ω) --div--> L²(Ω)` (`deRhamVec ℝ 1`) is the
   unitary transport of the maximal de Rham complex `HΛ⁰(Ω) → HΛ¹(Ω) → HΛ²(Ω) → L²Λ³(Ω)` along the
@@ -126,6 +129,32 @@ theorem maximal_ofMatrixCLM_of_comm (hΩ : IsOpen Ω) {A : ConstCoeffOp E 𝕜 �
   obtain ⟨hu, he⟩ := maximal_ofMatrixCLM hΩ (M' := -M') (fun f hf => by
     rw [h f hf, ofMatrix_neg_apply, neg_neg]) u
   exact ⟨hu, by rw [he, L2F.ofMatrixCLM_neg, neg_neg]⟩
+
+/-- **A constant matrix intertwining two operators maps minimal domains**: if `A M = M' B` on
+smooth fields, then `M D(B_min) ⊆ D(A_min)` with `A_min (M u) = M' (B_min u)`: `M` maps test
+fields to test fields, hence the graph of `B` on test fields into that of `A`, and the closures
+of these graphs into each other by continuity. -/
+theorem minimal_ofMatrixCLM_of_comm (hΩ : IsOpen Ω) {A : ConstCoeffOp E 𝕜 ι' κ'}
+    {B : ConstCoeffOp E 𝕜 ι κ} {M : Matrix ι' ι 𝕜} {M' : Matrix κ' κ 𝕜}
+    (h : ∀ f : ι → E → 𝕜, (∀ i, ContDiff ℝ ∞ (f i)) →
+      A.apply ((ofMatrix M).apply f) = (ofMatrix M').apply (B.apply f))
+    (u : (B.minimal Ω).domain) :
+    ∃ hu : L2F.ofMatrixCLM M (u : L2F 𝕜 Ω ι) ∈ (A.minimal Ω).domain,
+      A.minimal Ω ⟨_, hu⟩ = L2F.ofMatrixCLM M' (B.minimal Ω u) := by
+  let P : L2F 𝕜 Ω ι × L2F 𝕜 Ω κ →L[𝕜] L2F 𝕜 Ω ι' × L2F 𝕜 Ω κ' :=
+    (L2F.ofMatrixCLM M).prodMap (L2F.ofMatrixCLM M')
+  have hT : (B.testGraph Ω : Set _) ⊆ P ⁻¹' (A.testGraph Ω).topologicalClosure := by
+    rintro _ ⟨φ, hφ, rfl⟩
+    refine Submodule.le_topologicalClosure _ ⟨_, (ofMatrix M).isTestField_apply hφ, ?_⟩
+    refine Prod.ext (L2F.ofMatrixCLM_testField M hφ) ?_
+    change L2F.ofMatrixCLM M' (testField (B.isTestField_apply hφ)) = _
+    rw [L2F.ofMatrixCLM_testField]
+    exact testField_congr _ _ (h φ fun i => (hφ i).contDiff).symm
+  have hcl : IsClosed (P ⁻¹' (A.testGraph Ω).topologicalClosure : Set _) :=
+    (Submodule.isClosed_topologicalClosure _).preimage P.continuous
+  have hm := closure_minimal hT hcl (B.mem_closure_minimal hΩ u)
+  rw [Set.mem_preimage, ← A.minimal_graph hΩ] at hm
+  exact ⟨LinearPMap.mem_domain_of_mem_graph hm, ((LinearPMap.image_iff _).2 hm).symm⟩
 
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in

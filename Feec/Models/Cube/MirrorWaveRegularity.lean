@@ -78,7 +78,7 @@ open Set MeasureTheory Filter Finset
 namespace Feec.Models.Cube.MirrorWeakSymmetry
 
 open Feec.Fourier.GradCurl (Mat Vec curl curl_apply)
-open Feec.Fourier.BGG (VM bgg bgg_apply bggFamily tsdB mem_tsdB)
+open Feec.Fourier.BGG (VM bgg bgg_apply adjoint_bgg_inr bggFamily tsdB mem_tsdB)
 open Feec.ShortHilbertComplex (W3)
 open Feec.HilbertComplex (totalSub totalJ)
 open Feec.Models.Cube.Mirror (MQ VQ)
@@ -351,14 +351,6 @@ theorem memSobState_waveGroupQ_iff (s t : ℝ) (x : PiLp 2 MirrorBGG.SpaceQ) :
 /-! ### `L` on TSD states, one frequency at a time -/
 
 open Feec.Fourier.GradCurl (tsd norm_curl_of_mem_tsd)
-
-/-- `(S₁, curl)_ξ† (0, N) = curl_ξ N`. -/
-theorem adjoint_bgg_inr (ξ : Fourier.GradCurl.Freq) (N : Mat) :
-    ContinuousLinearMap.adjoint (bgg ξ) (WithLp.toLp 2 ((0 : Vec), N)) = curl ξ N := by
-  refine ext_inner_left ℂ fun M => ?_
-  rw [ContinuousLinearMap.adjoint_inner_right, bgg_apply, WithLp.prod_inner_apply,
-    WithLp.ofLp_toLp, WithLp.ofLp_toLp, inner_zero_right, zero_add,
-    Fourier.GradCurl.inner_curl]
 
 theorem norm_sq_VM (w : VM) : ‖w‖ ^ 2 = ‖(WithLp.ofLp w).1‖ ^ 2 + ‖(WithLp.ofLp w).2‖ ^ 2 :=
   WithLp.prod_norm_sq_eq_of_L2 w

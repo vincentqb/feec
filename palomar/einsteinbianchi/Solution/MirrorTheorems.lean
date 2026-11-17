@@ -161,23 +161,11 @@ theorem mirror_tsd_propagates_of :
 /-- **The rate of the mirror scheme on TSD solutions** (`FEEC.mirror_weakSymmetry_cube`):
 `mirror_fem_main` read on `U = Re e^{tL} cplx U₀`. -/
 theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
-    (Q : ℕ → mirrorData.Discretization) (C K : ℝ), IsMeshFamily (cube 3) 𝒯 ∧ IsFreudenthal 𝒯 ∧
-    (∀ N, ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpace (cube 3) (𝒯 N) topSeq 0 ∧
-      ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpace (cube 3) (𝒯 N) topSeq 1 ∧
-      ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpace (cube 3) (𝒯 N) topSeq 2 ∧
-      ((Q N).Vt0 : Set (L2Vec (cube 3) 0)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (𝒯 N) bottomSeq 0} ∧
-      ((Q N).Vt1 : Set (L2Vec (cube 3) 1)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (𝒯 N) bottomSeq 1} ∧
-      ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (𝒯 N) bottomSeq 2}) ∧
-    (∀ N, (Q N).IsBounded C ∧ (Q N).Compatible ∧ (Q N).IsConsistent C (meshSize (𝒯 N))) ∧
-    (∀ N T σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T →
-      (Q N).IsDiscreteWave T 0 σ φ u M ρ lam → (Q N).IsDiscreteWave T 0 σ' φ' u' M' ρ' lam' →
-      σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
-      ∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
-    (∀ N T σ φ u M ρ lam, 0 < T → (Q N).IsDiscreteWave T 0 σ φ u M ρ lam →
-      (Q N).IsGauss (σ 0) (u 0) → ∀ t ∈ Icc 0 T, (Q N).IsGauss (σ t) (u t)) ∧
+    (Q : ℕ → mirrorData.Discretization) (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧
+    mirrorData.IsBGG ∧
+    (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ σ φ u M ρ lam,
+      (Q N).IsDiscreteWave T 0 σ φ u M ρ lam ∧ (Q N).IsGauss (σ 0) (u 0) ∧
+        (u 0 : L2Vec (cube 3) 1) ≠ 0 ∧ ∃ t ∈ Ioc 0 T, M t ≠ M 0) ∧
     ∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
       mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
       IsStrongSolution mirrorData.IsWave (Icc 0 T) U →
@@ -186,9 +174,8 @@ theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
           ‖(U t).2.2.2 - ρh t‖ ^ 2) ≤
         K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
           meshSize (𝒯 N) := by
-  obtain ⟨𝒯, Q, C, K, h𝒯, hF, hV, hB, hU, hG, -, hK⟩ := mirror_fem_main
-  refine ⟨𝒯, Q, C, K, h𝒯, hF, hV, hB, hU, hG,
-    fun N T U₀ V₁ V₂ V₃ U hT h1 h2 h3 hU₀ hU0 hUs => ?_⟩
+  obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, -, hK⟩ := mirror_fem_main
+  refine ⟨𝒯, Q, C, K, hQ, hBGG, hG, fun N T U₀ V₁ V₂ V₃ U hT h1 h2 h3 hU₀ hU0 hUs => ?_⟩
   obtain ⟨hd0, hc0, hw0, hV₁⟩ := forward h1 hU₀
   obtain ⟨hd1, -, hw1, hV₂⟩ := forward h2 hV₁
   obtain ⟨hd2, -, hw2, hV₃⟩ := forward h3 hV₂

@@ -2,9 +2,9 @@
 # formalization.yaml v0.4 for the Palomar submission of finite element exterior calculus for
 # Hilbert complexes (`palomar/feec/`; it replaces the former packages palomar/static,
 # palomar/dynamic and palomar/constraints, whose general compared theorems it contains, and absorbs
-# palomar/bgg, whose BGG theorems it contains; the weak-symmetry theorems of palomar/bgg,
-# FEEC.bggWeakSymmetry and FEEC.bggWeakSymmetry_nonvacuous, moved to palomar/einsteinbianchi,
-# next to their finite element instance on the cube).
+# palomar/bgg, whose BGG theorems it contains; the weak-symmetry theorem of palomar/bgg,
+# FEEC.bggWeakSymmetry, moved to palomar/einsteinbianchi, whose non-vacuity is its finite
+# element instance on the cube, FEEC.weakSymmetry_cube, replacing FEEC.bggWeakSymmetry_nonvacuous).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
@@ -291,9 +291,9 @@ status:
     FEEC.crime_nonvacuous, FEEC.feec_cube, FEEC.bggCohomology, FEEC.bggFinrank and
     FEEC.bggHilbert (Challenge.lean, 999 lines; the definitions were redesigned to fit the limit,
     see review.notes). The weak-symmetry theorems of the former
-    palomar/bgg (FEEC.bggWeakSymmetry, FEEC.bggWeakSymmetry_nonvacuous and their definitions
-    WeakSymmetryData, Discretization) moved to palomar/einsteinbianchi, next to their finite
-    element instance on the cube (Table 5.1). Not compared, proved in Feec: of the former
+    palomar/bgg (FEEC.bggWeakSymmetry and its definitions WeakSymmetryData, Discretization) moved
+    to palomar/einsteinbianchi, where its finite element instance on the cube (Table 5.1),
+    FEEC.weakSymmetry_cube, replaces FEEC.bggWeakSymmetry_nonvacuous as its non-vacuity. Not compared, proved in Feec: of the former
     palomar/bgg, the identification of Gamma / Delta with the output complex (24)-(26), Theorem 7,
     Proposition 1, Corollary 1 and the Moore-Penrose form of (30) (FEEC.bggIdentification,
     FEEC.bggSum, FEEC.bggExplicit, FEEC.bggOrthogonal; near-definitional bookkeeping, compared in

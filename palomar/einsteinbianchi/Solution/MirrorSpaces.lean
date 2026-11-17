@@ -11,10 +11,11 @@ On a mesh `M` of `Ω`, the glued space `V_{h,Γ}ᵏ` of `Feec.FiniteElement.poly
 vertex set of `Γ`) is the space of finite element pieces whose tangential traces vanish on these
 faces (`mem_VPartial_iff`). On the Freudenthal meshes of the cube with
 `Γ = partialFaces J`, vanishing traces on all faces lying in a face `{y_j = 0}`, `{y_j = ½}`,
-`j ∈ J`, of the cube is vanishing traces on the facets lying there (`femSpacePart`): every such
+`j ∈ J`, of the cube is vanishing traces on the facets lying there (`femSpace`): every such
 face lies in a facet of some simplex lying in the same face of the cube (`exists_planeFacet`),
-and traces are single-valued (`isFemPieces_iff_partial`). So the spaces of `mirrorQ` are `femSpace` of `topSeq` and
-`femSpacePart {a}` of `bottomSeq` (`mirrorQ_spaces`).
+and traces are single-valued (`isFemPieces_iff_partial`). So the spaces of `mirrorQ` are
+`femSpace ∅` of `topSeq` and `femSpace {a}` of `bottomSeq` (`mirrorQ_spaces`), and
+`femSpace univ` is the space with vanishing boundary traces (`femSpace_univ_eq`).
 
 ## References
 
@@ -129,7 +130,7 @@ theorem isFemPieces_iff_partial (S : PolySeq) (N : ℕ) (J : Finset (Fin 3)) (k 
     (∃ p, IsFemPieces (cube 3) (cubeMesh N) S k u p ∧
       ∀ T ∈ (cubeMesh N).simplices, ∀ g ⊆ vertexSet T, (∃ F ∈ partialFaces 3 J, g ⊆ F) →
         ∀ x ∈ convexHull ℝ (g : Set (Fin 3 → ℝ)), TraceEq g k.toNat (p T x) 0) ↔
-      u ∈ femSpacePart J (cubeMesh N) S k := by
+      u ∈ femSpace J (cubeMesh N) S k := by
   refine ⟨fun ⟨p, hp, hb⟩ => ⟨p, hp, fun T hT F hFT _ hF => hb T hT F hFT ⟨F, hF, subset_rfl⟩⟩,
     fun ⟨p, hp, hb⟩ => ⟨p, hp, fun T hT g hgT ⟨F, ⟨j, hj, hFj⟩, hgF⟩ x hx => ?_⟩⟩
   rcases g.eq_empty_or_nonempty with rfl | hne
@@ -149,10 +150,10 @@ theorem isFemPieces_iff_partial (S : PolySeq) (N : ℕ) (J : Finset (Fin 3)) (k 
   rw [traceEq_iff]
   exact fun V hV => ((h2.mono hg2) V hV).trans ((h1.mono hgF') V hV)
 
-/-- **The spaces of `polyPartial` are the challenge's `femSpacePart`.** -/
+/-- **The spaces of `polyPartial` are the challenge's `femSpace`.** -/
 theorem polyPartial_V_eq (S : PolySeq) (N : ℕ) (J : Finset (Fin 3)) (k : ℤ) :
     (SetLike.coe ((polyPartial 3 S.toFeec N J).V k) : Set (L2Form (cube 3) k)) =
-      femSpacePart J (cubeMesh N) S k := by
+      femSpace J (cubeMesh N) S k := by
   have h := partialSubcomplexOfEq_V S (mesh 3 N) (mesh_domain 3 N) (mesh_domain_eq_Q N)
     (isOpen_cubeDomain 3) (cubeDomain_subset_Q 3) J k
   ext u
@@ -160,12 +161,13 @@ theorem polyPartial_V_eq (S : PolySeq) (N : ℕ) (J : Finset (Fin 3)) (k : ℤ) 
   simp only [eq_iff_iff] at hu
   exact hu.trans (isFemPieces_iff_partial S N J k u)
 
-/-- Without boundary condition, `femSpacePart` is `femSpace`. -/
-theorem femSpacePart_empty (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
-    femSpacePart ∅ M S k = femSpace (cube n) M S k := by
-  ext u
-  exact ⟨fun ⟨p, hp, _⟩ => ⟨p, hp⟩, fun ⟨p, hp⟩ => ⟨p, hp, fun _ _ _ _ _ ⟨_, hj, _⟩ =>
-    absurd hj (Finset.notMem_empty _)⟩⟩
+/-- **With vanishing traces on all faces, `femSpace` is the space with vanishing boundary
+traces** (Freudenthal meshes, `Feec.Models.Cube.FEM.polyPartial_univ_V`). -/
+theorem femSpace_univ_eq (S : PolySeq) (N : ℕ) (k : ℤ) :
+    femSpace Finset.univ (cubeMesh N) S k = femSpaceMinOn (cubeDomain 3) (cubeMesh N) S k := by
+  rw [← polyPartial_V_eq]
+  exact (congrArg (fun P => (SetLike.coe P : Set (L2Form (cube 3) k)))
+    (polyPartial_univ_V S.toFeec N k)).trans (polyMin_V_eq S N k)
 
 section Spaces
 
@@ -175,20 +177,19 @@ variable {ρ : ℕ → Feec.Models.Cube.ParitySmoother.ReflKernel 3} {C : ℝ}
 
 /-- **The spaces of `mirrorQ` are the elements of Table 6.1 with the mirror conditions.** -/
 theorem mirrorQ_spaces (N : ℕ) :
-    ((mirrorQ hT hB N).V0 : Set W0) = femSpace (cube 3) (cubeMesh N) topSeq 0 ∧
-      ((mirrorQ hT hB N).V1 : Set W1) = femSpace (cube 3) (cubeMesh N) topSeq 1 ∧
-      ((mirrorQ hT hB N).V2 : Set W2) = femSpace (cube 3) (cubeMesh N) topSeq 2 ∧
+    ((mirrorQ hT hB N).V0 : Set W0) = femSpace ∅ (cubeMesh N) topSeq 0 ∧
+      ((mirrorQ hT hB N).V1 : Set W1) = femSpace ∅ (cubeMesh N) topSeq 1 ∧
+      ((mirrorQ hT hB N).V2 : Set W2) = femSpace ∅ (cubeMesh N) topSeq 2 ∧
       ((mirrorQ hT hB N).Vt0 : Set (Wv W0)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (cubeMesh N) bottomSeq 0} ∧
+        {v | ∀ a, v a ∈ femSpace {a} (cubeMesh N) bottomSeq 0} ∧
       ((mirrorQ hT hB N).Vt1 : Set (Wv W1)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (cubeMesh N) bottomSeq 1} ∧
+        {v | ∀ a, v a ∈ femSpace {a} (cubeMesh N) bottomSeq 1} ∧
       ((mirrorQ hT hB N).Vt2 : Set (Wv W2)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (cubeMesh N) bottomSeq 2} := by
+        {v | ∀ a, v a ∈ femSpace {a} (cubeMesh N) bottomSeq 2} := by
   have hT' := fun k => polyPartial_V_eq topSeq N ∅ k
   have hB' := fun a k => polyPartial_V_eq bottomSeq N {a} k
   rw [topSeq_toFeec] at hT'
   rw [bottomSeq_toFeec] at hB'
-  simp only [femSpacePart_empty] at hT'
   refine ⟨hT' 0, hT' 1, hT' 2, ?_, ?_, ?_⟩ <;>
   · ext v
     exact forall_congr' fun a => by rw [← hB']; rfl

@@ -8,7 +8,7 @@ public import Feec.Models.Parallelepiped.StarShaped
 
 The Freudenthal meshes of `Feec.Models.Cube.FEM.mesh` are a mesh family of the challenge
 (`isMeshFamily_cube`, from `Feec.Models.StarShaped.CubeWitness.meshFamily`) named by their
-vertices (`points_cube`), and the spaces of `cubeQ` are the challenge's `femSpaceMin` of
+vertices (`points_cube`), and the spaces of `cubeQ` are the challenge's `femSpaceMinOn` of
 `topSeq` and `bottomSeq` (`cubeQ_spaces`, from `mem_V₀_iff`), these being `Feec`'s
 `PolySeq.lowestOrder` and `PolySeq.lagrangeP2` (`topSeq_toFeec`, `bottomSeq_toFeec`).
 
@@ -94,7 +94,7 @@ theorem minimalSubcomplexOfEq_V (S : PolySeq) (m : Feec.Mesh.SimplicialMesh 3)
     (k : ℤ) :
     (SetLike.coe (((deRham ℝ 3).minimalSubcomplexOfEq h hm hΩ
       (S.toFeec.subcomplexMin m hm x₀ hstar)).V k) : Set (L2Form Ω k)) =
-      femSpaceMin Ω (SimplicialMesh.ofFeec m) S k := by
+      femSpaceMinOn Ω (SimplicialMesh.ofFeec m) S k := by
   obtain ⟨T, d, h1, h2, h3⟩ := m
   subst h
   ext u
@@ -103,7 +103,7 @@ theorem minimalSubcomplexOfEq_V (S : PolySeq) (m : Feec.Mesh.SimplicialMesh 3)
 /-- The cube's finite element spaces with vanishing boundary DOFs are the challenge's. -/
 theorem polyMin_V_eq (S : PolySeq) (N : ℕ) (k : ℤ) :
     (SetLike.coe ((polyMin 3 S.toFeec N).V k) : Set (L2Form (cubeDomain 3) k)) =
-      femSpaceMin (cubeDomain 3) (cubeMesh N) S k :=
+      femSpaceMinOn (cubeDomain 3) (cubeMesh N) S k :=
   minimalSubcomplexOfEq_V S _ _ _ _ _ _ k
 
 end FEEC

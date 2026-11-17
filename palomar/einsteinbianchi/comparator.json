@@ -1,8 +1,9 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.tsd_not_propagates", "FEEC.mirror_tsd_propagates",
-    "FEEC.mirror_weakSymmetry_cube", "FEEC.weakSymmetry_cube", "FEEC.weakSymmetry_cube_nonvacuous"],
+  "theorem_names": ["FEEC.bggWeakSymmetry", "FEEC.tsd_not_propagates", "FEEC.box_stationary",
+    "FEEC.mirror_tsd_propagates", "FEEC.mirror_weakSymmetry_cube", "FEEC.weakSymmetry_cube",
+    "FEEC.weakSymmetry_cube_nonvacuous"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

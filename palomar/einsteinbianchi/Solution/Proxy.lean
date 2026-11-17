@@ -232,8 +232,8 @@ theorem fieldB_eq_sum (ρ : L2Vec Ω 2) : fieldB ρ = ∑ a, L2F.ofMatrixCLM (ma
   rfl
 
 /-- **`H̊Λ¹(Ω)³` lies in `H̊(curl, Ω; ℝ³ˣ³)`, with `curl_min E = B(d_min u)`.** -/
-theorem fieldE_mem_curl_minimal (hΩ : IsOpen Ω) (u : (vecOp (dMin Ω 1)).domain) :
-    (fieldE (u : L2Vec Ω 1), fieldB (vecOp (dMin Ω 1) u)) ∈
+theorem fieldE_mem_curl_minimal (hΩ : IsOpen Ω) (u : (vecOpC (dMin Ω 1)).domain) :
+    (fieldE (u : L2Vec Ω 1), fieldB (vecOpC (dMin Ω 1) u)) ∈
       ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).graph := by
   rw [fieldE_eq_sum, fieldB_eq_sum]
   rw [show ∀ (x : Fin 3 → L2F ℝ Ω Ix) (y : Fin 3 → L2F ℝ Ω Ix),
@@ -244,7 +244,7 @@ theorem fieldE_mem_curl_minimal (hΩ : IsOpen Ω) (u : (vecOp (dMin Ω 1)).domai
     rw [← dMin_eq]; exact u.2 a
   obtain ⟨h, e⟩ := ConstCoeffOp.minimal_ofMatrixCLM_of_comm hΩ (A := curlOp 3)
     (fun f _ => curlOp_matE a f) ⟨_, hu⟩
-  have e' : (vecOp (dMin Ω 1) u : L2Vec Ω 2) a = (extDerivOp ℝ 3 1).minimal Ω ⟨_, hu⟩ :=
+  have e' : (vecOpC (dMin Ω 1) u : L2Vec Ω 2) a = (extDerivOp ℝ 3 1).minimal Ω ⟨_, hu⟩ :=
     LinearPMap.apply_of_eq' (dMin_eq Ω 1) ⟨_, u.2 a⟩
   rw [e', ← e]
   exact LinearPMap.mem_graph _ ⟨_, h⟩

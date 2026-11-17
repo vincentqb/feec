@@ -46,7 +46,7 @@ variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedA
 
 theorem mem_graph_vecOp_iff (T : E →ₗ.[ℝ] F) (x : PiLp 2 (fun _ : Fin n => E))
     (y : PiLp 2 (fun _ : Fin n => F)) :
-    (x, y) ∈ (vecOp T).graph ↔ ∀ a, (x a, y a) ∈ T.graph := by
+    (x, y) ∈ (vecOpC T).graph ↔ ∀ a, (x a, y a) ∈ T.graph := by
   constructor
   · intro h a
     obtain ⟨z, rfl, rfl⟩ := (LinearPMap.mem_graph_iff _).1 h
@@ -56,9 +56,9 @@ theorem mem_graph_vecOp_iff (T : E →ₗ.[ℝ] F) (x : PiLp 2 (fun _ : Fin n =>
     refine (LinearPMap.mem_graph_iff _).2 ⟨⟨x, hx⟩, rfl, PiLp.ext fun a => ?_⟩
     exact ((LinearPMap.image_iff (hx a)).2 (h a)).symm
 
-theorem isClosed_vecOp {T : E →ₗ.[ℝ] F} (hT : T.IsClosed) : (vecOp (n := n) T).IsClosed := by
+theorem isClosed_vecOp {T : E →ₗ.[ℝ] F} (hT : T.IsClosed) : (vecOpC (n := n) T).IsClosed := by
   rw [LinearPMap.IsClosed]
-  have e : ((vecOp (n := n) T).graph : Set _) = ⋂ a, (fun p : PiLp 2 (fun _ : Fin n => E) ×
+  have e : ((vecOpC (n := n) T).graph : Set _) = ⋂ a, (fun p : PiLp 2 (fun _ : Fin n => E) ×
       PiLp 2 (fun _ : Fin n => F) => (p.1 a, p.2 a)) ⁻¹' (T.graph : Set (E × F)) := by
     ext p
     simp only [SetLike.mem_coe, mem_iInter, mem_preimage]
@@ -69,8 +69,8 @@ theorem isClosed_vecOp {T : E →ₗ.[ℝ] F} (hT : T.IsClosed) : (vecOp (n := n
     ((PiLp.continuous_apply 2 _ a).comp continuous_snd)
 
 theorem dense_vecOp {T : E →ₗ.[ℝ] F} (hT : Dense (T.domain : Set E)) :
-    Dense ((vecOp (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) := by
-  have e : ((vecOp (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) =
+    Dense ((vecOpC (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) := by
+  have e : ((vecOpC (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) =
       WithLp.toLp 2 '' univ.pi fun _ => (T.domain : Set E) := by
     ext v
     refine ⟨fun hv => ⟨WithLp.ofLp v, fun a _ => hv a, rfl⟩, ?_⟩
@@ -256,9 +256,9 @@ theorem isWave_datumBeta_eq (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
 
 variable (Ω) in
 theorem bggData_eq : bggData Ω = ⟨(extDerivOp ℝ 3 0).minimal Ω, (extDerivOp ℝ 3 1).minimal Ω,
-    vecOp ((extDerivOp ℝ 3 0).minimal Ω), vecOp ((extDerivOp ℝ 3 1).minimal Ω),
+    vecOpC ((extDerivOp ℝ 3 0).minimal Ω), vecOpC ((extDerivOp ℝ 3 1).minimal Ω),
     Feec.FiniteElement.wsL2 (Ω := Ω) 0, Feec.FiniteElement.wsL2 (Ω := Ω) 1⟩ := by
-  change (⟨dMin Ω 0, dMin Ω 1, vecOp (dMin Ω 0), vecOp (dMin Ω 1), wedge Ω 0, wedge Ω 1⟩ :
+  change (⟨dMin Ω 0, dMin Ω 1, vecOpC (dMin Ω 0), vecOpC (dMin Ω 1), wedge Ω 0, wedge Ω 1⟩ :
     WeakSymmetryData (L2Form Ω 0) (L2Form Ω 1) (L2Form Ω 2) (L2Vec Ω 0) (L2Vec Ω 1)
       (L2Vec Ω 2)) = _
   rw [dMin_eq, dMin_eq, wedge_eq, wedge_eq]

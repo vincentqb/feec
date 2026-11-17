@@ -158,7 +158,7 @@ def toExactWave (hw : 𝒟.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam
   cℓ' μ := (continuous_id.inner continuous_const).comp_continuousOn hw.2.2.2.2.2.2.1.2.1
   dσ t ht := hw.1.2.2 t ht
   du t ht := hasDerivWithinAt_piSubtype D1.domain (f := fun s => e1 (u s)) (f' := e1 (u' t))
-    ((vecOp (n := 3) D1).domain.subtypeL.hasFDerivAt.comp_hasDerivWithinAt t (hw.2.1.2.2 t ht))
+    ((vecOpC (n := 3) D1).domain.subtypeL.hasFDerivAt.comp_hasDerivWithinAt t (hw.2.1.2.2 t ht))
   dM t ht := hw.2.2.2.2.1.2.2 t ht
   dρ t ht := hw.2.2.2.2.2.1.2.2 t ht
   ddφ t ht := hasDerivWithinAt_piSubtype D1.domain (f := fun s => bggSegment.dt0 (e0 (φ s)))
@@ -166,7 +166,7 @@ def toExactWave (hw : 𝒟.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam
   dSu t ht := by
     have h1 : HasDerivWithinAt (fun s => ((u s : 𝒟.dt1.domain) : Wv W1))
         ((u' t : 𝒟.dt1.domain) : Wv W1) (Ici t) t :=
-      ((vecOp (n := 3) D1).domain.subtypeL).hasFDerivAt.comp_hasDerivWithinAt t (hw.2.1.2.2 t ht)
+      ((vecOpC (n := 3) D1).domain.subtypeL).hasFDerivAt.comp_hasDerivWithinAt t (hw.2.1.2.2 t ht)
     exact (wsL2 (Ω := cubeDomain 3) 1).hasFDerivAt.comp_hasDerivWithinAt t h1
   ddu t ht := hw.2.2.2.1.2.2 t ht
   dℓ t ht μ := by

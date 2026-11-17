@@ -56,14 +56,14 @@ def fe2 : W2 →L[ℝ] (cubeFEM hT hB N).W2h :=
 /-- The projection onto `Ṽₕ⁰`. -/
 def fet0 : Wv W0 →L[ℝ] (cubeFEM hT hB N).Vt0h :=
   (e0.toContinuousLinearEquiv.toContinuousLinearMap.comp
-    ((cubeQ hT hB N).πt0.codRestrict (vecOp (n := 3) D0).domain fun x =>
+    ((cubeQ hT hB N).πt0.codRestrict (vecOpC (n := 3) D0).domain fun x =>
       (cubeQ hT hB N).let0 ((cubeQ hT hB N).πt0_mem x))).codRestrict (cubeFEM hT hB N).Vt0h
     fun x a => (cubeQ hT hB N).πt0_mem x a
 
 /-- The projection onto `Ṽₕ¹`. -/
 def fet1 : Wv W1 →L[ℝ] (cubeFEM hT hB N).Vt1h :=
   (e1.toContinuousLinearEquiv.toContinuousLinearMap.comp
-    ((cubeQ hT hB N).πt1.codRestrict (vecOp (n := 3) D1).domain fun x =>
+    ((cubeQ hT hB N).πt1.codRestrict (vecOpC (n := 3) D1).domain fun x =>
       (cubeQ hT hB N).let1 ((cubeQ hT hB N).πt1_mem x))).codRestrict (cubeFEM hT hB N).Vt1h
     fun x a => (cubeQ hT hB N).πt1_mem x a
 

@@ -9,8 +9,9 @@ public import Solution.Trace
 
 On a mesh `M` of `Ω`, the glued spaces `Vₕᵏ`, `V̊ₕᵏ` of the element family
 `Feec.FiniteElement.polyElement n S` of an admissible sequence (piecewise fields whose degrees of
-freedom agree on shared faces, resp. also vanish on boundary faces) are the spaces `femSpace`,
-`femSpaceMin` of the challenge (`mem_V_iff`, `mem_V₀_iff`): degrees of freedom agree on a face
+freedom agree on shared faces, resp. also vanish on boundary faces) are the spaces `femSpaceOn`,
+`femSpaceMinOn` (`mem_V_iff`, `mem_V₀_iff`; on Freudenthal meshes of the cube, the challenge's
+`femSpace ∅` and `femSpace univ`): degrees of freedom agree on a face
 iff the tangential traces do (`Feec.FiniteElement.PolySeq.dof_congr` and trace determination on
 faces of every dimension, `Feec.FiniteElement.PolySeq.tangentialTraceEq_of_dof_eq_face`), and the
 glued field is the element field almost everywhere on each simplex (the frontiers of simplices are
@@ -34,6 +35,20 @@ namespace FEEC
 open Feec.Domain Feec.FiniteElement Feec.ExteriorFibre
 
 variable {n : ℕ}
+
+/-- **The finite element space** `S_k(M) ⊆ L²(Ω; Λᵏ)` on a mesh of `Ω`: the forms that are on
+every simplex a polynomial form of `S_k`, with single-valued tangential traces. -/
+def femSpaceOn (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    Set (L2Form Ω k) :=
+  {u | ∃ p, IsFemPieces Ω M S k u p}
+
+/-- **The finite element space with vanishing boundary traces** `S̊_k(M)`: the forms of
+`S_k(M)` whose tangential traces vanish on the boundary facets (the facets of a single simplex). -/
+def femSpaceMinOn (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    Set (L2Form Ω k) :=
+  {u | ∃ p, IsFemPieces Ω M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T, F.card = n →
+    (∀ T' ∈ M.simplices, F ⊆ vertexSet T' → T' = T) →
+      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
 
 /-- Almost every point of a simplex lies in its interior. -/
 theorem ae_mem_interior (Ω : Set (Fin n → ℝ)) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
@@ -158,7 +173,7 @@ theorem isFemPieces_glue {k : ℤ}
 omit [NeZero n] in
 /-- **The glued space `Vₕᵏ` is the finite element space of the challenge.** -/
 theorem mem_V_iff {k : ℤ} (u : L2Form Ω k) :
-    u ∈ (polyElement n S.toFeec).V (M.toFeec Ω hdom) k ↔ u ∈ femSpace Ω M S k := by
+    u ∈ (polyElement n S.toFeec).V (M.toFeec Ω hdom) k ↔ u ∈ femSpaceOn Ω M S k := by
   constructor
   · rintro ⟨v, rfl⟩
     exact ⟨_, isFemPieces_glue S M Ω hdom v⟩
@@ -196,7 +211,7 @@ theorem eq_of_isBoundaryFacet {F : Finset (Fin n → ℝ)} (hF : (M.toFeec Ω hd
 omit [NeZero n] in
 /-- **The glued space `V̊ₕᵏ` is the finite element space with vanishing boundary traces.** -/
 theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
-    u ∈ (polyElement n S.toFeec).V₀ (M.toFeec Ω hdom) k ↔ u ∈ femSpaceMin Ω M S k := by
+    u ∈ (polyElement n S.toFeec).V₀ (M.toFeec Ω hdom) k ↔ u ∈ femSpaceMinOn Ω M S k := by
   constructor
   · rintro ⟨v, rfl⟩
     set w : (polyElement n S.toFeec).Piecewise (M.toFeec Ω hdom) k.toNat := v.1 with hw

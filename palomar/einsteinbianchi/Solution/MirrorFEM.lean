@@ -47,8 +47,8 @@ section VecFam
 variable {n : ℕ} {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
   [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : Fin n → E →ₗ.[ℝ] F)
 
-/-- `∏ₐ D(Tₐ)` (the domain of `vecOpFam T`) as `Feec`'s vectors of elements of the `D(Tₐ)`. -/
-def vecFamEquiv : (vecOpFam T).domain ≃ₗᵢ[ℝ] PiLp 2 (fun a => (T a).domain) where
+/-- `∏ₐ D(Tₐ)` (the domain of `vecOp T`) as `Feec`'s vectors of elements of the `D(Tₐ)`. -/
+def vecFamEquiv : (vecOp T).domain ≃ₗᵢ[ℝ] PiLp 2 (fun a => (T a).domain) where
   toFun v := WithLp.toLp 2 fun a => ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
   invFun w := ⟨WithLp.toLp 2 fun a => (w a : E), fun a => (w a).2⟩
   map_add' _ _ := rfl
@@ -68,7 +68,7 @@ end VecFam
 /-- **The mirror data in `Feec`'s types and operators**: `d_∅`, `∏ₐ d_{a}`, `wsL2`
 (`mirrorData_eq`). -/
 abbrev 𝒟m : WeakSymmetryData W0 W1 W2 (Wv W0) (Wv W1) (Wv W2) :=
-  ⟨TD0, TD1, vecOpFam BD0, vecOpFam BD1, wsL2 (Ω := cubeDomain 3) 0, wsL2 (Ω := cubeDomain 3) 1⟩
+  ⟨TD0, TD1, vecOp BD0, vecOp BD1, wsL2 (Ω := cubeDomain 3) 0, wsL2 (Ω := cubeDomain 3) 1⟩
 
 /-- **`mirrorData` is the data of `Feec`'s mirror scheme.** -/
 theorem mirrorData_eq : mirrorData = (𝒟m : WeakSymmetryData (L2Form (cube 3) 0)
@@ -76,8 +76,8 @@ theorem mirrorData_eq : mirrorData = (𝒟m : WeakSymmetryData (L2Form (cube 3) 
     (L2Vec (cube 3) 2)) := by
   have h0 : dMax (cube 3) 0 = TD0 := (dMax_eq _ _).trans (dPart_empty isOpen_cube 0).symm
   have h1 : dMax (cube 3) 1 = TD1 := (dMax_eq _ _).trans (dPart_empty isOpen_cube 1).symm
-  change (⟨dMax (cube 3) 0, dMax (cube 3) 1, vecOpFam fun a => dPart {a} 0,
-    vecOpFam fun a => dPart {a} 1, wedge (cube 3) 0, wedge (cube 3) 1⟩ : WeakSymmetryData
+  change (⟨dMax (cube 3) 0, dMax (cube 3) 1, vecOp fun a => dPart {a} 0,
+    vecOp fun a => dPart {a} 1, wedge (cube 3) 0, wedge (cube 3) 1⟩ : WeakSymmetryData
       (L2Form (cube 3) 0) (L2Form (cube 3) 1) (L2Form (cube 3) 2) (L2Vec (cube 3) 0)
       (L2Vec (cube 3) 1) (L2Vec (cube 3) 2)) = _
   rw [h0, h1, wedge_eq, wedge_eq]

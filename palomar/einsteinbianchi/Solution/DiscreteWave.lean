@@ -215,4 +215,62 @@ theorem IsDiscreteWave.isGauss (hD : D.IsBGG) {T : ℝ} {σ : ℝ → D.d0.domai
   refine (Q.isGauss_iff _ _).2 ⟨norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 (by linarith)),
     norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 (by linarith))⟩
 
+/-! ### A nonzero state in the discrete Gauss law, and non-stationarity -/
+
+variable {Q} in
+/-- **A nonzero `uₕ` in the discrete Gauss law** for BGG data: if `π²S¹v₁ ≠ 0` for some
+`v₁ ∈ Ṽₕ¹`, the representative `u₀ ∈ Ṽₕ¹` of `v ↦ ⟪M, π²S¹v⟫`, `M = π²S¹v₁`, is nonzero,
+orthogonal to `d̃ψ` for every discrete pair `dτ = π¹S⁰ψ` (there `π²S¹d̃ψ = -d π¹S⁰ψ = -d dτ = 0`)
+and has `π²S¹u₀ ≠ 0` (`⟪M, π²S¹u₀⟫ = ‖u₀‖²`). -/
+theorem exists_isGauss_ne_zero (hD : D.IsBGG) {v₁ : D.dt1.domain} (hv₁ : (v₁ : Wt1) ∈ Q.Vt1)
+    (hne : Q.π2 (D.S1 v₁) ≠ 0) : ∃ u₀ : D.dt1.domain, (u₀ : Wt1) ∈ Q.Vt1 ∧ (u₀ : Wt1) ≠ 0 ∧
+      Q.IsGauss 0 u₀ ∧ Q.π2 (D.S1 u₀) ≠ 0 := by
+  have := Q.fdt1
+  set M := Q.π2 (D.S1 v₁)
+  let F : Q.Vt1 →L[ℝ] ℝ := (innerSL ℝ M).comp (Q.π2.comp (D.S1.comp Q.Vt1.subtypeL))
+  set r : Q.Vt1 := (InnerProductSpace.toDual ℝ Q.Vt1).symm F with hr
+  have key : ∀ v : Q.Vt1, ⟪(r : Wt1), (v : Wt1)⟫ = ⟪M, Q.π2 (D.S1 v)⟫ := fun v => by
+    rw [← Submodule.coe_inner, hr, InnerProductSpace.toDual_symm_apply]; rfl
+  have hr0 : (r : Wt1) ≠ 0 := fun h => by
+    have := key ⟨_, hv₁⟩
+    rw [h, inner_zero_left] at this
+    exact hne (inner_self_eq_zero.1 this.symm)
+  refine ⟨⟨r, Q.let1 r.2⟩, r.2, hr0, ⟨rfl, fun τ ψ _ hψ hτψ => ?_⟩, fun h => ?_⟩
+  · obtain ⟨hd, hS⟩ := hD.2.2 ψ
+    have hc := Q.comm1 ⟨_, hd⟩
+    have e : (⟨Q.π1 (D.S0 ψ), Q.le1 (Q.π1_mem _)⟩ : D.d1.domain) = ⟨D.d0 τ, (hD.1 τ).1⟩ :=
+      Subtype.ext hτψ.symm
+    rw [e, (hD.1 τ).2, hS, map_neg] at hc
+    change ⟪(r : Wt1), D.dt0 ψ⟫ = 0
+    rw [key ⟨_, Q.dt0_mem ψ hψ⟩]
+    change ⟪M, Q.π2 (D.S1 (D.dt0 ψ))⟫ = 0
+    rw [neg_eq_zero.1 hc.symm, inner_zero_right]
+  · have := key r
+    change ⟪(r : Wt1), (r : Wt1)⟫ = ⟪M, Q.π2 (D.S1 (r : Wt1))⟫ at this
+    rw [show D.S1 ((⟨r, Q.let1 r.2⟩ : D.dt1.domain) : Wt1) = D.S1 (r : Wt1) from rfl] at h
+    rw [h, inner_zero_right] at this
+    exact hr0 (inner_self_eq_zero.1 this)
+
+variable {Q} in
+/-- **Solutions of (6.5) with `π²S¹uₕ(0) ≠ 0` are not stationary**: `Mₕ` is not constant on
+`[0, T]` (else `Mₕ'(0) = 0`, while `⟪Mₕ'(0), z⟫ = ⟪π²S¹uₕ(0), z⟫` on `Vₕ²`). -/
+theorem IsDiscreteWave.exists_M_ne {T : ℝ} (hT : 0 < T) {f : ℝ → Wt1} {σ : ℝ → D.d0.domain}
+    {φ : ℝ → D.dt0.domain} {u : ℝ → D.dt1.domain} {M : ℝ → W2} {ρ : ℝ → Wt2} {lam : ℝ → W1}
+    (h : Q.IsDiscreteWave T f σ φ u M ρ lam) (hu : Q.π2 (D.S1 (u 0)) ≠ 0) :
+    ∃ t ∈ Ioc 0 T, M t ≠ M 0 := by
+  by_contra hc
+  push Not at hc
+  obtain ⟨-, -, -, -, -, σ', u', M', ρ', hd⟩ := h
+  obtain ⟨-, -, hM, -, -, -, hM', -⟩ := hd 0 ⟨le_rfl, hT⟩
+  have hconst : HasDerivWithinAt M 0 (Ici 0) 0 :=
+    (hasDerivWithinAt_const 0 (Ici 0) (M 0)).congr_of_eventuallyEq
+      (Filter.mem_of_superset (Icc_mem_nhdsGE hT) fun t ht => by
+        rcases eq_or_lt_of_le ht.1 with h0 | h0
+        · subst h0; rfl
+        · exact hc t ⟨h0, ht.2⟩) rfl
+  have h0 : M' 0 = 0 := (uniqueDiffWithinAt_Ici 0).eq_deriv _ hM hconst
+  have := hM' _ (Q.π2_mem (D.S1 (u 0)))
+  rw [h0, inner_zero_left] at this
+  exact hu (inner_self_eq_zero.1 this.symm)
+
 end FEEC.WeakSymmetryData.Discretization

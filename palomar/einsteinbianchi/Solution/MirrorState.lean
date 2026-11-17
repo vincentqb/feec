@@ -112,7 +112,7 @@ theorem dPart_apply_eq {n : ℕ} {J : Finset (Fin n)} {k : ℤ} (x : (dPart J k)
       ⟨(x : L2Form (cube n) k), dPart_eq J k ▸ x.2⟩ :=
   LinearPMap.apply_of_eq' (dPart_eq J k) x
 
-/-- A vector of the domain of `vecOpFam (dPart {a} k)` as `Feec`'s vector of domain elements. -/
+/-- A vector of the domain of `vecOp (dPart {a} k)` as `Feec`'s vector of domain elements. -/
 def toBU1 (v : mirrorData.dt1.domain) : BU1 :=
   WithLp.toLp 2 fun a => ⟨(v : L2Vec (cube 3) 1) a, by
     have h := v.2 a; rw [show (fun a => dPart {a} 1) a = dPart {a} 1 from rfl, dPart_eq] at h

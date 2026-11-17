@@ -39,38 +39,6 @@ variable {W0 W1 W2 Wt0 Wt1 Wt2 : Type*} [NormedAddCommGroup W0] [InnerProductSpa
   [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2]
   [InnerProductSpace ℝ Wt2]
 
-/-! ### The hypotheses of the abstract theorem (not compared: the cube theorem states the
-conclusions) -/
-
-/-- The rows are complexes, `R(d⁰) ⊆ D(d¹)`, `d¹d⁰ = 0` and `R(d̃⁰) ⊆ D(d̃¹)`, `d̃¹d̃⁰ = 0`, and
-`S` anticommutes with them: `S⁰D(d̃⁰) ⊆ D(d¹)` and `d¹S⁰ = -S¹d̃⁰` (a morphism `Ṽ → V[1]`). -/
-def IsBGG (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2) : Prop :=
-  (∀ x : D.d0.domain, ∃ h : D.d0 x ∈ D.d1.domain, D.d1 ⟨_, h⟩ = 0) ∧
-    (∀ x : D.dt0.domain, ∃ h : D.dt0 x ∈ D.dt1.domain, D.dt1 ⟨_, h⟩ = 0) ∧
-    ∀ ψ : D.dt0.domain, ∃ h : D.S0 ψ ∈ D.d1.domain, D.d1 ⟨_, h⟩ = -D.S1 (D.dt0 ψ)
-
-/-- **The continuous hypotheses with constant `C`** ([QuennevilleBelair2015], §5.1, Prop 5.3):
-Poincaré inequalities on `V⁰` and `Ṽ⁰`, exactness of the top row at `V¹`, the Hodge decomposition
-`v = d̃ψ + w`, `‖w‖ ≤ C ‖d̃v‖`, on `Ṽ¹`, the regular decomposition `d¹V¹ = d¹S⁰Ṽ⁰` with the bound
-`‖d̃φ‖ ≤ C ‖d¹x‖`, and `‖S⁰‖, ‖S¹‖ ≤ C`. -/
-structure IsStable (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2) (C : ℝ) : Prop where
-  poincare : ∀ σ : D.d0.domain, ‖(σ : W0)‖ ≤ C * ‖D.d0 σ‖
-  poincare_t : ∀ φ : D.dt0.domain, ‖(φ : Wt0)‖ ≤ C * ‖D.dt0 φ‖
-  exact : ∀ μ : D.d1.domain, D.d1 μ = 0 → ∃ ρ : D.d0.domain, D.d0 ρ = μ
-  hodge_t : ∀ v : D.dt1.domain, ∃ (ψ : D.dt0.domain) (w : D.dt1.domain),
-    (v : Wt1) = D.dt0 ψ + w ∧ ‖(w : Wt1)‖ ≤ C * ‖D.dt1 v‖
-  regular : ∀ x : D.d1.domain, ∃ (φ : D.dt0.domain) (h : D.S0 φ ∈ D.d1.domain),
-    D.d1 ⟨_, h⟩ = D.d1 x ∧ ‖D.dt0 φ‖ ≤ C * ‖D.d1 x‖
-  norm_S0 : ‖D.S0‖ ≤ C
-  norm_S1 : ‖D.S1‖ ≤ C
-
-/-- The squared **projection error** of `(σ, φ, u)` in the norms of `errorSq` (with `d π = π d`). -/
-def Discretization.projErrorSq {D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2}
-    (Q : D.Discretization) (σ : D.d0.domain) (φ : D.dt0.domain) (u : D.dt1.domain) : ℝ :=
-  ‖Q.π0 σ - σ‖ ^ 2 + ‖Q.π1 (D.d0 σ) - D.d0 σ‖ ^ 2 + ‖Q.πt0 φ - φ‖ ^ 2 +
-    ‖Q.πt1 (D.dt0 φ) - D.dt0 φ‖ ^ 2 + ‖Q.πt1 u - u‖ ^ 2 + ‖Q.π2 (D.S1 (Q.πt1 u - u))‖ ^ 2 +
-    ‖Q.πt2 (D.dt1 u) - D.dt1 u‖ ^ 2
-
 variable {D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2}
 
 /-- A linear map into the domain of `T` from values in it. -/
@@ -275,7 +243,8 @@ theorem errorConst_nonneg (C : ℝ) : 0 ≤ Feec.BGG.Discrete.errorConst C C C C
   have := Feec.BGG.Discrete.KL_pos C C C C
   positivity
 
-/-- **The abstract theorem** (not compared in this entry): Prop 5.4
+/-- **The abstract theorem** (the stability and convergence part of `FEEC.bggWeakSymmetry`):
+Prop 5.4
 (`Feec.BGG.Discrete.existsUnique_mixed_h`) and Thm 5.5
 (`Feec.BGG.Discrete.error_estimate_of_weakConsistency` with the weak consistency of
 `Feec.BGG.Discrete.weakConsistency_of_potential_of_bound`) through `toSegment`, `toDiscrete`. -/

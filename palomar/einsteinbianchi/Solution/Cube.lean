@@ -82,8 +82,8 @@ section Vec
 variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedAddCommGroup F]
   [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F)
 
-/-- `D(T)ⁿ` (the domain of `vecOp T`) as `Feec`'s vectors of elements of `D(T)`. -/
-def vecEquiv : (vecOp (n := n) T).domain ≃ₗᵢ[ℝ] PiLp 2 (fun _ : Fin n => T.domain) where
+/-- `D(T)ⁿ` (the domain of `vecOpC T`) as `Feec`'s vectors of elements of `D(T)`. -/
+def vecEquiv : (vecOpC (n := n) T).domain ≃ₗᵢ[ℝ] PiLp 2 (fun _ : Fin n => T.domain) where
   toFun v := WithLp.toLp 2 fun a => ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
   invFun w := ⟨WithLp.toLp 2 fun a => (w a : E), fun a => (w a).2⟩
   map_add' _ _ := rfl
@@ -96,11 +96,11 @@ def vecEquiv : (vecOp (n := n) T).domain ≃ₗᵢ[ℝ] PiLp 2 (fun _ : Fin n =>
     rw [PiLp.norm_eq_of_L2, PiLp.norm_eq_of_L2]
     rfl
 
-@[simp] theorem coe_vecEquiv_apply (v : (vecOp (n := n) T).domain) (a : Fin n) :
+@[simp] theorem coe_vecEquiv_apply (v : (vecOpC (n := n) T).domain) (a : Fin n) :
     ((vecEquiv T v a : T.domain) : E) = (v : PiLp 2 fun _ : Fin n => E) a := rfl
 
 @[simp] theorem coe_vecEquiv_symm_apply (w : PiLp 2 (fun _ : Fin n => T.domain)) (a : Fin n) :
-    (((vecEquiv T).symm w : (vecOp (n := n) T).domain) : PiLp 2 fun _ : Fin n => E) a =
+    (((vecEquiv T).symm w : (vecOpC (n := n) T).domain) : PiLp 2 fun _ : Fin n => E) a =
       (w a : E) := rfl
 
 end Vec
@@ -110,12 +110,12 @@ end Vec
 /-- **The cube data in `Feec`'s types and operators**: `cubeData` with `D0`, `D1`, `wsL2`
 (`cubeData_eq`). -/
 abbrev 𝒟 : WeakSymmetryData W0 W1 W2 (Wv W0) (Wv W1) (Wv W2) :=
-  ⟨D0, D1, vecOp D0, vecOp D1, wsL2 (Ω := cubeDomain 3) 0, wsL2 (Ω := cubeDomain 3) 1⟩
+  ⟨D0, D1, vecOpC D0, vecOpC D1, wsL2 (Ω := cubeDomain 3) 0, wsL2 (Ω := cubeDomain 3) 1⟩
 
 /-- **`cubeData` is the data of `Feec`'s minimal realizations.** -/
 theorem cubeData_eq : cubeData = (𝒟 : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1)
     (L2Form (cube 3) 2) (L2Vec (cube 3) 0) (L2Vec (cube 3) 1) (L2Vec (cube 3) 2)) := by
-  change (⟨dMin (cube 3) 0, dMin (cube 3) 1, vecOp (dMin (cube 3) 0), vecOp (dMin (cube 3) 1),
+  change (⟨dMin (cube 3) 0, dMin (cube 3) 1, vecOpC (dMin (cube 3) 0), vecOpC (dMin (cube 3) 1),
     wedge (cube 3) 0, wedge (cube 3) 1⟩ : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1)
       (L2Form (cube 3) 2) (L2Vec (cube 3) 0) (L2Vec (cube 3) 1) (L2Vec (cube 3) 2)) = _
   rw [dMin_eq, dMin_eq, wedge_eq, wedge_eq]

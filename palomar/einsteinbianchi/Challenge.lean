@@ -15,67 +15,58 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 
 /-!
-# Constraint preservation for the linearized Einstein–Bianchi equations: the thesis' boundary conditions lose the constraints on every bounded domain, mirror boundary conditions keep them, and the weak-symmetry finite element method with each
+# The weak-symmetry finite element method and constraint preservation for the linearized Einstein–Bianchi equations: the thesis' boundary conditions lose the constraints, mirror boundary conditions keep them
 
 The linearized Einstein–Bianchi system of [QuennevilleBelair2015] evolves the electric and
 magnetic parts `E`, `B` of the linearized Weyl tensor; its solutions describe gravitational waves
 only while `E` and `B` are **TSD** (symmetric, trace-free, divergence-free). The method of
-[QuennevilleBelair2015], Ch. 6, solves it as the Hodge wave equation (6.1) of the complex with
+[QuennevilleBelair2015], Ch. 5–6, solves it as the Hodge wave equation (6.1) of the complex with
 weak symmetry `Γ → Ṽ¹ → W² × W̃²` (below) on states `(σ, u, M, ρ)`: `u` the rows of `E` (vector
-`1`-forms), `ρ` the rows of `⋆B` (vector `2`-forms), `M` the multiplier of the symmetry of `E`
-and `σ` the potential of the constraint `Γ`. The constraint is `σ = 0`, `M = 0`, `E` and `B` TSD
-(`IsTSDState`). Whether a boundary condition preserves the constraints is the central difficulty
-of the initial boundary value problem in general relativity ([FriedrichNagy1999],
-[KreissWinicour2006]).
+`1`-forms), `ρ` the rows of `⋆B` (vector `2`-forms), `M` the multiplier of the symmetry of `E`,
+`σ` the potential of `Γ`. The constraint is `σ = 0`, `M = 0`, `E` and `B` TSD (`IsTSDState`).
+Whether boundary conditions preserve the constraints is the central difficulty of the initial
+boundary value problem of general relativity ([FriedrichNagy1999], [KreissWinicour2006]).
 
-* `FEEC.tsd_not_propagates` (**the thesis' boundary conditions lose the constraints**): with the
-  boundary conditions of [QuennevilleBelair2015], §6.3, on every nonempty bounded open `Ω ⊆ ℝ³`
-  (no regularity), a TSD datum of the domain of the wave operator has strong solutions on every
-  `[0, T]`, and each of them has `E(t)` not TSD and `B(t)` not symmetric at some times `t`.
-* `FEEC.mirror_tsd_propagates` (**mirror boundary conditions keep them**): on the cube
-  `Q = (0, ½)³` with the boundary conditions of the reflection-symmetric fields, strong solutions
-  are unique, exist from every TSD datum of the domain and stay TSD, and some TSD datum of
-  `D(L³)` is not stationary.
-* `FEEC.mirror_weakSymmetry_cube` (**the method with mirror boundary conditions**): the
-  semi-discrete method (6.5) with the elements of Table 5.1 and mirror boundary conditions on the
-  Freudenthal meshes of `Q` has solutions determined by their initial values, preserves a
-  discrete Gauss law exactly, and converges at the rate `(1 + t) h` to the TSD solution from TSD
-  data of `D(L³)`, with a constant independent of the mesh, the time and the data.
-* `FEEC.weakSymmetry_cube`, `FEEC.weakSymmetry_cube_nonvacuous` (**the method with the thesis'
-  boundary conditions**): on `Q` the mixed method (5.6) is uniquely solvable, solutions of the
-  semi-discrete method (6.5) are determined by their initial values, and both converge at the
-  rates `h` and `(1 + t) h` to solutions of (5.3) and (6.2) — by `FEEC.tsd_not_propagates`, to
-  solutions that need not stay TSD.
+* `FEEC.bggWeakSymmetry`: the abstract method (Prop 5.4, Thm 5.5, and for (6.5) uniqueness and
+  a discrete Gauss law);
+* `FEEC.tsd_not_propagates`: with the thesis' boundary conditions (§6.3) TSD data leave TSD, on
+  every nonempty bounded open `Ω ⊆ ℝ³`;
+* `FEEC.box_stationary`: on boxes, for the grad–curl system (4.14), only stationary solutions
+  keep a TSD constraint;
+* `FEEC.mirror_tsd_propagates`: on `Q = (0, ½)³` with mirror boundary conditions TSD data stay TSD;
+* `FEEC.mirror_weakSymmetry_cube`: the method with mirror boundary conditions converges at the rate
+  `(1 + t) h` to the TSD solution;
+* `FEEC.weakSymmetry_cube`, `FEEC.weakSymmetry_cube_nonvacuous`: the method with the thesis'
+  boundary conditions, an instance of `FEEC.bggWeakSymmetry` with `Sₕ ≠ S`, converges at the rates
+  `h` and `(1 + t) h` (by `FEEC.tsd_not_propagates`, to solutions that need not stay TSD).
 
 **The complex with weak symmetry.** The BGG construction ([ArnoldHu2021]) couples two de Rham
 complexes by connecting maps `S : Ṽⁱ → Vⁱ⁺¹` with `d S = -S d̃`; eliminating `Ṽ⁰` against `V¹`
-weakly gives the saddle point problem (5.3) of [QuennevilleBelair2015]: find `σ ∈ V⁰`, `φ ∈ Ṽ⁰`,
-`u ∈ Ṽ¹` and a multiplier `λ` with `⟪σ, τ⟫ - ⟪u, d̃ψ⟫ - ⟪λ, dτ - S⁰ψ⟫ = 0` for all `τ ∈ V⁰`,
-`ψ ∈ Ṽ⁰`, `⟪d̃φ, v⟫ + ⟪S¹u, S¹v⟫ + ⟪d̃u, d̃v⟫ = F(v)` for all `v ∈ Ṽ¹`, and `dσ = S⁰φ`. With the
-thesis' boundary conditions the rows are `H̊¹ → H̊(curl) → L²` and, in vector proxies, `S⁰ = I`,
-`S¹ = 2 vskw`, so `Γ = {(σ, grad σ) | σ ∈ H̊²}`: a conforming discretization of `Γ` needs `C¹`
-elements, which the multiplier avoids. The method replaces `S` by `Sₕ = πS` for cochain
-projections `π` (a variational crime), and the compatibility condition (5.4) `π¹S⁰π̃⁰ = π¹S⁰`
-replaces the surjectivity of `S⁰ₕ`. The Hodge wave equation of the complex is (6.1), written
-with the multiplier as (6.2) and discretized as (6.5).
+weakly by a multiplier `λ` gives the saddle point problem (5.3): find `σ ∈ V⁰`, `φ ∈ Ṽ⁰`,
+`u ∈ Ṽ¹`, `λ` with `⟪σ, τ⟫ - ⟪u, d̃ψ⟫ - ⟪λ, dτ - S⁰ψ⟫ = 0` for all `τ ∈ V⁰`, `ψ ∈ Ṽ⁰`,
+`⟪d̃φ, v⟫ + ⟪S¹u, S¹v⟫ + ⟪d̃u, d̃v⟫ = F(v)` for all `v ∈ Ṽ¹`, and `dσ = S⁰φ`. With the thesis'
+boundary conditions the rows are `H̊¹ → H̊(curl) → L²`, `S⁰ = I`, `S¹ = 2 vskw` in vector proxies,
+and `Γ = {(σ, grad σ) | σ ∈ H̊²}` needs `C¹` elements, which the multiplier avoids. The method
+replaces `S` by `Sₕ = πS` for cochain projections `π` (a variational crime); the compatibility
+condition (5.4) `π¹S⁰π̃⁰ = π¹S⁰` replaces the surjectivity of `S⁰ₕ`. The Hodge wave equation of
+the complex is (6.1), written with the multiplier as (6.2) and discretized as (6.5).
 
 ## Conventions
 
 Points of `ℝⁿ` are `Fin n → ℝ` (Lebesgue measure, sup norm). A `k`-form is given by its
 coefficients `ω_s` on `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s = {s₁ < ⋯ < s_k} ⊆ Fin n`
 (`FormIdx n k`); `L²(Ω; Λᵏ)` is the `ℓ²` sum of a copy of `L²(Ω)` per coefficient (`L2Form`) and
-`L²(Ω; Λᵏ ⊗ ℝⁿ)` the `ℓ²` sum of `n` copies of it (`L2Vec`). With the sign
-`ε(j, s) = (-1)^{#{l ∈ s | l < j}}`, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` and
-`(Σₐ dxₐ ∧ vₐ)_s = Σ_{a ∈ s} ε(a, s) (vₐ)_{s ∖ a}`. The definitions of differential forms,
-polynomial forms, simplicial meshes, finite element spaces and Sobolev spaces are those of the
-Palomar entry `palomar/fem`, and those of the complex with weak symmetry and its discretization
-those of `palomar/bgg`. In `ℝ³` the electric field of a state is the matrix `E_{ab} = (uₐ)_{dx_b}`
-and the magnetic field `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` (the Hodge star `⋆dxᵢ = (-1)ⁱ dx_{{i}ᶜ}`).
+`L²(Ω; Λᵏ ⊗ ℝⁿ)` the `ℓ²` sum of `n` copies of it (`L2Vec`). With `ε(j, s) =
+(-1)^{#{l ∈ s | l < j}}`, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` and `(Σₐ dxₐ ∧ vₐ)_s =
+Σ_{a ∈ s} ε(a, s) (vₐ)_{s ∖ a}`. Forms, polynomial forms, meshes, finite element and Sobolev
+spaces are those of the Palomar entry `palomar/fem`. In `ℝ³` the electric field of a state is
+`E_{ab} = (uₐ)_{dx_b}` and the magnetic field `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` (`⋆dxᵢ = (-1)ⁱ dx_{{i}ᶜ}`).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 5 ((5.1)–(5.6), Thm 5.5, Table 5.1), Ch. 6 ((6.1)–(6.5), §6.3, Prop 6.2)
+  §4.10 ((4.14)), Ch. 5 ((5.1)–(5.6), Props 5.3, 5.4, 5.9, Thm 5.5, Table 5.1), Ch. 6
+  ((6.1)–(6.5), §6.3, Prop 6.2)
 * [H. Friedrich, G. Nagy, *The Initial Boundary Value Problem for Einstein's Vacuum Field Equation*][FriedrichNagy1999]
 * [H.-O. Kreiss, J. Winicour, *Problems which are well posed in a generalized sense with applications to the Einstein equations*][KreissWinicour2006]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
@@ -84,14 +75,13 @@ and the magnetic field `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` (the Hodge star `⋆d
   §3, §4, §5.5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+* [R. Hiptmair, *Finite elements in computational electromagnetism*][Hiptmair2002], Lemma 2.4
+* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
-* [H. Brezis, *Functional Analysis, Sobolev Spaces and Partial Differential Equations*][Brezis2011],
-  §9.2
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -101,8 +91,9 @@ open Filter Topology Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 
-namespace FEEC
+universe u
 
+namespace FEEC
 /-! ### Differential forms on `ℝⁿ` and the `L²` de Rham complexes (from `palomar/fem`) -/
 
 variable {n : ℕ}
@@ -296,6 +287,7 @@ def TraceEq (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → �
   ∀ v : Fin k → Fin n → ℝ, (∀ l, v l ∈ vectorSpan ℝ (g : Set (Fin n → ℝ))) →
     covEval α v = covEval β v
 
+
 /-- `p = (p_T)_T` are **finite element pieces** of `u ∈ L²(Ω; Λᵏ)` on the mesh `M` for the
 sequence `S`: on every simplex `T`, `u` is (almost everywhere) the polynomial form `p_T ∈ S_k`,
 and the tangential traces of `p_T` and `p_{T'}` agree on the common face of any two simplices. -/
@@ -308,29 +300,41 @@ def IsFemPieces (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) 
       ∀ x ∈ convexHull ℝ ((vertexSet T ∩ vertexSet T' : Finset (Fin n → ℝ)) : Set (Fin n → ℝ)),
         TraceEq (vertexSet T ∩ vertexSet T') k.toNat (p T x) (p T' x)
 
-/-- **The finite element space** `S_k(M) ⊆ L²(Ω; Λᵏ)` of the admissible sequence `S` on the mesh
-`M` ([AFW2006], §5; [Arnold2018], Ch. 7): the forms that are on every simplex a polynomial form
-of `S_k`, with single-valued tangential traces on the faces of the mesh. -/
-def femSpace (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
-    Set (L2Form Ω k) :=
-  {u | ∃ p, IsFemPieces Ω M S k u p}
-
-/-- **The finite element space with vanishing boundary traces** `S̊_k(M)`: the forms of
-`S_k(M)` whose tangential traces vanish on the boundary facets (the facets of a single simplex of
-the mesh). -/
-def femSpaceMin (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
-    Set (L2Form Ω k) :=
-  {u | ∃ p, IsFemPieces Ω M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T, F.card = n →
-    (∀ T' ∈ M.simplices, F ⊆ vertexSet T' → T' = T) →
+/-- **The finite element space `S_k(M)` of the admissible sequence `S` on a mesh `M` of the cube
+`(0, ½)ⁿ`, with vanishing traces on the faces normal to `eⱼ`, `j ∈ J`** ([AFW2006], §5;
+[Arnold2018], Ch. 7): the forms that are on every simplex a polynomial form of `S_k`, with
+single-valued tangential traces on the faces of the mesh, vanishing on the facets that lie in a
+face `{y_j = 0}` or `{y_j = ½}`, `j ∈ J` (`J = ∅`: no boundary condition; `J = univ`: vanishing
+traces on `∂Q`). -/
+def femSpace (J : Finset (Fin n)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    Set (L2Form (cube n) k) :=
+  {u | ∃ p, IsFemPieces (cube n) M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T,
+    F.card = n → (∃ j ∈ J, (∀ v ∈ F, v j = 0) ∨ ∀ v ∈ F, v j = 1 / 2) →
       ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
 
 /-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³` (Lagrange, Nédélec edge,
-Raviart–Thomas face elements and piecewise constants; [Whitney1957], [AFW2006], §3–4). -/
+Raviart–Thomas face elements and piecewise constants; [Whitney1957], [AFW2006], §3–4): the top
+row of Table 5.1. -/
 def topSeq : PolySeq where
   full k := k == 0
   deg _ := 1
   one_le_deg _ := le_rfl
   transition _ := Or.inl ⟨rfl, rfl⟩
+
+/-- **The bottom row of Table 5.1**, `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₁⁻Λ³` (Lagrange `P₂`, second-order
+Nédélec edge elements of the first kind, `BDM₁` and piecewise constants). -/
+def bottomSeq : PolySeq where
+  full k := k == 0 || k == 2
+  deg k := if k ≤ 1 then 2 else 1
+  one_le_deg
+    | 0 => Nat.le_succ 1
+    | 1 => Nat.le_succ 1
+    | _ + 2 => le_rfl
+  transition
+    | 0 => Or.inl ⟨rfl, rfl⟩
+    | 1 => Or.inr ⟨rfl, rfl⟩
+    | 2 => Or.inl ⟨rfl, rfl⟩
+    | _ + 3 => Or.inl ⟨rfl, rfl⟩
 
 /-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
 restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
@@ -352,19 +356,20 @@ def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : 
 sum. -/
 abbrev L2Vec (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type := PiLp 2 fun _ : Fin n => L2Form Ω k
 
-/-- The operator `T` acting componentwise on vectors, with domain `D(T)ⁿ`. -/
+/-- The operators `Tₐ` acting componentwise on vectors, `(vₐ) ↦ (Tₐ vₐ)`, with domain
+`∏ₐ D(Tₐ)`. -/
 def vecOp {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedAddCommGroup F]
-    [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) :
+    [InnerProductSpace ℝ F] (T : Fin n → E →ₗ.[ℝ] F) :
     PiLp 2 (fun _ : Fin n => E) →ₗ.[ℝ] PiLp 2 (fun _ : Fin n => F) where
   domain :=
-    { carrier := {v | ∀ a, v a ∈ T.domain}
-      add_mem' := fun hv hw a => T.domain.add_mem (hv a) (hw a)
-      zero_mem' := fun _ => T.domain.zero_mem
-      smul_mem' := fun c _ hv a => T.domain.smul_mem c (hv a) }
+    { carrier := {v | ∀ a, v a ∈ (T a).domain}
+      add_mem' := fun hv hw a => (T a).domain.add_mem (hv a) (hw a)
+      zero_mem' := fun a => (T a).domain.zero_mem
+      smul_mem' := fun c _ hv a => (T a).domain.smul_mem c (hv a) }
   toFun :=
-    { toFun := fun v => WithLp.toLp 2 fun a => T ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
-      map_add' := fun v w => PiLp.ext fun a => T.map_add ⟨_, v.2 a⟩ ⟨_, w.2 a⟩
-      map_smul' := fun c v => PiLp.ext fun a => T.map_smul c ⟨_, v.2 a⟩ }
+    { toFun := fun v => WithLp.toLp 2 fun a => T a ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
+      map_add' := fun v w => PiLp.ext fun a => (T a).map_add ⟨_, v.2 a⟩ ⟨_, w.2 a⟩
+      map_smul' := fun c v => PiLp.ext fun a => (T a).map_smul c ⟨_, v.2 a⟩ }
 
 /-- **The connecting map** `S v = Σₐ dxₐ ∧ vₐ : L²(Ω; Λᵏ ⊗ ℝⁿ) → L²(Ω; Λᵏ⁺¹)`,
 `(S v)_s = Σ_{a ∈ s} ε(a, s) (vₐ)_{s ∖ a}`. On vector proxies, `S` is the identity `S⁰ = I` on
@@ -379,40 +384,24 @@ def wedge (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Form Ω 
             rw [Finset.card_erase_of_mem h, Nat.cast_sub (Finset.card_pos.2 ⟨a, h⟩), s.2]
             ring⟩) ∘L PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin n => L2Form Ω k) a) else 0
 
-/-- The operators `Tₐ` acting componentwise on vectors, `(vₐ) ↦ (Tₐ vₐ)`, with domain
-`∏ₐ D(Tₐ)`. -/
-def vecOpFam {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedAddCommGroup F]
-    [InnerProductSpace ℝ F] (T : Fin n → E →ₗ.[ℝ] F) :
-    PiLp 2 (fun _ : Fin n => E) →ₗ.[ℝ] PiLp 2 (fun _ : Fin n => F) where
-  domain :=
-    { carrier := {v | ∀ a, v a ∈ (T a).domain}
-      add_mem' := fun hv hw a => (T a).domain.add_mem (hv a) (hw a)
-      zero_mem' := fun a => (T a).domain.zero_mem
-      smul_mem' := fun c _ hv a => (T a).domain.smul_mem c (hv a) }
-  toFun :=
-    { toFun := fun v => WithLp.toLp 2 fun a => T a ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
-      map_add' := fun v w => PiLp.ext fun a => (T a).map_add ⟨_, v.2 a⟩ ⟨_, w.2 a⟩
-      map_smul' := fun c v => PiLp.ext fun a => (T a).map_smul c ⟨_, v.2 a⟩ }
+/-! ### BGG data with weak symmetry and their discretization ([QuennevilleBelair2015], Ch. 5) -/
 
-/-! ### BGG data with weak symmetry and their discretization -/
-
-/-- **BGG data**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of densely defined operators
-`d`, `d̃` between Hilbert spaces (`LinearPMap`s; their domains `V = D(d)` carry the inner product
-of `W`), with bounded connecting maps `S⁰ : W̃⁰ → W¹`, `S¹ : W̃¹ → W²`. -/
+/-- **BGG data with weak symmetry**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of
+operators `d`, `d̃` between real Hilbert spaces (unbounded, `LinearPMap`s; their domains
+`V = D(d)` carry the inner product of `W`; in the application densely defined and closed, which
+is not required), with bounded connecting maps `S⁰ : W̃⁰ → W¹`, `S¹ : W̃¹ → W²`. The complex and
+anticommutation laws are `WeakSymmetryData.IsBGG`. -/
 structure WeakSymmetryData (W0 W1 W2 Wt0 Wt1 Wt2 : Type*) [NormedAddCommGroup W0]
     [InnerProductSpace ℝ W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0]
     [InnerProductSpace ℝ Wt0] [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1]
     [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2] where
   /-- the top row -/
-  d0 : W0 →ₗ.[ℝ] W1
-  d1 : W1 →ₗ.[ℝ] W2
+  (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2)
   /-- the bottom row -/
-  dt0 : Wt0 →ₗ.[ℝ] Wt1
-  dt1 : Wt1 →ₗ.[ℝ] Wt2
+  (dt0 : Wt0 →ₗ.[ℝ] Wt1) (dt1 : Wt1 →ₗ.[ℝ] Wt2)
   /-- the connecting maps -/
-  S0 : Wt0 →L[ℝ] W1
-  S1 : Wt1 →L[ℝ] W2
+  (S0 : Wt0 →L[ℝ] W1) (S1 : Wt1 →L[ℝ] W2)
 
 namespace WeakSymmetryData
 
@@ -421,6 +410,30 @@ variable {W0 W1 W2 Wt0 Wt1 Wt2 : Type*} [NormedAddCommGroup W0] [InnerProductSpa
   [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0]
   [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2]
   [InnerProductSpace ℝ Wt2] (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2)
+
+/-- The rows are complexes, `R(d⁰) ⊆ D(d¹)`, `d¹d⁰ = 0` and `R(d̃⁰) ⊆ D(d̃¹)`, `d̃¹d̃⁰ = 0`, and
+`S` anticommutes with them: `S⁰D(d̃⁰) ⊆ D(d¹)` and `d¹S⁰ = -S¹d̃⁰` (a morphism `Ṽ → V[1]`). -/
+def IsBGG : Prop :=
+  (∀ x : D.d0.domain, ∃ h : D.d0 x ∈ D.d1.domain, D.d1 ⟨_, h⟩ = 0) ∧
+    (∀ x : D.dt0.domain, ∃ h : D.dt0 x ∈ D.dt1.domain, D.dt1 ⟨_, h⟩ = 0) ∧
+    ∀ ψ : D.dt0.domain, ∃ h : D.S0 ψ ∈ D.d1.domain, D.d1 ⟨_, h⟩ = -D.S1 (D.dt0 ψ)
+
+/-- **The continuous hypotheses with constant `C`** ([QuennevilleBelair2015], §5.1, Prop 5.3):
+Poincaré inequalities on `V⁰` and `Ṽ⁰` (so `d⁰`, `d̃⁰` are injective, with closed range when
+closed), exactness of the top row at `V¹`, the Hodge decomposition `v = d̃ψ + w`,
+`‖w‖ ≤ C ‖d̃v‖`, on `Ṽ¹` (exactness of the bottom row at `Ṽ¹` and the Poincaré inequality), the
+**regular decomposition** `d¹V¹ = d¹S⁰Ṽ⁰` with the bound `‖d̃φ‖ ≤ C ‖d¹x‖` ([Hiptmair2002],
+Lemma 2.4, in the application), and `‖S⁰‖, ‖S¹‖ ≤ C`. -/
+structure IsStable (C : ℝ) : Prop where
+  poincare : ∀ σ : D.d0.domain, ‖(σ : W0)‖ ≤ C * ‖D.d0 σ‖
+  poincare_t : ∀ φ : D.dt0.domain, ‖(φ : Wt0)‖ ≤ C * ‖D.dt0 φ‖
+  exact : ∀ μ : D.d1.domain, D.d1 μ = 0 → ∃ ρ : D.d0.domain, D.d0 ρ = μ
+  hodge_t : ∀ v : D.dt1.domain, ∃ (ψ : D.dt0.domain) (w : D.dt1.domain),
+    (v : Wt1) = D.dt0 ψ + w ∧ ‖(w : Wt1)‖ ≤ C * ‖D.dt1 v‖
+  regular : ∀ x : D.d1.domain, ∃ (φ : D.dt0.domain) (h : D.S0 φ ∈ D.d1.domain),
+    D.d1 ⟨_, h⟩ = D.d1 x ∧ ‖D.dt0 φ‖ ≤ C * ‖D.d1 x‖
+  norm_S0 : ‖D.S0‖ ≤ C
+  norm_S1 : ‖D.S1‖ ≤ C
 
 /-- `(σ, φ, u)` with the multiplier `λ ∈ W¹` solves **the mixed problem (5.3)** with datum `F`
 ([QuennevilleBelair2015], (5.3), with an `L²` multiplier): `⟪σ, τ⟫ - ⟪u, d̃ψ⟫ - ⟪λ, dτ - S⁰ψ⟫ = 0`,
@@ -439,49 +452,29 @@ them (identity on the subspaces, `d π = π d` on the domains). The method (5.6)
 `S⁰ₕ = π¹S⁰`, `S¹ₕ = π²S¹`. -/
 structure Discretization where
   /-- the finite element spaces -/
-  V0 : Submodule ℝ W0
-  V1 : Submodule ℝ W1
-  V2 : Submodule ℝ W2
-  Vt0 : Submodule ℝ Wt0
-  Vt1 : Submodule ℝ Wt1
-  Vt2 : Submodule ℝ Wt2
-  [fd0 : FiniteDimensional ℝ V0]
-  [fd1 : FiniteDimensional ℝ V1]
-  [fd2 : FiniteDimensional ℝ V2]
-  [fdt0 : FiniteDimensional ℝ Vt0]
-  [fdt1 : FiniteDimensional ℝ Vt1]
+  (V0 : Submodule ℝ W0) (V1 : Submodule ℝ W1) (V2 : Submodule ℝ W2)
+  (Vt0 : Submodule ℝ Wt0) (Vt1 : Submodule ℝ Wt1) (Vt2 : Submodule ℝ Wt2)
+  [fd0 : FiniteDimensional ℝ V0] [fd1 : FiniteDimensional ℝ V1] [fd2 : FiniteDimensional ℝ V2]
+  [fdt0 : FiniteDimensional ℝ Vt0] [fdt1 : FiniteDimensional ℝ Vt1]
   [fdt2 : FiniteDimensional ℝ Vt2]
-  le0 : V0 ≤ D.d0.domain
-  le1 : V1 ≤ D.d1.domain
-  let0 : Vt0 ≤ D.dt0.domain
-  let1 : Vt1 ≤ D.dt1.domain
-  d0_mem : ∀ x : D.d0.domain, (x : W0) ∈ V0 → D.d0 x ∈ V1
-  d1_mem : ∀ x : D.d1.domain, (x : W1) ∈ V1 → D.d1 x ∈ V2
-  dt0_mem : ∀ x : D.dt0.domain, (x : Wt0) ∈ Vt0 → D.dt0 x ∈ Vt1
-  dt1_mem : ∀ x : D.dt1.domain, (x : Wt1) ∈ Vt1 → D.dt1 x ∈ Vt2
+  (le0 : V0 ≤ D.d0.domain) (le1 : V1 ≤ D.d1.domain)
+  (let0 : Vt0 ≤ D.dt0.domain) (let1 : Vt1 ≤ D.dt1.domain)
+  (d0_mem : ∀ x : D.d0.domain, (x : W0) ∈ V0 → D.d0 x ∈ V1)
+  (d1_mem : ∀ x : D.d1.domain, (x : W1) ∈ V1 → D.d1 x ∈ V2)
+  (dt0_mem : ∀ x : D.dt0.domain, (x : Wt0) ∈ Vt0 → D.dt0 x ∈ Vt1)
+  (dt1_mem : ∀ x : D.dt1.domain, (x : Wt1) ∈ Vt1 → D.dt1 x ∈ Vt2)
   /-- the cochain projections -/
-  π0 : W0 →L[ℝ] W0
-  π1 : W1 →L[ℝ] W1
-  π2 : W2 →L[ℝ] W2
-  πt0 : Wt0 →L[ℝ] Wt0
-  πt1 : Wt1 →L[ℝ] Wt1
-  πt2 : Wt2 →L[ℝ] Wt2
-  π0_mem : ∀ x, π0 x ∈ V0
-  π1_mem : ∀ x, π1 x ∈ V1
-  π2_mem : ∀ x, π2 x ∈ V2
-  πt0_mem : ∀ x, πt0 x ∈ Vt0
-  πt1_mem : ∀ x, πt1 x ∈ Vt1
-  πt2_mem : ∀ x, πt2 x ∈ Vt2
-  π0_id : ∀ x ∈ V0, π0 x = x
-  π1_id : ∀ x ∈ V1, π1 x = x
-  π2_id : ∀ x ∈ V2, π2 x = x
-  πt0_id : ∀ x ∈ Vt0, πt0 x = x
-  πt1_id : ∀ x ∈ Vt1, πt1 x = x
-  πt2_id : ∀ x ∈ Vt2, πt2 x = x
-  comm0 : ∀ x : D.d0.domain, D.d0 ⟨π0 x, le0 (π0_mem x)⟩ = π1 (D.d0 x)
-  comm1 : ∀ x : D.d1.domain, D.d1 ⟨π1 x, le1 (π1_mem x)⟩ = π2 (D.d1 x)
-  commt0 : ∀ x : D.dt0.domain, D.dt0 ⟨πt0 x, let0 (πt0_mem x)⟩ = πt1 (D.dt0 x)
-  commt1 : ∀ x : D.dt1.domain, D.dt1 ⟨πt1 x, let1 (πt1_mem x)⟩ = πt2 (D.dt1 x)
+  (π0 : W0 →L[ℝ] W0) (π1 : W1 →L[ℝ] W1) (π2 : W2 →L[ℝ] W2)
+  (πt0 : Wt0 →L[ℝ] Wt0) (πt1 : Wt1 →L[ℝ] Wt1) (πt2 : Wt2 →L[ℝ] Wt2)
+  (π0_mem : ∀ x, π0 x ∈ V0) (π1_mem : ∀ x, π1 x ∈ V1) (π2_mem : ∀ x, π2 x ∈ V2)
+  (πt0_mem : ∀ x, πt0 x ∈ Vt0) (πt1_mem : ∀ x, πt1 x ∈ Vt1) (πt2_mem : ∀ x, πt2 x ∈ Vt2)
+  (π0_id : ∀ x ∈ V0, π0 x = x) (π1_id : ∀ x ∈ V1, π1 x = x) (π2_id : ∀ x ∈ V2, π2 x = x)
+  (πt0_id : ∀ x ∈ Vt0, πt0 x = x) (πt1_id : ∀ x ∈ Vt1, πt1 x = x)
+  (πt2_id : ∀ x ∈ Vt2, πt2 x = x)
+  (comm0 : ∀ x : D.d0.domain, D.d0 ⟨π0 x, le0 (π0_mem x)⟩ = π1 (D.d0 x))
+  (comm1 : ∀ x : D.d1.domain, D.d1 ⟨π1 x, le1 (π1_mem x)⟩ = π2 (D.d1 x))
+  (commt0 : ∀ x : D.dt0.domain, D.dt0 ⟨πt0 x, let0 (πt0_mem x)⟩ = πt1 (D.dt0 x))
+  (commt1 : ∀ x : D.dt1.domain, D.dt1 ⟨πt1 x, let1 (πt1_mem x)⟩ = πt2 (D.dt1 x))
 
 namespace Discretization
 
@@ -521,6 +514,12 @@ def errorSq (σ σh : D.d0.domain) (φ φh : D.dt0.domain) (u uh : D.dt1.domain)
   ‖((σ - σh : D.d0.domain) : W0)‖ ^ 2 + ‖D.d0 (σ - σh)‖ ^ 2 +
     ‖((φ - φh : D.dt0.domain) : Wt0)‖ ^ 2 + ‖D.dt0 (φ - φh)‖ ^ 2 +
     ‖((u - uh : D.dt1.domain) : Wt1)‖ ^ 2 + ‖Q.π2 (D.S1 (u - uh))‖ ^ 2 + ‖D.dt1 (u - uh)‖ ^ 2
+
+/-- The squared **projection error** of `(σ, φ, u)` in the norms of `errorSq` (with `d π = π d`). -/
+def projErrorSq (σ : D.d0.domain) (φ : D.dt0.domain) (u : D.dt1.domain) : ℝ :=
+  ‖Q.π0 σ - σ‖ ^ 2 + ‖Q.π1 (D.d0 σ) - D.d0 σ‖ ^ 2 + ‖Q.πt0 φ - φ‖ ^ 2 +
+    ‖Q.πt1 (D.dt0 φ) - D.dt0 φ‖ ^ 2 + ‖Q.πt1 u - u‖ ^ 2 + ‖Q.π2 (D.S1 (Q.πt1 u - u))‖ ^ 2 +
+    ‖Q.πt2 (D.dt1 u) - D.dt1 u‖ ^ 2
 
 end Discretization
 
@@ -608,32 +607,35 @@ def IsStrongSolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (L :
     (I : Set ℝ) (U : ℝ → X) : Prop :=
   ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U V I t
 
-/-! ### The cube: the BGG data (4.16) and the elements of Table 5.1 -/
+/-- **The Hodge wave operator `L (σ, u, ρ) = (d⁰*u, -d⁰σ - d¹*ρ, d¹u)` of `W⁰ → W¹ → W²`**
+([QuennevilleBelair2015], (4.5); the sign convention of `WeakSymmetryData.IsWave`): `L U = V`
+iff `σ ∈ D(d⁰)`, `u ∈ D(d¹)`, `⟪V_σ, τ⟫ = ⟪u, d⁰τ⟫` for all `τ ∈ D(d⁰)`,
+`⟪V_u, v⟫ = -⟪d⁰σ, v⟫ - ⟪ρ, d¹v⟫` for all `v ∈ D(d¹)`, and `V_ρ = d¹u`. -/
+def IsHodgeWave {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+    [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
+    [InnerProductSpace ℝ W2] (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (U V : W0 × W1 × W2) :
+    Prop :=
+  ∃ (σ : d0.domain) (u : d1.domain), (σ : W0) = U.1 ∧ (u : W1) = U.2.1 ∧
+    (∀ τ : d0.domain, ⟪V.1, τ⟫_ℝ = ⟪(u : W1), d0 τ⟫_ℝ) ∧
+    (∀ v : d1.domain, ⟪V.2.1, v⟫_ℝ = -⟪d0 σ, v⟫_ℝ - ⟪U.2.2, d1 v⟫_ℝ) ∧ V.2.2 = d1 u
 
-/-- **The bottom row of Table 5.1**, `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₁⁻Λ³` (Lagrange `P₂`, second-order
-Nédélec edge elements of the first kind, `BDM₁` and piecewise constants). -/
-def bottomSeq : PolySeq where
-  full k := k == 0 || k == 2
-  deg k := if k ≤ 1 then 2 else 1
-  one_le_deg
-    | 0 => Nat.le_succ 1
-    | 1 => Nat.le_succ 1
-    | _ + 2 => le_rfl
-  transition
-    | 0 => Or.inl ⟨rfl, rfl⟩
-    | 1 => Or.inr ⟨rfl, rfl⟩
-    | 2 => Or.inl ⟨rfl, rfl⟩
-    | _ + 3 => Or.inl ⟨rfl, rfl⟩
+/-! ### The Einstein–Bianchi fields, the constraint and the boundary conditions -/
 
-/-- **The BGG data (4.16) on the cube** `Q = (0, ½)³` with the thesis' boundary conditions
-([QuennevilleBelair2015], §5.3): the top row `H̊Λ⁰(Q) → H̊Λ¹(Q) → L²Λ²(Q)` and, componentwise, the
-bottom row `H̊Λ⁰(Q) ⊗ ℝ³ → H̊Λ¹(Q) ⊗ ℝ³ → L²Λ²(Q) ⊗ ℝ³` of the minimal exterior derivative, with
-`S⁰ = S¹ = Σₐ dxₐ ∧ ·` (`wedge`). In vector proxies the rows are `H̊¹ → H̊(curl) → L²(ℝ³)` and
-`S⁰ = I`, `S¹ = 2 vskw`. -/
-def cubeData : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1) (L2Form (cube 3) 2)
-    (L2Vec (cube 3) 0) (L2Vec (cube 3) 1) (L2Vec (cube 3) 2) :=
-  ⟨dMin (cube 3) 0, dMin (cube 3) 1, vecOp (dMin (cube 3) 0), vecOp (dMin (cube 3) 1),
-    wedge (cube 3) 0, wedge (cube 3) 1⟩
+/-- BGG data on the forms of `Ω ⊆ ℝ³`: the rows `L²Λ⁰ → L²Λ¹ → L²Λ²` and
+`L²Λ⁰ ⊗ ℝ³ → L²Λ¹ ⊗ ℝ³ → L²Λ² ⊗ ℝ³`. -/
+abbrev FormData (Ω : Set (Fin 3 → ℝ)) : Type :=
+  WeakSymmetryData (L2Form Ω 0) (L2Form Ω 1) (L2Form Ω 2) (L2Vec Ω 0) (L2Vec Ω 1) (L2Vec Ω 2)
+
+/-- **The BGG data (4.16) on `Ω ⊆ ℝ³` with the thesis' boundary conditions**
+([QuennevilleBelair2015], §5.3, §6.3): the top row `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → L²Λ²(Ω)` and,
+componentwise, the bottom row `H̊Λ⁰(Ω) ⊗ ℝ³ → H̊Λ¹(Ω) ⊗ ℝ³ → L²Λ²(Ω) ⊗ ℝ³` of the minimal
+exterior derivative, with `S⁰ = S¹ = Σₐ dxₐ ∧ ·` (`wedge`). In vector proxies the rows are
+`H̊¹ → H̊(curl) → L²(ℝ³)` and `S⁰ = I`, `S¹ = 2 vskw`. -/
+def bggData (Ω : Set (Fin 3 → ℝ)) : FormData Ω :=
+  ⟨dMin Ω 0, dMin Ω 1, vecOp fun _ => dMin Ω 0, vecOp fun _ => dMin Ω 1, wedge Ω 0, wedge Ω 1⟩
+
+/-- The BGG data with the thesis' boundary conditions on the cube `Q = (0, ½)³`. -/
+abbrev cubeData : FormData (cube 3) := bggData (cube 3)
 
 /-- `x ∈ L²(Q; Λʲ)` on the cube `Q = (0, ½)ⁿ` is (almost everywhere) a `C²` form `w` on `ℝⁿ` of
 degree `j` whose **tangential components vanish on `∂Q`** (`(w y)_t = 0` for `y ∈ cl Q` on a face
@@ -668,15 +670,6 @@ def IsH1State (L : ℝ) (σ : L2Form (cube 3) 0) (φ : L2Vec (cube 3) 0) (u : L2
       IsSobolevForm (cube 3) 1 2 L (dMin (cube 3) 1 ⟨u a, h⟩)) ∧
     IsSobolevForm (cube 3) 1 2 L M ∧ (∀ a, IsSobolevForm (cube 3) 1 2 L (ρ a)) ∧
     M ∈ (dMin (cube 3) 2).domain ∧ ∀ a, ρ a ∈ (dMin (cube 3) 2).domain
-
-/-! ### The Einstein–Bianchi fields, the constraint and the boundary conditions -/
-
-/-- **The BGG data (4.16) on `Ω ⊆ ℝ³` with the thesis' boundary conditions**
-([QuennevilleBelair2015], §6.3): those of `cubeData` on any `Ω` (`cubeData` is
-`bggData (cube 3)`). -/
-def bggData (Ω : Set (Fin 3 → ℝ)) : WeakSymmetryData (L2Form Ω 0) (L2Form Ω 1) (L2Form Ω 2)
-    (L2Vec Ω 0) (L2Vec Ω 1) (L2Vec Ω 2) :=
-  ⟨dMin Ω 0, dMin Ω 1, vecOp (dMin Ω 0), vecOp (dMin Ω 1), wedge Ω 0, wedge Ω 1⟩
 
 /-- **The electric field** `E_{ab} = (uₐ)_{dx_b}` of a vector `1`-form `u` (its rows are the
 `uₐ`). -/
@@ -716,21 +709,65 @@ def dPart (J : Finset (Fin n)) (k : ℤ) : L2Form (cube n) k →ₗ.[ℝ] L2Form
 `H_{a}Λ⁰(Q) → H_{a}Λ¹(Q) → L²Λ²(Q)` (vanishing tangential traces on the faces normal to `eₐ`),
 `S = Σₐ dxₐ ∧ ·`. These are the conditions satisfied by fields invariant under the reflections in
 the faces with `E` a tensor, `B` a pseudotensor and `M` a pseudovector. -/
-def mirrorData : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1) (L2Form (cube 3) 2)
-    (L2Vec (cube 3) 0) (L2Vec (cube 3) 1) (L2Vec (cube 3) 2) :=
-  ⟨dMax (cube 3) 0, dMax (cube 3) 1, vecOpFam fun a => dPart {a} 0,
-    vecOpFam fun a => dPart {a} 1, wedge (cube 3) 0, wedge (cube 3) 1⟩
+def mirrorData : FormData (cube 3) :=
+  ⟨dMax (cube 3) 0, dMax (cube 3) 1, vecOp fun a => dPart {a} 0, vecOp fun a => dPart {a} 1,
+    wedge (cube 3) 0, wedge (cube 3) 1⟩
 
-/-- **The finite element space with vanishing traces on the faces normal to `eⱼ`, `j ∈ J`**, on a
-mesh `M` of the cube `(0, ½)ⁿ`: the forms of `S_k(M)` whose tangential traces vanish on the
-facets lying in a face `{y_j = 0}` or `{y_j = ½}`, `j ∈ J`. -/
-def femSpacePart (J : Finset (Fin n)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
-    Set (L2Form (cube n) k) :=
-  {u | ∃ p, IsFemPieces (cube n) M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T,
-    F.card = n → (∃ j ∈ J, (∀ v ∈ F, v j = 0) ∨ ∀ v ∈ F, v j = 1 / 2) →
-      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
+/-- `Q_N` are **discretizations of `D` by the elements of Table 5.1 on Freudenthal meshes `𝒯_N`
+of `Q = (0, ½)³`** ([QuennevilleBelair2015], §5.3; [AFW2010], §5.5): `𝒯` a shape-regular,
+quasi-uniform family with `h_N → 0`, the spaces of `topSeq` (top row) and, in each component,
+`bottomSeq` (bottom row) with vanishing traces on the faces normal to `eⱼ`, `j ∈ J` (top row),
+`j ∈ J̃ a` (component `a` of the bottom row), and projections bounded by `C`, satisfying (5.4)
+and consistent at the order `h_N`. -/
+def IsTable51 {D : FormData (cube 3)} (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → D.Discretization)
+    (C : ℝ) (J : Finset (Fin 3)) (Jt : Fin 3 → Finset (Fin 3)) : Prop :=
+  IsMeshFamily (cube 3) 𝒯 ∧ IsFreudenthal 𝒯 ∧ ∀ N,
+    ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpace J (𝒯 N) topSeq 0 ∧
+    ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpace J (𝒯 N) topSeq 1 ∧
+    ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpace J (𝒯 N) topSeq 2 ∧
+    ((Q N).Vt0 : Set (L2Vec (cube 3) 0)) = {v | ∀ a, v a ∈ femSpace (Jt a) (𝒯 N) bottomSeq 0} ∧
+    ((Q N).Vt1 : Set (L2Vec (cube 3) 1)) = {v | ∀ a, v a ∈ femSpace (Jt a) (𝒯 N) bottomSeq 1} ∧
+    ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) = {v | ∀ a, v a ∈ femSpace (Jt a) (𝒯 N) bottomSeq 2} ∧
+    (Q N).IsBounded C ∧ (Q N).Compatible ∧ (Q N).IsConsistent C (meshSize (𝒯 N))
+
+/-- The open box `∏ᵢ (aᵢ, aᵢ + ℓᵢ)`. -/
+def box (a ℓ : Fin 3 → ℝ) : Set (Fin 3 → ℝ) := univ.pi fun i => Ioo (a i) (a i + ℓ i)
 
 /-! ### The theorems -/
+
+/-- **Stability and convergence of the method with weak symmetry**
+([QuennevilleBelair2015], Prop 5.4, Thm 5.5, Prop 6.2, (6.5); [AFW2007]; [AFW2010], §3). For
+every BGG data `D` and every discretization `Q`, solutions of (6.5) with the same source are
+determined on `[0, T]` by `(σₕ, uₕ, Mₕ, ρₕ)(0)`, and if `D` satisfies `IsBGG`, solutions of (6.5)
+without source satisfying the discrete Gauss law at `t = 0` satisfy it at every `t`. For every
+constant `C` there is `K` such that, if `D` satisfies the continuous hypotheses with constant `C`
+and `Q` has projections bounded by `C` satisfying (5.4): the discrete problem (5.6) has exactly
+one solution for every datum `F` (Prop 5.4); and if `Sₕ` is consistent at the order `h` with
+constant `C`, then for every solution `(σ, φ, u, λ)` of (5.3) with `‖λ‖ ≤ Λ` and
+`|⟪S¹u, d¹w⟫| ≤ Λ ‖w‖` on `V¹` (for densely defined `d¹`: `S¹u ∈ D(d¹*)`, `‖d¹*S¹u‖ ≤ Λ`), and the
+solution of (5.6) with the same datum, the squared error is at most `K` times the squared
+projection error of `(σ, φ, u)` plus `h² (Λ² + ‖S¹u‖²)` plus `‖(S¹ - S¹ₕ)u‖²` (Thm 5.5). -/
+theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Type u}
+    [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [NormedAddCommGroup W1]
+    [InnerProductSpace ℝ W1] [NormedAddCommGroup W2] [InnerProductSpace ℝ W2]
+    [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0] [NormedAddCommGroup Wt1]
+    [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
+    (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2) (Q : D.Discretization),
+    (∀ T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', Q.IsDiscreteWave T f σ φ u M ρ lam →
+      Q.IsDiscreteWave T f σ' φ' u' M' ρ' lam' → σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 →
+      ρ 0 = ρ' 0 → ∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
+    (D.IsBGG → ∀ T σ φ u M ρ lam, Q.IsDiscreteWave T 0 σ φ u M ρ lam →
+      Q.IsGauss (σ 0) (u 0) → ∀ t ∈ Icc 0 T, Q.IsGauss (σ t) (u t)) ∧
+    (D.IsBGG → D.IsStable C → Q.IsBounded C → Q.Compatible →
+    (∀ F, ∃! x : D.d0.domain × D.dt0.domain × D.dt1.domain × W1,
+      Q.IsDiscreteSolution F x.1 x.2.1 x.2.2.1 x.2.2.2) ∧
+    ∀ (h Λ : ℝ), 0 ≤ h → Q.IsConsistent C h → ∀ F σ φ u lam σh φh uh lamh,
+      D.IsSolution F σ φ u lam → ‖lam‖ ≤ Λ →
+      (∀ w : D.d1.domain, |⟪D.S1 u, D.d1 w⟫_ℝ| ≤ Λ * ‖(w : W1)‖) →
+      Q.IsDiscreteSolution F σh φh uh lamh →
+      Q.errorSq σ σh φ φh u uh ≤ K * (Q.projErrorSq σ φ u + h ^ 2 * (Λ ^ 2 + ‖D.S1 u‖ ^ 2) +
+        ‖D.S1 u - Q.π2 (D.S1 u)‖ ^ 2)) := by
+  sorry
 
 /-- **With the thesis' boundary conditions the constraints are lost, on every bounded domain**
 ([QuennevilleBelair2015], §6.1, §6.3). On every nonempty bounded open `Ω ⊆ ℝ³` (no regularity
@@ -745,6 +782,26 @@ theorem tsd_not_propagates {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) (hb : Bo
       ∀ U, U 0 = U₀ → IsStrongSolution (bggData Ω).IsWave (Icc 0 T) U →
         (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
         ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a := by
+  sorry
+
+/-- **On boxes, the strong solutions that keep a TSD constraint are the stationary ones**
+([QuennevilleBelair2015], (4.14), §4.10, with the boundary conditions of §6.3). On an open box
+`B = ∏ᵢ (aᵢ, aᵢ + ℓᵢ)`, the linearized Einstein–Bianchi system (4.14) is the Hodge wave
+equation `U' = L U` (`IsHodgeWave`) of the complex `H̊Λ⁰(B) ⊗ ℝ³ → H̊Λ¹(B) ⊗ ℝ³ → L²Λ²(B) ⊗ ℝ³`
+of the minimal exterior derivative (in vector proxies, row by row, `H̊¹ → H̊(curl) → L²`) on
+states `(σ, u, ρ)`, with electric field `mat1 u` and magnetic field `mat2 ρ`. From every state
+of the domain of `L` there is a strong solution on `[0, ∞)`; and for all subspaces `S₁`, `S₂` of
+TSD fields, a strong solution on `[0, ∞)` stays in `{0} × S₁ × S₂` if and only if it starts there
+with `L U(0) = 0`. (For the system with weak symmetry, on every bounded domain some TSD datum
+leaves the constraint in every interval `[0, T]`, `FEEC.tsd_not_propagates`; whether only
+stationary solutions keep it on every bounded domain is not claimed here.) -/
+theorem box_stationary {a ℓ : Fin 3 → ℝ} (hℓ : ∀ i, 0 < ℓ i) :
+    let L := IsHodgeWave (vecOp fun _ => dMin (box a ℓ) 0) (vecOp fun _ => dMin (box a ℓ) 1)
+    (∀ U₀ V, L U₀ V → ∃ U, U 0 = U₀ ∧ IsStrongSolution L (Ici 0) U) ∧
+    ∀ (S₁ : Submodule ℝ (L2Vec (box a ℓ) 1)) (S₂ : Submodule ℝ (L2Vec (box a ℓ) 2)),
+      (∀ u ∈ S₁, IsTSD (mat1 u)) → (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) → ∀ U, IsStrongSolution L (Ici 0) U →
+        ((∀ t ≥ 0, (U t).1 = 0 ∧ (U t).2.1 ∈ S₁ ∧ (U t).2.2 ∈ S₂) ↔
+          ((U 0).1 = 0 ∧ (U 0).2.1 ∈ S₁ ∧ (U 0).2.2 ∈ S₂) ∧ L (U 0) 0) := by
   sorry
 
 /-- **With mirror boundary conditions the constraints are kept** ([QuennevilleBelair2015], §6.1,
@@ -766,43 +823,28 @@ theorem mirror_tsd_propagates :
   sorry
 
 /-- **The method with mirror boundary conditions converges to the TSD solution**
-([QuennevilleBelair2015], §5.3, Table 5.1, §6.2–6.3, (6.4), (6.5), with the boundary conditions of
-`mirrorData`; [AFW2010], §5.5). The cube `Q = (0, ½)³` carries a shape-regular, quasi-uniform
-family of Freudenthal meshes `𝒯_N`, `h_N → 0`, and discretizations `Q_N` of `mirrorData` whose
-spaces are the elements of Table 5.1 with the mirror boundary conditions (`femSpace` of
-`topSeq`, and in component `a` `femSpacePart {a}` of `bottomSeq`), with projections bounded by
-one constant `C`, satisfying (5.4) and consistent at the order `h_N`, such that, for the
-semi-discrete problem (6.5) without source:
+([QuennevilleBelair2015], §6.2–6.3, (6.4), (6.5)). Discretizations `Q_N` of `mirrorData` by the
+elements of Table 5.1 with the mirror conditions (`IsTable51` with `∅` and `{a}`), `mirrorData`
+satisfying `IsBGG` (so by `FEEC.bggWeakSymmetry` solutions of (6.5) are determined by their
+initial values and keep the discrete Gauss law), such that:
 
-* (**well-posedness**) its solutions are determined on `[0, T]` by `(σₕ, uₕ, Mₕ, ρₕ)(0)`;
-* (**the discrete Gauss law**) solutions satisfying it at `t = 0` satisfy it at every `t`;
+* (**a non-stationary solution in the discrete Gauss law**) for every `T > 0` and all large
+  `N`, (6.5) without source has a solution on `[0, T]` with `uₕ(0) ≠ 0` satisfying the law at
+  `t = 0` (so at every `t`, by `FEEC.bggWeakSymmetry`) whose `Mₕ` is not constant;
 * (**the rate**) there is `K` such that for every state `U₀` in the constraint with `U₀`,
   `L U₀`, `L² U₀` in the domain of `L` and every strong solution `U` of `U' = L U` from `U₀`,
-  some solution of (6.5) (in the proof, the one starting from the elliptic projection (6.4) of
-  `U₀`) has
+  some solution of (6.5) without source (in the proof, the one starting from the elliptic
+  projection (6.4) of `U₀`) has
   `(‖σₕ‖² + ‖u - uₕ‖² + ‖Mₕ‖² + ‖ρ - ρₕ‖²)^{1/2}(t) ≤ K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` on
   `[0, T]` (`σ = 0`, `M = 0` for the exact solution).
 
 The projections are asserted, not named (in the proof, smoothed projections commuting with the
 reflections in the faces); the method depends on them through `Sₕ = πS`. -/
 theorem mirror_weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3)
-    (Q : ℕ → mirrorData.Discretization) (C K : ℝ), IsMeshFamily (cube 3) 𝒯 ∧ IsFreudenthal 𝒯 ∧
-    (∀ N, ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpace (cube 3) (𝒯 N) topSeq 0 ∧
-      ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpace (cube 3) (𝒯 N) topSeq 1 ∧
-      ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpace (cube 3) (𝒯 N) topSeq 2 ∧
-      ((Q N).Vt0 : Set (L2Vec (cube 3) 0)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (𝒯 N) bottomSeq 0} ∧
-      ((Q N).Vt1 : Set (L2Vec (cube 3) 1)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (𝒯 N) bottomSeq 1} ∧
-      ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) =
-        {v | ∀ a, v a ∈ femSpacePart {a} (𝒯 N) bottomSeq 2}) ∧
-    (∀ N, (Q N).IsBounded C ∧ (Q N).Compatible ∧ (Q N).IsConsistent C (meshSize (𝒯 N))) ∧
-    (∀ N T σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T →
-      (Q N).IsDiscreteWave T 0 σ φ u M ρ lam → (Q N).IsDiscreteWave T 0 σ' φ' u' M' ρ' lam' →
-      σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
-      ∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
-    (∀ N T σ φ u M ρ lam, 0 < T → (Q N).IsDiscreteWave T 0 σ φ u M ρ lam →
-      (Q N).IsGauss (σ 0) (u 0) → ∀ t ∈ Icc 0 T, (Q N).IsGauss (σ t) (u t)) ∧
+    (Q : ℕ → mirrorData.Discretization) (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧
+    mirrorData.IsBGG ∧
+    (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ σ φ u M ρ lam, (Q N).IsDiscreteWave T 0 σ φ u M ρ lam ∧
+      (Q N).IsGauss (σ 0) (u 0) ∧ (u 0 : L2Vec (cube 3) 1) ≠ 0 ∧ ∃ t ∈ Ioc 0 T, M t ≠ M 0) ∧
     ∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
       mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
       IsStrongSolution mirrorData.IsWave (Icc 0 T) U →
@@ -813,44 +855,37 @@ theorem mirror_weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3)
           meshSize (𝒯 N) := by
   sorry
 
-/-- **The finite element method of Table 5.1 for the complex with weak symmetry on the cube**
-([QuennevilleBelair2015], §5.3, Table 5.1, Thm 5.5, §6.3, Prop 6.2; [AFW2010], §5.5;
-[ChristiansenWinther2008]). The cube `Q = (0, ½)³` carries a shape-regular, quasi-uniform family
-of Freudenthal meshes `𝒯_N`, `h_N → 0`, and discretizations `Q_N` of `cubeData` whose spaces
-are the elements of Table 5.1 with vanishing boundary traces (`femSpaceMin` of `topSeq`, and of
-`bottomSeq` in each component), with projections bounded by one constant `C`, satisfying (5.4),
+/-- **The finite element method of Table 5.1 with the thesis' boundary conditions on the cube**
+([QuennevilleBelair2015], §5.3, Table 5.1, Thm 5.5, Prop 5.9, §6.3, Prop 6.2; [AFW2010], §5.5;
+[ChristiansenWinther2008]). Discretizations `Q_N` of `cubeData` by the elements of Table 5.1
+with vanishing boundary traces on Freudenthal meshes of `Q = (0, ½)³` (`IsTable51` with `univ`)
 such that:
 
-* (**consistency**) `Sₕ = πS` is consistent at the order `h_N` with constant `C`;
-* (**well-posedness**) the discrete problem (5.6) has exactly one solution for every datum `F`;
+* (**an instance of `FEEC.bggWeakSymmetry`**) `cubeData` satisfies `IsBGG` and the continuous
+  hypotheses with constant `C` (so (5.6) is uniquely solvable), and for `N ≥ 2` the method
+  changes `S⁰` on the discrete space: `S⁰ₕψ = π¹S⁰ψ ≠ S⁰ψ` for some `ψ ∈ Ṽₕ⁰`;
+* (**no best approximation of `S¹` at the order `h`**) for some `c > 0` and every `N ≥ 2`, some
+  `v ∈ Ṽₕ¹`, `v ≠ 0`, has `‖S¹v - w‖ ≥ c (‖v‖² + ‖d̃v‖²)^{1/2}` for all `w ∈ Vₕ²` (Raviart–Thomas):
+  no projection has `‖(S¹ - S¹ₕ)v‖ ≤ C h_N ‖v‖_{HΛ}` on `Ṽₕ¹` (`IsConsistent` asks less);
 * (**static rates**) for every solution of (5.3) with `‖λ‖ ≤ L` whose components `σ`, `φₐ`, `uₐ`
   are `C²` up to `∂Q` with vanishing tangential traces and bound `L`, or whose components `σ`,
   `φₐ`, `d̃φₐ`, `uₐ`, `d̃uₐ` lie in `H¹(Q)` with norms at most `L`, the solution of (5.6) has
   `errorSq ≤ (K L h_N)²`;
-* (**wave**) solutions of the semi-discrete problem (6.5) are determined on `[0, T]` by
-  `(σₕ, uₕ, Mₕ, ρₕ)(0)` (and `φₕ`, `λₕ` on `[0, T)`), and for every classical solution of
-  (6.2) whose states and their time derivatives are regular (`IsRegularState`) or of class `H¹`
-  (`IsH1State`) with bound `L` and whose multipliers are bounded by `L`, some solution of (6.5)
-  (the one starting from the elliptic projection of the exact data, [QuennevilleBelair2015],
-  (6.4)) has `(‖σ - σₕ‖² + ‖u - uₕ‖² + ‖M - Mₕ‖² + ‖ρ - ρₕ‖²)^{1/2} ≤ K L (1 + t) h_N` on
-  `[0, T]`.
+* (**wave**) solutions of (6.5) are determined by `(σₕ, uₕ, Mₕ, ρₕ)(0)` (also `φₕ`, `λₕ` on
+  `[0, T)`), and for every classical solution of (6.2) whose states and their time derivatives are
+  regular (`IsRegularState`) or of class `H¹` (`IsH1State`) with bound `L` and whose multipliers
+  are bounded by `L`, some solution of (6.5) (from the elliptic projection (6.4)) has
+  `(‖σ - σₕ‖² + ‖u - uₕ‖² + ‖M - Mₕ‖² + ‖ρ - ρₕ‖²)^{1/2} ≤ K L (1 + t) h_N` on `[0, T]`.
 
 The projections are asserted, not named (in the proof, the smoothed projections of one smoother
-for both rows); the method (5.6) depends on them through `Sₕ = πS`. -/
+for both rows); the method depends on them through `Sₕ = πS`. -/
 theorem weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → cubeData.Discretization)
-    (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧ IsFreudenthal 𝒯 ∧
-    (∀ N, ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpaceMin (cube 3) (𝒯 N) topSeq 0 ∧
-      ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpaceMin (cube 3) (𝒯 N) topSeq 1 ∧
-      ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpaceMin (cube 3) (𝒯 N) topSeq 2 ∧
-      ((Q N).Vt0 : Set (L2Vec (cube 3) 0)) =
-        {v | ∀ a, v a ∈ femSpaceMin (cube 3) (𝒯 N) bottomSeq 0} ∧
-      ((Q N).Vt1 : Set (L2Vec (cube 3) 1)) =
-        {v | ∀ a, v a ∈ femSpaceMin (cube 3) (𝒯 N) bottomSeq 1} ∧
-      ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) =
-        {v | ∀ a, v a ∈ femSpaceMin (cube 3) (𝒯 N) bottomSeq 2}) ∧
-    (∀ N, (Q N).IsBounded C ∧ (Q N).Compatible ∧ (Q N).IsConsistent C (meshSize (𝒯 N))) ∧
-    (∀ N F, ∃! x : cubeData.d0.domain × cubeData.dt0.domain × cubeData.dt1.domain ×
-      L2Form (cube 3) 1, (Q N).IsDiscreteSolution F x.1 x.2.1 x.2.2.1 x.2.2.2) ∧
+    (C : ℝ), IsTable51 𝒯 Q C Finset.univ (fun _ => Finset.univ) ∧ cubeData.IsBGG ∧
+    cubeData.IsStable C ∧ (∀ N, 2 ≤ N → ∃ ψ : cubeData.dt0.domain,
+      (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧ (Q N).π1 (cubeData.S0 ψ) ≠ cubeData.S0 ψ) ∧
+    (∃ c > 0, ∀ N, 2 ≤ N → ∃ v : cubeData.dt1.domain, (v : L2Vec (cube 3) 1) ∈ (Q N).Vt1 ∧
+      (v : L2Vec (cube 3) 1) ≠ 0 ∧ ∀ w ∈ (Q N).V2,
+        c * √(‖(v : L2Vec (cube 3) 1)‖ ^ 2 + ‖cubeData.dt1 v‖ ^ 2) ≤ ‖cubeData.S1 v - w‖) ∧
     (∃ K, ∀ N F σ φ u lam σh φh uh lamh L, cubeData.IsSolution F σ φ u lam →
       IsTangentialC2 0 L (σ : L2Form (cube 3) 0) →
       (∀ a, IsTangentialC2 0 L ((φ : L2Vec (cube 3) 0) a)) →

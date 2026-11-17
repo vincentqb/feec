@@ -53,15 +53,15 @@ theorem cube_hyps : ∃ (p : ℕ → SmoothingParam (Fin 3 → ℝ)) (C₀ : ℝ
 theorem cubeQ_spaces {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C₀ : ℝ}
     (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C₀)
     (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C₀) (N : ℕ) :
-    ((cubeQ hT hB N).V0 : Set W0) = femSpaceMin (cubeDomain 3) (cubeMesh N) topSeq 0 ∧
-      ((cubeQ hT hB N).V1 : Set W1) = femSpaceMin (cubeDomain 3) (cubeMesh N) topSeq 1 ∧
-      ((cubeQ hT hB N).V2 : Set W2) = femSpaceMin (cubeDomain 3) (cubeMesh N) topSeq 2 ∧
+    ((cubeQ hT hB N).V0 : Set W0) = femSpaceMinOn (cubeDomain 3) (cubeMesh N) topSeq 0 ∧
+      ((cubeQ hT hB N).V1 : Set W1) = femSpaceMinOn (cubeDomain 3) (cubeMesh N) topSeq 1 ∧
+      ((cubeQ hT hB N).V2 : Set W2) = femSpaceMinOn (cubeDomain 3) (cubeMesh N) topSeq 2 ∧
       ((cubeQ hT hB N).Vt0 : Set (Wv W0)) =
-        {v | ∀ a, v a ∈ femSpaceMin (cubeDomain 3) (cubeMesh N) bottomSeq 0} ∧
+        {v | ∀ a, v a ∈ femSpaceMinOn (cubeDomain 3) (cubeMesh N) bottomSeq 0} ∧
       ((cubeQ hT hB N).Vt1 : Set (Wv W1)) =
-        {v | ∀ a, v a ∈ femSpaceMin (cubeDomain 3) (cubeMesh N) bottomSeq 1} ∧
+        {v | ∀ a, v a ∈ femSpaceMinOn (cubeDomain 3) (cubeMesh N) bottomSeq 1} ∧
       ((cubeQ hT hB N).Vt2 : Set (Wv W2)) =
-        {v | ∀ a, v a ∈ femSpaceMin (cubeDomain 3) (cubeMesh N) bottomSeq 2} := by
+        {v | ∀ a, v a ∈ femSpaceMinOn (cubeDomain 3) (cubeMesh N) bottomSeq 2} := by
   have hT' := fun k => polyMin_V_eq topSeq N k
   have hB' := fun k => polyMin_V_eq bottomSeq N k
   rw [topSeq_toFeec] at hT'

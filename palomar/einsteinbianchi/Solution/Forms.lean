@@ -143,4 +143,10 @@ theorem LinearPMap.apply_of_eq' {E F : Type*} [AddCommGroup E] [Module ℝ E] [A
     T x = T' ⟨x, h ▸ x.2⟩ := by
   subst h; rfl
 
+/-- The operator `T` acting componentwise on vectors: `vecOp` of the constant family `T`. -/
+abbrev vecOpC {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedAddCommGroup F]
+    [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) :
+    PiLp 2 (fun _ : Fin n => E) →ₗ.[ℝ] PiLp 2 (fun _ : Fin n => F) :=
+  FEEC.vecOp fun _ => T
+
 end FEEC

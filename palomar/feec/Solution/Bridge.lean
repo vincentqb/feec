@@ -1,6 +1,6 @@
 module
 
-public import Solution.Defs
+public import Solution.Legacy
 public import Feec.HilbertComplex.Approximation.StaticFEEC
 
 /-!
@@ -85,9 +85,9 @@ theorem graphNorm_domainCoord {i k : ℤ} (hik : (ComplexShape.up ℤ).Rel i k)
 
 theorem mixedNorm_domainCoord {j : ℤ} (σ : H.toFeec.domainSpace (j - 1))
     (u : H.toFeec.domainSpace j) (p : W j) :
-    H.mixedNorm j (H.coord (j - 1) j σ) (H.coord j (j + 1) u) p =
+    H.mixedNorm₃ j (H.coord (j - 1) j σ) (H.coord j (j + 1) u) p =
       ‖σ‖ + ‖u‖ + ‖p‖ := by
-  unfold mixedNorm
+  unfold mixedNorm₃
   rw [H.graphNorm_domainCoord (rel_sub_one j), H.graphNorm_domainCoord (rel_add_one j)]
 
 /-- The error of the challenge at points of `Feec`'s domain spaces is their distance there. -/
@@ -197,7 +197,7 @@ theorem toFeec_π_apply {i : ℤ} (x : (H.d i (i + 1)).domain) : P.toFeec.π i x
 /-- The harmonic gap is that of `Feec`. -/
 theorem harmonicGap_toFeec (j : ℤ) : P.toFeec.harmonicGap j = P.harmonicGap j := by
   unfold Feec.HilbertComplex.Subcomplex.CochainProjection.harmonicGap
-    Subcomplex.CochainProjection.harmonicGap
+    Subcomplex.CochainProjection.harmonicGap Subcomplex.CochainProjection.harmonicError
   rw [H.harmonic_eq j]
   exact iSup_congr fun q => congrArg (fun x => ‖((q : H.harmonic j) : W j) - x‖)
     (P.extend_apply ⟨_, H.harmonic_le_domain j (q : H.harmonic j).2⟩)
@@ -579,7 +579,7 @@ variable (S : H.Subcomplex) [∀ i, FiniteDimensional 𝕜 (S.V i)]
 
 /-- A point of `Feec`'s discrete mixed space, read in the challenge: its norm there. -/
 theorem mixedNorm_eq {j : ℤ} (x : S.toFeec.toHilbertComplex.MixedSpace (j - 1) j) :
-    H.mixedNorm j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
+    H.mixedNorm₃ j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
       (H.coord j (j + 1) (S.toFeec.embD j (WithLp.snd x).fst))
       (((WithLp.snd x).snd : S.toFeec.V j) : W j) =
       ‖WithLp.fst x‖ + ‖(WithLp.snd x).fst‖ + ‖(((WithLp.snd x).snd : S.toFeec.V j) : W j)‖ := by
@@ -587,10 +587,10 @@ theorem mixedNorm_eq {j : ℤ} (x : S.toFeec.toHilbertComplex.MixedSpace (j - 1)
 
 /-- The norm of the challenge is between the `ℓ²` norm of `Feec` and twice it. -/
 theorem norm_le_mixedNorm {j : ℤ} (x : S.toFeec.toHilbertComplex.MixedSpace (j - 1) j) :
-    ‖x‖ ≤ H.mixedNorm j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
+    ‖x‖ ≤ H.mixedNorm₃ j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
       (H.coord j (j + 1) (S.toFeec.embD j (WithLp.snd x).fst))
       (((WithLp.snd x).snd : S.toFeec.V j) : W j) ∧
-    H.mixedNorm j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
+    H.mixedNorm₃ j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
       (H.coord j (j + 1) (S.toFeec.embD j (WithLp.snd x).fst))
       (((WithLp.snd x).snd : S.toFeec.V j) : W j) ≤ 2 * ‖x‖ := by
   rw [S.mixedNorm_eq]
@@ -612,7 +612,7 @@ theorem norm_le_mixedNorm {j : ℤ} (x : S.toFeec.toHilbertComplex.MixedSpace (j
 challenge. -/
 theorem mixedNorm_le_of_norm_le {j : ℤ} (x : S.toFeec.toHilbertComplex.MixedSpace (j - 1) j)
     {B : ℝ} (hx : ‖x‖ ≤ B) :
-    H.mixedNorm j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
+    H.mixedNorm₃ j (H.coord (j - 1) j (S.toFeec.embD (j - 1) (WithLp.fst x)))
       (H.coord j (j + 1) (S.toFeec.embD j (WithLp.snd x).fst))
       (((WithLp.snd x).snd : S.toFeec.V j) : W j) ≤ 2 * B := by
   have := (S.norm_le_mixedNorm x).2
@@ -642,8 +642,8 @@ theorem infSup_of_feec (P : S.CochainProjection) {j : ℤ} {cP C : ℝ} (hC : 1 
     (hσ : (σ : W (j - 1)) ∈ S.V (j - 1)) (hu : (u : W j) ∈ S.V j) (hp : p ∈ S.harmonic j) :
     ∃ (τ : (H.d (j - 1) j).domain) (v : (H.d j (j + 1)).domain) (q : W j),
       (τ : W (j - 1)) ∈ S.V (j - 1) ∧ (v : W j) ∈ S.V j ∧ q ∈ S.harmonic j ∧
-      H.mixedNorm j τ v q ≤ H.mixedNorm j σ u p ∧
-      1 / (16 * (C * √(1 + cP ^ 2)) ^ 2) / 16 * H.mixedNorm j σ u p ^ 2 ≤
+      H.mixedNorm₃ j τ v q ≤ H.mixedNorm₃ j σ u p ∧
+      1 / (16 * (C * √(1 + cP ^ 2)) ^ 2) / 16 * H.mixedNorm₃ j σ u p ^ 2 ≤
         ‖H.mixedForm j σ u p τ v q‖ := by
   have hIS := P.toFeec.infSup_mixedForm_of_graph (rel_sub_one j) (rel_add_one j) hC hPi hPj hπi hπj
   set γ := 1 / (16 * (C * √(1 + cP ^ 2)) ^ 2)
@@ -693,7 +693,7 @@ the Poincaré constant `c_P`. -/
 theorem SubcomplexFamily.staticVerdict_of (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ}
     (hc : 1 ≤ c) (hπ : F.IsGraphBoundedBy (j - 1) c) (hπ' : F.IsGraphBoundedBy j c)
     (hP : H.PoincareBy (j - 1) cP) (hP' : H.PoincareBy j cP) :
-    F.StaticVerdict j (staticConst c cP) := by
+    F.StaticVerdict₀ j (staticConst c cP) := by
   set G := F.toFeec
   have hPi := hP.toFeec (sub_add_cancel j 1)
   have hPj := hP'.toFeec (rel_add_one j)
@@ -801,8 +801,8 @@ theorem SubcomplexFamily.staticVerdict_of (F : H.SubcomplexFamily κ) (j : ℤ) 
       (F.V h).infSup_of_feec (F.π h) hc hPi hPj (hCi h) (hCj h) σ u p hσ hu hp
     refine ⟨τ, v, q, h1, h2, h3, h4, ?_⟩
     have hK0 : 0 < K := by linarith
-    have e : H.mixedNorm j σ u p ^ 2 =
-        256 * K ^ 2 * (1 / (16 * K ^ 2) / 16 * H.mixedNorm j σ u p ^ 2) := by
+    have e : H.mixedNorm₃ j σ u p ^ 2 =
+        256 * K ^ 2 * (1 / (16 * K ^ 2) / 16 * H.mixedNorm₃ j σ u p ^ 2) := by
       field_simp; ring
     rw [e]
     refine (mul_le_mul_of_nonneg_left h5 (by positivity)).trans

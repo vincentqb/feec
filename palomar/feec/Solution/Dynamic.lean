@@ -130,8 +130,10 @@ theorem invariantCore_of {A : E →ₗ.[𝕜] E} {S : ℝ → E →L[𝕜] E}
 
 /-- **The evolution verdict from `Feec`'s**: the conclusions of the dissipative and fully discrete
 FEEC theorems, restated. -/
-theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → Submodule 𝕜 E}
-    [∀ h, CompleteSpace (X h)] {B : ∀ h, X h →L[𝕜] X h} {S S' : ℝ → E →L[𝕜] E} (hSS' : ∀ t, 0 ≤ t → S t = S' t)
+theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → Type*}
+    [∀ h, NormedAddCommGroup (X h)] [∀ h, InnerProductSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
+    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] {ι : ∀ h, X h →L[𝕜] E} {B : ∀ h, X h →L[𝕜] X h} {S S' : ℝ → E →L[𝕜] E}
+    (hSS' : ∀ t, 0 ≤ t → S t = S' t)
     (hA : A.IsMDissipative) (hS' : ∀ t, S' t = hA.semigroup.S t)
     (hB : ∀ h x, RCLike.re ⟪B h x, x⟫_𝕜 ≤ 0)
     (hsol : ∀ (x : A.domain) (T : ℝ),
@@ -139,15 +141,15 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
     (huniq : ∀ (x : A.domain) (T : ℝ) (U : ℝ → E), U 0 = x →
       Feec.Evolution.IsStrongSolution A (Icc 0 T) 0 U → EqOn U (fun t => S' t x) (Icc 0 T))
     (hanti : ∀ x, AntitoneOn (fun t => ‖S' t x‖) (Ici 0)) (hS0 : ∀ x, S' 0 x = x)
-    (hconv : ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ T : ℝ,
-      TendstoUniformlyOn (fun h t => ((Feec.C0Group.ofBounded (B h)).S t (v h) : E))
+    (hconv : ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => ι h (v h)) l (𝓝 x) → ∀ T : ℝ,
+      TendstoUniformlyOn (fun h t => ι h ((Feec.C0Group.ofBounded (B h)).S t (v h)))
         (fun t => S' t x) l (Icc 0 T))
     (hrat : ∀ (r : RationalScheme) (_ : r.toFeec.IsAStable) {p : ℕ} (_ : r.toFeec.HasOrder p)
       (_ : 0 < p) (τ : κ → ℝ) (_ : ∀ h, 0 < τ h), Tendsto τ l (𝓝 0) →
-      ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => (v h : E)) l (𝓝 x) → ∀ (T ε : ℝ), 0 < ε →
+      ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => ι h (v h)) l (𝓝 x) → ∀ (T ε : ℝ), 0 < ε →
         ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
-          ‖S' (n * τ h) x - ((r.toFeec.apply ((τ h : 𝕜) • B h) ^ n) (v h) : E)‖ < ε) :
-    EvolutionVerdict A l X B S where
+          ‖S' (n * τ h) x - ι h ((r.toFeec.apply ((τ h : 𝕜) • B h) ^ n) (v h))‖ < ε) :
+    EvolutionVerdict A l X ι B S where
   dense := hA.dense_domain
   solution x hx T := (isStrongSolution_iff.2 (hsol ⟨x, hx⟩ T).toIsStrongSolution).congr
     fun t ht => by simp only [hSS' t ht.1]
@@ -527,7 +529,8 @@ theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
     rw [isReducing_iff, H.wave_eq a m]
     exact VK.isReducing_iff_invariant
   have hL : F.Lh a m = fun h => G.discreteWave h := funext (F.Lh_eq a m happrox ⊤ (isClosed_top a m))
-  have hEV : EvolutionVerdict (H.wave a m) F.l (F.Xh a m) (F.Lh a m) G.toApprox.U := by
+  have hEV : EvolutionVerdict (H.wave a m) F.l (fun h => F.Xh a m h)
+      (fun h => (F.Xh a m h).subtypeL) (F.Lh a m) G.toApprox.U := by
     rw [H.wave_eq a m, hL]
     exact evolutionVerdict_of (S' := G.toApprox.S) (fun t ht => (V.S_eq_U ht).symm)
       G.toApprox.isMDissipative (fun _ => rfl) G.toApprox.dissipative V.isClassicalSolution V.unique
@@ -560,7 +563,8 @@ theorem heatVerdict (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded
         ‖((F.π h).π _ x : W (a + (i : ℕ)))‖ ≤ C * ‖(x : W (a + (i : ℕ)))‖)
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) → IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
     ∃ S : ℝ → Total W a m →L[𝕜] Total W a m,
-    EvolutionVerdict (sq (H.wave a m)) F.l (F.Xh a m) (fun h => F.Lh a m h ^ 2) S := by
+    EvolutionVerdict (sq (H.wave a m)) F.l (fun h => F.Xh a m h)
+      (fun h => (F.Xh a m h).subtypeL) (fun h => F.Lh a m h ^ 2) S := by
   have hcrw := H.closedRangeAt_window a m hcr
   have hb := F.isGraphBounded_window a m hπ hπ'
   set G := F.feecWindow a m happrox ⊤ (isClosed_top a m)

@@ -71,9 +71,11 @@ project:
     discretization with the load i_h* f are uniquely solvable, the discrete solutions are stable,
     satisfy the Strang lemma (error at most the read error of any discrete triple plus C times its
     residual in the dual graph norm) and converge for every datum once the method is consistent on a
-    dense set of data, and the heat equation converges (i_h exp(-t Delta_h) v_h -> U(t)x uniformly
-    on [0, T] for every family i_h v_h -> x) when the static method converges for every datum and
-    ||1 - i_h* i_h|| -> 0; for cochain reading maps with cochain projections bounded in the graph
+    dense set of data, and the heat equation u' = L^2 u by u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h
+    read by i_h has the evolution verdict of the conforming case (well-posed, i_h exp(-t Delta_h) v_h
+    -> U(t)x uniformly on [0, T] for every family i_h v_h -> x, the A-stable rational schemes with
+    their temporal error, the K / K-perp criterion) when the static method converges for every
+    datum and ||1 - i_h* i_h|| -> 0; for cochain reading maps with cochain projections bounded in the graph
     norm: the uniform discrete Poincare inequality, convergence for every datum when ||1 - i_h*
     i_h|| -> 0 and i_h pi_h -> 1 on D(d), eventually an isomorphism H(d) = H(d_h) induced by pi_h
     (for finite-dimensional harmonic forms), and the error at most K eps for data whose sigma, u, p
@@ -286,8 +288,8 @@ status:
     Formalized and compared: FEEC.feec, FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, FEEC.crimeFEEC,
     FEEC.crime_nonvacuous, FEEC.feec_cube, FEEC.bggCohomology, FEEC.bggFinrank and
-    FEEC.bggHilbert (Challenge.lean, 1311 lines: OVER the Palomar limit of 1000 lines; the entry is
-    not submittable as it stands, see review.notes). The weak-symmetry theorems of the former
+    FEEC.bggHilbert (Challenge.lean, 997 lines; the definitions were redesigned to fit the limit,
+    see review.notes). The weak-symmetry theorems of the former
     palomar/bgg (FEEC.bggWeakSymmetry, FEEC.bggWeakSymmetry_nonvacuous and their definitions
     WeakSymmetryData, Discretization) moved to palomar/einsteinbianchi, next to their finite
     element instance on the cube (Table 5.1). Not compared, proved in Feec: of the former
@@ -462,15 +464,31 @@ review:
     - "none"
   notes: >-
     Not yet reviewed by the author: the challenge merges the former palomar/feec challenge
-    (definitions and statements unchanged up to shortened docstrings) and the BGG part of the
+    (statements equivalent, definitions redesigned as below) and the BGG part of the
     former palomar/bgg (FEEC.bggCohomology stated as the two quasi-isomorphisms; the other fields
     of the former BGG verdict, the identification and Theorem 7 are not compared), with the L2 de
-    Rham definitions of palomar/fem (shortened docstrings) and the new FEEC.feec_cube. LINE LIMIT:
-    the challenge has 1311 lines, over the Palomar hard limit of 1000; compression (docstrings,
-    theorem docstrings that restated the statements) did not close the gap without cutting
-    content. Candidates: keep the BGG part as its own entry (about 310 lines with its header,
-    leaving about 1000 here before further docstring compression), or move the variational crimes
-    to their own entry (about 210 lines); a user decision. Audit A (2026-11-17, an AI editor's
+    Rham definitions of palomar/fem (shortened docstrings) and the new FEEC.feec_cube. REDESIGN
+    for the 1000-line limit (1311 -> 997 lines, no compared theorem or conclusion dropped): one
+    mixed problem of a pair of closed operators on a Galerkin space (FEEC.MixedSpace, mixedForm,
+    galerkin, IsMixedSolution: x in X and B(x; y) = <v, f> for all y in X, on a Galerkin space
+    equivalent to the three equations; HilbertComplex.mixedSpace, Subcomplex.mixedSpace,
+    totalMixedSpace) replaces HilbertComplex.IsMixedSolution, mixedForm, mixedError and
+    IsTotalMixedSolution, solutions are triples; one evolution verdict for a generator and
+    discrete spaces with reading maps (EvolutionVerdict A l X iota B S, as Feec's DissipFEEC) serves
+    the wave, the heat and the crime heat equations (the conforming ones with the inclusion
+    X_h -> W), so the crime heat field now also asserts density, the A-stable rational schemes,
+    the temporal error and the K / K-perp criterion; crime triples (CrimeFamily.IsSolution,
+    ResidualLE, readGap, ConvergesAt, defect); SubcomplexFamily.HasRate (the mixed method has a rate
+    on regularity classes) shared by Rated.static and FEEC.feec_cube; SubcomplexFamily.Verdict
+    absorbs DynamicVerdict (fields wave, heat); CochainProjection.harmonicError; BGG.Gamma and
+    BGG.Delta stated over all indices (the same submodules: twist k i = 0 unless k + 1 = i), the
+    l2 spaces of FEEC.bggHilbert as let-bindings; dMax with its test graph inline. Variational
+    crimes as the general case was assessed and not applied to the statements: Feec already
+    embeds the conforming windows (ConformingFamily.Verdict.crime), but the conforming verdict
+    has conclusions without crime analogues (harmonic gaps, the inclusion isomorphism on
+    cohomology, the 4 sqrt 3 wave bound, propagation), so one crime verdict would drop them. The
+    Solution proves the componentwise forms (Solution/Legacy.lean) and converts
+    (Solution/Convert.lean). Audit A (2026-11-17, an AI editor's
     read): the compared finite element family (FEEC.feec_cube) answers its main finding; the
     per-h fully discrete wave bound (fidelity (4)) and the toy crime witness (fidelity (7)) are
     disclosed; Feec proves Thm 3.7 of [AFW2010] with no closed-range hypothesis
@@ -495,14 +513,14 @@ alignment:
     - source: >-
         [QuennevilleBelair2015], Thms 4.6, 4.7, 4.14, Props 4.13, 4.16, 4.17; [Kato1995], §III.5.6;
         [GilletteHolstZhu2017]; [Thomee2006], Ch. 7; [BrennerThomee1979]
-      lean: "FEEC.HilbertComplex.SubcomplexFamily.DynamicVerdict"
+      lean: "FEEC.HilbertComplex.SubcomplexFamily.WaveVerdict"
       module: "Challenge"
       status: "proved"
       note: >-
-        Field dynamic of FEEC.HilbertComplex.SubcomplexFamily.Verdict: wave (WaveVerdict, with
-        EvolutionVerdict; constraint fields propagates_iff, invariantCore, subcomplex) and heat
-        (EvolutionVerdict), including the A-stable rational schemes and the K / K-perp criterion
-        EvolutionVerdict.reducing_iff.
+        Fields wave (WaveVerdict, with EvolutionVerdict; constraint fields propagates_iff,
+        invariantCore, subcomplex) and heat (EvolutionVerdict) of
+        FEEC.HilbertComplex.SubcomplexFamily.Verdict, including the A-stable rational schemes and the
+        K / K-perp criterion EvolutionVerdict.reducing_iff.
     - source: "all of the above"
       lean: "FEEC.feec"
       module: "Challenge"

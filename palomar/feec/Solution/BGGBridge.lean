@@ -89,7 +89,10 @@ theorem Γ_toData (J : ℤ) : (toData S).Γ (J < ·) = Γ S J := by
   rw [Feec.BGG.Data.mem_Γ, CochainComplex.next]
   simp only [Γ, Submodule.mem_inf, Submodule.mem_iInf, LinearMap.mem_ker, LinearMap.coe_comp,
     Function.comp_apply, LinearMap.fst_apply]
-  rfl
+  refine and_congr Iff.rfl ⟨fun h j hj => ?_, fun h hJ => h (i + 1) hJ⟩
+  by_cases hij : i + 1 = j
+  · subst hij; exact h hj
+  · rw [twist_of_ne S hij]; rfl
 
 theorem Δ_toData (J : ℤ) : (toData S).Δ (· < J) = Δ S J := by
   funext i
@@ -99,7 +102,13 @@ theorem Δ_toData (J : ℤ) : (toData S).Δ (· < J) = Δ S J := by
   generalize hp : (ComplexShape.up ℤ).prev i = p
   rw [CochainComplex.prev] at hp
   subst hp
-  rfl
+  unfold Δ
+  congr 1
+  refine le_antisymm (iSup_le fun h => le_iSup₂_of_le (i - 1) h le_rfl) (iSup₂_le fun k hk => ?_)
+  by_cases hki : k + 1 = i
+  · obtain rfl : k = i - 1 := by omega
+    exact le_iSup_of_le hk le_rfl
+  · rw [twist_of_ne S hki, Submodule.map_zero]; exact bot_le
 
 theorem eliminates_toData {J : ℤ} (hinj : ∀ i < J, Function.Injective (S.f i))
     (hsurj : ∀ i, J ≤ i →
@@ -251,6 +260,16 @@ theorem closedRange [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (
   · have := D.isClosed_bgg_Δ hS i
     rwa [hΔ'] at this
 
+/-- `Γⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`. -/
+abbrev ΓL (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Γ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
+/-- `Δⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)`. -/
+abbrev ΔL (J i : ℤ) : Submodule 𝕜 (WithLp 2 (H i × Ht i)) :=
+  (Δ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i).comap
+    (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+
 /-- `Γ / Δ` on the `ℓ²` products as a subquotient of the twisted complex (`Feec`). -/
 def subquot (J : ℤ)
     (hle : ∀ i, Δ (ofBoundedHom (hd := hd) (hdt := hdt) s hs) J i ≤
@@ -265,7 +284,7 @@ def subquot (J : ℤ)
   Δ_le_Γ i _ hx := hle i hx
   isClosed_Γ i := (hΓ i).preimage (WithLp.prodContinuousLinearEquiv 2 𝕜 (H i) (Ht i)).continuous
   d_mem_Γ i j _ hx := twist_mem_Γ _ J i j hx
-  d_mem_Δ i j _ hx := twist_mem_Δ _ J i j hx
+  d_mem_Δ i j _ hx := Δ_le_comap _ J i j hx
 
 /-- **The BGG complex with the quotient norm is a bounded Hilbert complex with closed ranges**
 (`FEEC.bggHilbert`), from `Feec.HilbertComplex.Subquotient.toQuotEquiv`, `quotD_toQuot`,
@@ -275,9 +294,9 @@ theorem hilbert [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)] (J : 
     (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
       LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
     let S := ofBoundedHom (hd := hd) (hdt := hdt) s hs
-    let ΓL := ΓL (hd := hd) (hdt := hdt) s hs J
-    let ΔL := ΔL (hd := hd) (hdt := hdt) s hs J
-    let Q := QuotL (hd := hd) (hdt := hdt) s hs J
+    let ΓL i := (Γ S J i).comap (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+    let ΔL i := (Δ S J i).comap (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+    let Q i := ΓL i ⧸ (ΔL i).comap (ΓL i).subtype
     (∀ i, IsClosed (Γ S J i : Set (H i × Ht i)) ∧ IsClosed (Δ S J i : Set (H i × Ht i))) ∧
       (∀ i, ∃ e : ↥(ΓL i ⊓ (ΔL i)ᗮ) ≃ₗᵢ[𝕜] Q i, ∀ y, e y = Submodule.Quotient.mk ⟨y, y.2.1⟩) ∧
       ∃ D : ∀ i, Q i →L[𝕜] Q (i + 1),

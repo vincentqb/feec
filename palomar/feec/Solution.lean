@@ -1,6 +1,7 @@
 module
 
 public import Solution.Cube
+public import Solution.Convert
 public import Solution.Existence
 public import Solution.Witness
 public import Solution.BGGBridge
@@ -93,8 +94,8 @@ theorem staticFEEC_uniform : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [
     F.IsGraphBoundedBy (j - 1) c → F.IsGraphBoundedBy j c →
     H.PoincareBy (j - 1) cP → H.PoincareBy j cP → F.StaticVerdict j (Φ c cP) :=
   ⟨fun c cP => HilbertComplex.staticConst (max c 1) cP, fun F j _ _ hπ hπ' hP hP' =>
-    F.staticVerdict_of j (le_max_right _ _) (hπ.mono (le_max_left _ _)) (hπ'.mono (le_max_left _ _))
-      hP hP'⟩
+    (F.staticVerdict_of j (le_max_right _ _) (hπ.mono (le_max_left _ _))
+      (hπ'.mono (le_max_left _ _)) hP hP').toStaticVerdict⟩
 
 variable [∀ i, NormedSpace ℝ (W i)]
 
@@ -104,7 +105,7 @@ Thm 4.14; [BrennerThomee1979]): for every Jackson estimate `J` of `F`, the stati
 `O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)` (`HilbertComplex.SubcomplexFamily.Rated`). -/
 theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
     (J : F.Jackson ρ) : F.Rated J :=
-  F.rated J
+  (F.rated J).toRated
 
 /-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
 4.7, 4.14, Props 4.13, 4.16, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family
@@ -114,9 +115,9 @@ theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ
   have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
   ⟨fun a m => by
     rw [HilbertComplex.wave_eq]; exact (H.toFeec.window a m).isSkewAdjoint_wave,
-    fun j hπ hπ' hj hj' => F.exists_staticVerdict j hπ hπ' hj hj', fun a m ha =>
-    ⟨F.waveVerdict a m (F.approximates_window a m ha.1 ha.2), fun hπ hπ' hcr =>
-      F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩⟩
+    fun j hπ hπ' hj hj' => (F.exists_staticVerdict j hπ hπ' hj hj').imp fun _ V =>
+      V.toStaticVerdict, fun a m ha => F.waveVerdict a m (F.approximates_window a m ha.1 ha.2),
+    fun a m ha hπ hπ' hcr => F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩
 
 /-- **The FEEC theorem with variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8):
 on a window with closed ranges (degrees `a + 1, …, a + m - 1`), every approximating family of
@@ -126,7 +127,8 @@ theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) : S.Verdict :=
   have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => isScalarTower_of_normedSpace
-  ⟨fun hP => S.staticVerdict hcr hP, fun hi _ P => S.cochainVerdict hcr hi P,
+  ⟨fun hP => (S.staticVerdict hcr hP).imp fun _ V => V.toStaticVerdict,
+    fun hi _ P => (S.cochainVerdict hcr hi P).toCochainVerdict,
     fun hP hJ hconv => S.heatVerdict hcr hP hJ hconv⟩
 
 /-- **Non-vacuity of the crimes** ([HolstStern2012], §3): on the complex `ℝ` in every degree with
@@ -139,12 +141,12 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     (S : H.CrimeFamily.{0} 0 3 ℕ) (P : S.CochainProj 2),
     (∀ i : Fin 3, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℝ)) ∧
     S.l = atTop ∧ S.IsCochain ∧ (∀ n, (S.incl n).adjoint ∘L S.incl n ≠ 1) ∧
-    Tendsto (fun n => ‖1 - (S.incl n).adjoint ∘L S.incl n‖) atTop (𝓝 0) ∧
+    Tendsto S.defect atTop (𝓝 0) ∧
     (∀ n (x : (H.totalD 0 3).domain), S.incl n (P.π n x) = x) ∧
     (∃ q ∈ H.totalHarmonic 0 3, q ≠ 0) ∧
     (∀ n, ∃ q ∈ S.harmonic n, S.incl n q ∉ H.totalHarmonic 0 3) ∧
-    ∃ f, ∀ σ u p, H.IsTotalMixedSolution 0 3 f σ u p → ∀ n σh uh ph,
-      S.IsMixedSolution n f σh uh ph → 0 < S.readError n σ u p σh uh ph := by
+    ∃ f, ∀ x, IsMixedSolution (H.totalMixedSpace 0 3) f x → ∀ n xh,
+      S.IsSolution n f xh → 0 < S.readError n x xh := by
   have hcr : ∀ i : Fin 3, 0 < (i : ℕ) →
       IsClosed (Witness.complex.boundaries (0 + (i : ℕ)) : Set ℝ) :=
     fun _ _ => Submodule.closed_of_finiteDimensional _
@@ -155,7 +157,10 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
       have := congrArg (fun y : Witness.T3 => y 2) h0
       exact one_ne_zero this⟩,
     fun n => ⟨Witness.e2, Witness.mem_harmonic_e2 n, Witness.incl_e2_not_mem n⟩,
-    Witness.e2, fun σ u p hs n σh uh ph hsh => ?_⟩
+    Witness.e2, fun ⟨σ, u, p⟩ hs n ⟨σh, uh, ph⟩ hsh => ?_⟩
+  replace hs := HilbertComplex.isMixedSolution_total_iff.1 hs
+  replace hsh := (Witness.family.isSolution_iff).1 hsh
+  rw [HilbertComplex.CrimeFamily.readError_eq₀]
   obtain ⟨-, -, hp⟩ := Witness.complex.eq_totalSol 0 3 hcr' hs
   obtain ⟨-, -, hp'⟩ := Witness.complex.eq_totalSol 0 3 hcr' Witness.isTotalMixedSolution_e2
   obtain ⟨-, -, hph⟩ := Witness.family.eq_mixedSol hsh
@@ -170,7 +175,7 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     rw [Witness.incl_e2] at h1
     change (0 : ℝ) - Witness.mesh n = 0 at h1
     linarith [Witness.mesh_pos n]
-  unfold HilbertComplex.CrimeFamily.readError
+  unfold HilbertComplex.CrimeFamily.readError₀
   positivity
 
 
@@ -187,14 +192,7 @@ theorem feec_cube (n : ℕ) [NeZero n] :
             fun x => a s.1 + ∑ i, A s.1 i * x i) ∧
       (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
       (∀ i, IsClosed (H.boundaries i : Set (L2Form (cube n) i))) ∧
-      ∀ j, ∃ C, ∀ {f : L2Form (cube n) j} {σ : (H.d (j - 1) j).domain}
-        {u : (H.d j (j + 1)).domain} {p : L2Form (cube n) j},
-        H.IsMixedSolution j ⊤ ⊤ (H.harmonic j) f σ u p → ∀ {L : ℝ}, 0 ≤ L →
-        IsCsForm (cube n) 0 (j - 1) L σ → IsCsForm (cube n) 0 j L u → IsCsForm (cube n) 0 j L p →
-        IsCsForm (cube n) 0 j L ((H.boundaries j).topologicalClosure.starProjection u) →
-        ∀ (N : ℕ) {σh : (H.d (j - 1) j).domain} {uh : (H.d j (j + 1)).domain} {ph},
-          H.IsMixedSolution j ((F.V N).V (j - 1)) ((F.V N).V j) ((F.V N).harmonic j) f σh uh ph →
-          H.mixedError j σ σh u uh p ph ≤ C * L / (N + 1) := by
+      ∀ j, F.HasRate j (IsCsForm (cube n) 0) fun N => 1 / (N + 1) := by
   set D := CubeWitness.starDomain n
   set Fm := CubeWitness.meshFamily n
   obtain ⟨K, hK1, hK⟩ := Fm.exists_uniform_polyProj whitney
@@ -228,7 +226,7 @@ theorem feec_cube (n : ℕ) [NeZero n] :
             Fm.polyInterpBound whitney i * (L * (Fm.mesh N).meshSize ^ (1 : ℝ)) := by
           rw [Real.rpow_one]; ring
         exact ⟨v, hv, e ▸ h1, fun j hxj => e ▸ h2 j hxj⟩ }
-  have hR := F.rated J
+  have hR := (F.rated J).toRated
   refine ⟨H, F, fun k => dMax_cube k, rfl, fun N k u hu z σ => ?_, hB, hA, hcr, fun j => ?_⟩
   · obtain ⟨T, hT, hpts⟩ := exists_kuhn N z σ
     obtain ⟨w, hw, hae⟩ := exists_piece_of_mem_poly (FEM.mesh n N) (Fm.domain_eq N)
@@ -246,14 +244,15 @@ theorem feec_cube (n : ℕ) [NeZero n] :
     filter_upwards [hae s] with x hx
     exact hx.trans (haff _ _)
   · obtain ⟨C, hC⟩ := hR.static j (hB _) (hB _) (hcr _) (hcr _) ()
-    refine ⟨C / 2, fun {f σ u p} hs {L} hL h1 h2 h3 h4 N σh uh ph hsh => ?_⟩
+    refine ⟨C / 2, fun {f x} hs {L} hL h1 h2 h3 h4 N xh hsh => ?_⟩
     have h := hC hs hL h1 h2 h3 h4 N hsh
     have hm : J.meshSize N ^ J.ord () = 1 / 2 / (N + 1) := by
       change (FEM.mesh n N).meshSize ^ (1 : ℝ) = _
       rw [Real.rpow_one, FEM.meshSize_mesh, FEM.hN_eq_meshSize, FEM.meshSize]
+    change _ ≤ C * L * (J.meshSize N ^ J.ord ()) at h
     rw [hm] at h
     refine h.trans_eq ?_
-    field_simp
+    ring
 
 section BGGSection
 
@@ -281,12 +280,10 @@ theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} 
     (hsurj : ∀ i, J ≤ i →
       LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) (i : ℤ)
     [FiniteDimensional K (V.homology i)] [FiniteDimensional K (Vt.homology i)] :
-    FiniteDimensional K ((BGG.bgg S J).homology i) ∧
-      Module.finrank K ((BGG.bgg S J).homology i) ≤
-        Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) ∧
-      (Module.finrank K ((BGG.bgg S J).homology i) =
-          Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i) ↔
-        BGG.InducesZero S (i - 1) ∧ BGG.InducesZero S i) :=
+    let b := Module.finrank K ((BGG.bgg S J).homology i)
+    let r := Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i)
+    FiniteDimensional K ((BGG.bgg S J).homology i) ∧ b ≤ r ∧
+      (b = r ↔ BGG.InducesZero S (i - 1) ∧ BGG.InducesZero S i) :=
   BGG.finiteDimensional_and_finrank_le hinj hsurj i
 
 /-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed
@@ -307,9 +304,12 @@ theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
     (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
       LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
     let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
-    let ΓL := BGG.ΓL (hd := hd) (hdt := hdt) s hs J
-    let ΔL := BGG.ΔL (hd := hd) (hdt := hdt) s hs J
-    let Q := BGG.QuotL (hd := hd) (hdt := hdt) s hs J
+    -- `Γⁱ`, `Δⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)` (norm `(‖σ‖² + ‖φ‖²)^½`), and `Γⁱ / Δⁱ`
+    -- with the quotient norm `‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖` (for `i ≠ J` the norm of the output
+    -- space of [ArnoldHu2021], (25); not that norm at `J`)
+    let ΓL i := (BGG.Γ S J i).comap (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+    let ΔL i := (BGG.Δ S J i).comap (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
+    let Q i := ΓL i ⧸ (ΔL i).comap (ΓL i).subtype
     (∀ i, IsClosed (BGG.Γ S J i : Set (H i × Ht i)) ∧ IsClosed (BGG.Δ S J i : Set (H i × Ht i))) ∧
       (∀ i, ∃ e : ↥(ΓL i ⊓ (ΔL i)ᗮ) ≃ₗᵢ[𝕜] Q i, ∀ y, e y = Submodule.Quotient.mk ⟨y, y.2.1⟩) ∧
       ∃ D : ∀ i, Q i →L[𝕜] Q (i + 1),

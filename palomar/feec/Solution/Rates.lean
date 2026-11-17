@@ -38,7 +38,7 @@ variable {H : HilbertComplex 𝕜 W} {κ : Type*}
 theorem SubcomplexFamily.exists_staticVerdict (F : H.SubcomplexFamily κ) (j : ℤ)
     (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
     (hj : IsClosed (H.boundaries j : Set (W j)))
-    (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) : ∃ C, F.StaticVerdict j C := by
+    (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) : ∃ C, F.StaticVerdict₀ j C := by
   obtain ⟨c₁, hc₁, h₁⟩ := hπ.exists_one_le
   obtain ⟨c₂, -, h₂⟩ := hπ'.exists_one_le
   obtain ⟨p₁, hp₁⟩ := H.exists_poincareBy (i := j - 1) (by rwa [sub_add_cancel])
@@ -154,7 +154,7 @@ theorem graphDist_le_of_jackson {ρ : Type*} (J : F.Jackson ρ) (s : ρ) (h : κ
 
 omit [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 /-- **The rates of a Jackson estimate** (`Rated`). -/
-theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated J where
+theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated₀ J where
   static j hπ hπ' hj hj' s := by
     obtain ⟨C, V⟩ := F.exists_staticVerdict j hπ hπ' hj hj'
     obtain ⟨c, hc⟩ := hπ'

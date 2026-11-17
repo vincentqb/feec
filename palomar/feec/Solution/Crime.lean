@@ -185,15 +185,15 @@ theorem isMixedSolution_iff (h : κ) {f : Total W a m} {σ u p : S.X h}
   · rintro ⟨-, hr⟩
     refine ⟨fun τ => ?_, fun v => ?_, fun q hq => ?_⟩
     · have := hr (S.inclD h τ) 0 0 (Submodule.zero_mem _)
-      simp only [residual, _root_.map_zero, inner_zero_left, add_zero, sub_zero] at this
+      simp only [residual₀, _root_.map_zero, inner_zero_left, add_zero, sub_zero] at this
       exact this
     · have := hr 0 (S.inclD h v) 0 (Submodule.zero_mem _)
-      simp only [residual, _root_.map_zero, inner_zero_left, zero_add, sub_zero] at this
+      simp only [residual₀, _root_.map_zero, inner_zero_left, zero_add, sub_zero] at this
       change _ = ⟪S.inclD h v, (S.incl h).adjoint f⟫_𝕜
       rw [ContinuousLinearMap.adjoint_inner_right]
       exact sub_eq_zero.1 this
     · have := hr 0 0 q ((S.mem_harmonic_iff h).2 hq)
-      simp only [residual, _root_.map_zero, inner_zero_left, add_zero,
+      simp only [residual₀, _root_.map_zero, inner_zero_left, add_zero,
         zero_sub, sub_zero, neg_eq_zero] at this
       exact this
   · intro hs
@@ -205,7 +205,7 @@ theorem isMixedSolution_iff (h : κ) {f : Total W a m} {σ u p : S.X h}
     change ⟪v, S.D h σ⟫_𝕜 + ⟪S.D h v, S.D h u⟫_𝕜 + ⟪v, p⟫_𝕜 = ⟪v, (S.incl h).adjoint f⟫_𝕜 at h2
     change ⟪q, u⟫_𝕜 = 0 at h3
     rw [ContinuousLinearMap.adjoint_inner_right] at h2
-    unfold residual
+    unfold residual₀
     linear_combination h1 + h2 - h3
 
 /-- **Uniqueness for the discrete mixed problem**: every solution is `Feec`'s. -/
@@ -232,9 +232,9 @@ theorem isMixedSolution_mixedSol (h : κ) (f : Total W a m) :
 /-- **The read errors are `Feec`'s.** -/
 theorem readError_eq (h : κ) (X : (H.win a m).total.MixedSpace () ())
     (x : (S.toFeec.cpx h).MixedSpace () ()) :
-    S.toFeec.readError h X x = S.readError h (H.coordT a m X.fst) (H.coordT a m X.snd.fst)
+    S.toFeec.readError h X x = S.readError₀ h (H.coordT a m X.fst) (H.coordT a m X.snd.fst)
       X.snd.snd (S.inclD h x.fst) (S.inclD h x.snd.fst) (x.snd.snd : S.toFeec.X h) := by
-  unfold Feec.HilbertComplex.ApproxComplexCrime.Family.readError readError
+  unfold Feec.HilbertComplex.ApproxComplexCrime.Family.readError readError₀
   rw [H.totalD_coordT a m, H.totalD_coordT a m]
   rfl
 
@@ -242,14 +242,14 @@ theorem readError_eq (h : κ) (X : (H.win a m).total.MixedSpace () ())
 theorem readError_sol_eq (hcr : ∀ i, (H.win a m).ClosedRangeAt i) {h : κ} {f : Total W a m}
     {σ u : (H.totalD a m).domain} {p : Total W a m} (hs : H.IsTotalMixedSolution a m f σ u p)
     {σh uh ph : S.X h} (hsh : S.IsMixedSolution h f σh uh ph) :
-    S.readError h σ u p σh uh ph = S.toFeec.staticError hcr h f := by
+    S.readError₀ h σ u p σh uh ph = S.toFeec.staticError hcr h f := by
   obtain ⟨rfl, rfl, rfl⟩ := H.eq_totalSol a m hcr hs
   obtain ⟨rfl, rfl, rfl⟩ := S.eq_mixedSol hsh
   exact (S.readError_eq h _ _).symm
 
 /-- **The residual functional of `Feec`** at a test point is the residual of the challenge. -/
 theorem staticResidual_apply (h : κ) (f : Total W a m) (x y : (S.toFeec.cpx h).MixedSpace () ()) :
-    S.toFeec.staticResidual h f x y = S.residual h f (S.inclD h x.fst) (S.inclD h x.snd.fst)
+    S.toFeec.staticResidual h f x y = S.residual₀ h f (S.inclD h x.fst) (S.inclD h x.snd.fst)
       (x.snd.snd : S.toFeec.X h) (S.inclD h y.fst) (S.inclD h y.snd.fst)
       (y.snd.snd : S.toFeec.X h) := by
   rw [Feec.HilbertComplex.ApproxComplexCrime.Family.staticResidual, _root_.sub_apply,
@@ -286,7 +286,7 @@ theorem sum_norm_le (h : κ) (y : (S.toFeec.cpx h).MixedSpace () ()) :
 /-- **The residual of the challenge bounds `Feec`'s residual functional**: `‖B x - F‖ ≤ 3 ε`. -/
 theorem norm_staticResidual_le (h : κ) (f : Total W a m) (x : (S.toFeec.cpx h).MixedSpace () ())
     {ε : ℝ} (hε : 0 ≤ ε) (hres : ∀ τ v q, q ∈ S.harmonic h →
-      ‖S.residual h f (S.inclD h x.fst) (S.inclD h x.snd.fst) (x.snd.snd : S.toFeec.X h) τ v q‖ ≤
+      ‖S.residual₀ h f (S.inclD h x.fst) (S.inclD h x.snd.fst) (x.snd.snd : S.toFeec.X h) τ v q‖ ≤
         ε * (‖τ‖ + ‖S.D h τ‖ + ‖v‖ + ‖S.D h v‖ + ‖q‖)) :
     ‖S.toFeec.staticResidual h f x‖ ≤ 3 * ε := by
   refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun y => ?_
@@ -298,7 +298,7 @@ theorem norm_staticResidual_le (h : κ) (f : Total W a m) (x : (S.toFeec.cpx h).
 reading maps), from `Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC`. -/
 theorem staticVerdict
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) → IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ)))))
-    {cP : ℝ} (hP : S.IsPoincare cP) : ∃ C, S.StaticVerdict C := by
+    {cP : ℝ} (hP : S.IsPoincare cP) : ∃ C, S.StaticVerdict₀ C := by
   have hcr' := H.closedRangeAt_win a m hcr
   have hcP : 1 ≤ max cP 1 := le_max_right _ _
   have hP' : S.toFeec.IsPoincare (max cP 1) := fun h v hv =>
@@ -332,7 +332,7 @@ theorem staticVerdict
       ⟨p', (S.mem_harmonic_iff h).1 hp'⟩
     have h1 := V.strang h f x
     have h2 := S.norm_staticResidual_le h f x hε hres
-    have e : S.toFeec.readError h (H.totalSol a m hcr' f) x = S.readError h
+    have e : S.toFeec.readError h (H.totalSol a m hcr' f) x = S.readError₀ h
         (H.coordT a m (H.totalSol a m hcr' f).fst) (H.coordT a m (H.totalSol a m hcr' f).snd.fst)
         (H.totalSol a m hcr' f).snd.snd σ' u' p' := S.readError_eq h _ x
     rw [e] at h1
@@ -347,7 +347,7 @@ theorem staticVerdict
       set x : (S.toFeec.cpx h).MixedSpace () () := Feec.HilbertComplex.MixedSpace.mk
         (S.toD h σ') (S.toD h u') ⟨p', (S.mem_harmonic_iff h).1 hp'⟩
       refine ⟨x, ?_, ?_⟩
-      · have e : S.toFeec.readError h (H.totalSol a m hcr' g) x = S.readError h
+      · have e : S.toFeec.readError h (H.totalSol a m hcr' g) x = S.readError₀ h
             (H.coordT a m (H.totalSol a m hcr' g).fst)
             (H.coordT a m (H.totalSol a m hcr' g).snd.fst) (H.totalSol a m hcr' g).snd.snd
             σ' u' p' := S.readError_eq h _ x
@@ -387,7 +387,7 @@ set_option maxHeartbeats 1000000 in
 (`Feec.HilbertComplex.Approximation.StaticCochain`). -/
 theorem cochainVerdict
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) → IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ)))))
-    (hi : S.IsCochain) {Cπ : ℝ} (P : S.CochainProj Cπ) : S.CochainVerdict P := by
+    (hi : S.IsCochain) {Cπ : ℝ} (P : S.CochainProj Cπ) : S.CochainVerdict₀ P := by
   have hcr' := H.closedRangeAt_win a m hcr
   obtain ⟨cP, hcP, hP⟩ := hi.exists_isPoincare hcr' P
   refine
@@ -460,25 +460,27 @@ theorem cochainVerdict
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- `(𝐝ₕ - 𝐝ₕ*)² = -(𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ)`, since `𝐝ₕ² = 0`. -/
+theorem diffWave_sq (h : κ) : ((S.D h - (S.D h).adjoint) ^ 2 : S.X h →L[𝕜] S.X h) =
+    -(S.D h ∘L (S.D h).adjoint + (S.D h).adjoint ∘L S.D h) := by
+  have h1 : S.D h ∘L S.D h = 0 := ContinuousLinearMap.ext (S.D_D h)
+  have h2 : (S.D h).adjoint ∘L (S.D h).adjoint = 0 := by
+    rw [← ContinuousLinearMap.adjoint_comp, h1, _root_.map_zero]
+  rw [pow_two]
+  change (S.D h - (S.D h).adjoint) ∘L (S.D h - (S.D h).adjoint) = _
+  rw [ContinuousLinearMap.sub_comp, ContinuousLinearMap.comp_sub, ContinuousLinearMap.comp_sub,
+    h1, h2]
+  abel
+
 /-- **The heat verdict with crimes** from `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`
-(no constraint, `K = W`). -/
+(no constraint, `K = W`) and the fully discrete FEEC theorem on its heat core. -/
 theorem heatVerdict
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) → IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ)))))
-    {cP : ℝ} (hP : S.IsPoincare cP)
-    (hJ : Tendsto (fun h => ‖1 - (S.incl h).adjoint ∘L S.incl h‖) S.l (𝓝 0))
-    (hconv : ∀ f σ u p, H.IsTotalMixedSolution a m f σ u p → ∀ σh uh ph : ∀ h, S.X h,
-      (∀ h, S.IsMixedSolution h f (σh h) (uh h) (ph h)) →
-        Tendsto (fun h => S.readError h σ u p (σh h) (uh h) (ph h)) S.l (𝓝 0)) :
-    ∃ U : ℝ → Total W a m →L[𝕜] Total W a m,
-      (∀ x ∈ (sq (H.wave a m)).domain, ∀ T,
-        IsStrongSolution (sq (H.wave a m)) (Icc 0 T) fun t => U t x) ∧
-      (∀ x ∈ (sq (H.wave a m)).domain, ∀ T (y : ℝ → Total W a m), y 0 = x →
-        IsStrongSolution (sq (H.wave a m)) (Icc 0 T) y → EqOn y (fun t => U t x) (Icc 0 T)) ∧
-      (∀ x, U 0 x = x) ∧ (∀ x t, 0 ≤ t → ‖U t x‖ ≤ ‖x‖) ∧
-      ∀ (x : Total W a m) (v : ∀ h, S.X h), Tendsto (fun h => S.incl h (v h)) S.l (𝓝 x) →
-        ∀ T, TendstoUniformlyOn (fun h (t : ℝ) => S.incl h (semiflow
-          (-(S.D h ∘L (S.D h).adjoint + (S.D h).adjoint ∘L S.D h)) t (v h)))
-          (fun t => U t x) S.l (Icc 0 T) := by
+    {cP : ℝ} (hP : S.IsPoincare cP) (hJ : Tendsto S.defect S.l (𝓝 0))
+    (hconv : ∀ f, S.ConvergesAt f) :
+    ∃ U, EvolutionVerdict (sq (H.wave a m)) S.l S.X S.incl
+      (fun h => (S.D h - (S.D h).adjoint) ^ 2) U := by
   have hcr' := H.closedRangeAt_win a m hcr
   have hcP : 1 ≤ max cP 1 := le_max_right _ _
   have hP' : S.toFeec.IsPoincare (max cP 1) := fun h v hv =>
@@ -490,8 +492,9 @@ theorem heatVerdict
       l := S.l
       tendsto_innerDefect := hJ }
   have hconv' : ∀ f, Tendsto (fun h => S.toFeec.staticError hcr' h f) S.l (𝓝 0) := fun f =>
-    (hconv f _ _ _ (H.isTotalMixedSolution_totalSol a m hcr' f) (fun h => S.inclD h
-      (S.toFeec.mixedSol h f).fst) (fun h => S.inclD h (S.toFeec.mixedSol h f).snd.fst)
+    ((S.convergesAt_iff.1 (hconv f)) _ _ _ (H.isTotalMixedSolution_totalSol a m hcr' f)
+      (fun h => S.inclD h (S.toFeec.mixedSol h f).fst)
+      (fun h => S.inclD h (S.toFeec.mixedSol h f).snd.fst)
       (fun h => ((S.toFeec.mixedSol h f).snd.snd : S.toFeec.X h))
       (fun h => S.isMixedSolution_mixedSol h f)).congr fun h =>
         S.readError_sol_eq hcr' (H.isTotalMixedSolution_totalSol a m hcr' f)
@@ -499,18 +502,20 @@ theorem heatVerdict
   have V := F.heatFEEC hcr' hcP hP' hconv'
   have hZ : ∀ x, x ∈ (F.heatCore hcr' hcP hP' hconv').Data.topologicalClosure := fun x => by
     rw [F.dense_heatCore_data hcr' hcP hP' hconv']; exact Submodule.mem_top
-  have hS0 : ∀ x, F.toHeat.S 0 x = x := fun x => by
-    rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply]
-  refine ⟨F.toHeat.S, fun x hx T => ?_, fun x hx T y hy0 hy => ?_, hS0, fun x t ht => ?_,
-    fun x v hv T => ?_⟩
-  · rw [H.heat_eq a m] at hx ⊢
-    exact isStrongSolution_iff.2 (V.isClassicalSolution ⟨x, hx⟩ T).toIsStrongSolution
-  · rw [H.heat_eq a m] at hx hy
-    exact V.unique ⟨x, hx⟩ T y hy0 (isStrongSolution_iff.1 hy)
-  · have := V.antitone x (Set.mem_Ici.2 le_rfl) ht ht
-    dsimp only at this
-    rwa [hS0] at this
-  · exact V.converges (hZ x) hv T
+  have hL : (fun h => (S.D h - (S.D h).adjoint) ^ 2) = fun h => F.toHeat.L h :=
+    funext fun h => (S.diffWave_sq h).trans rfl
+  let _ : ∀ h, NormedSpace ℝ (S.X h) := S.normedSpaceReal
+  have _ : ∀ h, IsScalarTower ℝ 𝕜 (S.X h) := S.isScalarTower
+  refine ⟨F.toHeat.S, ?_⟩
+  rw [H.heat_eq a m, hL]
+  exact evolutionVerdict_of (S' := F.toHeat.S) (fun _ _ => rfl) F.toHeat.isMDissipative
+    (fun _ => rfl) F.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
+    (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
+    (fun x v hv T => V.converges (hZ x) hv T)
+    (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>
+      (Feec.HilbertComplex.dissipFEEC_fullyDiscrete (F.heatCore hcr' hcP hP' hconv')
+        (F.toHeat.rationalScheme r.toFeec hr hp hp0 τ hτ)).converges_iterates
+        (hZ x) hv hτ0 T hε)
 
 end CrimeFamily
 

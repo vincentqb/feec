@@ -74,9 +74,9 @@ freedom the discrete operator `Aₕ` is skew-adjoint for the `L²` product. The 
 Crank–Nicolson rule is `r(ΔtAₕ)` for the A-stable `r(z) = (2 + z)/(2 - z)`
 (`crankNicolson_isAStable`, `|r(iy)| = 1`), the Hilbert case of `contractive`: stable for every
 time step, of error `O(h + Δt²)` (`crankNicolson_cube`). The explicit leapfrog rule is a two-step
-method outside the one-step class; it is stable under the CFL condition `Δt ≲ h` that the
-global inverse estimate (`inverse_estimate`) makes concrete, with the same error
-(`leapfrog_cube`). A plane wave meets the hypotheses of both error bounds
+method outside the one-step class; it is stable under the CFL condition `2C₀Δt ≤ ch`, `c < 1`,
+for every constant `C₀` of the global inverse estimate (`inverse_estimate`), with the error
+`O((h + Δt²)/(1 - c))` (`leapfrog_cube`). A plane wave meets the hypotheses of both error bounds
 (`rowSolution_nonvacuous`), as backward Euler and Crank–Nicolson meet those on `r`
 (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
 

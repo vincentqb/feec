@@ -1,6 +1,6 @@
 module
 
-public import Solution.FdHeat
+public import Solution.Bridge
 public import Solution.Leapfrog
 public import Solution.PlaneWave
 
@@ -8,7 +8,7 @@ public import Solution.PlaneWave
 # Rational time stepping on Banach spaces, with its instances (solution)
 
 The theorems of `Challenge.lean`, proved from `Feec` through the bridges `Solution.Bridge` (the
-rational schemes), `Solution.FdHeat` (compatible data for finite differences) and
+rational schemes) and
 `Solution.CubeSpaces`, `Solution.WhitneySpaces`, `Solution.WhitneyInterp`,
 `Solution.WhitneyScheme` (the Whitney schemes of the cube).
 
@@ -23,7 +23,7 @@ rational schemes), `Solution.FdHeat` (compatible data for finite differences) an
   `Feec.TimeStepping.RationalScheme.norm_step_le` with
   `Feec.TimeStepping.RationalScheme.step_eq_resolventEval`.
 * Finite differences: `Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat` with
-  `TimeStepping.norm_fdLaplacian_pow_gridInterp_le`.
+  compatible data (`Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`).
 * The Whitney schemes: the Freudenthal meshes are `Feec`'s (`cubeMesh`), the challenge's Whitney
   spaces, interpolant and steps are `Feec`'s, and the errors are
   `Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row` and
@@ -224,8 +224,8 @@ theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [Inner
 /-! ### Finite differences in the maximum norm -/
 
 /-- **The heat equation in the maximum norm by finite differences, from compatible data**:
-`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat` at `v = Iₕ u(0)`, whose discrete
-term `‖Δₕ^{m+1} Iₕ u(0)‖_∞ ≤ n^{m+1} B'` is `norm_fdLaplacian_pow_gridInterp_le`. -/
+`Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`, the classical solution as a
+`Feec.Models.Cube.MaxNormHeat.HeatSolution`. -/
 theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
     ∃ K : ℝ, ∀ (n : ℕ) (b : Fin n → ℝ) (s T B B' : ℝ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
       (ũ : (Fin n → ℝ) → ℝ), 0 < s →
@@ -252,30 +252,14 @@ theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q 
   let S : Feec.Models.Cube.MaxNormHeat.HeatSolution b s T :=
     { u := u, u₁ := u₁, contDiff := hu, hasDerivAt := fun t ht x hx => (hh t ht x hx).1,
       heat := fun t ht x hx => (hh t ht x hx).2, boundary := hbd, B₄ := B, bound₄ := hB }
-  set v := gridInterp b (s / (N + 1 : ℕ)) N (u 0) with hvdef
-  have H := (Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat b hs).rational S
-    hr.scheme_isAStable (hr.scheme_hasOrder hm) N hτ hk v
+  have H := Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible hs S hr.scheme_isAStable
+    (hr.scheme_hasOrder hm) hũ (fun i => ⟨fun x => (hodd i x).1, fun x => (hodd i x).2⟩) hũu hB'
+    N hτ hk
   have e := (step_eq (Feec.Models.Cube.FiniteDifferenceHeat.family n s) hτ N hr.scheme).2
   simp only [RCLike.ofReal_real_eq_id, id] at e
   rw [e, show Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian s N =
     fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ)) from (fdLaplacian_eq _ _).symm] at H
-  have hv : v = gridInterp b (s / (N + 1 : ℕ)) N ũ := funext fun g =>
-    (hũu _ (Set.pi_mono (fun _ _ => Set.Ioo_subset_Icc_self)
-      (Feec.Models.Cube.MaxNormHeat.node_mem_openCube (b := b) hs g))).symm
-  have hD := norm_fdLaplacian_pow_gridInterp_le b hs N m hũ
-    (fun i => ⟨fun x => (hodd i x).1, fun x => (hodd i x).2⟩) hB'
-  rw [← hv] at hD
-  have hK := RationalScheme.sharpConst_nonneg hr.scheme_isAStable (hr.scheme_hasOrder hm)
-  refine H.trans ?_
-  calc _ ≤ 0 + k * τ * S.defect N +
-        hr.scheme.sharpConst m * (k * τ) * τ ^ m * (n ^ (m + 1) * B') :=
-        add_le_add (add_le_add (norm_le_zero_iff.2 (sub_eq_zero.2 rfl)) le_rfl)
-          (mul_le_mul_of_nonneg_left hD
-            (mul_nonneg (mul_nonneg hK (by positivity)) (by positivity)))
-    _ = _ := by
-        simp only [Feec.Models.Cube.MaxNormHeat.HeatSolution.defect,
-          Feec.Models.Cube.MaxNormHeat.meshSize]
-        ring
+  exact H
 
 /-! ### The hypotheses on `r` are met -/
 

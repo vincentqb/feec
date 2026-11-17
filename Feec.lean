@@ -141,6 +141,7 @@ public import Feec.ForMathlib.Analysis.NormedComplexification
 public import Feec.ForMathlib.Analysis.Polynomial
 public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Analysis.StrongConvergence
+public import Feec.ForMathlib.Calculus.DifferenceLaplacian
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.SecondDifference

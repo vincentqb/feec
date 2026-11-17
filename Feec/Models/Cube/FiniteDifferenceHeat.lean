@@ -1,6 +1,7 @@
 module
 
 public import Feec.ForMathlib.Analysis.FiniteDifference
+public import Feec.ForMathlib.Calculus.DifferenceLaplacian
 public import Feec.Models.Cube.MaxNormHeat
 
 /-!
@@ -30,6 +31,17 @@ difference scheme. The discrete maximum principle is also proved directly on the
 nodes. `finiteDifferenceHeat_nonvacuous`: the first eigenmode
 satisfies the hypotheses.
 
+**`FiniteDifferenceHeat.rational_compatible`**: the rational-scheme error from the interpolated
+initial value is `O(h² + τᵖ)`, `‖Iₕ u(kτ) - r(τΔₕ)ᵏ Iₕ u(0)‖_∞ ≤ kτ (n B h²/12 + C nᵖ⁺¹ B' τᵖ)`,
+when `u(0)` satisfies the compatibility conditions of order `p`: on `Q̄` it is a function `ũ` of
+class `C^{2p+2}` odd under the reflections in the faces of `Q` (`IsFaceOdd`, the odd
+`2s`-periodic extension of `u(0)`) with `|∂²_{i₁} ⋯ ∂²_{i_{p+1}} ũ| ≤ B'`. Odd functions vanish
+on `∂Q`, so `Δₕ Iₕ f = Iₕ Dₕ f` for the difference Laplacian `Dₕ` on `ℝⁿ`
+(`fdLaplacian_interp`, `FiniteDifference.diffLaplacian`); `Dₕ` keeps them odd, so
+`Δₕᵏ Iₕ ũ = Iₕ Dₕᵏ ũ` (`fdLaplacian_pow_interp`), and `|Dₕ^{p+1} ũ| ≤ n^{p+1} B'`
+(`FiniteDifference.abs_iterate_diffLaplacian_le`) bounds the discrete datum of the error of
+`rational` (`norm_fdLaplacian_pow_interp_le`).
+
 ## References
 
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
@@ -43,6 +55,7 @@ open Set Finset NormedSpace Feec.FiniteElement Feec.TimeStepping
 open Feec.Models.Cube.Geometry (openCube closedCube)
 open Feec.Models.Cube.MaxNormHeat (Nodes Space meshSize interp HeatSolution lumpedLaplacian
   lumpedLaplacian_apply maxNormHeat)
+open FiniteDifference (diffLaplacian IsOddAbout secondPartials)
 
 @[expose] public noncomputable section
 
@@ -150,5 +163,103 @@ theorem finiteDifferenceHeat_nonvacuous (b : Fin n → ℝ) (hs : 0 < s) (T : �
         ∀ t ∈ Icc 0 T, ∀ x ∈ openCube b s, |u₂ t x| ≤ B₂ :=
   have ⟨_, S, hS, h₂, _⟩ := MaxNormHeat.maxNormHeat_nonvacuous b hs T
   ⟨finiteDifferenceHeat b hs, S, hS, h₂⟩
+
+/-! ### Compatible initial data -/
+
+/-- `f` is **odd under the reflections in the faces** of the cube `b + (0, s)ⁿ`
+(`xᵢ ↦ 2bᵢ - xᵢ` and `xᵢ ↦ 2(bᵢ + s) - xᵢ`): on `Q̄` it is a function whose odd `2s`-periodic
+extension in every variable is `f`. -/
+def IsFaceOdd (b : Fin n → ℝ) (s : ℝ) (f : (Fin n → ℝ) → ℝ) : Prop :=
+  ∀ i, IsOddAbout i (b i) f ∧ IsOddAbout i (b i + s) f
+
+theorem IsFaceOdd.diffLaplacian {f : (Fin n → ℝ) → ℝ} (hf : IsFaceOdd b s f) (h : ℝ) :
+    IsFaceOdd b s (diffLaplacian h f) :=
+  fun i => ⟨(hf i).1.diffLaplacian h, (hf i).2.diffLaplacian h⟩
+
+/-- A function odd in the faces of `Q` vanishes on `∂Q`. -/
+theorem IsFaceOdd.eq_zero {f : (Fin n → ℝ) → ℝ} (hf : IsFaceOdd b s f) {x : Fin n → ℝ}
+    (hx : x ∈ closedCube b s) (hx' : x ∉ openCube b s) : f x = 0 := by
+  simp only [openCube, closedCube, mem_univ_pi, not_forall] at hx hx'
+  obtain ⟨i, hi⟩ := hx'
+  rcases (hx i).1.eq_or_lt with h | h
+  · exact (hf i).1.eq_zero h.symm
+  rcases (hx i).2.eq_or_lt with h' | h'
+  · exact (hf i).2.eq_zero h'
+  · exact absurd ⟨h, h'⟩ hi
+
+/-- **`Δₕ Iₕ f = Iₕ Dₕ f`** for `f` vanishing on `∂Q`, `Dₕ` the difference Laplacian on `ℝⁿ`. -/
+theorem fdLaplacian_interp (hs : 0 < s) (N : ℕ) {f : (Fin n → ℝ) → ℝ}
+    (hbd : ∀ x ∈ closedCube b s, x ∉ openCube b s → f x = 0) :
+    fdLaplacian s N (interp b s N f) = interp b s N (diffLaplacian (meshSize s N) f) := by
+  funext p
+  have hp := Feec.FiniteElement.mem_interiorNodes.1 p.2
+  rw [FiniteDifference.laplacian_apply]
+  refine Finset.sum_congr rfl fun l _ => ?_
+  have hq : ∀ c : ℤ, (c = 1 ∨ c = -1) → ∀ j, 0 ≤ ((p : Fin n → ℤ) + Pi.single l c : Fin n → ℤ) j ∧
+      ((p : Fin n → ℤ) + Pi.single l c : Fin n → ℤ) j ≤ N + 1 := fun c hc j => by
+    have := hp j
+    by_cases hj : j = l
+    · subst hj; simp only [Pi.add_apply, Pi.single_eq_same]; push_cast at this; omega
+    · simp only [Pi.add_apply, Pi.single_eq_of_ne hj, add_zero]; push_cast at this; omega
+  have hsub : (p : Fin n → ℤ) - Pi.single l 1 = (p : Fin n → ℤ) + Pi.single l (-1) := by
+    rw [sub_eq_add_neg, Pi.single_neg]
+  rw [MaxNormHeat.zeroExt_interp hs hbd (hq 1 (Or.inl rfl)), hsub,
+    MaxNormHeat.zeroExt_interp hs hbd (hq (-1) (Or.inr rfl)), ← hsub,
+    node_add_single_one, node_sub_single_one]
+  rfl
+
+/-- **`Δₕᵏ Iₕ f = Iₕ Dₕᵏ f`** for `f` odd in the faces of `Q`. -/
+theorem fdLaplacian_pow_interp (hs : 0 < s) (N : ℕ) {f : (Fin n → ℝ) → ℝ}
+    (hf : IsFaceOdd b s f) (k : ℕ) :
+    (fdLaplacian s N ^ k) (interp b s N f) =
+      interp b s N ((diffLaplacian (meshSize s N))^[k] f) := by
+  induction k generalizing f with
+  | zero => rfl
+  | succ k ih =>
+    rw [pow_succ, Function.iterate_succ_apply, ← ih (hf.diffLaplacian _),
+      ← fdLaplacian_interp hs N fun x hx hx' => hf.eq_zero hx hx']
+    rfl
+
+/-- **The discrete datum of compatible initial data**: for `f ∈ C^{2p+2}` odd in the faces of `Q`
+with `|∂²_{i₁} ⋯ ∂²_{i_{p+1}} f| ≤ B'`, `‖Δₕ^{p+1} Iₕ f‖_∞ ≤ n^{p+1} B'`. -/
+theorem norm_fdLaplacian_pow_interp_le (hs : 0 < s) (N p : ℕ) {f : (Fin n → ℝ) → ℝ} {B' : ℝ}
+    (hf : ContDiff ℝ (2 * p + 2) f) (hodd : IsFaceOdd b s f)
+    (hB : ∀ (l : Fin (p + 1) → Fin n) x, |secondPartials (List.ofFn l) f x| ≤ B') :
+    ‖(fdLaplacian s N ^ (p + 1)) (interp b s N f)‖ ≤ n ^ (p + 1) * B' := by
+  have h0 : 0 ≤ (n : ℝ) ^ (p + 1) * B' := by
+    rcases Nat.eq_zero_or_pos n with rfl | hn
+    · simp
+    · exact mul_nonneg (by positivity) ((abs_nonneg _).trans (hB (fun _ => ⟨0, hn⟩) 0))
+  rw [fdLaplacian_pow_interp hs N hodd]
+  refine (pi_norm_le_iff_of_nonneg h0).2 fun q => ?_
+  rw [Real.norm_eq_abs]
+  exact FiniteDifference.abs_iterate_diffLaplacian_le (MaxNormHeat.meshSize_pos hs N).ne' (p + 1)
+    (by exact_mod_cast hf) hB _
+
+/-- **Every A-stable rational scheme from the interpolated initial value is `O(h² + τᵖ)`** in the
+maximum norm, for initial data satisfying the compatibility conditions of order `p`: if `u(0)` is
+on `Q̄` a function `ũ ∈ C^{2p+2}` odd in the faces of `Q` with `|∂²_{i₁} ⋯ ∂²_{i_{p+1}} ũ| ≤ B'`,
+then `‖Iₕ u(kτ) - r(τΔₕ)ᵏ Iₕ u(0)‖_∞ ≤ kτ (n B₄ h²/12 + C_r nᵖ⁺¹ B' τᵖ)`, `C_r` the constant
+of Brenner–Thomée's sharp error estimate (`RationalScheme.sharpConst`). [Thomee2006], Ch. 15;
+[BrennerThomee1979] -/
+theorem rational_compatible (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {r : RationalScheme}
+    (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) {ũ : (Fin n → ℝ) → ℝ}
+    (hũ : ContDiff ℝ (2 * p + 2) ũ) (hodd : IsFaceOdd b s ũ)
+    (hũu : ∀ x ∈ closedCube b s, ũ x = S.u 0 x) {B' : ℝ}
+    (hB' : ∀ (l : Fin (p + 1) → Fin n) x, |secondPartials (List.ofFn l) ũ x| ≤ B') (N : ℕ)
+    {τ : ℝ} (hτ : 0 < τ) {k : ℕ} (hk : k * τ ≤ T) :
+    ‖interp b s N (S.u (k * τ)) - ((family n s).step r τ N ^ k) (interp b s N (S.u 0))‖ ≤
+      k * τ * (S.defect N + r.sharpConst p * n ^ (p + 1) * B' * τ ^ p) := by
+  have hv : interp b s N (S.u 0) = interp b s N ũ := funext fun q =>
+    (hũu _ (Set.pi_mono (fun _ _ => Set.Ioo_subset_Icc_self)
+      (MaxNormHeat.node_mem_openCube hs q))).symm
+  have hD := norm_fdLaplacian_pow_interp_le hs N p hũ hodd hB'
+  rw [← hv] at hD
+  have hK := RationalScheme.sharpConst_nonneg hr hp
+  refine ((finiteDifferenceHeat b hs).rational S hr hp N hτ hk _).trans ?_
+  rw [sub_self, norm_zero, zero_add]
+  have := mul_le_mul_of_nonneg_left hD
+    (mul_nonneg (mul_nonneg hK (by positivity : (0 : ℝ) ≤ k * τ)) (by positivity : 0 ≤ τ ^ p))
+  nlinarith
 
 end Feec.Models.Cube.FiniteDifferenceHeat

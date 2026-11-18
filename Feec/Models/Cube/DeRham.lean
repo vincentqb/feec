@@ -470,7 +470,8 @@ theorem absolute_harmonic_eq_bot {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) 
 theorem finrank_absolute_harmonic_zero : Module.finrank ℂ ((absolute d).harmonic 0) = 1 := by
   refine finrank_harmonic_eq_one ⟨∅, by simp⟩
     (fun t => Subtype.ext (Finset.card_eq_zero.1 (by
-      have := t.2; simp only [Fin.val_zero, Nat.cast_zero] at this; exact_mod_cast this))) fun j => ?_
+      have := t.2; simp only [Fin.val_zero, Nat.cast_zero] at this; exact_mod_cast this)))
+    fun j => ?_
   simp [parSign, reflSign]
 
 /-- **Duality of the harmonic forms** (Poincaré–Lefschetz, numerically): the relative harmonic

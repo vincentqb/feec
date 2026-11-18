@@ -175,7 +175,8 @@ theorem norm_sub_le_bandGalerkin (N : ℕ) {i j k : ℤ} (hij : (ComplexShape.up
 
 variable (d) in
 /-- The truncation of a point of `Vⁱ` as a point of the discrete domain space. -/
-def truncD (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) : (bandSubcomplex d N).toHilbertComplex.domainSpace i :=
+def truncD (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) :
+    (bandSubcomplex d N).toHilbertComplex.domainSpace i :=
   ((bandSubcomplex d N).toHilbertComplex.d i ((ComplexShape.up ℤ).next i)).toGraphSpace
     ⟨⟨(band (d := d) N i).starProjection ((complex d).domainIncl i x),
       Submodule.starProjection_apply_mem _ _⟩, Submodule.mem_top⟩

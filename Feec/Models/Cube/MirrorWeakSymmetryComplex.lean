@@ -86,7 +86,7 @@ variable {n : ℕ}
 
 section Fibre
 
-variable (k : ℕ) (ξ : EuclideanSpace ℝ (Fin n))
+variable (k : ℤ) (ξ : EuclideanSpace ℝ (Fin n))
 
 /-- The kernel of the de Rham symbol `d_ξ : Λᵏ → Λᵏ⁺¹` at one frequency. -/
 abbrev symKer : Submodule ℂ (Form ℂ (Fin n) k) :=
@@ -129,7 +129,7 @@ end Fibre
 
 section Symmetry
 
-variable {k : ℕ} {ξ : EuclideanSpace ℝ (Fin n)}
+variable {k : ℤ} {ξ : EuclideanSpace ℝ (Fin n)}
 
 open Feec.Models.Cube.DeRham (reflFreq reflFreq_apply reflForm reflForm_apply reflForm_reflForm
   inner_reflForm deRham_reflForm)
@@ -200,7 +200,7 @@ theorem deRham_cjForm (v : Form ℂ (Fin n) k) :
   have he : (Feec.Fourier.Exterior.ext k (cjForm v) : Feec.Fourier.Exterior.Lam ℂ (Fin n))
       (u.1.erase l) = conj ((Feec.Fourier.Exterior.ext k v : Feec.Fourier.Exterior.Lam ℂ (Fin n))
         (u.1.erase l)) := by
-    by_cases h : #(u.1.erase l) = k
+    by_cases h : (#(u.1.erase l) : ℤ) = k
     · rw [Feec.Fourier.Exterior.ext_apply k _ h, Feec.Fourier.Exterior.ext_apply k _ h,
         cjForm_apply]
     · rw [Feec.Fourier.Exterior.ext_apply_of_ne k _ h, Feec.Fourier.Exterior.ext_apply_of_ne k _ h,
@@ -327,10 +327,10 @@ theorem pcJ_symmDiff_empty (J s : Finset (Fin n)) : pcJ (symmDiff J s) ∅ = pcJ
 theorem coeff_JfJ_zeroForm (J : Finset (Fin n)) (k : ℕ) (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
     (s : formIdx n (k : ℤ)) (m : Fin n → ℤ) (t₀ : {r : Finset (Fin n) // (#r : ℤ) = 0}) :
     (JfJ (symmDiff J s.1) 0 (zeroForm (w s)) : (Fin n → ℤ) → Form ℂ (Fin n) 0) m t₀ =
-      (JfJ J k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s) := by
+      (JfJ J k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m s := by
   rw [coeff_JfJ, coeff_JfJ]
   have ht : t₀.1 = ∅ := Finset.card_eq_zero.1 (by exact_mod_cast t₀.2)
-  rw [ht, pcJ_symmDiff_empty, zeroForm_apply, Equiv.symm_apply_apply, idx_val]
+  rw [ht, pcJ_symmDiff_empty, zeroForm_apply]
 
 /-- `‖d_ξ c‖ = |ξ| ‖c‖` on `0`-forms. -/
 theorem norm_deRham_zero (ξ : EuclideanSpace ℝ (Fin n)) (c : Form ℂ (Fin n) 0) :
@@ -448,7 +448,7 @@ theorem exists_coexact_potential (u : (dPart (Q (Fin n)) J (k : ℤ)).domain) :
     exact (abs_le_of_sq_le_sq' key (by positivity)).2
   · -- the coefficients
     have hcoef : ∀ (s : formIdx n (k : ℤ)) m, ‖(JfJ (symmDiff J s.1) 0 (zeroForm (w₀ s)) :
-        (Fin n → ℤ) → Form ℂ (Fin n) 0) m‖ = ‖(Y : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖ :=
+        (Fin n → ℤ) → Form ℂ (Fin n) 0) m‖ = ‖(Y : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖ :=
       fun s m => by
         rw [norm_form_zero _ ⟨∅, by simp⟩, coeff_JfJ_zeroForm, hJw]
     have hsum_s : ∀ (s : formIdx n (k : ℤ)), Summable fun m =>
@@ -460,17 +460,22 @@ theorem exists_coexact_potential (u : (dPart (Q (Fin n)) J (k : ℤ)).domain) :
           (PiLp.norm_apply_le _ _) (norm_nonneg _)) 2
     have hmem := fun s => exists_mem_dPart_of_summable (hsum_s s)
     choose hw hnorm using hmem
+    replace hnorm : ∀ s : formIdx n (k : ℤ),
+        ‖dPart (Q (Fin n)) (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨_, hw s⟩‖ ^ 2 = (2 ^ n)⁻¹ * ∑' m,
+          ‖(Feec.Fourier.Exterior.deRham (Fin n)).m 0 (0 + 1) (freq m)
+            ((JfJ (symmDiff J s.1) 0 (zeroForm (w₀ s)) : (Fin n → ℤ) → Form ℂ (Fin n) 0) m)‖ ^ 2 :=
+      hnorm
     refine ⟨fun s => dPart (Q (Fin n)) (symmDiff J s.1) ((0 : ℕ) : ℤ) ⟨_, hw s⟩,
       fun s => (dPart (Q (Fin n)) (symmDiff J s.1) ((0 : ℕ) : ℤ)).mem_graph ⟨_, hw s⟩, ?_⟩
     simp only [hnorm, norm_deRham_zero, hcoef]
     rw [← Finset.mul_sum, ← Summable.tsum_finsetSum fun s _ => (hsum_s s).congr fun m => by
       rw [norm_deRham_zero, hcoef]]
     have hm : ∀ m, ∑ s : formIdx n (k : ℤ),
-        (‖freq m‖ * ‖(Y : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 =
+        (‖freq m‖ * ‖(Y : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖) ^ 2 =
           ‖(JfJ J (k + 1) du : (Fin n → ℤ) → Form ℂ (Fin n) (k + 1)) m‖ ^ 2 := fun m => by
       rw [hYeq, mul_pow, EuclideanSpace.norm_sq_eq ((Y : (Fin n → ℤ) → Form ℂ (Fin n) k) m),
         Finset.mul_sum]
-      refine Fintype.sum_equiv (idx k) _ _ fun s => ?_
+      refine Finset.sum_congr rfl fun s _ => ?_
       rw [mul_pow]
     simp only [hm]
     rw [← norm_sq_count', norm_sq_JfJ]
@@ -505,22 +510,22 @@ theorem mem_dPart_of_coeff (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
       exact (coeff_d_dPart (symmDiff J s.1) 0 (y s) m).symm
   have hzn : ∀ (s : formIdx n (k : ℤ)) m, ‖(JfJ (symmDiff J s.1) (0 + 1) (g s) :
       (Fin n → ℤ) → Form ℂ (Fin n) (0 + 1)) m‖ = ‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m
-        (idx k s)‖ := fun s m => by
+        s‖ := fun s m => by
     rw [hz, norm_deRham_zero, norm_form_zero _ ⟨∅, by simp⟩, coeff_JfJ_zeroForm]
   have hsum_s : ∀ s : formIdx n (k : ℤ), Summable fun m => (‖freq m‖ *
-      ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 := fun s =>
+      ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖) ^ 2 := fun s =>
     (summable_norm_sq_count' (JfJ (symmDiff J s.1) (0 + 1) (g s))).congr fun m => by rw [hzn]
   have hpt : ∀ m, ‖(Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (freq m)
       ((x : (Fin n → ℤ) → Form ℂ (Fin n) k) m)‖ ^ 2 ≤
-        ∑ s, (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 := fun m => by
+        ∑ s, (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖) ^ 2 := fun m => by
     have h1 := pow_le_pow_left₀ (norm_nonneg _) (norm_deRham_le k (freq m)
       ((x : (Fin n → ℤ) → Form ℂ (Fin n) k) m)) 2
     refine h1.trans_eq ?_
     rw [mul_pow, EuclideanSpace.norm_sq_eq ((x : (Fin n → ℤ) → Form ℂ (Fin n) k) m),
       Finset.mul_sum]
-    exact (Fintype.sum_equiv (idx k) _ _ fun s => by rw [mul_pow]).symm
+    exact Finset.sum_congr rfl fun s _ => by rw [mul_pow]
   have hsumall : Summable fun m => ∑ s,
-      (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 :=
+      (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖) ^ 2 :=
     summable_sum fun s _ => hsum_s s
   obtain ⟨hw, hn⟩ := exists_mem_dPart_of_summable (J := J) (k := k) (u := w)
     (hsumall.of_nonneg_of_le (fun _ => sq_nonneg _) hpt)
@@ -529,7 +534,7 @@ theorem mem_dPart_of_coeff (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
   have hle := (hsumall.of_nonneg_of_le (fun _ => sq_nonneg _) hpt).tsum_le_tsum hpt hsumall
   rw [Summable.tsum_finsetSum fun s _ => hsum_s s] at hle
   have he : ∀ s : formIdx n (k : ℤ), (2 ^ n)⁻¹ * ∑' m,
-      (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 = ‖g s‖ ^ 2 := by
+      (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖) ^ 2 = ‖g s‖ ^ 2 := by
     intro s
     have e := norm_sq_JfJ (symmDiff J s.1) (0 + 1) (g s)
     rw [norm_sq_count'] at e
@@ -538,7 +543,7 @@ theorem mem_dPart_of_coeff (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
   calc (2 ^ n)⁻¹ * ∑' m, ‖(Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) (freq m)
         ((JfJ J k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m)‖ ^ 2
       ≤ (2 ^ n)⁻¹ * ∑ s, ∑' m,
-        (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 :=
+        (‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m s‖) ^ 2 :=
         mul_le_mul_of_nonneg_left hle (by positivity)
     _ = ∑ s, ‖g s‖ ^ 2 := by rw [Finset.mul_sum]; exact Finset.sum_congr rfl fun s _ => he s
 

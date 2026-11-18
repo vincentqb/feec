@@ -163,7 +163,7 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
         ‖((F.π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖) ∧
       (∀ k, F.Approximates k) ∧ ∀ a m, F.ApproximatesOn a m :=
   ⟨Torus.complexC n, Torus.family n, Torus.mem_graph_iff, rfl, Torus.mem_V_iff, Torus.π_apply,
-    fun _ => inferInstance, Torus.finrank_harmonic, fun _ hk0 hkn => Torus.V_ne_top hk0 hkn,
+    fun _ => inferInstance, Torus.finrank_harmonic, fun _ => Torus.V_ne_top,
     Torus.isClosed_boundaries, Torus.poincareBy,
     ((projectionFEEC atTop (Torus.family n).V).2 Torus.isClosed_boundaries).1
       ⟨Torus.family n, rfl, rfl, fun k => ⟨1, Torus.isGraphBoundedBy k⟩⟩,

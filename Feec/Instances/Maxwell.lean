@@ -438,8 +438,8 @@ def torusFamily : ConformingFamily (complex d) ℕ where
     rw [one_mul, bandProj_apply]; exact Submodule.norm_starProjection_apply_le _ x⟩
   approx k y := by
     refine (tendsto_infDist_submodule_iff _ y).2 fun ε hε => ?_
-    filter_upwards [(tendsto_iff_norm_sub_tendsto_zero.1 (tendsto_starProjection_band k y)).eventually
-      (gt_mem_nhds hε)] with N hN
+    filter_upwards [(tendsto_iff_norm_sub_tendsto_zero.1
+      (tendsto_starProjection_band k y)).eventually (gt_mem_nhds hε)] with N hN
     exact ⟨_, Submodule.starProjection_apply_mem _ _, by rwa [norm_sub_rev]⟩
 
 /-- **Maxwell's equations on the torus `𝕋ᵈ`** (degree `a`; `d = 3`, `a = 0` is the classical
@@ -471,9 +471,9 @@ theorem torus_exists_d_ne_zero [Nonempty d] :
   have hq : q ≠ 0 := fun h => by simpa [q] using congrFun h j
   set v : Fourier.Exterior.Form ℂ d 0 := EuclideanSpace.single ⟨∅, by simp⟩ 1
   have hv : v ≠ 0 := by simp [v]
-  set u : L2Form d 0 := mode 0 q v
+  set u : L2Form d 0 := Fourier.Torus.mode q v
   have hu : ∀ p, (u : (d → ℤ) → Fourier.Exterior.Form ℂ d 0) p = if p = q then v else 0 :=
-    mode_apply 0 q v
+    fun p => by rw [Fourier.Torus.coeFn_mode, Pi.single_apply]
   have hband : u ∈ (bandSubcomplex d 1).V 0 := by
     refine (Fourier.mem_band_iff
       (S := Fourier.Torus.symbolComplex (Fourier.Exterior.deRham d))).2

@@ -132,12 +132,12 @@ theorem symbol_trunc {k : ℕ} {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : M
 /-- The physical field of a coefficient sequence of `k`-forms (indexed by `formIdx n k`). -/
 abbrev physF (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))) :
     Field (Fin n) (formIdx n (k : ℤ)) :=
-  (Fourier.Torus.fieldFourier (Fin n) (formIdx n (k : ℤ))).symm ((reidx k).symm x)
+  (Fourier.Torus.fieldFourier (Fin n) (formIdx n (k : ℤ))).symm x
 
 theorem repr_physF (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))
     (s : formIdx n (k : ℤ)) (m : Fin n → ℤ) :
-    mFourierBasis.repr (physF k x s) m = (x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s) := by
-  rw [mFourierBasis_repr, coeff_fieldFourier_symm, reidx_symm_apply]
+    mFourierBasis.repr (physF k x s) m = (x : (Fin n → ℤ) → Form ℂ (Fin n) k) m s := by
+  rw [mFourierBasis_repr, coeff_fieldFourier_symm]
 
 theorem isSmooth_trigPoly (f : lp (fun _ : Fin n → ℤ => ℂ) 2) (S : Finset (Fin n → ℤ)) :
     IsSmooth (trigPoly f S) := by

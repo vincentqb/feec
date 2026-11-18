@@ -263,7 +263,8 @@ theorem mixed_harmonic_eq_span (J : Finset d) {i : Fin (Fintype.card d + 1)}
   refine le_antisymm (fun w hw => ?_) ((Submodule.span_singleton_le_iff_mem _ _).2
     (constMode_mem_harmonic J hi))
   rw [Submodule.mem_span_singleton]
-  refine ⟨(w : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 ⟨J, congrArg Nat.cast hi.symm⟩,
+  refine ⟨(w : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0
+      ⟨J, congrArg Nat.cast hi.symm⟩,
     Subtype.ext (Lp.ext_count fun n => ?_)⟩
   rw [Submodule.coe_smul, coeFn_smul_count]
   change _ • (constMode J hi : (d → ℤ) → Form ℂ d i) n = _

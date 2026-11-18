@@ -95,14 +95,14 @@ theorem mem_graph_iff (k : ℤ) (u : TorusForm n k) (w : TorusForm n (k + 1)) :
 
 theorem mem_V_iff (N : ℕ) (k : ℤ) (u : TorusForm n k) :
     u ∈ ((family n).V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0 := by
-  change u ∈ band N k ↔ _
+  change u ∈ band (d := Fin n) N k ↔ _
   rw [Feec.Models.Torus.DeRham.mem_band_iff]
   simp only [Feec.Fourier.Torus.mem_bandN, not_forall, not_le]
 
 theorem π_apply (N : ℕ) (k : ℤ) (x : ((complexC n).d k (k + 1)).domain) (ξ : Fin n → ℤ) :
     (((family n).π N).π k x : TorusForm n k) ξ =
       if ∀ j, |ξ j| ≤ N then (x : TorusForm n k) ξ else 0 := by
-  change ((band N k).starProjection (x : TorusForm n k) : TorusForm n k) ξ = _
+  change ((band (d := Fin n) N k).starProjection (x : TorusForm n k) : TorusForm n k) ξ = _
   rw [Feec.Models.Torus.DeRham.coeFn_starProjection_band]
   by_cases h : ∀ j, |ξ j| ≤ (N : ℤ)
   · rw [if_pos (Feec.Fourier.Torus.mem_bandN.2 h), if_pos h]
@@ -118,7 +118,8 @@ instance (k : ℤ) : FiniteDimensional ℂ ((complexC n).harmonic k) := by
 /-- **`dim ℌᵏ = (n choose k)`** (the constant forms). -/
 theorem finrank_harmonic (k : ℕ) : Module.finrank ℂ ((complexC n).harmonic k) = n.choose k := by
   rw [← (complexC n).harmonic_eq k]
-  exact (Feec.Models.Torus.DeRham.finrank_harmonic (d := Fin n) k).trans (by rw [Fintype.card_fin])
+  have h := Feec.Models.Torus.DeRham.finrank_harmonic (d := Fin n) k
+  rwa [Fintype.card_fin] at h
 
 /-- **No band subcomplex is the whole space** in degrees `0 ≤ k ≤ n` (`n ≥ 1`): the mode
 `e^{2πi (N + 1)·x} dx_t`, `#t = k`, lies outside. -/
@@ -131,11 +132,11 @@ theorem V_ne_top [NeZero n] {k : ℤ} (hk0 : 0 ≤ k) (hkn : k ≤ n) (N : ℕ) 
   set v : Feec.Fourier.Exterior.Form ℂ (Fin n) k := EuclideanSpace.single ⟨t, htk⟩ 1
   set q : Fin n → ℤ := fun _ => (N : ℤ) + 1
   intro htop
-  have hmem : Feec.Models.Torus.DeRham.mode k q v ∈ ((family n).V N).V k := by
+  have hmem : (Feec.Fourier.Torus.mode q v : TorusForm n k) ∈ ((family n).V N).V k := by
     rw [htop]; exact Submodule.mem_top
   have h := (mem_V_iff N k _).1 hmem q
     ⟨0, show (N : ℤ) < |(N : ℤ) + 1| by rw [abs_of_nonneg (by positivity)]; omega⟩
-  rw [Feec.Models.Torus.DeRham.mode_apply, if_pos rfl] at h
+  rw [Feec.Fourier.Torus.coeFn_mode, Pi.single_eq_same] at h
   have := congrArg (fun w : Feec.Fourier.Exterior.Form ℂ (Fin n) k => w ⟨t, htk⟩) h
   simp [v] at this
 
@@ -181,16 +182,18 @@ theorem approximates (k : ℤ) : (family n).Approximates k := by
     (Feec.Models.Torus.DeRham.tendsto_starProjection_band (k + 1)
       ((complexC n).d k (k + 1) x)))).2 ε hε
   filter_upwards [h1, h2] with N hN1 hN2
-  refine ⟨(band N k).starProjection (x : TorusForm n k),
-    Submodule.starProjection_apply_mem (band N k) _, by rwa [norm_sub_rev], ?_⟩
-  have hv : (band N k).starProjection (x : TorusForm n k) ∈ ((complexC n).d k (k + 1)).domain :=
+  refine ⟨_, Submodule.starProjection_apply_mem (band (d := Fin n) N k) (x : TorusForm n k),
+    by rwa [norm_sub_rev], ?_⟩
+  have hv : (band (d := Fin n) N k).starProjection (x : TorusForm n k) ∈
+      ((complexC n).d k (k + 1)).domain :=
     (bandSubcomplex (Fin n) N).le_domain k (k + 1) (Submodule.starProjection_apply_mem _ _)
-  have hc : (complexC n).d k (k + 1) ⟨(band N k).starProjection (x : TorusForm n k), hv⟩ =
-      (band N (k + 1)).starProjection ((complexC n).d k (k + 1) x) :=
+  have hc : (complexC n).d k (k + 1) ⟨_, hv⟩ =
+      (band (d := Fin n) N (k + 1)).starProjection ((complexC n).d k (k + 1) x) :=
     ((Feec.Models.Torus.DeRham.reducingSubcomplex_band (d := Fin n) N).reduces k (k + 1)).comm x
   have e : (complexC n).d k (k + 1) ⟨(x : TorusForm n k) -
-      (band N k).starProjection (x : TorusForm n k), Submodule.sub_mem _ x.2 hv⟩ =
-      (complexC n).d k (k + 1) x - (band N (k + 1)).starProjection ((complexC n).d k (k + 1) x) := by
+      (band (d := Fin n) N k).starProjection (x : TorusForm n k), Submodule.sub_mem _ x.2 hv⟩ =
+      (complexC n).d k (k + 1) x -
+        (band (d := Fin n) N (k + 1)).starProjection ((complexC n).d k (k + 1) x) := by
     rw [← hc, ← LinearPMap.map_sub]
     rfl
   rw [e, norm_sub_rev]

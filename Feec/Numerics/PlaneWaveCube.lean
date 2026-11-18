@@ -195,85 +195,13 @@ theorem exists_not_propagates (W : WholeSpaceTSD) {Ω : Set R3} (hΩ : IsOpen Ω
 
 /-! ## The periodic run on `𝕋³` (Fourier side) -/
 
-section Modes
-
-open Feec.Fourier
-
-variable {d : Type*} [Fintype d]
-
-/-- The single-frequency field `δ_k v` on the Fourier side: the coefficients of `v e^{2πi k·x}`. -/
-def mode {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] (k : d → ℤ) (v : E) :
-    Lp E 2 (Measure.count : Measure (d → ℤ)) :=
-  (lp.memLp_count (d → ℤ) E 2 (lp.single 2 k v)).toLp _
-
-variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E] [NormedAddCommGroup F]
-  [InnerProductSpace ℂ F]
-
-theorem coeFn_mode (k : d → ℤ) (v : E) : ⇑(mode k v) = Pi.single k v :=
-  MemLp.coeFn_toLp_count _
-
-theorem mode_add (k : d → ℤ) (v w : E) : mode k (v + w) = mode k v + mode k w :=
-  Lp.ext_count fun a => by
-    rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_add _ _)]
-    simp only [coeFn_mode, Pi.add_apply, Pi.single_add]
-
-theorem mode_smul (k : d → ℤ) (c : ℂ) (v : E) : mode k (c • v) = c • mode k v :=
-  Lp.ext_count fun a => by
-    rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_smul _ _)]
-    simp only [coeFn_mode, Pi.smul_apply, Pi.single_smul]
-
-theorem mode_zero (k : d → ℤ) : mode k (0 : E) = 0 :=
-  Lp.ext_count fun a => by
-    rw [Lp.coeFn_eq_count_iff.1 (Lp.coeFn_zero _ _ _)]
-    simp [coeFn_mode]
-
-theorem mode_neg (k : d → ℤ) (v : E) : mode k (-v) = -mode k v := by
-  rw [← neg_one_smul ℂ v, mode_smul, neg_one_smul]
-
-theorem mode_sub (k : d → ℤ) (v w : E) : mode k (v - w) = mode k v - mode k w := by
-  rw [sub_eq_add_neg, mode_add, mode_neg, ← sub_eq_add_neg]
-
-theorem mode_sum {ι : Type*} (s : Finset ι) (k : d → ℤ) (v : ι → E) :
-    mode k (∑ i ∈ s, v i) = ∑ i ∈ s, mode k (v i) := by
-  classical
-  induction s using Finset.induction_on with
-  | empty => simp [mode_zero]
-  | insert a s ha ih => rw [Finset.sum_insert ha, Finset.sum_insert ha, mode_add, ih]
-
-/-- Modes lie in the domain of every multiplier. -/
-theorem mode_mem_mulDomain (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E) :
-    mode k v ∈ Operator.mulDomain (Measure.count : Measure (d → ℤ)) m := by
-  rw [Operator.mem_mulDomain, coeFn_mode]
-  have : (fun a => m a ((Pi.single k v : (d → ℤ) → E) a)) =
-      ⇑(lp.single 2 k (m k v) : lp (fun _ => F) 2) := by
-    funext a
-    rw [lp.coeFn_single]
-    by_cases h : a = k
-    · subst h; simp
-    · simp [h]
-  rw [this]
-  exact lp.memLp_count (d → ℤ) F 2 _
-
-/-- A multiplier acts on a mode by its value at the frequency: `m (δ_k v) = δ_k (m k v)`. -/
-theorem mulOp_mode (m : (d → ℤ) → E →L[ℂ] F) (k : d → ℤ) (v : E)
-    (h : mode k v ∈ (Operator.mulOp (Measure.count : Measure (d → ℤ)) m).domain) :
-    Operator.mulOp (Measure.count : Measure (d → ℤ)) m ⟨mode k v, h⟩ = mode k (m k v) := by
-  refine Lp.ext_count fun a => ?_
-  have h1 := Lp.coeFn_eq_count_iff.1 (Operator.coeFn_mulOp _ m ⟨mode k v, h⟩)
-  rw [h1]
-  change m a (mode k v a) = mode k (m k v) a
-  rw [coeFn_mode, coeFn_mode]
-  by_cases hak : a = k
-  · subst hak; simp
-  · simp [hak]
+open Feec.Fourier.Torus (mode coeFn_mode mode_smul mode_sub mode_sum mode_mem_mulDomain mulOp_mode)
 
 /-- Rewriting the operator in an application. -/
 theorem _root_.LinearPMap.apply_of_eq' {G H : Type*} [AddCommGroup G] [Module ℂ G]
     [AddCommGroup H] [Module ℂ H] {f g : G →ₗ.[ℂ] H} (h : f = g) (x : G) (hx : x ∈ f.domain) :
     f ⟨x, hx⟩ = g ⟨x, h ▸ hx⟩ := by
   subst h; rfl
-
-end Modes
 
 section TorusModes
 

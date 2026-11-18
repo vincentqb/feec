@@ -414,7 +414,7 @@ theorem integrable_sq_of_continuous {f : (Fin n → ℝ) → ℝ} (hf : Continuo
 
 /-- The restriction of a trigonometric polynomial is the real part of an exponential sum. -/
 theorem trigLift_eq_re_expSum (x : Seq n k) (S : Finset (Fin n → ℤ)) (t : formIdx n (k : ℤ)) :
-    trigLift k x S t = fun y => (expSum S (fun m => cf x m (idx k t)) y).re := by
+    trigLift k x S t = fun y => (expSum S (fun m => cf x m t) y).re := by
   funext y
   simp only [trigLift, trigPoly, ContinuousMap.coe_sum, ContinuousMap.coe_smul, Finset.sum_apply,
     Pi.smul_apply, smul_eq_mul, expSum, expChar_eq_mFourier, repr_physF]
@@ -452,7 +452,7 @@ theorem Jinvf_trunc_eq_toL2F (x : Seq n k) (M : ℕ) :
 /-- The components of the truncation field are real exponential sums. -/
 theorem truncField_comp_eq (x : Seq n k) (M : ℕ) (t : formIdx n (k : ℤ)) :
     (fun y => truncField k x M y t.1) =
-      fun y => (expSum (bandS M) (fun m => cf (trunc M k x) m (idx k t)) y).re := by
+      fun y => (expSum (bandS M) (fun m => cf (trunc M k x) m t) y).re := by
   funext y
   rw [truncField_val, trigLift_eq_re_expSum]
 
@@ -460,7 +460,7 @@ theorem truncField_comp_eq (x : Seq n k) (M : ℕ) (t : formIdx n (k : ℤ)) :
 theorem integral_iterPartial_truncField_sq_le (x : Seq n k) (M : ℕ) (l : List (Fin n))
     (t : formIdx n (k : ℤ)) :
     ∫ y in Q (Fin n), (iterPartial l (fun z => truncField k x M z t.1) y) ^ 2 ≤
-      ∑ m ∈ bandS M, ‖symb l m‖ ^ 2 * ‖cf (trunc M k x) m (idx k t)‖ ^ 2 := by
+      ∑ m ∈ bandS M, ‖symb l m‖ ^ 2 * ‖cf (trunc M k x) m t‖ ^ 2 := by
   rw [truncField_comp_eq, iterPartial_re_expSum]
   refine (integral_re_expSum_sq_le _ _).trans (le_of_eq ?_)
   refine Finset.sum_congr rfl fun m _ => ?_
@@ -511,7 +511,7 @@ theorem integral_norm_iteratedFDeriv_truncField_sq_le (x : Seq n k) (M p : ℕ) 
     have : (fun z => w z s) = fun _ => 0 := funext fun z => truncField_of_ne x M z hs
     simp [a, this, iterPartial_zero]
   rw [Feec.Domain.sum_eq_sum_formIdx h0]
-  set c := fun (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) => cf (trunc M k x) m (idx k t)
+  set c := fun (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) => cf (trunc M k x) m t
   calc ∑ t : formIdx n (k : ℤ), ∑ r : Fin p → Fin n, ∫ y in Q (Fin n), (a t.1 r y) ^ 2
       ≤ ∑ t : formIdx n (k : ℤ), ∑ r : Fin p → Fin n, ∑ m ∈ bandS M,
           ‖symb (List.ofFn r) m‖ ^ 2 * ‖c m t‖ ^ 2 :=
@@ -717,8 +717,8 @@ theorem hasWeakDeriv_Jinvf_trunc {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : 
     (hl : (l.length : ℝ) ≤ s) (M : ℕ) (t : formIdx n (k : ℤ)) :
     HasWeakDeriv (Q (Fin n)) l (Jinvf k (trunc M k x) t) (Jinvf k (trunc M k (mulSeq l x)) t) := by
   intro φ hφ
-  set c := fun m => cf (trunc M k x) m (idx k t)
-  have hc' : (fun m => cf (trunc M k (mulSeq l x)) m (idx k t)) = fun m => symb l m * c m := by
+  set c := fun m => cf (trunc M k x) m t
+  have hc' : (fun m => cf (trunc M k (mulSeq l x)) m t) = fun m => symb l m * c m := by
     classical
     funext m
     simp only [c, cf_trunc]
@@ -841,7 +841,7 @@ def HasWeakDerivsT (m : ℕ) (f : Lp ℂ 2 (volume : Measure (UnitAddTorus (Fin 
   ∀ l : List (Fin n), l.length ≤ m → ∃ v, HasWeakDerivT l f v
 
 theorem mFourierCoeff_physF (x : Seq n k) (t : formIdx n (k : ℤ)) (m : Fin n → ℤ) :
-    mFourierCoeff (physF k x t : UnitAddTorus (Fin n) → ℂ) m = cf x m (idx k t) := by
+    mFourierCoeff (physF k x t : UnitAddTorus (Fin n) → ℂ) m = cf x m t := by
   rw [← mFourierBasis_repr, repr_physF]
 
 /-- **`Hᵐ(𝕋ⁿ)` has weak derivatives up to order `m`** (the multiplier `mulSeq`). -/
@@ -855,7 +855,7 @@ theorem hasWeakDerivT_physF {s : ℝ} {x : Seq n k} (hx : MemSob s x) {l : List 
   refine tsum_congr fun m => ?_
   rw [mFourierCoeff_iterPartialT hφ, symb_neg, mFourierCoeff_physF, mFourierCoeff_physF,
     cf_mulSeq hx hl]
-  change _ = _ * (_ * (symb l m * cf x m (idx k t)))
+  change _ = _ * (_ * (symb l m * cf x m t))
   ring
 
 /-- Conversely, a weak derivative on `𝕋ⁿ` has the Fourier coefficients `symb_l(m) f̂(m)`. -/
@@ -887,7 +887,7 @@ frequency `q`: `⟨ξ_q⟩^{2(m+1)} |x(q)|² ≤ (n + 1)ᵐ (|x(q)|² + Σ_{j,t}
 theorem weight_mul_le_pure (x : Seq n k) (m : ℕ) (q : Fin n → ℤ) :
     weight ((m + 1 : ℕ) : ℝ) q * ‖cf x q‖ ^ 2 ≤ (n + 1 : ℝ) ^ m *
       (‖cf x q‖ ^ 2 + ∑ j, ∑ t : formIdx n (k : ℤ),
-        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2) := by
+        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q t‖ ^ 2) := by
   set a : Option (Fin n) → ℝ := fun i => i.elim 1 fun j => (2 * Real.pi * q j) ^ 2
   have ha : ∀ i ∈ (Finset.univ : Finset (Option (Fin n))), 0 ≤ a i := fun i _ => by
     cases i <;> simp [a, sq_nonneg]
@@ -919,12 +919,12 @@ theorem sobSum_le (x : Seq n k) {m : ℕ}
     (hv : ∀ j t, HasWeakDerivT (List.replicate (m + 1) j) (physF k x t) (v j t)) :
     sobSum ((m + 1 : ℕ) : ℝ) x ≤ (n + 1 : ℝ) ^ m * (‖x‖ ^ 2 + ∑ j, ∑ t, ‖v j t‖ ^ 2) := by
   have hpure : ∀ j t, HasSum (fun q : Fin n → ℤ =>
-      ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2) (‖v j t‖ ^ 2) := by
+      ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q t‖ ^ 2) (‖v j t‖ ^ 2) := by
     intro j t
     have h := hasSum_sq_mFourierCoeff (v j t)
     rw [← Feec.Models.Cube.Geometry.norm_sq_eq_integral] at h
     have e : (fun q => ‖mFourierCoeff (v j t : UnitAddTorus (Fin n) → ℂ) q‖ ^ 2) = fun q =>
-        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2 := by
+        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q t‖ ^ 2 := by
       funext q
       rw [(hv j t).mFourierCoeff_eq, mFourierCoeff_physF, norm_mul, mul_pow, norm_symb_sq]
       simp
@@ -952,7 +952,7 @@ theorem memSob_nat_iff (x : Seq n k) (m : ℕ) :
     · rw [Nat.cast_zero]; exact memSob_zero x
     -- the pure derivatives `∂_j^{m+1}` of every component
     have hpure : ∀ (j : Fin n) (t : formIdx n (k : ℤ)), Summable fun q : Fin n → ℤ =>
-        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q (idx k t)‖ ^ 2 := by
+        ((2 * Real.pi * q j) ^ 2) ^ (m + 1) * ‖cf x q t‖ ^ 2 := by
       intro j t
       obtain ⟨v, hv⟩ := h t (List.replicate (m + 1) j) (by simp)
       refine ((hasSum_sq_mFourierCoeff v).summable).congr fun q => ?_

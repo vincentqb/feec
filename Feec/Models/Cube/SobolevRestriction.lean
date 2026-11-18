@@ -495,7 +495,7 @@ theorem exists_qNorm_le (k m : ℕ) : ∃ C : ℝ, 0 ≤ C ∧
   -- the torus field and its coefficient sequence
   set G : Feec.Fourier.TorusWeak.Field (Fin n) (Feec.Domain.formIdx n (k : ℤ)) :=
     WithLp.toLp 2 fun t => (memLp_perCell (hW0 t) (hW2 t)).toLp (perCell (W t))
-  set x : Seq n k := reidx k (Feec.Fourier.Torus.fieldFourier (Fin n) _ G)
+  set x : Seq n k := Feec.Fourier.Torus.fieldFourier (Fin n) _ G
   have hphys : physF k x = G := by simp [x, physF]
   have hder : ∀ t l (hl : l.length ≤ m + 1), HasWeakDerivT l (physF k x t)
       ((memLp_perCell (hEm t l hl) (hE2 t l hl)).toLp (perCell (E t l hl))) := fun t l hl => by
@@ -506,7 +506,7 @@ theorem exists_qNorm_le (k m : ℕ) : ∃ C : ℝ, 0 ≤ C ∧
     (memSob_nat_iff x (m + 1)).2 fun t l hl => ⟨_, hder t l hl⟩
   have hJ : Jinvf k x = u := by
     have e1 : Jinvf k x = reF (Q (Fin n)) _ (resQF G) := by
-      change Jinv (Fin n) _ ((reidx k).symm x) = _
+      change Jinv (Fin n) _ x = _
       rw [Jinv_apply]; simp [x]
     rw [e1]
     ext1 t

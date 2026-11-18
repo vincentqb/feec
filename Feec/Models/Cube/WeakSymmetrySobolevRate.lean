@@ -992,7 +992,7 @@ open Feec.Models.Cube.Geometry (Q)
 open Feec.Fourier.Exterior (Form)
 
 /-- The index `{1, 2}` of the `2`-form `dx₁ ∧ dx₂`. -/
-def t12 : {s : Finset (Fin 3) // (#s : ℤ) = 2} := ⟨{1, 2}, by decide⟩
+def t12 : {s : Finset (Fin 3) // (s.card : ℤ) = 2} := ⟨{1, 2}, by decide⟩
 
 open scoped Classical in
 /-- **The coefficients of the sawtooth `2`-form** `f(y₀) dx₁ ∧ dx₂`, `f(y₀) = Σ_{c ≠ 0}
@@ -1115,7 +1115,7 @@ theorem contr_ext_sawCoeff (m : Fin 3 → ℤ) :
     · subst hj
       have h0 : ext 2 (sawCoeff m) (insert 0 s) = 0 := by
         rw [sawCoeff, ite_eq_left_of_eq_true _ _ (eq_true hm)]
-        by_cases hc : (insert 0 s).card = 2
+        by_cases hc : ((insert 0 s).card : ℤ) = 2
         · rw [ext_apply 2 _ hc, PiLp.single_apply, ite_eq_right_of_eq_false _ _ (eq_false ?_)]
           intro h
           have h' : insert 0 s = ({1, 2} : Finset (Fin 3)) := congrArg Subtype.val h

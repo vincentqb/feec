@@ -391,14 +391,13 @@ theorem norm_piLp_le_of_le {ι : Type*} [Fintype ι] {E F : ι → Type*}
 
 /-- **Restriction to `Q` (real part) is a contraction**: `‖x|_Q‖_{L²(Q)} ≤ ‖x‖_{ℓ²}`. -/
 theorem norm_Jinvf_le (k : ℕ) (x : Seq n k) : ‖Jinvf k x‖ ≤ ‖x‖ := by
-  set w := (reidx k).symm x
-  set F := (Fourier.Torus.fieldFourier (Fin n) (formIdx n (k : ℤ))).symm w
-  change ‖Jinv (Fin n) (formIdx n (k : ℤ)) w‖ ≤ ‖x‖
+  set F := (Fourier.Torus.fieldFourier (Fin n) (formIdx n (k : ℤ))).symm x
+  change ‖Jinv (Fin n) (formIdx n (k : ℤ)) x‖ ≤ ‖x‖
   rw [Jinv_apply]
   calc ‖reF (Q (Fin n)) (formIdx n (k : ℤ)) (resQF F)‖ ≤ ‖resQF (P := formIdx n (k : ℤ)) F‖ :=
         norm_piLp_le_of_le _ _ fun p => by rw [reF_apply]; exact norm_reL_le _ _
     _ ≤ ‖F‖ := norm_piLp_le_of_le _ _ fun p => by rw [resQF_apply]; exact norm_resQ_le _
-    _ = ‖x‖ := by rw [LinearIsometryEquiv.norm_map, LinearIsometryEquiv.norm_map]
+    _ = ‖x‖ := by rw [LinearIsometryEquiv.norm_map]
 
 end Contraction
 
@@ -558,8 +557,8 @@ theorem pcJ_symmDiff_empty (s : Finset (Fin n)) : pcJ (symmDiff J s) ∅ = pcJ J
 class `J ∆ t`) is the `t`-component of the extension of `u` (class `J`). -/
 theorem cf_JfJ_zeroF (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) (t : formIdx n (k : ℤ))
     (m : Fin n → ℤ) :
-    cf (JfJ (symmDiff J t.1) 0 (zeroF (u t))) m t₀ = cf (JfJ J k u) m (idx k t) := by
-  rw [coeff_JfJ, coeff_JfJ, Equiv.symm_apply_apply, idx_val]
+    cf (JfJ (symmDiff J t.1) 0 (zeroF (u t))) m t₀ = cf (JfJ J k u) m t := by
+  rw [coeff_JfJ, coeff_JfJ]
   change ∫ y in Q (Fin n), _ * fold (pcJ (symmDiff J t.1) ∅) _ y = _
   rw [pcJ_symmDiff_empty]
   rfl
@@ -604,28 +603,27 @@ theorem mem_dPart_zero_of_summable {v : L2F ℝ (Q (Fin n)) (formIdx n ((0 : ℕ
   exact (mem_dPart_of_JfJ hy).1
 
 theorem norm_cf_sq_eq_sum (x : Seq n k) (m : Fin n → ℤ) :
-    ‖cf x m‖ ^ 2 = ∑ t : formIdx n (k : ℤ), ‖cf x m (idx k t)‖ ^ 2 := by
+    ‖cf x m‖ ^ 2 = ∑ t : formIdx n (k : ℤ), ‖cf x m t‖ ^ 2 := by
   rw [EuclideanSpace.norm_sq_eq]
-  exact ((idx k).sum_comp (fun t' => ‖cf x m t'‖ ^ 2)).symm
 
 theorem grad_term_eq (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) (t : formIdx n (k : ℤ))
     (m : Fin n → ℤ) :
     ‖freq m‖ ^ 2 * ‖cf (JfJ (symmDiff J t.1) 0 (zeroF (u t))) m‖ ^ 2 =
-      ‖freq m‖ ^ 2 * ‖cf (JfJ J k u) m (idx k t)‖ ^ 2 := by
+      ‖freq m‖ ^ 2 * ‖cf (JfJ J k u) m t‖ ^ 2 := by
   rw [norm_form_zero_sq, cf_JfJ_zeroF]
 
 theorem summable_one_iff (x : Seq n k) :
     MemSob 1 x ↔ ∀ t : formIdx n (k : ℤ),
-      Summable fun m => ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      Summable fun m => ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
   have e : ∀ m, weight 1 m * ‖cf x m‖ ^ 2 =
-      ‖cf x m‖ ^ 2 + ∑ t : formIdx n (k : ℤ), ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ‖cf x m‖ ^ 2 + ∑ t : formIdx n (k : ℤ), ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
     intro m
     rw [weight_one, ← Finset.mul_sum, ← norm_cf_sq_eq_sum]; ring
   constructor
   · intro hx t
     refine Summable.of_nonneg_of_le (fun m => by positivity) (fun m => ?_) hx
     rw [e m]
-    have h1 := Finset.single_le_sum (f := fun t => ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2)
+    have h1 := Finset.single_le_sum (f := fun t => ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2)
       (fun _ _ => by positivity) (Finset.mem_univ t)
     have h2 := sq_nonneg ‖cf x m‖
     linarith
@@ -653,16 +651,16 @@ theorem parNorm_one_sq {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))} (hu : u �
   set x := JfJ J k u
   have hs := (summable_one_iff k x).1 hu
   have e : ∀ m, weight 1 m * ‖cf x m‖ ^ 2 =
-      ‖cf x m‖ ^ 2 + ∑ t : formIdx n (k : ℤ), ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ‖cf x m‖ ^ 2 + ∑ t : formIdx n (k : ℤ), ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
     intro m
     rw [weight_one, ← Finset.mul_sum, ← norm_cf_sq_eq_sum]; ring
   have hsum : sobSum 1 x = ‖x‖ ^ 2 + ∑ t : formIdx n (k : ℤ),
-      ∑' m, ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
     unfold sobSum
     simp_rw [e]
     rw [Summable.tsum_add (summable_norm_sq x) (summable_sum fun t _ => hs t),
       Summable.tsum_finsetSum fun t _ => hs t, ← norm_sq_eq_tsum]
-  have ht : ∀ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 =
+  have ht : ∀ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 =
       2 ^ n * ‖dPart (Q (Fin n)) (symmDiff J t.1) ((0 : ℕ) : ℤ)
         ⟨zeroF (u t), (mem_sobolevPar_one_iff J k).1 hu t⟩‖ ^ 2 := by
     intro t
@@ -888,7 +886,7 @@ theorem norm_sq_fderiv_trigLift_le (x : Seq n k) {S : Finset (Fin n → ℤ)}
     (hF : MemLp (fun y => fderiv ℝ (trigLift k x S t) y (Pi.single j 1)) 2
       (volume.restrict (Q (Fin n)))) :
     ‖hF.toLp (fun y => fderiv ℝ (trigLift k x S t) y (Pi.single j 1))‖ ^ 2 ≤
-      ∑' m, (2 * Real.pi * m j) ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ∑' m, (2 * Real.pi * m j) ^ 2 * ‖cf x m t‖ ^ 2 := by
   set P := trigPoly (mFourierBasis.repr (physF k x t)) S
   have hPs := isSmooth_trigPoly (mFourierBasis.repr (physF k x t)) S
   set g : C(UnitAddTorus (Fin n), ℂ) := ⟨partialT j P, continuous_partialT hPs.contDiff_one j⟩
@@ -907,14 +905,14 @@ theorem norm_sq_fderiv_trigLift_le (x : Seq n k) {S : Finset (Fin n → ℤ)}
   have hP : physF k x t = P.toLp 2 volume ℂ := by
     rw [← ofCoeff_eq_toLp S hS', ofCoeff, LinearIsometryEquiv.symm_apply_apply]
   have hcoef : ∀ m, mFourierCoeff (g.toLp 2 (volume : Measure (UnitAddTorus (Fin n))) ℂ) m =
-      2 * Real.pi * Complex.I * m j * cf x m (idx k t) := by
+      2 * Real.pi * Complex.I * m j * cf x m t := by
     intro m
     rw [mFourierCoeff_toLp]
     change mFourierCoeff (partialT j P) m = _
     rw [mFourierCoeff_partialT hPs.contDiff_one, ← mFourierCoeff_toLp, ← hP,
       ← mFourierBasis_repr, repr_physF]
   have h2 : ‖g.toLp 2 (volume : Measure (UnitAddTorus (Fin n))) ℂ‖ ^ 2 =
-      ∑' m, (2 * Real.pi * m j) ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ∑' m, (2 * Real.pi * m j) ^ 2 * ‖cf x m t‖ ^ 2 := by
     rw [norm_sq_eq_tsum_mFourierCoeff]
     refine tsum_congr fun m => ?_
     rw [hcoef, norm_mul, mul_pow]
@@ -932,7 +930,7 @@ theorem grad_Jinvf_of_finite (x : Seq n k) {S : Finset (Fin n → ℤ)}
     (hS : ∀ m ∉ S, cf x m = 0) (t : formIdx n (k : ℤ)) :
     ∃ h : zeroF (Jinvf k x t) ∈ ((extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))).domain,
       ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n)) ⟨_, h⟩‖ ^ 2 ≤
-        ∑' m, ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+        ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
   set ψ : formIdx n ((0 : ℕ) : ℤ) → (Fin n → ℝ) → ℝ := fun _ => trigLift k x S t
   have hψs : ∀ s, ContDiff ℝ (⊤ : ℕ∞) (ψ s) := fun _ => contDiff_trigLift k x S t
   have hw : ∀ s, MemLp (ψ s) 2 (volume.restrict (Q (Fin n))) := fun _ => memLp_trigLift k x S t
@@ -950,7 +948,7 @@ theorem grad_Jinvf_of_finite (x : Seq n k) {S : Finset (Fin n → ℤ)}
     rw [← hd]; congr 2
   rw [hval, PiLp.norm_sq_eq_of_L2, ← (single1 (n := n)).sum_comp]
   have hcomp : ∀ j : Fin n, ‖(toL2F hdw) (single1 j)‖ ^ 2 ≤
-      ∑' m, (2 * Real.pi * m j) ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ∑' m, (2 * Real.pi * m j) ^ 2 * ‖cf x m t‖ ^ 2 := by
     intro j
     have hfj : (extDerivOp ℝ n ((0 : ℕ) : ℤ)).apply ψ (single1 j) =
         fun y => fderiv ℝ (trigLift k x S t) y (Pi.single j 1) := by
@@ -963,7 +961,7 @@ theorem grad_Jinvf_of_finite (x : Seq n k) {S : Finset (Fin n → ℤ)}
       congr 1
     rw [e]
     exact norm_sq_fderiv_trigLift_le x hS t j hF
-  have hsum : ∀ j : Fin n, Summable fun m => (2 * Real.pi * m j) ^ 2 * ‖cf x m (idx k t)‖ ^ 2 :=
+  have hsum : ∀ j : Fin n, Summable fun m => (2 * Real.pi * m j) ^ 2 * ‖cf x m t‖ ^ 2 :=
     fun j => summable_of_ne_finset_zero (s := S) fun m hm => by simp [hS m hm]
   refine (Finset.sum_le_sum fun j _ => hcomp j).trans (le_of_eq ?_)
   rw [← Summable.tsum_finsetSum fun j _ => hsum j]
@@ -983,9 +981,9 @@ variable {k : ℕ}
 
 /-- `Σ_t Σ_m |2πm|² |x(m)_t|² ≤ Σ_m ⟨ξ⟩² |x(m)|²` for finitely supported `x`. -/
 theorem sum_tsum_freq_le (x : Seq n k) {S : Finset (Fin n → ℤ)} (hS : ∀ m ∉ S, cf x m = 0) :
-    ∑ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 ≤ sobSum 1 x := by
+    ∑ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 ≤ sobSum 1 x := by
   have hsum : ∀ t : formIdx n (k : ℤ),
-      Summable fun m => ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := fun t =>
+      Summable fun m => ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := fun t =>
     summable_of_ne_finset_zero (s := S) fun m hm => by
       have h0 := hS m hm
       simp only [cf] at h0
@@ -1107,9 +1105,9 @@ theorem exists_tendsto_grad_trunc {x : Seq n k} (hx : MemSob 1 x) (t : formIdx n
       rw [← zeroF_sub, ← PiLp.sub_apply, ← map_sub]
     rw [dist_eq_norm, e]
     have hb : y = (x - trunc b k x) - (x - trunc a k x) := by simp only [y]; abel
-    have h3 : ∑' m, ‖freq m‖ ^ 2 * ‖cf y m (idx k t)‖ ^ 2 ≤ sobSum 1 y := by
+    have h3 : ∑' m, ‖freq m‖ ^ 2 * ‖cf y m t‖ ^ 2 ≤ sobSum 1 y := by
       refine le_trans ?_ (sum_tsum_freq_le y hy)
-      exact Finset.single_le_sum (f := fun t => ∑' m, ‖freq m‖ ^ 2 * ‖cf y m (idx k t)‖ ^ 2)
+      exact Finset.single_le_sum (f := fun t => ∑' m, ‖freq m‖ ^ 2 * ‖cf y m t‖ ^ 2)
         (fun _ _ => tsum_nonneg fun m => by positivity) (Finset.mem_univ t)
     have h4 : sobSum 1 y ≤ 2 * sobSum 1 (x - trunc b k x) + 2 * sobSum 1 (x - trunc a k x) := by
       rw [hb]
@@ -1218,10 +1216,10 @@ theorem Jinvf_evenExt (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) : Jinvf k 
 /-- The `t`-component of `evenExt u` is the even extension of the coefficient `u_t`. -/
 theorem cf_evenExt_apply (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) (m : Fin n → ℤ)
     (t' : formIdx n (k : ℤ)) :
-    cf (evenExt u) m (idx k t') = cf (JfJ ∅ 0 (zeroF (u t'))) m t₀ := by
+    cf (evenExt u) m t' = cf (JfJ ∅ 0 (zeroF (u t'))) m t₀ := by
   rw [evenExt, cf_sum]
-  rw [show (∑ t : formIdx n (k : ℤ), cf (JfJ t.1 k (singleCoeff t u)) m) (idx k t') =
-      ∑ t : formIdx n (k : ℤ), cf (JfJ t.1 k (singleCoeff t u)) m (idx k t') by
+  rw [show (∑ t : formIdx n (k : ℤ), cf (JfJ t.1 k (singleCoeff t u)) m) t' =
+      ∑ t : formIdx n (k : ℤ), cf (JfJ t.1 k (singleCoeff t u)) m t' by
     simp]
   rw [Finset.sum_eq_single t']
   · rw [← cf_JfJ_zeroF, symmDiff_self, Finset.bot_eq_empty]
@@ -1278,10 +1276,10 @@ theorem sobSum_evenExt {u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
 /-- `‖x‖²_{H¹(𝕋ⁿ)} = ‖x‖² + Σ_t Σ_m |2πm|² |x(m)_t|²`. -/
 theorem sobSum_one_eq {x : Seq n k} (hx : MemSob 1 x) :
     sobSum 1 x = ‖x‖ ^ 2 + ∑ t : formIdx n (k : ℤ),
-      ∑' m, ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ∑' m, ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
   have hs := (summable_one_iff (k := k) x).1 hx
   have e : ∀ m, weight 1 m * ‖cf x m‖ ^ 2 =
-      ‖cf x m‖ ^ 2 + ∑ t : formIdx n (k : ℤ), ‖freq m‖ ^ 2 * ‖cf x m (idx k t)‖ ^ 2 := by
+      ‖cf x m‖ ^ 2 + ∑ t : formIdx n (k : ℤ), ‖freq m‖ ^ 2 * ‖cf x m t‖ ^ 2 := by
     intro m
     rw [weight_one, ← Finset.mul_sum, ← norm_cf_sq_eq_sum]; ring
   unfold sobSum
@@ -1310,7 +1308,7 @@ theorem norm_sq_add_sum_grad_sq_le_sobSum {x : Seq n k} (hx : MemSob 1 x) :
     pow_le_pow_left₀ (norm_nonneg _) (norm_Jinvf_le k _) 2
   have h2 : ∑ t, ‖(extDerivOp ℝ n ((0 : ℕ) : ℤ)).maximal (Q (Fin n))
         ⟨_, (grad_Jinvf_of_finite (trunc N k x) (hfin N) t).1⟩‖ ^ 2 ≤
-      ∑ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf (trunc N k x) m (idx k t)‖ ^ 2 :=
+      ∑ t : formIdx n (k : ℤ), ∑' m, ‖freq m‖ ^ 2 * ‖cf (trunc N k x) m t‖ ^ 2 :=
     Finset.sum_le_sum fun t _ => (grad_Jinvf_of_finite (trunc N k x) (hfin N) t).2
   have h3 := sobSum_one_eq (memSob_trunc 1 N x)
   have h4 : sobSum 1 (trunc N k x) ≤ sobSum 1 x := by

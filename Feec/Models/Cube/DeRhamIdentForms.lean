@@ -30,7 +30,7 @@ in the neighbouring parity class. Green's identity holds
 
 ## Main definitions
 
-* `pc`, `pcF`, `idx`, `reidx`, `Jf`, `Jinvf`, `RealPar`, `GreenFor`.
+* `pc`, `pcF`, `Jf`, `Jinvf`, `RealPar`, `GreenFor`.
 
 ## Main results
 
@@ -97,60 +97,34 @@ theorem update_pcF_erase (rel : Bool) {s : Finset (Fin n)} {j : Fin n} (hj : j �
   · rw [Function.update_of_ne hi]
     simp [pcF, DeRham.reflSign, Finset.mem_erase, hi]
 
-/-- `formIdx n k` and the `k`-subsets of `Fin n` (the index set of `Form ℂ (Fin n) k`). -/
-def idx (k : ℕ) : formIdx n (k : ℤ) ≃ {s : Finset (Fin n) // (#s : ℤ) = k} :=
-  Equiv.refl _
-
-@[simp] theorem idx_val (k : ℕ) (s : formIdx n (k : ℤ)) : ((idx k s) : Finset (Fin n)) = s.1 := rfl
-
-/-- The coefficient sequences of `L²` fields indexed by `formIdx n k`, as `ℓ²(ℤⁿ; Λᵏ)`. -/
-def reidx (k : ℕ) : Lp (EuclideanSpace ℂ (formIdx n (k : ℤ))) 2 (Measure.count : Measure (Fin n → ℤ))
-    ≃ₗᵢ[ℂ] Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) :=
-  LinearIsometryEquiv.refl ℂ _
-
-theorem reidx_apply (k : ℕ)
-    (w : Lp (EuclideanSpace ℂ (formIdx n (k : ℤ))) 2 (Measure.count : Measure (Fin n → ℤ)))
-    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
-    (reidx k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m t = w m ((idx k).symm t) :=
-  rfl
-
-theorem reidx_symm_apply (k : ℕ)
-    (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)))
-    (m : Fin n → ℤ) (s : formIdx n (k : ℤ)) :
-    ((reidx k).symm x : (Fin n → ℤ) → EuclideanSpace ℂ (formIdx n (k : ℤ))) m s = x m (idx k s) := by
-  conv_rhs => rw [← (reidx k).apply_symm_apply x]
-  rw [reidx_apply, Equiv.symm_apply_apply]
-
 /-! ### The extension of `k`-forms -/
 
-/-- **The parity extension of real `k`-forms on `Q`**, on the Fourier side of `𝕋ⁿ`. -/
+/-- **The parity extension of real `k`-forms on `Q`**, on the Fourier side of `𝕋ⁿ` (the
+components `formIdx n k` of the forms on `Q` are the index set of `Form ℂ (Fin n) k`). -/
 def Jf (rel : Bool) (k : ℕ) : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) →L[ℝ]
     Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) :=
-  ((reidx k).toContinuousLinearEquiv.toContinuousLinearMap.restrictScalars ℝ).comp
-    (JR (pc_mul_self rel))
+  JR (pc_mul_self rel)
 
 theorem Jf_apply (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    Jf rel k u = reidx k (JR (pc_mul_self rel) u) := rfl
+    Jf rel k u = JR (pc_mul_self rel) u := rfl
 
 /-- **The coefficients of `Jf`**: `(Jf u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
-    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
+    (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) :
     (Jf rel k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m t =
-      ∫ y in Q (Fin n), (((u ((idx k).symm t) : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
+      ∫ y in Q (Fin n), (((u t : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
         fold (pcF rel t.1) (mFourier (-m)) y := by
-  rw [Jf_apply, reidx_apply, coeff_JR]
+  rw [Jf_apply, coeff_JR]
   rfl
 
 /-- The restriction of Fourier-side `k`-forms to `Q`, real part. -/
 def Jinvf (k : ℕ) : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) →L[ℝ]
     L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) :=
-  (Jinv (Fin n) (formIdx n (k : ℤ))).comp
-    ((reidx k).symm.toContinuousLinearEquiv.toContinuousLinearMap.restrictScalars ℝ)
+  Jinv (Fin n) (formIdx n (k : ℤ))
 
 theorem Jinvf_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    Jinvf k (Jf rel k u) = u := by
-  change Jinv (Fin n) (formIdx n (k : ℤ)) ((reidx k).symm (reidx k (JR (pc_mul_self rel) u))) = u
-  rw [LinearIsometryEquiv.symm_apply_apply, Jinv_JR]
+    Jinvf k (Jf rel k u) = u :=
+  Jinv_JR _ u
 
 theorem injective_Jf (rel : Bool) (k : ℕ) : Function.Injective (Jf (n := n) rel k) :=
   fun u v h => by rw [← Jinvf_Jf rel k u, h, Jinvf_Jf]
@@ -159,9 +133,8 @@ theorem injective_Jf (rel : Bool) (k : ℕ) : Function.Injective (Jf (n := n) re
 theorem inner_Jf (rel : Bool) (k : ℕ) (u v : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     ⟪Jf rel k u, Jf rel k v⟫_ℝ = 2 ^ n * ⟪u, v⟫_ℝ := by
   rw [MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, Jf_apply,
-    Jf_apply, LinearIsometryEquiv.inner_map_map,
-    ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, inner_JR,
-    Fintype.card_fin]
+    Jf_apply, ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner,
+    inner_JR, Fintype.card_fin]
 
 /-- **The real coefficient sequences of the parity class `rel`**: `x(-m) = conj x(m)` and
 `x(flip_j m)_t = ± ε_j(t) x(m)_t`. -/
@@ -175,23 +148,19 @@ def RealPar (rel : Bool) (k : ℕ)
 theorem Jf_realPar (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     RealPar rel k (Jf rel k u) := by
   refine ⟨fun m t => ?_, fun j m t => ?_⟩
-  · rw [Jf_apply, reidx_apply, reidx_apply]
+  · rw [Jf_apply]
     exact JR_isReal (pc_mul_self rel) (conj_pc rel) u m _
-  · rw [Jf_apply, reidx_apply, reidx_apply]
+  · rw [Jf_apply]
     exact (mem_fieldParity_iff.1 (JR_mem_fieldParity (pc_mul_self rel) u)) j m _
 
 /-- **Real parity sequences are extensions of `k`-forms on `Q`.** -/
 theorem Jf_Jinvf {rel : Bool} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealPar rel k x) :
     Jf rel k (Jinvf k x) = x := by
-  set w := (reidx k).symm x
-  have hw : w ∈ fieldParity (pc (n := n) (k := (k : ℤ)) rel) := mem_fieldParity_iff.2 fun j m s => by
-    rw [reidx_symm_apply, reidx_symm_apply, hx.2]
-    rfl
-  have hr : IsReal w := fun m s => by
-    rw [reidx_symm_apply, reidx_symm_apply, hx.1]
-  change reidx k (JR (pc_mul_self rel) (Jinv (Fin n) (formIdx n (k : ℤ)) w)) = x
-  rw [JR_Jinv (pc_mul_self rel) hw hr, LinearIsometryEquiv.apply_symm_apply]
+  have hw : x ∈ fieldParity (pc (n := n) (k := (k : ℤ)) rel) :=
+    mem_fieldParity_iff.2 fun j m s => by rw [hx.2]; rfl
+  have hr : IsReal x := fun m s => hx.1 m s
+  exact JR_Jinv (pc_mul_self rel) hw hr
 
 /-! ### The torus symbol and the coefficients of `Jf` on all index sets -/
 
@@ -210,7 +179,6 @@ theorem ext_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : �
   by_cases h : (#r : ℤ) = k
   · rw [Feec.Fourier.Exterior.ext_apply k _ h, coeff_Jf, uExt,
       formExt_of_card _ (by exact_mod_cast h)]
-    rfl
   · rw [Feec.Fourier.Exterior.ext_apply_of_ne k _ h, uExt, formExt,
       dite_eq_right (by exact_mod_cast h)]
     symm

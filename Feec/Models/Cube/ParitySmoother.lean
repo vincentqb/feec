@@ -2093,8 +2093,8 @@ theorem exists_symm_approx (J' : Finset (Fin n))
       have e : flipB (single j) m = Fourier.Torus.flipAt j m := flipB_single j m
       simp only [f]
       rw [e, repr_physF, repr_physF, hxN.2]
-      have hs : (idx 0 s).1 = ∅ := by
-        rw [idx_val, eq_idx₀ s]; rfl
+      have hs : s.1 = ∅ := by
+        rw [eq_idx₀ s]; rfl
       simp only [DeRham.mixedSign, DeRham.reflSign, pvec, hs, Finset.notMem_empty, ↓reduceIte,
         mul_one]
       split_ifs <;> simp

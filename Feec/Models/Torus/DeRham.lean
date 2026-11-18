@@ -20,7 +20,6 @@ constraint propagation) applies to it.
 * **`closedRangeAt`**, `dual_closedRangeAt`: closed range in every degree, with the sharp
   **Poincaré inequality** `‖u‖ ≤ (2π)⁻¹ ‖d u‖` on `D(d) ∩ N(d)ᗮ` (`norm_le_of_mem_orthogonal`),
   from the fibre identity `‖d_ξ v‖ = |ξ| ‖v‖` on `N(d_ξ)ᗮ` and `|2πk| ≥ 2π`.
-* `mode k q v`: the Fourier mode `e^{2πi q·x} v`; `const k v = mode k 0 v`.
 * **`mem_harmonic_iff`**: the harmonic `k`-forms are the constant forms (only the zero mode);
   `harmonicEquiv : ℌᵏ ≃ₗ Λᵏ`, so `ℌᵏ` is finite-dimensional with `finrank_harmonic :
   dim ℌᵏ = (#d choose k)`, and **`cohomologyEquiv : Hᵏ(𝕋ᵈ) ≃ₗ Λᵏ`** with
@@ -117,26 +116,13 @@ theorem mem_harmonic_iff {k : ℤ} {u : L2Form d k} :
     simp only [Fourier.Torus.symbolComplex_m, deRham_harmonic_fibre hξ k, Submodule.mem_bot]
     exact ⟨fun h _ => h, fun h => h hq⟩
 
-/-- The Fourier mode `e^{2πi q·x} v` of the `k`-form `v`: the coefficients `v` at `q`, `0` at the
-other frequencies. -/
-def mode (k : ℤ) (q : d → ℤ) (v : Form ℂ d k) : L2Form d k :=
-  lp.equivLpCount ℂ (d → ℤ) (Form ℂ d k) 2 (lp.single 2 q v)
-
-omit [LinearOrder d] in
-theorem mode_apply (k : ℤ) (q : d → ℤ) (v : Form ℂ d k) (p : d → ℤ) :
-    (mode k q v : (d → ℤ) → Form ℂ d k) p = if p = q then v else 0 := by
-  rw [mode, lp.coeFn_equivLpCount, lp.single_apply]
-  split_ifs with h
-  · subst h; simp
-  · simp [Pi.single, Function.update, h]
-
-/-- The constant `k`-form `v` (the zero mode). -/
-abbrev const (k : ℤ) (v : Form ℂ d k) : L2Form d k := mode k 0 v
+/-- The constant `k`-form `v`: the zero mode `δ₀ v` (`Fourier.Torus.mode`). -/
+def const (k : ℤ) (v : Form ℂ d k) : L2Form d k := Fourier.Torus.mode 0 v
 
 omit [LinearOrder d] in
 theorem const_apply (k : ℤ) (v : Form ℂ d k) (q : d → ℤ) :
-    (const k v : (d → ℤ) → Form ℂ d k) q = if q = 0 then v else 0 :=
-  mode_apply k 0 v q
+    (const k v : (d → ℤ) → Form ℂ d k) q = if q = 0 then v else 0 := by
+  rw [const, Fourier.Torus.coeFn_mode, Pi.single_apply]
 
 theorem const_mem_harmonic (k : ℤ) (v : Form ℂ d k) : const k v ∈ (complex d).harmonic k :=
   mem_harmonic_iff.2 fun q hq => by simp [const_apply, hq]
@@ -251,8 +237,8 @@ theorem window_cartan (i : Fin (Fintype.card d + 1)) (ξ : EuclideanSpace ℝ d)
         ComplexShape.prev_eq' _ (by simp only [ComplexShape.window_rel]; omega)
       have hij : (((ComplexShape.window (Fintype.card d + 1)).prev i : ℕ) : ℤ) + 1 = (i : ℕ) := by
         rw [hp]; push_cast [Nat.cast_sub hpos]; ring
-      rw [← (Exterior.ext (𝕜 := ℂ) (d := d) _).norm_map, ext_adjoint_deRham hij, norm_smul, norm_neg,
-        Complex.norm_I, one_mul]
+      rw [← (Exterior.ext (𝕜 := ℂ) (d := d) _).norm_map, ext_adjoint_deRham hij, norm_smul,
+        norm_neg, Complex.norm_I, one_mul]
   rw [hnext, hprev, hcartan]
 
 omit [LinearOrder d] in

@@ -124,11 +124,10 @@ theorem pcJ_univ : pcJ (Finset.univ : Finset (Fin n)) = pcF true := by
 of `𝕋ⁿ`. -/
 def JfJ (J : Finset (Fin n)) (k : ℕ) : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)) →L[ℝ]
     Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) :=
-  ((reidx k).toContinuousLinearEquiv.toContinuousLinearMap.restrictScalars ℝ).comp
-    (JR (pcJF_mul_self J))
+  JR (pcJF_mul_self J)
 
 theorem JfJ_apply (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    JfJ J k u = reidx k (JR (pcJF_mul_self J) u) := rfl
+    JfJ J k u = JR (pcJF_mul_self J) u := rfl
 
 theorem JR_congr {d P : Type*} [Fintype d] [DecidableEq d] [Fintype P] {c c' : P → d → ℂ}
     (h : c = c') (hc : ∀ p j, c p j * c p j = 1) (hc' : ∀ p j, c' p j * c' p j = 1) :
@@ -143,17 +142,16 @@ theorem JfJ_univ (k : ℕ) : JfJ (Finset.univ : Finset (Fin n)) k = Jf true k :=
 
 /-- **The coefficients of `JfJ`**: `(JfJ u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
-    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
+    (m : Fin n → ℤ) (t : formIdx n (k : ℤ)) :
     (JfJ J k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m t =
-      ∫ y in Q (Fin n), (((u ((idx k).symm t) : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
+      ∫ y in Q (Fin n), (((u t : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
         fold (pcJ J t.1) (mFourier (-m)) y := by
-  rw [JfJ_apply, reidx_apply, coeff_JR]
+  rw [JfJ_apply, coeff_JR]
   rfl
 
 theorem Jinvf_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
-    Jinvf k (JfJ J k u) = u := by
-  change Jinv (Fin n) (formIdx n (k : ℤ)) ((reidx k).symm (reidx k (JR (pcJF_mul_self J) u))) = u
-  rw [LinearIsometryEquiv.symm_apply_apply, Jinv_JR]
+    Jinvf k (JfJ J k u) = u :=
+  Jinv_JR _ u
 
 theorem injective_JfJ (J : Finset (Fin n)) (k : ℕ) : Function.Injective (JfJ (n := n) J k) :=
   fun u v h => by rw [← Jinvf_JfJ J k u, h, Jinvf_JfJ]
@@ -162,9 +160,8 @@ theorem injective_JfJ (J : Finset (Fin n)) (k : ℕ) : Function.Injective (JfJ (
 theorem inner_JfJ (J : Finset (Fin n)) (k : ℕ) (u v : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     ⟪JfJ J k u, JfJ J k v⟫_ℝ = 2 ^ n * ⟪u, v⟫_ℝ := by
   rw [MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, JfJ_apply,
-    JfJ_apply, LinearIsometryEquiv.inner_map_map,
-    ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner, inner_JR,
-    Fintype.card_fin]
+    JfJ_apply, ← MeasureTheory.L2.real_inner_eq_re_inner EuclideanSpace.real_inner_eq_re_inner,
+    inner_JR, Fintype.card_fin]
 
 /-- **The real coefficient sequences of the mixed class `J`**: `x(-m) = conj x(m)` and
 `x(flip_j m)_t = ε_j ε_j(t) x(m)_t`. -/
@@ -178,24 +175,21 @@ def RealParJ (J : Finset (Fin n)) (k : ℕ)
 theorem JfJ_realParJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) :
     RealParJ J k (JfJ J k u) := by
   refine ⟨fun m t => ?_, fun j m t => ?_⟩
-  · rw [JfJ_apply, reidx_apply, reidx_apply]
+  · rw [JfJ_apply]
     exact JR_isReal (pcJF_mul_self J) (conj_pcJF J) u m _
-  · rw [JfJ_apply, reidx_apply, reidx_apply]
+  · rw [JfJ_apply]
     exact (mem_fieldParity_iff.1 (JR_mem_fieldParity (pcJF_mul_self J) u)) j m _
 
 /-- **Real mixed parity sequences are extensions of `k`-forms on `Q`.** -/
 theorem JfJ_Jinvf {J : Finset (Fin n)} {k : ℕ}
     {x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))} (hx : RealParJ J k x) :
     JfJ J k (Jinvf k x) = x := by
-  set w := (reidx k).symm x
-  have hw : w ∈ fieldParity (pcJF (n := n) (k := (k : ℤ)) J) :=
+  have hw : x ∈ fieldParity (pcJF (n := n) (k := (k : ℤ)) J) :=
     mem_fieldParity_iff.2 fun j m s => by
-      rw [reidx_symm_apply, reidx_symm_apply, hx.2]
+      rw [hx.2]
       rfl
-  have hr : IsReal w := fun m s => by
-    rw [reidx_symm_apply, reidx_symm_apply, hx.1]
-  change reidx k (JR (pcJF_mul_self J) (Jinv (Fin n) (formIdx n (k : ℤ)) w)) = x
-  rw [JR_Jinv (pcJF_mul_self J) hw hr, LinearIsometryEquiv.apply_symm_apply]
+  have hr : IsReal x := fun m s => hx.1 m s
+  exact JR_Jinv (pcJF_mul_self J) hw hr
 
 /-! ### The real mixed parity class as a fixed space -/
 
@@ -335,7 +329,6 @@ theorem ext_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx
   by_cases h : (#r : ℤ) = k
   · rw [Feec.Fourier.Exterior.ext_apply k _ h, coeff_JfJ, uExt,
       formExt_of_card _ (by exact_mod_cast h)]
-    rfl
   · rw [Feec.Fourier.Exterior.ext_apply_of_ne k _ h, uExt, formExt,
       dite_eq_right (by exact_mod_cast h)]
     symm
@@ -1457,21 +1450,21 @@ def zeroCoeffJ (J : Finset (Fin n)) (k : ℕ) (t₀ : {s : Finset (Fin n) // (#s
 
 /-- On forms whose mixed extension has only the zero mode, the real zero-mode coefficient at `J`
 is injective: such forms are multiples of `dx_J`. -/
-theorem injective_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : #J = k)
+theorem injective_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : (#J : ℤ) = k)
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
-    Function.Injective (zeroCoeffJ J k ⟨J, congrArg Nat.cast hk⟩ S) := by
+    Function.Injective (zeroCoeffJ J k ⟨J, hk⟩ S) := by
   intro x y hxy
   refine Subtype.ext (injective_JfJ J k (Lp.ext_count fun m => ?_))
   by_cases hm : m = 0
   · subst hm
     ext t
     by_cases ht : t.1 = J
-    · obtain rfl : t = ⟨J, congrArg Nat.cast hk⟩ := Subtype.ext ht
+    · obtain rfl : t = ⟨J, hk⟩ := Subtype.ext ht
       have hr : ∀ z : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)),
-          (JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, congrArg Nat.cast hk⟩ =
-            (((JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, congrArg Nat.cast hk⟩).re : ℂ) := fun z => by
-        have e := (JfJ_realParJ J k z).1 0 ⟨J, congrArg Nat.cast hk⟩
+          (JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, hk⟩ =
+            (((JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, hk⟩).re : ℂ) := fun z => by
+        have e := (JfJ_realParJ J k z).1 0 ⟨J, hk⟩
         rw [neg_zero] at e
         exact (Complex.conj_eq_iff_re.1 e.symm).symm
       rw [hr x, hr y]
@@ -1479,13 +1472,13 @@ theorem injective_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : #J = k)
     · rw [JfJ_zero_eq_zero_of_ne _ ht, JfJ_zero_eq_zero_of_ne _ ht]
   · rw [hS _ x.2 m hm, hS _ y.2 m hm]
 
-theorem finiteDimensional_of_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : #J = k)
+theorem finiteDimensional_of_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : (#J : ℤ) = k)
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
     FiniteDimensional ℝ S :=
   Module.Finite.of_injective _ (injective_zeroCoeffJ hk S hS)
 
-theorem finrank_le_one_of_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : #J = k)
+theorem finrank_le_one_of_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : (#J : ℤ) = k)
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
     Module.finrank ℝ S ≤ 1 := by

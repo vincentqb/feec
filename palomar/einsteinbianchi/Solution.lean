@@ -27,7 +27,8 @@ parts of constrained states of `Feec`'s mirror complex, and the mirror scheme is
 (`mirror_fem_main`).
 
 `FEEC.weakSymmetry_electric_nonvacuous`: `cube_static_nonvacuous`, `cube_wave_nonvacuous` and
-their `H¹` classes `cube_static_h1`, `cube_wave_h1` (`Solution.CubeNonvac`).
+their `H¹` classes `cube_static_h1`, `cube_wave_h1` (`Solution.CubeNonvac`); the same solutions
+meet the `C²` classes of the thesis (`weakSymmetry_electric_nonvacuous_c2`, `Solution.Smooth`).
 
 ## References
 

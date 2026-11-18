@@ -11,9 +11,9 @@ on `ℝⁿ` whose tangential components vanish on `∂Q`, the values and first d
 and of its exterior derivative bounded by `L` on `cl Q`) has `H¹(ℝⁿ)` data with bound `c L`, and
 so has its minimal exterior derivative (`IsCsFormTr.exists_h1Data`, from
 `Feec.Domain.exists_h1Data_closedBall` applied to the coefficients on `cl Q`, the closed ball of
-radius `¼` about the centre); `c` depends only on `n`. So the
-`C²` classes of the rates of the methods on the cube lie in their `H¹` classes, and the `C²` rates
-are corollaries of the `H¹` ones.
+radius `¼` about the centre); `c` depends only on `n`. So the `C²` classes of the rates of the
+methods on the cube lie in their `H¹` classes, and the `C²` rates are corollaries of the `H¹`
+ones.
 
 ## References
 

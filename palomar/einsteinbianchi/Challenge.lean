@@ -33,11 +33,11 @@ answer has two parts.
 
 * `FEEC.weakSymmetry_electric`: with the **electric** boundary conditions of the thesis
   (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) the solutions of the method are determined by their
-  initial values, and it converges, with no regularity, from every datum of `D(L)` (the limit of
-  discrete initial states), and at the rates `h` (static) and `(1 + t) h` (wave) for solutions of
-  class `H¹`; but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and at the times it is
-  not TSD neither are, for all large `N`, the discrete fields: it computes a solution that is not
-  a gravitational wave.
+  initial values, and it converges, with no regularity, from every datum of `D(L)`, each the
+  limit of discrete initial states, and at the rates `h` (static) and `(1 + t) h` (wave) for
+  solutions of class `H¹`; but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and at the
+  times it is not TSD neither are, for all large `N`, the discrete fields: it computes a solution
+  that is not a gravitational wave.
 * `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges at the rate
   `(1 + t) h` from the TSD data of `D(L³)` to the exact solution, which stays TSD, and keeps the
   discrete Gauss law along non-stationary discrete solutions: it computes the gravitational wave.

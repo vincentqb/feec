@@ -26,8 +26,8 @@ of general relativity ([FriedrichNagy1999], [KreissWinicour2006], [CPRST2003]). 
 it for each boundary condition.
 
 **The criterion** (`FEEC.constraint_propagation`, the fields of `PropagationCriterion`;
-[Kato1995], §III.5.6), over `𝕜 = ℝ` or `ℂ`. A skew-adjoint generator `L` has a unique evolution,
-a unitary group `S`; a closed constraint `K` propagates (`S(t) K ⊆ K` for all `t`) iff `K`
+[Kato1995], §III.5.6), over `𝕜 = ℝ` or `ℂ`. A skew-adjoint generator `L` has a unique evolution
+`S`, by isometries; a closed constraint `K` propagates (`S(t) K ⊆ K` for all `t`) iff `K`
 reduces `L`, iff `S(t)`, `t ≥ 0`, keeps `K` and `Kᗮ`; and the data whose evolution stays in `K`
 form the **invariant core** `K* = {x | S(t) x ∈ K for all t}`, the largest closed subspace of `K`
 reducing `L`. An m-dissipative generator has a contraction semigroup, and `K` reduces it iff
@@ -146,7 +146,6 @@ def dMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[�
     ∀ t : FormIdx n (k + 1), ⇑(p.2 t) =ᵐ[volume.restrict Ω] fun x => extDeriv φ x t.1}
     ).topologicalClosure.toLinearPMap
 -- palomar-shared-end: dMin
-
 
 /-! ### Evolutions, invariant cores and reducing subspaces -/
 
@@ -296,7 +295,7 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
           Finset.smul_sum]
         exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
 
-/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ` (`sq`). -/
+/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
 
 end HilbertComplex
@@ -552,7 +551,7 @@ def tsdPair : Set (WithLp 2 (L2Mat (cube 3) × L2Mat (cube 3))) :=
 for the derivatives in time, is any one (it is the restriction of scalars). -/
 structure PropagationCriterion : Prop where
   /-- (**groups**) A densely defined skew-adjoint `L` (`L* = -L`) has a unique evolution `S` on
-  `ℝ`, by unitary operators (Stone's theorem), and every strong solution on `[0, T]` from
+  `ℝ`, by isometries (Stone's theorem), and every strong solution on `[0, T]` from
   `x ∈ D(L)` is its orbit. A closed subspace `K` reduces `L` iff `S t K ⊆ K` for all `t ∈ ℝ`, iff
   `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`; and the invariant core `K*` is a closed subspace reducing
   `L` that contains every closed subspace of `K` reducing `L`: `K*` is the largest of them. -/
@@ -625,7 +624,8 @@ structure PropagationCriterion : Prop where
 /-- **The verdict of the boundary conditions natural for the complex on `Ω ⊆ ℝ³`**
 ([QuennevilleBelair2015], §4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`,
 constraint `tsdConstraint`) and the system (6.1) with weak symmetry (`bggData`, constraint
-`IsTSDState`); it holds on every nonempty bounded open `Ω`, with no regularity of `∂Ω`. -/
+`IsTSDState`); `TSDVerdict.natural` asserts it on every nonempty bounded open `Ω`, with no
+regularity of `∂Ω`. -/
 structure NaturalVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex: densely
   defined closed operators with `d¹ d⁰ = 0` -/

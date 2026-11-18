@@ -20,24 +20,38 @@ project:
     asks whether TSD data stay TSD, the question of constraint-preserving boundary conditions of
     the initial boundary value problem of general relativity (Friedrich-Nagy, Kreiss-Winicour,
     Calabrese-Pullin-Reula-Sarbach-Tiglio). Stated over Mathlib in the vocabulary of differential
-    forms, with the definitions of forms, minimal exterior derivatives and strong solutions shared
-    with palomar/fem and palomar/feec (the canonical blocks of palomar/shared/vocabulary.lean.txt,
-    checked byte for byte by the gate). Operators are given by their graphs (relations), an
-    evolution S of u' = A u on I (IsEvolution: S 0 = 1, every orbit from D(A) a strong solution
-    on I) and the invariant core K* = {x | S t x in K for all t} (invariantCore) are the common
-    notions of the two compared theorems.
-    FEEC.constraint_propagation, the criterion (Kato III.5.6): on a real Hilbert space, a densely
-    defined skew-adjoint L has an evolution on R by unitary operators whose orbits are the strong
-    solutions from D(L); a closed subspace K reduces L (P_K D(L) in D(L), L P_K = P_K L) iff
-    S t K is in K for all t; and K* is a closed subspace reducing L containing every closed
-    subspace of K that reduces L. An m-dissipative A (<A x, x> <= 0, 1 - A onto) has an evolution
-    on [0, infinity) by contractions whose orbits are the strong solutions, and K reduces A iff
-    S t, t >= 0, keeps K and its orthogonal complement. For a short Hilbert complex of closed
-    densely defined d^0, d^1 (d^1 d^0 = 0) and closed Z^i with P_{Z^i} D(d^i) in D(d^i) and
-    d^i P_{Z^i} = P_{Z^{i+1}} d^i (a reducing subcomplex, the thesis' Prop 4.16), every strong
-    solution of the Hodge wave equation starting in Z^0 x Z^1 x Z^2 stays in it. So the question
-    for each boundary condition is K*.
-    FEEC.tsd_boundary_conditions, the verdict of each boundary condition, for the system (4.14)
+    forms, with the definitions of forms, minimal exterior derivatives, Hilbert complexes and
+    strong solutions shared with palomar/fem and palomar/feec (the canonical blocks of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), and the windows of
+    Hilbert complexes (Total, totalD, wave, sq) as in palomar/feec. Operators are given by their
+    graphs (relations), an evolution S of u' = A u on I (IsEvolution: bounded linear S t over the
+    scalars, S 0 = 1, every orbit from D(A) a strong solution on I) and the invariant core
+    K* = {x | S t x in K for all t} (invariantCore) are the common notions of the two compared
+    theorems, both structures with one documented field per clause.
+    FEEC.constraint_propagation : FEEC.PropagationCriterion, the criterion (Kato III.5.6), over
+    the scalars R or C: (group) a densely defined skew-adjoint L has a unique evolution on R, by
+    isometries, whose orbits are the strong solutions from D(L); a closed subspace K reduces L
+    (P_K D(L) in D(L), L P_K = P_K L) iff S t K is in K for all t, iff S t, t >= 0, keeps K and
+    its orthogonal complement; and K* is a closed subspace reducing L containing every closed
+    subspace of K that reduces L. (semigroup) An m-dissipative A (re <A x, x> <= 0, 1 - A onto)
+    has an evolution on [0, infinity), unique at t >= 0, by contractions, whose orbits are the
+    strong solutions, and K reduces A iff S t, t >= 0, keeps K and its orthogonal complement.
+    (window) On every window [a, a + m) of every Hilbert complex over R or C the Hodge wave
+    operator L = d - d* is densely defined and skew-adjoint (the thesis' Thm 4.6), its square
+    L^2 = -Delta is m-dissipative, and every evolution of L keeps the product of a reducing
+    subcomplex, closed Z^i with P_{Z^i} D(d i j) in D(d i j) and d i j P_{Z^i} = P_{Z^j} d i j
+    (the thesis' Prop 4.16). (shortComplex) For a real short Hilbert complex of closed densely
+    defined d^0, d^1 (d^1 d^0 = 0) and a reducing subcomplex Z^0 x Z^1 x Z^2, every strong
+    solution of the Hodge wave equation (in the relation form of the systems below) starting in
+    Z^0 x Z^1 x Z^2 stays in it. So the question for each boundary condition is K*. These are the
+    fields propagates_iff, invariantCore, subcomplex and reducing_iff of the former verdict of
+    palomar/feec, compared here at least as generally: propagates_iff and invariantCore by group
+    with window (the wave group of every window, unique), subcomplex by window, reducing_iff by
+    group (the wave group) and by semigroup with window (the heat semigroup of every window),
+    without the approximation hypotheses under which palomar/feec stated them.
+    FEEC.tsd_boundary_conditions : FEEC.TSDVerdict, the verdict of each boundary condition, one
+    field per boundary condition and domain class (NaturalVerdict, StarShapedVerdict, ball,
+    BoxVerdict, AbsorbingVerdict, MirrorVerdict), for the system (4.14)
     on states (sigma, u, rho) (E = rows u_a, B = rows of *rho_a), the Hodge wave equation of
     H°Lambda^0 (x) R^3 -> H°Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 (gradCurlWave; vector
     proxies H°^1 -> H°(curl) -> L^2, grad and curl of the rows), constraint
@@ -45,8 +59,8 @@ project:
     (natural boundary conditions, every nonempty bounded open Omega in R^3, no regularity of the
     boundary) the complex is a short Hilbert complex (closed, densely defined, d^1 d^0 = 0), the
     system has an evolution, and for every one K* = {0} x S_1* x S_2* with closed S_1*, S_2* of TSD
-    fields, the largest reducing subcomplex of the complex in K (IsReducingSubcomplex; so the
-    third part of FEEC.constraint_propagation applies to it), S_1* within L^2(TSD_0) (rows weakly
+    fields, the largest reducing subcomplex of the complex in K (IsReducingSubcomplex; so
+    PropagationCriterion.shortComplex applies to it), S_1* within L^2(TSD_0) (rows weakly
     divergence-free with vanishing normal trace; zero mean), both strictly smaller than L^2(TSD),
     S_2* containing a nonzero stationary datum; from (0, E_0, beta), beta = x_3 (e_1 e_2^T + e_2 e_1^T), TSD with
     (0, 0, beta) in D(L), every strong solution on [0, T], T > 0, has a non-TSD electric field at
@@ -56,7 +70,8 @@ project:
     Ch. 5-6 (the same boundary conditions in both rows) the TSD datum (0, 0, 0, *beta) of D(L)
     has strong solutions on every [0, T], every one of which has a non-TSD E and a non-symmetric
     B at some times;
-    (domains star-shaped with respect to a ball) the closure of L^2(TSD) and H°(curl) is
+    (domains star-shaped with respect to a ball) L^2(TSD) and H(curl) (rows in H Lambda^1)
+    intersect in a dense subspace of L^2(TSD), while the closure of L^2(TSD) and H°(curl) is
     L^2(TSD_0), and K* consists of stationary data iff no nonzero TSD eigenfield u of curl* curl
     with frequency xi > 0 has curl u outside H°(curl);
     (the unit ball) every TSD eigenfield (xi != 0) with a representative C^2 on a neighbourhood of
@@ -193,14 +208,15 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: FEEC.constraint_propagation (every real Hilbert space, every densely
-    defined skew-adjoint L, every m-dissipative A, every closed subspace K; every short Hilbert
+    Formalized and compared: FEEC.constraint_propagation (every Hilbert space over R or C, every
+    densely defined skew-adjoint L, every m-dissipative A, every closed subspace K; every window of
+    every Hilbert complex over R or C and every reducing subcomplex; every real short Hilbert
     complex and every reducing subcomplex) and
     FEEC.tsd_boundary_conditions (the natural boundary conditions on every nonempty bounded open
     set of R^3, on those star-shaped with respect to a ball, on the unit ball and on every open
     box, for the system (4.14), and on every nonempty bounded open set for the system (6.1); the
     absorbing boundary conditions on the cube; the mirror boundary conditions on the cube for the
-    system (6.1)). The Challenge is 589 lines. Open, and not claimed: that only stationary data
+    system (6.1)). The Challenge is 799 lines. Open, and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
     fields C^2 up to the boundary; Feec proves it on the ball only under an elliptic regularity
@@ -249,12 +265,15 @@ automation:
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written by an AI agent for this submission, to be reviewed by the author; the Solution
     identifies them with the definitions of the library Feec and applies its theorems:
-    Solution/Engine.lean (evolutions and strong solutions as Feec's C_0-groups and semigroups,
-    uniqueness of evolutions, the reducing criteria), Solution/Subcomplex.lean (the challenge's
+    Solution/Engine.lean (evolutions and strong solutions as Feec's C_0-groups and semigroups
+    over R or C, uniqueness of evolutions, the reducing criteria, Stone's group as the
+    Lumer-Phillips semigroup of a skew-adjoint L), Solution/Window.lean (the challenge's Hilbert
+    complexes and windows as Feec's, as in palomar/feec), Solution/Subcomplex.lean (the challenge's
     short complexes as Feec's ShortHilbertComplex, reducing subcomplexes), Solution/Box.lean and GradCurl.lean (the
     challenge's Hodge wave operator of (4.14) carried to Feec's gradCurl complex by unitary maps;
     every evolution is Feec's wave group; the invariant core is Feec's coreSub; the adjoint of the
-    curl, H°(curl), L^2(TSD_0) and the eigenfields through the fields), Solution/Verdicts.lean (the
+    curl, H°(curl), H(curl), L^2(TSD_0) and the eigenfields through the fields),
+    Solution/Verdicts.lean (the
     verdicts of the natural boundary conditions), Solution/Absorbing.lean (the energy space and
     the absorbing relation as Feec's impedance operator), Solution/Proxy.lean, Bounded.lean,
     Wave.lean, Wedge.lean, Forms.lean (fields, the system (6.1) and its datum, from
@@ -271,15 +290,20 @@ fidelity:
     divergence-free against test functions of Omega (no boundary condition); IsTSD_0 adds
     vanishing normal traces, tested against all C^1 functions on R^3.
     (2) Operators are relations (graphs), strong solutions those of the shared IsStrongSolution.
-    Mathlib has no C_0-semigroups: an evolution (IsEvolution) is a family of bounded operators
-    with S 0 = 1 whose orbits from D(A) are strong solutions on I; FEEC.constraint_propagation
-    gives existence and uniqueness of the strong solutions, hence of S on I, for skew-adjoint and
-    m-dissipative generators, and the verdicts are stated for every evolution with, where needed,
-    its existence. The invariant core is defined for groups (all t in R); for the absorbing
-    semigroup the verdict is the failure of forward invariance.
+    Mathlib has no C_0-semigroups: an evolution (IsEvolution) is a family of bounded linear
+    operators over the scalars with S 0 = 1 whose orbits from D(A) are strong solutions on I;
+    FEEC.constraint_propagation gives existence and uniqueness of the strong solutions and of the
+    evolution, on R for skew-adjoint and at t >= 0 for m-dissipative generators, and the verdicts
+    are stated for every evolution with, where needed, its existence. The invariant core is
+    defined for groups (all t in R); for the absorbing semigroup the verdict is the failure of
+    forward invariance. Over C the real structure of a space, for the derivatives in time, is any
+    NormedSpace R instance (it is the restriction of scalars, RCLike.isScalarTower_of_normedSpace
+    in the proof), as in palomar/feec. The three spaces of a short complex lie in one universe, as
+    the spaces of a Hilbert complex. The shared block HilbertComplex also states the families of
+    subcomplexes of palomar/feec, not used here.
     (3) The system (4.14) is a relation on the product of the three spaces (IsHodgeWave), not an
     operator on their l^2 sum: its skew-adjointness on the l^2 sum (the hypothesis under which
-    FEEC.constraint_propagation identifies K* as the largest reducing subspace of K) is proved in
+    PropagationCriterion.group identifies K* as the largest reducing subspace of K) is proved in
     Feec and not stated in the challenge; the failure of reduction is stated directly, as the
     projection hypothesis: for a test field u (in D(d^1) and D(d^0*)), the orthogonal projection v
     of u onto L^2(TSD) (characterized as the TSD field with u - v orthogonal to L^2(TSD)) is not
@@ -321,10 +345,14 @@ review:
     - "none"
   notes: >-
     Not yet reviewed by the author: the Challenge statement (the two compared theorems and their
-    definitions, 2026-11-18, new; FEEC.constraint_propagation states the criterion formerly in
-    the verdict of palomar/feec, FEEC.tsd_boundary_conditions contains the statements formerly
-    compared in palomar/einsteinbianchi as FEEC.tsd_not_propagates, FEEC.box_stationary and
-    FEEC.mirror_tsd_propagates). Every merge of the library was gated by a full build (zero
+    definitions, 2026-11-18, new). FEEC.constraint_propagation states the criterion formerly in
+    the verdict of palomar/feec (there for the windows of Hilbert complexes approximated by
+    subcomplex families; here for every window, and for every skew-adjoint or m-dissipative
+    generator), and FEEC.tsd_boundary_conditions contains the statements formerly compared in
+    palomar/einsteinbianchi as FEEC.tsd_not_propagates (NaturalVerdict.weakSymmetry),
+    FEEC.box_stationary (BoxVerdict.forward; its existence clause through
+    NaturalVerdict.evolution, an evolution on R on every bounded open set) and
+    FEEC.mirror_tsd_propagates (MirrorVerdict). Every merge of the library was gated by a full build (zero
     warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
     review. No external mathematical review.
 
@@ -339,10 +367,13 @@ alignment:
         Stone's group LinearPMap.IsSkewAdjoint.group with
         Feec.C0Group.IsIsometric.isReducing_iff_invariant, isReducing_invariantCore and
         le_invariantCore_of_isReducing; the Lumer-Phillips semigroup
-        LinearPMap.IsMDissipative.semigroup with LinearPMap.IsMDissipative.isReducing_iff;
-        uniqueness by Feec.C0Semigroup.isStrongSolution_unique (Solution/Engine.lean); reducing
-        subcomplexes by Feec.HilbertComplex.ReducingSubcomplex.propagates for the short complex
-        of the challenge (Solution/Subcomplex.lean).
+        LinearPMap.IsMDissipative.semigroup with LinearPMap.IsMDissipative.isReducing_iff, also
+        for the skew-adjoint L (LinearPMap.IsSkewAdjoint.isMDissipative); uniqueness by
+        Feec.C0Semigroup.isStrongSolution_unique (Solution/Engine.lean); windows by
+        Feec.HilbertComplex.window, dense_wave_domain, isSkewAdjoint_wave,
+        isMDissipative_neg_hodgeLaplacian and ReducingSubcomplex.isReducing_wave
+        (Solution/Window.lean); reducing subcomplexes of the short complex of the challenge by
+        Feec.HilbertComplex.ReducingSubcomplex.propagates (Solution/Subcomplex.lean).
     - source: "[QuennevilleBelair2015] §3.4, §4.10 ((4.14), Prop 4.17), §6.1, §6.3"
       lean: "FEEC.tsd_boundary_conditions"
       module: "Challenge"
@@ -350,7 +381,9 @@ alignment:
       note: >-
         Natural boundary conditions: Feec.Counterexamples.BoundedDomainTSD (invariantCore_tsd,
         betaL2_not_propagates, exists_projTSD_not_mem_domain, not_dense_tsd_inter,
-        density_dichotomy), Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff with
+        density_dichotomy, both halves, H(curl) through
+        Feec.Domain.ConstCoeffOp.maximal_ofMatrixCLM_of_comm and curlOp_formalAdj_apply),
+        Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff with
         Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl,
         Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball,
         Feec.Counterexamples.BoxStationary (mem_invariantCore_tsd_iff_box,

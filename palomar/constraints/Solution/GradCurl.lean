@@ -12,10 +12,10 @@ state map `gcState` (`gcWave_iff` of `Solution.Box`), and its graph is the graph
 of the wave group (`gc_graph_iff`). So every evolution of the challenge's system is the wave
 group conjugated by the state map (`gc_eq_of_isEvolution`, from `eq_group_of_isEvolution` of
 `Solution.Engine`), and its invariant core is `Feec`'s `coreSub` (`gc_mem_invariantCore_iff`).
-The electric and magnetic fields carry `L²(TSD)`, `L²(TSD₀)`, `H̊(curl)`, the adjoint of the curl
-and the eigenfields to those of `Feec` (`mem_dom_iff`, `isTSD₀_iff`, `isEigenfield_iff`), and
-the verdicts are those of `Feec.Counterexamples.BoundedDomainTSD` (`natural_of`),
-`Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with
+The electric and magnetic fields carry `L²(TSD)`, `L²(TSD₀)`, `H̊(curl)`, `H(curl)`, the adjoint of
+the curl and the eigenfields to those of `Feec` (`mem_dom_iff`, `mem_domMax_iff`, `isTSD₀_iff`,
+`isEigenfield_iff`), and the verdicts are those of `Feec.Counterexamples.BoundedDomainTSD`
+(`natural_of`), `Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with
 `Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl` (`starShaped_of`),
 `Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball` (`ball_of`) and
 `Feec.Counterexamples.BoxStationary.mem_invariantCore_tsd_iff_box` (`box_of`).

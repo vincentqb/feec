@@ -202,7 +202,7 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
     type: "article"
-    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §4 (the minimal and maximal exterior derivatives)"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), 281-354, §4 (the minimal and maximal exterior derivatives)"
     relationship: "background"
     author_endorsement: "not-contacted"
   - title: "Mixed finite element methods for linear elasticity with weakly imposed symmetry"
@@ -212,7 +212,7 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1090/S0025-5718-07-01998-9"
     type: "article"
-    location: "Math. Comp. 76 (2007)"
+    location: "Math. Comp. 76 (2007), 1699-1723"
     relationship: "background"
     note: "The connecting map S^1 = 2 vskw of the complex with weak symmetry."
     author_endorsement: "not-contacted"
@@ -375,7 +375,8 @@ review:
     FEEC.box_stationary (BoxVerdict.forward; its existence clause through
     ElectricVerdict.evolution, an evolution on R on every bounded open set) and
     FEEC.mirror_tsd_propagates (MirrorVerdict), the same statements over the same definitions.
-    Every merge of the library was gated by a full build (zero warnings), an axiom audit
+    The identifiers of the sources other than the thesis were checked against Crossref
+    (2026-11-18). Every merge of the library was gated by a full build (zero warnings), an axiom audit
     (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
     mathematical review.
 

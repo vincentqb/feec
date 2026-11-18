@@ -30,13 +30,15 @@ theorems (`Solution.lean`).
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3, §5
+  §3–§5
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3–§3.5, §4, §5
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
+* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
+* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 4
 

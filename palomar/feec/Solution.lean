@@ -4,37 +4,38 @@ public import Solution.Cube
 public import Solution.Convert
 public import Solution.Existence
 public import Solution.Witness
-public import Solution.BGGBridge
 
 /-!
-# Finite element exterior calculus: Hilbert complexes, Whitney forms and BGG complexes (solution)
+# Galerkin approximation of Hilbert complexes (solution)
 
-The compared theorems of `Challenge.lean`. `FEEC.feec` from the full static verdict
-(`HilbertComplex.SubcomplexFamily.exists_staticVerdict`, through
-`Feec.HilbertComplex.SubcomplexFamily.staticFEEC` and `Solution.Bridge`) and the full wave verdict
-(`HilbertComplex.SubcomplexFamily.waveVerdict`, through `Feec.HilbertComplex.approxFEEC` and
-`Solution.Dynamic`), projected to the compared fields. `FEEC.feec_cube` from `Solution.Cube` (the
-Whitney forms on the Freudenthal meshes of the cube, `Feec.Models.StarShaped.CubeWitness`) and the
-static rate of `Solution.Rates`.
+The four theorems of `Challenge.lean` and their witnesses. Theorem 1
+(`FEEC.exists_subcomplexFamily_iff`) from `Feec.HilbertComplex.Subcomplex.exists_cochainProjection`
+and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff`; Theorem 2 (`FEEC.staticFEEC`) from
+the static verdict with explicit constants (`HilbertComplex.SubcomplexFamily.staticVerdict_of`,
+through `Feec.HilbertComplex.SubcomplexFamily.staticFEEC` and `Solution.Bridge`) and the rates of
+`Solution.Rates`; Theorem 3 (`FEEC.evolutionFEEC`) from the wave and heat verdicts
+(`HilbertComplex.SubcomplexFamily.waveVerdict`, `heatVerdict`, through
+`Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
+`Solution.Dynamic`) and `Solution.Rates`; Theorem 4 (`FEEC.crimeFEEC`) from `Solution.Crime`. The
+witnesses: `FEEC.crime_nonvacuous` from `Solution.Witness`, `FEEC.feec_cube` from `Solution.Cube`
+(the Whitney forms on the Freudenthal meshes of the cube, `Feec.Models.StarShaped.CubeWitness`).
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021]
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
-* [T. Kato, *Perturbation Theory for Linear Operators*][Kato1995]
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace LinearPMap
 open Filter Topology Set MeasureTheory
 
 universe u v w
@@ -46,7 +47,8 @@ namespace FEEC
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
 
-/-- **Bounded cochain projections from discrete stability** ([AFW2010], Thm 3.7). -/
+/-- **Bounded cochain projections from discrete stability** ([AFW2010], Thm 3.7), for one
+subcomplex. -/
 theorem exists_cochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex)
     [∀ i, FiniteDimensional 𝕜 (S.V i)] {c₁ c₂ : ℤ → ℝ} (hc₁ : ∀ i, 0 ≤ c₁ i)
     (hc₂ : ∀ i, 0 ≤ c₂ i) (hP : ∀ i, S.PoincareBy i (c₁ i))
@@ -60,13 +62,22 @@ theorem exists_cochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex)
     HilbertComplex.Subcomplex.CochainProjection.graphNorm_ofFeec_le P
       (mul_nonneg (by linarith [hc₁ i]) (by linarith [hc₂ i])) (hP' i) x⟩
 
-/-- **Uniformly bounded cochain projections exist iff discrete stability holds uniformly**
-([AFW2010], Thms 3.6, 3.7 and (30)). -/
+/-- **Theorem 1: bounded cochain projections ⇔ uniform discrete stability** ([AFW2010], Thm 3.7
+and its converse, Thm 3.6 and (30)): the projections of `FEEC.exists_cochainProjection` for every
+`h`, and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` under closed ranges. -/
 theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
-    (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
-    (hcr : ∀ i, IsClosed (H.boundaries i : Set (W i))) :
-    (∃ F : H.SubcomplexFamily κ, F.l = l ∧ F.V = V ∧ ∀ i, F.IsGraphBounded i) ↔
-      ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).PoincareBy i c₁ ∧ (V h).HarmonicBoundBy i c₂ := by
+    (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)] :
+    (∀ c₁ c₂ : ℤ → ℝ, (∀ i, 0 ≤ c₁ i) → (∀ i, 0 ≤ c₂ i) →
+      (∀ h i, (V h).PoincareBy i (c₁ i) ∧ (V h).HarmonicBoundBy i (c₂ i)) →
+      ∃ F : H.SubcomplexFamily κ, F.l = l ∧ F.V = V ∧
+        ∀ i, F.IsGraphBoundedBy i ((1 + c₁ i) * (1 + c₂ i))) ∧
+    ((∀ i, IsClosed (H.boundaries i : Set (W i))) →
+      ((∃ F : H.SubcomplexFamily κ, F.l = l ∧ F.V = V ∧ ∀ i, F.IsGraphBounded i) ↔
+        ∀ i, ∃ c₁ c₂ : ℝ, ∀ h, (V h).PoincareBy i c₁ ∧ (V h).HarmonicBoundBy i c₂)) := by
+  refine ⟨fun c₁ c₂ hc₁ hc₂ hV => ?_, fun hcr => ?_⟩
+  · choose P hP using fun h => exists_cochainProjection (V h) hc₁ hc₂ (fun i => (hV h i).1)
+      fun i => (hV h i).2
+    exact ⟨⟨l, V, P⟩, rfl, rfl, fun i h x => hP h i x⟩
   have key := Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff (fun h => (V h).toFeec)
     fun i => (H.closedRangeAt_iff i).2 (hcr i)
   refine ⟨?_, fun hV => ?_⟩
@@ -85,53 +96,69 @@ theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l 
     exact ⟨|C|, fun h x => HilbertComplex.Subcomplex.CochainProjection.graphNorm_ofFeec_le (π h)
       (abs_nonneg C) (fun y => (hC h y).trans_eq (by rw [sq_abs])) x⟩
 
-/-- **The constants of the static FEEC theorem** depend only on the bound `c` of the cochain
-projections and the Poincaré constant `c_P` ([AFW2010], §3.3–§3.4): one function `Φ` serves every
-Hilbert complex, family of subcomplexes and degree. -/
-theorem staticFEEC_uniform : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike 𝕜] {W : ℤ → Type v}
+/-- **Theorem 2: the static theory** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9, §3.3–§3.5): closed range
+is the Poincaré inequality (`HilbertComplex.closedRange_iff_poincareBy`); the static verdict with the
+constant `HilbertComplex.staticConst (max c 1) c_P` (`HilbertComplex.SubcomplexFamily.staticVerdict_of`)
+and the rates of `HilbertComplex.SubcomplexFamily.rated`. -/
+theorem staticFEEC : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike 𝕜] {W : ℤ → Type v}
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
-    {κ : Type w} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ},
-    F.IsGraphBoundedBy (j - 1) c → F.IsGraphBoundedBy j c →
-    H.PoincareBy (j - 1) cP → H.PoincareBy j cP → F.StaticVerdict j (Φ c cP) :=
-  ⟨fun c cP => HilbertComplex.staticConst (max c 1) cP, fun F j _ _ hπ hπ' hP hP' =>
-    (F.staticVerdict_of j (le_max_right _ _) (hπ.mono (le_max_left _ _))
-      (hπ'.mono (le_max_left _ _)) hP hP').toStaticVerdict⟩
+    {H : HilbertComplex 𝕜 W},
+    (∀ i, IsClosed (H.boundaries (i + 1) : Set (W (i + 1))) ↔ ∃ c, H.PoincareBy i c) ∧
+    ∀ {κ : Type w} (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ},
+      F.IsGraphBoundedBy (j - 1) c → F.IsGraphBoundedBy j c →
+      H.PoincareBy (j - 1) cP → H.PoincareBy j cP →
+      F.StaticVerdict j (Φ c cP) ∧ ∀ {ρ : Type*} (J : F.Jackson ρ) (s : ρ),
+        F.HasRate j (J.Reg s) fun h => J.meshSize h ^ J.ord s :=
+  ⟨fun c cP => HilbertComplex.staticConst (max c 1) cP, fun {_ _ _ _ _ _ H} =>
+    ⟨H.closedRange_iff_poincareBy, fun F j c _ hπ hπ' hP hP' =>
+      ⟨(F.staticVerdict_of j (le_max_right _ _) (hπ.mono (le_max_left _ _))
+        (hπ'.mono (le_max_left _ _)) hP hP').toStaticVerdict, fun J s =>
+        (F.rated J).hasRate j ⟨c, hπ⟩ ⟨c, hπ'⟩
+          ((H.closedRange_iff_poincareBy_of_eq (sub_add_cancel j 1)).2 ⟨_, hP⟩)
+          ((H.closedRange_iff_poincareBy j).2 ⟨_, hP'⟩) s⟩⟩⟩
 
 variable [∀ i, NormedSpace ℝ (W i)]
 
-/-- **The FEEC theorem with rates** ([AFW2010], Thm 3.9, §3.5; [QuennevilleBelair2015],
-Thm 4.14; [BrennerThomee1979]): for every Jackson estimate `J` of `F`, the static error is
-`O(L hᵒʳᵈ⁽ˢ⁾)` and, on every window `F` approximates, the fully discrete wave error
-`O(L hᵒʳᵈ⁽ˢ⁾ + τᵖ ‖Lₕ^{p+1} v‖)` (`HilbertComplex.SubcomplexFamily.Rated`). -/
-theorem feec_rated {κ ρ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ)
-    (J : F.Jackson ρ) : F.Rated J :=
-  (F.rated J).toRated
-
-/-- **The FEEC theorem** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9; [QuennevilleBelair2015], Thms 4.6,
-4.7, 4.14, Props 4.13, 4.16, 4.17; [GilletteHolstZhu2017]; [BrennerThomee1979]). Every family
-of subcomplexes satisfies the static, wave and heat verdicts under their hypotheses
-(`HilbertComplex.SubcomplexFamily.Verdict`). -/
-theorem feec {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) : F.Verdict :=
+/-- **Theorem 3: the evolution equations** ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14,
+Prop 4.13; [GilletteHolstZhu2017]; [BrennerThomee1979]): the skew-adjointness of `Feec`'s window,
+the wave verdict (`HilbertComplex.SubcomplexFamily.waveVerdict`) with its rates
+(`HilbertComplex.SubcomplexFamily.WaveVerdict.hasWaveRate`) and the heat verdict
+(`HilbertComplex.SubcomplexFamily.heatVerdict`). -/
+theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (a : ℤ)
+    (m : ℕ) : (H.wave a m)† = -H.wave a m ∧
+    (F.ApproximatesOn a m → ∃ S, F.WaveVerdict a m S ∧ ∀ {ρ : Type*} (J : F.Jackson ρ) (s : ρ),
+      F.HasWaveRate a m S (J.Reg s) fun h => J.meshSize h ^ J.ord s) ∧
+    (F.ApproximatesOn a m → (∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded (a + (i : ℕ))) →
+      (∀ i : Fin m, (i : ℕ) + 1 = m → ∃ C : ℝ, ∀ (h : κ)
+        (x : (H.d (a + (i : ℕ)) (a + (i : ℕ) + 1)).domain),
+          ‖((F.π h).π _ x : W (a + (i : ℕ)))‖ ≤ C * ‖(x : W (a + (i : ℕ)))‖) →
+      (∀ i : Fin m, 0 < (i : ℕ) →
+        IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) →
+      ∃ S, EvolutionVerdict (sq (H.wave a m)) F.l (fun h => F.Xh a m h)
+        (fun h => (F.Xh a m h).subtypeL) (fun h => F.Lh a m h ^ 2) S) :=
   have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
-  ⟨fun a m => by
-    rw [HilbertComplex.wave_eq]; exact (H.toFeec.window a m).isSkewAdjoint_wave,
-    fun j hπ hπ' hj hj' => (F.exists_staticVerdict j hπ hπ' hj hj').imp fun _ V =>
-      V.toStaticVerdict, fun a m ha => F.waveVerdict a m (F.approximates_window a m ha.1 ha.2),
-    fun a m ha hπ hπ' hcr => F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩
+  ⟨by rw [HilbertComplex.wave_eq]; exact (H.toFeec.window a m).isSkewAdjoint_wave,
+    fun ha => (F.waveVerdict a m (F.approximates_window a m ha.1 ha.2)).imp fun _ hS =>
+      ⟨hS, fun J s => hS.hasWaveRate J s⟩,
+    fun ha hπ hπ' hcr => F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩
 
-/-- **The FEEC theorem with variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8):
-on a window with closed ranges (degrees `a + 1, …, a + m - 1`), every approximating family of
-discrete differential spaces satisfies the static, cochain and heat verdicts with crimes under
-their hypotheses (`HilbertComplex.CrimeFamily.Verdict`). -/
+/-- **Theorem 4: variational crimes** ([HolstStern2012], §3; [AFW2010], Thm 3.8): on a window with
+closed ranges (degrees `a + 1, …, a + m - 1`), the static, cochain and heat verdicts of
+`Solution.Crime` (`HilbertComplex.CrimeFamily.staticVerdict`, `cochainVerdict`, `heatVerdict`). -/
 theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) : S.Verdict :=
+      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
+    (∀ {cP : ℝ}, S.IsPoincare cP → ∃ C, S.StaticVerdict C) ∧
+    (S.IsCochain → ∀ {Cπ : ℝ} (P : S.CochainProj Cπ), S.CochainVerdict P) ∧
+    ∀ {cP : ℝ}, S.IsPoincare cP → Tendsto S.defect S.l (𝓝 0) → (∀ f, S.ConvergesAt f) →
+      ∃ U, EvolutionVerdict (sq (H.wave a m)) S.l S.X S.incl
+        (fun h => (S.D h - (S.D h).adjoint) ^ 2) U :=
   have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
   ⟨fun hP => (S.staticVerdict hcr hP).imp fun _ V => V.toStaticVerdict,
     fun hi _ P => (S.cochainVerdict hcr hi P).toCochainVerdict,
     fun hP hJ hconv => S.heatVerdict hcr hP hJ hconv⟩
 
-/-- **Non-vacuity of the crimes** ([HolstStern2012], §3): on the complex `ℝ` in every degree with
+/-- **Non-vacuity of Theorem 4** ([HolstStern2012], §3): on the complex `ℝ` in every degree with
 `d⁰ = id` and all other differentials `0`, on the window `ℝ --id--> ℝ --0--> ℝ` (harmonic forms
 `ℝ (0, 0, 1) ≠ 0`), a family of cochain reading maps `iₙ` with cochain projections `πₙ`,
 `iₙ πₙ = 1`, satisfies the hypotheses of the cochain verdict: closed ranges, `iₙ* iₙ ≠ 1` (not
@@ -180,7 +207,7 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
 
 
 open Feec.Domain Feec.FiniteElement Feec.Models.StarShaped Feec.Models.Cube HilbertComplex in
-/-- **A finite element family meets the hypotheses of `FEEC.feec`: Whitney forms on the
+/-- **A finite element family meets the hypotheses of Theorems 2 and 3: Whitney forms on the
 cube.** -/
 theorem feec_cube (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ),
@@ -226,7 +253,6 @@ theorem feec_cube (n : ℕ) [NeZero n] :
             Fm.polyInterpBound whitney i * (L * (Fm.mesh N).meshSize ^ (1 : ℝ)) := by
           rw [Real.rpow_one]; ring
         exact ⟨v, hv, e ▸ h1, fun j hxj => e ▸ h2 j hxj⟩ }
-  have hR := (F.rated J).toRated
   refine ⟨H, F, fun k => dMax_cube k, rfl, fun N k u hu z σ => ?_, hB, hA, hcr, fun j => ?_⟩
   · obtain ⟨T, hT, hpts⟩ := FEM.exists_mem_simplices_points_eq N z σ
     obtain ⟨w, hw, hae⟩ := PolySeq.exists_piece_of_mem_subcomplex (FEM.mesh n N) (Fm.domain_eq N)
@@ -243,7 +269,7 @@ theorem feec_cube (n : ℕ) [NeZero n] :
     rw [hset]
     filter_upwards [hae s] with x hx
     exact hx.trans (haff _ _)
-  · obtain ⟨C, hC⟩ := hR.static j (hB _) (hB _) (hcr _) (hcr _) ()
+  · obtain ⟨C, hC⟩ := (F.rated J).hasRate j (hB _) (hB _) (hcr _) (hcr _) ()
     refine ⟨C / 2, fun {f x} hs {L} hL h1 h2 h3 h4 N xh hsh => ?_⟩
     have h := hC hs hL h1 h2 h3 h4 N hsh
     have hm : J.meshSize N ^ J.ord () = 1 / 2 / (N + 1) := by
@@ -253,76 +279,5 @@ theorem feec_cube (n : ℕ) [NeZero n] :
     rw [hm] at h
     refine h.trans_eq ?_
     ring
-
-section BGGSection
-
-open CategoryTheory
-
-/-- **The BGG construction** ([ArnoldHu2021], §5.2). For a stacked diagram `S : Ṽ ⟶ V⟦1⟧` of
-cochain complexes of modules over any ring, with `Sⁱ` injective for `i < J` and onto modulo `d`
-for `i ≥ J` (`R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`; in particular when `Sⁱ` is surjective, [ArnoldHu2021], (23)),
-the inclusion `Γ → T` and the projection `Γ → Γ / Δ` are quasi-isomorphisms: the BGG complex has
-the cohomology of the twisted complex, and is exact when both rows are (`BGG.verdict`). -/
-theorem bggCohomology {R : Type u} [Ring R] {V Vt : CochainComplex (ModuleCat.{v} R) ℤ}
-    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i →
-      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) :
-    QuasiIso (BGG.bggΓι S J) ∧ QuasiIso (BGG.bggπ S J) ∧
-      (∀ i, Nonempty ((BGG.bgg S J).homology i ≅ (BGG.twisted S).homology i)) ∧
-      (V.Acyclic → Vt.Acyclic → (BGG.bgg S J).Acyclic) := by
-  have V := BGG.verdict (S := S) hinj hsurj
-  exact ⟨V.quasiIso_ι, V.quasiIso_π, V.homology, V.acyclic⟩
-
-/-- **The cohomology of the BGG complex** ([ArnoldHu2021], Theorem 6). Over a field, under the
-hypotheses of `FEEC.bggCohomology`, if both rows have finite-dimensional cohomology in degree `i`,
-so does the BGG complex, `dim Hⁱ(Γ / Δ) ≤ dim Hⁱ(V) + dim Hⁱ(Ṽ)`, with equality if and only if
-`Sⁱ⁻¹` and `Sⁱ` induce the zero maps on cohomology ([ArnoldHu2021], (27)). -/
-theorem bggFinrank {K : Type u} [Field K] {V Vt : CochainComplex (ModuleCat.{v} K) ℤ}
-    (S : Vt ⟶ V⟦(1 : ℤ)⟧) (J : ℤ) (hinj : ∀ i < J, Function.Injective (S.f i))
-    (hsurj : ∀ i, J ≤ i →
-      LinearMap.range (V.d i (i + 1)).hom ⊔ LinearMap.range (BGG.conn S i (i + 1)) = ⊤) (i : ℤ)
-    [FiniteDimensional K (V.homology i)] [FiniteDimensional K (Vt.homology i)] :
-    let b := Module.finrank K ((BGG.bgg S J).homology i)
-    let r := Module.finrank K (V.homology i) + Module.finrank K (Vt.homology i)
-    FiniteDimensional K ((BGG.bgg S J).homology i) ∧ b ≤ r ∧
-      (b = r ↔ BGG.InducesZero S (i - 1) ∧ BGG.InducesZero S i) :=
-  BGG.finiteDimensional_and_finrank_le hinj hsurj i
-
-/-- **The BGG complex of bounded Hilbert complexes is a bounded Hilbert complex with closed
-ranges** ([ArnoldHu2021], Theorem 6 and the remark after it). For complexes `d`, `d̃` of bounded
-operators on Hilbert spaces and bounded `s`, `d s = -s d̃`, bounded below for `i < J` and onto
-modulo `d` for `i ≥ J`: `Γⁱ`, `Δⁱ` are closed; `y ↦ [y]` is an isometry of `Γⁱ ∩ (Δⁱ)ᗮ` onto
-`Γⁱ / Δⁱ` with the quotient norm of the `ℓ²` norm (a Hilbert norm); the differentials
-`[(σ, φ)] ↦ [(dσ - sφ, d̃φ)]` are bounded; and the differential into `Γⁱ⁺¹ / Δⁱ⁺¹` has closed range
-where both rows have finite-dimensional cohomology in degree `i + 1`. -/
-theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
-    [∀ i, NormedAddCommGroup (H i)] [∀ i, InnerProductSpace 𝕜 (H i)] [∀ i, CompleteSpace (H i)]
-    [∀ i, NormedAddCommGroup (Ht i)] [∀ i, InnerProductSpace 𝕜 (Ht i)]
-    [∀ i, CompleteSpace (Ht i)]
-    (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)
-    (dt : ∀ i, Ht i →L[𝕜] Ht (i + 1)) (hdt : ∀ i x, dt (i + 1) (dt i x) = 0)
-    (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) = -s (i + 1) (dt i x))
-    (J : ℤ) (hinj : ∀ i < J, ∃ C, AntilipschitzWith C (s i))
-    (hsurj : ∀ i, J ≤ i → LinearMap.range (d i : H i →ₗ[𝕜] H (i + 1)) ⊔
-      LinearMap.range (s i : Ht i →ₗ[𝕜] H (i + 1)) = ⊤) :
-    let S := BGG.ofBoundedHom (hd := hd) (hdt := hdt) s hs
-    -- `Γⁱ`, `Δⁱ` in the `ℓ²` product `WithLp 2 (Hⁱ × H̃ⁱ)` (norm `(‖σ‖² + ‖φ‖²)^½`), and `Γⁱ / Δⁱ`
-    -- with the quotient norm `‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖` (for `i ≠ J` the norm of the output
-    -- space of [ArnoldHu2021], (25); not that norm at `J`)
-    let ΓL i := (BGG.Γ S J i).comap (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
-    let ΔL i := (BGG.Δ S J i).comap (WithLp.linearEquiv 2 𝕜 (H i × Ht i)).toLinearMap
-    let Q i := ΓL i ⧸ (ΔL i).comap (ΓL i).subtype
-    (∀ i, IsClosed (BGG.Γ S J i : Set (H i × Ht i)) ∧ IsClosed (BGG.Δ S J i : Set (H i × Ht i))) ∧
-      (∀ i, ∃ e : ↥(ΓL i ⊓ (ΔL i)ᗮ) ≃ₗᵢ[𝕜] Q i, ∀ y, e y = Submodule.Quotient.mk ⟨y, y.2.1⟩) ∧
-      ∃ D : ∀ i, Q i →L[𝕜] Q (i + 1),
-        (∀ i (x : ΓL i) (x' : ΓL (i + 1)), (x' : WithLp 2 (H (i + 1) × Ht (i + 1))).ofLp =
-          BGG.twist S i (i + 1) (x : WithLp 2 (H i × Ht i)).ofLp →
-            D i (Submodule.Quotient.mk x) = Submodule.Quotient.mk x') ∧
-        ∀ i, [FiniteDimensional 𝕜 ((BGG.ofBounded d hd).homology (i + 1))] →
-          [FiniteDimensional 𝕜 ((BGG.ofBounded dt hdt).homology (i + 1))] →
-          IsClosed (Set.range (D i)) :=
-  BGG.hilbert s hs J hinj hsurj
-
-end BGGSection
 
 end FEEC

@@ -5,8 +5,8 @@ public import Solution.Dynamic
 /-!
 # The rates of a Jackson estimate
 
-The rated conclusions of the challenge (`SubcomplexFamily.Rated`) from the verdicts: the static
-rate from quasi-optimality (`StaticVerdict.quasiOptimal`), the Jackson estimate and the bound
+The rates of the challenge (`SubcomplexFamily.HasRate`, `SubcomplexFamily.HasWaveRate`) from the
+verdicts: the static rate from quasi-optimality (`StaticVerdict.quasiOptimal`), the Jackson estimate and the bound
 `μₕ ≤ 1 + c` of the harmonic gap (`SubcomplexFamily.harmonicGap_le`); the fully discrete wave rate
 from the semidiscrete error bound (`WaveVerdict.error`), the Jackson estimate of the window
 (`SubcomplexFamily.graphDist_le_of_jackson`) and the temporal error of the rational scheme
@@ -152,8 +152,8 @@ theorem graphDist_le_of_jackson {ρ : Type*} (J : F.Jackson ρ) (s : ρ) (h : κ
   change ‖(y : Total W a m) - w‖ + ‖H.totalD a m y - H.totalD a m ⟨w, F.Xh_le a m h hw⟩‖ ≤ _
   nlinarith
 
-omit [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
-/-- **The rates of a Jackson estimate** (`Rated`). -/
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- **The static rates of a Jackson estimate** (`Rated₀`). -/
 theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated₀ J where
   static j hπ hπ' hj hj' s := by
     obtain ⟨C, V⟩ := F.exists_staticVerdict j hπ hπ' hj hj'
@@ -200,30 +200,37 @@ theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated₀ J where
           (1 + max c 0) * (2 * |J.B s j|)) * (L * J.meshSize h ^ J.ord s)) :=
         mul_le_mul_of_nonneg_left key (le_max_right C 0)
       _ = _ := by ring
-  wave a m ha P Q hr p hp s := by
-    have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
-    obtain ⟨S, hS⟩ := F.waveVerdict a m (F.approximates_window a m ha.1 ha.2)
-    obtain ⟨K, hK⟩ := hS.evolution.rational_temporal P Q hr hp
-    refine ⟨S, hS, 2 * (1 + 4 * √3) * ((1 + m) * ∑ i : Fin m, |J.B s (a + (i : ℕ))|), K,
-      fun x hx hx2 L hL h τ hτ n v hreg => ?_⟩
-    set M := (1 + m) * (∑ i : Fin m, |J.B s (a + (i : ℕ))|) * (L * J.meshSize h ^ J.ord s)
-    have hnτ : 0 ≤ (n : ℝ) * τ := mul_nonneg (Nat.cast_nonneg n) hτ
-    have e1 := hS.error x hx hx2 h v (t := n * τ) (M := M) hnτ fun t ht y hy => by
-      refine F.graphDist_le_of_jackson a m J s h hL y fun i => ?_
-      rcases hy with hy | hy
-      · rw [hy]; exact (hreg t ht i).1
-      · rw [hy]; exact (hreg t ht i).2
-    have e2 := hK h hτ n v
-    have e3 : ‖S (n * τ) x - ((rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
-        ‖S (n * τ) x - (semiflow (F.Lh a m h) (n * τ) v : Total W a m)‖ +
-          ‖semiflow (F.Lh a m h) (n * τ) v - (rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v‖ := by
-      rw [← Submodule.norm_coe, Submodule.coe_sub]
-      exact norm_sub_le_norm_sub_add_norm_sub _ _ _
-    have e4 : 2 * (1 + 4 * √3) * (1 + n * τ) * M = 2 * (1 + 4 * √3) *
-        ((1 + m) * ∑ i : Fin m, |J.B s (a + (i : ℕ))|) * (1 + n * τ) * L *
-          J.meshSize h ^ J.ord s := by
-      ring
-    linarith
+
+omit [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+variable {F a m} in
+/-- **The fully discrete wave rates of a Jackson estimate** (`HasWaveRate`), for the group `S` of a
+wave verdict: the semidiscrete error bound (`WaveVerdict.error`) with the Jackson estimate of the
+window, plus the temporal error of the rational scheme (`EvolutionVerdict.rational_temporal`). -/
+theorem WaveVerdict.hasWaveRate {S : ℝ → Total W a m →L[𝕜] Total W a m} (hS : F.WaveVerdict a m S)
+    {ρ : Type*} (J : F.Jackson ρ) (s : ρ) :
+    F.HasWaveRate a m S (J.Reg s) fun h => J.meshSize h ^ J.ord s := by
+  intro P Q hr p hp
+  obtain ⟨K, hK⟩ := hS.evolution.rational_temporal P Q hr hp
+  refine ⟨2 * (1 + 4 * √3) * ((1 + m) * ∑ i : Fin m, |J.B s (a + (i : ℕ))|), K,
+    fun x hx hx2 L hL h τ hτ n v hreg => ?_⟩
+  set M := (1 + m) * (∑ i : Fin m, |J.B s (a + (i : ℕ))|) * (L * J.meshSize h ^ J.ord s)
+  have hnτ : 0 ≤ (n : ℝ) * τ := mul_nonneg (Nat.cast_nonneg n) hτ
+  have e1 := hS.error x hx hx2 h v (t := n * τ) (M := M) hnτ fun t ht y hy => by
+    refine F.graphDist_le_of_jackson a m J s h hL y fun i => ?_
+    rcases hy with hy | hy
+    · rw [hy]; exact (hreg t ht i).1
+    · rw [hy]; exact (hreg t ht i).2
+  have e2 := hK h hτ n v
+  have e3 : ‖S (n * τ) x - ((rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
+      ‖S (n * τ) x - (semiflow (F.Lh a m h) (n * τ) v : Total W a m)‖ +
+        ‖semiflow (F.Lh a m h) (n * τ) v - (rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v‖ := by
+    rw [← Submodule.norm_coe, Submodule.coe_sub]
+    exact norm_sub_le_norm_sub_add_norm_sub _ _ _
+  have e4 : 2 * (1 + 4 * √3) * (1 + n * τ) * M = 2 * (1 + 4 * √3) *
+      ((1 + m) * ∑ i : Fin m, |J.B s (a + (i : ℕ))|) * (1 + n * τ) * L *
+        J.meshSize h ^ J.ord s := by
+    ring
+  linarith
 
 end SubcomplexFamily
 

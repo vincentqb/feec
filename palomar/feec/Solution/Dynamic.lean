@@ -3,8 +3,6 @@ module
 public import Solution.Bridge
 public import Solution.Rational
 public import Feec.HilbertComplex.Approximation.Crown
-public import Feec.HilbertComplex.Reducing
-public import Feec.Semigroup.DissipativeInvariance
 
 /-!
 # The bridge for windows and evolutions
@@ -88,45 +86,14 @@ theorem isStrongSolution_iff {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u : ℝ → 
   · obtain ⟨v, hv, hd⟩ := h.deriv t ht
     exact ⟨v, hv, by simpa using hd⟩
 
-omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-theorem isReducing_iff (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
-    IsReducing A K ↔ A.IsReducing K :=
-  ⟨fun h => ⟨fun x => (h x).1, fun x => (h x).2⟩, fun h x => ⟨h.proj_mem x, h.comm x⟩⟩
-
-omit [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
-/-- **The invariant core from propagation**: for a group `S` whose invariant closed subspaces are
-those reducing `A`, `K* = ⋂ₜ S(t)⁻¹ K` is closed, `S`-invariant (so reducing), and contains every
-closed subspace of `K` reducing `A`. -/
-theorem invariantCore_of {A : E →ₗ.[𝕜] E} {S : ℝ → E →L[𝕜] E}
-    (hadd : ∀ s t, S (s + t) = S s ∘L S t)
-    (hprop : ∀ (K : Submodule 𝕜 E) [K.HasOrthogonalProjection],
-      IsReducing A K ↔ ∀ t, ∀ x ∈ K, S t x ∈ K)
-    (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
-    ∃ (Ks : Submodule 𝕜 E) (_ : Ks.HasOrthogonalProjection),
-      (∀ x, x ∈ Ks ↔ ∀ t, S t x ∈ K) ∧ IsReducing A Ks ∧
-      ∀ (M : Submodule 𝕜 E) [M.HasOrthogonalProjection], M ≤ K → IsReducing A M → M ≤ Ks := by
-  have hK : IsClosed (K : Set E) := by
-    rw [← K.orthogonal_orthogonal]; exact Kᗮ.isClosed_orthogonal
-  let Ks : Submodule 𝕜 E := ⨅ t, K.comap (S t : E →ₗ[𝕜] E)
-  have hmem : ∀ x, x ∈ Ks ↔ ∀ t, S t x ∈ K := fun x => by
-    simp only [Ks, Submodule.mem_iInf, Submodule.mem_comap, ContinuousLinearMap.coe_coe]
-  have hc : IsClosed (Ks : Set E) := by
-    have : (Ks : Set E) = ⋂ t, S t ⁻¹' K := by
-      ext x; simp only [SetLike.mem_coe, hmem, Set.mem_iInter, Set.mem_preimage]
-    rw [this]; exact isClosed_iInter fun t => hK.preimage (S t).continuous
-  have : CompleteSpace Ks := hc.completeSpace_coe
-  refine ⟨Ks, inferInstance, hmem, (hprop Ks).2 fun t x hx => (hmem _).2 fun s => ?_,
-    fun M _ hMK hM x hx => (hmem x).2 fun t => hMK ((hprop M).1 hM t x hx)⟩
-  rw [← ContinuousLinearMap.comp_apply, ← hadd]
-  exact (hmem x).1 hx _
-
+omit [IsScalarTower ℝ 𝕜 E] in
 /-- **The evolution verdict from `Feec`'s**: the conclusions of the dissipative and fully discrete
 FEEC theorems, restated. -/
 theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → Type*}
     [∀ h, NormedAddCommGroup (X h)] [∀ h, InnerProductSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
     [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] {ι : ∀ h, X h →L[𝕜] E} {B : ∀ h, X h →L[𝕜] X h} {S S' : ℝ → E →L[𝕜] E}
     (hSS' : ∀ t, 0 ≤ t → S t = S' t)
-    (hA : A.IsMDissipative) (hS' : ∀ t, S' t = hA.semigroup.S t)
+    (hA : A.IsMDissipative)
     (hB : ∀ h x, RCLike.re ⟪B h x, x⟫_𝕜 ≤ 0)
     (hsol : ∀ (x : A.domain) (T : ℝ),
       Feec.Evolution.IsClassicalSolution A (Icc 0 T) 0 fun t => S' t x)
@@ -165,10 +132,6 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
       rw [norm_sub_rev, hr.rationalApply_eq]
       exact hr.scheme.norm_apply_pow_sub_exp_le (hB h) hr.scheme_isAStable (hr.scheme_hasOrder hp)
         hτ n w⟩
-  reducing_iff K _ := by
-    rw [isReducing_iff, hA.isReducing_iff]
-    refine and_congr (forall_congr' fun t => forall_congr' fun ht => ?_)
-      (forall_congr' fun t => forall_congr' fun ht => ?_) <;> rw [hSS' t ht, hS' t]
 
 end Evolution
 
@@ -507,20 +470,12 @@ theorems on the window and the per-`h` error bound (`error_le`). -/
 theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
   set G := F.feecWindow a m happrox ⊤ (isClosed_top a m)
   have V := Feec.HilbertComplex.approxFEEC G.toApprox G.toCore
-  have hprop : ∀ (K : Submodule 𝕜 (Total W a m)) [K.HasOrthogonalProjection],
-      IsReducing (H.wave a m) K ↔ ∀ t, ∀ x ∈ K, G.toApprox.U t x ∈ K := fun K _ => by
-    have hK : IsClosed (K : Set (Total W a m)) := by
-      rw [← K.orthogonal_orthogonal]; exact Kᗮ.isClosed_orthogonal
-    have VK := Feec.HilbertComplex.approxFEEC (F.feecWindow a m happrox K hK).toApprox
-      (F.feecWindow a m happrox K hK).toCore
-    rw [isReducing_iff, H.wave_eq a m]
-    exact VK.isReducing_iff_invariant
   have hL : F.Lh a m = fun h => G.discreteWave h := funext (F.Lh_eq a m happrox ⊤ (isClosed_top a m))
   have hEV : EvolutionVerdict (H.wave a m) F.l (fun h => F.Xh a m h)
       (fun h => (F.Xh a m h).subtypeL) (F.Lh a m) G.toApprox.U := by
     rw [H.wave_eq a m, hL]
     exact evolutionVerdict_of (S' := G.toApprox.S) (fun t ht => (V.S_eq_U ht).symm)
-      G.toApprox.isMDissipative (fun _ => rfl) G.toApprox.dissipative V.isClassicalSolution V.unique
+      G.toApprox.isMDissipative G.toApprox.dissipative V.isClassicalSolution V.unique
       V.antitone
       (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
       (fun x v hv T => V.converges (G.mem_toCore_closure x) hv T)
@@ -528,18 +483,8 @@ theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
         (Feec.HilbertComplex.dissipFEEC_fullyDiscrete G.toCore
           (G.toApprox.rationalScheme r hr hp hp0 τ hτ)).converges_iterates
           (G.mem_toCore_closure x) hv hτ0 T hε)
-  have hadd : ∀ s t, G.toApprox.U (s + t) = G.toApprox.U s ∘L G.toApprox.U t :=
-    fun s t => G.toApprox.isSkewAdjoint.group.map_add s t
-  refine ⟨G.toApprox.U, ⟨hEV, V.norm_U, hadd,
-    fun x hx hx2 h v _ _ ht hM => F.error_le a m x hx hx2 h v ht hM, hprop,
-    invariantCore_of hadd hprop, fun Z _ hZ t x hx i => ?_⟩⟩
-  have hR : (H.toFeec.window a m).ReducingSubcomplex fun i : Fin m => Z (a + (i : ℕ)) :=
-    ⟨fun i j => ⟨fun x => (hZ _ _ x).1, fun x => (hZ _ _ x).2⟩⟩
-  have hred : IsReducing (H.wave a m)
-      (Feec.HilbertComplex.totalSub fun i : Fin m => Z (a + (i : ℕ))) := by
-    rw [isReducing_iff, H.wave_eq a m]
-    exact hR.isReducing_wave
-  exact (hprop _).1 hred t x hx i
+  exact ⟨G.toApprox.U, ⟨hEV, V.norm_U, fun s t => G.toApprox.isSkewAdjoint.group.map_add s t,
+    fun x hx hx2 h v _ _ ht hM => F.error_le a m x hx hx2 h v ht hM⟩⟩
 
 set_option maxHeartbeats 1600000 in
 include happrox in
@@ -563,7 +508,6 @@ theorem heatVerdict (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded
     funext (F.Lh_sq_eq a m happrox ⊤ (isClosed_top a m))
   rw [H.heat_eq a m, hL]
   exact evolutionVerdict_of (S' := G.toHeat.S) (fun _ _ => rfl) G.toHeat.isMDissipative
-    (fun _ => rfl)
     G.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
     (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
     (fun x v hv T => V.converges (hZ x) hv T)

@@ -145,10 +145,10 @@ structure SubcomplexFamily.StaticVerdict₀ (F : H.SubcomplexFamily κ) (j : ℤ
 
 namespace SubcomplexFamily
 
-variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) [∀ i, NormedSpace ℝ (W i)]
+variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ)
 
-/-- **The rates of a Jackson estimate** `J` of `F`, constants independent of `h`, `τ`, `n`, `L`
-and the data. -/
+/-- **The static rates of a Jackson estimate** `J` of `F`, constants independent of `h`, `L` and
+the data. -/
 structure Rated₀ {ρ : Type*} (J : F.Jackson ρ) : Prop where
   /-- the mixed method in degree `j` is `O(L hᵒʳᵈ⁽ˢ⁾)` when `σ`, `u`, `p`, `P_𝔅 u` are `s`-regular
   with bound `L` ([AFW2010], Thm 3.9, §3.5) -/
@@ -162,21 +162,6 @@ structure Rated₀ {ρ : Type*} (J : F.Jackson ρ) : Prop where
       ∀ (h : κ) {σh : (H.d (j - 1) j).domain} {uh : (H.d j (j + 1)).domain} {ph : W j},
       H.IsMixedSolution j ((F.V h).V (j - 1)) ((F.V h).V j) ((F.V h).harmonic j) f σh uh ph →
       H.mixedError j σ σh u uh p ph ≤ C * L * J.meshSize h ^ J.ord s
-  /-- on a window `F` approximates, with its group `S`, the iterates `r(τ Lₕ)ⁿ v` of an A-stable
-  rational scheme of order `p` have the error
-  `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖` when the components of `S(t) x`,
-  `S(t) L x` are `s`-regular with bound `L` on `[0, nτ]` ([QuennevilleBelair2015], Thm 4.14;
-  [BrennerThomee1979]) -/
-  wave (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) (P Q : Polynomial ℝ) (hr : IsAStable P Q)
-    {p : ℕ} (hp : HasOrder P Q p) (s : ρ) : ∃ S, F.WaveVerdict a m S ∧ ∃ C K : ℝ,
-      ∀ (x : Total W a m) (hx : x ∈ (H.wave a m).domain),
-      H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain → ∀ {L : ℝ}, 0 ≤ L → ∀ (h : κ) {τ : ℝ}, 0 ≤ τ →
-      ∀ (n : ℕ) (v : F.Xh a m h), (∀ t ∈ Icc 0 (n * τ), ∀ i : Fin m,
-        J.Reg s (a + (i : ℕ)) L (S t x i) ∧ J.Reg s (a + (i : ℕ)) L (S t (H.wave a m ⟨x, hx⟩) i)) →
-      ‖S (n * τ) x - ((rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
-        ‖(v : Total W a m) - x‖ + C * (1 + n * τ) * L * J.meshSize h ^ J.ord s +
-          K * (n * τ) * τ ^ p * ‖(F.Lh a m h ^ (p + 1)) v‖
-
 
 end SubcomplexFamily
 

@@ -330,6 +330,20 @@ theorem exists_poincareBy {i : ℤ} (hi : IsClosed (H.boundaries (i + 1) : Set (
     ((H.closedRangeAt_iff (i + 1)).2 hi)
   exact ⟨_, H.poincareBy_of_feec hc⟩
 
+variable (H) in
+/-- **Closed range is the Poincaré inequality**: `R(dⁱ) = 𝔅ⁱ⁺¹` is closed iff
+`‖v‖_V ≤ c ‖d v‖` on `D(dⁱ) ∩ (𝔷ⁱ)ᗮ` for some `c` (`Feec`'s
+`Feec.HilbertComplex.closedRangeAt_iff_poincare_of_rel`). -/
+theorem closedRange_iff_poincareBy (i : ℤ) :
+    IsClosed (H.boundaries (i + 1) : Set (W (i + 1))) ↔ ∃ c, H.PoincareBy i c :=
+  ⟨H.exists_poincareBy, fun ⟨_, hc⟩ => (H.closedRangeAt_iff (i + 1)).1
+    ((H.toFeec.closedRangeAt_iff_poincare_of_rel (rel_add_one i)).2 ⟨_, hc.toFeec rfl⟩)⟩
+
+variable (H) in
+theorem closedRange_iff_poincareBy_of_eq {i k : ℤ} (hik : i + 1 = k) :
+    IsClosed (H.boundaries k : Set (W k)) ↔ ∃ c, H.PoincareBy i c := by
+  subst hik; exact H.closedRange_iff_poincareBy i
+
 /-- **The approximation property transfers**: the graph-norm distance of `Feec` is at most that
 of the challenge. -/
 theorem SubcomplexFamily.approximates_toFeec {F : H.SubcomplexFamily κ} {i : ℤ}

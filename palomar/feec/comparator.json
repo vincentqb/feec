@@ -1,10 +1,8 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.feec", "FEEC.feec_rated", "FEEC.staticFEEC_uniform",
-    "FEEC.exists_cochainProjection", "FEEC.exists_subcomplexFamily_iff", "FEEC.crimeFEEC",
-    "FEEC.crime_nonvacuous", "FEEC.feec_cube", "FEEC.bggCohomology", "FEEC.bggFinrank",
-    "FEEC.bggHilbert"],
+  "theorem_names": ["FEEC.exists_subcomplexFamily_iff", "FEEC.staticFEEC", "FEEC.evolutionFEEC",
+    "FEEC.crimeFEEC", "FEEC.crime_nonvacuous", "FEEC.feec_cube"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

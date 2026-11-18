@@ -10,7 +10,7 @@ The static verdicts of `Solution.Bridge` and `Solution.Crime` and the rates of `
 are proved for the componentwise forms of `Solution.Legacy`; with the one-equation mixed problem
 (`HilbertComplex.isMixedSolution_iff`, `HilbertComplex.isMixedSolution_total_iff`), the triples
 of the crimes (`CrimeFamily.isSolution_iff`, `CrimeFamily.readError_eq₀`) they are the verdicts
-of the challenge (`SubcomplexFamily.StaticVerdict₀.toStaticVerdict`, `SubcomplexFamily.Rated₀.toRated`,
+of the challenge (`SubcomplexFamily.StaticVerdict₀.toStaticVerdict`, `SubcomplexFamily.Rated₀.hasRate`,
 `CrimeFamily.StaticVerdict₀.toStaticVerdict`, `CrimeFamily.CochainVerdict₀.toCochainVerdict`).
 
 ## References
@@ -56,27 +56,24 @@ theorem SubcomplexFamily.StaticVerdict₀.toStaticVerdict {F : H.SubcomplexFamil
     (σh := fun h => (xh h).1) (uh := fun h => (xh h).2.1) (ph := fun h => (xh h).2.2)
     fun h => isMixedSolution_iff.1 (hsh h)
 
-variable [∀ i, NormedSpace ℝ (W i)]
-
-/-- **The rates** from their componentwise form. -/
-theorem SubcomplexFamily.Rated₀.toRated {F : H.SubcomplexFamily κ} {ρ : Type*} {J : F.Jackson ρ}
-    (R : F.Rated₀ J) : F.Rated J where
-  static j hπ hπ' hj hj' s := by
-    obtain ⟨C, hC⟩ := R.static j hπ hπ' hj hj' s
-    exact ⟨C, fun hs L hL h1 h2 h3 h4 h xh hsh =>
-      hC (isMixedSolution_iff.1 hs) hL h1 h2 h3 h4 h (isMixedSolution_iff.1 hsh)⟩
-  wave := R.wave
+/-- **The static rate** from its componentwise form. -/
+theorem SubcomplexFamily.Rated₀.hasRate {F : H.SubcomplexFamily κ} {ρ : Type*} {J : F.Jackson ρ}
+    (R : F.Rated₀ J) (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
+    (hj : IsClosed (H.boundaries j : Set (W j)))
+    (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) (s : ρ) :
+    F.HasRate j (J.Reg s) fun h => J.meshSize h ^ J.ord s := by
+  obtain ⟨C, hC⟩ := R.static j hπ hπ' hj hj' s
+  exact ⟨C, fun hs L hL h1 h2 h3 h4 h xh hsh =>
+    hC (isMixedSolution_iff.1 hs) hL h1 h2 h3 h4 h (isMixedSolution_iff.1 hsh)⟩
 
 namespace CrimeFamily
 
 variable {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
 
-omit [∀ i, NormedSpace ℝ (W i)] in
 theorem readGap_zero (h : κ) (y : Total W a m) (v : S.X h) :
     S.readGap h y 0 v = ‖y - S.incl h v‖ + ‖S.incl h (S.D h v)‖ := by
   rw [readGap, zero_sub, norm_neg]
 
-omit [∀ i, NormedSpace ℝ (W i)] in
 /-- **The static verdict with crimes** from its componentwise form. -/
 theorem StaticVerdict₀.toStaticVerdict {S : H.CrimeFamily a m κ} {C : ℝ} (V : S.StaticVerdict₀ C) :
     S.StaticVerdict C := by
@@ -97,7 +94,6 @@ theorem StaticVerdict₀.toStaticVerdict {S : H.CrimeFamily a m κ} {C : ℝ} (V
     rw [S.readError_eq₀] at h1
     exact ⟨x'.1, x'.2.1, x'.2.2, h2.1, h1, fun τ v q hq => h2.2 (τ, v, q) hq⟩
 
-omit [∀ i, NormedSpace ℝ (W i)] in
 /-- **The cochain verdict with crimes** from its componentwise form. -/
 theorem CochainVerdict₀.toCochainVerdict {S : H.CrimeFamily a m κ} {Cπ : ℝ} {P : S.CochainProj Cπ}
     (V : S.CochainVerdict₀ P) : S.CochainVerdict P where

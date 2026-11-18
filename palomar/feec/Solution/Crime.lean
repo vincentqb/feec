@@ -497,7 +497,7 @@ theorem heatVerdict
   refine ⟨F.toHeat.S, ?_⟩
   rw [H.heat_eq a m, hL]
   exact evolutionVerdict_of (S' := F.toHeat.S) (fun _ _ => rfl) F.toHeat.isMDissipative
-    (fun _ => rfl) F.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
+    F.toHeat.dissipative V.isClassicalSolution V.unique V.antitone
     (fun x => by rw [Feec.HilbertComplex.DissipFEEC.S_def, Feec.C0Semigroup.S_zero_apply])
     (fun x v hv T => V.converges (hZ x) hv T)
     (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>

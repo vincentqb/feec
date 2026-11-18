@@ -16,15 +16,16 @@ So a field of `L²(Ω; ℝ^ι)` that is almost everywhere on `Ω` the restrictio
 Lipschitz functions, bounded by `A` with Lipschitz constant `K` and supported in a set of volume
 `V`, has `H¹(ℝⁿ)` data with bound `max A K · √V` (`H1Data.ofLipschitz`).
 
-On the closed cube `[0, ½]ⁿ`, a `C¹` function on `ℝⁿ` whose values and first derivatives are
-bounded by `L` on `[0, ½]ⁿ` agrees there with `χ · (f ∘ r)`, `r` the nearest-point retraction onto
-`[0, ½]ⁿ` (`cubeRetract`: each coordinate clamped) and `χ` a fixed bump equal to `1` on `[0, ½]ⁿ`
-(`cubeBump`); this function is Lipschitz with constant `c L` and supported in a fixed compact set,
-so the fields of `L²((0, ½)ⁿ; ℝ^ι)` that are restrictions of such functions have `H¹(ℝⁿ)` data
-with bound `c L`, `c` depending only on `n` (`exists_h1Data_cube`). In particular the `C²` classes
-with bounded first derivatives on the closed cube (for instance `C²` forms with vanishing
-tangential traces, the classes of the `C²` rates of the finite element methods on the cube) lie
-in the `H¹` classes.
+On a closed cube `B = closedBall x₀ r` (a closed ball of the sup norm of `Fin n → ℝ`, the cube
+`∏ᵢ [x₀ᵢ - r, x₀ᵢ + r]`), a `C¹` function `f` on `ℝⁿ` whose values and first derivatives are
+bounded by `L` on `B` agrees there with `χ · (f ∘ ρ)`, `ρ` the nearest-point retraction onto `B`
+(`ballRetract`: each coordinate clamped) and `χ` a bump equal to `1` on `B` and supported in
+`closedBall x₀ (2 r)`; this function is Lipschitz with constant `c L`, so the fields of
+`L²(Ω; ℝ^ι)`, `Ω ⊆ B`, that are restrictions of such functions have `H¹(ℝⁿ)` data with bound
+`c L`, `c` depending only on `n` and `r` (`exists_h1Data_closedBall`). In particular the `C²`
+classes with bounded first derivatives on a closed cube (for instance `C²` forms on `(0, ½)ⁿ`
+with vanishing tangential traces, the classes of the `C²` rates of the finite element methods on
+the cube) lie in the `H¹` classes.
 
 ## References
 
@@ -140,24 +141,35 @@ def H1Data.ofLipschitz {Ω : Set (Fin n → ℝ)} {ι : Type*} {u : L2F ℝ Ω �
     normG := fun i m => (norm_toLp_le_of_bound _ hSm (hG0 i m) (hGb i m) hV).trans
       (mul_le_mul_of_nonneg_right (le_max_right _ _) (Real.sqrt_nonneg _)) }
 
-/-! ### The closed cube -/
+/-! ### Closed cubes -/
 
-/-- The closed cube `[0, ½]ⁿ`. -/
-def closedHalfCube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Icc 0 (1 / 2)
+/-- **The nearest-point retraction onto the closed cube `closedBall x₀ r`** of the sup norm (the
+cube `∏ᵢ [x₀ᵢ - r, x₀ᵢ + r]`): each coordinate clamped to `[x₀ᵢ - r, x₀ᵢ + r]`. -/
+def ballRetract (x₀ : Fin n → ℝ) (r : ℝ) (y : Fin n → ℝ) : Fin n → ℝ :=
+  fun i => max (min (y i) (x₀ i + r)) (x₀ i - r)
 
-/-- **The nearest-point retraction onto `[0, ½]ⁿ`**: each coordinate clamped to `[0, ½]`. -/
-def cubeRetract (y : Fin n → ℝ) : Fin n → ℝ := fun i => max (min (y i) (1 / 2)) 0
+theorem ballRetract_mem (x₀ : Fin n → ℝ) {r : ℝ} (hr : 0 ≤ r) (y : Fin n → ℝ) :
+    ballRetract x₀ r y ∈ Metric.closedBall x₀ r := by
+  rw [Metric.mem_closedBall, dist_pi_le_iff hr]
+  intro i
+  have h1 := le_max_right (min (y i) (x₀ i + r)) (x₀ i - r)
+  have h2 : max (min (y i) (x₀ i + r)) (x₀ i - r) ≤ x₀ i + r :=
+    max_le (min_le_right _ _) (by linarith)
+  rw [Real.dist_eq, abs_le]
+  simp only [ballRetract]
+  constructor <;> linarith
 
-theorem cubeRetract_mem (y : Fin n → ℝ) : cubeRetract y ∈ closedHalfCube n := fun i _ =>
-  ⟨le_max_right _ _, max_le (min_le_right _ _) (by norm_num)⟩
-
-theorem cubeRetract_of_mem {y : Fin n → ℝ} (hy : y ∈ closedHalfCube n) : cubeRetract y = y := by
+theorem ballRetract_of_mem {x₀ y : Fin n → ℝ} {r : ℝ} (hy : y ∈ Metric.closedBall x₀ r) :
+    ballRetract x₀ r y = y := by
   funext i
-  obtain ⟨h0, h1⟩ := hy i (mem_univ i)
-  have h1' : y i ≤ 2⁻¹ := by norm_num at h1 ⊢; exact h1
-  simp [cubeRetract, min_eq_left h1', max_eq_left h0]
+  have h := (dist_le_pi_dist y x₀ i).trans (Metric.mem_closedBall.1 hy)
+  rw [Real.dist_eq, abs_le] at h
+  obtain ⟨h1, h2⟩ := h
+  simp only [ballRetract]
+  rw [min_eq_left (by linarith), max_eq_left (by linarith)]
 
-theorem lipschitzWith_cubeRetract : LipschitzWith 1 (cubeRetract (n := n)) := by
+theorem lipschitzWith_ballRetract (x₀ : Fin n → ℝ) (r : ℝ) :
+    LipschitzWith 1 (ballRetract x₀ r) := by
   refine LipschitzWith.of_dist_le_mul fun y z => ?_
   rw [NNReal.coe_one, one_mul]
   refine (dist_pi_le_iff dist_nonneg).2 fun i => ?_
@@ -166,71 +178,56 @@ theorem lipschitzWith_cubeRetract : LipschitzWith 1 (cubeRetract (n := n)) := by
   rw [sub_self, abs_zero, max_eq_left (abs_nonneg _), ← Real.dist_eq]
   exact dist_le_pi_dist y z i
 
-theorem convex_closedHalfCube : Convex ℝ (closedHalfCube n) :=
-  convex_pi fun _ _ => convex_Icc 0 (1 / 2)
-
-/-- The center `(¼, …, ¼)` of the cube; `[0, ½]ⁿ` is its closed ball of radius `¼`. -/
-def cubeCenter (n : ℕ) : Fin n → ℝ := fun _ => 1 / 4
-
-theorem closedHalfCube_eq_closedBall : closedHalfCube n = Metric.closedBall (cubeCenter n) (1 / 4) := by
-  ext y
-  rw [Metric.mem_closedBall, dist_pi_le_iff (by norm_num)]
-  refine ⟨fun hy i => ?_, fun hy i _ => ?_⟩
-  · obtain ⟨h0, h1⟩ := hy i (mem_univ i)
-    rw [Real.dist_eq, abs_le]; simp only [cubeCenter]; constructor <;> linarith
-  · have := hy i
-    rw [Real.dist_eq, abs_le] at this; simp only [cubeCenter] at this
-    exact ⟨by linarith [this.1], by linarith [this.2]⟩
-
-/-- **The bump of the cube**: smooth, `1` on `[0, ½]ⁿ`, with values in `[0, 1]`, supported in the
-closed ball of radius `½` about the center. -/
-def cubeBump (n : ℕ) : ContDiffBump (cubeCenter n) := ⟨1 / 4, 1 / 2, by norm_num, by norm_num⟩
-
-/-- **`C¹` functions bounded with their derivative on `[0, ½]ⁿ` have `H¹(ℝⁿ)` data with a
-universal constant**: for every family `f` of `C¹` functions on `ℝⁿ` with `|f_i| ≤ L` and
-`‖Df_i‖ ≤ L` on `[0, ½]ⁿ`, a field of `L²((0, ½)ⁿ; ℝ^ι)` equal to `f` almost everywhere has
-`H¹(ℝⁿ)` data with bound `c L`; `c` depends only on `n`. -/
-theorem exists_h1Data_cube (n : ℕ) : ∃ c : ℝ, 0 ≤ c ∧ ∀ {ι : Type*} {Ω : Set (Fin n → ℝ)},
-    MeasurableSet Ω → Ω ⊆ closedHalfCube n → ∀ {u : L2F ℝ Ω ι} (f : ι → (Fin n → ℝ) → ℝ) {L : ℝ},
-    0 ≤ L → (∀ i, ContDiff ℝ 1 (f i)) → (∀ i, ∀ y ∈ closedHalfCube n, |f i y| ≤ L) →
-    (∀ i, ∀ y ∈ closedHalfCube n, ‖fderiv ℝ (f i) y‖ ≤ L) →
+/-- **`C¹` functions bounded with their derivative on a closed cube have `H¹(ℝⁿ)` data with a
+uniform constant**: on the cube `B = closedBall x₀ r` of the sup norm, `r > 0`, for every family
+`f` of `C¹` functions on `ℝⁿ` with `|f_i| ≤ L` and `‖Df_i‖ ≤ L` on `B`, a field of `L²(Ω; ℝ^ι)`,
+`Ω ⊆ B`, equal to `f` almost everywhere on `Ω` has `H¹(ℝⁿ)` data with bound `c L`; `c` depends
+only on `n` and `r`. -/
+theorem exists_h1Data_closedBall (x₀ : Fin n → ℝ) {r : ℝ} (hr : 0 < r) :
+    ∃ c : ℝ, 0 ≤ c ∧ ∀ {ι : Type*} {Ω : Set (Fin n → ℝ)}, MeasurableSet Ω →
+    Ω ⊆ Metric.closedBall x₀ r → ∀ {u : L2F ℝ Ω ι} (f : ι → (Fin n → ℝ) → ℝ) {L : ℝ},
+    0 ≤ L → (∀ i, ContDiff ℝ 1 (f i)) → (∀ i, ∀ y ∈ Metric.closedBall x₀ r, |f i y| ≤ L) →
+    (∀ i, ∀ y ∈ Metric.closedBall x₀ r, ‖fderiv ℝ (f i) y‖ ≤ L) →
     (∀ i, (u i : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω] f i) →
     Nonempty (H1Data Ω u (c * L)) := by
-  set χ := cubeBump n
+  set χ : ContDiffBump x₀ := ⟨r, 2 * r, hr, by linarith⟩
   obtain ⟨Kχ, hKχ⟩ := (χ.contDiff (n := 1)).lipschitzWith_of_hasCompactSupport
     χ.hasCompactSupport (by simp)
-  set S := Metric.closedBall (cubeCenter n) (1 / 2 : ℝ)
+  set S := Metric.closedBall x₀ (2 * r)
   have hS : IsCompact S := isCompact_closedBall _ _
   refine ⟨(1 + Kχ) * √(volume.real S), by positivity,
     fun {ι Ω} hΩm hΩ {u} f {L} hL hf hb hd hu => ?_⟩
-  -- `g = f ∘ r` is `L`-Lipschitz and bounded by `L`
-  have hLip : ∀ i, LipschitzOnWith (Real.toNNReal L) (f i) (closedHalfCube n) := fun i =>
-    convex_closedHalfCube.lipschitzOnWith_of_nnnorm_fderiv_le
+  -- `g = f ∘ ρ` is `L`-Lipschitz and bounded by `L`
+  have hLip : ∀ i, LipschitzOnWith (Real.toNNReal L) (f i) (Metric.closedBall x₀ r) := fun i =>
+    (convex_closedBall x₀ r).lipschitzOnWith_of_nnnorm_fderiv_le
       (fun y _ => ((hf i).differentiable one_ne_zero) y) (fun y hy => by
         rw [← NNReal.coe_le_coe, coe_nnnorm, Real.coe_toNNReal _ hL]; exact hd i y hy)
-  have hg : ∀ i y z, |f i (cubeRetract y) - f i (cubeRetract z)| ≤ L * dist y z := fun i y z => by
-    have h := (hLip i).dist_le_mul _ (cubeRetract_mem y) _ (cubeRetract_mem z)
-    have h' := lipschitzWith_cubeRetract.dist_le_mul y z
-    rw [NNReal.coe_one, one_mul] at h'
-    rw [Real.coe_toNNReal _ hL, Real.dist_eq] at h
-    exact h.trans (mul_le_mul_of_nonneg_left h' hL)
-  have hgb : ∀ i y, |f i (cubeRetract y)| ≤ L := fun i y => hb i _ (cubeRetract_mem y)
+  have hg : ∀ i y z, |f i (ballRetract x₀ r y) - f i (ballRetract x₀ r z)| ≤ L * dist y z :=
+    fun i y z => by
+      have h := (hLip i).dist_le_mul _ (ballRetract_mem x₀ hr.le y) _ (ballRetract_mem x₀ hr.le z)
+      have h' := (lipschitzWith_ballRetract x₀ r).dist_le_mul y z
+      rw [NNReal.coe_one, one_mul] at h'
+      rw [Real.coe_toNNReal _ hL, Real.dist_eq] at h
+      exact h.trans (mul_le_mul_of_nonneg_left h' hL)
+  have hgb : ∀ i y, |f i (ballRetract x₀ r y)| ≤ L := fun i y =>
+    hb i _ (ballRetract_mem x₀ hr.le y)
   -- `F = χ · g`
-  set F : ι → (Fin n → ℝ) → ℝ := fun i y => χ y * f i (cubeRetract y) with hFdef
+  set F : ι → (Fin n → ℝ) → ℝ := fun i y => χ y * f i (ballRetract x₀ r y) with hFdef
   have hχ1 : ∀ y, |χ y| ≤ 1 := fun y => by
     rw [abs_of_nonneg (χ.nonneg' y)]; exact χ.le_one
   have hKL : 0 ≤ (1 + (Kχ : ℝ)) * L := mul_nonneg (by positivity) hL
   have hF : ∀ i, LipschitzWith (Real.toNNReal ((1 + Kχ) * L)) (F i) := fun i => by
     refine LipschitzWith.of_dist_le_mul fun y z => ?_
     rw [Real.coe_toNNReal _ hKL, Real.dist_eq]
-    have e : F i y - F i z = χ y * (f i (cubeRetract y) - f i (cubeRetract z)) +
-        (χ y - χ z) * f i (cubeRetract z) := by simp only [F]; ring
+    have e : F i y - F i z = χ y * (f i (ballRetract x₀ r y) - f i (ballRetract x₀ r z)) +
+        (χ y - χ z) * f i (ballRetract x₀ r z) := by simp only [F]; ring
     rw [e]
     have h2 := hKχ.dist_le_mul y z
     rw [Real.dist_eq] at h2
-    calc |χ y * (f i (cubeRetract y) - f i (cubeRetract z)) + (χ y - χ z) * f i (cubeRetract z)|
-        ≤ |χ y| * |f i (cubeRetract y) - f i (cubeRetract z)| +
-            |χ y - χ z| * |f i (cubeRetract z)| := by
+    calc |χ y * (f i (ballRetract x₀ r y) - f i (ballRetract x₀ r z)) +
+          (χ y - χ z) * f i (ballRetract x₀ r z)|
+        ≤ |χ y| * |f i (ballRetract x₀ r y) - f i (ballRetract x₀ r z)| +
+            |χ y - χ z| * |f i (ballRetract x₀ r z)| := by
           rw [← abs_mul, ← abs_mul]; exact abs_add_le _ _
       _ ≤ 1 * (L * dist y z) + (Kχ * dist y z) * L := by
           gcongr
@@ -246,19 +243,17 @@ theorem exists_h1Data_cube (n : ℕ) : ∃ c : ℝ, 0 ≤ c ∧ ∀ {ι : Type*}
     simp [F, this]
   have hA : ∀ i y, |F i y| ≤ L := fun i y => by
     simp only [F, abs_mul]
-    calc |χ y| * |f i (cubeRetract y)| ≤ 1 * L := by
+    calc |χ y| * |f i (ballRetract x₀ r y)| ≤ 1 * L := by
           gcongr
           · exact hχ1 y
           · exact hgb i y
       _ = L := one_mul L
   have hFu : ∀ i, (u i : (Fin n → ℝ) → ℝ) =ᵐ[volume.restrict Ω] F i := fun i => by
     filter_upwards [hu i, ae_restrict_mem hΩm] with y hy hyΩ
-    have hyQ := hΩ hyΩ
-    have h1 : χ y = 1 := χ.one_of_mem_closedBall (by
-      change y ∈ Metric.closedBall (cubeCenter n) (1 / 4)
-      rw [← closedHalfCube_eq_closedBall]; exact hyQ)
+    have hyB := hΩ hyΩ
+    have h1 : χ y = 1 := χ.one_of_mem_closedBall hyB
     rw [hy]
-    simp only [F, h1, one_mul, cubeRetract_of_mem hyQ]
+    simp only [F, h1, one_mul, ballRetract_of_mem hyB]
   refine ⟨(H1Data.ofLipschitz F hF hS hSF hA hFu).mono ?_⟩
   rw [Real.coe_toNNReal _ hKL, max_eq_right (le_mul_of_one_le_left hL (by
     linarith [Kχ.coe_nonneg]))]

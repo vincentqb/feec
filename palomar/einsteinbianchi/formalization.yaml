@@ -49,8 +49,9 @@ project:
     both are those of Table 5.1 with the faces of each (IsTable51). Four compared theorems.
     FEEC.bggWeakSymmetry (thesis Prop 5.4, Thm 5.5, Prop 6.2), the abstract method: for all BGG
     data (two segments of unbounded operators between real inner product spaces, not assumed
-    complete, with bounded connecting maps) and every discretization (finite-dimensional subcomplexes with bounded cochain
-    projections pi; the method replaces S by S_h = pi S), solutions of the semi-discrete problem
+    complete, with bounded connecting maps) and every discretization (finite-dimensional
+    subcomplexes with bounded cochain projections pi; the method replaces S by S_h = pi S),
+    solutions of the semi-discrete problem
     (6.5) are determined by (sigma_h, u_h, M_h, rho_h)(0); for BGG data (d^1 S^0 = -S^1 d~^0,
     complexes) solutions without source keep the discrete Gauss law (sigma_h = 0, u_h orthogonal
     to d~psi for the discrete pairs d tau = pi^1 S^0 psi); and for every C there is K such that,
@@ -76,9 +77,10 @@ project:
     [0, T] (no regularity hypothesis); from the TSD datum (0, 0, 0, *beta), beta = x_3 (e_1 e_2^T
     + e_2 e_1^T), every strong solution has E(t) not TSD at some t and B(t') not symmetric at some
     t', and at these times, for all large N, so have the discrete fields of every such family:
-    the method computes a solution that is not a gravitational wave; the static method (5.6) converges at the rate h for
-    solutions of (5.3) of class H^1, and (6.5) at the rate (1 + t) h for classical solutions of
-    (6.2) of class H^1 (IsH1State); and for some c > 0 and every N >= 2 some nonzero v in V~_h^1
+    the method computes a solution that is not a gravitational wave; the static method (5.6)
+    converges at the rate h for solutions of (5.3) of class H^1, and (6.5) at the rate (1 + t) h
+    for classical solutions of (6.2) of class H^1 (IsH1State); and for some c > 0 and every
+    N >= 2 some nonzero v in V~_h^1
     has ||S^1 v - w|| >= c (||v||^2 + ||d~v||^2)^(1/2) for every w in the Raviart-Thomas space
     V_h^2 (no projection makes S^1_h consistent at the order h on V~_h^1; consistency is asked
     on regular potentials).
@@ -270,9 +272,9 @@ status:
     electric rates). The C^2 rates of the thesis (states C^2 up to the boundary with vanishing
     tangential traces) are corollaries of the H^1 rates: such states are of class H^1 with a
     universal factor on the bound (Feec.Models.Cube.FEM.IsCsFormTr.exists_h1Data, from the
-    Lipschitz extension Feec.Domain.exists_h1Data_cube), and Solution/Smooth.lean proves that on
-    every family of discretizations of bggData (cube 3) the H^1 static and wave clauses with a
-    constant K imply the C^2 clauses of the former statement (its classes IsTangentialC2 and
+    Lipschitz extension Feec.Domain.exists_h1Data_closedBall), and Solution/Smooth.lean proves
+    that on every family of discretizations of bggData (cube 3) the H^1 static and wave clauses
+    with a constant K imply the C^2 clauses of the former statement (its classes IsTangentialC2 and
     IsRegularState, verbatim) with the constant c K, c universal, and the same quantifiers
     (c2_rates_of_h1_rates; weakSymmetry_electric_c2 for the discretizations of
     FEEC.weakSymmetry_electric), so the challenge states the H^1 rates only. The

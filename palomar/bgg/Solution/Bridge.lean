@@ -616,7 +616,7 @@ theorem Υ_boundedData (J i : ℤ) :
 
 variable [∀ i, CompleteSpace (H i)] [∀ i, CompleteSpace (Ht i)]
 
-/-- **The orthogonal form of (30) and Corollary 1** (`FEEC.bggOrthogonal`), from
+/-- **The orthogonal form of (30) and Corollary 1** (the second clause of `FEEC.bggHilbert`), from
 `Feec.BGG.BoundedData.quasiIso_orthSumMap`, `Feec.BGG.BoundedData.isIso_toOrth` and
 `Feec.BGG.BoundedData.orth_represents`. -/
 theorem orthogonal (d : ∀ i, H i →L[𝕜] H (i + 1)) (hd : ∀ i x, d (i + 1) (d i x) = 0)

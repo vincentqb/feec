@@ -229,7 +229,7 @@ status:
   scope: >-
     Formalized and compared: the four theorems FEEC.exists_subcomplexFamily_iff,
     FEEC.staticFEEC, FEEC.evolutionFEEC and FEEC.crimeFEEC, and the witnesses
-    FEEC.crime_nonvacuous and FEEC.feec_cube (Challenge.lean, LINES lines). They restate the
+    FEEC.crime_nonvacuous and FEEC.feec_cube (Challenge.lean, 784 lines). They restate the
     former compared theorems FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated,
     FEEC.staticFEEC_uniform, FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff and
     FEEC.crimeFEEC with no conclusion dropped, except the constraint-propagation conclusions below
@@ -431,7 +431,7 @@ review:
     CrimeFamily.Verdict are the three clauses of FEEC.crimeFEEC. Removed definitions:
     SubcomplexFamily.Verdict, SubcomplexFamily.Rated, CrimeFamily.Verdict and IsReducing (with the
     fields propagates_iff, invariantCore, subcomplex of WaveVerdict and reducing_iff of
-    EvolutionVerdict); new: SubcomplexFamily.HasWaveRate. Challenge 999 -> LINES lines. Earlier
+    EvolutionVerdict); new: SubcomplexFamily.HasWaveRate. Challenge 999 -> 784 lines. Earlier
     history: the challenge merged the former palomar/static and palomar/dynamic challenges
     (statements equivalent), the L2 de Rham definitions of palomar/fem (shortened docstrings) and
     FEEC.feec_cube, and was redesigned for the 1000-line limit with no conclusion dropped: one

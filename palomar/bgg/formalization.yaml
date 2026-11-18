@@ -170,7 +170,7 @@ status:
     norm of Gamma / Delta, an isometry with the Hilbert space Gamma (-) Delta, bounded quotient
     differentials and closed range, with s bounded below before J and onto modulo d from J on;
     the orthogonal form of (30) with Corollary 1 for every linear null-homotopy K under (23) with
-    closed ranges of s^i for i < J). Challenge.lean, 613 lines. These are the BGG theorems of the
+    closed ranges of s^i for i < J). Challenge.lean, 614 lines. These are the BGG theorems of the
     former palomar/bgg (FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
     FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert, FEEC.bggOrthogonal), regrouped into three
     theorems with no conclusion dropped (review.notes); its weak-symmetry theorem

@@ -467,8 +467,8 @@ def HasRate (j : ℤ) (Reg : ∀ i, ℝ → W i → Prop) (r : κ → ℝ) : Pro
     Reg j L ((H.boundaries j).topologicalClosure.starProjection x.2.1) → ∀ (h : κ) {xh},
     IsMixedSolution ((F.V h).mixedSpace j) f xh → H.mixedNorm (x - xh) ≤ C * L * r h
 /-- The fully discrete wave method of `F` on the window, with the exact group `S`, **has the rate
-`r`** on the regularity classes `Reg`: for every A-stable `r = P/Q` of order `p`, some `C`, `K`
-(independent of `h`, `τ`, `n`, `L` and the data) bound the error of `r(τ Lₕ)ⁿ v` by
+`r`** on the regularity classes `Reg`: for every A-stable scheme `P/Q` of order `p`, some `C`, `K`
+(independent of `h`, `τ`, `n`, `L` and the data) bound the error of `(P/Q)(τ Lₕ)ⁿ v` by
 `‖v - x‖ + C (1 + nτ) L r(h) + K nτ τᵖ ‖Lₕ^{p+1} v‖` when the components of `S(t) x` and
 `S(t) L x` are regular with bound `L` on `[0, nτ]`. -/
 def HasWaveRate (S : ℝ → Total W a m →L[𝕜] Total W a m) (Reg : ∀ i, ℝ → W i → Prop)

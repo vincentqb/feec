@@ -97,9 +97,10 @@ theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l 
       (abs_nonneg C) (fun y => (hC h y).trans_eq (by rw [sq_abs])) x⟩
 
 /-- **Theorem 2: the static theory** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9, §3.3–§3.5): closed range
-is the Poincaré inequality (`HilbertComplex.closedRange_iff_poincareBy`); the static verdict with the
-constant `HilbertComplex.staticConst (max c 1) c_P` (`HilbertComplex.SubcomplexFamily.staticVerdict_of`)
-and the rates of `HilbertComplex.SubcomplexFamily.rated`. -/
+is the Poincaré inequality (`HilbertComplex.closedRange_iff_poincareBy`); the static verdict with
+the constant `HilbertComplex.staticConst (max c 1) c_P`
+(`HilbertComplex.SubcomplexFamily.staticVerdict_of`) and the rates of
+`HilbertComplex.SubcomplexFamily.rated`. -/
 theorem staticFEEC : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike 𝕜] {W : ℤ → Type v}
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     {H : HilbertComplex 𝕜 W},

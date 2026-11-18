@@ -10,8 +10,9 @@ The static verdicts of `Solution.Bridge` and `Solution.Crime` and the rates of `
 are proved for the componentwise forms of `Solution.Legacy`; with the one-equation mixed problem
 (`HilbertComplex.isMixedSolution_iff`, `HilbertComplex.isMixedSolution_total_iff`), the triples
 of the crimes (`CrimeFamily.isSolution_iff`, `CrimeFamily.readError_eq₀`) they are the verdicts
-of the challenge (`SubcomplexFamily.StaticVerdict₀.toStaticVerdict`, `SubcomplexFamily.Rated₀.hasRate`,
-`CrimeFamily.StaticVerdict₀.toStaticVerdict`, `CrimeFamily.CochainVerdict₀.toCochainVerdict`).
+of the challenge (`SubcomplexFamily.StaticVerdict₀.toStaticVerdict`,
+`SubcomplexFamily.Rated₀.hasRate`, `CrimeFamily.StaticVerdict₀.toStaticVerdict`,
+`CrimeFamily.CochainVerdict₀.toCochainVerdict`).
 
 ## References
 

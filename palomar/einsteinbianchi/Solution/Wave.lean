@@ -10,7 +10,8 @@ public import Mathlib.Analysis.InnerProductSpace.Calculus
 For any data `D`, the relation `D.IsWave` is linear (`IsWave.sub`, `IsWave.zero`) and skew,
 `⟪L U, U⟫ = 0` (`IsWave.inner_eq_zero`: the terms of the four equations cancel in pairs), so the
 energy `‖U(t)‖²` of a strong solution is conserved and strong solutions are determined by their
-initial value (`isStrongSolution_unique`).
+initial value (`isStrongSolution_unique`). `isStrongSolution_setOf_iff`: the strong solutions of
+the graph `{(U, V) | L U V}` of a relation are those of the relation.
 
 ## References
 
@@ -24,6 +25,19 @@ open scoped InnerProductSpace RealInnerProductSpace
 open Set Filter Topology
 
 @[expose] public noncomputable section
+
+namespace FEEC
+
+/-- **Strong solutions of an operator given by a relation** `L`: `IsStrongSolution` of its graph
+`{(U, V) | L U V}` is the relation form, continuity on `I` and, at every `t ∈ I`, a derivative
+`V` of `U` within `I` with `L (U t) V`. -/
+theorem isStrongSolution_setOf_iff {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+    {L : X → X → Prop} {I : Set ℝ} {U : ℝ → X} :
+    IsStrongSolution {p | L p.1 p.2} I U ↔
+      ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U V I t :=
+  Iff.rfl
+
+end FEEC
 
 namespace FEEC.WeakSymmetryData
 
@@ -102,12 +116,13 @@ theorem hasDerivWithinAt_energy {U : ℝ → W0 × Wt1 × W2 × Wt2} {V : W0 × 
 /-- **Strong solutions are determined by their initial value**: the energy of the difference is
 conserved (`IsWave.inner_eq_zero`). -/
 theorem isStrongSolution_unique {T : ℝ} {U U' : ℝ → W0 × Wt1 × W2 × Wt2}
-    (hU : IsStrongSolution D.IsWave (Icc 0 T) U) (hU' : IsStrongSolution D.IsWave (Icc 0 T) U')
-    (h0 : U 0 = U' 0) : EqOn U U' (Icc 0 T) := by
+    (hU : IsStrongSolution {p | D.IsWave p.1 p.2} (Icc 0 T) U)
+    (hU' : IsStrongSolution {p | D.IsWave p.1 p.2} (Icc 0 T) U') (h0 : U 0 = U' 0) :
+    EqOn U U' (Icc 0 T) := by
   have hd : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun r => energy (U r - U' r)) 0 (Icc 0 T) t := by
     intro t ht
-    obtain ⟨V, hV, hdV⟩ := hU.2 t ht
-    obtain ⟨V', hV', hdV'⟩ := hU'.2 t ht
+    obtain ⟨V, hV, hdV⟩ := (isStrongSolution_setOf_iff.1 hU).2 t ht
+    obtain ⟨V', hV', hdV'⟩ := (isStrongSolution_setOf_iff.1 hU').2 t ht
     have := hasDerivWithinAt_energy (hdV.sub hdV')
     rw [show (U - U') t = U t - U' t from rfl, (hV.sub hV').inner_eq_zero, mul_zero] at this
     exact this

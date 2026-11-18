@@ -233,7 +233,7 @@ theorem isHodgeWave_iff (U V : W0 × W1 × W2) :
 include h0 h1 in
 /-- **Strong solutions of the challenge are `Feec`'s**, through the state map. -/
 theorem isStrongSolution_toFeec {I : Set ℝ} {U : ℝ → W0 × W1 × W2}
-    (hU : IsStrongSolution (IsHodgeWave d0 d1) I U) :
+    (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} I U) :
     Evolution.IsStrongSolution S.wave I 0 fun t => stateL e0 e1 e2 (U t) where
   continuousOn := (stateL e0 e1 e2).continuous.comp_continuousOn hU.1
   deriv t ht := by
@@ -248,7 +248,7 @@ include h0 h1 in
 /-- **`Feec`'s strong solutions are strong solutions of the challenge.** -/
 theorem isStrongSolution_ofFeec {I : Set ℝ} {X : ℝ → PiLp 2 (W3 X0 X1 X2)}
     (hX : Evolution.IsStrongSolution S.wave I 0 X) :
-    IsStrongSolution (IsHodgeWave d0 d1) I fun t => stateInvL e0 e1 e2 (X t) := by
+    IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} I fun t => stateInvL e0 e1 e2 (X t) := by
   refine ⟨(stateInvL e0 e1 e2).continuous.comp_continuousOn hX.continuousOn, fun t ht => ?_⟩
   obtain ⟨v, hv, hd⟩ := hX.deriv t ht
   rw [Pi.zero_apply, add_zero] at hd
@@ -267,7 +267,7 @@ theorem mem_nhdsWithin_Ici_Icc (t : ℝ) : Icc 0 (t + 1) ∈ 𝓝[Ici 0] t :=
 
 /-- A strong solution on `[0, ∞)` is one on every `[0, T]`. -/
 theorem IsStrongSolution.mono_Icc {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
-    {L : X → X → Prop} {U : ℝ → X} (hU : IsStrongSolution L (Ici 0) U) (T : ℝ) :
+    {L : SetRel X X} {U : ℝ → X} (hU : IsStrongSolution L (Ici 0) U) (T : ℝ) :
     IsStrongSolution L (Icc 0 T) U :=
   ⟨hU.1.mono Icc_subset_Ici_self, fun t ht => by
     obtain ⟨V, hV, hd⟩ := hU.2 t ht.1
@@ -275,7 +275,7 @@ theorem IsStrongSolution.mono_Icc {X : Type*} [NormedAddCommGroup X] [NormedSpac
 
 /-- Strong solutions on every `[0, T]` are one on `[0, ∞)`. -/
 theorem isStrongSolution_Ici {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
-    {L : X → X → Prop} {U : ℝ → X} (hU : ∀ T, IsStrongSolution L (Icc 0 T) U) :
+    {L : SetRel X X} {U : ℝ → X} (hU : ∀ T, IsStrongSolution L (Icc 0 T) U) :
     IsStrongSolution L (Ici 0) U := by
   refine ⟨fun t ht => ?_, fun t ht => ?_⟩
   · exact ((hU (t + 1)).1 t ⟨ht, by linarith⟩).mono_of_mem_nhdsWithin
@@ -584,7 +584,7 @@ theorem gcWave_iff (U V : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
   isHodgeWave_iff field0 fieldE fieldB _ (mem_graph_grad_iff hΩ) (mem_graph_curl_iff hΩ) U V
 
 theorem gc_orbit {U : ℝ → L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2}
-    (hU : IsStrongSolution (gcWave (Ω := Ω)) (Ici 0) U) {t : ℝ} (ht : 0 ≤ t) :
+    (hU : IsStrongSolution {p | gcWave (Ω := Ω) p.1 p.2} (Ici 0) U) {t : ℝ} (ht : 0 ≤ t) :
     gcState (U t) = (gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t (gcState (U 0)) := by
   obtain ⟨V, hV, -⟩ := hU.2 0 le_rfl
   obtain ⟨hd, -⟩ := (gcWave_iff hΩ _ _).1 hV
@@ -594,7 +594,7 @@ theorem gc_orbit {U : ℝ → L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2}
 
 include hΩ in
 theorem gc_exists {U₀ V : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2} (hV : gcWave U₀ V) :
-    ∃ U, U 0 = U₀ ∧ IsStrongSolution (gcWave (Ω := Ω)) (Ici 0) U := by
+    ∃ U, U 0 = U₀ ∧ IsStrongSolution {p | gcWave (Ω := Ω) p.1 p.2} (Ici 0) U := by
   obtain ⟨hd, -⟩ := (gcWave_iff hΩ _ _).1 hV
   refine ⟨fun t => stateInvL field0 fieldE fieldB
       ((gradCurl ℝ hΩ).toHilbertComplex.waveGroup.S t (gcState U₀)), ?_,
@@ -635,9 +635,10 @@ end GradCurl
 
 theorem box_stationary_of {a ℓ : Fin 3 → ℝ} (hℓ : ∀ i, 0 < ℓ i) :
     let L := IsHodgeWave (vecOp fun _ => dMin (box a ℓ) 0) (vecOp fun _ => dMin (box a ℓ) 1)
-    (∀ U₀ V, L U₀ V → ∃ U, U 0 = U₀ ∧ IsStrongSolution L (Ici 0) U) ∧
+    (∀ U₀ V, L U₀ V → ∃ U, U 0 = U₀ ∧ IsStrongSolution {p | L p.1 p.2} (Ici 0) U) ∧
     ∀ (S₁ : Submodule ℝ (L2Vec (box a ℓ) 1)) (S₂ : Submodule ℝ (L2Vec (box a ℓ) 2)),
-      (∀ u ∈ S₁, IsTSD (mat1 u)) → (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) → ∀ U, IsStrongSolution L (Ici 0) U →
+      (∀ u ∈ S₁, IsTSD (mat1 u)) → (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) → ∀ U,
+        IsStrongSolution {p | L p.1 p.2} (Ici 0) U →
         ((∀ t ≥ 0, (U t).1 = 0 ∧ (U t).2.1 ∈ S₁ ∧ (U t).2.2 ∈ S₂) ↔
           ((U 0).1 = 0 ∧ (U 0).2.1 ∈ S₁ ∧ (U 0).2.2 ∈ S₂) ∧ L (U 0) 0) := by
   intro L

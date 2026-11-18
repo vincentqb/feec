@@ -348,7 +348,7 @@ theorem stateBeta_mem (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
 /-- **A strong solution from `U₀ = (0, 0, 0, ⋆β)`** on every `[0, T]`: `σ ≡ 0` and the orbit of
 `stateBeta` for the wave operator of `D₁`. -/
 theorem exists_strongSolution_datumBeta (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (T : ℝ) :
-    ∃ U, U 0 = datumBeta hΩ hb ∧ IsStrongSolution (bggData Ω).IsWave (Icc 0 T) U := by
+    ∃ U, U 0 = datumBeta hΩ hb ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U := by
   set S := shortD1 hΩ
   set X := fun t => S.toHilbertComplex.waveGroup.S t (stateBeta hΩ hb)
   have hX : Evolution.IsStrongSolution S.wave (Icc 0 T) 0 X :=
@@ -440,8 +440,8 @@ end Orbit
 (`FEEC.tsd_not_propagates`). -/
 theorem tsd_not_propagates_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
-      (∃ U, U 0 = U₀ ∧ IsStrongSolution (bggData Ω).IsWave (Icc 0 T) U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution (bggData Ω).IsWave (Icc 0 T) U →
+      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
         (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
         ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a := by
   refine ⟨datumBeta hΩ hb, ⟨_, isWave_datumBeta hΩ hb⟩, ⟨rfl, rfl, ?_, ?_⟩, fun T hT =>

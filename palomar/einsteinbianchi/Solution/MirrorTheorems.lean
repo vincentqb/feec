@@ -41,7 +41,8 @@ open Feec.HilbertComplex (totalSub)
 system. -/
 theorem isStrongSolution_realL {x : PiLp 2 SpaceQ} (hx : x ∈ complexQ.wave.domain)
     (hc : x ∈ totalSub tsdQ) (T : ℝ) :
-    IsStrongSolution mirrorData.IsWave (Icc 0 T) fun t => realL (complexQ.waveGroup.S t x) := by
+    IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T)
+      fun t => realL (complexQ.waveGroup.S t x) := by
   have hX := complexQ.isStrongSolution_waveGroup hx T
   refine ⟨realL.continuous.comp_continuousOn hX.continuousOn, fun t ht => ⟨_,
     isWave_realL (x := ⟨_, hX.mem_domain ht⟩)
@@ -137,11 +138,12 @@ theorem exists_mirror_chain : ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V�
 /-- **Propagation of the constraints under mirror boundary conditions**
 (`FEEC.mirror_tsd_propagates`). -/
 theorem mirror_tsd_propagates_of :
-    (∀ T U U', IsStrongSolution mirrorData.IsWave (Icc 0 T) U →
-      IsStrongSolution mirrorData.IsWave (Icc 0 T) U' → U 0 = U' 0 → EqOn U U' (Icc 0 T)) ∧
+    (∀ T U U', IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+      IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U' → U 0 = U' 0 →
+        EqOn U U' (Icc 0 T)) ∧
     (∀ U₀ V, mirrorData.IsWave U₀ V → IsTSDState U₀ → ∀ T,
-      ∃ U, U 0 = U₀ ∧ IsStrongSolution mirrorData.IsWave (Icc 0 T) U) ∧
-    (∀ T U, IsStrongSolution mirrorData.IsWave (Icc 0 T) U → IsTSDState (U 0) →
+      ∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
+    (∀ T U, IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U → IsTSDState (U 0) →
       ∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧
     ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
       mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
@@ -168,7 +170,7 @@ theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
         (u 0 : L2Vec (cube 3) 1) ≠ 0 ∧ ∃ t ∈ Ioc 0 T, M t ≠ M 0) ∧
     ∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
       mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
-      IsStrongSolution mirrorData.IsWave (Icc 0 T) U →
+      IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
       ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T 0 σh φh uh Mh ρh lamh ∧ ∀ t ∈ Icc 0 T,
         √(‖(σh t : L2Form (cube 3) 0)‖ ^ 2 + ‖(U t).2.1 - uh t‖ ^ 2 + ‖Mh t‖ ^ 2 +
           ‖(U t).2.2.2 - ρh t‖ ^ 2) ≤

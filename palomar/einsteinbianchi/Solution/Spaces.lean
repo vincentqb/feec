@@ -11,7 +11,7 @@ On a mesh `M` of `Ω`, the glued spaces `Vₕᵏ`, `V̊ₕᵏ` of the element fa
 `Feec.FiniteElement.polyElement n S` of an admissible sequence (piecewise fields whose degrees of
 freedom agree on shared faces, resp. also vanish on boundary faces) are the spaces `femSpaceOn`,
 `femSpaceMinOn` (`mem_V_iff`, `mem_V₀_iff`; on Freudenthal meshes of the cube, the challenge's
-`femSpace ∅` and `femSpace univ`): degrees of freedom agree on a face
+`femSpace` with `cubeFacets ∅` and `cubeFacets univ`): degrees of freedom agree on a face
 iff the tangential traces do (`Feec.FiniteElement.PolySeq.dof_congr` and trace determination on
 faces of every dimension, `Feec.FiniteElement.PolySeq.tangentialTraceEq_of_dof_eq_face`), and the
 glued field is the element field almost everywhere on each simplex (the frontiers of simplices are

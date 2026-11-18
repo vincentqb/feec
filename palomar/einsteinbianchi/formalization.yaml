@@ -23,10 +23,12 @@ project:
     of *B (vector 2-forms), M the multiplier of the symmetry of E, sigma the potential of the
     constraint Gamma = {(sigma, phi) | d sigma = S^0 phi}; the constraint is sigma = 0, M = 0, E and
     B TSD (IsTSDState). Stated over Mathlib in the vocabulary of differential forms, with the
-    definitions of forms, polynomial forms, simplicial meshes and Sobolev spaces of palomar/fem;
-    one finite element space femSpace J (vanishing traces on the faces of the cube normal to e_j,
-    j in J: J = empty, no boundary condition, J = univ, vanishing boundary traces, J = {a}, the
-    mirror conditions of component a) replaces palomar/fem's femSpace and femSpaceMin; the
+    definitions of forms, polynomial forms, simplicial meshes, finite element and Sobolev spaces
+    and strong solutions shared with palomar/fem and palomar/feec (the canonical blocks of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate); the finite element
+    spaces of the cube are femSpace (cube 3) M S (cubeFacets J), vanishing traces on the faces of
+    the cube normal to e_j, j in J (J = empty, no boundary condition, J = univ, vanishing boundary
+    traces, J = {a}, the mirror conditions of component a); the
     definitions of the complex with weak symmetry and its discretization (WeakSymmetryData,
     IsBGG, IsStable, Discretization, IsSolution, IsDiscreteSolution, errorSq, projErrorSq) are
     those of the former palomar/bgg entry (deleted), moved here with its theorem FEEC.bggWeakSymmetry; the wave operator L
@@ -329,10 +331,14 @@ automation:
 fidelity:
   divergences: >-
     (1) Coordinates and definitions of forms, meshes, finite element spaces and H^m as in
-    palomar/fem (divergences (1)-(5), (8) there), except that the finite element spaces are
-    defined on the cube only, as femSpace J with vanishing traces on the facets in the faces
-    normal to e_j, j in J (on Freudenthal meshes femSpace univ is palomar/fem's femSpaceMin, the
-    vanishing of traces on boundary facets, Solution femSpace_univ_eq); W~^k = L^2(Omega;
+    palomar/fem (divergences (1)-(5), (8) there; the shared blocks of
+    palomar/shared/vocabulary.lean.txt); the finite element spaces of the cube have vanishing
+    traces on the facets in the faces normal to e_j, j in J, the facets cubeFacets J of the
+    shared femSpace (definitionally the earlier cube-only femSpace J; on Freudenthal meshes
+    J = univ gives the vanishing of traces on boundary facets, Solution femSpace_univ_eq). Strong
+    solutions are those of the shared IsStrongSolution for an operator given by its graph, a
+    relation (Mathlib's SetRel), here the graph {p | IsWave p.1 p.2} of the wave operator
+    (definitionally the earlier relation form, Solution isStrongSolution_setOf_iff); W~^k = L^2(Omega;
     Lambda^k) ⊗ R^3 is the l^2 sum of three copies (L2Vec). The fields of a state are read as
     matrices, E_ab = (u_a)_{dx_b},
     B_ai = (-1)^i (rho_a)_{{i}^c}; IsTSD is symmetric, trace-free and weakly divergence-free

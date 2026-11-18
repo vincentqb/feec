@@ -11,7 +11,8 @@ For smoothed projections `hT`, `hB` of the two rows from one smoother, `cubeQ hT
 discretization of `𝒟 = cubeDataOf D0 D1` by the spaces of `Feec.Models.Cube.FEM.polyMin` with the
 projections of `hT.proj N`, `hB.proj N` (the challenge's form of
 `Feec.Models.Cube.WeakSymmetry.cubeFEM`). Its spaces are the boundary-trace-free spaces
-`femSpaceMinOn`, the challenge's `femSpace univ` (`cubeQ_V0`, …, `femSpace_univ_eq`), and with one constant `C` the continuous hypotheses
+`femSpaceMinOn`, the challenge's `femSpace` with `cubeFacets univ` (`cubeQ_V0`, …,
+`femSpace_univ_eq`), and with one constant `C` the continuous hypotheses
 (`Feec.Models.Cube.WeakSymmetry.bggStability_of`), the uniform bounds
 (`PolySmoothingEstimatesMin.norm_proj_le`), (5.4) (`proj_wsL2_piMap_proj`) and the consistency
 (`cubeFEM_happ0`, `cubeFEMReg`) hold (`cube_hyps`).

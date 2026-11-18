@@ -86,27 +86,29 @@ theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Typ
 
 theorem tsd_not_propagates {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
-      (∃ U, U 0 = U₀ ∧ IsStrongSolution (bggData Ω).IsWave (Icc 0 T) U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution (bggData Ω).IsWave (Icc 0 T) U →
+      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
         (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
         ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a :=
   tsd_not_propagates_of hΩ hb hne
 
 theorem box_stationary {a ℓ : Fin 3 → ℝ} (hℓ : ∀ i, 0 < ℓ i) :
     let L := IsHodgeWave (vecOp fun _ => dMin (box a ℓ) 0) (vecOp fun _ => dMin (box a ℓ) 1)
-    (∀ U₀ V, L U₀ V → ∃ U, U 0 = U₀ ∧ IsStrongSolution L (Ici 0) U) ∧
+    (∀ U₀ V, L U₀ V → ∃ U, U 0 = U₀ ∧ IsStrongSolution {p | L p.1 p.2} (Ici 0) U) ∧
     ∀ (S₁ : Submodule ℝ (L2Vec (box a ℓ) 1)) (S₂ : Submodule ℝ (L2Vec (box a ℓ) 2)),
-      (∀ u ∈ S₁, IsTSD (mat1 u)) → (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) → ∀ U, IsStrongSolution L (Ici 0) U →
+      (∀ u ∈ S₁, IsTSD (mat1 u)) → (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) → ∀ U,
+        IsStrongSolution {p | L p.1 p.2} (Ici 0) U →
         ((∀ t ≥ 0, (U t).1 = 0 ∧ (U t).2.1 ∈ S₁ ∧ (U t).2.2 ∈ S₂) ↔
           ((U 0).1 = 0 ∧ (U 0).2.1 ∈ S₁ ∧ (U 0).2.2 ∈ S₂) ∧ L (U 0) 0) :=
   box_stationary_of hℓ
 
 theorem mirror_tsd_propagates :
-    (∀ T U U', IsStrongSolution mirrorData.IsWave (Icc 0 T) U →
-      IsStrongSolution mirrorData.IsWave (Icc 0 T) U' → U 0 = U' 0 → EqOn U U' (Icc 0 T)) ∧
+    (∀ T U U', IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+      IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U' → U 0 = U' 0 →
+        EqOn U U' (Icc 0 T)) ∧
     (∀ U₀ V, mirrorData.IsWave U₀ V → IsTSDState U₀ → ∀ T,
-      ∃ U, U 0 = U₀ ∧ IsStrongSolution mirrorData.IsWave (Icc 0 T) U) ∧
-    (∀ T U, IsStrongSolution mirrorData.IsWave (Icc 0 T) U → IsTSDState (U 0) →
+      ∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
+    (∀ T U, IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U → IsTSDState (U 0) →
       ∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧
     ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
       mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 :=
@@ -119,7 +121,7 @@ theorem mirror_weakSymmetry_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3)
       (Q N).IsGauss (σ 0) (u 0) ∧ (u 0 : L2Vec (cube 3) 1) ≠ 0 ∧ ∃ t ∈ Ioc 0 T, M t ≠ M 0) ∧
     ∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
       mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
-      IsStrongSolution mirrorData.IsWave (Icc 0 T) U →
+      IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
       ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T 0 σh φh uh Mh ρh lamh ∧ ∀ t ∈ Icc 0 T,
         √(‖(σh t : L2Form (cube 3) 0)‖ ^ 2 + ‖(U t).2.1 - uh t‖ ^ 2 + ‖Mh t‖ ^ 2 +
           ‖(U t).2.2.2 - ρh t‖ ^ 2) ≤

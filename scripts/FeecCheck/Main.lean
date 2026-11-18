@@ -27,7 +27,7 @@ documentation cites):
 | `docs/THESIS_MAP.md` up to date | `feec-thesismap --check` | yes |
 | migration coverage | `feec-mapcheck --strict` | yes |
 | names in `README.md` and `docs/*.md` exist | `feec-docnames` | yes (and `FeecCheck`) |
-| `palomar/*`: `Defs.lean` copies the challenge, `lake build` | `feec-palomar` | no (builds every package) |
+| `palomar/*`: shared blocks canonical, `Defs.lean` copies the challenge, `lake build` | `feec-palomar` | no (builds every package) |
 
 Run from the root of the repository (as `lake exe` does) after `lake build`; the executables that
 import `Feec` declare `needs = ["Feec"]` (`feec-gate` and `feec-docnames` also `"FeecCheck"`), so
@@ -87,10 +87,10 @@ def mainDocNames : List String → IO UInt32
   | [] => do finish [← DocNames.run (← loadFeec (withChecks := true))]
   | _ => usage "lake exe feec-docnames"
 
-def mainPalomar : List String → IO UInt32
-  | [] => do finish [← Palomar.run]
-  | ["--write"] => do finish [← Palomar.run (write := true)]
-  | _ => usage "lake exe feec-palomar [--write]"
+def mainPalomar (args : List String) : IO UInt32 := do
+  unless args.all (fun a => a == "--write" || a == "--no-build") do
+    return ← usage "lake exe feec-palomar [--write] [--no-build]"
+  finish [← Palomar.run (write := args.contains "--write") (doBuild := !args.contains "--no-build")]
 
 def mainSnapshot : List String → IO UInt32
   | [out] => if out.startsWith "-" then usage "lake exe feec-snapshot OUT" else do

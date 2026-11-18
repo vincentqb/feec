@@ -55,8 +55,8 @@ universe u v w
 
 namespace FEEC
 
-/-! ### Hilbert complexes and the mixed problem -/
-
+/-! ### Hilbert complexes and families of subcomplexes -/
+-- palomar-shared: HilbertComplex
 /-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
 zero unless `j = i + 1`, with `R(d i j) ⊆ D(d j k)` and `d j k ∘ d i j = 0`. -/
 structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i, NormedAddCommGroup (W i)]
@@ -67,7 +67,69 @@ structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i
   closed : ∀ i j, (d i j).IsClosed
   mapsTo : ∀ i j k (x : (d i j).domain), (d i j x : W j) ∈ (d j k).domain
   d_comp_d : ∀ i j k (x : (d i j).domain), d j k ⟨_, mapsTo i j k x⟩ = 0
-
+namespace HilbertComplex
+variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex 𝕜 W} {κ : Type*}
+/-- The **graph norm** `‖x‖_V = (‖x‖² + ‖d x‖²)^½` on `D(d i j)`. -/
+def graphNorm (H : HilbertComplex 𝕜 W) (i j : ℤ) (x : (H.d i j).domain) : ℝ :=
+  √(‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)
+/-- A **subcomplex**: subspaces `Vⁱ ⊆ D(d i j)` with `d Vⁱ ⊆ Vʲ`. -/
+structure Subcomplex (H : HilbertComplex 𝕜 W) where
+  V : ∀ i, Submodule 𝕜 (W i)
+  le_domain : ∀ i j, V i ≤ (H.d i j).domain
+  mapsTo : ∀ i j (x : W i) (hx : x ∈ V i), (H.d i j ⟨x, le_domain i j hx⟩ : W j) ∈ V j
+/-- A **cochain projection** onto `S`: projections `πⁱ : D(dⁱ) → Sⁱ` of the domain complex
+commuting with `d`. -/
+structure Subcomplex.CochainProjection (S : H.Subcomplex) where
+  π : ∀ i, (H.d i (i + 1)).domain →ₗ[𝕜] S.V i
+  proj : ∀ i (x : (H.d i (i + 1)).domain), (x : W i) ∈ S.V i → (π i x : W i) = x
+  comm : ∀ i (x : (H.d i (i + 1)).domain),
+    H.d i (i + 1) ⟨π i x, S.le_domain i (i + 1) (π i x).2⟩ =
+      π (i + 1) ⟨H.d i (i + 1) x, H.mapsTo i (i + 1) (i + 1 + 1) x⟩
+/-- The distance `E(x) = inf_{v ∈ Vⁱ} ‖x - v‖_V` from `x ∈ D(d i j)` to `Vⁱ` in the graph norm. -/
+def Subcomplex.graphDist (S : H.Subcomplex) (i j : ℤ) (x : (H.d i j).domain) : ℝ :=
+  ⨅ v : S.V i, H.graphNorm i j (x - ⟨v, S.le_domain i j v.2⟩)
+/-- A **family of subcomplexes** of `H` along the filter `l` (the refinement `h → 0`):
+finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ` (no bound and no
+approximation property: these are hypotheses of the theorems). -/
+structure SubcomplexFamily (H : HilbertComplex 𝕜 W) (κ : Type*) where
+  l : Filter κ
+  V : κ → H.Subcomplex
+  [finiteDimensional : ∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
+  π : ∀ h, (V h).CochainProjection
+attribute [instance] SubcomplexFamily.finiteDimensional
+/-- The cochain projections of `F` are **bounded in the graph norm by `C`** in degree `i`,
+uniformly in `h`: `‖πₕ x‖_V ≤ C ‖x‖_V` on `D(d i (i + 1))`. -/
+def SubcomplexFamily.IsGraphBoundedBy (F : H.SubcomplexFamily κ) (i : ℤ) (C : ℝ) : Prop :=
+  ∀ (h : κ) (x : (H.d i (i + 1)).domain),
+    H.graphNorm i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).π i x).2⟩ ≤
+      C * H.graphNorm i (i + 1) x
+/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly in
+`h`: bounded by some `C`. -/
+def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∃ C : ℝ, F.IsGraphBoundedBy i C
+/-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
+`Vₕⁱ` in the graph norm tends to `0`. -/
+def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
+  ∀ x : (H.d i (i + 1)).domain, Tendsto (fun h => (F.V h).graphDist i (i + 1) x) F.l (𝓝 0)
+/-- **A Jackson estimate** for `F` ([AFW2010], §3.5): a mesh size `hₕ → 0` and, for every
+regularity index `s : ρ`, classes `Reg s i L` of `s`-regular forms in `Wⁱ` with bound `L`,
+approximated in `Vₕⁱ` at the order `hₕ^{ord s}`: some `v ∈ Vₕⁱ` has `‖x - v‖ ≤ B L hₕ^{ord s}`
+and `‖d (x - v)‖ ≤ B L hₕ^{ord s}`. -/
+structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) where
+  meshSize : κ → ℝ
+  meshSize_nonneg : ∀ h, 0 ≤ meshSize h
+  tendsto_meshSize : Tendsto meshSize F.l (𝓝 0)
+  /-- `Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L` -/
+  Reg : ρ → ∀ i, ℝ → W i → Prop
+  ord : ρ → ℝ
+  B : ρ → ℤ → ℝ
+  jackson : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
+    ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
+      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
+        B s i * (L * meshSize h ^ ord s)
+end HilbertComplex
+-- palomar-shared-end: HilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
 /-- The kernel of a closed operator is closed. -/
@@ -104,6 +166,31 @@ def IsMixedSolution (X : Submodule 𝕜 (MixedSpace d₀ d₁)) (f : E₁) (x : 
 end Mixed
 
 /-! ### Evolutions and time schemes -/
+-- palomar-shared: IsStrongSolution
+/-- `u` is a **strong solution** of `u' = A u` on `I ⊆ ℝ` for an operator given by its graph, a
+relation `A ⊆ X × X` (a `LinearPMap` through its `graph`): `u` is continuous on `I` and at every
+`t ∈ I` has, within `I`, a derivative `v` with `(u(t), v) ∈ A` (so `u(t)` lies in `D(A)`). -/
+def IsStrongSolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A : SetRel X X)
+    (I : Set ℝ) (u : ℝ → X) : Prop :=
+  ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A ∧ HasDerivWithinAt u v I t
+-- palomar-shared-end: IsStrongSolution
+-- palomar-shared: rationalScheme
+/-- `r = p/q` is **A-stable** ([HairerWanner1996], §IV.3): on the closed left half-plane `q` has
+no zero and `|r| ≤ 1` (a property of the pair `p`, `q`; for coprime `p`, `q`, of `r`). -/
+def IsAStable (p q : Polynomial ℝ) : Prop :=
+  ∀ z : ℂ, z.re ≤ 0 → Polynomial.aeval z q ≠ 0 ∧
+    ‖Polynomial.aeval z p / Polynomial.aeval z q‖ ≤ 1
+/-- `r = p/q` has **order `m`**: `r(z) - e^z = O(z^{m+1})` as `z → 0` (with `q(0) ≠ 0`, as for
+A-stable `p/q`, the quotient is the rational function near `0`). -/
+def HasOrder (p q : Polynomial ℝ) (m : ℕ) : Prop :=
+  (fun z : ℂ => Polynomial.aeval z p / Polynomial.aeval z q - Complex.exp z) =O[𝓝 0]
+    fun z => z ^ (m + 1)
+/-- **The rational scheme of a bounded operator**: `r(L) = p(L) q(L)⁻¹` for `r = p/q`. -/
+def rationalApply {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+    (p q : Polynomial ℝ) (L : E →L[𝕜] E) : E →L[𝕜] E :=
+  Polynomial.aeval L (p.map (algebraMap ℝ 𝕜)) *
+    Ring.inverse (Polynomial.aeval L (q.map (algebraMap ℝ 𝕜)))
+-- palomar-shared-end: rationalScheme
 
 section Evolution
 variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {κ : Type*}
@@ -116,35 +203,7 @@ def sq (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
 def IsReducing (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : Prop :=
   ∀ x : A.domain, ∃ hx : K.starProjection (x : E) ∈ A.domain, A ⟨_, hx⟩ = K.starProjection (A x)
 
-/-- A **rational time scheme** `r = n/d` ([HairerWanner1996], §IV.3): real polynomials with
-`deg n ≤ deg d` and `d(z) ≠ 0` for `re z ≤ 0`; a step is `wₙ₊₁ = r(τ B) wₙ` (the θ-scheme:
-`n = 1 + (1 - θ) X`, `d = 1 - θ X`, A-stable for `θ ≥ 1/2`). -/
-structure RationalScheme where
-  num : Polynomial ℝ
-  den : Polynomial ℝ
-  natDegree_num_le : num.natDegree ≤ den.natDegree
-  aeval_den_ne_zero : ∀ z : ℂ, z.re ≤ 0 → Polynomial.aeval z den ≠ 0
-
-/-- **A-stability**: `|r(iy)| ≤ 1` for every real `y`; with no poles in `re z ≤ 0` and
-`deg n ≤ deg d`, equivalent to `|r(z)| ≤ 1` on `re z ≤ 0` by the maximum principle. -/
-def RationalScheme.IsAStable (r : RationalScheme) : Prop :=
-  ∀ y : ℝ, ‖Polynomial.aeval ((y : ℂ) * Complex.I) r.num /
-    Polynomial.aeval ((y : ℂ) * Complex.I) r.den‖ ≤ 1
-/-- **Order `p`**: `r(z) - e^z = O(z^{p+1})` at `0`, i.e. `X^{p+1}` divides `n - d Tₚ`,
-`Tₚ = ∑_{j ≤ p} Xʲ/j!`. -/
-def RationalScheme.HasOrder (r : RationalScheme) (p : ℕ) : Prop :=
-  Polynomial.X ^ (p + 1) ∣ r.num - r.den * ∑ j ∈ Finset.range (p + 1),
-    Polynomial.C (1 / (j.factorial : ℝ)) * Polynomial.X ^ j
-/-- `r(B) = n(B) d(B)⁻¹` for a bounded operator `B` (`d(B)` is invertible for dissipative `B`). -/
-def RationalScheme.apply (r : RationalScheme) {X : Type*} [NormedAddCommGroup X]
-    [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X) : X →L[𝕜] X :=
-  Polynomial.aeval B (r.num.map (algebraMap ℝ 𝕜)) *
-    Ring.inverse (Polynomial.aeval B (r.den.map (algebraMap ℝ 𝕜)))
-
 variable [NormedSpace ℝ E]
-/-- `u` is a **strong solution** of `u' = A u` on `I`. -/
-def IsStrongSolution (A : E →ₗ.[𝕜] E) (I : Set ℝ) (u : ℝ → E) : Prop :=
-  ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A.graph ∧ HasDerivWithinAt u v I t
 /-- The semidiscrete evolution `exp(t B)`. -/
 def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X) (t : ℝ) :
     X →L[𝕜] X := NormedSpace.exp ((t : 𝕜) • B)
@@ -152,28 +211,28 @@ def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : 
 /-- **The conclusions of the FEEC theorem for an evolution** `u' = A u` approximated by
 `uₕ' = Bₕ uₕ` on spaces `Xₕ` read in `E` by `ιₕ`, exact evolution `S`: `S t x` is the unique strong
 solution from `x ∈ D(A)` (dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; for `ιₕ vₕ → x`, `ιₕ exp(t Bₕ) vₕ →
-S t x` uniformly on `[0, T]` and `ιₕ r(τₕ Bₕ)ⁿ vₕ → S(nτₕ) x` (`r` A-stable of order `p ≥ 1`),
-with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` (`K` independent of `h`, `τ`, `n`, `w`); a closed `K`
-reduces `A` iff `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`. -/
+S t x` uniformly on `[0, T]` and `ιₕ r(τₕ Bₕ)ⁿ vₕ → S(nτₕ) x` (`r = P/Q` A-stable of order
+`p ≥ 1`), with temporal error `K nτ τᵖ ‖Bₕ^{p+1} w‖` (`K` independent of `h`, `τ`, `n`, `w`); a
+closed `K` reduces `A` iff `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`. -/
 structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → Type*)
     [∀ h, NormedAddCommGroup (X h)] [∀ h, InnerProductSpace 𝕜 (X h)] (ι : ∀ h, X h →L[𝕜] E)
     (B : ∀ h, X h →L[𝕜] X h) (S : ℝ → E →L[𝕜] E) : Prop where
   dense : Dense (A.domain : Set E)
-  solution (x : E) (hx : x ∈ A.domain) (T : ℝ) : IsStrongSolution A (Icc 0 T) fun t => S t x
+  solution (x : E) (hx : x ∈ A.domain) (T : ℝ) : IsStrongSolution A.graph (Icc 0 T) fun t => S t x
   unique (x : E) (hx : x ∈ A.domain) (T : ℝ) (u : ℝ → E) (hu0 : u 0 = x)
-    (hu : IsStrongSolution A (Icc 0 T) u) : EqOn u (fun t => S t x) (Icc 0 T)
+    (hu : IsStrongSolution A.graph (Icc 0 T) u) : EqOn u (fun t => S t x) (Icc 0 T)
   initial (x : E) : S 0 x = x
   contraction (x : E) {t : ℝ} (ht : 0 ≤ t) : ‖S t x‖ ≤ ‖x‖
   semidiscrete (x : E) (v : ∀ h, X h) (hv : Tendsto (fun h => ι h (v h)) l (𝓝 x)) (T : ℝ) :
     TendstoUniformlyOn (fun h (t : ℝ) => ι h (semiflow (B h) t (v h))) (fun t => S t x) l (Icc 0 T)
-  rational (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) (hp0 : 0 < p)
+  rational (P Q : Polynomial ℝ) (hr : IsAStable P Q) {p : ℕ} (hp : HasOrder P Q p) (hp0 : 0 < p)
     (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (x : E) (v : ∀ h, X h)
     (hv : Tendsto (fun h => ι h (v h)) l (𝓝 x)) (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
     ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
-      ‖S (n * τ h) x - ι h ((r.apply ((τ h : 𝕜) • B h) ^ n) (v h))‖ < ε
-  rational_temporal (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p) :
+      ‖S (n * τ h) x - ι h ((rationalApply P Q ((τ h : 𝕜) • B h) ^ n) (v h))‖ < ε
+  rational_temporal (P Q : Polynomial ℝ) (hr : IsAStable P Q) {p : ℕ} (hp : HasOrder P Q p) :
     ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
-      ‖semiflow (B h) (n * τ) w - (r.apply ((τ : 𝕜) • B h) ^ n) w‖ ≤
+      ‖semiflow (B h) (n * τ) w - (rationalApply P Q ((τ : 𝕜) • B h) ^ n) w‖ ≤
         K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
   reducing_iff (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : IsReducing A K ↔
     (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ
@@ -184,34 +243,8 @@ end Evolution
 abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
 
 namespace HilbertComplex
-
-/-! ### Subcomplexes, cohomology and harmonic forms -/
-
+/-! ### Cohomology and harmonic forms -/
 variable (H : HilbertComplex 𝕜 W)
-/-- The **graph norm** `‖x‖_V = (‖x‖² + ‖d x‖²)^½` on `D(d i j)`. -/
-def graphNorm (i j : ℤ) (x : (H.d i j).domain) : ℝ := √(‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)
-/-- A **subcomplex**: subspaces `Vⁱ ⊆ D(d i j)` with `d Vⁱ ⊆ Vʲ`. -/
-structure Subcomplex where
-  V : ∀ i, Submodule 𝕜 (W i)
-  le_domain : ∀ i j, V i ≤ (H.d i j).domain
-  mapsTo : ∀ i j (x : W i) (hx : x ∈ V i), (H.d i j ⟨x, le_domain i j hx⟩ : W j) ∈ V j
-/-- A **cochain projection** onto `S`: projections `πⁱ : D(dⁱ) → Sⁱ` of the domain complex
-commuting with `d`. -/
-structure Subcomplex.CochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex) where
-  π : ∀ i, (H.d i (i + 1)).domain →ₗ[𝕜] S.V i
-  proj : ∀ i (x : (H.d i (i + 1)).domain), (x : W i) ∈ S.V i → (π i x : W i) = x
-  comm : ∀ i (x : (H.d i (i + 1)).domain),
-    H.d i (i + 1) ⟨π i x, S.le_domain i (i + 1) (π i x).2⟩ =
-      π (i + 1) ⟨H.d i (i + 1) x, H.mapsTo i (i + 1) (i + 1 + 1) x⟩
-/-- A **family of subcomplexes** of `H` along the filter `l` (the refinement `h → 0`):
-finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ` (no bound, no approximation). -/
-structure SubcomplexFamily (κ : Type*) where
-  l : Filter κ
-  V : κ → H.Subcomplex
-  [finiteDimensional : ∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
-  π : ∀ h, (V h).CochainProjection
-attribute [instance] SubcomplexFamily.finiteDimensional
-
 /-- The cycles `𝔷ⁱ = N(d i (i + 1))`. -/
 def cycles (i : ℤ) : Submodule 𝕜 (W i) := (H.d i (i + 1)).ker
 /-- The boundaries `𝔅ⁱ = R(d (i - 1) i)`. -/
@@ -265,10 +298,6 @@ def cohomologyIncl (i : ℤ) : S.cohomology i →ₗ[𝕜] H.cohomology i :=
 /-- The Galerkin space `Vʲ⁻¹ × Vʲ × ℌₕʲ` of the discrete mixed problem in degree `j`. -/
 def mixedSpace (j : ℤ) : Submodule 𝕜 (H.Mixed j) :=
   galerkin _ _ (S.V (j - 1)) (S.V j) (S.harmonic j)
-/-- The distance `E(x) = inf_{v ∈ Vⁱ} ‖x - v‖_V` from `x ∈ D(d i j)` to `Vⁱ` in the graph norm. -/
-def graphDist (i j : ℤ) (x : (H.d i j).domain) : ℝ :=
-  ⨅ v : S.V i, H.graphNorm i j (x - ⟨v, S.le_domain i j v.2⟩)
-
 /-- The map `Hⁱ → Hⁱ(V)`, `[z] ↦ [π z]`, induced by the cochain projection. -/
 def CochainProjection.cohomologyMap {S : H.Subcomplex} (P : S.CochainProjection) (i : ℤ) :
     H.cohomology i →ₗ[𝕜] S.cohomology i :=
@@ -296,17 +325,7 @@ def CochainProjection.harmonicGap {S : H.Subcomplex} (P : S.CochainProjection) (
 end Subcomplex
 
 /-! ### The static theory -/
-
 variable {H} {κ : Type*}
-/-- The cochain projections of `F` are **bounded in the graph norm by `C`** in degree `i`,
-uniformly in `h`: `‖πₕ x‖_V ≤ C ‖x‖_V` on `D(d i (i + 1))`. -/
-def SubcomplexFamily.IsGraphBoundedBy (F : H.SubcomplexFamily κ) (i : ℤ) (C : ℝ) : Prop :=
-  ∀ (h : κ) (x : (H.d i (i + 1)).domain),
-    H.graphNorm i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).π i x).2⟩ ≤
-      C * H.graphNorm i (i + 1) x
-/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly. -/
-def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
-  ∃ C : ℝ, F.IsGraphBoundedBy i C
 variable (H) in
 /-- The **Poincaré inequality** `‖v‖_V ≤ c ‖d v‖` on `Vⁱ ⊥ 𝔷ⁱ` with constant `c`; some `c` exists
 iff the range `𝔅ⁱ⁺¹` of `dⁱ` is closed. -/
@@ -322,11 +341,6 @@ def Subcomplex.PoincareBy (S : H.Subcomplex) (i : ℤ) (c : ℝ) : Prop :=
 `c` (on cycles the graph norm is the norm of `W`). -/
 def Subcomplex.HarmonicBoundBy (S : H.Subcomplex) (i : ℤ) (c : ℝ) : Prop :=
   ∀ q ∈ S.harmonic i, ‖q‖ ≤ c * ‖(H.harmonic i).starProjection q‖
-/-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
-`Vₕⁱ` in the graph norm tends to `0`. -/
-def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
-  ∀ x : (H.d i (i + 1)).domain, Tendsto (fun h => (F.V h).graphDist i (i + 1) x) F.l (𝓝 0)
-
 /-- **The conclusions of the static FEEC theorem** in degree `j` for `F`, with the constant `C`
 (independent of `h`) in every bound. -/
 structure SubcomplexFamily.StaticVerdict (F : H.SubcomplexFamily κ) (j : ℤ) (C : ℝ) : Prop where
@@ -375,7 +389,6 @@ structure SubcomplexFamily.StaticVerdict (F : H.SubcomplexFamily κ) (j : ℤ) (
     Tendsto (fun h => H.mixedNorm (x - xh h)) F.l (𝓝 0)
 
 /-! ### Windows -/
-
 section Window
 variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
 /-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
@@ -442,21 +455,6 @@ def ApproximatesOn : Prop :=
     ∀ i : Fin m, (i : ℕ) + 1 = m → ∀ x : W (a + (i : ℕ)),
       Tendsto (fun h => Metric.infDist x ((F.V h).V (a + (i : ℕ)))) F.l (𝓝 0)
 
-/-- **A Jackson estimate** for `F` ([AFW2010], §3.5): a mesh size `hₕ → 0` and classes `Reg s i L`
-of `s`-regular forms in `Wⁱ` with bound `L` (`s : ρ`) approximated at the order `hₕ^{ord s}`: some
-`v ∈ Vₕⁱ` has `‖x - v‖, ‖d (x - v)‖ ≤ B L hₕ^{ord s}`. -/
-structure Jackson (ρ : Type*) where
-  meshSize : κ → ℝ
-  meshSize_nonneg : ∀ h, 0 ≤ meshSize h
-  tendsto_meshSize : Tendsto meshSize F.l (𝓝 0)
-  /-- `Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L` -/
-  Reg : ρ → ∀ i, ℝ → W i → Prop
-  ord : ρ → ℝ
-  B : ρ → ℤ → ℝ
-  jackson : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
-    ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
-      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
-        B s i * (L * meshSize h ^ ord s)
 /-- The mixed method of `F` in degree `j` **has the rate `r`** on the regularity classes `Reg`:
 for some `C`, `‖x - xₕ‖ ≤ C L r(h)` when `σ`, `u`, `p` and `P_𝔅 u` are regular with bound `L`. -/
 def HasRate (j : ℤ) (Reg : ∀ i, ℝ → W i → Prop) (r : κ → ℝ) : Prop :=
@@ -525,20 +523,20 @@ structure Verdict : Prop where
 
 /-- **The rates of a Jackson estimate** `J` (constants independent of `h`, `τ`, `n`, `L`, the data):
 the mixed method has the rate `L hᵒʳᵈ⁽ˢ⁾` on `s`-regular data ([AFW2010], Thm 3.9); on a window,
-`r(τ Lₕ)ⁿ v` (`r` A-stable of order `p`) has the error `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ +
+`r(τ Lₕ)ⁿ v` (`r = P/Q` A-stable of order `p`) has the error `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ +
 K nτ τᵖ ‖Lₕ^{p+1} v‖` for `s`-regular `S(t) x`, `S(t) L x` ([QuennevilleBelair2015], Thm 4.14). -/
 structure Rated {ρ : Type*} (J : F.Jackson ρ) : Prop where
   static (j : ℤ) (hπ : F.IsGraphBounded (j - 1)) (hπ' : F.IsGraphBounded j)
     (hj : IsClosed (H.boundaries j : Set (W j)))
     (hj' : IsClosed (H.boundaries (j + 1) : Set (W (j + 1)))) (s : ρ) :
     F.HasRate j (J.Reg s) fun h => J.meshSize h ^ J.ord s
-  wave (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) (r : RationalScheme) (hr : r.IsAStable)
-    {p : ℕ} (hp : r.HasOrder p) (s : ρ) : ∃ S, F.WaveVerdict a m S ∧ ∃ C K : ℝ,
+  wave (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) (P Q : Polynomial ℝ) (hr : IsAStable P Q)
+    {p : ℕ} (hp : HasOrder P Q p) (s : ρ) : ∃ S, F.WaveVerdict a m S ∧ ∃ C K : ℝ,
       ∀ (x : Total W a m) (hx : x ∈ (H.wave a m).domain),
       H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain → ∀ {L : ℝ}, 0 ≤ L → ∀ (h : κ) {τ : ℝ}, 0 ≤ τ →
       ∀ (n : ℕ) (v : F.Xh a m h), (∀ t ∈ Icc 0 (n * τ), ∀ i : Fin m,
         J.Reg s (a + (i : ℕ)) L (S t x i) ∧ J.Reg s (a + (i : ℕ)) L (S t (H.wave a m ⟨x, hx⟩) i)) →
-      ‖S (n * τ) x - ((r.apply ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
+      ‖S (n * τ) x - ((rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
         ‖(v : Total W a m) - x‖ + C * (1 + n * τ) * L * J.meshSize h ^ J.ord s +
           K * (n * τ) * τ ^ p * ‖(F.Lh a m h ^ (p + 1)) v‖
 
@@ -735,51 +733,54 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
   sorry
 
 /-! ### A finite element instance: Whitney forms on the cube, in the `L²` de Rham complex -/
-
-section Cube
-variable {n : ℕ}
-/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s` of `Fin n` (`dx_s`). -/
+-- palomar-shared: forms
+/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
+`s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
 abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
-/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, `ℓ²` sum. -/
-abbrev L2Form (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
+/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
+abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
   PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
-/-- A **form field** on `ℝⁿ`: at each point, a coefficient for every subset `s` of `Fin n`. -/
+/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
+`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
 abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
 /-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn (j : Fin n) (s : Finset (Fin n)) : ℝ := (-1) ^ (s.filter fun l => l < j).card
-/-- The partial derivative `∂_j f(x)`. -/
-def partialDeriv (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
+def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
+  (-1) ^ (s.filter fun l => l < j).card
+/-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
+def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   fderiv ℝ f x (Pi.single j 1)
 /-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
-def extDeriv (w : FormField n) : FormField n :=
+def extDeriv {n : ℕ} (w : FormField n) : FormField n :=
   fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
 /-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, formal adjoint of `d`. -/
-def codiff (ψ : FormField n) : FormField n :=
+def codiff {n : ℕ} (ψ : FormField n) : FormField n :=
   fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
+open scoped ContDiff in
 /-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
-def IsTestFn (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
+def IsTestFn {n : ℕ} (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
   ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
 /-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`: the adjoint of the closure of
 the codifferential on test forms (the span of the pairs `(ψ, dᵗψ)`), so `du = w` iff
 `⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`; its domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
-def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
   (Submodule.span ℝ {p : L2Form Ω (k + 1) × L2Form Ω k | ∃ ψ : FormField n,
     (∀ s, IsTestFn Ω fun x => ψ x s) ∧
     (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
     ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
     ).topologicalClosure.toLinearPMap†
-/-- `x ∈ L²(Ω; Λʲ)` is (almost everywhere) a `C^{s+2}` form `w` of degree `j` whose
-`(s+1)`-st derivative and that of `dw` are bounded by `L` on `cl Ω` (true in negative degrees):
-the regularity class of the order `h^{s+1}`. -/
-def IsCsForm (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+-- palomar-shared-end: forms
+-- palomar-shared: IsCsForm
+/-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` with `‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L`
+on `cl Ω` (true in negative degrees): the regularity class of the order `h^{s+1}`. -/
+def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
   j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
     (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
-/-- The cube `(0, ½)ⁿ`. -/
-def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
-
+-- palomar-shared-end: IsCsForm
 /-- **Whitney forms on the cube meet the hypotheses of `FEEC.feec`** ([AFW2010], §5.2, §5.5;
 [ChristiansenWinther2008]; [Freudenthal1942]): `HΛ((0, ½)ⁿ)` has closed ranges; the Whitney forms
 of the Freudenthal meshes (`h = 1 / (2 (N + 1))`, a.e. affine on every Kuhn simplex) have uniformly
@@ -796,8 +797,6 @@ theorem feec_cube (n : ℕ) [NeZero n] :
       (∀ i, IsClosed (H.boundaries i : Set (L2Form (cube n) i))) ∧
       ∀ j, F.HasRate j (IsCsForm (cube n) 0) fun N => 1 / (N + 1) := by
   sorry
-
-end Cube
 
 /-! ### BGG complexes ([ArnoldHu2021])
 

@@ -61,111 +61,94 @@ namespace FEEC
 
 variable {n : ℕ}
 
-/-- The index set of the coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets
-`s = {s₁ < ⋯ < s_k}` of `Fin n`, `s` indexing `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (empty unless
-`0 ≤ k ≤ n`). -/
+-- palomar-shared: forms
+/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
+`s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
 abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
-
-/-- `L²(Ω; Λᵏ)`: the square-integrable `k`-forms on `Ω ⊆ ℝⁿ` (Lebesgue measure), the `ℓ²` sum
-of a copy of `L²(Ω)` for each coefficient. -/
-abbrev L2Form (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
+/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
+abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
   PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
-
-/-- A **form field** on `ℝⁿ`: at each point, a coefficient for every subset `s` of `Fin n` (the
-coefficient of `dx_s`); it is a `k`-form when the coefficients off the `k`-subsets vanish. -/
+/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
+`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
 abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
-
 /-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn (j : Fin n) (s : Finset (Fin n)) : ℝ := (-1) ^ (s.filter fun l => l < j).card
-
-/-- The partial derivative `∂_j f(x)`. -/
-def partialDeriv (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
+def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
+  (-1) ^ (s.filter fun l => l < j).card
+/-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
+def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   fderiv ℝ f x (Pi.single j 1)
-
 /-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
-def extDeriv (w : FormField n) : FormField n :=
+def extDeriv {n : ℕ} (w : FormField n) : FormField n :=
   fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
-
-/-- The **formal adjoint** of `d`, the codifferential `δ`,
-`(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`: `∫ ⟨dφ, ψ⟩ = ∫ ⟨φ, dᵗψ⟩` for test forms. -/
-def codiff (ψ : FormField n) : FormField n :=
+/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, formal adjoint of `d`. -/
+def codiff {n : ℕ} (ψ : FormField n) : FormField n :=
   fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
-
+open scoped ContDiff in
 /-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
-def IsTestFn (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
+def IsTestFn {n : ℕ} (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
   ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
-
-/-- The graph `{(φ, dφ)}` of the exterior derivative on the test `k`-forms `φ ∈ C_c^∞(Ω; Λᵏ)`
-(every coefficient a test function), as a subspace of `L²(Ω; Λᵏ) × L²(Ω; Λᵏ⁺¹)`. -/
-def testGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω k × L2Form Ω (k + 1)) :=
-  Submodule.span ℝ {p | ∃ φ : FormField n, (∀ s, IsTestFn Ω fun x => φ x s) ∧
-    (∀ s : FormIdx n k, ⇑(p.1 s) =ᵐ[volume.restrict Ω] fun x => φ x s.1) ∧
-    ∀ t : FormIdx n (k + 1), ⇑(p.2 t) =ᵐ[volume.restrict Ω] fun x => extDeriv φ x t.1}
-
-/-- The graph `{(ψ, dᵗψ)}` of the formal adjoint on the test `(k + 1)`-forms, as a subspace of
-`L²(Ω; Λᵏ⁺¹) × L²(Ω; Λᵏ)`. -/
-def codiffGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω (k + 1) × L2Form Ω k) :=
-  Submodule.span ℝ {p | ∃ ψ : FormField n, (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`: the adjoint of the closure of
+the codifferential on test forms (the span of the pairs `(ψ, dᵗψ)`), so `du = w` iff
+`⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`; its domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
+def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (Submodule.span ℝ {p : L2Form Ω (k + 1) × L2Form Ω k | ∃ ψ : FormField n,
+    (∀ s, IsTestFn Ω fun x => ψ x s) ∧
     (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
     ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
-
-/-- The **minimal exterior derivative** `d̊ : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the closure of `d` on
-test forms (the closure of the graph is a graph: `d` is closable, its formal adjoint being
-densely defined): its domain is `H̊Λᵏ(Ω)` (for Lipschitz `Ω`, the forms of `HΛᵏ(Ω)` with vanishing
-tangential trace) ([AFW2010], §4; [Arnold2018], Ch. 6). -/
-def dMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
-  (testGraph Ω k).topologicalClosure.toLinearPMap
-
-/-- The closure of the formal adjoint `dᵗ` on test `(k + 1)`-forms. -/
-def codiffMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω (k + 1) →ₗ.[ℝ] L2Form Ω k :=
-  (codiffGraph Ω k).topologicalClosure.toLinearPMap
-
-/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the adjoint of the formal
-adjoint on test forms: `u ∈ D(d)` iff some `w ∈ L²(Ω; Λᵏ⁺¹)` has `⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every
-test `(k + 1)`-form `ψ`, and then `du = w`. Its domain is `HΛᵏ(Ω)` ([AFW2010], §4;
-[Arnold2018], Ch. 6). -/
-def dMax (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
-  (codiffMin Ω k)†
+    ).topologicalClosure.toLinearPMap†
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+-- palomar-shared-end: forms
+-- palomar-shared: dMin
+/-- The **minimal exterior derivative** `d̊ : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`, the closure of `d` on test
+forms, that is of the span of the pairs `(φ, dφ)`, `φ` a test `k`-form (the closure is a graph:
+`d` is closable, its formal adjoint being densely defined); its domain is `H̊Λᵏ(Ω)` (for Lipschitz
+`Ω`, the forms of `HΛᵏ(Ω)` with vanishing tangential trace) ([AFW2010], §4). -/
+def dMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (Submodule.span ℝ {p : L2Form Ω k × L2Form Ω (k + 1) | ∃ φ : FormField n,
+    (∀ s, IsTestFn Ω fun x => φ x s) ∧
+    (∀ s : FormIdx n k, ⇑(p.1 s) =ᵐ[volume.restrict Ω] fun x => φ x s.1) ∧
+    ∀ t : FormIdx n (k + 1), ⇑(p.2 t) =ᵐ[volume.restrict Ω] fun x => extDeriv φ x t.1}
+    ).topologicalClosure.toLinearPMap
+-- palomar-shared-end: dMin
 
 /-! ### Polynomial differential forms ([AFW2006], §3) -/
 
-/-- **Polynomial differential forms** on `ℝⁿ` in coordinates: a polynomial coefficient `ω_s` for
+-- palomar-shared: PolyForm
+/-- **Polynomial differential forms** on `Kⁿ` in coordinates: a polynomial coefficient `ω_s` for
 every subset `s` of `Fin n`, the form `Σ_s ω_s dx_s`. -/
-abbrev PolyForm (n : ℕ) : Type := Finset (Fin n) → MvPolynomial (Fin n) ℝ
-
+abbrev PolyForm (K : Type*) [Field K] (n : ℕ) : Type _ := Finset (Fin n) → MvPolynomial (Fin n) K
 /-- `P_rΛᵏ`: the polynomial `k`-forms (`ω_s = 0` unless `#s = k`) with coefficients of degree at
 most `r`. -/
-def polyForm (r k : ℕ) : Submodule ℝ (PolyForm n) :=
+def polyForm (K : Type*) [Field K] (n r k : ℕ) : Submodule K (PolyForm K n) :=
   Submodule.pi Set.univ fun s =>
-    if s.card = k then MvPolynomial.restrictTotalDegree (Fin n) ℝ r else ⊥
-
+    if s.card = k then MvPolynomial.restrictTotalDegree (Fin n) K r else ⊥
 /-- `H_rΛᵏ`: the polynomial `k`-forms with coefficients homogeneous of degree `r`. -/
-def homForm (r k : ℕ) : Submodule ℝ (PolyForm n) :=
+def homForm (K : Type*) [Field K] (n r k : ℕ) : Submodule K (PolyForm K n) :=
   Submodule.pi Set.univ fun s =>
-    if s.card = k then MvPolynomial.homogeneousSubmodule (Fin n) ℝ r else ⊥
-
+    if s.card = k then MvPolynomial.homogeneousSubmodule (Fin n) K r else ⊥
 /-- The **Koszul differential** `κ`, the contraction with the position vector field `x`:
 `(κω)_s = Σ_{j ∉ s} ε(j, s) x_j ω_{s ∪ j}`. -/
-def koszul : PolyForm n →ₗ[ℝ] PolyForm n :=
+def koszul (K : Type*) [Field K] (n : ℕ) : PolyForm K n →ₗ[K] PolyForm K n :=
   LinearMap.pi fun s => ∑ j ∈ sᶜ,
-    sgn j s • (LinearMap.mulLeft ℝ (MvPolynomial.X j) ∘ₗ LinearMap.proj (insert j s))
-
+    (sgn j s : K) • (LinearMap.mulLeft K (MvPolynomial.X j) ∘ₗ LinearMap.proj (insert j s))
 /-- `P_r⁻Λᵏ = P_{r-1}Λᵏ + κ H_{r-1}Λ^{k+1}`, the trimmed polynomial `k`-forms (`r ≥ 1`), and
 `P_0⁻Λᵏ = 0` ([AFW2006], §3.3). -/
-def polyFormMinus : ℕ → ℕ → Submodule ℝ (PolyForm n)
+def polyFormMinus (K : Type*) [Field K] (n : ℕ) : ℕ → ℕ → Submodule K (PolyForm K n)
   | 0, _ => ⊥
-  | r + 1, k => polyForm r k ⊔ (homForm r (k + 1)).map koszul
-
-/-- The **evaluation** of a polynomial form: the form field `x ↦ (ω_s(x))_s`. -/
-def evalForm : PolyForm n →ₗ[ℝ] FormField n :=
+  | r + 1, k => polyForm K n r k ⊔ (homForm K n r (k + 1)).map (koszul K n)
+/-- The **evaluation** of a real polynomial form: the form field `x ↦ (ω_s(x))_s`. -/
+def evalForm {n : ℕ} : PolyForm ℝ n →ₗ[ℝ] FormField n :=
   LinearMap.pi fun x => LinearMap.pi fun s =>
     (MvPolynomial.aeval x).toLinearMap ∘ₗ LinearMap.proj s
-
+-- palomar-shared-end: PolyForm
+-- palomar-shared: PolySeq
 /-- **An admissible sequence** of polynomial families ([AFW2006], §5; [AFW2010], §5.2): in every
 form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
 `r_k ≥ 1`, followed in degree `k + 1` by `P_{r_k}⁻Λᵏ⁺¹` or by `P_{r_k - 1}Λᵏ⁺¹`. (The piecewise
 constants `P_0Λⁿ` are represented by the equal space `P_1⁻Λⁿ`; the spaces of degree `k > n`
-are `0`.) -/
+are `0`. A full space `P_0Λᵏ` with `k < n` is excluded: it is followed by `P_0⁻Λᵏ⁺¹ = 0`, and
+such a family could not approximate `HΛᵏ⁺¹(Ω)`.) -/
 structure PolySeq where
   /-- `P_{r_k}Λᵏ` (`true`) or `P_{r_k}⁻Λᵏ` (`false`) in degree `k` -/
   full : ℕ → Bool
@@ -174,17 +157,27 @@ structure PolySeq where
   one_le_deg : ∀ k, 1 ≤ deg k
   transition : ∀ k, (full (k + 1) = false ∧ deg (k + 1) = deg k) ∨
     (full (k + 1) = true ∧ deg (k + 1) + 1 = deg k)
-
 /-- The space `P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` of form fields on `ℝⁿ` of the sequence in degree `k`. -/
 def PolySeq.space (S : PolySeq) (n k : ℕ) : Submodule ℝ (FormField n) :=
-  (if S.full k then polyForm (n := n) (S.deg k) k else polyFormMinus (S.deg k) k).map evalForm
+  (if S.full k then polyForm ℝ n (S.deg k) k else polyFormMinus ℝ n (S.deg k) k).map evalForm
+-- palomar-shared-end: PolySeq
+-- palomar-shared: topSeq
+/-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³ → ⋯` (in `ℝ³` the Lagrange, Nédélec
+edge and Raviart–Thomas face elements and the piecewise constants; [Whitney1957], [AFW2006],
+§3–4). -/
+def topSeq : PolySeq where
+  full k := k == 0
+  deg _ := 1
+  one_le_deg _ := le_rfl
+  transition _ := Or.inl ⟨rfl, rfl⟩
+-- palomar-shared-end: topSeq
 
 /-! ### Simplicial meshes -/
 
+-- palomar-shared: SimplicialMesh
 /-- The vertex set `{v₀, …, v_k}` of a simplex. -/
-def vertexSet {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : Finset (Fin n → ℝ) :=
+def vertexSet {n k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : Finset (Fin n → ℝ) :=
   Finset.univ.image T.points
-
 /-- A **conforming simplicial mesh** of `closure domain ⊆ ℝⁿ`: a finite set of `n`-simplices
 whose closed simplices cover `closure domain`, have pairwise disjoint interiors, and meet face to
 face (the intersection of two closed simplices is the convex hull of their common vertices). -/
@@ -200,61 +193,55 @@ structure SimplicialMesh (n : ℕ) where
   inter_closedInterior : ∀ T ∈ simplices, ∀ T' ∈ simplices,
     T.closedInterior ∩ T'.closedInterior =
       convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
-
+/-- The **boundary facets** of the mesh: the facets (sets of `n` vertices of a simplex) of exactly
+one of its simplices. -/
+def SimplicialMesh.boundaryFacets {n : ℕ} (M : SimplicialMesh n) : Set (Finset (Fin n → ℝ)) :=
+  {F | F.card = n ∧ ∃! T, T ∈ M.simplices ∧ F ⊆ vertexSet T}
 /-- `h_T`: the diameter of the closed simplex `T`. -/
-def diam {k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : ℝ := Metric.diam T.closedInterior
-
+def diam {n k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : ℝ := Metric.diam T.closedInterior
 /-- The **mesh size** `h = max_T h_T`. -/
-def meshSize (M : SimplicialMesh n) : ℝ :=
+def meshSize {n : ℕ} (M : SimplicialMesh n) : ℝ :=
   ⨆ T : M.simplices, diam (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-
 /-- The mesh is **shape regular** with constant `σ` ([Ciarlet2002], §3.1): every simplex `T`
 contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T` (the
 largest radius of a ball in `T`). Balls and `h_T` are those of the sup norm (Conventions). -/
-def IsShapeRegular (M : SimplicialMesh n) (σ : ℝ) : Prop :=
+def IsShapeRegular {n : ℕ} (M : SimplicialMesh n) (σ : ℝ) : Prop :=
   ∀ T ∈ M.simplices, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ
-
 /-- The mesh is **quasi-uniform** with constant `q`: `q h ≤ h_T` for every simplex. -/
-def IsQuasiUniform (M : SimplicialMesh n) (q : ℝ) : Prop :=
+def IsQuasiUniform {n : ℕ} (M : SimplicialMesh n) (q : ℝ) : Prop :=
   ∀ T ∈ M.simplices, q * meshSize M ≤ diam T
-
 /-- `M_N` is a **shape-regular, quasi-uniform family of meshes of `Ω`** with mesh size `h_N → 0`:
 meshes of `Ω`, shape regular and quasi-uniform with constants independent of `N`. -/
-def IsMeshFamily (Ω : Set (Fin n → ℝ)) (M : ℕ → SimplicialMesh n) : Prop :=
+def IsMeshFamily {n : ℕ} (Ω : Set (Fin n → ℝ)) (M : ℕ → SimplicialMesh n) : Prop :=
   (∀ N, (M N).domain = Ω) ∧
     (∃ σ q : ℝ, 0 < q ∧ ∀ N, IsShapeRegular (M N) σ ∧ IsQuasiUniform (M N) q) ∧
     (∀ N, 0 < meshSize (M N)) ∧ Tendsto (fun N => meshSize (M N)) atTop (𝓝 0)
-
-/-- The cube `(0, ½)ⁿ`. -/
-def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
-
-/-- `𝒯` are **Freudenthal meshes** of the cube ([Freudenthal1942]): every simplex of `𝒯 N` is a
-Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`, `z ∈ {0, …, N}ⁿ`, `σ ∈ 𝔖ₙ`, with vertices
-`v_j = h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`, `j = 0, …, n` (a mesh of `(0, ½)ⁿ` of such
+/-- `𝒯` are **Freudenthal meshes** of the cube `(0, ½)ⁿ` ([Freudenthal1942]): every simplex of
+`𝒯 N` is a Kuhn simplex `h (z + K_σ)`, `h = 1 / (2 (N + 1))`, `z ∈ {0, …, N}ⁿ`, `σ ∈ 𝔖ₙ`, with
+vertices `v_j = h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`, `j = 0, …, n` (a mesh of `(0, ½)ⁿ` of such
 simplices consists of all of them). -/
-def IsFreudenthal (𝒯 : ℕ → SimplicialMesh n) : Prop :=
+def IsFreudenthal {n : ℕ} (𝒯 : ℕ → SimplicialMesh n) : Prop :=
   ∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
     T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
+-- palomar-shared-end: SimplicialMesh
 
 /-! ### The finite element spaces -/
 
+-- palomar-shared: femSpace
 /-- The value `α(v₁, …, v_k) = Σ_{#s = k} α_s det (v_l(s_i))_{i,l}` of the `k`-covector `α` on
 the vectors `v₁, …, v_k`. -/
-def covEval {k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) : ℝ :=
+def covEval {n k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) : ℝ :=
   ∑ s : Finset (Fin n), if h : s.card = k then
     α s * (Matrix.of fun i l => v l (s.orderEmbOfFin h i)).det else 0
-
 /-- The `k`-covectors `α`, `β` have the **same tangential trace** on the face spanned by the
 points `g`: they agree on all `k`-tuples of vectors tangent to the face. -/
-def TraceEq (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=
+def TraceEq {n : ℕ} (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=
   ∀ v : Fin k → Fin n → ℝ, (∀ l, v l ∈ vectorSpan ℝ (g : Set (Fin n → ℝ))) →
     covEval α v = covEval β v
-
-
 /-- `p = (p_T)_T` are **finite element pieces** of `u ∈ L²(Ω; Λᵏ)` on the mesh `M` for the
 sequence `S`: on every simplex `T`, `u` is (almost everywhere) the polynomial form `p_T ∈ S_k`,
 and the tangential traces of `p_T` and `p_{T'}` agree on the common face of any two simplices. -/
-def IsFemPieces (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ)
+def IsFemPieces {n : ℕ} (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ)
     (u : L2Form Ω k) (p : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n) : Prop :=
   (∀ T ∈ M.simplices, p T ∈ S.space n k.toNat) ∧
     (∀ T ∈ M.simplices, ∀ s : FormIdx n k,
@@ -262,27 +249,22 @@ def IsFemPieces (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) 
     ∀ T ∈ M.simplices, ∀ T' ∈ M.simplices,
       ∀ x ∈ convexHull ℝ ((vertexSet T ∩ vertexSet T' : Finset (Fin n → ℝ)) : Set (Fin n → ℝ)),
         TraceEq (vertexSet T ∩ vertexSet T') k.toNat (p T x) (p T' x)
+/-- **The finite element space** `S_k(M) ⊆ L²(Ω; Λᵏ)` of the admissible sequence `S` on the mesh
+`M` **with vanishing traces on the facets `Γ`** ([AFW2006], §5; [Arnold2018], Ch. 7): the forms
+that are on every simplex a polynomial form of `S_k`, with single-valued tangential traces on the
+faces of the mesh, vanishing on the facets of the mesh in `Γ` (`Γ = ∅`: no boundary condition,
+the spaces of `HΛ(Ω)`; `Γ = M.boundaryFacets`: vanishing traces on `∂Ω`, those of `H̊Λ(Ω)`). -/
+def femSpace {n : ℕ} (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq)
+    (Γ : Set (Finset (Fin n → ℝ))) (k : ℤ) : Set (L2Form Ω k) :=
+  {u | ∃ p, IsFemPieces Ω M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T, F.card = n →
+    F ∈ Γ → ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
+-- palomar-shared-end: femSpace
 
-/-- **The finite element space `S_k(M)` of the admissible sequence `S` on a mesh `M` of the cube
-`(0, ½)ⁿ`, with vanishing traces on the faces normal to `eⱼ`, `j ∈ J`** ([AFW2006], §5;
-[Arnold2018], Ch. 7): the forms that are on every simplex a polynomial form of `S_k`, with
-single-valued tangential traces on the faces of the mesh, vanishing on the facets that lie in a
-face `{y_j = 0}` or `{y_j = ½}`, `j ∈ J` (`J = ∅`: no boundary condition; `J = univ`: vanishing
-traces on `∂Q`). -/
-def femSpace (J : Finset (Fin n)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
-    Set (L2Form (cube n) k) :=
-  {u | ∃ p, IsFemPieces (cube n) M S k u p ∧ ∀ T ∈ M.simplices, ∀ F ⊆ vertexSet T,
-    F.card = n → (∃ j ∈ J, (∀ v ∈ F, v j = 0) ∨ ∀ v ∈ F, v j = 1 / 2) →
-      ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
-
-/-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³` (Lagrange, Nédélec edge,
-Raviart–Thomas face elements and piecewise constants; [Whitney1957], [AFW2006], §3–4): the top
-row of Table 5.1. -/
-def topSeq : PolySeq where
-  full k := k == 0
-  deg _ := 1
-  one_le_deg _ := le_rfl
-  transition _ := Or.inl ⟨rfl, rfl⟩
+/-- The vertex sets lying in a face `{y_j = 0}` or `{y_j = ½}`, `j ∈ J`, of the cube `(0, ½)ⁿ`: in
+`femSpace`, vanishing traces on the faces normal to `eⱼ`, `j ∈ J` (`J = ∅`: no boundary condition;
+`J = univ`: vanishing traces on `∂Q`). -/
+def cubeFacets (J : Finset (Fin n)) : Set (Finset (Fin n → ℝ)) :=
+  {F | ∃ j ∈ J, (∀ v ∈ F, v j = 0) ∨ ∀ v ∈ F, v j = 1 / 2}
 
 /-- **The bottom row of Table 5.1**, `P₂Λ⁰ → P₂⁻Λ¹ → P₁Λ² → P₁⁻Λ³` (Lagrange `P₂`, second-order
 Nédélec edge elements of the first kind, `BDM₁` and piecewise constants). -/
@@ -299,6 +281,7 @@ def bottomSeq : PolySeq where
     | 2 => Or.inl ⟨rfl, rfl⟩
     | _ + 3 => Or.inl ⟨rfl, rfl⟩
 
+-- palomar-shared: IsSobolevForm
 /-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
 restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
 Stein's extension theorem, the space of weak derivatives in `L²(Ω)` with an equivalent norm): each
@@ -306,12 +289,14 @@ coefficient is the restriction of a function `D t []` on `ℝⁿ` with weak deri
 `L²(ℝⁿ)` along the words `l` of length at most `m` (`∫ D t [] ∂_{l₁} ⋯ ∂_{l_p} φ =
 (-1)^p ∫ D t l φ` for test functions `φ`), with `Σ_t Σ_{|l| ≤ m} ‖D t l‖² ≤ L²` (norm at most
 `|L|`; a sum over words: a derivative of multi-index `α` is counted `|α|!/α!` times). -/
-def IsSobolevForm (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+def IsSobolevForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) :
+    Prop :=
   ∃ D : FormIdx n j → List (Fin n) → (Fin n → ℝ) → ℝ,
     (∀ t l, l.length ≤ m → MemLp (D t l) 2 volume ∧ ∀ φ, IsTestFn univ φ →
       ∫ y, D t [] y * l.foldr partialDeriv φ y = (-1) ^ l.length * ∫ y, D t l y * φ y) ∧
     ∑ t, ∑ p ∈ Finset.range (m + 1), ∑ l : Fin p → Fin n, ∫ y, D t (List.ofFn l) y ^ 2 ≤ L ^ 2 ∧
     ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
+-- palomar-shared-end: IsSobolevForm
 
 /-! ### Vector-valued forms and the connecting maps -/
 
@@ -341,7 +326,7 @@ vector `0`-forms (`(S v)_{a} = vₐ`), and on vector `1`-forms `vₐ = Σ_b u_{a
 def wedge (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Form Ω (k + 1) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : FormIdx n (k + 1) =>
       Lp ℝ 2 (volume.restrict Ω)).symm.toContinuousLinearMap ∘L
-    ContinuousLinearMap.pi fun s => ∑ a : Fin n, if h : a ∈ s.1 then sgn a s.1 •
+    ContinuousLinearMap.pi fun s => ∑ a : Fin n, if h : a ∈ s.1 then (sgn a s.1 : ℝ) •
       ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω))
           ⟨s.1.erase a, by
             rw [Finset.card_erase_of_mem h, Nat.cast_sub (Finset.card_pos.2 ⟨a, h⟩), s.2]
@@ -563,12 +548,14 @@ end WeakSymmetryData
 def stateNorm {E F G H : Type*} [Norm E] [Norm F] [Norm G] [Norm H] (U : E × F × G × H) : ℝ :=
   √(‖U.1‖ ^ 2 + ‖U.2.1‖ ^ 2 + ‖U.2.2.1‖ ^ 2 + ‖U.2.2.2‖ ^ 2)
 
-/-- `U` is a **strong solution** of `U' = L U` on `I`, for an operator `L` given by its graph
-(`L U = V` iff `L U V`): `U` is continuous on `I` and at every `t ∈ I`, `U(t)` lies in the
-domain of `L` and the derivative of `U` within `I` is `L U(t)`. -/
-def IsStrongSolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (L : X → X → Prop)
-    (I : Set ℝ) (U : ℝ → X) : Prop :=
-  ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U V I t
+-- palomar-shared: IsStrongSolution
+/-- `u` is a **strong solution** of `u' = A u` on `I ⊆ ℝ` for an operator given by its graph, a
+relation `A ⊆ X × X` (a `LinearPMap` through its `graph`): `u` is continuous on `I` and at every
+`t ∈ I` has, within `I`, a derivative `v` with `(u(t), v) ∈ A` (so `u(t)` lies in `D(A)`). -/
+def IsStrongSolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A : SetRel X X)
+    (I : Set ℝ) (u : ℝ → X) : Prop :=
+  ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A ∧ HasDerivWithinAt u v I t
+-- palomar-shared-end: IsStrongSolution
 
 /-- **The Hodge wave operator `L (σ, u, ρ) = (d⁰*u, -d⁰σ - d¹*ρ, d¹u)` of `W⁰ → W¹ → W²`**
 ([QuennevilleBelair2015], (4.5); the sign convention of `WeakSymmetryData.IsWave`): `L U = V`
@@ -685,12 +672,15 @@ and consistent at the order `h_N`. -/
 def IsTable51 {D : FormData (cube 3)} (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → D.Discretization)
     (C : ℝ) (J : Finset (Fin 3)) (Jt : Fin 3 → Finset (Fin 3)) : Prop :=
   IsMeshFamily (cube 3) 𝒯 ∧ IsFreudenthal 𝒯 ∧ ∀ N,
-    ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpace J (𝒯 N) topSeq 0 ∧
-    ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpace J (𝒯 N) topSeq 1 ∧
-    ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpace J (𝒯 N) topSeq 2 ∧
-    ((Q N).Vt0 : Set (L2Vec (cube 3) 0)) = {v | ∀ a, v a ∈ femSpace (Jt a) (𝒯 N) bottomSeq 0} ∧
-    ((Q N).Vt1 : Set (L2Vec (cube 3) 1)) = {v | ∀ a, v a ∈ femSpace (Jt a) (𝒯 N) bottomSeq 1} ∧
-    ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) = {v | ∀ a, v a ∈ femSpace (Jt a) (𝒯 N) bottomSeq 2} ∧
+    ((Q N).V0 : Set (L2Form (cube 3) 0)) = femSpace (cube 3) (𝒯 N) topSeq (cubeFacets J) 0 ∧
+    ((Q N).V1 : Set (L2Form (cube 3) 1)) = femSpace (cube 3) (𝒯 N) topSeq (cubeFacets J) 1 ∧
+    ((Q N).V2 : Set (L2Form (cube 3) 2)) = femSpace (cube 3) (𝒯 N) topSeq (cubeFacets J) 2 ∧
+    ((Q N).Vt0 : Set (L2Vec (cube 3) 0)) =
+      {v | ∀ a, v a ∈ femSpace (cube 3) (𝒯 N) bottomSeq (cubeFacets (Jt a)) 0} ∧
+    ((Q N).Vt1 : Set (L2Vec (cube 3) 1)) =
+      {v | ∀ a, v a ∈ femSpace (cube 3) (𝒯 N) bottomSeq (cubeFacets (Jt a)) 1} ∧
+    ((Q N).Vt2 : Set (L2Vec (cube 3) 2)) =
+      {v | ∀ a, v a ∈ femSpace (cube 3) (𝒯 N) bottomSeq (cubeFacets (Jt a)) 2} ∧
     (Q N).IsBounded C ∧ (Q N).Compatible ∧ (Q N).IsConsistent C (meshSize (𝒯 N))
 
 /-- The open box `∏ᵢ (aᵢ, aᵢ + ℓᵢ)`. -/

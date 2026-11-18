@@ -488,7 +488,8 @@ variable [∀ i, NormedSpace ℝ (W i)]
 
 /-- **`L²` `k`-forms on the torus `𝕋ⁿ = ℝⁿ/ℤⁿ`, in Fourier coefficients**: `ℓ²(ℤⁿ; Λᵏ)`, where
 `u ξ s` is the coefficient of `e^{2πi ξ·x} dx_s` (`ξ ∈ ℤⁿ`, `s` a `k`-subset of `Fin n`; no
-coefficients unless `0 ≤ k ≤ n`); by Parseval, the complex `L²(𝕋ⁿ; Λᵏ)`. -/
+coefficients unless `0 ≤ k ≤ n`; for the counting measure `u ξ` is defined at every `ξ`); by
+Parseval, `L²(𝕋ⁿ; Λᵏ)` with complex coefficients. -/
 abbrev TorusForm (n : ℕ) (k : ℤ) : Type :=
   Lp (EuclideanSpace ℂ {s : Finset (Fin n) // (s.card : ℤ) = k}) 2
     (Measure.count : Measure (Fin n → ℤ))

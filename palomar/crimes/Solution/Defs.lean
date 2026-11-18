@@ -197,9 +197,11 @@ end Window
 
 /-! ### Variational crimes -/
 
-/-- An **approximating family of discrete differential spaces** on `[a, a + m)` ([HolstStern2012],
-§3): finite-dimensional `Xₕ`, `𝐝ₕ 𝐝ₕ = 0`, uniformly bounded reading maps `iₕ : Xₕ → W` with
-uniformly bounded left inverses (not necessarily cochain maps, isometries, or into `D(𝐝)`). -/
+/-- A **family of discrete differential spaces** read in the window `[a, a + m)`
+([HolstStern2012], §3), along the filter `l`: finite-dimensional Hilbert spaces `Xₕ` with
+`𝐝ₕ 𝐝ₕ = 0`, uniformly bounded reading maps `iₕ : Xₕ → W` with uniformly bounded left inverses
+(not necessarily cochain maps, isometries, or into `D(𝐝)`; no approximation property:
+consistency, convergence and the limit of the defect are hypotheses of the theorem). -/
 structure CrimeFamily (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ) (κ : Type*) where
   l : Filter κ
   X : κ → Type u

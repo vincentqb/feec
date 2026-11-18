@@ -16,18 +16,23 @@ its domain complex `V = D(d)` with commuting cochain projections `πₕ`. When d
 of the Hodge Laplacian and of the Hodge heat and wave equations converge, and how fast? Three
 theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every family of subcomplexes:
 
-1. `FEEC.projectionFEEC`: uniformly bounded cochain projections exist iff the discrete Poincaré
-   inequality and the harmonic bound hold uniformly ([AFW2010], Thm 3.7 and its converse).
+1. `FEEC.projectionFEEC`: the discrete Poincaré inequality and the harmonic bound, uniformly in
+   `h`, give cochain projections bounded by `(1 + c₁)(1 + c₂)` in the graph norm, whatever the
+   ranges; under closed ranges, uniformly bounded cochain projections exist iff both bounds hold
+   uniformly ([AFW2010], Thm 3.7 and its converse).
 2. `FEEC.staticFEEC`: with bounded projections and closed ranges, the mixed Hodge Laplacian and its
-   Galerkin discretizations are uniformly well posed and quasi-optimal, the discrete harmonic forms
-   and cohomology converge, and Jackson estimates give rates ([AFW2010], Thms 3.4–3.6, 3.8, 3.9),
-   with constants depending only on the bound of `πₕ` and the Poincaré constant.
+   Galerkin discretizations are uniformly well posed and quasi-optimal and, where `Vₕ`
+   approximates, converge, with the discrete harmonic forms and cohomology converging to the
+   continuous ones (finite-dimensional harmonic forms), and Jackson estimates give rates
+   ([AFW2010], Thms 3.4–3.6, 3.8, 3.9), with constants depending only on the bound of `πₕ` and the
+   Poincaré constant.
 3. `FEEC.evolutionFEEC`: on every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}`, `L = 𝐝 - 𝐝*` is skew-adjoint; the
-   Galerkin solutions of the Hodge wave equation `ξ' = L ξ` converge under approximation by `Vₕ`
+   Galerkin solutions of the Hodge wave equation `U' = L U` converge under approximation by `Vₕ`
    alone (no bound of `πₕ`, no closed range), with the error `‖v - x‖ + 2 (1 + 4√3) (1 + t) M`
    ([QuennevilleBelair2015], Ch. 4), those of the heat equation `u' = L² u` when moreover the
    projections are bounded and the ranges closed ([GilletteHolstZhu2017]); both with every A-stable
-   rational scheme ([BrennerThomee1979]), the wave equation at the Jackson rates.
+   rational scheme of order `p ≥ 1` ([BrennerThomee1979]), the wave equation at the Jackson
+   rates.
 
 The elliptic and parabolic problems need bounded cochain projections, which are uniform discrete
 stability; the hyperbolic one needs only approximation. The witness `FEEC.spectral_nonvacuous`
@@ -548,7 +553,7 @@ variable [∀ i, NormedSpace ℝ (W i)]
 /-- **Theorem 3: the evolution equations** ([QuennevilleBelair2015], Thms 4.6, 4.7, 4.14,
 Prop 4.13; [GilletteHolstZhu2017]; [BrennerThomee1979]). On every window `[a, a + m)` the wave
 operator `L = 𝐝 - 𝐝*` is skew-adjoint. Where `F` approximates (no bound of the projections, no
-closed range), the Hodge wave equation `ξ' = L ξ` has a unitary group `S` with the wave verdict and
+closed range), the Hodge wave equation `U' = L U` has a unitary group `S` with the wave verdict and
 the rates of every Jackson estimate; with projections bounded in the graph norm (in `W` in the
 last degree) and closed ranges, the heat equation `u' = L² u` has the evolution verdict. Both
 verdicts include the fully discrete A-stable rational schemes. -/
@@ -570,7 +575,8 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
 
 /-- **`L²` `k`-forms on the torus `𝕋ⁿ = ℝⁿ/ℤⁿ`, in Fourier coefficients**: `ℓ²(ℤⁿ; Λᵏ)`, where
 `u ξ s` is the coefficient of `e^{2πi ξ·x} dx_s` (`ξ ∈ ℤⁿ`, `s` a `k`-subset of `Fin n`; no
-coefficients unless `0 ≤ k ≤ n`); by Parseval, the complex `L²(𝕋ⁿ; Λᵏ)`. -/
+coefficients unless `0 ≤ k ≤ n`; for the counting measure `u ξ` is defined at every `ξ`); by
+Parseval, `L²(𝕋ⁿ; Λᵏ)` with complex coefficients. -/
 abbrev TorusForm (n : ℕ) (k : ℤ) : Type :=
   Lp (EuclideanSpace ℂ {s : Finset (Fin n) // (s.card : ℤ) = k}) 2
     (Measure.count : Measure (Fin n → ℤ))
@@ -583,13 +589,14 @@ def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Fin
 
 /-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus.** On
 `𝕋ⁿ`, `n ≥ 1`, the `L²` de Rham complex in Fourier coefficients (the graph of `d` is that of the
-multiplier `torusD`, on its maximal domain), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier
+multiplier `torusD`, on its maximal domain; that this multiplier is the weak exterior derivative
+of `L²(𝕋ⁿ; Λᵏ)` is not part of the statement), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier
 truncations as cochain projections: in every degree `0 ≤ k ≤ n` the harmonic forms are nonzero and
 no `V_Nᵏ` is the whole space; and the family meets the hypotheses of the three theorems: closed
-ranges, the Poincaré inequality with constant `√(1 + (2π)⁻²)`, the discrete Poincaré inequality
-and the harmonic bound uniformly in `N` (Theorem 1), projections bounded by `1` in the graph norm
-and in `L²` (Theorems 2 and 3), and approximation in the graph norm in every degree and on every
-window (Theorems 2 and 3). -/
+ranges (Theorems 1 and 3), the Poincaré inequality with constant `√(1 + (2π)⁻²)` (Theorem 2), the
+discrete Poincaré inequality and the harmonic bound uniformly in `N` (Theorem 1), projections
+bounded by `1` in the graph norm (Theorems 1–3) and in `L²` (Theorem 3), and approximation in the
+graph norm in every degree (Theorem 2), hence on every window (`ApproximatesOn`, Theorem 3). -/
 theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔

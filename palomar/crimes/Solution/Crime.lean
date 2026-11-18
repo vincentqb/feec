@@ -5,7 +5,7 @@ public import Solution.Dynamic
 /-!
 # The bridge for variational crimes
 
-An approximating family of discrete differential spaces of the challenge on the window `[a, a + m)`
+A family of discrete differential spaces of the challenge on the window `[a, a + m)`
 (`HilbertComplex.CrimeFamily`) is a `Feec.HilbertComplex.ApproxComplexCrime.Family` of the window
 `H.toFeec.window a m` (`CrimeFamily.toFeec`, the same fields, with the real structure of `Xₕ`
 restricted from `𝕜`). The mixed problems of the challenge are those of `Feec`: the mixed Hodge

@@ -58,11 +58,12 @@ project:
     sum_{j in s} eps(j, s) xi_j u(xi)_{s - j}, torusD, on its maximal domain, stated through its
     graph), with the spectral Galerkin spaces of band-limited forms |xi|_inf <= N and the Fourier
     truncations as cochain projections: in every degree 0 <= k <= n the harmonic forms are nonzero
-    and no band space is the whole space; the ranges are closed, the Poincare inequality holds with
-    constant sqrt(1 + (2 pi)^-2) in the graph norm, the discrete Poincare inequality and the
-    harmonic bound hold uniformly in N (the hypotheses of Theorem 1), the truncations are bounded
-    by 1 in the graph norm and in L2 (those of Theorems 2 and 3), and the family approximates in
-    the graph norm in every degree and on every window. The finite element families that meet the
+    and no band space is the whole space; the ranges are closed (a hypothesis of Theorems 1 and 3),
+    the Poincare inequality holds with constant sqrt(1 + (2 pi)^-2) in the graph norm (Theorem 2),
+    the discrete Poincare inequality and the harmonic bound hold uniformly in N (Theorem 1), the
+    truncations are bounded by 1 in the graph norm (Theorems 1-3) and in L2 (Theorem 3), and the
+    family approximates in the graph norm in every degree (Theorem 2), hence on every window
+    (Theorem 3). The finite element families that meet the
     hypotheses (the P_r Lambda and P_r^- Lambda complexes of every admissible sequence on
     shape-regular quasi-uniform meshes, with smoothed cochain projections, closed ranges on
     parallelepipeds, Jackson rates) are the finite element instance of this entry, compared in
@@ -182,7 +183,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: the three theorems FEEC.projectionFEEC, FEEC.staticFEEC and
-    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 609 lines). The
+    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 618 lines). The
     theorems restate the former compared theorems
     FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection and FEEC.exists_subcomplexFamily_iff with no conclusion dropped,
@@ -235,7 +236,8 @@ automation:
     Human-directed, AI-written development. The Challenge restates over Mathlib the objects of the
     library Feec; the Solution translates them (Solution/Bridge.lean for the static theory,
     Solution/Existence.lean for the converse, Solution/Dynamic.lean for the windows and evolutions,
-    Solution/Rates.lean for the rates, Solution/Rational.lean for the rational schemes) and applies
+    Solution/Rates.lean for the rates, Solution/Rational.lean for the rational schemes,
+    Solution/OfFeec.lean and Solution/Torus.lean for the witness) and applies
     Feec.HilbertComplex.SubcomplexFamily.staticFEEC,
     Feec.HilbertComplex.Subcomplex.exists_cochainProjection,
     Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff, Feec.HilbertComplex.approxFEEC,
@@ -297,20 +299,26 @@ fidelity:
     (SubcomplexFamily.ApproximatesOn). No heat rate is compared. (7) Non-vacuity: the hypotheses
     of the three theorems are hypotheses on a family of subcomplexes and of a Jackson estimate
     (inhabited, e.g. by empty classes). FEEC.spectral_nonvacuous is a compared nontrivial family
-    meeting all of them, with no finite element vocabulary: the de Rham complex of the torus T^n
-    in Fourier coefficients and its spectral Galerkin spaces. It is stated on the Fourier side:
+    meeting all the hypotheses on the family (those on a Jackson estimate are met by empty
+    classes), with no finite element vocabulary: the de Rham complex of the torus T^n in Fourier
+    coefficients and its spectral Galerkin spaces. It is stated on the Fourier side:
     the spaces are l2(Z^n; Lambda^k) with complex coefficients (TorusForm), the differential is
     characterized by its graph, {(u, w) | w(xi)_s = torusD u xi s for all xi, s} (the maximal
     multiplier by the symbol 2 pi i xi wedge), and the family by its spaces (u(xi) = 0 for
     |xi|_inf > N) and projections (the truncation of the coefficients). By Parseval these are the
-    L2 de Rham complex of T^n and its trigonometric polynomials of degree <= N; that the
+    L2 de Rham complex of T^n and its trigonometric polynomials of degree <= N in each variable;
+    that the
     multiplier is the weak exterior derivative of L2(T^n; Lambda^k) is not part of the statement
     (it is proved in Feec, Feec.Fourier.TorusWeak.mem_graph_iff_isWeak, and not compared). The
     hypotheses of Theorem 1 (the discrete Poincare inequality and the harmonic bound, uniformly in
     N) are obtained in the solution from the second clause of Theorem 1 itself (closed ranges and
     graph-bounded projections); the constants are not stated. No Jackson estimate with nonempty
     classes is stated for the family (the trigonometric approximation rates are not formalized),
-    so the rate conjuncts of Theorems 2 and 3 are exercised only by palomar/fem. The finite element families of palomar/fem (FEEC.fem, FEEC.fem_parallelepiped,
+    so the rate conjuncts of Theorems 2 and 3 are exercised only by palomar/fem. The witness states
+    that the harmonic forms are nonzero, not that they are finite-dimensional (they are the
+    constant forms, of dimension (n choose k); proved in Feec for the complex graded by N,
+    Feec.Models.Torus.DeRham.harmonicEquiv, and not compared here), which the eventual cohomology
+    isomorphism of the static verdict assumes. The finite element families of palomar/fem (FEEC.fem, FEEC.fem_parallelepiped,
     FEEC.fem_cube) meet the hypotheses too and are compared there, with the definitions of this
     entry (item (10)).
     (8) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
@@ -364,7 +372,7 @@ review:
     its notions, totalHarmonic, totalMixedSpace); the witness FEEC.feec_cube removed (its family,
     the lowest-order Whitney forms of the cube, is a family of palomar/fem), with the differential
     forms and IsCsForm; new: the witness FEEC.spectral_nonvacuous with TorusForm and torusD (the
-    spectral Galerkin family of the torus, Solution/Torus.lean); Challenge 795 -> 609 lines.
+    spectral Galerkin family of the torus, Solution/Torus.lean); Challenge 795 -> 618 lines.
     Removed earlier: SubcomplexFamily.Verdict,
     SubcomplexFamily.Rated, CrimeFamily.Verdict and IsReducing (with the fields propagates_iff,
     invariantCore, subcomplex of WaveVerdict and reducing_iff of EvolutionVerdict); new then:
@@ -438,7 +446,9 @@ alignment:
         HilbertComplex.SubcomplexFamily.WaveVerdict.hasWaveRate (Solution/Rates.lean); the heat
         clause from HilbertComplex.SubcomplexFamily.heatVerdict (through
         Feec.HilbertComplex.ConstrainedFEEC.heatFEEC).
-    - source: "Non-vacuity of Theorems 1-3: the spectral Galerkin family of the de Rham complex of the torus (this entry)"
+    - source: >-
+        Non-vacuity of Theorems 1-3: the spectral Galerkin family of the de Rham complex of the
+        torus (this entry)
       lean: "FEEC.spectral_nonvacuous"
       module: "Challenge"
       status: "proved"

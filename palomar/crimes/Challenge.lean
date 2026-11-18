@@ -12,11 +12,13 @@ Galerkin methods for a Hilbert complex often do not use subspaces of its domain:
 approximated domains and on hypersurfaces, with quadrature or with nonconforming spaces, the
 discrete complex `(Xₕ, 𝐝ₕ)` has its own inner product and is compared with the continuous one
 through reading maps `iₕ : Xₕ → W` that are not isometries and need not be cochain maps. What
-survives of the approximation theory of finite element exterior calculus? [HolstStern2012], §3,
-answer for the mixed Hodge Laplacian. `FEEC.crimeFEEC` states the answer on every window
-`Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` with closed ranges of a Hilbert complex (on `ℤ`, over `ℝ` or `ℂ`), for every
-approximating family of discrete differential spaces (finite-dimensional, `𝐝ₕ² = 0`, uniformly
-bounded reading maps with uniformly bounded left inverses), in three clauses:
+survives of the approximation theory of finite element exterior calculus? Holst and Stern
+([HolstStern2012], §3) answered for the mixed Hodge Laplacian with cochain reading maps.
+`FEEC.crimeFEEC` states the answer on every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` with closed ranges of a
+Hilbert complex (on `ℤ`, over `ℝ` or `ℂ`), for every family of discrete differential spaces
+(`CrimeFamily`: finite-dimensional, `𝐝ₕ² = 0`, uniformly bounded reading maps with uniformly
+bounded left inverses), in three clauses; the first and the third need no cochain reading maps,
+beyond [HolstStern2012]:
 
 1. **Stability and the Strang lemma.** Under a uniform discrete Poincaré inequality, the mixed
    Hodge Laplacian of the window and its discretizations with the load `iₕ* f` are uniquely
@@ -27,19 +29,21 @@ bounded reading maps with uniformly bounded left inverses), in three clauses:
 2. **Cochain reading maps.** If the `iₕ` are cochain maps with cochain projections bounded in the
    graph norm, the discrete Poincaré inequality holds, the method converges for every datum when
    the inner-product defect `‖1 - iₕ* iₕ‖` tends to `0` and `iₕ πₕ → 1` on `D(𝐝)`, the discrete
-   cohomology is eventually that of the window, and the error is bounded by the approximation of
-   the solution and the defect.
-3. **The heat equation.** When `‖1 - iₕ* iₕ‖ → 0` and the static method converges for every
-   datum, the Hodge heat equation `u' = -Δ u` of the window is well posed and the semidiscrete
+   cohomology is eventually that of the window (for finite-dimensional harmonic forms, with
+   `iₕ πₕ → 1` on them), and the error is bounded by the approximation of the solution and the
+   defect.
+3. **The heat equation.** Under a uniform discrete Poincaré inequality, when `‖1 - iₕ* iₕ‖ → 0`
+   and the static method converges for every datum, the Hodge heat equation `u' = -Δ u` of the
+   window is well posed and the semidiscrete
    and A-stable fully discrete solutions of `uₕ' = (𝐝ₕ - 𝐝ₕ*)² uₕ`, read by `iₕ`, converge to its
    solutions, with the temporal error of [BrennerThomee1979] (the route of [GilletteHolstZhu2017]
    with the elliptic projection of [Wheeler1973] built from the static theory with crimes).
 
-The defects are the price of the crimes: the inner-product defect enters every estimate. The
-witness `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a complex with
-nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0` meet the
-hypotheses of the three clauses, read a discrete harmonic form off the harmonic forms, and leave a
-positive error at every level. The conforming case (subcomplexes with cochain projections) is the
+The defects are the price of the crimes: the inner-product defect enters the estimates. The
+witness `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert
+complex with nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`
+meet the hypotheses of the three clauses, read a discrete harmonic form off the harmonic forms,
+and leave a positive error at every level. The conforming case (subcomplexes with cochain projections) is the
 Palomar entry `palomar/feec`.
 
 ## References
@@ -226,9 +230,11 @@ end Window
 
 /-! ### Variational crimes -/
 
-/-- An **approximating family of discrete differential spaces** on `[a, a + m)` ([HolstStern2012],
-§3): finite-dimensional `Xₕ`, `𝐝ₕ 𝐝ₕ = 0`, uniformly bounded reading maps `iₕ : Xₕ → W` with
-uniformly bounded left inverses (not necessarily cochain maps, isometries, or into `D(𝐝)`). -/
+/-- A **family of discrete differential spaces** read in the window `[a, a + m)`
+([HolstStern2012], §3), along the filter `l`: finite-dimensional Hilbert spaces `Xₕ` with
+`𝐝ₕ 𝐝ₕ = 0`, uniformly bounded reading maps `iₕ : Xₕ → W` with uniformly bounded left inverses
+(not necessarily cochain maps, isometries, or into `D(𝐝)`; no approximation property:
+consistency, convergence and the limit of the defect are hypotheses of the theorem). -/
 structure CrimeFamily (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ) (κ : Type*) where
   l : Filter κ
   X : κ → Type u
@@ -347,13 +353,13 @@ end HilbertComplex
 
 variable [∀ i, NormedSpace ℝ (W i)]
 /-- **Variational crimes** ([HolstStern2012], §3: Thms 3.3, 3.5, 3.9, 3.10,
-Cors 3.4, 3.11). On a window with closed ranges, for an approximating family of discrete
-differential spaces read by `iₕ`: under a uniform discrete Poincaré inequality, the static verdict
-(unique solvability, stability, the Strang lemma, convergence from consistency on a dense set);
-for cochain reading maps with cochain projections bounded in the graph norm, the cochain verdict
-(discrete Poincaré inequality, convergence, cohomology isomorphisms, error bound); and when
-`‖1 - iₕ* iₕ‖ → 0` and the static method converges, the evolution verdict of `u' = L² u` by
-`(𝐝ₕ - 𝐝ₕ*)²` read by `iₕ`. -/
+Cors 3.4, 3.11). On a window with closed ranges, for a family of discrete differential spaces
+read by `iₕ`: under a uniform discrete Poincaré inequality, the static verdict (unique
+solvability, stability, the Strang lemma, convergence from consistency on a dense set); for
+cochain reading maps with cochain projections bounded in the graph norm, the cochain verdict
+(discrete Poincaré inequality, convergence, cohomology isomorphisms, error bound); and under a
+uniform discrete Poincaré inequality, when `‖1 - iₕ* iₕ‖ → 0` and the static method converges for
+every datum, the evolution verdict of `u' = L² u` by `(𝐝ₕ - 𝐝ₕ*)²` read by `iₕ`. -/
 theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
@@ -364,11 +370,12 @@ theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (
         (fun h => (S.D h - (S.D h).adjoint) ^ 2) U := by
   sorry
 
-/-- **Non-vacuity of `FEEC.crimeFEEC`**: on the window `ℝ --id--> ℝ --0--> ℝ` (closed ranges,
-harmonic forms `ℝ (0, 0, 1) ≠ 0`), cochain reading maps `iₙ` with cochain projections `πₙ`,
-`iₙ πₙ = 1`, not isometric (`iₙ* iₙ ≠ 1`) but with `‖1 - iₙ* iₙ‖ → 0`, meet the hypotheses of
-the three clauses (with the discrete Poincaré inequality and convergence for every datum); they
-read a discrete harmonic form off `ℌ`, and the error at some datum is positive at every level. -/
+/-- **Non-vacuity of `FEEC.crimeFEEC`**: a Hilbert complex with `ℝ` in every degree, with closed
+ranges and nonzero harmonic forms on the window `[0, 3)`, carries a family of discrete
+differential spaces with cochain reading maps `iₙ` and cochain projections `πₙ`, `iₙ πₙ = 1`, not
+isometric (`iₙ* iₙ ≠ 1`) but with `‖1 - iₙ* iₙ‖ → 0`, that meets the hypotheses of the three
+clauses (with the discrete Poincaré inequality and convergence for every datum); a discrete
+harmonic form is read off `ℌ`, and the error at some datum is positive at every level. -/
 theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     (S : H.CrimeFamily.{0} 0 3 ℕ) (P : S.CochainProj 2),
     (∀ i : Fin 3, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℝ)) ∧

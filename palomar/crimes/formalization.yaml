@@ -19,10 +19,11 @@ project:
     Holst and Stern ([HolstStern2012] §3) answered for the mixed Hodge Laplacian. The compared
     theorem FEEC.crimeFEEC states the answer on every window W^a + ... + W^(a+m-1) of consecutive
     degrees of a Hilbert complex of closed densely defined operators on Z (any RCLike field) with
-    closed ranges in the degrees a+1, ..., a+m-1, for every approximating family of discrete
-    differential spaces (FEEC.HilbertComplex.CrimeFamily: finite-dimensional Hilbert spaces X_h
-    with d_h^2 = 0, read in the window by uniformly bounded maps i_h with uniformly bounded left
-    inverses, refined along any filter), in three clauses. (static) Under a uniform discrete
+    closed ranges in the degrees a+1, ..., a+m-1, for every family of discrete differential spaces
+    (FEEC.HilbertComplex.CrimeFamily: finite-dimensional Hilbert spaces X_h with d_h^2 = 0, read
+    in the window by uniformly bounded maps i_h with uniformly bounded left inverses, refined along
+    any filter; no approximation property, consistency and convergence being hypotheses of the
+    clauses), in three clauses. (static) Under a uniform discrete
     Poincare inequality ||v|| <= c_P ||d_h v|| on N(d_h)^perp, the mixed Hodge Laplacian of the
     window and its discretizations with the load i_h* f are uniquely solvable, the discrete
     solutions are stable (||sigma_h|| + ||d_h sigma_h|| + ||u_h|| + ||d_h u_h|| + ||p_h|| <= C
@@ -35,20 +36,25 @@ project:
     i_h|| tends to 0 and i_h pi_h -> 1 on D(d); eventually an isomorphism H(d) = H(d_h) induced by
     pi_h (for finite-dimensional harmonic forms with i_h pi_h q -> q on them); and the error at
     most K eps for data whose sigma, u, p and P_B u are within eps of i_h X_h in the graph norm
-    with ||1 - i_h* i_h|| ||(sigma, u, p)|| <= eps. (heat) When ||1 - i_h* i_h|| -> 0 and the
-    static method converges for every datum: the Hodge heat equation u' = L^2 u = -Delta u of the
+    with ||1 - i_h* i_h|| ||(sigma, u, p)|| <= eps. (heat) Under a uniform discrete Poincare
+    inequality, when ||1 - i_h* i_h|| -> 0 and the static method converges for every datum: the
+    Hodge heat equation u' = L^2 u = -Delta u of the
     window is well posed (a contraction semigroup U characterized by its strong solutions), the
     semidiscrete solutions of u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h read by i_h converge to its
     solutions uniformly on bounded time intervals for every family of initial values with
     i_h v_h -> x, and so do the iterates of every A-stable rational scheme r = P/Q of order
     p >= 1 as h and tau tend to 0, with the temporal error K n tau tau^p ||Delta_h^(p+1) w||
-    (K independent of h). The compared witness FEEC.crime_nonvacuous shows that the hypotheses
-    admit genuine crimes: on the window R --id--> R --0--> R (closed ranges, harmonic forms
-    R (0, 0, 1)), the cochain reading maps i_n = 1 + h_n N, N(a, b, c) = (0, c, 0), h_n = 1/(n+1),
-    with cochain projections pi_n = 1 - h_n N meet the hypotheses of the three clauses (i_n pi_n =
-    1, ||1 - i_n* i_n|| -> 0, the discrete Poincare inequality and convergence for every datum),
-    the reading maps are not isometric (i_n* i_n != 1), a discrete harmonic form is read off the
-    harmonic forms, and the error at the datum (0, 0, 1) is positive at every level. The
+    (K independent of h). The clauses (static) and (heat) assume no cochain reading maps, which
+    goes beyond [HolstStern2012] (cochain morphisms). The compared witness FEEC.crime_nonvacuous
+    shows that the hypotheses admit genuine crimes: it states that a Hilbert complex with R in
+    every degree, with closed ranges and nonzero harmonic forms on the window [0, 3), carries a
+    family with cochain reading maps and cochain projections, i_n pi_n = 1, not isometric
+    (i_n* i_n != 1) but with ||1 - i_n* i_n|| -> 0, which meets the hypotheses of the three
+    clauses (with the discrete Poincare inequality and convergence for every datum), reads a
+    discrete harmonic form off the harmonic forms, and has a positive error at some datum at every
+    level. The solution's witness is the window R --id--> R --0--> R (harmonic forms R (0, 0, 1))
+    with the reading maps i_n = 1 + h_n N, N(a, b, c) = (0, c, 0), h_n = 1/(n+1), the cochain
+    projections pi_n = 1 - h_n N, and the datum (0, 0, 1); the statement fixes none of these. The
     conforming case (subcomplexes with cochain projections, the inclusion as reading map) is the
     Palomar entry palomar/feec. The statement is self-contained over Mathlib; the proof is the
     library Feec of this repository.
@@ -155,7 +161,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: the theorem FEEC.crimeFEEC and the witness FEEC.crime_nonvacuous
-    (Challenge.lean, 384 lines), formerly Theorem 4 and a witness of palomar/feec (the statement
+    (Challenge.lean, 391 lines), formerly Theorem 4 and a witness of palomar/feec (the statement
     of FEEC.crimeFEEC unchanged; the witness now also states the discrete Poincare inequality and
     convergence for every datum, so that it meets the hypotheses of the three clauses). Not
     compared, proved in Feec: the wave equation with crimes, the rates of the heat equation with
@@ -245,9 +251,12 @@ fidelity:
     i_h as reading map): density of D(L^2), existence and uniqueness of strong solutions,
     contractions, semidiscrete and fully discrete convergence, temporal error. This clause
     combines [HolstStern2012] with the route of [GilletteHolstZhu2017] and the elliptic
-    projection of [Wheeler1973]; it is not a theorem of a single source. (7) Non-vacuity:
-    FEEC.crime_nonvacuous is a finite-dimensional complex (R in every degree), with reading maps
-    that are cochain maps and bijective; it shows that the hypotheses of the three clauses admit
+    projection of [Wheeler1973]; it is not a theorem of a single source. It also assumes the
+    uniform discrete Poincare inequality, as the static clause does. (7) Non-vacuity:
+    FEEC.crime_nonvacuous is stated for some Hilbert complex with R in every degree (finite
+    dimensional; the statement does not fix its differentials), with reading maps that are
+    cochain maps (and, in the solution, bijective); it shows that the hypotheses of the three
+    clauses admit
     non-isometric reading maps, discrete harmonic forms read off the harmonic forms and positive
     errors, on a complex with nonzero harmonic forms. No compared witness has reading maps that are
     not cochain maps (such witnesses, with a nonzero cochain defect, are proved in Feec,
@@ -289,12 +298,14 @@ review:
 alignment:
   namespace: "FEEC"
   statements:
-    - source: "[HolstStern2012], §3 (Thms 3.3, 3.5, Cor 3.4)"
+    - source: "[HolstStern2012], §3.3 (Thm 3.9, stability; the Strang-type bound generalizes Thm 3.10)"
       lean: "FEEC.HilbertComplex.CrimeFamily.StaticVerdict"
       module: "Challenge"
       status: "proved"
-      note: "The conclusion of the static clause of FEEC.crimeFEEC (reading maps not necessarily cochain maps)."
-    - source: "[HolstStern2012], §3.3 (Thms 3.9, 3.10, Cor 3.11)"
+      note: >-
+        The conclusion of the static clause of FEEC.crimeFEEC, for reading maps not necessarily
+        cochain maps (the uniform discrete Poincare inequality is its hypothesis).
+    - source: "[HolstStern2012], §3 (Thms 3.3, 3.5, 3.10, Cors 3.4, 3.11)"
       lean: "FEEC.HilbertComplex.CrimeFamily.CochainVerdict"
       module: "Challenge"
       status: "proved"
@@ -310,7 +321,7 @@ alignment:
         Feec.HilbertComplex.Approximation.StaticCochain and
         Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC), converted by
         Solution/Convert.lean.
-    - source: "[HolstStern2012], §3 (non-vacuity)"
+    - source: "Non-vacuity of FEEC.crimeFEEC (this entry)"
       lean: "FEEC.crime_nonvacuous"
       module: "Challenge"
       status: "proved"

@@ -53,7 +53,8 @@ theorem coeff_bounds {w : FormField n} (hw : ContDiff ℝ 1 w) {L : ℝ}
     ContDiff ℝ 1 (fun y => w y t) ∧ (∀ y ∈ Metric.closedBall (center n) (1 / 4), |w y t| ≤ L) ∧
       ∀ y ∈ Metric.closedBall (center n) (1 / 4), ‖fderiv ℝ (fun y => w y t) y‖ ≤ L := by
   rw [← closure_cubeDomain_eq_closedBall]
-  refine ⟨contDiff_pi.1 hw t, fun y hy => ((norm_le_pi_norm (w y) t).trans (h0 y hy)), fun y hy => ?_⟩
+  refine ⟨contDiff_pi.1 hw t, fun y hy => (norm_le_pi_norm (w y) t).trans (h0 y hy),
+    fun y hy => ?_⟩
   have hd : HasFDerivAt (fun y => w y t)
       ((ContinuousLinearMap.proj t).comp (fderiv ℝ w y)) y :=
     (ContinuousLinearMap.proj (R := ℝ) (φ := fun _ : Finset (Fin n) => ℝ) t).hasFDerivAt.comp y

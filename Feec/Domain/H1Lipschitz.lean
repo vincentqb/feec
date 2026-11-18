@@ -11,10 +11,11 @@ public import Mathlib.Topology.Order.ProjIcc
 A compactly supported Lipschitz function `F : ℝⁿ → ℝ` has weak first derivatives, its line
 derivatives `∂ₘF` (defined almost everywhere by Rademacher's theorem), bounded by the Lipschitz
 constant: `∫ F ∂ₘφ = -∫ (∂ₘF) φ` for every test function `φ`
-(`integral_mul_fderiv_eq_of_lipschitzWith`, from Mathlib's `LipschitzWith.integral_lineDeriv_mul_eq`).
-So a field of `L²(Ω; ℝ^ι)` that is almost everywhere on `Ω` the restriction of compactly supported
-Lipschitz functions, bounded by `A` with Lipschitz constant `K` and supported in a set of volume
-`V`, has `H¹(ℝⁿ)` data with bound `max A K · √V` (`H1Data.ofLipschitz`).
+(`integral_mul_fderiv_eq_of_lipschitzWith`, from Mathlib's
+`LipschitzWith.integral_lineDeriv_mul_eq`). So a field of `L²(Ω; ℝ^ι)` that is almost
+everywhere on `Ω` the restriction of compactly supported Lipschitz functions, bounded by `A` with
+Lipschitz constant `K` and supported in a set of volume `V`, has `H¹(ℝⁿ)` data with bound
+`max A K · √V` (`H1Data.ofLipschitz`).
 
 On a closed cube `B = closedBall x₀ r` (a closed ball of the sup norm of `Fin n → ℝ`, the cube
 `∏ᵢ [x₀ᵢ - r, x₀ᵢ + r]`), a `C¹` function `f` on `ℝⁿ` whose values and first derivatives are

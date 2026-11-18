@@ -80,10 +80,9 @@ project:
     the method computes a solution that is not a gravitational wave; the static method (5.6)
     converges at the rate h for solutions of (5.3) of class H^1, and (6.5) at the rate (1 + t) h
     for classical solutions of (6.2) of class H^1 (IsH1State); and for some c > 0 and every
-    N >= 2 some nonzero v in V~_h^1
-    has ||S^1 v - w|| >= c (||v||^2 + ||d~v||^2)^(1/2) for every w in the Raviart-Thomas space
-    V_h^2 (no projection makes S^1_h consistent at the order h on V~_h^1; consistency is asked
-    on regular potentials).
+    N >= 2 some nonzero v in V~_h^1 has ||S^1 v - w|| >= c (||v||^2 + ||d~v||^2)^(1/2) for every
+    w in the Raviart-Thomas space V_h^2 (no projection makes S^1_h consistent at the order h on
+    V~_h^1; consistency is asked on regular potentials).
     FEEC.weakSymmetry_mirror, the mirror boundary conditions: there are discretizations of
     mirrorData by the elements of Table 5.1 with the mirror conditions on Freudenthal meshes of Q
     (IsTable51 with no face in the top row and the faces normal to e_a in component a of the
@@ -409,11 +408,11 @@ fidelity:
     solution exists (Stone's theorem in Feec), and every family of trajectories of (6.5) without
     source whose initial states converge to U_0 converges to every strong solution from U_0
     uniformly on [0, T] (Lax: stability of (6.1) and (6.5) and convergence on the dense D(L^2));
-    no regularity is assumed, and no rate is claimed. Such families exist for every datum: the
-    initial values of (6.5) are constrained (u_h(0) is orthogonal to d~psi for the psi of V~_h^0
-    with pi^1 S^0 psi = 0, and only such data have solutions), so a projection of the datum need
-    not start a trajectory; in Feec the trajectories start from the elliptic projections of data
-    of D(L^2) approximating the datum, at levels chosen diagonally
+    no regularity is assumed, and no rate is claimed. Such families exist for every datum
+    (stated), although the initial values of (6.5) are constrained (u_h(0) is orthogonal to
+    d~psi for the psi of V~_h^0 with pi^1 S^0 psi = 0, and only such data have solutions), so that
+    a projection of the datum need not start a trajectory; in Feec the trajectories start from the
+    elliptic projections of data of D(L^2) approximating the datum, at levels chosen diagonally
     (Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec). The loss of TSD is
     stated as E(t) not TSD at some t and B(t') not symmetric (B(t')_ai != B(t')_ia for some a, i)
     at some t'; the discrete fields lose TSD at the same times for all large N, since TSD and

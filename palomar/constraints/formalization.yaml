@@ -1,0 +1,361 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of the boundary conditions that keep, or lose,
+# the TSD constraints of the linearized Einstein-Bianchi equations (`palomar/constraints/`): the
+# criterion (propagation is reduction, the invariant core) and the verdict of each boundary
+# condition.
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: >-
+    Which boundary conditions keep the TSD constraints of the linearized Einstein-Bianchi
+    equations
+  description: >-
+    The linearized Einstein-Bianchi system evolves the electric and magnetic parts E, B of the
+    linearized Weyl tensor and describes gravitational waves only while E and B are TSD
+    (symmetric, trace-free, divergence-free). It is the Hodge wave equation U' = L U of a Hilbert
+    complex whose operators carry the boundary conditions; the thesis (§4.10, Prop 4.17; §6.1)
+    asks whether TSD data stay TSD, the question of constraint-preserving boundary conditions of
+    the initial boundary value problem of general relativity (Friedrich-Nagy, Kreiss-Winicour,
+    Calabrese-Pullin-Reula-Sarbach-Tiglio). Stated over Mathlib in the vocabulary of differential
+    forms, with the definitions of forms, minimal exterior derivatives and strong solutions shared
+    with palomar/fem and palomar/feec (the canonical blocks of palomar/shared/vocabulary.lean.txt,
+    checked byte for byte by the gate). Operators are given by their graphs (relations), an
+    evolution S of u' = A u on I (IsEvolution: S 0 = 1, every orbit from D(A) a strong solution
+    on I) and the invariant core K* = {x | S t x in K for all t} (invariantCore) are the common
+    notions of the two compared theorems.
+    FEEC.constraint_propagation, the criterion (Kato III.5.6): on a real Hilbert space, a densely
+    defined skew-adjoint L has an evolution on R by unitary operators whose orbits are the strong
+    solutions from D(L); a closed subspace K reduces L (P_K D(L) in D(L), L P_K = P_K L) iff
+    S t K is in K for all t; and K* is a closed subspace reducing L containing every closed
+    subspace of K that reduces L. An m-dissipative A (<A x, x> <= 0, 1 - A onto) has an evolution
+    on [0, infinity) by contractions whose orbits are the strong solutions, and K reduces A iff
+    S t, t >= 0, keeps K and its orthogonal complement. For a short Hilbert complex of closed
+    densely defined d^0, d^1 (d^1 d^0 = 0) and closed Z^i with P_{Z^i} D(d^i) in D(d^i) and
+    d^i P_{Z^i} = P_{Z^{i+1}} d^i (a reducing subcomplex, the thesis' Prop 4.16), every strong
+    solution of the Hodge wave equation starting in Z^0 x Z^1 x Z^2 stays in it. So the question
+    for each boundary condition is K*.
+    FEEC.tsd_boundary_conditions, the verdict of each boundary condition, for the system (4.14)
+    on states (sigma, u, rho) (E = rows u_a, B = rows of *rho_a), the Hodge wave equation of
+    H°Lambda^0 (x) R^3 -> H°Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 (gradCurlWave; vector
+    proxies H°^1 -> H°(curl) -> L^2, grad and curl of the rows), constraint
+    K = {0} x L^2(TSD) x L^2(TSD) (tsdConstraint):
+    (natural boundary conditions, every nonempty bounded open Omega in R^3, no regularity of the
+    boundary) the system has an evolution, and for every one K* = {0} x S_1* x S_2* with closed
+    S_1*, S_2* of TSD fields, S_1* within L^2(TSD_0) (rows weakly divergence-free with vanishing
+    normal trace; zero mean), both strictly smaller than L^2(TSD), S_2* containing a nonzero
+    stationary datum; from (0, E_0, beta), beta = x_3 (e_1 e_2^T + e_2 e_1^T), TSD with
+    (0, 0, beta) in D(L), every strong solution on [0, T], T > 0, has a non-TSD electric field at
+    some time; the projection hypothesis fails (the orthogonal projection onto L^2(TSD) of some
+    test field leaves H°(curl)), so K does not reduce L; L^2(TSD) and H°(curl) intersect in a
+    non-dense subspace of L^2(TSD); and for the system (6.1) of the complex with weak symmetry of
+    Ch. 5-6 (the same boundary conditions in both rows) the TSD datum (0, 0, 0, *beta) of D(L)
+    has strong solutions on every [0, T], every one of which has a non-TSD E and a non-symmetric
+    B at some times;
+    (domains star-shaped with respect to a ball) the closure of L^2(TSD) and H°(curl) is
+    L^2(TSD_0), and K* consists of stationary data iff no nonzero TSD eigenfield u of curl* curl
+    with frequency xi > 0 has curl u outside H°(curl);
+    (the unit ball) every TSD eigenfield (xi != 0) with a representative C^2 on a neighbourhood of
+    the closed ball vanishes;
+    (every open box) K* = K intersected with N(L), with vanishing electric field: only stationary
+    data keep the constraint; and for all subspaces S_1, S_2 of TSD fields a strong solution on
+    [0, infinity) stays in {0} x S_1 x S_2 iff it starts there with L U(0) = 0;
+    (absorbing, Silver-Muller, boundary conditions n x E_i + (B_i)_tau = 0 on the cube) the
+    first-order system E' = -curl B, B' = curl E on states (E, B) (absorbing, with its energy
+    space: the closure of the triples (Phi, curl Phi, Phi_tau) of C^1 matrix fields) is the graph
+    of an m-dissipative operator, some state radiates (<A x, x> < 0), and every evolution moves
+    some TSD datum out of L^2(TSD) x L^2(TSD) (tsdPair);
+    (mirror boundary conditions on the cube Q = (0, 1/2)^3, the conditions of fields invariant
+    under the reflections in the faces) for the system (6.1), strong solutions are determined by
+    their initial value, exist on every [0, T] from every TSD datum of D(L) and stay TSD, and some
+    TSD datum U_0 with U_0, L U_0, L^2 U_0 in D(L) has L U_0 != 0.
+    Not claimed: whether on every bounded domain only stationary data keep the constraint
+    (K* in N(L)). It is open; it is proved on boxes, it is equivalent on domains star-shaped with
+    respect to a ball to the absence of TSD eigenfields u with curl u outside H°(curl), and on the
+    ball no such eigenfield is C^2 up to the boundary. The proof is the library Feec of this
+    repository (Feec.Semigroup.Stone, Feec.Semigroup.Invariance,
+    Feec.Semigroup.DissipativeInvariance, Feec.Counterexamples.BoundedDomainTSD,
+    Feec.Counterexamples.BoundedBGG, BoxStationary, BallEigenfields,
+    Feec.Models.StarShaped.EigenDense, Feec.Models.BoundedDomain.MovingTSD,
+    Feec.Models.Cube.Absorbing, AbsorbingTSD, Feec.Models.Cube.MirrorBGG, MirrorConstraint).
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.AP", "gr-qc", "math.FA"]
+  msc2020: ["35L50", "35Q75", "83C05", "47D06", "47B25"]
+
+sources:
+  - title: "A New Approach to Finite Element Simulations of General Relativity"
+    authors:
+      - "Vincent Quenneville-Bélair"
+    id: "http://hdl.handle.net/11299/175309"
+    type: "PhD thesis, University of Minnesota, 2015"
+    location: "§3.4 (the first-order system), §4.9 (Prop 4.16: reducing subcomplexes), §4.10 ((4.14), Prop 4.17: propagation of the TSD constraints), §5.3, §6.1, §6.3 (the complex with weak symmetry and its boundary conditions)"
+    relationship: "formalizes"
+    note: >-
+      The source of the systems (4.14) and (6.1), of their boundary conditions natural for the
+      complexes (§4.10, §6.3) and of the question whether the TSD constraints propagate (Prop 4.17,
+      §6.1). The verdicts of FEEC.tsd_boundary_conditions (the invariant core on bounded domains,
+      the star-shaped and ball criteria, boxes), the absorbing and mirror boundary conditions are
+      Feec's. The formalization is by the thesis author.
+    author_endorsement: "participated"
+  - title: "Perturbation Theory for Linear Operators"
+    authors:
+      - "Tosio Kato"
+    id: "doi:10.1007/978-3-642-66282-9"
+    type: "book"
+    location: "Classics in Mathematics, reprint of the 2nd ed. (1995), §III.5.6 (reducing subspaces)"
+    relationship: "background"
+    note: "The reducing-subspace criterion of FEEC.constraint_propagation."
+    author_endorsement: "not-contacted"
+  - title: "Semigroups of Linear Operators and Applications to Partial Differential Equations"
+    authors:
+      - "Amnon Pazy"
+    id: "doi:10.1007/978-1-4612-5561-1"
+    type: "book"
+    location: "Applied Mathematical Sciences 44 (1983), §1.4 (Lumer-Phillips), §1.10 (Stone), §4.1"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "The Initial Boundary Value Problem for Einstein's Vacuum Field Equation"
+    authors:
+      - "Helmut Friedrich"
+      - "Gabriel Nagy"
+    id: "doi:10.1007/s002200050571"
+    type: "article"
+    location: "Comm. Math. Phys. 201 (1999), 619-655"
+    relationship: "background"
+    note: "Constraint-preserving boundary conditions for the Einstein equations; not formalized."
+    author_endorsement: "not-contacted"
+  - title: "Problems which are well posed in a generalized sense with applications to the Einstein equations"
+    authors:
+      - "Heinz-Otto Kreiss"
+      - "Jeffrey Winicour"
+    id: "doi:10.1088/0264-9381/23/16/S07"
+    type: "article"
+    location: "Class. Quantum Grav. 23 (2006), S405-S420"
+    relationship: "background"
+    note: "Constraint preservation at boundaries in numerical relativity; not formalized."
+    author_endorsement: "not-contacted"
+  - title: "Well Posed Constraint-Preserving Boundary Conditions for the Linearized Einstein Equations"
+    authors:
+      - "Gioel Calabrese"
+      - "Jorge Pullin"
+      - "Oscar Reula"
+      - "Olivier Sarbach"
+      - "Manuel Tiglio"
+    id: "doi:10.1007/s00220-003-0889-2"
+    type: "article"
+    location: "Comm. Math. Phys. 240 (2003), 377-395"
+    relationship: "background"
+    note: "Constraint-preserving boundary conditions by derivative conditions; not formalized."
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Methods for Maxwell's Equations"
+    authors:
+      - "Peter Monk"
+    id: "doi:10.1093/acprof:oso/9780198508885.001.0001"
+    type: "book"
+    location: "Oxford University Press (2003), §1.4 (the Silver-Muller condition), §4.6 (the impedance problem)"
+    relationship: "background"
+    note: "The absorbing boundary condition and its energy space."
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §4 (the minimal and maximal exterior derivatives)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Mixed finite element methods for linear elasticity with weakly imposed symmetry"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0025-5718-07-01998-9"
+    type: "article"
+    location: "Math. Comp. 76 (2007)"
+    relationship: "background"
+    note: "The connecting map S^1 = 2 vskw of the complex with weak symmetry."
+    author_endorsement: "not-contacted"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: FEEC.constraint_propagation (every real Hilbert space, every densely
+    defined skew-adjoint L, every m-dissipative A, every closed subspace K; every short Hilbert
+    complex and every reducing subcomplex) and
+    FEEC.tsd_boundary_conditions (the natural boundary conditions on every nonempty bounded open
+    set of R^3, on those star-shaped with respect to a ball, on the unit ball and on every open
+    box, for the system (4.14), and on every nonempty bounded open set for the system (6.1); the
+    absorbing boundary conditions on the cube; the mirror boundary conditions on the cube for the
+    system (6.1)). The Challenge is 562 lines. Open, and not claimed: that only stationary data
+    keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
+    absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
+    fields C^2 up to the boundary; Feec proves it on the ball only under an elliptic regularity
+    hypothesis, Feec.Counterexamples.BallEigenfields.coreSub_le_stationary_ball_of_maxwellRegularity,
+    not compared). Not compared here (proved in Feec): the same obstruction for every short
+    complex with d_1 inside the minimal curl (any W_0 and d_0); the violation confined to the
+    boundary layer by finite speed of propagation (beta_violation_boundary_layer); the sym-curl
+    system (4.19) on every bounded domain and every ball (BoundedSymTSD, EveryBallSymTSD); the
+    absorbing semigroup's interior equations, the propagation of the Gauss laws and of TSD in the
+    domain of dependence (absorbingSemigroup_divFree, absorbingSemigroup_symTF_depDomain); the
+    mirror boundary conditions for the system (4.14) on every open box, where K* = K
+    (Feec.Models.Box.Mirror.invariantCore_eqBox), and on the whole space and the torus
+    (Feec.EinsteinBianchi.euclidean_tsd_propagates and siblings); the convergence of the
+    weak-symmetry method to the constrained or unconstrained solution (palomar/einsteinbianchi).
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals (the thesis and the literature), the statement design
+        and the review standard; agents proposed and proved lemmas.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge statement and its definitions were
+    written by an AI agent for this submission, to be reviewed by the author; the Solution
+    identifies them with the definitions of the library Feec and applies its theorems:
+    Solution/Engine.lean (evolutions and strong solutions as Feec's C_0-groups and semigroups,
+    uniqueness of evolutions, the reducing criteria), Solution/Subcomplex.lean (the challenge's
+    short complexes as Feec's ShortHilbertComplex, reducing subcomplexes), Solution/Box.lean and GradCurl.lean (the
+    challenge's Hodge wave operator of (4.14) carried to Feec's gradCurl complex by unitary maps;
+    every evolution is Feec's wave group; the invariant core is Feec's coreSub; the adjoint of the
+    curl, H°(curl), L^2(TSD_0) and the eigenfields through the fields), Solution/Verdicts.lean (the
+    verdicts of the natural boundary conditions), Solution/Absorbing.lean (the energy space and
+    the absorbing relation as Feec's impedance operator), Solution/Proxy.lean, Bounded.lean,
+    Wave.lean, Wedge.lean, Forms.lean (fields, the system (6.1) and its datum, from
+    palomar/einsteinbianchi), MirrorData.lean, MirrorTSD.lean, MirrorState.lean,
+    MirrorForward.lean, MirrorChain.lean, MirrorProp.lean (TSD states as the real parts of the
+    constrained states of Feec's complex mirror complex on Q, from palomar/einsteinbianchi).
+
+fidelity:
+  divergences: >-
+    (1) Coordinates and definitions of forms and of the minimal exterior derivative as in
+    palomar/fem (the shared blocks forms and dMin); W~^k = L^2(Omega; Lambda^k) (x) R^3 is the
+    l^2 sum of three copies (L2Vec); the fields of a state are read as matrices,
+    E_ab = (u_a)_{dx_b}, B_ai = (-1)^i (rho_a)_{{i}^c}; IsTSD is symmetric, trace-free and weakly
+    divergence-free against test functions of Omega (no boundary condition); IsTSD_0 adds
+    vanishing normal traces, tested against all C^1 functions on R^3.
+    (2) Operators are relations (graphs), strong solutions those of the shared IsStrongSolution.
+    Mathlib has no C_0-semigroups: an evolution (IsEvolution) is a family of bounded operators
+    with S 0 = 1 whose orbits from D(A) are strong solutions on I; FEEC.constraint_propagation
+    gives existence and uniqueness of the strong solutions, hence of S on I, for skew-adjoint and
+    m-dissipative generators, and the verdicts are stated for every evolution with, where needed,
+    its existence. The invariant core is defined for groups (all t in R); for the absorbing
+    semigroup the verdict is the failure of forward invariance.
+    (3) The system (4.14) is a relation on the product of the three spaces (IsHodgeWave), not an
+    operator on their l^2 sum: its skew-adjointness on the l^2 sum (the hypothesis under which
+    FEEC.constraint_propagation identifies K* as the largest reducing subspace of K) is proved in
+    Feec and not stated in the challenge; the failure of reduction is stated directly, as the
+    projection hypothesis: for a test field u (in D(d^1) and D(d^0*)), the orthogonal projection v
+    of u onto L^2(TSD) (characterized as the TSD field with u - v orthogonal to L^2(TSD)) is not
+    in H°(curl), so P_K (0, u, 0) is not in D(L). The absorbing operator is stated as the graph of
+    an m-dissipative operator, a literal instance of the criterion.
+    (4) Natural boundary conditions: vanishing tangential traces (minimal exterior derivatives) in
+    every row, for (4.14) and both rows of (6.1). The invariant core of (4.14) is described as
+    {0} x S_1* x S_2* with explicit properties (closed, S_1* within L^2(TSD_0), strictness through
+    the TSD fields diag(1, -1, 0) and beta in Feec's proof, a nonzero stationary datum in S_2*),
+    not by a formula for S_1*, S_2* on general domains (none is known). The datum beta is given
+    almost everywhere by its formula. The obstruction for (6.1) is the explicit datum
+    (0, 0, 0, *beta) (in the proof) with existence of solutions.
+    (5) Star-shaped domains: with respect to a ball of the sup norm (equivalently of the Euclidean
+    norm). The unit ball is Euclidean; eigenfields (IsEigenfield) are u in H°(curl) with
+    curl u in D(curl*) and curl* curl u = xi^2 u (the adjoint of Mathlib's LinearPMap); curl u
+    outside H°(curl) is stated as: no w in H°Lambda^1 (x) R^3 has the electric field of w equal to
+    the magnetic field of curl u. The ball clause asks a representative C^2 on a neighbourhood of
+    the closed ball.
+    (6) Absorbing boundary conditions: on the cube (0, 1/2)^3 only, for the first-order system
+    without the gauge sigma; the energy space is the closure of the triples (Phi, curl Phi, Phi_tau)
+    of C^1 fields, with boundary values on the six faces parametrized by the square (0, 1/2)^2
+    (surface measure); the operator is the impedance operator of Monk §4.6 (whether the energy
+    space consists of all Green triples is not used). The verdict asserts some TSD datum leaving
+    L^2(TSD) x L^2(TSD) at some time t >= 0; the datum need not lie in D(A) (Feec's proof: an
+    invariant K would make D(A) and K intersect densely in K, which a boundary functional
+    excludes).
+    (7) Mirror boundary conditions: on the cube Q only and for the system (6.1) (top row d_max;
+    component a of the bottom row with vanishing tangential traces on the faces normal to e_a,
+    dPart), as in palomar/einsteinbianchi: existence of strong solutions is stated from TSD data
+    of D(L); in Feec the theorem is proved for a complex Hilbert complex of matrix fields defined
+    by the Fourier series of the reflection-symmetric extensions, and the Solution identifies the
+    challenge's real states with the real parts of its constrained states.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    Not yet reviewed by the author: the Challenge statement (the two compared theorems and their
+    definitions, 2026-11-18, new; FEEC.constraint_propagation states the criterion formerly in
+    the verdict of palomar/feec, FEEC.tsd_boundary_conditions contains the statements formerly
+    compared in palomar/einsteinbianchi as FEEC.tsd_not_propagates, FEEC.box_stationary and
+    FEEC.mirror_tsd_propagates). Every merge of the library was gated by a full build (zero
+    warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an independent AI
+    review. No external mathematical review.
+
+alignment:
+  namespace: "FEEC"
+  statements:
+    - source: "[Kato1995] §III.5.6; [Pazy1983] §1.4, §1.10; [QuennevilleBelair2015] Prop 4.16"
+      lean: "FEEC.constraint_propagation"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Stone's group LinearPMap.IsSkewAdjoint.group with
+        Feec.C0Group.IsIsometric.isReducing_iff_invariant, isReducing_invariantCore and
+        le_invariantCore_of_isReducing; the Lumer-Phillips semigroup
+        LinearPMap.IsMDissipative.semigroup with LinearPMap.IsMDissipative.isReducing_iff;
+        uniqueness by Feec.C0Semigroup.isStrongSolution_unique (Solution/Engine.lean); reducing
+        subcomplexes by Feec.HilbertComplex.ReducingSubcomplex.propagates for the short complex
+        of the challenge (Solution/Subcomplex.lean).
+    - source: "[QuennevilleBelair2015] §3.4, §4.10 ((4.14), Prop 4.17), §6.1, §6.3"
+      lean: "FEEC.tsd_boundary_conditions"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Natural boundary conditions: Feec.Counterexamples.BoundedDomainTSD (invariantCore_tsd,
+        betaL2_not_propagates, exists_projTSD_not_mem_domain, not_dense_tsd_inter,
+        density_dichotomy), Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff with
+        Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl,
+        Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball,
+        Feec.Counterexamples.BoxStationary (mem_invariantCore_tsd_iff_box,
+        forward_iff_stationary_box), Feec.Counterexamples.BoundedBGG for (6.1)
+        (Solution/GradCurl.lean, Verdicts.lean, Bounded.lean, Box.lean); absorbing:
+        Feec.Models.Cube.Absorbing (isMDissipative_absorbing, exists_inner_absorbing_neg,
+        not_invariant_tsdPair) (Solution/Absorbing.lean); mirror: Feec.Models.Cube.MirrorBGG
+        (propagatesQ, reducingSubcomplexQ) and Feec.Models.Cube.MirrorWeakSymmetry.cosDatum
+        (Solution/Mirror*.lean).
+
+acknowledgements: >-
+  Mathlib and the Lean FRO; the semigroup, numerical relativity and FEEC literature cited above.

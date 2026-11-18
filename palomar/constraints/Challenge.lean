@@ -20,7 +20,7 @@ magnetic parts `E`, `B` of the linearized Weyl tensor; its solutions describe gr
 only while `E` and `B` are **TSD** (symmetric, trace-free, divergence-free). It is the Hodge wave
 equation `U' = L U` of a Hilbert complex, whose operators carry the boundary conditions, and
 [QuennevilleBelair2015] (§4.10, Prop 4.17; §6.1) asks whether TSD data stay TSD. Whether boundary
-conditions preserve the constraints is the central question of the initial boundary value problem
+conditions preserve the constraints is a central question of the initial boundary value problem
 of general relativity ([FriedrichNagy1999], [KreissWinicour2006], [CPRST2003]). This entry answers
 it for each boundary condition.
 
@@ -47,9 +47,9 @@ of the complex with weak symmetry of the method of Ch. 5–6 (`WeakSymmetryData.
 | mirror (tensorial reflections) | the cube | kept, with moving data |
 
 **Not claimed.** Whether on every bounded domain only stationary data keep the constraint
-(`K* ⊆ N(L)`) is open: it is proved on boxes; on domains star-shaped with respect to a ball it is
-equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)`, and on the ball no
-eigenfield `C²` up to the boundary exists.
+(`K* ⊆ N(L)`) is open. It is proved on boxes; on domains star-shaped with respect to a ball it is
+equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)`, and on the ball no such
+eigenfield is `C²` up to the boundary, which leaves the eigenfields of lower regularity.
 
 ## Conventions
 
@@ -85,6 +85,8 @@ open scoped InnerProductSpace Topology ContDiff
 open Filter Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
+
+universe u
 
 namespace FEEC
 
@@ -415,7 +417,12 @@ a real Hilbert space `E`:
 * (**semigroups**) an m-dissipative `A` (`⟪A x, x⟫ ≤ 0`, `1 - A` onto) has an evolution `S` on
   `[0, ∞)` by contractions (Lumer–Phillips), and every strong solution on `[0, T]` from
   `x ∈ D(A)` is its orbit; a closed subspace `K` reduces `A` iff `S t`, `t ≥ 0`, keeps `K` and
-  `Kᗮ`. -/
+  `Kᗮ`;
+* (**reducing subcomplexes**, [QuennevilleBelair2015], Prop 4.16) for a short Hilbert complex
+  `W⁰ → W¹ → W²` of closed densely defined `d⁰`, `d¹` (`d¹ d⁰ = 0`) and closed `Zⁱ ⊆ Wⁱ` with
+  `P_{Zⁱ} D(dⁱ) ⊆ D(dⁱ)` and `dⁱ P_{Zⁱ} = P_{Zⁱ⁺¹} dⁱ`, every strong solution of the Hodge wave
+  equation (`IsHodgeWave`) on `[0, T]` starting in `Z⁰ × Z¹ × Z²` stays in it (the product
+  reduces the Hodge wave operator). -/
 theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [CompleteSpace E] :
     (∀ L : E →ₗ.[ℝ] E, Dense (L.domain : Set E) → L† = -L →
@@ -427,13 +434,28 @@ theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductS
           ∃ (Ks : Submodule ℝ E) (_ : Ks.HasOrthogonalProjection),
             (Ks : Set E) = invariantCore S K ∧ IsReducing L Ks ∧
             ∀ (M : Submodule ℝ E) [M.HasOrthogonalProjection], M ≤ K → IsReducing L M → M ≤ Ks) ∧
-    ∀ A : E →ₗ.[ℝ] E, (∀ x : A.domain, ⟪A x, (x : E)⟫_ℝ ≤ 0) →
+    (∀ A : E →ₗ.[ℝ] E, (∀ x : A.domain, ⟪A x, (x : E)⟫_ℝ ≤ 0) →
       (∀ y, ∃ x : A.domain, (x : E) - A x = y) →
       ∃ S, IsEvolution A.graph (Ici 0) S ∧ (∀ t, 0 ≤ t → ∀ x, ‖S t x‖ ≤ ‖x‖) ∧
         (∀ x ∈ A.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution A.graph (Icc 0 T) u →
           EqOn u (fun t => S t x) (Icc 0 T)) ∧
         ∀ (K : Submodule ℝ E) [K.HasOrthogonalProjection],
-          IsReducing A K ↔ (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ := by
+          IsReducing A K ↔ (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ) ∧
+    ∀ {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+      [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
+      [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
+      (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2), Dense (d0.domain : Set W0) →
+      Dense (d1.domain : Set W1) → d0.IsClosed → d1.IsClosed →
+      (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      ∀ (Z0 : Submodule ℝ W0) (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2)
+        [Z0.HasOrthogonalProjection] [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection],
+        (∀ x : d0.domain, ∃ h : Z0.starProjection (x : W0) ∈ d0.domain,
+          d0 ⟨_, h⟩ = Z1.starProjection (d0 x)) →
+        (∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
+          d1 ⟨_, h⟩ = Z2.starProjection (d1 x)) →
+        ∀ T (U : ℝ → W0 × W1 × W2), IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
+          (U 0).1 ∈ Z0 → (U 0).2.1 ∈ Z1 → (U 0).2.2 ∈ Z2 →
+          ∀ t ∈ Icc 0 T, (U t).1 ∈ Z0 ∧ (U t).2.1 ∈ Z1 ∧ (U t).2.2 ∈ Z2 := by
   sorry
 
 /-- **Which boundary conditions keep the TSD constraints of the linearized Einstein–Bianchi
@@ -469,9 +491,9 @@ equations** ([QuennevilleBelair2015], §4.10 (Prop 4.17), §6.1, §6.3). By
   determined by their initial value, exist on every `[0, T]` from every TSD datum of `D(L)` and
   stay TSD; and some TSD datum `U₀` with `U₀`, `L U₀`, `L² U₀` in `D(L)` is not stationary.
 
-Whether on every bounded domain only stationary data keep the constraint is not claimed (it is
-open); on the ball it would follow from the absence of TSD eigenfields `u` with
-`curl u ∉ H̊(curl)`, which the smooth case excludes. -/
+Whether on every bounded domain only stationary data keep the constraint is open and not
+claimed: on the ball it is equivalent to the absence of TSD eigenfields `u` with
+`curl u ∉ H̊(curl)`, which is proved here only for the eigenfields `C²` up to the boundary. -/
 theorem tsd_boundary_conditions :
     (∀ Ω : Set (Fin 3 → ℝ), IsOpen Ω → Bornology.IsBounded Ω → Ω.Nonempty →
       (∃ S, IsEvolution (gradCurlWave Ω) univ S) ∧

@@ -38,6 +38,8 @@ open Filter Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 
+universe u
+
 namespace FEEC
 
 /-! ### Differential forms on `ℝⁿ` and the minimal exterior derivative (from `palomar/fem`) -/

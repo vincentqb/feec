@@ -3,12 +3,14 @@ module
 public import Solution.Verdicts
 public import Solution.MirrorProp
 public import Solution.Absorbing
+public import Solution.Subcomplex
 
 /-!
 # Which boundary conditions keep the TSD constraints (solution)
 
 `FEEC.constraint_propagation`: `constraint_propagation_of` (`Solution.Engine`), Stone's group
-and the Lumer–Phillips semigroup of `Feec` with their reducing-subspace criteria.
+and the Lumer–Phillips semigroup of `Feec` with their reducing-subspace criteria, and
+`subcomplex_of` (`Solution.Subcomplex`), the reducing subcomplexes of a short complex.
 `FEEC.tsd_boundary_conditions`: the natural boundary conditions on bounded domains, on domains
 star-shaped with respect to a ball, on the unit ball and on boxes (`natural_of`, `starShaped_of`,
 `ball_of`, `box_of` of `Solution.Verdicts`, through the grad–curl bridge `Solution.GradCurl`, and
@@ -30,6 +32,8 @@ open Set MeasureTheory LinearPMap
 
 @[expose] public noncomputable section
 
+universe u
+
 namespace FEEC
 
 theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
@@ -43,15 +47,31 @@ theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductS
           ∃ (Ks : Submodule ℝ E) (_ : Ks.HasOrthogonalProjection),
             (Ks : Set E) = invariantCore S K ∧ IsReducing L Ks ∧
             ∀ (M : Submodule ℝ E) [M.HasOrthogonalProjection], M ≤ K → IsReducing L M → M ≤ Ks) ∧
-    ∀ A : E →ₗ.[ℝ] E, (∀ x : A.domain, ⟪A x, (x : E)⟫_ℝ ≤ 0) →
+    (∀ A : E →ₗ.[ℝ] E, (∀ x : A.domain, ⟪A x, (x : E)⟫_ℝ ≤ 0) →
       (∀ y, ∃ x : A.domain, (x : E) - A x = y) →
       ∃ S, IsEvolution A.graph (Ici 0) S ∧ (∀ t, 0 ≤ t → ∀ x, ‖S t x‖ ≤ ‖x‖) ∧
         (∀ x ∈ A.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution A.graph (Icc 0 T) u →
           EqOn u (fun t => S t x) (Icc 0 T)) ∧
         ∀ (K : Submodule ℝ E) [K.HasOrthogonalProjection],
-          IsReducing A K ↔ (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧
-            ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ :=
-  constraint_propagation_of
+          IsReducing A K ↔ (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ) ∧
+    ∀ {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+      [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
+      [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
+      (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2), Dense (d0.domain : Set W0) →
+      Dense (d1.domain : Set W1) → d0.IsClosed → d1.IsClosed →
+      (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      ∀ (Z0 : Submodule ℝ W0) (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2)
+        [Z0.HasOrthogonalProjection] [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection],
+        (∀ x : d0.domain, ∃ h : Z0.starProjection (x : W0) ∈ d0.domain,
+          d0 ⟨_, h⟩ = Z1.starProjection (d0 x)) →
+        (∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
+          d1 ⟨_, h⟩ = Z2.starProjection (d1 x)) →
+        ∀ T (U : ℝ → W0 × W1 × W2), IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
+          (U 0).1 ∈ Z0 → (U 0).2.1 ∈ Z1 → (U 0).2.2 ∈ Z2 →
+          ∀ t ∈ Icc 0 T, (U t).1 ∈ Z0 ∧ (U t).2.1 ∈ Z1 ∧ (U t).2.2 ∈ Z2 :=
+  ⟨constraint_propagation_of.1, constraint_propagation_of.2,
+    fun d0 d1 hd0 hd1 hc0 hc1 hcomp Z0 Z1 Z2 _ _ _ hZ0 hZ1 T U hU h0 h1 h2 =>
+      subcomplex_of d0 d1 hd0 hd1 hc0 hc1 hcomp Z0 Z1 Z2 hZ0 hZ1 T U hU h0 h1 h2⟩
 
 theorem tsd_boundary_conditions :
     (∀ Ω : Set (Fin 3 → ℝ), IsOpen Ω → Bornology.IsBounded Ω → Ω.Nonempty →

@@ -35,6 +35,8 @@ open Set MeasureTheory Filter Topology
 
 @[expose] public noncomputable section
 
+universe u
+
 namespace FEEC
 
 open Feec Feec.Domain Feec.Models.BoundedDomain
@@ -62,7 +64,7 @@ section Transfer
 
 variable {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
   [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
-  [InnerProductSpace ℝ W2] {X0 X1 X2 : Type} [NormedAddCommGroup X0] [InnerProductSpace ℝ X0]
+  [InnerProductSpace ℝ W2] {X0 X1 X2 : Type u} [NormedAddCommGroup X0] [InnerProductSpace ℝ X0]
   [NormedAddCommGroup X1] [InnerProductSpace ℝ X1] [NormedAddCommGroup X2]
   [InnerProductSpace ℝ X2]
   (e0 : W0 ≃ₗᵢ[ℝ] X0) (e1 : W1 ≃ₗᵢ[ℝ] X1) (e2 : W2 ≃ₗᵢ[ℝ] X2)

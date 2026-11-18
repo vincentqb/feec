@@ -16,8 +16,8 @@ its domain complex `V = D(d)` with commuting cochain projections `πₕ`. When d
 of the Hodge Laplacian and of the Hodge heat and wave equations converge, and how fast? Four
 theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every family of subcomplexes:
 
-1. `FEEC.exists_subcomplexFamily_iff`: uniformly bounded cochain projections exist iff the discrete
-   Poincaré inequality and the harmonic bound hold uniformly ([AFW2010], Thm 3.7 and its converse).
+1. `FEEC.projectionFEEC`: uniformly bounded cochain projections exist iff the discrete Poincaré
+   inequality and the harmonic bound hold uniformly ([AFW2010], Thm 3.7 and its converse).
 2. `FEEC.staticFEEC`: with bounded projections and closed ranges, the mixed Hodge Laplacian and its
    Galerkin discretizations are uniformly well posed and quasi-optimal, the discrete harmonic forms
    and cohomology converge, and Jackson estimates give rates ([AFW2010], Thms 3.4–3.6, 3.8, 3.9),
@@ -25,9 +25,9 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
 3. `FEEC.evolutionFEEC`: on every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}`, `L = 𝐝 - 𝐝*` is skew-adjoint; the
    Galerkin solutions of the Hodge wave equation `ξ' = L ξ` converge under approximation by `Vₕ`
    alone (no bound of `πₕ`, no closed range), with the error `‖v - x‖ + 2 (1 + 4√3) (1 + t) M`
-   ([QuennevilleBelair2015], Ch. 4), those of the heat equation `u' = L² u` under the static
-   hypotheses ([GilletteHolstZhu2017]); both with every A-stable rational scheme
-   ([BrennerThomee1979]), the wave equation at the Jackson rates.
+   ([QuennevilleBelair2015], Ch. 4), those of the heat equation `u' = L² u` when moreover the
+   projections are bounded and the ranges closed ([GilletteHolstZhu2017]); both with every A-stable
+   rational scheme ([BrennerThomee1979]), the wave equation at the Jackson rates.
 4. `FEEC.crimeFEEC`: with variational crimes, discrete complexes read in `W` by bounded maps that
    need not be cochain maps nor isometries, the static and heat conclusions hold up to consistency
    errors (Strang lemma), and for cochain reading maps the discrete cohomology is right
@@ -36,9 +36,9 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
 The elliptic and parabolic problems need bounded cochain projections, which are uniform discrete
 stability; the hyperbolic one needs only approximation. The witnesses: genuine crimes meet the
 hypotheses of Theorem 4 (`FEEC.crime_nonvacuous`), and the Whitney forms on the cube those of
-Theorems 2 and 3 (`FEEC.feec_cube`). The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero
-unless `j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions are
-operator families characterized by their strong solutions.
+Theorems 2 and 3 (`FEEC.feec_cube`). The differential is a family `d i j : Wⁱ → Wʲ` of all pairs,
+zero unless `j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions
+are operator families characterized by their strong solutions.
 
 ## References
 
@@ -631,7 +631,7 @@ Poincaré inequality and the harmonic bound with constants `c₁ⁱ`, `c₂ⁱ` 
 cochain projections bounded by `(1 + c₁ⁱ)(1 + c₂ⁱ)` in the graph norm, whatever the ranges; for
 complexes with closed ranges, uniformly graph-bounded cochain projections exist iff both bounds
 hold uniformly. -/
-theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
+theorem projectionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
     (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)] :
     (∀ c₁ c₂ : ℤ → ℝ, (∀ i, 0 ≤ c₁ i) → (∀ i, 0 ≤ c₂ i) →
       (∀ h i, (V h).PoincareBy i (c₁ i) ∧ (V h).HarmonicBoundBy i (c₂ i)) →
@@ -643,13 +643,14 @@ theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l 
   sorry
 
 /-- **Theorem 2: the static theory** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9, §3.3–§3.5). The range of
-`dⁱ` is closed iff `dⁱ` satisfies a Poincaré inequality. If the cochain projections are bounded by
-`c` in the graph norm in the degrees `j - 1`, `j` and `dʲ⁻¹`, `dʲ` satisfy the Poincaré inequality
-with constant `c_P`, then in degree `j` the harmonic gaps, the cohomology isomorphisms, the uniform
-discrete Poincaré inequality, unique solvability, the uniform inf-sup condition, stability,
-quasi-optimality and convergence of the mixed method hold (`StaticVerdict`), with one constant
-`Φ(c, c_P)` for every complex, family and degree; and every Jackson estimate gives the rate
-`L hᵒʳᵈ⁽ˢ⁾` on `s`-regular data. -/
+`dⁱ` is closed iff `dⁱ` satisfies a Poincaré inequality, so the Poincaré hypotheses below are the
+closed ranges of [AFW2010]. If the cochain projections are bounded by `c` in the graph norm in the
+degrees `j - 1`, `j` and `dʲ⁻¹`, `dʲ` satisfy the Poincaré inequality with constant `c_P`, then in
+degree `j` the harmonic gaps, the cohomology isomorphisms, the uniform discrete Poincaré
+inequality, unique solvability, the uniform inf-sup condition, stability, quasi-optimality and
+convergence of the mixed method hold (`StaticVerdict`), with one constant `Φ(c, c_P)` for every
+complex, family and degree; and every Jackson estimate gives the rate `L hᵒʳᵈ⁽ˢ⁾` on `s`-regular
+data. -/
 theorem staticFEEC : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike 𝕜] {W : ℤ → Type v}
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     {H : HilbertComplex 𝕜 W},
@@ -766,8 +767,9 @@ def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) 
 -- palomar-shared-end: IsCsForm
 /-- **Whitney forms on the cube meet the hypotheses of Theorems 2 and 3** ([AFW2010], §5.2, §5.5;
 [ChristiansenWinther2008]; [Freudenthal1942]): `HΛ((0, ½)ⁿ)` has closed ranges; the Whitney forms
-of the Freudenthal meshes (`h = 1 / (2 (N + 1))`, a.e. affine on every Kuhn simplex) have uniformly
-graph-bounded smoothed projections, approximate, and give the rate `C L / (N + 1)` on `C²` data. -/
+of the Freudenthal meshes (`h = 1 / (2 (N + 1))`, a.e. affine on every Kuhn simplex) have smoothed
+projections bounded in `L²` and in the graph norm uniformly in `N`, approximate, and give the rate
+`C L / (N + 1)` on `C²` data. -/
 theorem feec_cube (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ),
       (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
@@ -776,6 +778,8 @@ theorem feec_cube (n : ℕ) [NeZero n] :
           ⇑(u s) =ᵐ[volume.restrict (cube n ∩ convexHull ℝ (range fun (j : Fin (n + 1)) i =>
             ((z i : ℝ) + if (σ.symm i : ℕ) < j then 1 else 0) / (2 * (N + 1))))]
             fun x => a s.1 + ∑ i, A s.1 i * x i) ∧
+      (∃ C : ℝ, ∀ N i (x : (H.d i (i + 1)).domain),
+        ‖((F.π N).π i x : L2Form (cube n) i)‖ ≤ C * ‖(x : L2Form (cube n) i)‖) ∧
       (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
       (∀ i, IsClosed (H.boundaries i : Set (L2Form (cube n) i))) ∧
       ∀ j, F.HasRate j (IsCsForm (cube n) 0) fun N => 1 / (N + 1) := by

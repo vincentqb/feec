@@ -60,8 +60,9 @@ under other names in the end; their names are not checked (`proposal` in `region
 
 An entry of `regions` or `historicalNames` that matches nothing is an error, so both lists stay
 minimal. Citation keys of `docs/references.bib` (`AFW2010`) also resolve, and so do the compared
-theorems of the Palomar packages (`theorem_names` of `palomar/*/comparator.json`, `FEEC.feec`),
-which are not in `Feec`; the `Palomar` check finds each as a theorem of its `Challenge.lean`.
+theorems of the Palomar packages (`theorem_names` of `palomar/*/comparator.json`,
+`FEEC.staticFEEC`), which are not in `Feec`; the `Palomar` check finds each as a theorem of its
+`Challenge.lean`.
 
 Violations are reported as `path:line: message` at the line where the span starts.
 -/

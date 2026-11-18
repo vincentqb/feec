@@ -41,8 +41,9 @@ Three theorems:
   `Sⁱ⁻¹` and `Sⁱ` induce zero on cohomology (Theorem 6, (27)).
 * `FEEC.bggHilbert` (bounded Hilbert rows): `Γ / Δ` with the quotient norm is a bounded Hilbert
   complex, with closed ranges where the rows have finite-dimensional cohomology (Theorem 6 and the
-  remark after it); under (23) and (28) it is the orthogonal output complex of Arnold–Hu, with the
-  map (30) in its Moore–Penrose form (Theorem 7, Corollary 1).
+  remark after it); under (23) and (28), with `sⁱ` of closed range before `J`, it is isomorphic to
+  the orthogonal output complex of Arnold–Hu, with the map (30) in its Moore–Penrose form
+  (Theorem 7, Corollary 1).
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
 `i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and

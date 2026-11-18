@@ -170,12 +170,12 @@ status:
     norm of Gamma / Delta, an isometry with the Hilbert space Gamma (-) Delta, bounded quotient
     differentials and closed range, with s bounded below before J and onto modulo d from J on;
     the orthogonal form of (30) with Corollary 1 for every linear null-homotopy K under (23) with
-    closed ranges of s^i for i < J). Challenge.lean, 614 lines. These are the BGG theorems of the
+    closed ranges of s^i for i < J). Challenge.lean, 615 lines. These are the BGG theorems of the
     former palomar/bgg (FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
     FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert, FEEC.bggOrthogonal), regrouped into three
     theorems with no conclusion dropped (review.notes); its weak-symmetry theorem
-    FEEC.bggWeakSymmetry is compared in palomar/einsteinbianchi. Not yet stated (planned,
-    STORIES.md entry 6): the corollary on the cube, the Hessian, elasticity and div-div complexes
+    FEEC.bggWeakSymmetry is compared in palomar/einsteinbianchi. Not yet stated (planned): the
+    corollary on the cube, the Hessian, elasticity and div-div complexes
     of (0, 1/2)^3 (or every parallelepiped) as closed-range Hilbert complexes with cohomology
     P_1, RM, RT (dimensions 4, 6, 4) in degree 0 and zero above; it needs the identification of
     the BGG complex of the maximal L^2 data and the dimension count in Feec.
@@ -360,7 +360,7 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Re-created entry (2026-11-18, STORIES.md entry 6, a form cleanable in under a day): the BGG
+    Re-created entry (2026-11-18, the form that needs no new Feec work): the BGG
     theorems of the former palomar/bgg (deleted when palomar/feec absorbed them; palomar/feec
     compared FEEC.bggCohomology, FEEC.bggFinrank and FEEC.bggHilbert only) move out of
     palomar/feec and the bookkeeping dropped there is restored as clauses: FEEC.bggCohomology
@@ -379,9 +379,9 @@ review:
     clause structure of the three statements, the orthogonal clause of FEEC.bggHilbert and the
     quotient norm of its main clause (at J equivalent but not equal to the norm of Arnold-Hu, see
     fidelity (3)), and the definitions FEEC.BGG.moorePenrose, FEEC.BGG.Υ, FEEC.BGG.ΓL,
-    FEEC.BGG.ΔL and FEEC.BGG.QuotL. Editorial risk (audits stories-1 and stories-2): without the
-    cube corollary of status.scope the entry is the algebraic and Hilbert-space skeleton of
-    Arnold-Hu; the corollary is planned (STORIES.md entry 6).
+    FEEC.BGG.ΔL and FEEC.BGG.QuotL. Editorial risk (two AI editorial audits, 2026-11-17): without
+    the cube corollary of status.scope the entry is the algebraic and Hilbert-space skeleton of
+    Arnold-Hu; the corollary is planned.
 
 alignment:
   namespace: "FEEC"

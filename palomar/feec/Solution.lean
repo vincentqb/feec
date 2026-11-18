@@ -8,9 +8,9 @@ public import Solution.Witness
 /-!
 # Galerkin approximation of Hilbert complexes (solution)
 
-The four theorems of `Challenge.lean` and their witnesses. Theorem 1
-(`FEEC.exists_subcomplexFamily_iff`) from `Feec.HilbertComplex.Subcomplex.exists_cochainProjection`
-and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff`; Theorem 2 (`FEEC.staticFEEC`) from
+The four theorems of `Challenge.lean` and their witnesses. Theorem 1 (`FEEC.projectionFEEC`)
+from `Feec.HilbertComplex.Subcomplex.exists_cochainProjection` and
+`Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff`; Theorem 2 (`FEEC.staticFEEC`) from
 the static verdict with explicit constants (`HilbertComplex.SubcomplexFamily.staticVerdict_of`,
 through `Feec.HilbertComplex.SubcomplexFamily.staticFEEC` and `Solution.Bridge`) and the rates of
 `Solution.Rates`; Theorem 3 (`FEEC.evolutionFEEC`) from the wave and heat verdicts
@@ -65,7 +65,7 @@ theorem exists_cochainProjection {H : HilbertComplex 𝕜 W} (S : H.Subcomplex)
 /-- **Theorem 1: bounded cochain projections ⇔ uniform discrete stability** ([AFW2010], Thm 3.7
 and its converse, Thm 3.6 and (30)): the projections of `FEEC.exists_cochainProjection` for every
 `h`, and `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff` under closed ranges. -/
-theorem exists_subcomplexFamily_iff {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
+theorem projectionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
     (V : κ → H.Subcomplex) [∀ h i, FiniteDimensional 𝕜 ((V h).V i)] :
     (∀ c₁ c₂ : ℤ → ℝ, (∀ i, 0 ≤ c₁ i) → (∀ i, 0 ≤ c₂ i) →
       (∀ h i, (V h).PoincareBy i (c₁ i) ∧ (V h).HarmonicBoundBy i (c₂ i)) →
@@ -218,6 +218,8 @@ theorem feec_cube (n : ℕ) [NeZero n] :
           ⇑(u s) =ᵐ[volume.restrict (cube n ∩ convexHull ℝ (range fun (j : Fin (n + 1)) i =>
             ((z i : ℝ) + if (σ.symm i : ℕ) < j then 1 else 0) / (2 * (N + 1))))]
             fun x => a s.1 + ∑ i, A s.1 i * x i) ∧
+      (∃ C : ℝ, ∀ N i (x : (H.d i (i + 1)).domain),
+        ‖((F.π N).π i x : L2Form (cube n) i)‖ ≤ C * ‖(x : L2Form (cube n) i)‖) ∧
       (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
       (∀ i, IsClosed (H.boundaries i : Set (L2Form (cube n) i))) ∧
       ∀ j, F.HasRate j (IsCsForm (cube n) 0) fun N => 1 / (N + 1) := by
@@ -254,7 +256,8 @@ theorem feec_cube (n : ℕ) [NeZero n] :
             Fm.polyInterpBound whitney i * (L * (Fm.mesh N).meshSize ^ (1 : ℝ)) := by
           rw [Real.rpow_one]; ring
         exact ⟨v, hv, e ▸ h1, fun j hxj => e ▸ h2 j hxj⟩ }
-  refine ⟨H, F, fun k => dMax_cube k, rfl, fun N k u hu z σ => ?_, hB, hA, hcr, fun j => ?_⟩
+  refine ⟨H, F, fun k => dMax_cube k, rfl, fun N k u hu z σ => ?_,
+    ⟨K, fun N i x => hπ1 N i x.1⟩, hB, hA, hcr, fun j => ?_⟩
   · obtain ⟨T, hT, hpts⟩ := FEM.exists_mem_simplices_points_eq N z σ
     obtain ⟨w, hw, hae⟩ := PolySeq.exists_piece_of_mem_subcomplex (FEM.mesh n N) (Fm.domain_eq N)
       (Fm.isOpen_domain N) D.isOpen whitney hu hT

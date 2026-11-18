@@ -11,7 +11,7 @@ The discrete Poincaré inequality and the harmonic bound of the challenge are th
 `Subcomplex.harmonicBound_iff`), and a `Feec` cochain projection of the subcomplex restricts to the
 domain complex as a cochain projection of the challenge with the same graph-norm bound
 (`Subcomplex.CochainProjection.ofFeec`, `Subcomplex.CochainProjection.graphNorm_ofFeec_le`). The
-compared theorems `FEEC.exists_cochainProjection` and `FEEC.exists_subcomplexFamily_iff` follow from
+two clauses of the compared theorem `FEEC.projectionFEEC` (Solution.lean) follow from
 `Feec.HilbertComplex.Subcomplex.exists_cochainProjection` and
 `Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff`.
 

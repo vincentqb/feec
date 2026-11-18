@@ -16,7 +16,7 @@ project:
     closed densely defined operators on Z (any RCLike field) and an arbitrary family of
     finite-dimensional subcomplexes V_h of its domain complex V = D(d) with commuting cochain
     projections pi_h, refined along any filter, four compared theorems answer. Theorem 1,
-    FEEC.exists_subcomplexFamily_iff ([AFW2010] Thm 3.7 and its converse, Thm 3.6, (30)):
+    FEEC.projectionFEEC ([AFW2010] Thm 3.7 and its converse, Thm 3.6, (30)):
     finite-dimensional subcomplexes with the discrete Poincare inequality ||v||_V <= c1 ||dv|| and
     the harmonic bound ||q|| <= c2 ||P_H q|| (constants per degree, uniform in h) have cochain
     projections bounded by (1 + c1)(1 + c2) in the graph norm, whatever the ranges; under closed
@@ -74,9 +74,9 @@ project:
     complex (the weak exterior derivative, from test forms) is a Hilbert complex with closed range
     in every degree, and the Whitney forms on the Freudenthal meshes (h = 1/(2(N+1))) form a
     family of subcomplexes whose forms are almost everywhere affine on every Kuhn simplex (named
-    by its vertices), with smoothed cochain projections bounded in every graph norm uniformly in
-    N, approximating in the graph norm, with the mixed-method rate C L / (N + 1) for C^2
-    solutions: the hypotheses of Theorems 2 and 3 hold for a real finite element family. The
+    by its vertices), with smoothed cochain projections bounded in L2 and in every graph norm
+    uniformly in N, approximating in the graph norm, with the mixed-method rate C L / (N + 1) for
+    C^2 solutions: the hypotheses of Theorems 2 and 3 hold for a real finite element family. The
     statement is self-contained over Mathlib; the proof is the library Feec of this repository.
   authors:
     - "Vincent Quenneville-Bélair"
@@ -227,9 +227,9 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: the four theorems FEEC.exists_subcomplexFamily_iff,
-    FEEC.staticFEEC, FEEC.evolutionFEEC and FEEC.crimeFEEC, and the witnesses
-    FEEC.crime_nonvacuous and FEEC.feec_cube (Challenge.lean, 784 lines). They restate the
+    Formalized and compared: the four theorems FEEC.projectionFEEC, FEEC.staticFEEC,
+    FEEC.evolutionFEEC and FEEC.crimeFEEC, and the witnesses FEEC.crime_nonvacuous and
+    FEEC.feec_cube (Challenge.lean, 788 lines). They restate the
     former compared theorems FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated,
     FEEC.staticFEEC_uniform, FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff and
     FEEC.crimeFEEC with no conclusion dropped, except the constraint-propagation conclusions below
@@ -241,9 +241,9 @@ status:
     keeps K and its orthogonal complement" for the wave and heat generators) are compared in
     palomar/constraints; the BGG theorems of [ArnoldHu2021] (FEEC.bggCohomology, FEEC.bggFinrank,
     FEEC.bggHilbert) in palomar/bgg; the weak-symmetry theorem FEEC.bggWeakSymmetry in
-    palomar/einsteinbianchi. Not compared, proved in Feec: the higher-order families on general
-    meshes (palomar/fem); the wave rate on the cube; and, as before, the explicit constants, the
-    spatial heat rates, the uniform fully discrete rates, leapfrog, Runge-Kutta, bounded
+    palomar/einsteinbianchi; the higher-order families on general meshes in palomar/fem. Not
+    compared, proved in Feec: the wave rate on the cube; and, as before, the explicit constants,
+    the spatial heat rates, the uniform fully discrete rates, leapfrog, Runge-Kutta, bounded
     perturbations, the wave equation with crimes, the residual splitting, and the physical
     instances (Feec/Physics/EinsteinBianchi, Feec/Models/Cube, palomar/einsteinbianchi).
   sorry_count: 0
@@ -386,9 +386,10 @@ fidelity:
     they are subcomplexes of HΛ (so conforming) whose forms are almost everywhere affine on every
     Kuhn simplex (the Whitney forms are the affine forms a + κ b, a strict subspace of P1Λ in the
     degrees k >= 1; that they are exactly the Whitney forms is not stated). The cochain projections
-    are stated bounded in every graph norm uniformly in N (they are moreover bounded in L2, not
-    stated). The regularity class of the rate is IsCsForm 0 (C^2 forms with first derivatives of w
-    and dw bounded by L on the closure), as in palomar/fem, and the rate is that of the mixed
+    are stated bounded in L2 and in every graph norm uniformly in N (the L2 bound is the
+    hypothesis of the heat clause of Theorem 3 in the last degree of a window). The regularity
+    class of the rate is IsCsForm 0 (C^2 forms with first derivatives of w and dw bounded by L on
+    the closure), as in palomar/fem, and the rate is that of the mixed
     method in every degree, for every solution of the continuous problem (which exists and is
     unique by Theorem 2, closed ranges being part of the conclusion); the constant C depends on n
     and j only. HΛ is defined from test forms (the adjoint of the closure of the codifferential on
@@ -414,8 +415,8 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author. Restructure (2026-11-18, STORIES.md entry 4, one story: the
-    Galerkin approximation of Hilbert complexes): the former compared theorems become four named
+    Not yet reviewed by the author. Restructure (2026-11-18, one story: the Galerkin
+    approximation of Hilbert complexes): the former compared theorems become four named
     theorems and two witnesses, with every conclusion kept except the constraint-propagation ones
     (compared in palomar/constraints) and the BGG theorems (compared in palomar/bgg).
     Correspondence: FEEC.feec.static (closed ranges, some constant) and FEEC.staticFEEC_uniform
@@ -426,12 +427,14 @@ review:
     FEEC.feec_rated (for each scheme and regularity index, a group with the wave verdict and the
     rate) is the HasWaveRate conjunct of its wave clause (one group for every estimate, scheme and
     index; the group is unique); FEEC.exists_cochainProjection (one subcomplex) and the former
-    FEEC.exists_subcomplexFamily_iff are the two clauses of the new FEEC.exists_subcomplexFamily_iff
-    (the first stated for families, constants uniform in h); the three fields of the former
+    FEEC.exists_subcomplexFamily_iff are the two clauses of FEEC.projectionFEEC (the first stated
+    for families, constants uniform in h); the three fields of the former
     CrimeFamily.Verdict are the three clauses of FEEC.crimeFEEC. Removed definitions:
     SubcomplexFamily.Verdict, SubcomplexFamily.Rated, CrimeFamily.Verdict and IsReducing (with the
     fields propagates_iff, invariantCore, subcomplex of WaveVerdict and reducing_iff of
-    EvolutionVerdict); new: SubcomplexFamily.HasWaveRate. Challenge 999 -> 784 lines. Earlier
+    EvolutionVerdict); new: SubcomplexFamily.HasWaveRate, and the L2 bound of the projections in
+    FEEC.feec_cube (so that it meets the heat clause of Theorem 3 on every window). Challenge
+    999 -> 788 lines. Earlier
     history: the challenge merged the former palomar/static and palomar/dynamic challenges
     (statements equivalent), the L2 de Rham definitions of palomar/fem (shortened docstrings) and
     FEEC.feec_cube, and was redesigned for the 1000-line limit with no conclusion dropped: one
@@ -466,7 +469,7 @@ alignment:
   namespace: "FEEC"
   statements:
     - source: "[AFW2010], Thm 3.7 and its converse (Thm 3.6, (30))"
-      lean: "FEEC.exists_subcomplexFamily_iff"
+      lean: "FEEC.projectionFEEC"
       module: "Challenge"
       status: "proved"
       note: >-

@@ -181,6 +181,14 @@ end HilbertComplex
 
 variable {n : ℕ}
 
+-- palomar-shared: FormField
+/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
+`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
+abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
+/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
+def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
+  (-1) ^ (s.filter fun l => l < j).card
+-- palomar-shared-end: FormField
 -- palomar-shared: forms
 /-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
 `s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
@@ -188,12 +196,6 @@ abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : �
 /-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
 abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
   PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
-/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
-`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
-abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
-/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
-  (-1) ^ (s.filter fun l => l < j).card
 /-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
 def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   fderiv ℝ f x (Pi.single j 1)
@@ -310,6 +312,8 @@ structure SimplicialMesh (n : ℕ) where
   inter_closedInterior : ∀ T ∈ simplices, ∀ T' ∈ simplices,
     T.closedInterior ∩ T'.closedInterior =
       convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
+-- palomar-shared-end: SimplicialMesh
+-- palomar-shared: meshFamily
 /-- The **boundary facets** of the mesh: the facets (sets of `n` vertices of a simplex) of exactly
 one of its simplices. -/
 def SimplicialMesh.boundaryFacets {n : ℕ} (M : SimplicialMesh n) : Set (Finset (Fin n → ℝ)) :=
@@ -340,7 +344,7 @@ simplices consists of all of them, the Freudenthal triangulation of the cube). -
 def IsFreudenthal {n : ℕ} (𝒯 : ℕ → SimplicialMesh n) : Prop :=
   ∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
     T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
--- palomar-shared-end: SimplicialMesh
+-- palomar-shared-end: meshFamily
 -- palomar-shared: IsStarShapedBall
 /-- `Ω` is a **bounded open domain star-shaped with respect to a ball** `B(x₀, s₀)`: the segment
 from every point of the ball to every point of `Ω` lies in `Ω`. -/

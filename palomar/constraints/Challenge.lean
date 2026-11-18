@@ -67,9 +67,10 @@ coefficients `ω_s` on `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s = {s₁ < ⋯
 vector `1`-form `u` is `E_{ab} = (uₐ)_{dx_b}` and the magnetic field of a vector `2`-form `ρ` is
 `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` (`⋆dxᵢ = (-1)ⁱ dx_{{i}ᶜ}`). Operators are given by their graphs,
 relations `A ⊆ X × X`, and strong solutions are continuous paths in `D(A)` with derivative `A u`
-(`IsStrongSolution`). Forms, the exterior derivatives, Hilbert complexes, their windows and strong
-solutions are stated in the words of the Palomar entries `palomar/fem` and `palomar/feec`, the
-fields, the system (6.1) and its boundary conditions in those of `palomar/einsteinbianchi`.
+(`IsStrongSolution`). Forms, the exterior derivatives, Hilbert complexes, their windows, the square
+of an operator and strong solutions are stated in the words of the Palomar entries `palomar/fem`
+and `palomar/feec`, the fields, the system (6.1) and its boundary conditions in those of
+`palomar/einsteinbianchi`.
 
 ## References
 
@@ -100,6 +101,14 @@ namespace FEEC
 
 /-! ### Differential forms on `ℝⁿ` and the minimal exterior derivative (from `palomar/fem`) -/
 
+-- palomar-shared: FormField
+/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
+`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
+abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
+/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
+def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
+  (-1) ^ (s.filter fun l => l < j).card
+-- palomar-shared-end: FormField
 -- palomar-shared: forms
 /-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
 `s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
@@ -107,12 +116,6 @@ abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : �
 /-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
 abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
   PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
-/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
-`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
-abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
-/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
-  (-1) ^ (s.filter fun l => l < j).card
 /-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
 def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
   fderiv ℝ f x (Pi.single j 1)
@@ -201,12 +204,6 @@ structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i
 -- palomar-shared: window
 /-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of the **window** `[a, a + m)` (an `ℓ²` sum). -/
 abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
-/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
-def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-    (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
-  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
-    obtain ⟨y, hy, hyx⟩ := x.2.1
-    exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
 namespace HilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 W) (a : ℤ)
@@ -235,6 +232,14 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
 end HilbertComplex
 -- palomar-shared-end: window
+-- palomar-shared: sq
+/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
+def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
+  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
+    obtain ⟨y, hy, hyx⟩ := x.2.1
+    exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
+-- palomar-shared-end: sq
 
 /-! ### The linearized Einstein–Bianchi system (4.14) -/
 

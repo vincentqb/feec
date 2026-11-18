@@ -48,15 +48,14 @@ spaces, not complexes.
 Polynomial forms are coefficient functions `Finset (Fin n) → MvPolynomial (Fin n) K`, the
 coefficient of `dx_s`, `s` a set of indices; real polynomial forms are evaluated to form fields on
 `ℝⁿ = Fin n → ℝ` (`evalForm`) for the moments. The faces of a simplex are oriented by the
-increasing order of their vertices. The shared block `forms` (differential forms on `ℝⁿ`) is
-copied whole; this entry uses its form fields and the sign `ε(j, s)`.
+increasing order of their vertices.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §3–§4
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4, §5
+  §5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -70,48 +69,18 @@ universe u
 
 namespace FEEC
 
-/-! ### Differential forms on `ℝⁿ` (the shared block) -/
+/-! ### Form fields on `ℝⁿ` (the shared block) -/
 
 variable {n : ℕ}
 
--- palomar-shared: forms
-/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
-`s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
-abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
-/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
-abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
-  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
+-- palomar-shared: FormField
 /-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
 `Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
 abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
 /-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
 def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
   (-1) ^ (s.filter fun l => l < j).card
-/-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
-def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
-  fderiv ℝ f x (Pi.single j 1)
-/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
-def extDeriv {n : ℕ} (w : FormField n) : FormField n :=
-  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
-/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, formal adjoint of `d`. -/
-def codiff {n : ℕ} (ψ : FormField n) : FormField n :=
-  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
-open scoped ContDiff in
-/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
-def IsTestFn {n : ℕ} (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
-  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
-/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`: the adjoint of the closure of
-the codifferential on test forms (the span of the pairs `(ψ, dᵗψ)`), so `du = w` iff
-`⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`; its domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
-def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
-  (Submodule.span ℝ {p : L2Form Ω (k + 1) × L2Form Ω k | ∃ ψ : FormField n,
-    (∀ s, IsTestFn Ω fun x => ψ x s) ∧
-    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
-    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
-    ).topologicalClosure.toLinearPMap†
-/-- The cube `(0, ½)ⁿ`. -/
-def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
--- palomar-shared-end: forms
+-- palomar-shared-end: FormField
 
 /-! ### Polynomial differential forms ([AFW2006], §3) -/
 

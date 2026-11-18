@@ -20,10 +20,13 @@ project:
     studies whether TSD data stay TSD, the question of constraint-preserving boundary conditions
     of the initial boundary value problem of general relativity (Friedrich-Nagy, Kreiss-Winicour,
     Calabrese-Pullin-Reula-Sarbach-Tiglio). Stated over Mathlib in the vocabulary of differential
-    forms, with the definitions of forms, minimal exterior derivatives, Hilbert complexes, their
-    windows (Total, sq, totalDomain, totalD, wave) and strong solutions shared with palomar/fem
-    and palomar/feec (the windows with palomar/feec alone; the canonical blocks of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), and the
+    forms, with the definitions of forms and minimal exterior derivatives (shared with palomar/fem,
+    palomar/waves and palomar/einsteinbianchi, the form fields also with palomar/shapes), Hilbert
+    complexes (with palomar/feec, palomar/fem, palomar/crimes and palomar/waves), their windows
+    (Total, totalDomain, totalD, wave; with palomar/feec, palomar/crimes and palomar/waves), the
+    square sq of an operator (with palomar/feec and palomar/crimes) and strong solutions (with
+    palomar/feec, palomar/crimes and palomar/einsteinbianchi), the canonical blocks of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate, and the
     Einstein-Bianchi vocabulary shared with palomar/einsteinbianchi as canonical blocks too: the
     vector forms (L2Vec, vecOp), the fields (mat1, mat2, IsTSD), the system (6.1) (wedge,
     WeakSymmetryData with IsWave, FormData, bggData), its constraint (IsTSDState) and the mirror
@@ -299,8 +302,8 @@ automation:
 fidelity:
   divergences: >-
     (1) Coordinates and definitions of forms and of the minimal exterior derivative as in
-    palomar/fem (the shared blocks forms and dMin); W~^k = L^2(Omega; Lambda^k) (x) R^3 is the
-    l^2 sum of three copies (L2Vec); the fields of a state are read as matrices,
+    palomar/fem (the shared blocks FormField, forms and dMin); W~^k = L^2(Omega; Lambda^k) (x) R^3
+    is the l^2 sum of three copies (L2Vec); the fields of a state are read as matrices,
     E_ab = (u_a)_{dx_b}, B_ai = (-1)^i (rho_a)_{{i}^c}; IsTSD is symmetric, trace-free and weakly
     divergence-free against test functions of Omega (no boundary condition); IsTSD_0 adds
     vanishing normal traces, tested against all C^1 functions on R^3.

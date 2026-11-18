@@ -85,8 +85,7 @@ of the generator (right derivatives at `0`). For a bounded `L`, `r(τL) = p(τL)
 Points of `ℝⁿ` are `Fin n → ℝ` (Lebesgue measure, sup norm), `eᵢ = Pi.single i 1`, and
 `D^k f(x)(v₁, …, v_k)` is the `k`-th derivative `iteratedFDeriv ℝ k f x`; functions `ι → ℝ` on a
 finite set of nodes carry the maximum norm. The simplicial meshes are stated in the words of the
-Palomar entry `palomar/fem`; only `SimplicialMesh` is used here (no shape regularity or mesh
-family).
+Palomar entry `palomar/fem`.
 
 ## References
 
@@ -101,7 +100,6 @@ family).
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9, 15
 * [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
-* [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -365,36 +363,6 @@ structure SimplicialMesh (n : ℕ) where
   inter_closedInterior : ∀ T ∈ simplices, ∀ T' ∈ simplices,
     T.closedInterior ∩ T'.closedInterior =
       convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
-/-- The **boundary facets** of the mesh: the facets (sets of `n` vertices of a simplex) of exactly
-one of its simplices. -/
-def SimplicialMesh.boundaryFacets {n : ℕ} (M : SimplicialMesh n) : Set (Finset (Fin n → ℝ)) :=
-  {F | F.card = n ∧ ∃! T, T ∈ M.simplices ∧ F ⊆ vertexSet T}
-/-- `h_T`: the diameter of the closed simplex `T`. -/
-def diam {n k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : ℝ := Metric.diam T.closedInterior
-/-- The **mesh size** `h = max_T h_T`. -/
-def meshSize {n : ℕ} (M : SimplicialMesh n) : ℝ :=
-  ⨆ T : M.simplices, diam (T : Affine.Simplex ℝ (Fin n → ℝ) n)
-/-- The mesh is **shape regular** with constant `σ` ([Ciarlet2002], §3.1): every simplex `T`
-contains a ball `B(x, ρ)` with `h_T ≤ σ ρ`, that is `h_T / ρ_T ≤ σ` for the inradius `ρ_T` (the
-largest radius of a ball in `T`). Balls and `h_T` are those of the sup norm (Conventions). -/
-def IsShapeRegular {n : ℕ} (M : SimplicialMesh n) (σ : ℝ) : Prop :=
-  ∀ T ∈ M.simplices, ∃ x ρ, 0 < ρ ∧ Metric.ball x ρ ⊆ T.closedInterior ∧ diam T ≤ σ * ρ
-/-- The mesh is **quasi-uniform** with constant `q`: `q h ≤ h_T` for every simplex. -/
-def IsQuasiUniform {n : ℕ} (M : SimplicialMesh n) (q : ℝ) : Prop :=
-  ∀ T ∈ M.simplices, q * meshSize M ≤ diam T
-/-- `M_N` is a **shape-regular, quasi-uniform family of meshes of `Ω`** with mesh size `h_N → 0`:
-meshes of `Ω`, shape regular and quasi-uniform with constants independent of `N`. -/
-def IsMeshFamily {n : ℕ} (Ω : Set (Fin n → ℝ)) (M : ℕ → SimplicialMesh n) : Prop :=
-  (∀ N, (M N).domain = Ω) ∧
-    (∃ σ q : ℝ, 0 < q ∧ ∀ N, IsShapeRegular (M N) σ ∧ IsQuasiUniform (M N) q) ∧
-    (∀ N, 0 < meshSize (M N)) ∧ Tendsto (fun N => meshSize (M N)) atTop (𝓝 0)
-/-- `𝒯` are **Freudenthal meshes** ([Freudenthal1942]): every simplex of `𝒯 N` is a Kuhn simplex
-`h (z + K_σ)` of `[0, ½]ⁿ`, `h = 1 / (2 (N + 1))`, `z ∈ {0, …, N}ⁿ`, `σ ∈ 𝔖ₙ`, with vertices
-`v_j = h (z + e_{σ 0} + ⋯ + e_{σ (j - 1)})`, `j = 0, …, n` (a mesh of the cube `(0, ½)ⁿ` of such
-simplices consists of all of them, the Freudenthal triangulation of the cube). -/
-def IsFreudenthal {n : ℕ} (𝒯 : ℕ → SimplicialMesh n) : Prop :=
-  ∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
-    T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
 -- palomar-shared-end: SimplicialMesh
 
 /-- **The gradient `∇Π_T u` of the `P₁` interpolant** of `u` on the `n`-simplex `T` of `ℝⁿ` with
@@ -533,7 +501,7 @@ the finite difference Laplacian `Δₕ`:
 
 * (**finite differences are lumped-mass `P₁` elements**) `Δₕ` is the lumped-mass Laplacian of a
   non-obtuse mesh of `Q` on the interior nodes (in the proof, the Freudenthal mesh of the Kuhn
-  simplices `b + h (z + K_σ)`), so `maxNormHeat` applies to it;
+  simplices `b + h (z + K_σ)`; [Freudenthal1942]), so `maxNormHeat` applies to it;
 * (**`O(h² + τᵐ)` from compatible data**) for every A-stable `r = p/q` of order `m` there is `K`,
   depending on `r` and `m` only, such that: let `u` be a classical solution of
   `uₜ = Δu = Σᵢ D²u(eᵢ, eᵢ)` on `Q` for `t ∈ [0, T]` (`u(t)` of class `C⁴` on `ℝⁿ`, with

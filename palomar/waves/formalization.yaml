@@ -314,9 +314,7 @@ fidelity:
     are those of palomar/fem (the canonical blocks of palomar/shared/vocabulary.lean.txt,
     checked byte for byte by the gate; the Hilbert complexes and windows are those of
     palomar/feec), with the same scope: domains star-shaped with respect to a ball,
-    quasi-uniform meshes, admissible sequences with r_k >= 1. The block window is copied whole,
-    as the gate requires; its square sq of an operator (used by the heat equation of
-    palomar/feec) is not used by this entry.
+    quasi-uniform meshes, admissible sequences with r_k >= 1.
     (3) FEEC.fem_wave. Homogeneous boundary conditions only: the trial and test spaces are the
     finite element forms of the window (with vanishing boundary traces for b = true), the
     boundary data of the steps vanish, the load is zero, and the exact solution lies in the

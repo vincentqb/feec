@@ -50,12 +50,6 @@ structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i
 -- palomar-shared: window
 /-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of the **window** `[a, a + m)` (an `ℓ²` sum). -/
 abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
-/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
-def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-    (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
-  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
-    obtain ⟨y, hy, hyx⟩ := x.2.1
-    exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
 namespace HilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 W) (a : ℤ)
@@ -84,6 +78,14 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
 end HilbertComplex
 -- palomar-shared-end: window
+-- palomar-shared: sq
+/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
+def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
+  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
+    obtain ⟨y, hy, hyx⟩ := x.2.1
+    exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
+-- palomar-shared-end: sq
 -- palomar-shared: boundaries
 /-- The **boundaries** `𝔅ⁱ = R(d (i - 1) i) ⊆ Wⁱ` of a Hilbert complex, the range of its
 differential into degree `i`. -/

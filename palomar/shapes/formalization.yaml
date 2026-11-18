@@ -200,13 +200,11 @@ fidelity:
     AFW2006 §4 up to this orientation sign. The degrees of freedom are those of one simplex; the
     global finite element spaces are those of palomar/fem, stated there through traces.
     (4) Shared notions: the polynomial forms (PolyForm, polyForm, homForm, koszul, polyFormMinus,
-    evalForm) and the covector value covEval are the canonical blocks of
+    evalForm), the form fields and the sign epsilon(j, s) that they and the moments use
+    (FormField, sgn) and the covector value covEval are the canonical blocks of
     palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate, shared with
-    palomar/fem and palomar/waves. The block of differential forms on R^n (forms) is copied
-    whole, as the gate requires, for the form fields and the sign epsilon(j, s) that the
-    polynomial forms and the moments use; its L^2 notions (L2Form, the test functions, the
-    partial and exterior derivatives, the codifferential, the weak exterior derivative dMax and
-    the cube) are not used by this entry.
+    palomar/fem, palomar/waves and palomar/einsteinbianchi (the form fields also with
+    palomar/constraints).
 
 review:
   status: "self-assessed"

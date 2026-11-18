@@ -261,17 +261,6 @@ sources:
       Hilbert case of TimeStepping.contractive. The statements of this entry are not from the
       thesis. The formalization is by the thesis author.
     author_endorsement: "participated"
-  - title: "The Finite Element Method for Elliptic Problems"
-    authors:
-      - "Philippe G. Ciarlet"
-    id: "doi:10.1137/1.9780898719208"
-    type: "book"
-    location: "§3.1 (shape-regular families)"
-    relationship: "background"
-    note: >-
-      The shape regularity of the shared mesh block; TimeStepping.maxNormHeat needs no shape
-      regularity, quasi-uniformity or mesh family.
-    author_endorsement: "not-contacted"
   - title: "Simplizialzerlegungen von beschränkter Flachheit"
     authors:
       - "Hans Freudenthal"
@@ -374,11 +363,10 @@ fidelity:
     A-stability (TimeStepping.IsAStable) asks that q have no zero and |p/q| <= 1 on the closed left
     half-plane: for a non-reduced pair this also excludes removable zeros of q there. Order m
     (TimeStepping.HasOrder) is r(z) - e^z = O(z^(m+1)) at 0. IsAStable, HasOrder and rationalApply
-    are the shared block rationalScheme of palomar/shared/vocabulary.lean.txt (with palomar/feec;
-    checked byte for byte by the gate), as are the simplicial meshes (block SimplicialMesh) of
-    palomar/fem; that block also defines boundary facets, mesh sizes, shape regularity,
-    quasi-uniformity, mesh families and Freudenthal meshes, which this entry does not use. The
-    derivatives in TimeStepping.fdHeat are Mathlib's iterated derivatives on coordinate vectors,
+    are the shared block rationalScheme of palomar/shared/vocabulary.lean.txt (with palomar/feec
+    and palomar/crimes; checked byte for byte by the gate), as are the simplicial meshes (block
+    SimplicialMesh, with palomar/fem, palomar/waves and palomar/einsteinbianchi). The derivatives
+    in TimeStepping.fdHeat are Mathlib's iterated derivatives on coordinate vectors,
     D^k f(x)(e_(i_1), ..., e_(i_k)) (iteratedFDeriv). Mathlib has no C_0-semigroups or functional
     calculus for unbounded operators: a strongly continuous semigroup is a family S with S(0) = 1,
     the semigroup law and continuous orbits on [0, infinity) (TimeStepping.IsC0Semigroup); its

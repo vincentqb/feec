@@ -308,8 +308,12 @@ fidelity:
     IsFreudenthal, domains star-shaped with respect to a ball, covector values, finite element
     spaces, the regularity classes IsCsForm, IsCsFormMin and IsSobolevForm) are the canonical
     blocks of palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate; they are
-    shared with palomar/feec (the Hilbert complexes and their families) and palomar/waves (the
-    finite element notions).
+    shared with palomar/feec (the Hilbert complexes and their families), palomar/waves (all but
+    the families and IsSobolevForm), palomar/einsteinbianchi (the forms, polynomial forms,
+    admissible sequences, meshes, covector values, finite element spaces and IsSobolevForm),
+    palomar/constraints (the Hilbert complexes and the forms), palomar/shapes (the form fields,
+    polynomial forms and covector values), palomar/crimes (the Hilbert complexes) and
+    palomar/timestepping (the simplicial meshes).
 
 review:
   status: "self-assessed"

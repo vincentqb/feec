@@ -63,27 +63,177 @@ theorem closure_preimage_fieldE (s : Set (L2F ℝ Ω Ix)) :
     closure (fieldE ⁻¹' s : Set (L2Vec Ω 1)) = fieldE ⁻¹' closure s :=
   ((fieldE (Ω := Ω)).toHomeomorph.preimage_closure s).symm
 
+/-- Orthogonal projections onto the pull-back of a closed subspace by a unitary map. -/
+theorem starProjection_comap_apply {E E' : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup E'] [InnerProductSpace ℝ E'] (f : E ≃ₗᵢ[ℝ] E') (p : Submodule ℝ E')
+    [p.HasOrthogonalProjection] [(p.comap f.toLinearEquiv.toLinearMap).HasOrthogonalProjection]
+    (x : E) : f ((p.comap f.toLinearEquiv.toLinearMap).starProjection x) = p.starProjection (f x) := by
+  symm
+  refine Submodule.eq_starProjection_of_mem_of_inner_eq_zero
+    (Submodule.starProjection_apply_mem (p.comap f.toLinearEquiv.toLinearMap) x) fun w hw => ?_
+  rw [← LinearIsometryEquiv.apply_symm_apply f w, ← map_sub, LinearIsometryEquiv.inner_map_map]
+  refine Submodule.starProjection_inner_eq_zero x _ ?_
+  change f (f.symm w) ∈ p
+  rwa [LinearIsometryEquiv.apply_symm_apply]
+
+theorem starProjection_bot_apply {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    (x : E) : (⊥ : Submodule ℝ E).starProjection x = 0 := by
+  rw [Submodule.starProjection_bot]; rfl
+
+/-- **The complex of (4.14) is a short Hilbert complex** on every open `Ω`. -/
+theorem natural_complex (hΩ : IsOpen Ω) :
+    Dense ((vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain : Set (L2Vec Ω 0)) ∧
+      Dense ((vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain : Set (L2Vec Ω 1)) ∧
+      (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).IsClosed ∧
+      (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).IsClosed ∧
+      ∀ x : (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain,
+        ∃ h : (vecOp fun _ => dMin Ω 0) x ∈ (vecOp fun _ => dMin Ω 1 :
+          L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain, (vecOp fun _ => dMin Ω 1) ⟨_, h⟩ = 0 :=
+  ⟨dense_vecOp (by rw [dMin_eq]; exact (extDerivOp ℝ 3 0).dense_minimal_domain hΩ),
+    dense_bgg_dt1 hΩ,
+    isClosed_vecOp (by rw [dMin_eq]; exact (extDerivOp ℝ 3 0).isClosed_minimal hΩ),
+    isClosed_bgg_dt1 hΩ, (isBGG_bggData hΩ).2.1⟩
+
+/-- The electric slot `S₁*` of the invariant core, read through the electric field. -/
+abbrev coreE (hΩ : IsOpen Ω) : Submodule ℝ (L2Vec Ω 1) :=
+  ((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω)).comap (fieldE (Ω := Ω)).toLinearEquiv.toLinearMap
+
+/-- The magnetic slot `S₂*` of the invariant core, read through the magnetic field. -/
+abbrev coreB (hΩ : IsOpen Ω) : Submodule ℝ (L2Vec Ω 2) :=
+  ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω)).comap (fieldB (Ω := Ω)).toLinearEquiv.toLinearMap
+
+theorem isClosed_coreE (hΩ : IsOpen Ω) : IsClosed (coreE hΩ : Set (L2Vec Ω 1)) :=
+  (ShortHilbertComplex.isClosed_invariantCore₁ (S := gradCurl ℝ hΩ)).preimage fieldE.continuous
+
+theorem isClosed_coreB (hΩ : IsOpen Ω) : IsClosed (coreB hΩ : Set (L2Vec Ω 2)) :=
+  (ShortHilbertComplex.isClosed_invariantCore₂ (S := gradCurl ℝ hΩ)).preimage fieldB.continuous
+
+instance hasOrthogonalProjection_coreE (hΩ : IsOpen Ω) : (coreE hΩ).HasOrthogonalProjection :=
+  have : CompleteSpace (coreE hΩ) := (isClosed_coreE hΩ).completeSpace_coe
+  inferInstance
+
+instance hasOrthogonalProjection_coreB (hΩ : IsOpen Ω) : (coreB hΩ).HasOrthogonalProjection :=
+  have : CompleteSpace (coreB hΩ) := (isClosed_coreB hΩ).completeSpace_coe
+  inferInstance
+
+/-- **The invariant core is a reducing subcomplex.** -/
+theorem coreE_reducing (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ (coreE hΩ)
+      (coreB hΩ) := by
+  obtain ⟨-, -, -, hred, -⟩ := invariantCore_tsd hΩ hb hne
+  have hr01 := hred.reduces 0 1
+  have hr12 := hred.reduces 1 2
+  change (gradCurl ℝ hΩ).d₀.IsReducingPair (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3)))
+    ((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω)) at hr01
+  change (gradCurl ℝ hΩ).d₁.IsReducingPair ((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω))
+    ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω)) at hr12
+  constructor
+  · intro x
+    refine ⟨by rw [starProjection_bot_apply]; exact Submodule.zero_mem _, ?_⟩
+    rw [LinearPMap.apply_eq_zero_of_coe_eq_zero _ (starProjection_bot_apply _)]
+    obtain ⟨h, e⟩ := apply_of_mem_graph ((mem_graph_grad_iff hΩ x _).1 (LinearPMap.mem_graph _ x))
+    have hc := hr01.comm ⟨_, h⟩
+    rw [LinearPMap.apply_eq_zero_of_coe_eq_zero _ (starProjection_bot_apply _), e] at hc
+    apply fieldE.injective
+    rw [starProjection_comap_apply, ← hc, map_zero]
+  · intro x
+    have hy := (mem_dom_iff hΩ x.1).1 x.2
+    have hP := hr12.proj_mem ⟨_, hy⟩
+    have eP : fieldE ((coreE hΩ).starProjection x.1) =
+        ((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω)).starProjection (fieldE x.1) :=
+      starProjection_comap_apply _ _ _
+    have hx' : (coreE hΩ).starProjection x.1 ∈
+        (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain :=
+      (mem_dom_iff hΩ _).2 (by rw [eP]; exact hP)
+    refine ⟨hx', fieldB.injective ?_⟩
+    calc fieldB ((vecOp fun _ => dMin Ω 1) ⟨_, hx'⟩)
+        = (gradCurl ℝ hΩ).d₁ ⟨_, (mem_dom_iff hΩ _).1 hx'⟩ :=
+          (curl_fieldE hΩ ⟨_, hx'⟩ ((mem_dom_iff hΩ _).1 hx')).symm
+      _ = (gradCurl ℝ hΩ).d₁ ⟨_, hP⟩ := LinearPMap.apply_congr' _ _ _ eP
+      _ = ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω)).starProjection
+            ((gradCurl ℝ hΩ).d₁ ⟨_, hy⟩) := hr12.comm ⟨_, hy⟩
+      _ = ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω)).starProjection
+            (fieldB ((vecOp fun _ => dMin Ω 1) ⟨x.1, x.2⟩)) := by
+          rw [curl_fieldE hΩ ⟨x.1, x.2⟩ hy]
+      _ = fieldB ((coreB hΩ).starProjection ((vecOp fun _ => dMin Ω 1) ⟨x.1, x.2⟩)) :=
+          (starProjection_comap_apply _ _ _).symm
+
+set_option maxHeartbeats 1000000 in
+/-- **The invariant core is the largest reducing subcomplex in the constraint.** -/
+theorem coreE_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    (S₁' : Submodule ℝ (L2Vec Ω 1)) (S₂' : Submodule ℝ (L2Vec Ω 2)) [S₁'.HasOrthogonalProjection]
+    [S₂'.HasOrthogonalProjection] (hT₁ : ∀ u ∈ S₁', IsTSD (mat1 u))
+    (hT₂ : ∀ ρ ∈ S₂', IsTSD (mat2 ρ))
+    (hR : IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁' S₂') :
+    S₁' ≤ coreE hΩ ∧ S₂' ≤ coreB hΩ := by
+  obtain ⟨-, -, -, -, hmax, -⟩ := invariantCore_tsd hΩ hb hne
+  set T₁ := S₁'.map (fieldE (Ω := Ω)).toLinearEquiv.toLinearMap
+  set T₂ := S₂'.map (fieldB (Ω := Ω)).toLinearEquiv.toLinearMap
+  have hT₁' : T₁ ≤ tsd Ω := by
+    rintro _ ⟨u, hu, rfl⟩; exact (isTSD_iff _).1 (hT₁ u hu)
+  have hT₂' : T₂ ≤ tsd Ω := by
+    rintro _ ⟨ρ, hρ, rfl⟩; exact (isTSD_iff _).1 (hT₂ ρ hρ)
+  have eT₁ : ∀ y, T₁.starProjection y = fieldE (S₁'.starProjection (fieldE.symm y)) :=
+    fun y => Submodule.starProjection_map_apply fieldE S₁' y
+  have eT₂ : ∀ y, T₂.starProjection y = fieldB (S₂'.starProjection (fieldB.symm y)) :=
+    fun y => Submodule.starProjection_map_apply fieldB S₂' y
+  have r01 : (gradCurl ℝ hΩ).d₀.IsReducingPair (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3))) T₁ := by
+    refine ⟨fun y => by rw [starProjection_bot_apply]; exact Submodule.zero_mem _, fun y => ?_⟩
+    rw [LinearPMap.apply_eq_zero_of_coe_eq_zero _ (starProjection_bot_apply _)]
+    obtain ⟨hx, ex⟩ := apply_of_mem_graph ((mem_graph_grad_iff hΩ (field0.symm y)
+      (fieldE.symm ((gradCurl ℝ hΩ).d₀ y))).2 (by simpa using LinearPMap.mem_graph _ y))
+    obtain ⟨h0, e0⟩ := hR.1 ⟨_, hx⟩
+    rw [LinearPMap.apply_eq_zero_of_coe_eq_zero _ (starProjection_bot_apply _), ex] at e0
+    rw [eT₁, ← e0, map_zero]
+  have key : ∀ y : (gradCurl ℝ hΩ).d₁.domain, ∃ hx : fieldE.symm (y : L2F ℝ Ω Ix) ∈
+      (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
+      fieldB ((vecOp fun _ => dMin Ω 1) ⟨_, hx⟩) = (gradCurl ℝ hΩ).d₁ y := fun y => by
+    obtain ⟨hx, ex⟩ := apply_of_mem_graph ((mem_graph_curl_iff hΩ (fieldE.symm y)
+      (fieldB.symm ((gradCurl ℝ hΩ).d₁ y))).2 (by simpa using LinearPMap.mem_graph _ y))
+    exact ⟨hx, by rw [ex, LinearIsometryEquiv.apply_symm_apply]⟩
+  have hpm : ∀ y : (gradCurl ℝ hΩ).d₁.domain,
+      T₁.starProjection (y : L2F ℝ Ω Ix) ∈ (gradCurl ℝ hΩ).d₁.domain := fun y => by
+    obtain ⟨hx, -⟩ := key y
+    obtain ⟨hP, -⟩ := hR.2 ⟨_, hx⟩
+    rw [eT₁]; exact (mem_dom_iff hΩ _).1 hP
+  have r12 : (gradCurl ℝ hΩ).d₁.IsReducingPair T₁ T₂ := by
+    refine ⟨hpm, fun y => ?_⟩
+    obtain ⟨hx, ex⟩ := key y
+    obtain ⟨hP, eP⟩ := hR.2 ⟨_, hx⟩
+    rw [eT₂, ← ex, LinearIsometryEquiv.symm_apply_apply, ← eP,
+      ← curl_fieldE hΩ ⟨_, hP⟩ ((mem_dom_iff hΩ _).1 hP)]
+    exact LinearPMap.apply_congr' _ _ _ (eT₁ y)
+  have hredT : (gradCurl ℝ hΩ).toHilbertComplex.ReducingSubcomplex
+      (family3 (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3))) T₁ T₂) :=
+    HilbertComplex.ReducingSubcomplex.of_rel fun i j hij => by
+      fin_cases i <;> fin_cases j <;> simp at hij
+      · exact r01
+      · exact r12
+  obtain ⟨m1, m2⟩ := hmax T₁ T₂ hT₁' hT₂' hredT.isReducing_wave
+  exact ⟨fun u hu => m1 ⟨u, hu, rfl⟩, fun ρ hρ => m2 ⟨ρ, hρ, rfl⟩⟩
+
 /-- **The invariant core on a nonempty bounded open `Ω`.** -/
 theorem natural_core (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ] (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)}
     (hS : IsEvolution (gradCurlWave Ω) univ S) :
-    ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2)),
-      IsClosed (S₁ : Set (L2Vec Ω 1)) ∧ IsClosed (S₂ : Set (L2Vec Ω 2)) ∧
+    ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2))
+      (_ : S₁.HasOrthogonalProjection) (_ : S₂.HasOrthogonalProjection),
       invariantCore S (tsdConstraint Ω) = {U | U.1 = 0 ∧ U.2.1 ∈ S₁ ∧ U.2.2 ∈ S₂} ∧
+      IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁ S₂ ∧
+      (∀ (S₁' : Submodule ℝ (L2Vec Ω 1)) (S₂' : Submodule ℝ (L2Vec Ω 2))
+        [S₁'.HasOrthogonalProjection] [S₂'.HasOrthogonalProjection],
+        (∀ u ∈ S₁', IsTSD (mat1 u)) → (∀ ρ ∈ S₂', IsTSD (mat2 ρ)) →
+        IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁' S₂' →
+        S₁' ≤ S₁ ∧ S₂' ≤ S₂) ∧
       (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
       (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
       ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω := by
   obtain ⟨hcore, h1, h2, -, -, hd1, hd1', hd2, hne', hβ, hβ', -⟩ := invariantCore_tsd hΩ hb hne
-  refine ⟨((gradCurl ℝ hΩ).invariantCore₁ (tsd Ω) (tsd Ω)).comap
-      (fieldE (Ω := Ω)).toLinearEquiv.toLinearMap,
-    ((gradCurl ℝ hΩ).invariantCore₂ (tsd Ω) (tsd Ω)).comap
-      (fieldB (Ω := Ω)).toLinearEquiv.toLinearMap,
-    (ShortHilbertComplex.isClosed_invariantCore₁ (S := gradCurl ℝ hΩ)).preimage
-      fieldE.continuous,
-    (ShortHilbertComplex.isClosed_invariantCore₂ (S := gradCurl ℝ hΩ)).preimage
-      fieldB.continuous, ?_, fun u hu => (isTSD₀_iff hΩ hb u).2 (h1 hu),
-    fun ρ hρ => (isTSD_iff _).2 (h2 hρ), ⟨fieldE.symm (constField hΩ hb diagA), ?_, ?_⟩,
-    ⟨fieldB.symm (betaL2 hΩ hb), ?_, ?_⟩, fieldB.symm (constField hΩ hb diagA), ?_, ?_, ?_⟩
+  refine ⟨coreE hΩ, coreB hΩ, inferInstance, inferInstance, ?_, coreE_reducing hΩ hb hne,
+    fun S₁' S₂' _ _ hT₁ hT₂ hR => coreE_maximal hΩ hb hne S₁' S₂' hT₁ hT₂ hR,
+    fun u hu => (isTSD₀_iff hΩ hb u).2 (h1 hu), fun ρ hρ => (isTSD_iff _).2 (h2 hρ),
+    ⟨fieldE.symm (constField hΩ hb diagA), ?_, ?_⟩, ⟨fieldB.symm (betaL2 hΩ hb), ?_, ?_⟩,
+    fieldB.symm (constField hΩ hb diagA), ?_, ?_, ?_⟩
   · refine Set.ext fun U => ?_
     rw [gc_mem_invariantCore_iff hΩ hS, hcore, mem_totalSub_family3]
     change -field0 U.1 ∈ (⊥ : Submodule ℝ (L2F ℝ Ω (Fin 3))) ∧
@@ -174,31 +324,45 @@ theorem natural_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
 
 /-- **The boundary conditions natural for the complex, on a nonempty bounded open `Ω`.** -/
 theorem natural_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    (Dense ((vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain : Set (L2Vec Ω 0)) ∧
+      Dense ((vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain : Set (L2Vec Ω 1)) ∧
+      (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).IsClosed ∧
+      (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).IsClosed ∧
+      ∀ x : (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain,
+        ∃ h : (vecOp fun _ => dMin Ω 0) x ∈ (vecOp fun _ => dMin Ω 1 :
+          L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain, (vecOp fun _ => dMin Ω 1) ⟨_, h⟩ = 0) ∧
     (∃ S, IsEvolution (gradCurlWave Ω) univ S) ∧
-      (∀ S, IsEvolution (gradCurlWave Ω) univ S →
-        ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2)),
-          IsClosed (S₁ : Set (L2Vec Ω 1)) ∧ IsClosed (S₂ : Set (L2Vec Ω 2)) ∧
-          invariantCore S (tsdConstraint Ω) = {U | U.1 = 0 ∧ U.2.1 ∈ S₁ ∧ U.2.2 ∈ S₂} ∧
-          (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
-          (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
-          ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω) ∧
-      (∃ ρ : L2Vec Ω 2, (∀ a b, ⇑(mat2 ρ a b) =ᵐ[volume.restrict Ω]
-          fun x => if (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) then x 2 else 0) ∧
-        (0, 0, ρ) ∈ tsdConstraint Ω ∧ (∃ V, ((0, 0, ρ), V) ∈ gradCurlWave Ω) ∧
-        ∀ u T U, 0 < T → U 0 = (0, u, ρ) → IsStrongSolution (gradCurlWave Ω) (Icc 0 T) U →
-          ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
-      (∃ u : L2Vec Ω 1, (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
-        ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
-          v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
-      closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ (vecOp fun _ => dMin Ω 1 :
-        L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} ≠ {u | IsTSD (mat1 u)} ∧
-      ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
-        (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
-        ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
-          (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
-          ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a :=
-  ⟨⟨_, gc_isEvolution hΩ⟩, fun _ hS => natural_core hΩ hb hne hS, natural_beta hΩ hb hne,
-    natural_proj hΩ hb hne, natural_dense hΩ hb hne, tsd_not_propagates_of hΩ hb hne⟩
+    (∀ S, IsEvolution (gradCurlWave Ω) univ S →
+      ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2))
+        (_ : S₁.HasOrthogonalProjection) (_ : S₂.HasOrthogonalProjection),
+        invariantCore S (tsdConstraint Ω) = {U | U.1 = 0 ∧ U.2.1 ∈ S₁ ∧ U.2.2 ∈ S₂} ∧
+        IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁ S₂ ∧
+        (∀ (S₁' : Submodule ℝ (L2Vec Ω 1)) (S₂' : Submodule ℝ (L2Vec Ω 2))
+          [S₁'.HasOrthogonalProjection] [S₂'.HasOrthogonalProjection],
+          (∀ u ∈ S₁', IsTSD (mat1 u)) → (∀ ρ ∈ S₂', IsTSD (mat2 ρ)) →
+          IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁' S₂' →
+          S₁' ≤ S₁ ∧ S₂' ≤ S₂) ∧
+        (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
+        (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
+        ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω) ∧
+    (∃ ρ : L2Vec Ω 2, (∀ a b, ⇑(mat2 ρ a b) =ᵐ[volume.restrict Ω]
+        fun x => if (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) then x 2 else 0) ∧
+      (0, 0, ρ) ∈ tsdConstraint Ω ∧ (∃ V, ((0, 0, ρ), V) ∈ gradCurlWave Ω) ∧
+      ∀ u T U, 0 < T → U 0 = (0, u, ρ) → IsStrongSolution (gradCurlWave Ω) (Icc 0 T) U →
+        ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
+    (∃ u : L2Vec Ω 1, (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
+      ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
+        v ∉ (vecOp fun _ => dMin Ω 1).domain) ∧
+    closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ (vecOp fun _ => dMin Ω 1).domain} ≠
+      {u | IsTSD (mat1 u)} ∧
+    ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
+      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
+        (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
+        ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a :=
+  ⟨natural_complex hΩ, ⟨_, gc_isEvolution hΩ⟩, fun _ hS => natural_core hΩ hb hne hS,
+    natural_beta hΩ hb hne, natural_proj hΩ hb hne, natural_dense hΩ hb hne,
+    tsd_not_propagates_of hΩ hb hne⟩
 
 /-- **Domains star-shaped with respect to a ball.** -/
 theorem starShaped_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)

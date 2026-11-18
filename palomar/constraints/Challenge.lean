@@ -207,6 +207,19 @@ def IsHodgeWave {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace �
     (∀ τ : d0.domain, ⟪V.1, τ⟫_ℝ = ⟪(u : W1), d0 τ⟫_ℝ) ∧
     (∀ v : d1.domain, ⟪V.2.1, v⟫_ℝ = -⟪d0 σ, v⟫_ℝ - ⟪U.2.2, d1 v⟫_ℝ) ∧ V.2.2 = d1 u
 
+/-- Closed subspaces `Z⁰ ⊆ W⁰`, `Z¹ ⊆ W¹`, `Z² ⊆ W²` form a **reducing subcomplex** of
+`W⁰ → W¹ → W²` ([QuennevilleBelair2015], Prop 4.16): the orthogonal projections preserve the
+domains and commute with the operators, `P_{Zⁱ} D(dⁱ) ⊆ D(dⁱ)` and `dⁱ P_{Zⁱ} = P_{Zⁱ⁺¹} dⁱ`. -/
+def IsReducingSubcomplex {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+    [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
+    [InnerProductSpace ℝ W2] (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (Z0 : Submodule ℝ W0)
+    (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2) [Z0.HasOrthogonalProjection]
+    [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection] : Prop :=
+  (∀ x : d0.domain, ∃ h : Z0.starProjection (x : W0) ∈ d0.domain,
+    d0 ⟨_, h⟩ = Z1.starProjection (d0 x)) ∧
+  ∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
+    d1 ⟨_, h⟩ = Z2.starProjection (d1 x)
+
 /-- **The electric field** `E_{ab} = (uₐ)_{dx_b}` of a vector `1`-form `u` (its rows are the
 `uₐ`). -/
 def mat1 {Ω : Set (Fin 3 → ℝ)} (u : L2Vec Ω 1) (a b : Fin 3) : Lp ℝ 2 (volume.restrict Ω) :=
@@ -420,10 +433,10 @@ a real Hilbert space `E`:
   `x ∈ D(A)` is its orbit; a closed subspace `K` reduces `A` iff `S t`, `t ≥ 0`, keeps `K` and
   `Kᗮ`;
 * (**reducing subcomplexes**, [QuennevilleBelair2015], Prop 4.16) for a short Hilbert complex
-  `W⁰ → W¹ → W²` of closed densely defined `d⁰`, `d¹` (`d¹ d⁰ = 0`) and closed `Zⁱ ⊆ Wⁱ` with
-  `P_{Zⁱ} D(dⁱ) ⊆ D(dⁱ)` and `dⁱ P_{Zⁱ} = P_{Zⁱ⁺¹} dⁱ`, every strong solution of the Hodge wave
-  equation (`IsHodgeWave`) on `[0, T]` starting in `Z⁰ × Z¹ × Z²` stays in it (the product
-  reduces the Hodge wave operator). -/
+  `W⁰ → W¹ → W²` of closed densely defined `d⁰`, `d¹` (`d¹ d⁰ = 0`) and a reducing subcomplex
+  `Z⁰ × Z¹ × Z²` (`IsReducingSubcomplex`), every strong solution of the Hodge wave equation
+  (`IsHodgeWave`) on `[0, T]` starting in `Z⁰ × Z¹ × Z²` stays in it (the product reduces the
+  Hodge wave operator). -/
 theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
     [CompleteSpace E] :
     (∀ L : E →ₗ.[ℝ] E, Dense (L.domain : Set E) → L† = -L →
@@ -441,7 +454,8 @@ theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductS
         (∀ x ∈ A.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution A.graph (Icc 0 T) u →
           EqOn u (fun t => S t x) (Icc 0 T)) ∧
         ∀ (K : Submodule ℝ E) [K.HasOrthogonalProjection],
-          IsReducing A K ↔ (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧ ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ) ∧
+          IsReducing A K ↔ (∀ t, 0 ≤ t → ∀ x ∈ K, S t x ∈ K) ∧
+            ∀ t, 0 ≤ t → ∀ x ∈ Kᗮ, S t x ∈ Kᗮ) ∧
     ∀ {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
       [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
       [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
@@ -450,11 +464,8 @@ theorem constraint_propagation {E : Type*} [NormedAddCommGroup E] [InnerProductS
       (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
       ∀ (Z0 : Submodule ℝ W0) (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2)
         [Z0.HasOrthogonalProjection] [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection],
-        (∀ x : d0.domain, ∃ h : Z0.starProjection (x : W0) ∈ d0.domain,
-          d0 ⟨_, h⟩ = Z1.starProjection (d0 x)) →
-        (∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
-          d1 ⟨_, h⟩ = Z2.starProjection (d1 x)) →
-        ∀ T (U : ℝ → W0 × W1 × W2), IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
+        IsReducingSubcomplex d0 d1 Z0 Z1 Z2 → ∀ T (U : ℝ → W0 × W1 × W2),
+          IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
           (U 0).1 ∈ Z0 → (U 0).2.1 ∈ Z1 → (U 0).2.2 ∈ Z2 →
           ∀ t ∈ Icc 0 T, (U t).1 ∈ Z0 ∧ (U t).2.1 ∈ Z1 ∧ (U t).2.2 ∈ Z2 := by
   sorry
@@ -464,10 +475,12 @@ equations** ([QuennevilleBelair2015], §4.10 (Prop 4.17), §6.1, §6.3). By
 `FEEC.constraint_propagation` the question for each boundary condition is the invariant core:
 
 * (**the boundary conditions natural for the complex, on every nonempty bounded open `Ω ⊆ ℝ³`**,
-  no regularity of `∂Ω`) the system (4.14) has an evolution `S`, and for every one:
-  - `K* = {0} × S₁* × S₂*` for closed subspaces `S₁*`, `S₂*` of TSD fields, the electric part
-    `S₁*` within `L²(TSD₀)` (vanishing normal trace, zero mean), both strictly smaller than
-    `L²(TSD)`, and `S₂*` contains nonzero stationary data;
+  no regularity of `∂Ω`) the complex of (4.14) is a short Hilbert complex, the system has an
+  evolution `S`, and for every one:
+  - `K* = {0} × S₁* × S₂*` for closed subspaces `S₁*`, `S₂*` of TSD fields, the largest reducing
+    subcomplex of the complex in `K` (so the third part of `FEEC.constraint_propagation` applies to
+    it), the electric part `S₁*` within `L²(TSD₀)` (vanishing normal trace, zero mean), both
+    strictly smaller than `L²(TSD)`, and `S₂*` contains nonzero stationary data;
   - for the magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, TSD with `(0, 0, β) ∈ D(L)`, every strong
     solution on `[0, T]`, `T > 0`, from any `(0, E₀, β)` has a non-TSD electric field at some
     `t ∈ [0, T]`;
@@ -497,11 +510,24 @@ claimed: on the ball it is equivalent to the absence of TSD eigenfields `u` with
 `curl u ∉ H̊(curl)`, which is proved here only for the eigenfields `C²` up to the boundary. -/
 theorem tsd_boundary_conditions :
     (∀ Ω : Set (Fin 3 → ℝ), IsOpen Ω → Bornology.IsBounded Ω → Ω.Nonempty →
+      (Dense ((vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain : Set (L2Vec Ω 0)) ∧
+        Dense ((vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain : Set (L2Vec Ω 1)) ∧
+        (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).IsClosed ∧
+        (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).IsClosed ∧
+        ∀ x : (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain,
+          ∃ h : (vecOp fun _ => dMin Ω 0) x ∈ (vecOp fun _ => dMin Ω 1 :
+            L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain, (vecOp fun _ => dMin Ω 1) ⟨_, h⟩ = 0) ∧
       (∃ S, IsEvolution (gradCurlWave Ω) univ S) ∧
       (∀ S, IsEvolution (gradCurlWave Ω) univ S →
-        ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2)),
-          IsClosed (S₁ : Set (L2Vec Ω 1)) ∧ IsClosed (S₂ : Set (L2Vec Ω 2)) ∧
+        ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2))
+          (_ : S₁.HasOrthogonalProjection) (_ : S₂.HasOrthogonalProjection),
           invariantCore S (tsdConstraint Ω) = {U | U.1 = 0 ∧ U.2.1 ∈ S₁ ∧ U.2.2 ∈ S₂} ∧
+          IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁ S₂ ∧
+          (∀ (S₁' : Submodule ℝ (L2Vec Ω 1)) (S₂' : Submodule ℝ (L2Vec Ω 2))
+            [S₁'.HasOrthogonalProjection] [S₂'.HasOrthogonalProjection],
+            (∀ u ∈ S₁', IsTSD (mat1 u)) → (∀ ρ ∈ S₂', IsTSD (mat2 ρ)) →
+            IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁' S₂' →
+            S₁' ≤ S₁ ∧ S₂' ≤ S₂) ∧
           (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
           (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
           ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω) ∧

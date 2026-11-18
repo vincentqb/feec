@@ -43,10 +43,12 @@ project:
     proxies H°^1 -> H°(curl) -> L^2, grad and curl of the rows), constraint
     K = {0} x L^2(TSD) x L^2(TSD) (tsdConstraint):
     (natural boundary conditions, every nonempty bounded open Omega in R^3, no regularity of the
-    boundary) the system has an evolution, and for every one K* = {0} x S_1* x S_2* with closed
-    S_1*, S_2* of TSD fields, S_1* within L^2(TSD_0) (rows weakly divergence-free with vanishing
-    normal trace; zero mean), both strictly smaller than L^2(TSD), S_2* containing a nonzero
-    stationary datum; from (0, E_0, beta), beta = x_3 (e_1 e_2^T + e_2 e_1^T), TSD with
+    boundary) the complex is a short Hilbert complex (closed, densely defined, d^1 d^0 = 0), the
+    system has an evolution, and for every one K* = {0} x S_1* x S_2* with closed S_1*, S_2* of TSD
+    fields, the largest reducing subcomplex of the complex in K (IsReducingSubcomplex; so the
+    third part of FEEC.constraint_propagation applies to it), S_1* within L^2(TSD_0) (rows weakly
+    divergence-free with vanishing normal trace; zero mean), both strictly smaller than L^2(TSD),
+    S_2* containing a nonzero stationary datum; from (0, E_0, beta), beta = x_3 (e_1 e_2^T + e_2 e_1^T), TSD with
     (0, 0, beta) in D(L), every strong solution on [0, T], T > 0, has a non-TSD electric field at
     some time; the projection hypothesis fails (the orthogonal projection onto L^2(TSD) of some
     test field leaves H°(curl)), so K does not reduce L; L^2(TSD) and H°(curl) intersect in a
@@ -198,7 +200,7 @@ status:
     set of R^3, on those star-shaped with respect to a ball, on the unit ball and on every open
     box, for the system (4.14), and on every nonempty bounded open set for the system (6.1); the
     absorbing boundary conditions on the cube; the mirror boundary conditions on the cube for the
-    system (6.1)). The Challenge is 563 lines. Open, and not claimed: that only stationary data
+    system (6.1)). The Challenge is 589 lines. Open, and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
     fields C^2 up to the boundary; Feec proves it on the ball only under an elliptic regularity
@@ -285,9 +287,11 @@ fidelity:
     an m-dissipative operator, a literal instance of the criterion.
     (4) Natural boundary conditions: vanishing tangential traces (minimal exterior derivatives) in
     every row, for (4.14) and both rows of (6.1). The invariant core of (4.14) is described as
-    {0} x S_1* x S_2* with explicit properties (closed, S_1* within L^2(TSD_0), strictness through
-    the TSD fields diag(1, -1, 0) and beta in Feec's proof, a nonzero stationary datum in S_2*),
-    not by a formula for S_1*, S_2* on general domains (none is known). The datum beta is given
+    {0} x S_1* x S_2*, the largest reducing subcomplex of the complex inside K (maximal among the
+    products {0} x S_1' x S_2' of subspaces of TSD fields satisfying IsReducingSubcomplex), with
+    explicit properties (S_1* within L^2(TSD_0), strictness through the TSD fields
+    diag(1, -1, 0) and beta in Feec's proof, a nonzero stationary datum in S_2*), not by a formula
+    for S_1*, S_2* on general domains (none is known). The datum beta is given
     almost everywhere by its formula. The obstruction for (6.1) is the explicit datum
     (0, 0, 0, *beta) (in the proof) with existence of solutions.
     (5) Star-shaped domains: with respect to a ball of the sup norm (equivalently of the Euclidean

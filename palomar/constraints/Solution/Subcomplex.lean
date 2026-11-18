@@ -46,11 +46,7 @@ theorem subcomplex_of {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductS
     (hcomp : ∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0)
     (Z0 : Submodule ℝ W0) (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2)
     [Z0.HasOrthogonalProjection] [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection]
-    (hZ0 : ∀ x : d0.domain, ∃ h : Z0.starProjection (x : W0) ∈ d0.domain,
-      d0 ⟨_, h⟩ = Z1.starProjection (d0 x))
-    (hZ1 : ∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
-      d1 ⟨_, h⟩ = Z2.starProjection (d1 x))
-    (T : ℝ) (U : ℝ → W0 × W1 × W2) (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U)
+    (hZ : IsReducingSubcomplex d0 d1 Z0 Z1 Z2) (T : ℝ) (U : ℝ → W0 × W1 × W2) (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U)
     (h0 : (U 0).1 ∈ Z0) (h1 : (U 0).2.1 ∈ Z1) (h2 : (U 0).2.2 ∈ Z2) :
     ∀ t ∈ Icc 0 T, (U t).1 ∈ Z0 ∧ (U t).2.1 ∈ Z1 ∧ (U t).2.2 ∈ Z2 := by
   let S : ShortHilbertComplex ℝ W0 W1 W2 :=
@@ -58,8 +54,8 @@ theorem subcomplex_of {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductS
   have hred : S.toHilbertComplex.ReducingSubcomplex (family3 Z0 Z1 Z2) :=
     HilbertComplex.ReducingSubcomplex.of_rel fun i j hij => by
       fin_cases i <;> fin_cases j <;> simp at hij
-      · exact ⟨fun x => (hZ0 x).1, fun x => (hZ0 x).2⟩
-      · exact ⟨fun x => (hZ1 x).1, fun x => (hZ1 x).2⟩
+      · exact ⟨fun x => (hZ.1 x).1, fun x => (hZ.1 x).2⟩
+      · exact ⟨fun x => (hZ.2 x).1, fun x => (hZ.2 x).2⟩
   have hU' := isStrongSolution_toFeec (LinearIsometryEquiv.refl ℝ W0)
     (LinearIsometryEquiv.refl ℝ W1) (LinearIsometryEquiv.refl ℝ W2) S (fun _ _ => Iff.rfl)
     (fun _ _ => Iff.rfl) hU

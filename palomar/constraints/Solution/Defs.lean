@@ -159,6 +159,19 @@ def IsHodgeWave {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace �
     (∀ τ : d0.domain, ⟪V.1, τ⟫_ℝ = ⟪(u : W1), d0 τ⟫_ℝ) ∧
     (∀ v : d1.domain, ⟪V.2.1, v⟫_ℝ = -⟪d0 σ, v⟫_ℝ - ⟪U.2.2, d1 v⟫_ℝ) ∧ V.2.2 = d1 u
 
+/-- Closed subspaces `Z⁰ ⊆ W⁰`, `Z¹ ⊆ W¹`, `Z² ⊆ W²` form a **reducing subcomplex** of
+`W⁰ → W¹ → W²` ([QuennevilleBelair2015], Prop 4.16): the orthogonal projections preserve the
+domains and commute with the operators, `P_{Zⁱ} D(dⁱ) ⊆ D(dⁱ)` and `dⁱ P_{Zⁱ} = P_{Zⁱ⁺¹} dⁱ`. -/
+def IsReducingSubcomplex {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+    [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
+    [InnerProductSpace ℝ W2] (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (Z0 : Submodule ℝ W0)
+    (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2) [Z0.HasOrthogonalProjection]
+    [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection] : Prop :=
+  (∀ x : d0.domain, ∃ h : Z0.starProjection (x : W0) ∈ d0.domain,
+    d0 ⟨_, h⟩ = Z1.starProjection (d0 x)) ∧
+  ∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
+    d1 ⟨_, h⟩ = Z2.starProjection (d1 x)
+
 /-- **The electric field** `E_{ab} = (uₐ)_{dx_b}` of a vector `1`-form `u` (its rows are the
 `uₐ`). -/
 def mat1 {Ω : Set (Fin 3 → ℝ)} (u : L2Vec Ω 1) (a b : Fin 3) : Lp ℝ 2 (volume.restrict Ω) :=

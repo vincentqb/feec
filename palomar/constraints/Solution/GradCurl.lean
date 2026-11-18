@@ -59,8 +59,8 @@ theorem IsStrongSolution.map (hAB : ∀ x v, (x, v) ∈ A → (Φ x, Φ v) ∈ B
 /-- An evolution conjugated by mutually inverse maps carrying the graphs into each other. -/
 theorem IsEvolution.conj (Ψ : Y →L[ℝ] X) (hΦΨ : ∀ y, Φ (Ψ y) = y)
     (hAB : ∀ x v, (x, v) ∈ A → (Φ x, Φ v) ∈ B) (hBA : ∀ y w, (y, w) ∈ B → (Ψ y, Ψ w) ∈ A)
-    {I : Set ℝ} {S : ℝ → X →L[ℝ] X} (hS : IsEvolution A I S) :
-    IsEvolution B I fun t => Φ ∘L S t ∘L Ψ :=
+    {I : Set ℝ} {S : ℝ → X →L[ℝ] X} (hS : IsEvolution ℝ A I S) :
+    IsEvolution ℝ B I fun t => Φ ∘L S t ∘L Ψ :=
   ⟨fun y => by simp [hS.1, hΦΨ], fun y w hyw => (hS.2 _ _ (hBA _ _ hyw)).map Φ hAB⟩
 
 end Conj
@@ -156,13 +156,13 @@ theorem gc_graph_inv (y w : PiLp 2 (W3 (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F
 
 /-- **The system (4.14) has an evolution**: the wave group conjugated by the state map. -/
 theorem gc_isEvolution :
-    IsEvolution (gradCurlWave Ω) univ fun t => gcInv ∘L (gcGroup hΩ).S t ∘L gcState :=
+    IsEvolution ℝ (gradCurlWave Ω) univ fun t => gcInv ∘L (gcGroup hΩ).S t ∘L gcState :=
   (isEvolution_group (gcGroup hΩ)).conj gcInv gcState gcInv_gcState
     (fun y w h => gc_graph_inv hΩ y w h) fun U V h => (gc_graph_iff hΩ U V).1 h
 
 /-- **Every evolution of the system (4.14) is the wave group**, through the state map. -/
 theorem gc_eq_of_isEvolution {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ]
-    (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution (gradCurlWave Ω) univ S) (t : ℝ)
+    (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) (t : ℝ)
     (x : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
     S t x = gcInv ((gcGroup hΩ).S t (gcState x)) := by
   have hS' := hS.conj gcState gcInv gcState_gcInv (fun U V h => (gc_graph_iff hΩ U V).1 h)
@@ -185,7 +185,7 @@ theorem gc_mem_tsd_iff (W : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
 
 /-- **The invariant core is `Feec`'s `coreSub`**, through the state map. -/
 theorem gc_mem_invariantCore_iff {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ]
-    (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution (gradCurlWave Ω) univ S)
+    (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution ℝ (gradCurlWave Ω) univ S)
     (x : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
     x ∈ invariantCore S (tsdConstraint Ω) ↔
       gcState x ∈ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) := by
@@ -235,6 +235,32 @@ theorem mem_dom_iff (u : L2Vec Ω 1) :
     have hg := (gradCurl ℝ hΩ).d₁.mem_graph ⟨_, h⟩
     rw [← LinearIsometryEquiv.apply_symm_apply fieldB ((gradCurl ℝ hΩ).d₁ ⟨_, h⟩)] at hg
     exact LinearPMap.mem_domain_of_mem_graph ((mem_graph_curl_iff hΩ u _).2 hg)
+
+include hΩ in
+/-- **`HΛ¹(Ω)³` is `H(curl, Ω; ℝ³ˣ³)`** through the electric field: the rows of `curl E` are the
+`d uₐ`, and the row-wise curl is formally self-adjoint (`curlOp_formalAdj_apply`), so its maximal
+realization is that of its formal adjoint. -/
+theorem mem_domMax_iff (u : L2Vec Ω 1) :
+    u ∈ (vecOp fun _ => dMax Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain ↔
+      fieldE u ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain := by
+  constructor
+  · intro h
+    rw [fieldE_eq_sum]
+    refine Submodule.sum_mem _ fun a _ => ?_
+    have hu : u a ∈ ((extDerivOp ℝ 3 1).maximal Ω).domain := by rw [← dMax_eq]; exact h a
+    exact (ConstCoeffOp.maximal_ofMatrixCLM_of_comm hΩ
+      (A := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj) (B := extDerivOp ℝ 3 1)
+      (M := matE a) (M' := matB a)
+      (fun f _ => by rw [curlOp_formalAdj_apply]; exact curlOp_matE a f) ⟨_, hu⟩).1
+  · intro h a
+    have h' := (ConstCoeffOp.maximal_ofMatrixCLM_of_comm hΩ (A := extDerivOp ℝ 3 1)
+      (B := (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj) (M := (matE a).transpose)
+      (M' := (matB a).transpose)
+      (fun f _ => by rw [curlOp_formalAdj_apply]; exact extDerivOp_matE_transpose a f)
+      ⟨_, h⟩).1
+    rw [ofMatrixCLM_matE_transpose] at h'
+    change u a ∈ (dMax Ω 1).domain
+    rw [dMax_eq]; exact h'
 
 /-- The curl through the fields: `curl (E u) = B (d u)`. -/
 theorem curl_fieldE (u : (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain)

@@ -166,7 +166,7 @@ theorem absorbing_of_eq {Ω₃ : Set (Fin 3 → ℝ)} {Ω₂ : Set (Fin 2 → �
         (A.graph : SetRel _ _) = absorbingOn Ω₃ Ω₂ ∧ (∀ x : A.domain, ⟪A x, (x : _)⟫_ℝ ≤ 0) ∧
         ∀ y, ∃ x : A.domain, (x : _) - A x = y) ∧
       (∃ p ∈ absorbingOn Ω₃ Ω₂, ⟪p.2, p.1⟫_ℝ < 0) ∧
-      ∀ S, IsEvolution (absorbingOn Ω₃ Ω₂) (Ici 0) S →
+      ∀ S, IsEvolution ℝ (absorbingOn Ω₃ Ω₂) (Ici 0) S →
         ∃ t ≥ 0, ∃ x ∈ tsdPairOn Ω₃, S t x ∉ tsdPairOn Ω₃ := by
   subst h₃ h₂
   rw [absorbingOn_eq]
@@ -178,7 +178,7 @@ theorem absorbing_of_eq {Ω₃ : Set (Fin 3 → ℝ)} {Ω₂ : Set (Fin 2 → �
       Feec.Models.Cube.Absorbing.absorbing.mem_graph u, hu⟩
   · have hgen : absorbingSemigroup.generator = Feec.Models.Cube.Absorbing.absorbing :=
       hA.generator_semigroup
-    have hS' : IsEvolution absorbingSemigroup.generator.graph (Ici 0) S := by
+    have hS' : IsEvolution ℝ absorbingSemigroup.generator.graph (Ici 0) S := by
       rw [hgen]; exact hS
     have hD : Dense (absorbingSemigroup.generator.domain : Set State) := by
       rw [hgen]; exact hA.dense_domain

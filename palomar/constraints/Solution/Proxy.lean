@@ -98,7 +98,7 @@ def fieldB : L2Vec Ω 2 ≃ₗᵢ[ℝ] L2F ℝ Ω Ix where
     refine Fintype.sum_equiv ix2 _ _ fun i => ?_
     change ‖sgn3 i • ρ a (ix2 i)‖ ^ 2 = _
     rw [norm_smul, mul_pow, Real.norm_eq_abs, sq_abs, show sgn3 i ^ 2 = 1 by
-      rw [sq, sgn3_mul_self], one_mul]
+      rw [_root_.sq, sgn3_mul_self], one_mul]
 
 theorem fieldE_apply (u : L2Vec Ω 1) (a b : Fin 3) : fieldE u (a, b) = mat1 u a b := rfl
 

@@ -5,15 +5,17 @@ public import Solution.GradCurl
 /-!
 # The verdicts of the natural boundary conditions
 
-The clauses of `FEEC.tsd_boundary_conditions` for the system (4.14) with the boundary conditions
-natural for its complex, read off `Feec` through `Solution.GradCurl`:
+The verdicts `FEEC.NaturalVerdict`, `FEEC.StarShapedVerdict`, `FEEC.TSDVerdict.ball` and
+`FEEC.BoxVerdict` for the system (4.14) with the boundary conditions natural for its complex, read
+off `Feec` through `Solution.GradCurl`:
 
 * `natural_of`: on every nonempty bounded open `Ω`, the invariant core
   (`Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`), the datum `(0, E₀, β)`
   (`betaL2_not_propagates`), the projection hypothesis (`exists_projTSD_not_mem_domain`), the
   density (`not_dense_tsd_inter`), and the system (6.1) (`tsd_not_propagates_of` of
   `Solution.Bounded`);
-* `starShaped_of`: on domains star-shaped with respect to a ball, `density_dichotomy` and
+* `starShaped_of`: on domains star-shaped with respect to a ball, `density_dichotomy` (both
+  halves, `H(curl)` through `mem_domMax_iff`) and
   `Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with the complete set of eigenvectors
   `Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl`;
 * `ball_of`: `Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball`;
@@ -54,6 +56,16 @@ theorem tsd_inter_eq (hΩ : IsOpen Ω) :
   simp only [mem_ofPred_eq, mem_preimage, SetLike.mem_coe, Submodule.mem_inf, isTSD_iff,
     toIx_mat1, mem_dom_iff hΩ]
   rfl
+
+/-- The TSD fields with rows in `H(curl)`, through the electric field. -/
+theorem tsd_inter_max_eq (hΩ : IsOpen Ω) :
+    {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ (vecOp fun _ => dMax Ω 1 :
+        L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} =
+      fieldE ⁻¹' ((tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).formalAdj.maximal Ω).domain :
+        Submodule ℝ (L2F ℝ Ω Ix)) : Set (L2F ℝ Ω Ix)) := by
+  ext u
+  simp only [mem_ofPred_eq, mem_preimage, SetLike.mem_coe, Submodule.mem_inf, isTSD_iff,
+    toIx_mat1, mem_domMax_iff hΩ]
 
 theorem tsd_eq : {u : L2Vec Ω 1 | IsTSD (mat1 u)} = fieldE ⁻¹' (tsd Ω : Set (L2F ℝ Ω Ix)) := by
   ext u
@@ -215,7 +227,7 @@ theorem coreE_maximal (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
 /-- **The invariant core on a nonempty bounded open `Ω`.** -/
 theorem natural_core (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ] (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)}
-    (hS : IsEvolution (gradCurlWave Ω) univ S) :
+    (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) :
     ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2))
       (_ : S₁.HasOrthogonalProjection) (_ : S₂.HasOrthogonalProjection),
       invariantCore S (tsdConstraint Ω) = {U | U.1 = 0 ∧ U.2.1 ∈ S₁ ∧ U.2.2 ∈ S₂} ∧
@@ -324,42 +336,7 @@ theorem natural_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
 
 /-- **The boundary conditions natural for the complex, on a nonempty bounded open `Ω`.** -/
 theorem natural_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
-    (Dense ((vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain : Set (L2Vec Ω 0)) ∧
-      Dense ((vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain : Set (L2Vec Ω 1)) ∧
-      (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).IsClosed ∧
-      (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).IsClosed ∧
-      ∀ x : (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain,
-        ∃ h : (vecOp fun _ => dMin Ω 0) x ∈ (vecOp fun _ => dMin Ω 1 :
-          L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain, (vecOp fun _ => dMin Ω 1) ⟨_, h⟩ = 0) ∧
-    (∃ S, IsEvolution (gradCurlWave Ω) univ S) ∧
-    (∀ S, IsEvolution (gradCurlWave Ω) univ S →
-      ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2))
-        (_ : S₁.HasOrthogonalProjection) (_ : S₂.HasOrthogonalProjection),
-        invariantCore S (tsdConstraint Ω) = {U | U.1 = 0 ∧ U.2.1 ∈ S₁ ∧ U.2.2 ∈ S₂} ∧
-        IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁ S₂ ∧
-        (∀ (S₁' : Submodule ℝ (L2Vec Ω 1)) (S₂' : Submodule ℝ (L2Vec Ω 2))
-          [S₁'.HasOrthogonalProjection] [S₂'.HasOrthogonalProjection],
-          (∀ u ∈ S₁', IsTSD (mat1 u)) → (∀ ρ ∈ S₂', IsTSD (mat2 ρ)) →
-          IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁' S₂' →
-          S₁' ≤ S₁ ∧ S₂' ≤ S₂) ∧
-        (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
-        (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
-        ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω) ∧
-    (∃ ρ : L2Vec Ω 2, (∀ a b, ⇑(mat2 ρ a b) =ᵐ[volume.restrict Ω]
-        fun x => if (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) then x 2 else 0) ∧
-      (0, 0, ρ) ∈ tsdConstraint Ω ∧ (∃ V, ((0, 0, ρ), V) ∈ gradCurlWave Ω) ∧
-      ∀ u T U, 0 < T → U 0 = (0, u, ρ) → IsStrongSolution (gradCurlWave Ω) (Icc 0 T) U →
-        ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
-    (∃ u : L2Vec Ω 1, (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
-      ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
-        v ∉ (vecOp fun _ => dMin Ω 1).domain) ∧
-    closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ (vecOp fun _ => dMin Ω 1).domain} ≠
-      {u | IsTSD (mat1 u)} ∧
-    ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
-      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
-        (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
-        ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a :=
+    NaturalVerdict Ω :=
   ⟨natural_complex hΩ, ⟨_, gc_isEvolution hΩ⟩, fun _ hS => natural_core hΩ hb hne hS,
     natural_beta hΩ hb hne, natural_proj hΩ hb hne, natural_dense hΩ hb hne,
     tsd_not_propagates_of hΩ hb hne⟩
@@ -367,15 +344,12 @@ theorem natural_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Non
 /-- **Domains star-shaped with respect to a ball.** -/
 theorem starShaped_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     (hstar : ∃ x₀ s, 0 < s ∧ ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
-    closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ (vecOp fun _ => dMin Ω 1 :
-        L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} = {u | IsTSD₀ (mat1 u)} ∧
-      ∀ S, IsEvolution (gradCurlWave Ω) univ S →
-        (invariantCore S (tsdConstraint Ω) ⊆ {U | (U, 0) ∈ gradCurlWave Ω} ↔
-          ¬∃ ξ > 0, ∃ v : L2Vec Ω 1, v ≠ 0 ∧ IsTSD (mat1 v) ∧ IsEigenfield Ω ξ v ∧
-            ∀ h, ¬∃ w ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
-              mat1 w = mat2 ((vecOp fun _ => dMin Ω 1) ⟨v, h⟩)) := by
+    StarShapedVerdict Ω := by
   obtain ⟨x₀, s, hs, hst⟩ := hstar
-  refine ⟨?_, fun S hS => ?_⟩
+  refine ⟨⟨?_, ?_⟩, fun S hS => ?_⟩
+  · have e := (density_dichotomy hΩ hb hne hs hst).1
+    rw [tsd_inter_max_eq hΩ, closure_preimage_fieldE, ← Submodule.topologicalClosure_coe, e]
+    exact tsd_eq.symm
   · have e := (density_dichotomy hΩ hb hne hs hst).2.1
     rw [tsd_inter_eq hΩ, closure_preimage_fieldE, ← Submodule.topologicalClosure_coe, e]
     ext u
@@ -417,7 +391,7 @@ theorem starShaped_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
 theorem unitBall_eq : unitBall = Feec.Counterexamples.BallSymTSD.ball3 := by
   ext x
   simp [unitBall, Feec.Counterexamples.BallSymTSD.ball3, Feec.Counterexamples.BallSymTSD.rho,
-    Fin.sum_univ_three, sq]
+    Fin.sum_univ_three, _root_.sq]
 
 theorem ball_of_eq (hΩ : Ω = Feec.Counterexamples.BallSymTSD.ball3) {ξ : ℝ} (hξ : ξ ≠ 0)
     (v : L2Vec Ω 1) (hv : IsTSD (mat1 v)) (hE : IsEigenfield Ω ξ v) {O : Set (Fin 3 → ℝ)}
@@ -429,7 +403,7 @@ theorem ball_of_eq (hΩ : Ω = Feec.Counterexamples.BallSymTSD.ball3) {ξ : ℝ}
     (v := fieldE v) (by rw [← toIx_mat1, ← isTSD_iff]; exact hv)
     ((isEigenfield_iff Feec.Counterexamples.BallSymTSD.isOpen_ball3 ξ v).1 hE) hO
     (fun x hx => hBO (by
-      simpa [Feec.Counterexamples.BallSymTSD.rho, Fin.sum_univ_three, sq] using hx))
+      simpa [Feec.Counterexamples.BallSymTSD.rho, Fin.sum_univ_three, _root_.sq] using hx))
     (U := fun ij => Φ ij.1 ij.2) (fun ij => hΦ _ _) (fun ij => hvΦ _ _)
   exact (LinearIsometryEquiv.map_eq_zero_iff fieldE).1 h
 
@@ -441,19 +415,9 @@ theorem ball_of : ∀ ξ ≠ 0, ∀ v : L2Vec unitBall 1, IsTSD (mat1 v) → IsE
   fun _ hξ v hv hE ⟨_, hO, hBO, _, hΦ, hvΦ⟩ => ball_of_eq unitBall_eq hξ v hv hE hO hBO hΦ hvΦ
 
 /-- **Boxes.** -/
-theorem box_of {a ℓ : Fin 3 → ℝ} (hℓ : ∀ i, 0 < ℓ i) :
-    (∀ S, IsEvolution (gradCurlWave (box a ℓ)) univ S →
-        invariantCore S (tsdConstraint (box a ℓ)) =
-          tsdConstraint (box a ℓ) ∩ {U | (U, 0) ∈ gradCurlWave (box a ℓ)} ∧
-        ∀ U ∈ invariantCore S (tsdConstraint (box a ℓ)), U.2.1 = 0) ∧
-      ∀ (S₁ : Submodule ℝ (L2Vec (box a ℓ) 1)) (S₂ : Submodule ℝ (L2Vec (box a ℓ) 2)),
-        (∀ u ∈ S₁, IsTSD (mat1 u)) → (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) → ∀ U,
-          IsStrongSolution (gradCurlWave (box a ℓ)) (Ici 0) U →
-          ((∀ t ≥ 0, (U t).1 = 0 ∧ (U t).2.1 ∈ S₁ ∧ (U t).2.2 ∈ S₂) ↔
-            ((U 0).1 = 0 ∧ (U 0).2.1 ∈ S₁ ∧ (U 0).2.2 ∈ S₂) ∧
-              (U 0, 0) ∈ gradCurlWave (box a ℓ)) := by
+theorem box_of {a ℓ : Fin 3 → ℝ} (hℓ : ∀ i, 0 < ℓ i) : BoxVerdict a ℓ := by
   have hΩ : IsOpen (box a ℓ) := Feec.Models.Box.isOpen_openBox a ℓ
-  refine ⟨fun S hS => ?_, (box_stationary_of hℓ).2⟩
+  refine ⟨fun S hS => ?_, fun S₁ S₂ h₁ h₂ U hU => (box_stationary_of hℓ).2 S₁ S₂ h₁ h₂ U hU⟩
   have key : ∀ U, U ∈ invariantCore S (tsdConstraint (box a ℓ)) ↔
       ∃ B ∈ tsd (box a ℓ), ∃ h : B ∈ ((gradCurl ℝ hΩ).d₁†).domain,
         (gradCurl ℝ hΩ).d₁† ⟨B, h⟩ = 0 ∧

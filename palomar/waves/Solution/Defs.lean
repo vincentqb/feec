@@ -487,6 +487,6 @@ def IsMaxwellGalerkin (Ω : Set (Fin 3 → ℝ)) (V₀ : Set (L2Field Ω (Fin 1)
 
 /-! ### The Whitney schemes of the cube with the boundary data of the exact solution -/
 
-/-! ### Maxwell's equations -/
+/-! ### Maxwell's equations, semi-discrete -/
 
 end FEEC

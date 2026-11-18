@@ -28,7 +28,7 @@ canonical interpolant `Feec.Models.Cube.Inhomogeneous.FEMInterp.canonicalInterp`
 (`isWhitneyInterpAt_cube_iff`).
 
 **The schemes.** The window `[0, 3)` of the challenge's `HΛ(Q)` is `ofFeec (complex 3)`
-(`eq_ofFeec_complex`), whose Whitney forms are the image of `Feec`'s Whitney row `whitneyRow N`
+(`ofFeec_complex_d`), whose Whitney forms are the image of `Feec`'s Whitney row `whitneyRow N`
 under `dEmb` (`mem_whitney_iff`, `mem_whitneyMin_iff`); the challenge's steps with the boundary
 degrees of freedom of `g` are `Feec`'s `IsDirichletCNStep` and `IsDirichletLeapfrogStep` with
 zero load (`isCNStep_iff`, `isLeapfrogStep_iff`), and the row solutions are `Feec`'s
@@ -289,11 +289,10 @@ section Schemes
 
 open Feec.Models.Cube.Inhomogeneous HilbertComplex
 
-/-- **`HΛ(Q)` of the challenge is `Feec`'s complex of the cube.** -/
-theorem eq_ofFeec_complex {H : HilbertComplex ℝ (L2Form (cube 3))}
-    (hH : ∀ k, H.d k (k + 1) = dMax (cube 3) k) : H = HilbertComplex.ofFeec (complex 3) :=
-  ext_of_d fun k => (hH k).trans (by
-    rw [dMax_eq]; exact (deRham_maximalComplex_d (isOpen_cubeDomain 3) k).symm)
+/-- **`Feec`'s complex of the cube is the challenge's `HΛ(Q)`.** -/
+theorem ofFeec_complex_d (k : ℤ) :
+    (HilbertComplex.ofFeec (complex 3)).d k (k + 1) = dMax (cube 3) k := by
+  rw [dMax_eq]; exact deRham_maximalComplex_d (isOpen_cubeDomain 3) k
 
 variable (N : ℕ)
 

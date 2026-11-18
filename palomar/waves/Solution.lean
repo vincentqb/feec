@@ -80,9 +80,9 @@ theorem inverse_estimate [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
   exact hb'
 
 theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
-    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) (b : Bool)
-    (H : HilbertComplex ℝ (L2Form Ω)) (hH : ∀ k, H.d k (k + 1) = if b then dMin Ω k else dMax Ω k)
-    (a : ℤ) (m : ℕ) :
+    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) (b : Bool) :
+    ∃ H : HilbertComplex ℝ (L2Form Ω), (∀ k, H.d k (k + 1) = if b then dMin Ω k else dMax Ω k) ∧
+    ∀ (a : ℤ) (m : ℕ),
     let X : ℕ → Set (Total (L2Form Ω) a m) := fun N =>
       femTotal Ω (M N) S (if b then (M N).boundaryFacets else ∅) a m
     let Reg := if b then IsCsFormMin Ω else IsCsForm Ω
@@ -102,9 +102,9 @@ theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall �
           (∀ k, k + 2 ≤ K → H.IsLeapfrogStep a m (X N) (X N) Δt 0 (u k) (u (k + 1)) (u (k + 2))) →
           u 0 ∈ X N → u 1 ∈ X N → (1 - c) * ‖u K - U (K * Δt)‖ ≤
             ‖u 0 - U 0‖ + ‖u 1 - U Δt‖ + C * (1 + T) * L * (meshSize (M N) ^ (s + 1) + Δt ^ 2) := by
+  obtain ⟨H, F, J, hH, hV, ⟨C, hP⟩, hms, hord, hreg, ⟨B', hB'⟩⟩ := femFamily hΩ hM S b
+  refine ⟨H, hH, fun a m => ?_⟩
   intro X Reg IsInv
-  obtain ⟨H', F, J, hd, hV, ⟨C, hP⟩, hms, hord, hreg, ⟨B', hB'⟩⟩ := femFamily hΩ hM S b
-  obtain rfl : H = H' := (HilbertComplex.ext_of_d fun k => (hd k).trans (hH k).symm).symm
   choose P hPC hPV hPπ using hP
   have hC0 : 0 ≤ C := (norm_nonneg _).trans (hPC 0 0)
   have hXV : ∀ N (x : Total (L2Form Ω) a m),
@@ -312,8 +312,8 @@ section Cube
 open Feec.Models.Cube.Inhomogeneous Feec.Models.Cube.FEM HilbertComplex
 
 theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    IsFreudenthal 𝒯 ∧ ∀ H : HilbertComplex ℝ (L2Form (cube 3)),
-      (∀ k, H.d k (k + 1) = dMax (cube 3) k) →
+    IsFreudenthal 𝒯 ∧ ∃ H : HilbertComplex ℝ (L2Form (cube 3)),
+      (∀ k, H.d k (k + 1) = dMax (cube 3) k) ∧
     let V : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N => femTotal (cube 3) (𝒯 N) topSeq ∅ 0 3
     let V₀ : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N =>
       femTotal (cube 3) (𝒯 N) topSeq (𝒯 N).boundaryFacets 0 3
@@ -328,8 +328,7 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
         g (k + 1) - w ∈ V₀ N) →
       IsWhitneyInterp (cube 3) (𝒯 N) 0 3 (X.u 0) (u 0) → ∀ U, IsRepr (cube 3) 0 3 (X.u (M * Δt)) U →
         ‖u M - U‖ ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
-  refine ⟨cubeMesh, cnConst, isMeshFamily_cube, points_cube, fun H hH => ?_⟩
-  obtain rfl := eq_ofFeec_complex hH
+  refine ⟨cubeMesh, cnConst, isMeshFamily_cube, points_cube, _, ofFeec_complex_d, ?_⟩
   intro V V₀
   refine ⟨fun N m w hw => ?_, fun N Δt g u hg hu => ?_, fun N => ?_,
     fun N T L X Δt M u g hΔt hM hstep hg hu0 U hU => ?_⟩
@@ -384,8 +383,8 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
 
 set_option maxHeartbeats 800000 in
 theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    IsFreudenthal 𝒯 ∧ ∀ H : HilbertComplex ℝ (L2Form (cube 3)),
-      (∀ k, H.d k (k + 1) = dMax (cube 3) k) →
+    IsFreudenthal 𝒯 ∧ ∃ H : HilbertComplex ℝ (L2Form (cube 3)),
+      (∀ k, H.d k (k + 1) = dMax (cube 3) k) ∧
     let V : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N => femTotal (cube 3) (𝒯 N) topSeq ∅ 0 3
     let V₀ : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N =>
       femTotal (cube 3) (𝒯 N) topSeq (𝒯 N).boundaryFacets 0 3
@@ -407,8 +406,7 @@ theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshF
       ∀ U, IsRepr (cube 3) 0 3 (X.u (M * Δt)) U →
         ‖u M - U‖ ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) / (1 - c) := by
   obtain ⟨K, -, hK⟩ := exists_mul_norm_discreteD_whitneyRow_le
-  refine ⟨cubeMesh, leapfrogConst, isMeshFamily_cube, points_cube, fun H hH => ?_⟩
-  obtain rfl := eq_ofFeec_complex hH
+  refine ⟨cubeMesh, leapfrogConst, isMeshFamily_cube, points_cube, _, ofFeec_complex_d, ?_⟩
   intro V V₀ IsInv
   have hnorm : ∀ N (a : DState (whitneyRow N)),
       ‖(HilbertComplex.ofFeec (complex 3)).dApply 0 3 (ofD N a)‖ =

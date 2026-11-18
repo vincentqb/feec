@@ -17,38 +17,40 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 /-!
-# Fully discrete finite elements for the Hodge wave and Maxwell equations
+# Finite element methods for the Hodge wave and Maxwell equations
 
-Do fully discrete finite element schemes for the Hodge wave equation `U' = (𝐝 - 𝐝*) U` converge,
-and under what time-step condition? Take the finite element de Rham complexes of `palomar/fem`:
-`Ω ⊆ ℝⁿ` bounded, open and star-shaped with respect to a ball, shape-regular, quasi-uniform
-simplicial meshes `M_N` of `Ω` with `h_N → 0`, an admissible sequence `S` of `P_rΛ` and `P_r⁻Λ`
-spaces, in `HΛ(Ω)` or `H̊Λ(Ω)`, and the finite element forms `Xₕ` of a window `[a, a + m)` of
-degrees.
+Do finite element methods for the Hodge wave equation `U' = (𝐝 - 𝐝*) U` converge, fully discrete
+(under what time-step condition?) and, for Maxwell's equations, semi-discrete? Take the finite
+element de Rham complexes of `palomar/fem`: `Ω ⊆ ℝⁿ` bounded, open and star-shaped with respect to
+a ball, shape-regular, quasi-uniform simplicial meshes `M_N` of `Ω` with `h_N → 0`, an admissible
+sequence `S` of `P_rΛ` and `P_r⁻Λ` spaces, in `HΛ(Ω)` or `H̊Λ(Ω)`, and the finite element forms
+`Xₕ` of a window `[a, a + m)` of degrees.
 
 * **The inverse estimate** `h_N ‖dv‖ ≤ C ‖v‖` holds on the finite element forms
   (`inverse_estimate`); on the window, `h_N ‖𝐝 x‖ ≤ C₀ ‖x‖` on `Xₕ`, so the discrete wave
   operator has `‖Lₕ‖ ≤ 2 C₀ / h_N`.
-* **Crank–Nicolson converges for every time step, leapfrog under the CFL condition**
-  `2 C₀ Δt ≤ c h_N`, `c < 1` (`fem_wave`; [QuennevilleBelair2015], Ch. 4, 7; [Joly2003]): from any
-  starting values in `Xₕ`, the error at `t_K = K Δt` (for leapfrog, `1 - c` times the error) is at
-  most the starting errors plus `C (1 + T) L (h_N^{s+1} + Δt²)`, uniformly in `N`, for every
-  solution with the homogeneous boundary conditions of the complex, `C³` in time with
-  `‖∂ₜ³U‖ ≤ L`, whose values and time increments are `C^{s+2}` forms (vanishing outside `Ω` in
-  `H̊Λ(Ω)`) with the bounds `L` and `L |t' - t|`, where `S` reproduces `P_sΛ` in the degrees of
-  the window.
-
-With inhomogeneous Dirichlet data, the boundary degrees of freedom of the exact solution (the runs
-of [QuennevilleBelair2015], Ch. 7: the Whitney forms on the Freudenthal meshes of the cube, in
-`HΛ`), both schemes converge at `O(h + Δt²)` for every smooth solution with bound `L`
-(`RowSolution`): Crank–Nicolson for every time step from `u₀ = Π_h U(0)`, leapfrog under the CFL
-condition, with the factor `1 / (1 - c)`, from `u₀ = Π_h U(0)` and `u₁ = Π_h U(Δt)`
-(`crankNicolson_cube`, `leapfrog_cube`); some of these solutions are neither zero nor stationary
-(`rowSolution_nonvacuous`). Maxwell's equations in vector proxies are
-the Hodge wave equation of the window `[0, 3)` of `HΛ(Ω)` in `ℝ³`, the electric field in degree
-`1` (`maxwell`): well-posedness, conservation of the energy and of the Gauss laws, and the
-Galerkin solutions in the finite element spaces, which are unique, converge uniformly on `[0, T]`
-when their initial data converge.
+* **Fully discrete: Crank–Nicolson converges for every time step, leapfrog under the CFL
+  condition** `2 C₀ Δt ≤ c h_N`, `c < 1` (`fem_wave`; [QuennevilleBelair2015], Ch. 4, 7;
+  [Joly2003]): from any starting values in `Xₕ`, the error at `t_K = K Δt` (for leapfrog, `1 - c`
+  times the error) is at most the starting errors plus `C (1 + T) L (h_N^{s+1} + Δt²)`, uniformly
+  in `N`, for every solution with the homogeneous boundary conditions of the complex, `C³` in time
+  with `‖∂ₜ³U‖ ≤ L`, whose values and time increments are `C^{s+2}` forms (vanishing outside `Ω`
+  in `H̊Λ(Ω)`) with the bounds `L` and `L |t' - t|`, where `S` reproduces `P_sΛ` in the degrees
+  `a, …, a + m`.
+* **Fully discrete, inhomogeneous Dirichlet data**: with the boundary degrees of freedom of the
+  exact solution (the runs of [QuennevilleBelair2015], Ch. 7: the Whitney forms on the Freudenthal
+  meshes of the cube, in `HΛ`), both schemes converge at `O(h + Δt²)` for every smooth solution
+  with bound `L` (`RowSolution`): Crank–Nicolson for every time step from `u₀ = Π_h U(0)`, leapfrog
+  under the CFL condition, with the factor `1 / (1 - c)`, from `u₀ = Π_h U(0)` and
+  `u₁ = Π_h U(Δt)` (`crankNicolson_cube`, `leapfrog_cube`); some of these solutions are neither
+  zero nor stationary (`rowSolution_nonvacuous`).
+* **Semi-discrete: Maxwell's equations.** In vector proxies they are the Hodge wave equation of the
+  window `[0, 3)` of `HΛ(Ω)` in `ℝ³`, the electric field in degree `1` (`maxwell`): well-posedness,
+  conservation of the energy and of the Gauss laws, and the semi-discrete Galerkin solutions in
+  the finite element spaces, which are unique, converge uniformly on `[0, T]` when their initial
+  data converge (no rate; the fully discrete schemes of this window are those of `fem_wave`, in
+  forms, and semi-discrete convergence on every window is the wave clause of
+  `FEEC.evolutionFEEC` of `palomar/feec`).
 
 ## Conventions
 
@@ -538,23 +540,26 @@ theorem inverse_estimate [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
 /-- **The fully discrete Hodge wave equation** ([QuennevilleBelair2015], Ch. 4, 7; [Joly2003];
 [Arnold2018], Ch. 8). For `Ω` star-shaped with respect to a ball, shape-regular, quasi-uniform
 meshes `M_N` of `Ω` with `h_N → 0` and an admissible sequence `S` (the setting of `palomar/fem`),
-for `HΛ(Ω)` (`b = false`, natural boundary conditions) or `H̊Λ(Ω)` (`b = true`, vanishing traces),
-with the finite element forms `Xₕ` of the window `[a, a + m)` (`femTotal`): some `C₀` has
-`h_N ‖𝐝 x‖ ≤ C₀ ‖x‖` on `Xₕ` (inverse estimate); and for every `s` such that `S` reproduces
-`P_sΛ` in the degrees of the window, some `C` (independent of `N`, `Δt`, `T`, `L`, `U`, `c`,
-`C₀`) bounds the errors of the iterates `uₖ ∈ Xₕ`, from any starting values in `Xₕ`, for every
-solution `U` of `U' = (𝐝 - 𝐝*) U` on `[0, T]` (with the boundary conditions of `H`), `C³` in time
-on `ℝ` with `‖∂ₜ³U‖ ≤ L` on `[0, T]`, whose values and time increments are `C^{s+2}` forms
-(`IsCsForm`, resp. `IsCsFormMin`) with the bounds `L`, `L |t' - t|`, `Δt > 0`, `K Δt ≤ T`:
-`‖u_K - U(K Δt)‖ ≤ ‖u₀ - U(0)‖ + C (1 + T) L (h_N^{s+1} + Δt²)` for **Crank–Nicolson** (every
-time step), and `(1 - c) ‖u_K - U(K Δt)‖ ≤ ‖u₀ - U(0)‖ + ‖u₁ - U(Δt)‖ + C (1 + T) L (h_N^{s+1} +
-Δt²)` for **leapfrog** under the CFL condition `2 C₀ Δt ≤ c h_N`, `c < 1`, for every constant
-`C₀ ≥ 0` of the inverse estimate. For `U = 0` these are the stability bounds `‖u_K‖ ≤ ‖u₀‖` and
-`(1 - c) ‖u_K‖ ≤ ‖u₀‖ + ‖u₁‖`. -/
+`HΛ(Ω)` (`b = false`, natural boundary conditions) or `H̊Λ(Ω)` (`b = true`, vanishing traces) is a
+Hilbert complex `H`, and on every window `[a, a + m)`, with its finite element forms `Xₕ`
+(`femTotal`): some `C₀` has `h_N ‖𝐝 x‖ ≤ C₀ ‖x‖` on `Xₕ` (inverse estimate); and for every `s`
+such that `S` reproduces `P_sΛ` in the degrees `a, …, a + m` (`PolySeq.PolyOrderAt` in the
+degrees of the window), some `C` (independent of `N`, `Δt`, `T`, `L`, `U`, `c`, `C₀`) bounds the
+errors of the iterates `uₖ ∈ Xₕ`, from any starting values in `Xₕ`, for every solution `U` of
+`U' = (𝐝 - 𝐝*) U` on `[0, T]` (in the domain of the wave operator of `H`: its boundary
+conditions), `C³` in time on `ℝ` with `‖∂ₜ³U‖ ≤ L` on `[0, T]`, whose values and time increments
+are `C^{s+2}` forms (`IsCsForm`, resp. `IsCsFormMin`) with the bounds `L`, `L |t' - t|`,
+`Δt > 0`, `K Δt ≤ T`: `‖u_K - U(K Δt)‖ ≤ ‖u₀ - U(0)‖ + C (1 + T) L (h_N^{s+1} + Δt²)` for
+**Crank–Nicolson** (every time step), and `(1 - c) ‖u_K - U(K Δt)‖ ≤ ‖u₀ - U(0)‖ + ‖u₁ - U(Δt)‖ +
+C (1 + T) L (h_N^{s+1} + Δt²)` for **leapfrog** under the CFL condition `2 C₀ Δt ≤ c h_N`,
+`c < 1`, for every constant `C₀ ≥ 0` of the inverse estimate. For `U = 0` these are the stability
+bounds `‖u_K‖ ≤ ‖u₀‖` and `(1 - c) ‖u_K‖ ≤ ‖u₀‖ + ‖u₁‖`. (For `H̊Λ(Ω)`, `IsCsFormMin` asks the
+derivatives of order at most `s + 2` to vanish on `∂Ω` at every `t ∈ [0, T]`: a wave that reaches
+the boundary before `T` is in general not in the class.) -/
 theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
-    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) (b : Bool)
-    (H : HilbertComplex ℝ (L2Form Ω)) (hH : ∀ k, H.d k (k + 1) = if b then dMin Ω k else dMax Ω k)
-    (a : ℤ) (m : ℕ) :
+    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) (b : Bool) :
+    ∃ H : HilbertComplex ℝ (L2Form Ω), (∀ k, H.d k (k + 1) = if b then dMin Ω k else dMax Ω k) ∧
+    ∀ (a : ℤ) (m : ℕ),
     let X : ℕ → Set (Total (L2Form Ω) a m) := fun N =>
       femTotal Ω (M N) S (if b then (M N).boundaryFacets else ∅) a m
     let Reg := if b then IsCsFormMin Ω else IsCsForm Ω
@@ -581,18 +586,20 @@ theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall �
 /-- **The Crank–Nicolson Whitney scheme with the boundary degrees of freedom of the exact solution
 converges at `O(h + Δt²)`** ([QuennevilleBelair2015], Ch. 7; [Arnold2018], Ch. 7; [Monk2003];
 [Thomee2006]). The cube `Q = (0, ½)³` has shape-regular, quasi-uniform Freudenthal meshes `𝒯_N`,
-`h_N → 0`, on which, for `HΛ(Q)`, the Whitney spaces `Vₕ` (`topSeq`) of the window `[0, 3)` and
-their fields `V̊ₕ` with vanishing boundary traces: continuous `w` have exactly one Whitney
-interpolant `Π_h w` (the forms of `P₁⁻Λ` with the face integrals of `w`) on every window `[0, m)`;
-the step from `u` with the boundary degrees of freedom of `g` (test space `V̊ₕ`) is uniquely
-solvable for all `g, u ∈ Vₕ`, `Δt`; `V̊ₕ¹ ≠ 0`; and some `C` has, for every smooth solution `U`
-with bound `L` (`RowSolution`), `Δt > 0`, `M Δt ≤ T`, for the iterates from `u₀ = Π_h U(0)` with
-the boundary degrees of freedom of `Π_h U(tₙ)`, `‖u_M - U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`. With
-vanishing boundary data this is `fem_wave` (`b = true`, `S = topSeq`, `s = 0`; there for
-solutions vanishing to second order on `∂Q`). -/
+`h_N → 0`, and `HΛ(Q)` is a Hilbert complex `H`, on whose window `[0, 3)`, with the Whitney spaces
+`Vₕ` (`topSeq`) and their fields `V̊ₕ` with vanishing boundary traces: continuous `w` have exactly
+one Whitney interpolant `Π_h w` (the forms of `P₁⁻Λ` with the face integrals of `w`) on every
+window `[0, m)`; the step from `u` with the boundary degrees of freedom of `g` (test space `V̊ₕ`)
+is uniquely solvable for all `g, u ∈ Vₕ`, `Δt`; `V̊ₕ¹ ≠ 0`; and some `C` has, for every smooth
+solution `U` with bound `L` (`RowSolution`), `Δt > 0`, `M Δt ≤ T`, for the iterates from
+`u₀ = Π_h U(0)` with the boundary degrees of freedom of `Π_h U(tₙ)`,
+`‖u_M - U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²)`. With vanishing boundary data (`gₙ = 0`) the scheme on
+`V̊ₕ` is that of `fem_wave` (`b = true`, `S = topSeq`); the hypotheses on the solution differ
+(there `IsCsFormMin`, flat on `∂Q`; here `RowSolution`, no boundary condition), so neither
+statement contains the other. -/
 theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    IsFreudenthal 𝒯 ∧ ∀ H : HilbertComplex ℝ (L2Form (cube 3)),
-      (∀ k, H.d k (k + 1) = dMax (cube 3) k) →
+    IsFreudenthal 𝒯 ∧ ∃ H : HilbertComplex ℝ (L2Form (cube 3)),
+      (∀ k, H.d k (k + 1) = dMax (cube 3) k) ∧
     let V : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N => femTotal (cube 3) (𝒯 N) topSeq ∅ 0 3
     let V₀ : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N =>
       femTotal (cube 3) (𝒯 N) topSeq (𝒯 N).boundaryFacets 0 3
@@ -610,18 +617,19 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
   sorry
 
 /-- **The explicit leapfrog Whitney scheme under a CFL condition, with the boundary degrees of
-freedom of the exact solution** ([Joly2003]; [QuennevilleBelair2015], Ch. 7). With `𝒯_N`, `HΛ(Q)`,
-`Vₕ`, `V̊ₕ` as in `crankNicolson_cube`: some `C₀` has `h_N ‖𝐝 v‖ ≤ C₀ ‖v‖` on `Vₕ`
-(`inverse_estimate`), so `2 C₀ Δt ≤ c h_N` is a CFL condition `Δt ‖Lₕ‖ ≤ c`; the step is uniquely
-solvable for all `g, u, u' ∈ Vₕ`, `Δt`; and some `C` serves **every** constant `C₀ ≥ 0` of the
-inverse estimate (none is explicit) under the CFL condition with `c < 1`: iterates with vanishing
-boundary degrees of freedom from `u₀, u₁ ∈ V̊ₕ` have `√(1 - c) ‖u_{m+1}‖ ≤ √((1 + c)(‖u₀‖² +
-‖u₁‖²))`, and for `U`, `L`, `Δt`, `M` as there the iterates from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)`
-(no starting procedure is analysed) with the boundary degrees of freedom of `Π_h U(tₙ)` have
+freedom of the exact solution** ([Joly2003]; [QuennevilleBelair2015], Ch. 7). With `𝒯_N`, the
+Hilbert complex `HΛ(Q)`, `Vₕ` and `V̊ₕ` as in `crankNicolson_cube`: some `C₀` has
+`h_N ‖𝐝 v‖ ≤ C₀ ‖v‖` on `Vₕ` (`inverse_estimate`), so `2 C₀ Δt ≤ c h_N` is a CFL condition
+`Δt ‖Lₕ‖ ≤ c`; the step is uniquely solvable for all `g, u, u' ∈ Vₕ`, `Δt`; and some `C` serves
+**every** constant `C₀ ≥ 0` of the inverse estimate (none is explicit) under the CFL condition
+with `c < 1`: iterates with vanishing boundary degrees of freedom from `u₀, u₁ ∈ V̊ₕ` have
+`√(1 - c) ‖u_{m+1}‖ ≤ √((1 + c)(‖u₀‖² + ‖u₁‖²))`, and for `U`, `L`, `Δt`, `M` as there the
+iterates from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` (no starting procedure is analysed) with the
+boundary degrees of freedom of `Π_h U(tₙ)` have
 `‖u_M - U(t_M)‖ ≤ C L (1 + T) (h_N + Δt²) / (1 - c)`. -/
 theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    IsFreudenthal 𝒯 ∧ ∀ H : HilbertComplex ℝ (L2Form (cube 3)),
-      (∀ k, H.d k (k + 1) = dMax (cube 3) k) →
+    IsFreudenthal 𝒯 ∧ ∃ H : HilbertComplex ℝ (L2Form (cube 3)),
+      (∀ k, H.d k (k + 1) = dMax (cube 3) k) ∧
     let V : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N => femTotal (cube 3) (𝒯 N) topSeq ∅ 0 3
     let V₀ : ℕ → Set (Total (L2Form (cube 3)) 0 3) := fun N =>
       femTotal (cube 3) (𝒯 N) topSeq (𝒯 N).boundaryFacets 0 3
@@ -652,18 +660,19 @@ theorem rowSolution_nonvacuous (T : ℝ) :
     ∃ L, ∃ X : RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 := by
   sorry
 
-/-! ### Maxwell's equations -/
+/-! ### Maxwell's equations, semi-discrete -/
 
 /-- **Maxwell's equations** ([QuennevilleBelair2015], Ch. 4; [AFW2010], §4; [Monk2003]): for the
 domains, meshes and admissible sequences of `fem_wave` in `ℝ³`, the vector proxies `V_N⁰`, `V_N¹`,
 `V_N²` of `S_k(M_N)` (for `S = topSeq` the Lagrange, Nédélec and Raviart–Thomas elements) lie in
-`H¹(Ω)`, `H(curl, Ω)`, `H(div, Ω)`, and data in `V_N⁰ × V_N¹ × V_N²` have unique Galerkin
-solutions on `[0, T]`. In Hodge-wave form (the window `[0, 3)` of `HΛ(Ω)` in vector proxies),
-with `H = -B`, `σ = 0`: `E' = curl H`, `H' = -curl E` with perfect-magnetic-conductor walls
-`H × n = 0`, `E · n = 0`. For data in the domain of the Maxwell operator and every `T` there is a
-unique strong solution on `[0, T]`; it conserves the energy, keeps the Gauss laws `σ = 0`,
-`grad* E = 0`, `div B = 0`, and is the uniform limit on `[0, T]` of every family of Galerkin
-solutions whose initial data converge to the data; such families exist. -/
+`H¹(Ω)`, `H(curl, Ω)`, `H(div, Ω)`, and data in `V_N⁰ × V_N¹ × V_N²` have unique semi-discrete
+Galerkin solutions on `[0, T]` (continuous in time). In Hodge-wave form (the window `[0, 3)` of
+`HΛ(Ω)` in vector proxies), with `H = -B`, `σ = 0`: `E' = curl H`, `H' = -curl E` with
+perfect-magnetic-conductor walls `H × n = 0`, `E · n = 0`. For data in the domain of the Maxwell
+operator and every `T` there is a unique strong solution on `[0, T]`; it conserves the energy,
+keeps the Gauss laws `σ = 0`, `grad* E = 0`, `div B = 0`, and is the uniform limit on `[0, T]` of
+every family of Galerkin solutions whose initial data converge to the data; such families
+exist. -/
 theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ → SimplicialMesh 3}
     (hM : IsMeshFamily Ω M) (S : PolySeq) :
     let V₀ := fun N => proxy0 '' femSpace Ω (M N) S ∅ 0

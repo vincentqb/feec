@@ -2,7 +2,7 @@ module
 
 public import Solution.CubeUnique
 public import Solution.Bounded
-public import Feec.Physics.EinsteinBianchi.BoundedConvergence
+public import Feec.Physics.EinsteinBianchi.BoundedInitialData
 public import Feec.Instances.EinsteinBianchiFEMCube
 public import Feec.ForMathlib.LinearPMap.SkewMaximal
 
@@ -28,10 +28,12 @@ for `cubeQ` has compatible data (`exists_toDS` on `[0, T/2]`,
 from the same data exists (`cubeWave_exists_unique`), and by uniqueness (`cube_wave_unique`) its
 energy vectors are those of the challenge's solution (`exists_DS_eq`).
 
-**Convergence** is then `Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution`
-(`cube_converges`), and the TSD datum `(0, 0, 0, ⋆β)` of `datumBeta_spec` is the limit of the
-initial states of `Feec`'s discrete solutions `exists_betaDiscrete` (`cube_beta`); the discrete
-fields leave the closed sets of TSD and of symmetric fields with the limit.
+**Convergence** is then `Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution`,
+and every state is the limit of initial states of trajectories by
+`Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec` (`exists_trajectories_tendsto`,
+`cube_converges`). From the TSD datum `(0, 0, 0, ⋆β)` of `datumBeta_spec` the limit leaves TSD,
+and the discrete fields leave the closed sets of TSD and of symmetric fields with it
+(`cube_beta`).
 
 ## References
 
@@ -60,7 +62,7 @@ open Feec.EinsteinBianchi.BoundedFailure (WS comp0 comp1 comp2 compML compρL co
   mem_gammaOf ea_point eb_point ec_point ed_point solutionOfStrong dvec embQ
   eventually_not_mem_of_tendsto)
 open Feec.EinsteinBianchi.BoundedConvergence (vecL solutionOfStrong_vec_eq
-  tendsto_of_isStrongSolution)
+  tendsto_of_isStrongSolution exists_tendsto_dvec)
 open Feec.Instances.EinsteinBianchi.FEM (vecInv vecL_vecInv norm_vecL norm_vecInv gammaTop)
 
 attribute [-instance] Feec.ShortHilbertComplex.instNormedSpaceRealW3
@@ -339,16 +341,33 @@ theorem trajectory_spec {N : ℕ} {T : ℝ} {Uh : ℝ → St}
 
 /-! ### Convergence -/
 
+/-- **Every state is the limit of initial states of trajectories of (6.5)** (no source), although
+their initial values are constrained: `Feec`'s solutions of `exists_tendsto_dvec`. -/
+theorem exists_trajectories_tendsto (U₀ : St) {T : ℝ} (hT0 : 0 < T) :
+    ∃ Uh : ℕ → ℝ → St, (∀ N, Uh N ∈ (cubeQ hT hB N).trajectories T 0) ∧
+      Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) := by
+  obtain ⟨sh, hsh⟩ := exists_tendsto_dvec hT hB hT0 (toWS U₀)
+  refine ⟨fun N t => ((((sh N).σ t : U0) : W0), incl1 ((sh N).u t : Wv U1), ((sh N).M t : W2),
+    ((sh N).ρ t : Wv W2)), fun N => ⟨_, _, _, _, _, _, isDiscreteWave_ofDS hT hB (sh N),
+      fun _ => rfl⟩, hsh.congr fun N => ?_⟩
+  have e : dvec (cubeFEM hT hB N) (sh N) 0 = Feec.BGG.energyEmb W0 (Wv W1) W2 (Wv W2)
+      ((((sh N).σ 0 : U0) : W0), incl1 ((sh N).u 0 : Wv U1), ((sh N).M 0 : W2),
+        ((sh N).ρ 0 : Wv W2)) := rfl
+  rw [vecL_toWS, e, norm_energyEmb_sub]
+
 /-- **Convergence of (6.5) from every datum of `D(L)`** (the electric boundary conditions): a
-strong solution exists, and every family of trajectories of (6.5) whose initial states converge
-to the datum converges to every strong solution uniformly on `[0, T]`. -/
+strong solution exists, the datum is the limit of initial states of trajectories of (6.5), and
+every family of trajectories of (6.5) whose initial states converge to the datum converges to
+every strong solution uniformly on `[0, T]`. -/
 theorem cube_converges {U₀ V : St} {T : ℝ} (hW : 𝒟.IsWave U₀ V) (hT0 : 0 < T) :
     (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | 𝒟.IsWave p.1 p.2} (Icc 0 T) U) ∧
+    (∃ Uh : ℕ → ℝ → St, (∀ N, Uh N ∈ (cubeQ hT hB N).trajectories T 0) ∧
+      Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
     ∀ U (Uh : ℕ → ℝ → St), U 0 = U₀ → IsStrongSolution {p | 𝒟.IsWave p.1 p.2} (Icc 0 T) U →
       (∀ N, Uh N ∈ (cubeQ hT hB N).trajectories T 0) →
       Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
       ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε := by
-  refine ⟨?_, fun U Uh hU0 hU hUh h0 => ?_⟩
+  refine ⟨?_, exists_trajectories_tendsto hT hB U₀ hT0, fun U Uh hU0 hU hUh h0 => ?_⟩
   · have hdom : toWS U₀ ∈ formsShort.wave.domain :=
       LinearPMap.mem_domain_of_mem_graph (mem_graph_of_isWave hW)
     refine ⟨fun t => ofWS (formsShort.toHilbertComplex.waveGroup.S t (toWS U₀)), ?_,
@@ -382,27 +401,6 @@ theorem cube_converges {U₀ V : St} {T : ℝ} (hW : 𝒟.IsWave U₀ V) (hT0 : 
 theorem isOpen_cube3 : IsOpen (cube 3) := isOpen_cubeDomain 3
 theorem isBounded_cube3 : Bornology.IsBounded (cube 3) := isBounded_cubeDomain 3
 
-/-- On the cube, the magnetic field of the challenge is `Feec`'s rows dictionary for `2`-forms. -/
-theorem fieldB_eq_rows2Equiv (ρ : L2Vec (cube 3) 2) :
-    fieldB ρ = Feec.EinsteinBianchi.MatrixModel.rows2Equiv ρ := by
-  refine PiLp.ext fun ai => ?_
-  obtain ⟨a, i⟩ := ai
-  change sgn3 i • ρ a (ix2 i) = Feec.EinsteinBianchi.MatrixModel.sgn2 i •
-    ρ a (Feec.EinsteinBianchi.MatrixModel.idx2 i)
-  have e : ix2 i = Feec.EinsteinBianchi.MatrixModel.idx2 i := by
-    refine Subtype.ext ?_
-    fin_cases i <;> decide
-  have s : sgn3 i = Feec.EinsteinBianchi.MatrixModel.sgn2 i := by
-    fin_cases i <;> norm_num [sgn3, Feec.EinsteinBianchi.MatrixModel.sgn2]
-  rw [e, s]
-
-theorem rhoBeta_eq : rhoBeta isOpen_cube3 isBounded_cube3 =
-    Feec.EinsteinBianchi.BoundedFailure.rhoBeta := by
-  apply (Feec.EinsteinBianchi.MatrixModel.rows2Equiv).injective
-  rw [← fieldB_eq_rows2Equiv, rhoBeta, LinearIsometryEquiv.apply_symm_apply,
-    Feec.EinsteinBianchi.BoundedFailure.rhoBeta, LinearIsometryEquiv.apply_symm_apply]
-  rfl
-
 /-- The TSD fields of the cube form a closed set. -/
 theorem isClosed_setOf_isTSD : IsClosed {w : L2Vec (cube 3) 1 | IsTSD (mat1 w)} := by
   have e : {w : L2Vec (cube 3) 1 | IsTSD (mat1 w)} =
@@ -423,8 +421,6 @@ theorem isClosed_setOf_symm :
 
 /-- **From the TSD datum `(0, 0, 0, ⋆β)` the method converges to a solution that leaves TSD.** -/
 theorem cube_beta : ∃ (U₀ V : St), 𝒟.IsWave U₀ V ∧ IsTSDState (Ω := cube 3) U₀ ∧ ∀ T > 0,
-    (∃ Uh : ℕ → ℝ → St, (∀ N, Uh N ∈ (cubeQ hT hB N).trajectories T 0) ∧
-      Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
     ∀ U, U 0 = U₀ → IsStrongSolution {p | 𝒟.IsWave p.1 p.2} (Icc 0 T) U →
       (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (Ω := cube 3) (U t).2.1) ∧ ∀ Uh : ℕ → ℝ → St,
         (∀ N, Uh N ∈ (cubeQ hT hB N).trajectories T 0) →
@@ -437,43 +433,25 @@ theorem cube_beta : ∃ (U₀ V : St), 𝒟.IsWave U₀ V ∧ IsTSDState (Ω := 
   obtain ⟨⟨V, hV⟩, hTSD, hspec⟩ := datumBeta_spec isOpen_cube3 isBounded_cube3
     Feec.EinsteinBianchi.BoundedFailure.nonempty_cubeDomain
   rw [bggData_cube_eq] at hV hspec
-  refine ⟨datumBeta isOpen_cube3 isBounded_cube3, V, hV, hTSD, fun T hT0 => ⟨?_, ?_⟩⟩
-  · -- `Feec`'s discrete solutions from the projected datum
-    have hex := fun N => Feec.EinsteinBianchi.BoundedFailure.exists_betaDiscrete hT hB hT0 N
-    choose s hs using hex
-    refine ⟨fun N t => ((((s N).σ t : U0) : W0), incl1 ((s N).u t : Wv U1), ((s N).M t : W2),
-      ((s N).ρ t : Wv W2)), fun N => ⟨_, _, _, _, _, _, isDiscreteWave_ofDS hT hB (s N),
-      fun _ => rfl⟩, ?_⟩
-    have e : ∀ N, stateNorm ((datumBeta isOpen_cube3 isBounded_cube3 : St) -
-        (((((s N).σ 0 : U0) : W0), incl1 ((s N).u 0 : Wv U1), ((s N).M 0 : W2),
-          ((s N).ρ 0 : Wv W2)) : St)) = Metric.infDist Feec.EinsteinBianchi.BoundedFailure.rhoBeta
-            ((cubeFEM hT hB N).Wt2h : Set (Wv W2)) := fun N => by
-      obtain ⟨h1, h2, h3, h4⟩ := hs N
-      rw [h1, h2, h3, h4, ← Feec.EinsteinBianchi.BoundedFailure.norm_rhoBeta_sub_rhoBetaH hT hB N,
-        ← rhoBeta_eq]
-      simp [stateNorm, datumBeta]
-      rfl
-    simp only [e]
-    exact Feec.EinsteinBianchi.BoundedFailure.tendsto_infDist_rhoBeta hT hB
-  · intro U hU0 hU
-    obtain ⟨⟨t₁, ht₁, hE⟩, ⟨t₂, ht₂, a, i, hB'⟩⟩ := (hspec T hT0).2 U hU0 hU
-    obtain ⟨-, hconv⟩ := cube_converges hT hB hV hT0
-    refine ⟨⟨t₁, ht₁, hE, fun Uh hUh h0 => ?_⟩, ⟨t₂, ht₂, ⟨a, i, hB'⟩, fun Uh hUh h0 => ?_⟩⟩
-    · have hc := hconv U Uh hU0 hU hUh h0
-      have := eventually_not_mem_of_tendsto isClosed_setOf_isTSD (x := (U t₁).2.1) hE
-        (y := fun N => (Uh N t₁).2.1) fun ε hε => (hc ε hε).mono fun N hN =>
-          lt_of_le_of_lt (norm_u_le_stateNorm (U t₁ - Uh N t₁)) (hN t₁ ht₁)
-      exact this
-    · have hc := hconv U Uh hU0 hU hUh h0
-      have hnot : (U t₂).2.2.2 ∉ {w : L2Vec (cube 3) 2 | ∀ a i, mat2 w a i = mat2 w i a} :=
-        fun h => hB' (h a i)
-      have := eventually_not_mem_of_tendsto isClosed_setOf_symm hnot
-        (y := fun N => (Uh N t₂).2.2.2) fun ε hε => (hc ε hε).mono fun N hN =>
-          lt_of_le_of_lt (norm_ρ_le_stateNorm (U t₂ - Uh N t₂)) (hN t₂ ht₂)
-      refine this.mono fun N hN => ?_
-      by_contra h
-      push Not at h
-      exact hN h
+  refine ⟨datumBeta isOpen_cube3 isBounded_cube3, V, hV, hTSD, fun T hT0 U hU0 hU => ?_⟩
+  obtain ⟨⟨t₁, ht₁, hE⟩, ⟨t₂, ht₂, a, i, hB'⟩⟩ := (hspec T hT0).2 U hU0 hU
+  obtain ⟨-, -, hconv⟩ := cube_converges hT hB hV hT0
+  refine ⟨⟨t₁, ht₁, hE, fun Uh hUh h0 => ?_⟩, ⟨t₂, ht₂, ⟨a, i, hB'⟩, fun Uh hUh h0 => ?_⟩⟩
+  · have hc := hconv U Uh hU0 hU hUh h0
+    have := eventually_not_mem_of_tendsto isClosed_setOf_isTSD (x := (U t₁).2.1) hE
+      (y := fun N => (Uh N t₁).2.1) fun ε hε => (hc ε hε).mono fun N hN =>
+        lt_of_le_of_lt (norm_u_le_stateNorm (U t₁ - Uh N t₁)) (hN t₁ ht₁)
+    exact this
+  · have hc := hconv U Uh hU0 hU hUh h0
+    have hnot : (U t₂).2.2.2 ∉ {w : L2Vec (cube 3) 2 | ∀ a i, mat2 w a i = mat2 w i a} :=
+      fun h => hB' (h a i)
+    have := eventually_not_mem_of_tendsto isClosed_setOf_symm hnot
+      (y := fun N => (Uh N t₂).2.2.2) fun ε hε => (hc ε hε).mono fun N hN =>
+        lt_of_le_of_lt (norm_ρ_le_stateNorm (U t₂ - Uh N t₂)) (hN t₂ ht₂)
+    refine this.mono fun N hN => ?_
+    by_contra h
+    push Not at h
+    exact hN h
 
 end Disc
 

@@ -88,14 +88,14 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
         ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
     (∀ U₀ V T, (bggData (cube 3)).IsWave U₀ V → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
       ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
         IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U →
         (∀ N, Uh N ∈ (Q N).trajectories T 0) →
         Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
         ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε) ∧
     (∃ U₀ V, (bggData (cube 3)).IsWave U₀ V ∧ IsTSDState U₀ ∧ ∀ T > 0,
-      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
-        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
       ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U →
         (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1) ∧ ∀ Uh : ℕ → ℝ → _,
           (∀ N, Uh N ∈ (Q N).trajectories T 0) →

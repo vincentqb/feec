@@ -16,7 +16,9 @@ the challenge with bound `c L`, `c ≥ 1` universal (`exists_isSobolevForm_of_is
 `bggData Q`, the `H¹` static and wave clauses of `FEEC.weakSymmetry_electric` with a constant `K`
 imply the former `C²` clauses with the constant `c K` (`c2_rates_of_h1_rates`), and the
 discretizations of `FEEC.weakSymmetry_electric` satisfy the former `C²` clauses
-(`weakSymmetry_electric_c2`): the challenge states the `H¹` rates only.
+(`weakSymmetry_electric_c2`): the challenge states the `H¹` rates only. The former non-vacuity
+statement, with nontrivial solutions meeting the hypotheses of both the `C²` and the `H¹` clauses,
+holds verbatim (`weakSymmetry_electric_nonvacuous_c2`).
 
 ## References
 
@@ -229,5 +231,62 @@ theorem weakSymmetry_electric_c2 : ∃ (𝒯 : ℕ → SimplicialMesh 3)
   obtain ⟨𝒯, Q, C, K, h51, -, -, -, -, -, -, hs, hw, -⟩ := weakSymmetry_electric
   obtain ⟨c, hc⟩ := c2_rates_of_h1_rates
   exact ⟨𝒯, Q, C, c * K, h51, hc 𝒯 Q K hs hw⟩
+
+section Nonvacuous
+
+open Feec.Models.Cube.FEM Feec.Models.Cube.WeakSymmetry
+
+/-- `Feec`'s class `IsSmoothStateTr` of states of the cube is the regular class. -/
+theorem isRegularState_of_isSmoothStateTr {L : ℝ} {σ : U0} {φ : Wv U0} {u : Wv U1} {M : W2}
+    {ρ : Wv W2} (h : IsSmoothStateTr L σ φ u M ρ) :
+    IsRegularState L (σ : W0) (incl0 φ) (incl1 u) M ρ :=
+  ⟨(isTangentialC2_iff le_rfl L _).2 h.1, fun a => (isTangentialC2_iff le_rfl L _).2 (h.2.1 a),
+    fun a => (isTangentialC2_iff zero_le_one L _).2 (h.2.2.1 a),
+    (isTangentialC2_iff zero_le_two L _).2 h.2.2.2.1,
+    fun a => (isTangentialC2_iff zero_le_two L _).2 (h.2.2.2.2 a)⟩
+
+/-- **The former non-vacuity statement, with its `C²` classes**, verbatim: nontrivial solutions of
+(5.3) and (6.2) on the cube meet the hypotheses of both the `C²` clauses of the former statement
+(`IsTangentialC2`, `IsRegularState`) and the `H¹` clauses of `FEEC.weakSymmetry_electric`. -/
+theorem weakSymmetry_electric_nonvacuous_c2 :
+    (∃ F σ φ u lam L, (bggData (cube 3)).IsSolution F σ φ u lam ∧
+      (σ : L2Form (cube 3) 0) ≠ 0 ∧ (φ : L2Vec (cube 3) 0) ≠ 0 ∧ (u : L2Vec (cube 3) 1) ≠ 0 ∧
+      lam ≠ 0 ∧ IsTangentialC2 0 L (σ : L2Form (cube 3) 0) ∧
+      (∀ a, IsTangentialC2 0 L ((φ : L2Vec (cube 3) 0) a)) ∧
+      (∀ a, IsTangentialC2 1 L ((u : L2Vec (cube 3) 1) a)) ∧ ‖lam‖ ≤ L ∧
+      IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((bggData (cube 3)).dt0 φ a)) ∧
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) ∧
+      ∀ a, IsSobolevForm (cube 3) 1 2 L ((bggData (cube 3)).dt1 u a)) ∧
+    ∀ T, 0 < T → ∃ f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, ContinuousOn f (Icc 0 T) ∧
+      (bggData (cube 3)).IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' ∧
+      (∀ t ∈ Icc 0 T, IsRegularState L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsRegularState L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧
+        IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) ∧
+      (∀ t, (u t : L2Vec (cube 3) 1) ≠ 0) ∧
+      ∀ t ∈ Ioc 0 T, (σ t : L2Form (cube 3) 0) ≠ 0 ∧ (φ t : L2Vec (cube 3) 0) ≠ 0 := by
+  rw [bggData_cube_eq]
+  obtain ⟨L, hs, h1, h2, h3, h4, c1, c2, c3, c4⟩ := cube_static_nonvacuous
+  obtain ⟨L₁, hL₁, s1, s2, s3, s4, s5⟩ := cube_static_h1
+  have m := fun {j : ℤ} {x : L2Form (cube 3) j} (h : IsSobolevForm (cube 3) 1 j L₁ x) =>
+    isSobolevForm_mono hL₁ (le_max_right L L₁) h
+  refine ⟨⟨_, _, _, _, _, max L L₁, hs, h1, h2, h3, h4,
+    (isTangentialC2_iff le_rfl _ _).2 (c1.mono (le_max_left _ _)),
+    fun a => (isTangentialC2_iff le_rfl _ _).2 ((c2 a).mono (le_max_left _ _)),
+    fun a => (isTangentialC2_iff zero_le_one _ _).2 ((c3 a).mono (le_max_left _ _)),
+    c4.trans (le_max_left _ _), m s1, fun a => m (s2 a), fun a => m (s3 a), fun a => m (s4 a),
+    fun a => m (s5 a)⟩, fun T hT => ?_⟩
+  obtain ⟨L', hf, hw, hreg, hu, hne⟩ := cube_wave_nonvacuous hT
+  obtain ⟨L₂, hL₂, hH⟩ := cube_wave_h1 T
+  exact ⟨_, _, _, _, _, _, _, _, _, _, _, _, _, max L' L₂, hf, hw, fun t ht =>
+    ⟨isRegularState_of_isSmoothStateTr ((hreg t ht).1.mono (le_max_left _ _)),
+      isRegularState_of_isSmoothStateTr ((hreg t ht).2.1.mono (le_max_left _ _)),
+      (hH t ht).1.mono hL₂ (le_max_right _ _), (hH t ht).2.mono hL₂ (le_max_right _ _),
+      (hreg t ht).2.2.1.trans (le_max_left _ _), (hreg t ht).2.2.2.trans (le_max_left _ _)⟩,
+    hu, hne⟩
+
+end Nonvacuous
 
 end FEEC

@@ -128,6 +128,7 @@ public import Feec.FiniteElement.WhitneyComplex
 public import Feec.FiniteElement.WhitneyInterpolation
 public import Feec.ForMathlib.Algebra.GeomSum
 public import Feec.ForMathlib.Analysis.Carlson
+public import Feec.ForMathlib.Analysis.DiagonalChoice
 public import Feec.ForMathlib.Analysis.ExpFlow
 public import Feec.ForMathlib.Analysis.ExpLimit
 public import Feec.ForMathlib.Analysis.FiniteDifference
@@ -421,6 +422,7 @@ public import Feec.Operator.Multiplication
 public import Feec.Operator.Resolvent
 public import Feec.Physics.EinsteinBianchi.BoundedConvergence
 public import Feec.Physics.EinsteinBianchi.BoundedFailure
+public import Feec.Physics.EinsteinBianchi.BoundedInitialData
 public import Feec.Physics.EinsteinBianchi.Constraints
 public import Feec.Physics.EinsteinBianchi.Fields
 public import Feec.Physics.EinsteinBianchi.MatrixModel

@@ -48,8 +48,8 @@ project:
     bottom row vanishing tangential traces on the faces normal to e_a); the discretizations of
     both are those of Table 5.1 with the faces of each (IsTable51). Four compared theorems.
     FEEC.bggWeakSymmetry (thesis Prop 5.4, Thm 5.5, Prop 6.2), the abstract method: for all BGG
-    data (two segments of unbounded operators between real Hilbert spaces with bounded connecting
-    maps) and every discretization (finite-dimensional subcomplexes with bounded cochain
+    data (two segments of unbounded operators between real inner product spaces, not assumed
+    complete, with bounded connecting maps) and every discretization (finite-dimensional subcomplexes with bounded cochain
     projections pi; the method replaces S by S_h = pi S), solutions of the semi-discrete problem
     (6.5) are determined by (sigma_h, u_h, M_h, rho_h)(0); for BGG data (d^1 S^0 = -S^1 d~^0,
     complexes) solutions without source keep the discrete Gauss law (sigma_h = 0, u_h orthogonal
@@ -69,13 +69,14 @@ project:
     continuous hypotheses of FEEC.bggWeakSymmetry (an instance with S_h != S: for N >= 2,
     pi^1 S^0 psi != S^0 psi for some psi in V~_h^0); solutions of (6.5) are determined by their
     initial values (also phi_h, lambda_h on [0, T)); for every datum U_0 of D(L) strong
-    solutions exist on every [0, T] and every family of trajectories of (6.5) without source
-    whose initial states converge to U_0 converges to every strong solution uniformly on [0, T]
-    (no regularity hypothesis); the TSD datum (0, 0, 0, *beta), beta = x_3 (e_1 e_2^T + e_2
-    e_1^T), is the limit of initial states of trajectories of (6.5) while every strong solution
-    from it has E(t) not TSD at some t and B(t') not symmetric at some t', and at these times, for
-    all large N, so have the discrete fields of every such family: the method computes a solution
-    that is not a gravitational wave; the static method (5.6) converges at the rate h for
+    solutions exist on every [0, T], U_0 is the limit of the initial states of trajectories of
+    (6.5) without source (whose initial values are constrained: u_h(0) is orthogonal to d~psi for
+    the psi of V~_h^0 with pi^1 S^0 psi = 0), and every family of trajectories of (6.5) without
+    source whose initial states converge to U_0 converges to every strong solution uniformly on
+    [0, T] (no regularity hypothesis); from the TSD datum (0, 0, 0, *beta), beta = x_3 (e_1 e_2^T
+    + e_2 e_1^T), every strong solution has E(t) not TSD at some t and B(t') not symmetric at some
+    t', and at these times, for all large N, so have the discrete fields of every such family:
+    the method computes a solution that is not a gravitational wave; the static method (5.6) converges at the rate h for
     solutions of (5.3) of class H^1, and (6.5) at the rate (1 + t) h for classical solutions of
     (6.2) of class H^1 (IsH1State); and for some c > 0 and every N >= 2 some nonzero v in V~_h^1
     has ||S^1 v - w|| >= c (||v||^2 + ||d~v||^2)^(1/2) for every w in the Raviart-Thomas space
@@ -97,7 +98,8 @@ project:
     The proof is the library Feec of this repository (Feec.BGG.Discrete, Feec.Models.Cube.WeakSymmetry*,
     Feec.EinsteinBianchi.BoundedConvergence, BoundedFailure, MatrixModel, Feec.Models.Cube.MirrorBGG,
     MirrorConstraint, MirrorWeakSymmetry*, MirrorWaveRegularity, Feec.Counterexamples.BoundedBGG,
-    Feec.HilbertComplex.*, Feec.BGG.*, Feec.Domain.H1Lipschitz, Feec.Models.Cube.TangentialH1).
+    Feec.HilbertComplex.*, Feec.BGG.*, Feec.Physics.EinsteinBianchi.BoundedInitialData,
+    Feec.Domain.H1Lipschitz, Feec.Models.Cube.TangentialH1).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -255,12 +257,12 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: FEEC.bggWeakSymmetry (all BGG data on real Hilbert spaces in one
-    universe, every discretization); FEEC.weakSymmetry_electric (the cube Q = (0, 1/2)^3, the
+    Formalized and compared: FEEC.bggWeakSymmetry (all BGG data on real inner product spaces in
+    one universe, every discretization); FEEC.weakSymmetry_electric (the cube Q = (0, 1/2)^3, the
     elements of Table 5.1 on Freudenthal meshes with the electric conditions: the instance of the
-    abstract theorem with S_h != S, uniqueness for (6.5) (also phi_h, lambda_h), the
-    convergence of (6.5) from every datum of D(L), the
-    non-TSD limit of the datum (0, 0, 0, *beta) and of its discrete fields, the H^1 static and
+    abstract theorem with S_h != S, uniqueness for (6.5) (also phi_h, lambda_h), the convergence
+    of (6.5) from every datum of D(L), each the limit of discrete initial states, the non-TSD
+    limit of the datum (0, 0, 0, *beta) and of its discrete fields, the H^1 static and
     wave rates, the Raviart-Thomas best-approximation bound); FEEC.weakSymmetry_mirror (the same
     elements with the mirror conditions: the rate (1 + t) h to the TSD solution for TSD data of
     D(L^3), the discrete Gauss witness, a moving such datum);
@@ -285,8 +287,7 @@ status:
     (mirror_waveFEM_rate_sobolev_of_add_two) and its convergence without rate for D(L^2) TSD data
     (Feec.Models.Cube.MirrorWeakSymmetryTSD.mirror_waveFEM); the rates h^(min(s,1)) for relative
     class H^s data (cubeWave_rate_sobolev). Not claimed: convergence from every datum of D(L)
-    with the mirror conditions; the existence of trajectories of (6.5) whose initial states
-    converge to a general datum of D(L) (stated for (0, 0, 0, *beta)).
+    with the mirror conditions.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -333,8 +334,9 @@ automation:
     conversely since IsWave is skew and the wave operator skew-adjoint, hence maximal skew,
     LinearPMap.IsSkewAdjoint.mem_graph_of_inner (new in Feec); the challenge's solutions of (6.5)
     are Feec's on the whole interval (compatibility of their data, existence and uniqueness);
-    convergence is Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution; the datum
-    (0, 0, 0, *beta) and its discrete data from Feec.EinsteinBianchi.BoundedFailure), Bounded.lean
+    convergence is Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution, and the
+    discrete initial states converging to every datum are those of
+    Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec, new in Feec), Bounded.lean
     and Proxy.lean (the datum, its strong solutions and their loss of TSD, the fields as Feec's
     matrix fields), MirrorData.lean, MirrorTSD.lean,
     MirrorState.lean, MirrorForward.lean, MirrorChain.lean (TSD states as the real parts of the
@@ -343,7 +345,9 @@ automation:
     witness from Feec.BGG.exists_discreteSolution_iff_compatible_u); Forms.lean, Poly.lean,
     Mesh.lean, Trace.lean, Spaces.lean, Sobolev.lean adapted from palomar/fem. Smooth.lean, not
     part of the comparison, checks that the C^2 rates of the thesis follow from the statement of
-    FEEC.weakSymmetry_electric (c2_rates_of_h1_rates, weakSymmetry_electric_c2).
+    FEEC.weakSymmetry_electric (c2_rates_of_h1_rates, weakSymmetry_electric_c2) and that the
+    former non-vacuity statement with its C^2 classes holds verbatim
+    (weakSymmetry_electric_nonvacuous_c2).
 
 fidelity:
   divergences: >-
@@ -403,9 +407,12 @@ fidelity:
     solution exists (Stone's theorem in Feec), and every family of trajectories of (6.5) without
     source whose initial states converge to U_0 converges to every strong solution from U_0
     uniformly on [0, T] (Lax: stability of (6.1) and (6.5) and convergence on the dense D(L^2));
-    no regularity is assumed, and no rate is claimed. The existence of such families is stated
-    for the TSD datum (0, 0, 0, *beta) only (in Feec, the trajectories from (0, 0, 0, P rho(0)),
-    P the orthogonal projection onto V~_h^2), not for a general datum of D(L). The loss of TSD is
+    no regularity is assumed, and no rate is claimed. Such families exist for every datum: the
+    initial values of (6.5) are constrained (u_h(0) is orthogonal to d~psi for the psi of V~_h^0
+    with pi^1 S^0 psi = 0, and only such data have solutions), so a projection of the datum need
+    not start a trajectory; in Feec the trajectories start from the elliptic projections of data
+    of D(L^2) approximating the datum, at levels chosen diagonally
+    (Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec). The loss of TSD is
     stated as E(t) not TSD at some t and B(t') not symmetric (B(t')_ai != B(t')_ia for some a, i)
     at some t'; the discrete fields lose TSD at the same times for all large N, since TSD and
     symmetry are closed conditions. That the exact solution leaves TSD is the restriction to Q of
@@ -446,7 +453,8 @@ review:
     two-part answer, four compared theorems; FEEC.weakSymmetry_electric and
     FEEC.weakSymmetry_mirror are new, one per boundary condition, sharing IsTable51, and replace
     the former FEEC.weakSymmetry_cube and FEEC.mirror_weakSymmetry_cube; the electric
-    convergence from every datum of D(L) and its non-TSD limit are new as compared statements; the
+    convergence from every datum of D(L), the discrete initial states converging to every such
+    datum, and the non-TSD limit are new as compared statements; the
     C^2 rate clauses are replaced by their H^1 generalization, from which Solution/Smooth.lean
     derives them; FEEC.weakSymmetry_cube_nonvacuous is renamed
     FEEC.weakSymmetry_electric_nonvacuous;
@@ -479,7 +487,7 @@ alignment:
         exists_bestApproxError_ge; uniqueness for (6.5) from Feec.BGG.DiscreteSolution.unique
         (Solution/CubeUnique.lean); the convergence from every datum of D(L) and the non-TSD
         limit from Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution,
-        Feec.EinsteinBianchi.BoundedFailure.exists_betaDiscrete and
+        Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec and
         Feec.Counterexamples.BoundedBGG (Solution/Converge.lean, Bounded.lean); the H^1 rates
         from staticFEM_rate_sobolev and cubeWave_rate_sobolev_of_one_le through the Gaffney
         transfer sobRel_of_h1_*.

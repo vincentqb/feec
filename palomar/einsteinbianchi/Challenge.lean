@@ -33,10 +33,11 @@ answer has two parts.
 
 * `FEEC.weakSymmetry_electric`: with the **electric** boundary conditions of the thesis
   (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) the solutions of the method are determined by their
-  initial values, and it converges, with no regularity from every datum of `D(L)`, and at the
-  rates `h` (static) and `(1 + t) h` (wave) for solutions of class `H¹`; but from the TSD datum
-  `(0, 0, 0, ⋆β)` its limit leaves TSD, and so do its discrete fields: it computes a solution
-  that is not a gravitational wave.
+  initial values, and it converges, with no regularity, from every datum of `D(L)` (the limit of
+  discrete initial states), and at the rates `h` (static) and `(1 + t) h` (wave) for solutions of
+  class `H¹`; but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and at the times it is
+  not TSD neither are, for all large `N`, the discrete fields: it computes a solution that is not
+  a gravitational wave.
 * `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges at the rate
   `(1 + t) h` from the TSD data of `D(L³)` to the exact solution, which stays TSD, and keeps the
   discrete Gauss law along non-stationary discrete solutions: it computes the gravitational wave.
@@ -767,15 +768,16 @@ Prop 6.2; [AFW2010], §5.5; [ChristiansenWinther2008]). There are discretization
 * (*uniqueness for (6.5)*) solutions of (6.5) are determined by `(σₕ, uₕ, Mₕ, ρₕ)(0)`, and so
   are `φₕ`, `λₕ` on `[0, T)`;
 * (*convergence from every datum of `D(L)`, no regularity*) for every `U₀ ∈ D(L)` and `T > 0`,
-  `U' = L U` has a strong solution on `[0, T]` from `U₀`, and for every such solution `U`, every
-  family of trajectories of (6.5) without source whose initial states converge to `U₀`
+  `U' = L U` has a strong solution on `[0, T]` from `U₀`; some family of trajectories of (6.5)
+  without source has initial states converging to `U₀` (the initial values of (6.5) are
+  constrained: `uₕ(0) ⊥ d̃ψ` for `ψ ∈ Ṽₕ⁰` with `π¹S⁰ψ = 0`); and for every such solution `U`,
+  every family of trajectories of (6.5) without source whose initial states converge to `U₀`
   converges to `U` uniformly on `[0, T]`;
 * (*the limit leaves the constraint*) some TSD datum `U₀ ∈ D(L)` (in the proof `(0, 0, 0, ⋆β)`,
-  `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`) is, for every `T > 0`, the limit of initial states of families of
-  trajectories of (6.5), and every strong solution `U` from `U₀` has, at some `t ∈ [0, T]`, an
-  electric field `E(t)` that is not TSD, and at some `t' ∈ [0, T]` a magnetic field `B(t')` that
-  is not symmetric; at these times, for all large `N`, so have the discrete fields of every such
-  family;
+  `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`) has, for every `T > 0`, every strong solution `U` from it an
+  electric field `E(t)` that is not TSD at some `t ∈ [0, T]` and a magnetic field `B(t')` that is
+  not symmetric at some `t' ∈ [0, T]`; at these times, for all large `N`, so have the discrete
+  fields of every family of trajectories of (6.5) whose initial states converge to `U₀`;
 * (*the static rate*) for every solution of (5.3) with `‖λ‖ ≤ L` whose components `σ`, `φₐ`,
   `d̃φₐ`, `uₐ`, `d̃uₐ` lie in `H¹(Q)` with norms at most `L`, the solution of (5.6) has
   `errorSq ≤ (K L h_N)²`;
@@ -805,14 +807,14 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
         ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
     (∀ U₀ V T, (bggData (cube 3)).IsWave U₀ V → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
       ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
         IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U →
         (∀ N, Uh N ∈ (Q N).trajectories T 0) →
         Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
         ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε) ∧
     (∃ U₀ V, (bggData (cube 3)).IsWave U₀ V ∧ IsTSDState U₀ ∧ ∀ T > 0,
-      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
-        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
       ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U →
         (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1) ∧ ∀ Uh : ℕ → ℝ → _,
           (∀ N, Uh N ∈ (Q N).trajectories T 0) →

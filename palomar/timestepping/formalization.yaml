@@ -420,9 +420,10 @@ fidelity:
     palomar/feec); one finite element space with vanishing traces on a set of facets serves
     both Whitney rows, Gamma = ∅ and Gamma = M.boundaryFacets, the facets of a single simplex
     (the earlier femSpace and femSpaceMin; Solution femSpace_empty,
-    SimplicialMesh.mem_boundaryFacets_iff); polynomial forms are over a field K, used at K = ℝ
-    (definitionally the earlier real ones); the Freudenthal meshes are asserted existentially, named by their
-    vertices (IsFreudenthal; a mesh of the cube by such simplices contains all of them).
+    SimplicialMesh.mem_boundaryFacets_iff); polynomial forms are over a field K, used at K = ℝ, the
+    sign sgn takes values in any ring and dMax states its test graph inline (definitionally the
+    earlier real forms and codiffMin); the Freudenthal meshes are asserted existentially, named
+    by their vertices (IsFreudenthal; a mesh of the cube by such simplices contains all of them).
     Crank-Nicolson: one row of the thesis' three-row Einstein-Bianchi scheme (the rows
     decouple); the exact solution is a classical solution on R x R^3 (all times, all of space;
     for the wave equation smooth data give such solutions) with the stated bounds on [0, T]

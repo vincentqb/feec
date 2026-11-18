@@ -174,7 +174,8 @@ A-stable `p/q`, the quotient is the rational function near `0`). -/
 def HasOrder (p q : Polynomial ℝ) (m : ℕ) : Prop :=
   (fun z : ℂ => Polynomial.aeval z p / Polynomial.aeval z q - Complex.exp z) =O[𝓝 0]
     fun z => z ^ (m + 1)
-/-- **The rational scheme of a bounded operator**: `r(L) = p(L) q(L)⁻¹` for `r = p/q`. -/
+/-- **The rational scheme of a bounded operator**: `r(L) = p(L) q(L)⁻¹` for `r = p/q` (`0` if
+`q(L)` is not invertible; for A-stable `p/q` and dissipative `L` on a Hilbert space it is). -/
 def rationalApply {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
     (p q : Polynomial ℝ) (L : E →L[𝕜] E) : E →L[𝕜] E :=
   Polynomial.aeval L (p.map (algebraMap ℝ 𝕜)) *

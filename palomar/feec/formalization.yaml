@@ -289,7 +289,7 @@ status:
     Formalized and compared: FEEC.feec, FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, FEEC.crimeFEEC,
     FEEC.crime_nonvacuous, FEEC.feec_cube, FEEC.bggCohomology, FEEC.bggFinrank and
-    FEEC.bggHilbert (Challenge.lean, 998 lines; the definitions were redesigned to fit the limit,
+    FEEC.bggHilbert (Challenge.lean, 999 lines; the definitions were redesigned to fit the limit,
     see review.notes). The weak-symmetry theorems of the former
     palomar/bgg (FEEC.bggWeakSymmetry and its definitions WeakSymmetryData, Discretization) moved
     to palomar/einsteinbianchi, where its finite element instance on the cube (Table 5.1),
@@ -379,9 +379,10 @@ fidelity:
     are not bounded uniformly in h for arbitrary w, so the rated fully discrete wave bound is O(L
     h^(ord s) + tau^p) only along initial values with ||L_h^(p+1) v|| bounded (a per-h estimate, not
     a uniform rate; the uniform rates are proved in Feec and not compared). The rational scheme r(B)
-    is n(B) Ring.inverse(d(B)); d(B) is invertible for the dissipative generators of the statement.
-    The theta-schemes are not separate fields: the theta-scheme is the rational scheme n = 1 + (1 -
-    theta) X, d = 1 - theta X (A-stable for theta >= 1/2, order 1, and 2 for theta = 1/2), whose
+    is P(B) Ring.inverse(Q(B)) (rationalApply, 0 if Q(B) is not invertible); Q(B) is invertible for
+    the dissipative generators of the statement and A-stable P/Q. The theta-schemes are not
+    separate fields: the theta-scheme is the rational scheme P = 1 + (1 - theta) X, Q = 1 - theta X
+    (A-stable for theta >= 1/2, order 1, and 2 for theta = 1/2), whose
     iterates r(tau B)^n w_0 solve the implicit recurrence; the constraint residual bound is not
     restated (immediate from propagates_iff). (5) Rates: a Jackson estimate is data (mesh size h_h
     -> 0, classes Reg s i L, orders ord s, constants B s i) with ||x - v|| and ||d(x - v)|| at most
@@ -463,9 +464,10 @@ fidelity:
     canonical blocks of palomar/shared/vocabulary.lean.txt (HilbertComplex with Subcomplex,
     CochainProjection, SubcomplexFamily, graphDist, IsGraphBoundedBy, IsGraphBounded, Approximates
     and Jackson; IsStrongSolution; IsAStable, HasOrder, rationalApply; the differential forms; IsCsForm),
-    and the gate checks them byte for byte. Two of them read differently from the earlier text, with
-    the same meaning. Strong solutions are those of an operator given by its graph, a relation
-    A ⊆ X × X (Mathlib's SetRel), so the evolution verdict states IsStrongSolution A.graph
+    and the gate checks them byte for byte. The sign sgn takes values in any ring (here R, as in
+    palomar/fem). Two of them read differently from the earlier text, with the same meaning.
+    Strong solutions are those of an operator given by its graph, a relation A ⊆ X × X (Mathlib's
+    SetRel), so the evolution verdict states IsStrongSolution A.graph
     (definitionally the earlier LinearPMap form, Solution: FEEC.isStrongSolution_graph_iff). A
     rational scheme is a pair (P, Q) of real polynomials, A-stable when Q has no zero and
     |P/Q| <= 1 on the closed left half-plane ([HairerWanner1996], §IV.3), of order p when

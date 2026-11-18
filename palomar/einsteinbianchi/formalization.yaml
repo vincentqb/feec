@@ -338,7 +338,10 @@ fidelity:
     J = univ gives the vanishing of traces on boundary facets, Solution femSpace_univ_eq). Strong
     solutions are those of the shared IsStrongSolution for an operator given by its graph, a
     relation (Mathlib's SetRel), here the graph {p | IsWave p.1 p.2} of the wave operator
-    (definitionally the earlier relation form, Solution isStrongSolution_setOf_iff); W~^k = L^2(Omega;
+    (definitionally the earlier relation form, Solution isStrongSolution_setOf_iff); polynomial
+    forms are over a field K, used at K = R, the sign sgn takes values in any ring, and dMax, dMin
+    state their test graphs inline (definitionally the earlier real forms, codiffMin and
+    testGraph); W~^k = L^2(Omega;
     Lambda^k) ⊗ R^3 is the l^2 sum of three copies (L2Vec). The fields of a state are read as
     matrices, E_ab = (u_a)_{dx_b},
     B_ai = (-1)^i (rho_a)_{{i}^c}; IsTSD is symmetric, trace-free and weakly divergence-free

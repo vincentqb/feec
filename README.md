@@ -341,7 +341,8 @@ complexes and their families of subcomplexes, strong solutions, rational schemes
 polynomial forms, admissible sequences, meshes, finite element spaces, regularity classes) are
 copied from the canonical blocks of `palomar/shared/vocabulary.lean.txt`, delimited in a challenge by
 `-- palomar-shared: <name>` and `-- palomar-shared-end: <name>`. The gate (check `Palomar`, alone
-`lake exe feec-palomar`) checks that every such block is byte-identical to its canonical copy, that
+`lake exe feec-palomar`) checks that every such block is byte-identical to its canonical copy and
+that no challenge declares a name of a canonical block outside its block, that
 `Solution/Defs.lean` is the challenge without its compared theorems
 (`lake exe feec-palomar --write` copies the canonical blocks and regenerates it; `--no-build`
 skips the builds) and that every package builds against `Feec`. The

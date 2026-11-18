@@ -12,8 +12,10 @@ packages, the directories `palomar/*/` with a `comparator.json` (`palomarPackage
 1. every shared block of `Challenge.lean`, the lines between `-- palomar-shared: <name>` and
    `-- palomar-shared-end: <name>`, is byte-identical to the block `<name>` of the canonical file
    `palomar/shared/vocabulary.lean.txt` (`sharedPath`): the notions that several challenges
-   state are stated identically. The markers are well formed (no nesting, no repeated name, every
-   block closed), and every canonical block is copied by some challenge.
+   state are stated identically. The markers are well formed (at the start of their line, no
+   nesting, no repeated name, every block closed), every canonical block is copied by some
+   challenge, and no challenge declares outside its blocks a name of a canonical block (up to the
+   namespaces around the block): a shared notion is stated only by its block.
 2. `Solution/Defs.lean` is the copy of the definitions of `Challenge.lean`: the same imports and,
    after the module docstring, the same text with the compared theorems (the names of
    `theorem_names` in `comparator.json`, declared fully qualified or inside their namespaces;
@@ -22,8 +24,9 @@ packages, the directories `palomar/*/` with a `comparator.json` (`palomarPackage
 3. `lake build` in the package succeeds (its bridges to `Feec` still compile), with no warning but
    the `sorry` of `Challenge.lean`.
 
-`lake exe feec-palomar --write` copies the canonical blocks into the challenges, then regenerates
-`Defs.lean` from each challenge, keeping its docstring; `--no-build` skips the builds.
+`lake exe feec-palomar --write` copies the canonical blocks into the challenges whose markers are
+well formed, then regenerates `Defs.lean` from each challenge, keeping its docstring;
+`--no-build` skips the builds.
 
 The comparator (`lake comparator` in a package, several minutes) is not run here: it judges the
 solution against the challenge before a submission.
@@ -99,7 +102,8 @@ def markerName (m l : String) : Option String :=
 
 /-- The shared blocks of the lines `ls` of the file `path`, or the first error
 `path:line: message` (a marker inside a block, a closing marker of another block, an unclosed
-block, a repeated or empty name, a line starting with `-- palomar-shared` that is no marker). -/
+block, a repeated or empty name, a line `-- palomar-shared…` that is no marker, for instance an
+indented one: a marker starts its line). -/
 def blocks (path : System.FilePath) (ls : Array String) : Except String (Array Block) := do
   let mut out : Array Block := #[]
   let mut cur : Option Block := none
@@ -119,8 +123,9 @@ def blocks (path : System.FilePath) (ls : Array String) : Except String (Array B
       if let some b := out.find? (·.name == name) then
         throw s!"{path}:{i + 1}: second block `{name}` (the first at line {b.line})"
       cur := some ⟨name, i + 1, #[]⟩
-    else if l.startsWith "-- palomar-shared" then
-      throw s!"{path}:{i + 1}: `{l}` is neither `{openMarker}<name>` nor `{closeMarker}<name>`"
+    else if l.trimAscii.startsWith "-- palomar-shared" then
+      throw s!"{path}:{i + 1}: `{l}` is no marker, a line `{openMarker}<name>` or \
+        `{closeMarker}<name>`"
     else if let some b := cur then
       cur := some { b with body := b.body.push l }
   if let some b := cur then throw s!"{path}:{b.line}: block `{b.name}` is not closed"
@@ -156,8 +161,55 @@ def checkBlocks (chal : System.FilePath) (canon : Array Block) (bs : Array Block
       if b.body != c.body then
         let j := ((List.range (max b.body.size c.body.size)).find? fun j =>
           b.body[j]? != c.body[j]?).getD 0
-        errs := errs.push s!"{chal}:{b.line + 1 + j}: the block `{b.name}` differs from \
-          {sharedPath}:{c.line + 1 + j}; copy it with `lake exe feec-palomar --write`"
+        errs := errs.push s!"{chal}:{b.line + 1 + j}: the block `{b.name}` differs from its \
+          canonical copy {sharedPath}:{c.line + 1 + j} (change a notion there, then copy it \
+          with `lake exe feec-palomar --write`)"
+  return errs
+
+/-- The name declared by the line `l`, if `l` starts with a declaration keyword. -/
+def declName (l : String) : Option String :=
+  ["def ", "abbrev ", "structure ", "class ", "inductive ", "instance ", "theorem ", "lemma "]
+    |>.findSome? fun k =>
+      let n := String.ofList ((l.toList.drop k.length).takeWhile fun c =>
+        !c.isWhitespace && !"({[:".contains c)
+      if l.startsWith k && !n.isEmpty then some n else none
+
+/-- The names declared in the lines `ls`, qualified by the namespaces open at their line
+(`namespace`, `section` and `end` lines), with their lines and the shared blocks they lie in;
+the lines that start inside a comment `/- ⋯ -/` (docstrings included) declare nothing. -/
+def declarations (ls : Array String) : Array (String × Nat × Option String) := Id.run do
+  let mut out := #[]
+  let mut ns : Array (List String) := #[]
+  let mut block : Option String := none
+  let mut depth : Int := 0
+  for h : i in [0:ls.size] do
+    let l := ls[i]
+    let inComment := depth > 0
+    unless !inComment && l.startsWith "--" do
+      depth := depth + ((l.splitOn "/-").length : Int) - (l.splitOn "-/").length
+    if inComment then continue
+    if let some name := markerName openMarker l then block := some name
+    else if (markerName closeMarker l).isSome then block := none
+    else if let some n := markerName "namespace " l then ns := ns.push (n.splitOn ".")
+    else if l == "section" || l.startsWith "section " || l.endsWith " section" then
+      ns := ns.push []
+    else if l == "end" || l.startsWith "end " then ns := ns.pop
+    else if let some n := declName l then
+      out := out.push (".".intercalate (ns.toList.flatten ++ [n]), i + 1, block)
+  return out
+
+/-- The errors of the declarations of the challenge `chal` (its lines `ls`) outside its shared
+blocks that restate a notion of the canonical blocks, the names `canon` with their blocks (the
+name of a canonical declaration, up to the namespaces around the block): a challenge states such
+a notion by copying its block. -/
+def checkOutside (chal : System.FilePath) (canon : Array (String × String)) (ls : Array String) :
+    Array String := Id.run do
+  let mut errs := #[]
+  for (n, line, block) in declarations ls do
+    if block.isNone then
+      if let some (r, b) := canon.find? fun (r, _) => n == r || n.endsWith ("." ++ r) then
+        errs := errs.push s!"{chal}:{line}: `{n}` restates `{r}` of the shared block `{b}` \
+          outside the block; copy the block instead, or rename it"
   return errs
 
 /-! ### The packages -/
@@ -175,14 +227,15 @@ def build (pkg : System.FilePath) : IO (Except String Unit) := do
     return .error s!"{pkg}: `lake build` warns:\n{"\n".intercalate bad.toList}"
   return .ok ()
 
-/-- The checks of one package against the canonical blocks `canon`; the names of the shared
-blocks of its challenge, with the report. -/
-def runPackage (pkg : System.FilePath) (canon : Array Block) (write doBuild : Bool)
-    (rep : Report) : IO (Array String × Report) := do
+/-- The checks of one package against the canonical blocks `canon`, whose declarations are
+`canonDecls`; the names of the shared blocks of its challenge, with the report. -/
+def runPackage (pkg : System.FilePath) (canon : Array Block) (canonDecls : Array (String × String))
+    (write doBuild : Bool) (rep : Report) : IO (Array String × Report) := do
   let mut rep := rep
   let chalPath := pkg / "Challenge.lean"
   let mut chal ← readText chalPath
-  if write then
+  -- only well-formed blocks are copied: the body of an unclosed block runs to the end of the file
+  if write && (blocks chalPath (pyLines chal) matches .ok _) then
     let synced := "\n".intercalate (syncBlocks canon (pyLines chal)).toList ++ "\n"
     if synced != chal then
       IO.FS.writeFile chalPath synced
@@ -194,6 +247,7 @@ def runPackage (pkg : System.FilePath) (canon : Array Block) (write doBuild : Bo
   | .ok bs =>
     used := bs.map (·.name)
     for e in checkBlocks chalPath canon bs do rep := rep.addError e
+    for e in checkOutside chalPath canonDecls (pyLines chal) do rep := rep.addError e
     rep := rep.addInfo s!"Palomar: shared blocks of {chalPath}: {", ".intercalate used.toList}"
   let defs := pkg / "Solution" / "Defs.lean"
   let some names := theoremNames (← readText (pkg / "comparator.json"))
@@ -216,14 +270,16 @@ def runPackage (pkg : System.FilePath) (canon : Array Block) (write doBuild : Bo
 
 def run (write : Bool := false) (doBuild : Bool := true) : IO Report := do
   let mut rep : Report := { name := "Palomar" }
+  let shared := pyLines (← readText sharedPath)
   let mut canon : Array Block := #[]
-  match blocks sharedPath (pyLines (← readText sharedPath)) with
+  match blocks sharedPath shared with
   | .ok bs => canon := bs
   | .error e => rep := rep.addError e
+  let canonDecls := (declarations shared).filterMap fun (n, _, b) => b.map (n, ·)
   let packages ← palomarPackages
   let mut used : Array String := #[]
   for pkg in packages do
-    let (u, r) ← runPackage pkg canon write doBuild rep
+    let (u, r) ← runPackage pkg canon canonDecls write doBuild rep
     used := used ++ u
     rep := r
   for c in canon do

@@ -5,9 +5,9 @@
 --   ⋯
 --   -- palomar-shared-end: <name>
 --
--- byte for byte; `lake exe feec-palomar` (and `lake exe feec-gate`) checks it, and
--- `lake exe feec-palomar --write` copies the blocks below into the challenges. Change a notion
--- here, then run `--write`.
+-- byte for byte, and declares none of its names elsewhere; `lake exe feec-palomar` (and
+-- `lake exe feec-gate`) checks both, and `lake exe feec-palomar --write` copies the blocks below
+-- into the challenges. Change a notion here, then run `--write`.
 --
 -- Every block is self-contained: its binders are explicit or declared inside the block, it uses
 -- only Mathlib and the blocks before it (in this order), and it assumes the context of every

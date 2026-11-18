@@ -16,9 +16,9 @@ project:
     whether the powers r(tau A)^n are stable and accurate with constants depending on r alone,
     so that the bounds hold uniformly over whole families of space discretizations, and where
     that is needed. The input is the Hille-Yosida theorem: the resolvent (1 - tau A)^(-1)
-    exists, defines r(tau A), and makes backward Euler power bounded on every Banach space. On a
-    Hilbert space, von Neumann's inequality makes every A-stable scheme of an m-dissipative
-    operator a contraction. On a Banach space the other A-stable schemes need not be power
+    exists, defines r(tau A), and makes backward Euler stable on every Banach space (power bounded
+    for bounded semigroups). On a Hilbert space, von Neumann's inequality makes every A-stable
+    scheme of an m-dissipative operator a contraction. On a Banach space the other A-stable schemes need not be power
     bounded, but Brenner and Thomee (1979) showed that ||r(tau A)^n|| <= M (1 + C sqrt(n)) for
     every bounded semigroup, ||e^(tA)|| <= M, and that the error for smooth data is of the order
     of the scheme with no sqrt(n) loss; this is the headline. The application needs a Banach
@@ -483,8 +483,8 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: >-
-        The instance r(z) = 1/(1 - z) under growth M e^(omega t): power bounded, explicit
-        first-order error. Feec.TimeStepping.norm_pow_le_of_generator and
+        The instance r(z) = 1/(1 - z) under growth M e^(omega t): stable (power bounded for
+        omega = 0), explicit first-order error. Feec.TimeStepping.norm_pow_le_of_generator and
         Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le.
     - source: "[BrennerThomee1979] (the sqrt(n) stability bound)"
       lean: "TimeStepping.stable"

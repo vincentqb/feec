@@ -9,7 +9,7 @@ public import Feec.ForMathlib.LinearPMap.SkewMaximal
 /-!
 # With the electric boundary conditions the method converges from every datum of `D(L)`
 
-The convergence clauses of `FEEC.weakSymmetry_cube` for the electric boundary conditions.
+The convergence clauses of `FEEC.weakSymmetry_electric`.
 
 **The challenge's system is `Feec`'s forms model.** The state map `toWS`,
 `(σ, u, M, ρ) ↦ (−σ, u, (M, ρ))` (`Feec.Instances.EinsteinBianchi.FEM.vecInv`; `Γ̄ = L²Λ⁰(Q)`), is

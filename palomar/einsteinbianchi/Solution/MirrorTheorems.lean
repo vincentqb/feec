@@ -11,7 +11,7 @@ The strong solutions of the challenge's system from TSD data are the real parts 
 `Feec.Models.Cube.MirrorBGG.complexQ` from their complexifications (`isStrongSolution_realL`,
 `forward`), which stay in the constraint (`MirrorBGG.propagatesQ`); the non-stationary datum
 `cosStateQ` (or `-i cosStateQ`) gives a moving TSD solution (`eq_zero_of_realL`). The rate of
-`mirror_fem_main` is read on these solutions (`mirror_weakSymmetry_cube_of`).
+`mirror_fem_main` is read on these solutions (`weakSymmetry_mirror`).
 
 ## References
 
@@ -168,33 +168,33 @@ theorem mem_trajectories {D : FormData (cube 3)} {Q : D.Discretization} {T : ℝ
       Q.trajectories T f :=
   ⟨σ, φ, u, M, ρ, lam, h, fun _ => rfl⟩
 
-/-- **The mirror conditions in `FEEC.weakSymmetry_cube`**: `mirror_fem_main` read on
-`U = Re e^{tL} cplx U₀` (`U` stays TSD, `mirror_tsd_propagates_of`), with the moving datum of
-`exists_mirror_chain`. -/
-theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
-    (Q : ℕ → mirrorData.Discretization) (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧
-    mirrorData.IsBGG ∧
-    (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ Uh ∈ (Q N).trajectories T 0,
-      (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
-        ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
-    (∀ N T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
+/-- **`FEEC.weakSymmetry_mirror`**: `mirror_fem_main` read on `U = Re e^{tL} cplx U₀` (`U` stays
+TSD, `mirror_tsd_propagates_of`), with the moving datum of `exists_mirror_chain`. -/
+theorem weakSymmetry_mirror : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mirrorData.Discretization)
+    (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧ mirrorData.IsBGG ∧
+    (∀ T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
       mirrorData.IsWave V₂ V₃ → IsTSDState U₀ →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
       ∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
-        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
-          stateNorm (U t - Uh t) ≤
+        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∀ N, ∃ Uh ∈ (Q N).trajectories T 0,
+          ∀ t ∈ Icc 0 T, stateNorm (U t - Uh t) ≤
             K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
               meshSize (𝒯 N)) ∧
+    (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ Uh ∈ (Q N).trajectories T 0,
+      (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
+        ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
     ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
       mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
   obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, -, hK⟩ := mirror_fem_main
   obtain ⟨-, hex, hprop, -⟩ := mirror_tsd_propagates_of
-  refine ⟨𝒯, Q, C, K, hQ, hBGG, fun T hT => (hG T hT).mono fun N hN => ?_,
-    fun N T U₀ V₁ V₂ V₃ hT h1 h2 h3 hU₀ => ⟨hex U₀ V₁ h1 hU₀ T, fun U hU0 hUs => ?_⟩,
-    exists_mirror_chain⟩
+  refine ⟨𝒯, Q, C, K, hQ, hBGG,
+    fun T U₀ V₁ V₂ V₃ hT h1 h2 h3 hU₀ => ⟨hex U₀ V₁ h1 hU₀ T, fun U hU0 hUs => ?_⟩,
+    fun T hT => (hG T hT).mono fun N hN => ?_, exists_mirror_chain⟩
+  swap
   · obtain ⟨σ, φ, u, M, ρ, lam, hw, hg, hu, t, ht, hM⟩ := hN
     exact ⟨_, mem_trajectories hw, hg, hu, t, ht, hM⟩
   have hTSD : ∀ t ∈ Icc 0 T, IsTSDState (U t) := fun t ht => hprop T U hUs (hU0 ▸ hU₀) t ht
+  refine ⟨hTSD, fun N => ?_⟩
   obtain ⟨hd0, hc0, hw0, hV₁⟩ := forward h1 hU₀
   obtain ⟨hd1, -, hw1, hV₂⟩ := forward h2 hV₁
   obtain ⟨hd2, -, hw2, hV₃⟩ := forward h3 hV₂
@@ -207,7 +207,7 @@ theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (LinearPMap.apply_congr' _ _ hd2 eLL).trans hw2
   obtain ⟨σh, φh, uh, Mh, ρh, lamh, hW, hb⟩ := hK N D h3' T hT _ (by simp [D])
     (complexQ.isStrongSolution_waveGroup hd0 T)
-  refine ⟨hTSD, _, mem_trajectories hW, fun t ht => ?_⟩
+  refine ⟨_, mem_trajectories hW, fun t ht => ?_⟩
   have e := WeakSymmetryData.isStrongSolution_unique hUs (isStrongSolution_realL hd0 hc0 T)
     (hU0.trans (realL_orbit_zero hU₀.1 hU₀.2.1).symm) ht
   have hn : stateNorm (U t - ((σh t : L2Form (cube 3) 0), (uh t : L2Vec (cube 3) 1), Mh t,

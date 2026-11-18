@@ -18,9 +18,10 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.bggWeakSymmetry`, `FEEC.weakSymmetry_cube` and `FEEC.weakSymmetry_cube_nonvacuous`),
-compiled against Mathlib alone so that their elaborated values are those of the challenge. The solution imports this module and
-the bridges to `Feec`, and proves the theorems (`Solution.lean`).
+`FEEC.bggWeakSymmetry`, `FEEC.weakSymmetry_electric`, `FEEC.weakSymmetry_mirror` and
+`FEEC.weakSymmetry_electric_nonvacuous`), compiled against Mathlib alone so that their elaborated
+values are those of the challenge. The solution imports this module and the bridges to `Feec`,
+and proves the theorems (`Solution.lean`).
 
 ## References
 
@@ -632,39 +633,6 @@ def mirrorData : FormData (cube 3) :=
   ⟨dMax (cube 3) 0, dMax (cube 3) 1, vecOp fun a => dPart {a} 0, vecOp fun a => dPart {a} 1,
     wedge (cube 3) 0, wedge (cube 3) 1⟩
 -- palomar-shared-end: mirrorData
-
-/-- **The two boundary conditions of the system (6.1) on the cube `Q = (0, ½)³`**, and of its
-discretization: `electric`, vanishing tangential traces on `∂Q` in both rows (`σ = 0`,
-`n × E = 0`; the thesis' §6.3), and `mirror`, the conditions of the fields invariant under the
-reflections in the faces (none in the top row, in component `a` of the bottom row vanishing
-tangential traces on the faces normal to `eₐ`). -/
-inductive CubeBC where
-  /-- the electric boundary conditions (`bggData`) -/
-  | electric
-  /-- the mirror boundary conditions (`mirrorData`) -/
-  | mirror
-
-namespace CubeBC
-
-/-- The BGG data on `Q` with the boundary conditions `bc`: `bggData (cube 3)` (electric),
-`mirrorData` (mirror). -/
-def data : CubeBC → FormData (cube 3)
-  | electric => bggData (cube 3)
-  | mirror => mirrorData
-
-/-- The faces normal to `eⱼ`, `j ∈ bc.top`, on which the finite element spaces of the top row
-have vanishing traces: all (electric), none (mirror). -/
-def top : CubeBC → Finset (Fin 3)
-  | electric => Finset.univ
-  | mirror => ∅
-
-/-- The faces normal to `eⱼ`, `j ∈ bc.bottom a`, on which component `a` of the bottom row has
-vanishing traces: all (electric), those normal to `eₐ` (mirror). -/
-def bottom : CubeBC → Fin 3 → Finset (Fin 3)
-  | electric => fun _ => Finset.univ
-  | mirror => fun a => {a}
-
-end CubeBC
 
 /-- A state `(σ, φ, u, M, ρ)` of the cube is **of class `H¹` with bound `L`**: `σ`, the `uₐ`, `M`
 and the `ρₐ` lie in `H¹(Q)` with norms at most `L` (`IsSobolevForm`), so do the `d̊φₐ` and `d̊uₐ`

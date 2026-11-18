@@ -8,7 +8,7 @@ public import Feec.Physics.EinsteinBianchi.WaveFEMRegularity
 /-!
 # The `H¹` rates on the cube
 
-The `H¹` hypotheses of `FEEC.weakSymmetry_cube` put the exact solution in `Feec`'s relative
+The `H¹` hypotheses of `FEEC.weakSymmetry_electric` put the exact solution in `Feec`'s relative
 parity class `H¹_univ` (`isSobolevStaticTr_of`, `isSobolevStateTr_of`: Gaffney's identity, the
 `H¹(ℝⁿ)` data giving `d*`; `dσ = S⁰φ` and `S¹u` from the `φₐ`, `uₐ`). The static rate is then the
 abstract Thm 5.5 with the quasi-optimality of the smoothed projections for `H¹_univ` data

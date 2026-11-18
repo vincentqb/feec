@@ -7,7 +7,7 @@ public import Solution.CubeSpaces
 
 The projection errors of `cubeQ` in the norms of `projErrorSq` are those of `Feec`'s
 `Feec.Models.Cube.WeakSymmetry.cubeFEM` (`projErr0_eq`, `projErr1_eq`, `projErr2_eq`): the input
-of the static rate of `FEEC.weakSymmetry_cube` (`Solution.CubeSobolev`).
+of the static rate of `FEEC.weakSymmetry_electric` (`Solution.CubeSobolev`).
 
 ## References
 

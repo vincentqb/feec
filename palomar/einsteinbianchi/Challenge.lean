@@ -26,25 +26,28 @@ weak symmetry `Γ → Ṽ¹ → W² × W̃²` (below) on states `(σ, u, M, ρ)`
 `σ` the potential of `Γ`. The constraint is `σ = 0`, `M = 0`, `E` and `B` TSD (`IsTSDState`).
 Whether boundary conditions keep the constraints is the central difficulty of the initial
 boundary value problem of general relativity ([FriedrichNagy1999], [KreissWinicour2006]); the
-entry `palomar/constraints` answers it for the exact evolution. This entry answers it for the
-method: which solution does it compute?
+entry `palomar/constraints` answers it for the exact evolution. This entry asks it of the method:
+**under which boundary conditions does the method compute the constrained evolution?** On the
+cube `Q = (0, ½)³`, with the elements of Table 5.1 on Freudenthal meshes (`IsTable51`), the
+answer has two parts.
 
-* `FEEC.bggWeakSymmetry`, the abstract method (Prop 5.4, Thm 5.5): for BGG data with weak
-  symmetry and finite-dimensional subcomplexes with bounded cochain projections `π`, the method
-  that replaces `S` by `Sₕ = πS` is uniquely solvable and converges up to the consistency of
-  `Sₕ` at the order `h`; its semi-discrete form (6.5) is determined by the initial values and
-  keeps a discrete Gauss law.
-* `FEEC.weakSymmetry_cube`: the method with the elements of Table 5.1 on Freudenthal meshes of the
-  cube `Q = (0, ½)³`, for both boundary conditions of `CubeBC`. With the **electric** boundary
-  conditions of the thesis (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) it is an instance of
-  `FEEC.bggWeakSymmetry` with `Sₕ ≠ S`, converges at the rates `h` (static) and `(1 + t) h` (wave)
-  for solutions of class `H¹`, and converges with no regularity from every datum of `D(L)`; from
-  the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and so do its discrete fields: it computes a
-  solution that is not a gravitational wave. With the **mirror** boundary conditions it converges
-  at the rate `(1 + t) h` from the TSD data of `D(L³)` to the exact solution, which stays TSD,
-  and it has non-stationary discrete solutions in the discrete Gauss law.
-* `FEEC.weakSymmetry_cube_nonvacuous`: nontrivial solutions meet the hypotheses of the electric
-  rates.
+* `FEEC.weakSymmetry_electric`: with the **electric** boundary conditions of the thesis
+  (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) the method converges, with no regularity from every datum
+  of `D(L)`, and at the rates `h` (static) and `(1 + t) h` (wave) for solutions of class `H¹`;
+  but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and so do its discrete fields: it
+  computes a solution that is not a gravitational wave.
+* `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges at the rate
+  `(1 + t) h` from the TSD data of `D(L³)` to the exact solution, which stays TSD, and keeps the
+  discrete Gauss law along non-stationary discrete solutions: it computes the gravitational wave.
+
+Both are cases of the abstract method, `FEEC.bggWeakSymmetry` (Prop 5.4, Thm 5.5): for BGG data
+with weak symmetry and finite-dimensional subcomplexes with bounded cochain projections `π`, its
+semi-discrete form (6.5) is determined by the initial values and keeps a discrete Gauss law
+(`IsBGG`), and under uniform constants the method that replaces `S` by `Sₕ = πS` is uniquely
+solvable and converges up to the consistency of `Sₕ` at the order `h`. The electric
+discretizations meet all its hypotheses, with `Sₕ ≠ S`; the mirror data satisfy `IsBGG`.
+`FEEC.weakSymmetry_electric_nonvacuous`: nontrivial solutions meet the hypotheses of the electric
+rates.
 
 **The complex with weak symmetry.** The BGG construction ([ArnoldHu2021]) couples two de Rham
 complexes by connecting maps `S : Ṽⁱ → Vⁱ⁺¹` with `d S = -S d̃`; eliminating `Ṽ⁰` against `V¹`
@@ -679,39 +682,6 @@ def mirrorData : FormData (cube 3) :=
     wedge (cube 3) 0, wedge (cube 3) 1⟩
 -- palomar-shared-end: mirrorData
 
-/-- **The two boundary conditions of the system (6.1) on the cube `Q = (0, ½)³`**, and of its
-discretization: `electric`, vanishing tangential traces on `∂Q` in both rows (`σ = 0`,
-`n × E = 0`; the thesis' §6.3), and `mirror`, the conditions of the fields invariant under the
-reflections in the faces (none in the top row, in component `a` of the bottom row vanishing
-tangential traces on the faces normal to `eₐ`). -/
-inductive CubeBC where
-  /-- the electric boundary conditions (`bggData`) -/
-  | electric
-  /-- the mirror boundary conditions (`mirrorData`) -/
-  | mirror
-
-namespace CubeBC
-
-/-- The BGG data on `Q` with the boundary conditions `bc`: `bggData (cube 3)` (electric),
-`mirrorData` (mirror). -/
-def data : CubeBC → FormData (cube 3)
-  | electric => bggData (cube 3)
-  | mirror => mirrorData
-
-/-- The faces normal to `eⱼ`, `j ∈ bc.top`, on which the finite element spaces of the top row
-have vanishing traces: all (electric), none (mirror). -/
-def top : CubeBC → Finset (Fin 3)
-  | electric => Finset.univ
-  | mirror => ∅
-
-/-- The faces normal to `eⱼ`, `j ∈ bc.bottom a`, on which component `a` of the bottom row has
-vanishing traces: all (electric), those normal to `eₐ` (mirror). -/
-def bottom : CubeBC → Fin 3 → Finset (Fin 3)
-  | electric => fun _ => Finset.univ
-  | mirror => fun a => {a}
-
-end CubeBC
-
 /-- A state `(σ, φ, u, M, ρ)` of the cube is **of class `H¹` with bound `L`**: `σ`, the `uₐ`, `M`
 and the `ρₐ` lie in `H¹(Q)` with norms at most `L` (`IsSobolevForm`), so do the `d̊φₐ` and `d̊uₐ`
 (when `φₐ`, `uₐ` lie in the domain of `dMin`), and `M` and the `ρₐ` have vanishing tangential
@@ -783,126 +753,132 @@ theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Typ
         ‖D.S1 u - Q.π2 (D.S1 u)‖ ^ 2)) := by
   sorry
 
-/-- **What the method computes on the cube** ([QuennevilleBelair2015], §5.3, Table 5.1, Thm 5.5,
-Prop 5.9, §6.2–6.3, (6.4), (6.5), Prop 6.2; [AFW2010], §5.5; [ChristiansenWinther2008]). For both
-boundary conditions `bc`, there are discretizations `Q_N` of `bc.data` by the elements of
-Table 5.1 with the boundary conditions `bc` on Freudenthal meshes of `Q = (0, ½)³` (`IsTable51`
-with the faces `bc.top`, `bc.bottom`), `bc.data` satisfying `IsBGG` (so by
-`FEEC.bggWeakSymmetry` solutions of (6.5) are determined by their initial values and keep the
-discrete Gauss law), such that, with `L = bc.data.IsWave`:
+/-- **With the electric boundary conditions the method converges, but not to the constrained
+evolution** ([QuennevilleBelair2015], §5.3, Table 5.1, Thm 5.5, Prop 5.9, §6.2–6.3, (6.4), (6.5),
+Prop 6.2; [AFW2010], §5.5; [ChristiansenWinther2008]). There are discretizations `Q_N` of
+`bggData Q`, `Q = (0, ½)³` (vanishing tangential traces on `∂Q` in both rows: `σ = 0`,
+`n × E = 0`), by the elements of Table 5.1 with vanishing traces on `∂Q` on Freudenthal meshes
+(`IsTable51` with all faces in both rows) such that, with `L = (bggData Q).IsWave`:
 
-* with the **electric** boundary conditions:
-  - (*an instance of `FEEC.bggWeakSymmetry`*) the continuous hypotheses hold with constant `C`
-    (so (5.6) is uniquely solvable), and for `N ≥ 2` the method changes `S⁰` on the discrete
-    space: `S⁰ₕψ = π¹S⁰ψ ≠ S⁰ψ` for some `ψ ∈ Ṽₕ⁰`;
-  - (*no best approximation of `S¹` at the order `h`*) for some `c > 0` and every `N ≥ 2`, some
-    `v ∈ Ṽₕ¹`, `v ≠ 0`, has `‖S¹v - w‖ ≥ c (‖v‖² + ‖d̃v‖²)^{1/2}` for all `w ∈ Vₕ²`
-    (Raviart–Thomas): no projection has `‖(S¹ - S¹ₕ)v‖ ≤ C h_N ‖v‖_{HΛ}` on `Ṽₕ¹`
-    (`IsConsistent` asks less);
-  - (*the static rate*) for every solution of (5.3) with `‖λ‖ ≤ L` whose components `σ`, `φₐ`,
-    `d̃φₐ`, `uₐ`, `d̃uₐ` lie in `H¹(Q)` with norms at most `L`, the solution of (5.6) has
-    `errorSq ≤ (K L h_N)²`;
-  - (*the wave rate*) solutions of (6.5) are determined by `(σₕ, uₕ, Mₕ, ρₕ)(0)` (so are `φₕ`,
-    `λₕ` on `[0, T)`), and for every classical solution of (6.2) whose states and their time
-    derivatives are of class `H¹` with bound `L` (`IsH1State`) and whose multipliers are bounded
-    by `L`, some trajectory of (6.5) (from the elliptic projection (6.4)) is within
-    `K L (1 + t) h_N` on `[0, T]`;
-  - (*convergence from every datum of `D(L)`, no regularity*) for every `U₀ ∈ D(L)` and `T > 0`,
-    `U' = L U` has a strong solution on `[0, T]` from `U₀`, and for every such solution `U`, every
-    family of trajectories of (6.5) without source whose initial states converge to `U₀`
-    converges to `U` uniformly on `[0, T]`;
-  - (*the limit leaves the constraint*) some TSD datum `U₀ ∈ D(L)` (in the proof
-    `(0, 0, 0, ⋆β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`) is, for every `T > 0`, the limit of initial
-    states of families of trajectories of (6.5), and every strong solution `U` from `U₀` has, at
-    some `t ∈ [0, T]`, an electric field `E(t)` that is not TSD, and at some `t' ∈ [0, T]` a
-    magnetic field `B(t')` that is not symmetric; at these times, for all large `N`, so have the
-    discrete fields of every such family;
-* with the **mirror** boundary conditions:
-  - (*a non-stationary solution in the discrete Gauss law*) for every `T > 0` and all large `N`,
-    some trajectory of (6.5) without source has `uₕ(0) ≠ 0`, satisfies the law at `t = 0` (so at
-    every `t`) and has a non-constant `Mₕ`;
-  - (*the rate, to the TSD solution*) for every TSD datum `U₀` with `U₀`, `L U₀`, `L² U₀` in
-    `D(L)`, `U' = L U` has strong solutions from `U₀` on every `[0, T]`, and every such solution
-    `U` stays TSD and some trajectory of (6.5) without source (from the elliptic projection (6.4)
-    of `U₀`) is within `K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` of `U` on `[0, T]`; and some such
-    datum is not stationary (`L U₀ ≠ 0`; in the proof `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`,
-    `σ₀ = 0`, `M₀ = 0`, `B₀ = 0`).
+* (*an instance of `FEEC.bggWeakSymmetry`*) `bggData Q` satisfies `IsBGG` and the continuous
+  hypotheses with constant `C` (so (5.6) is uniquely solvable and converges), and for `N ≥ 2`
+  the method changes `S⁰` on the discrete space: `S⁰ₕψ = π¹S⁰ψ ≠ S⁰ψ` for some `ψ ∈ Ṽₕ⁰`;
+* (*convergence from every datum of `D(L)`, no regularity*) for every `U₀ ∈ D(L)` and `T > 0`,
+  `U' = L U` has a strong solution on `[0, T]` from `U₀`, and for every such solution `U`, every
+  family of trajectories of (6.5) without source whose initial states converge to `U₀`
+  converges to `U` uniformly on `[0, T]`;
+* (*the limit leaves the constraint*) some TSD datum `U₀ ∈ D(L)` (in the proof `(0, 0, 0, ⋆β)`,
+  `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`) is, for every `T > 0`, the limit of initial states of families of
+  trajectories of (6.5), and every strong solution `U` from `U₀` has, at some `t ∈ [0, T]`, an
+  electric field `E(t)` that is not TSD, and at some `t' ∈ [0, T]` a magnetic field `B(t')` that
+  is not symmetric; at these times, for all large `N`, so have the discrete fields of every such
+  family;
+* (*the static rate*) for every solution of (5.3) with `‖λ‖ ≤ L` whose components `σ`, `φₐ`,
+  `d̃φₐ`, `uₐ`, `d̃uₐ` lie in `H¹(Q)` with norms at most `L`, the solution of (5.6) has
+  `errorSq ≤ (K L h_N)²`;
+* (*the wave rate*) for every classical solution of (6.2) whose states and their time derivatives
+  are of class `H¹` with bound `L` (`IsH1State`) and whose multipliers are bounded by `L`, some
+  trajectory of (6.5) (from the elliptic projection (6.4)) is within `K L (1 + t) h_N` on
+  `[0, T]`;
+* (*no best approximation of `S¹` at the order `h`*) for some `c > 0` and every `N ≥ 2`, some
+  `v ∈ Ṽₕ¹`, `v ≠ 0`, has `‖S¹v - w‖ ≥ c (‖v‖² + ‖d̃v‖²)^{1/2}` for all `w ∈ Vₕ²`
+  (Raviart–Thomas): no projection has `‖(S¹ - S¹ₕ)v‖ ≤ C h_N ‖v‖_{HΛ}` on `Ṽₕ¹`, which is why
+  `IsConsistent` asks consistency on regular potentials only.
 
 The rates of [QuennevilleBelair2015] for states `C²` up to `∂Q` with vanishing tangential traces
 are corollaries: such states are of class `H¹`. The projections are asserted, not named (in the
-proof, the smoothed projections of one smoother for both rows, commuting with the reflections in
-the faces for the mirror conditions); the method depends on them through `Sₕ = πS`. -/
-theorem weakSymmetry_cube (bc : CubeBC) : ∃ (𝒯 : ℕ → SimplicialMesh 3)
-    (Q : ℕ → bc.data.Discretization) (C K : ℝ), IsTable51 𝒯 Q C bc.top bc.bottom ∧
-    bc.data.IsBGG ∧
-    (bc = .electric →
-      bc.data.IsStable C ∧
-      (∀ N, 2 ≤ N → ∃ ψ : bc.data.dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
-        (Q N).π1 (bc.data.S0 ψ) ≠ bc.data.S0 ψ) ∧
-      (∃ c > 0, ∀ N, 2 ≤ N → ∃ v : bc.data.dt1.domain, (v : L2Vec (cube 3) 1) ∈ (Q N).Vt1 ∧
-        (v : L2Vec (cube 3) 1) ≠ 0 ∧ ∀ w ∈ (Q N).V2,
-          c * √(‖(v : L2Vec (cube 3) 1)‖ ^ 2 + ‖bc.data.dt1 v‖ ^ 2) ≤ ‖bc.data.S1 v - w‖) ∧
-      (∀ N F σ φ u lam σh φh uh lamh L, bc.data.IsSolution F σ φ u lam →
-        IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) →
-        (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) →
-        (∀ a, IsSobolevForm (cube 3) 1 1 L (bc.data.dt0 φ a)) →
-        (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) →
-        (∀ a, IsSobolevForm (cube 3) 1 2 L (bc.data.dt1 u a)) → ‖lam‖ ≤ L →
-        (Q N).IsDiscreteSolution F σh φh uh lamh →
-        (Q N).errorSq σ σh φ φh u uh ≤ (K * L * meshSize (𝒯 N)) ^ 2) ∧
-      (∀ N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T → ContinuousOn f (Icc 0 T) →
-        (Q N).IsDiscreteWave T f σ φ u M ρ lam → (Q N).IsDiscreteWave T f σ' φ' u' M' ρ' lam' →
-        σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
-        (∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
-          ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
-      (∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
-        bc.data.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
-        (∀ t ∈ Icc 0 T, IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
-          IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) →
-        ∃ Uh ∈ (Q N).trajectories T f, ∀ t ∈ Icc 0 T,
-          stateNorm (((σ t : L2Form (cube 3) 0), (u t : L2Vec (cube 3) 1), M t, ρ t) - Uh t) ≤
-            K * L * (1 + t) * meshSize (𝒯 N)) ∧
-      (∀ U₀ V T, bc.data.IsWave U₀ V → 0 < T →
-        (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U) ∧
-        ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
-          IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
+proof, the smoothed projections of one smoother for both rows); the method depends on them
+through `Sₕ = πS`. -/
+theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
+    (Q : ℕ → (bggData (cube 3)).Discretization) (C K : ℝ),
+    IsTable51 𝒯 Q C Finset.univ (fun _ => Finset.univ) ∧ (bggData (cube 3)).IsBGG ∧
+    (bggData (cube 3)).IsStable C ∧
+    (∀ N, 2 ≤ N → ∃ ψ : (bggData (cube 3)).dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
+      (Q N).π1 ((bggData (cube 3)).S0 ψ) ≠ (bggData (cube 3)).S0 ψ) ∧
+    (∀ U₀ V T, (bggData (cube 3)).IsWave U₀ V → 0 < T →
+      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
+        IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U →
+        (∀ N, Uh N ∈ (Q N).trajectories T 0) →
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
+        ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε) ∧
+    (∃ U₀ V, (bggData (cube 3)).IsWave U₀ V ∧ IsTSDState U₀ ∧ ∀ T > 0,
+      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
+      ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U →
+        (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1) ∧ ∀ Uh : ℕ → ℝ → _,
           (∀ N, Uh N ∈ (Q N).trajectories T 0) →
           Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
-          ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε) ∧
-      ∃ U₀ V, bc.data.IsWave U₀ V ∧ IsTSDState U₀ ∧ ∀ T > 0,
-        (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
-          Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
-        ∀ U, U 0 = U₀ → IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
-          (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1) ∧ ∀ Uh : ℕ → ℝ → _,
-            (∀ N, Uh N ∈ (Q N).trajectories T 0) →
-            Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
-            ∀ᶠ N in atTop, ¬IsTSD (mat1 (Uh N t).2.1)) ∧
-          ∃ t ∈ Icc 0 T, (∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a) ∧
-            ∀ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) →
-            Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
-            ∀ᶠ N in atTop, ∃ a i, mat2 (Uh N t).2.2.2 a i ≠ mat2 (Uh N t).2.2.2 i a) ∧
-    (bc = .mirror →
-      (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0,
-        (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
-          ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
-      (∀ N T U₀ V₁ V₂ V₃, 0 < T → bc.data.IsWave U₀ V₁ → bc.data.IsWave V₁ V₂ →
-        bc.data.IsWave V₂ V₃ → IsTSDState U₀ →
-        (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U) ∧
-        ∀ U, U 0 = U₀ → IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
-          (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
-            stateNorm (U t - Uh t) ≤
-              K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
-                meshSize (𝒯 N)) ∧
-      ∃ U₀ V₁ V₂ V₃, bc.data.IsWave U₀ V₁ ∧ bc.data.IsWave V₁ V₂ ∧ bc.data.IsWave V₂ V₃ ∧
-        IsTSDState U₀ ∧ V₁ ≠ 0) := by
+          ∀ᶠ N in atTop, ¬IsTSD (mat1 (Uh N t).2.1)) ∧
+        ∃ t ∈ Icc 0 T, (∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a) ∧
+          ∀ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) →
+          Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
+          ∀ᶠ N in atTop, ∃ a i, mat2 (Uh N t).2.2.2 a i ≠ mat2 (Uh N t).2.2.2 i a) ∧
+    (∀ N F σ φ u lam σh φh uh lamh L, (bggData (cube 3)).IsSolution F σ φ u lam →
+      IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) →
+      (∀ a, IsSobolevForm (cube 3) 1 0 L ((φ : L2Vec (cube 3) 0) a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((bggData (cube 3)).dt0 φ a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 1 L ((u : L2Vec (cube 3) 1) a)) →
+      (∀ a, IsSobolevForm (cube 3) 1 2 L ((bggData (cube 3)).dt1 u a)) → ‖lam‖ ≤ L →
+      (Q N).IsDiscreteSolution F σh φh uh lamh →
+      (Q N).errorSq σ σh φ φh u uh ≤ (K * L * meshSize (𝒯 N)) ^ 2) ∧
+    (∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T → ContinuousOn f (Icc 0 T) →
+      (bggData (cube 3)).IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
+      (∀ t ∈ Icc 0 T, IsH1State L (σ t) (φ t) (u t) (M t) (ρ t) ∧
+        IsH1State L (σ' t) (φ' t) (u' t) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧ ‖lam' t‖ ≤ L) →
+      ∃ Uh ∈ (Q N).trajectories T f, ∀ t ∈ Icc 0 T,
+        stateNorm (((σ t : L2Form (cube 3) 0), (u t : L2Vec (cube 3) 1), M t, ρ t) - Uh t) ≤
+          K * L * (1 + t) * meshSize (𝒯 N)) ∧
+    ∃ c > 0, ∀ N, 2 ≤ N → ∃ v : (bggData (cube 3)).dt1.domain,
+      (v : L2Vec (cube 3) 1) ∈ (Q N).Vt1 ∧ (v : L2Vec (cube 3) 1) ≠ 0 ∧ ∀ w ∈ (Q N).V2,
+        c * √(‖(v : L2Vec (cube 3) 1)‖ ^ 2 + ‖(bggData (cube 3)).dt1 v‖ ^ 2) ≤
+          ‖(bggData (cube 3)).S1 v - w‖ := by
   sorry
 
-/-- **Non-vacuity of the electric rates of `FEEC.weakSymmetry_cube`**: (5.3) on the cube with
+/-- **With the mirror boundary conditions the method computes the constrained evolution**
+([QuennevilleBelair2015], §6.2–6.3, (6.4), (6.5)). There are discretizations `Q_N` of
+`mirrorData` by the elements of Table 5.1 with the mirror conditions on Freudenthal meshes of
+`Q = (0, ½)³` (`IsTable51` with no face in the top row and the faces normal to `eₐ` in
+component `a` of the bottom row), `mirrorData` satisfying `IsBGG` (so by `FEEC.bggWeakSymmetry`
+solutions of (6.5) are determined by their initial values and keep the discrete Gauss law), such
+that, with `L = mirrorData.IsWave`:
+
+* (*the rate, to the TSD solution*) for every TSD datum `U₀` with `U₀`, `L U₀`, `L² U₀` in
+  `D(L)` and every `T > 0`, `U' = L U` has a strong solution from `U₀` on `[0, T]`, every such
+  solution `U` stays TSD, and for every `N` some trajectory of (6.5) without source (from the
+  elliptic projection (6.4) of `U₀`) is within `K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` of `U` on
+  `[0, T]`;
+* (*a non-stationary solution in the discrete Gauss law*) for every `T > 0` and all large `N`,
+  some trajectory of (6.5) without source has `uₕ(0) ≠ 0`, satisfies the law at `t = 0` (so at
+  every `t`) and has a non-constant `Mₕ`;
+* (*a moving datum*) some such datum `U₀` is not stationary (`L U₀ ≠ 0`; in the proof
+  `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, `σ₀ = 0`, `M₀ = 0`, `B₀ = 0`).
+
+The projections are asserted, not named (in the proof, smoothed projections commuting with the
+reflections in the faces); the method depends on them through `Sₕ = πS`. -/
+theorem weakSymmetry_mirror : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mirrorData.Discretization)
+    (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧ mirrorData.IsBGG ∧
+    (∀ T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
+      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ →
+      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∀ N, ∃ Uh ∈ (Q N).trajectories T 0,
+          ∀ t ∈ Icc 0 T, stateNorm (U t - Uh t) ≤
+            K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
+              meshSize (𝒯 N)) ∧
+    (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0,
+      (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
+        ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
+    ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
+      mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
+  sorry
+
+/-- **Non-vacuity of the rates of `FEEC.weakSymmetry_electric`**: (5.3) on the cube with
 the electric boundary conditions has a smooth solution with `σ`, `φ`, `u` and `λ` all nonzero
 satisfying the hypotheses of the static rate for some `L`; and for every `T > 0`, (6.2) has a
 classical solution on `[0, T]`, with `u(t) ≠ 0` for all `t` and `σ(t), φ(t) ≠ 0` for
 `t ∈ (0, T]`, satisfying the hypotheses of the wave rate (`IsH1State`) for some `L`. -/
-theorem weakSymmetry_cube_nonvacuous :
+theorem weakSymmetry_electric_nonvacuous :
     (∃ F σ φ u lam L, (bggData (cube 3)).IsSolution F σ φ u lam ∧
       (σ : L2Form (cube 3) 0) ≠ 0 ∧ (φ : L2Vec (cube 3) 0) ≠ 0 ∧ (u : L2Vec (cube 3) 1) ≠ 0 ∧
       lam ≠ 0 ∧ ‖lam‖ ≤ L ∧ IsSobolevForm (cube 3) 1 0 L (σ : L2Form (cube 3) 0) ∧

@@ -1,8 +1,8 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.bggWeakSymmetry", "FEEC.weakSymmetry_cube",
-    "FEEC.weakSymmetry_cube_nonvacuous"],
+  "theorem_names": ["FEEC.bggWeakSymmetry", "FEEC.weakSymmetry_electric", "FEEC.weakSymmetry_mirror",
+    "FEEC.weakSymmetry_electric_nonvacuous"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

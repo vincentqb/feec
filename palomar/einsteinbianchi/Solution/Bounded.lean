@@ -5,7 +5,7 @@ public import Solution.Proxy
 /-!
 # The electric boundary conditions lose the constraints on every bounded domain
 
-The limit clause of `FEEC.weakSymmetry_cube` (the exact solution, on `Ω = Q`), from the path
+The limit clause of `FEEC.weakSymmetry_electric` (the exact solution, on `Ω = Q`), from the path
 criteria of `Feec.Counterexamples.BoundedBGG` (`datumBeta_spec`). For the datum
 `U₀ = (0, 0, 0, ⋆β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `bggData Ω`:
 

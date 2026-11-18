@@ -7,9 +7,10 @@ public import Feec.Domain.DeRham
 # The `L²` de Rham complexes of the challenge are those of `Feec`
 
 The challenge's `L²(Ω; Λᵏ)` is `Feec`'s `L2F ℝ Ω (formIdx n k)` (`rfl`), its graphs of `d` and
-of `dᵗ` on test forms are the test graphs of `Feec.Domain.extDerivOp` and of its formal adjoint
-(`testGraph_eq`, `codiffGraph_eq`), so `dMin` and `dMax` are `Feec`'s minimal and maximal
-realizations of the exterior derivative (`dMin_eq`, `dMax_eq`).
+of `dᵗ` on test forms (the spans inside `dMin` and `dMax`, named here `testGraph` and
+`codiffGraph`, `dMin_def`, `dMax_def`) are the test graphs of `Feec.Domain.extDerivOp` and of its
+formal adjoint (`testGraph_eq`, `codiffGraph_eq`), so `dMin` and `dMax` are `Feec`'s minimal and
+maximal realizations of the exterior derivative (`dMin_eq`, `dMax_eq`).
 
 ## References
 
@@ -80,6 +81,29 @@ theorem isTestFn_toField {Ω : Set (Fin n → ℝ)} {k : ℤ} {φ' : formIdx n k
   · have : (fun x => toField φ' x s) = 0 := funext fun x => by simp [toField, formExt, hs]
     rw [this]; exact isTestFn_of IsTest.zero
 
+/-- The graph `{(φ, dφ)}` of the exterior derivative on the test `k`-forms: the span inside
+`dMin`. -/
+def testGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω k × L2Form Ω (k + 1)) :=
+  Submodule.span ℝ {p | ∃ φ : FormField n, (∀ s, IsTestFn Ω fun x => φ x s) ∧
+    (∀ s : FormIdx n k, ⇑(p.1 s) =ᵐ[volume.restrict Ω] fun x => φ x s.1) ∧
+    ∀ t : FormIdx n (k + 1), ⇑(p.2 t) =ᵐ[volume.restrict Ω] fun x => extDeriv φ x t.1}
+
+/-- The graph `{(ψ, dᵗψ)}` of the codifferential on the test `(k + 1)`-forms: the span inside
+`dMax`. -/
+def codiffGraph (Ω : Set (Fin n → ℝ)) (k : ℤ) : Submodule ℝ (L2Form Ω (k + 1) × L2Form Ω k) :=
+  Submodule.span ℝ {p | ∃ ψ : FormField n, (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
+    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
+
+/-- The closure of the codifferential `dᵗ` on test `(k + 1)`-forms. -/
+def codiffMin (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω (k + 1) →ₗ.[ℝ] L2Form Ω k :=
+  (codiffGraph Ω k).topologicalClosure.toLinearPMap
+
+theorem dMin_def (Ω : Set (Fin n → ℝ)) (k : ℤ) :
+    dMin Ω k = (testGraph Ω k).topologicalClosure.toLinearPMap := rfl
+
+theorem dMax_def (Ω : Set (Fin n → ℝ)) (k : ℤ) : dMax Ω k = (codiffMin Ω k)† := rfl
+
 /-- **The graph of `d` on test forms is `Feec`'s test graph of `extDerivOp`.** -/
 theorem testGraph_eq (Ω : Set (Fin n → ℝ)) (k : ℤ) :
     testGraph Ω k = (extDerivOp ℝ n k).testGraph Ω := by
@@ -129,12 +153,14 @@ theorem codiffGraph_eq (Ω : Set (Fin n → ℝ)) (k : ℤ) :
 
 /-- **`dMin` is `Feec`'s minimal exterior derivative.** -/
 theorem dMin_eq (Ω : Set (Fin n → ℝ)) (k : ℤ) : dMin Ω k = (extDerivOp ℝ n k).minimal Ω := by
-  unfold dMin ConstCoeffOp.minimal
+  rw [dMin_def]
+  unfold ConstCoeffOp.minimal
   rw [testGraph_eq]
 
 /-- **`dMax` is `Feec`'s maximal (weak) exterior derivative.** -/
 theorem dMax_eq (Ω : Set (Fin n → ℝ)) (k : ℤ) : dMax Ω k = (extDerivOp ℝ n k).maximal Ω := by
-  unfold dMax codiffMin ConstCoeffOp.maximal ConstCoeffOp.minimal
+  rw [dMax_def]
+  unfold codiffMin ConstCoeffOp.maximal ConstCoeffOp.minimal
   rw [codiffGraph_eq]
 
 end FEEC

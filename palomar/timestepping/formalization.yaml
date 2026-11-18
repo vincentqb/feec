@@ -415,7 +415,13 @@ fidelity:
     only that q has no zero in the closed left half-plane; its bound (sup_y |r(iy)|)^n is <= 1
     exactly for A-stable r, and infinite when deg p > deg q.
     (5) The Whitney schemes. Coordinates and definitions of forms, meshes and finite element
-    spaces as in palomar/fem; the Freudenthal meshes are asserted existentially, named by their
+    spaces as in palomar/fem (the shared blocks of palomar/shared/vocabulary.lean.txt, checked
+    byte for byte by the gate, as are IsAStable, HasOrder and rationalApply, shared with
+    palomar/feec); one finite element space with vanishing traces on a set of facets serves
+    both Whitney rows, Gamma = ∅ and Gamma = M.boundaryFacets, the facets of a single simplex
+    (the earlier femSpace and femSpaceMin; Solution femSpace_empty,
+    SimplicialMesh.mem_boundaryFacets_iff); polynomial forms are over a field K, used at K = ℝ
+    (definitionally the earlier real ones); the Freudenthal meshes are asserted existentially, named by their
     vertices (IsFreudenthal; a mesh of the cube by such simplices contains all of them).
     Crank-Nicolson: one row of the thesis' three-row Einstein-Bianchi scheme (the rows
     decouple); the exact solution is a classical solution on R x R^3 (all times, all of space;

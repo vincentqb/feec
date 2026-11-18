@@ -35,6 +35,7 @@ theorems (`Solution.lean`).
 * [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
+* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Ch. 4
 

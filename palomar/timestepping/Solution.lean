@@ -309,7 +309,7 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
     IsFreudenthal 𝒯 ∧
     (∀ N k (w : FormField 3), Continuous w → ∃! x, IsWhitneyInterp (cube 3) (𝒯 N) k w x) ∧
     (∀ N Δt g u, RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → ∃! u', IsCNStep (𝒯 N) Δt g u u') ∧
-    (∀ N, ∃ v ∈ femSpaceMin (cube 3) (𝒯 N) topSeq 1, v ≠ 0) ∧
+    (∀ N, ∃ v ∈ femSpace (cube 3) (𝒯 N) topSeq (𝒯 N).boundaryFacets 1, v ≠ 0) ∧
     ∀ N T L (X : RowSolution T L) (Δt : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → M * Δt ≤ T →
       (∀ m < M, IsCNStep (𝒯 N) Δt (g (m + 1)) (u m) (u (m + 1))) →
       (∀ m < M, ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 1 : ℕ) * Δt)) w ∧
@@ -384,7 +384,7 @@ theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), Is
 theorem inverse_estimate {n : ℕ} [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
     (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :
-    ∃ C, ∀ N, ∀ v ∈ femSpace Ω (M N) S k, ∃ hv : v ∈ (dMax Ω k).domain,
+    ∃ C, ∀ N, ∀ v ∈ femSpace Ω (M N) S ∅ k, ∃ hv : v ∈ (dMax Ω k).domain,
       meshSize (M N) * ‖dMax Ω k ⟨v, hv⟩‖ ≤ C * ‖v‖ := by
   obtain ⟨hdom, ⟨σ, q, hq, hsq⟩, hpos, -⟩ := hM
   obtain ⟨T₀, hT₀⟩ := exists_mem_simplices (hpos 0)

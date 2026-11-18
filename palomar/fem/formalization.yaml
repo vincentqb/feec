@@ -13,10 +13,11 @@ project:
     The finite element de Rham complexes of Arnold-Falk-Winther on simplicial meshes, and the
     algebra of their shape functions, stated over Mathlib. The abstract definitions (Hilbert
     complexes, subcomplex families with cochain projections, graph-norm bounds and
-    approximation, Jackson estimates) are stated in full and self-contained in the challenge;
-    mathematically they are those of the Palomar entry palomar/feec (which states IsGraphBounded
-    through a constant, IsGraphBoundedBy), so that the families of this entry are families in the
-    sense of its theorems, whose conclusions are not restated here: under the bounds,
+    approximation, Jackson estimates) are stated in full and self-contained in the challenge, in
+    the words of the Palomar entry palomar/feec (the shared block HilbertComplex of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), so that the families
+    of this entry are families in the sense of its theorems, whose conclusions are not restated
+    here: under the bounds,
     approximation and closed ranges proved here, FEEC.feec gives the fields static (the mixed
     method), wave (the Hodge wave equation, with constraint propagation: propagates_iff,
     invariantCore, subcomplex) and heat (the Hodge heat equation) of its Verdict, and
@@ -400,7 +401,18 @@ fidelity:
     missing are that estimate on general shape-regular simplices, its assembly over the mesh,
     and the passage from smooth to H^(s+1) data by mollification; without 2(s+1) > n it needs
     local estimates for the smoothed projections or a Clement/Scott-Zhang-type quasi-interpolant.
-    (8) The boundary facets of femSpaceMin are the facets of a single simplex of the mesh.
+    (8) One finite element space femSpace Omega M S Gamma k with vanishing traces on a set Gamma
+    of facets serves both families: Gamma = ∅ for H Lambda(Omega) and Gamma = M.boundaryFacets,
+    the facets of a single simplex of the mesh, for the vanishing boundary traces of
+    H°Lambda(Omega) (the earlier femSpace and femSpaceMin; Solution: FEEC.femSpace_empty,
+    FEEC.mem_boundaryFacets_iff). The notions shared with other entries (Hilbert complexes and
+    their families, differential and polynomial forms, admissible sequences, meshes with the
+    Freudenthal meshes IsFreudenthal, finite element spaces, the regularity classes IsCsForm and
+    IsSobolevForm) are the canonical blocks of palomar/shared/vocabulary.lean.txt, checked byte
+    for byte by the gate; IsGraphBounded is now stated through IsGraphBoundedBy (definitionally
+    the earlier direct form), the Freudenthal meshes of FEEC.fem_cube through IsFreudenthal (the
+    earlier inline clause), and dMax, dMin inline (the earlier codiffGraph, codiffMin and
+    testGraph are definitional steps, defined in Solution/Forms.lean).
     (9) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
     natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy and
     H = -B the magnetic field): E . n = 0 and B x n = 0 (H x n = 0) enter through the adjoints

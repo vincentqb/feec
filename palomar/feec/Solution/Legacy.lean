@@ -167,13 +167,13 @@ structure Rated₀ {ρ : Type*} (J : F.Jackson ρ) : Prop where
   `‖v - x‖ + C (1 + nτ) L hᵒʳᵈ⁽ˢ⁾ + K nτ τᵖ ‖Lₕ^{p+1} v‖` when the components of `S(t) x`,
   `S(t) L x` are `s`-regular with bound `L` on `[0, nτ]` ([QuennevilleBelair2015], Thm 4.14;
   [BrennerThomee1979]) -/
-  wave (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) (r : RationalScheme) (hr : r.IsAStable)
-    {p : ℕ} (hp : r.HasOrder p) (s : ρ) : ∃ S, F.WaveVerdict a m S ∧ ∃ C K : ℝ,
+  wave (a : ℤ) (m : ℕ) (ha : F.ApproximatesOn a m) (P Q : Polynomial ℝ) (hr : IsAStable P Q)
+    {p : ℕ} (hp : HasOrder P Q p) (s : ρ) : ∃ S, F.WaveVerdict a m S ∧ ∃ C K : ℝ,
       ∀ (x : Total W a m) (hx : x ∈ (H.wave a m).domain),
       H.wave a m ⟨x, hx⟩ ∈ (H.wave a m).domain → ∀ {L : ℝ}, 0 ≤ L → ∀ (h : κ) {τ : ℝ}, 0 ≤ τ →
       ∀ (n : ℕ) (v : F.Xh a m h), (∀ t ∈ Icc 0 (n * τ), ∀ i : Fin m,
         J.Reg s (a + (i : ℕ)) L (S t x i) ∧ J.Reg s (a + (i : ℕ)) L (S t (H.wave a m ⟨x, hx⟩) i)) →
-      ‖S (n * τ) x - ((r.apply ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
+      ‖S (n * τ) x - ((rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
         ‖(v : Total W a m) - x‖ + C * (1 + n * τ) * L * J.meshSize h ^ J.ord s +
           K * (n * τ) * τ ^ p * ‖(F.Lh a m h ^ (p + 1)) v‖
 
@@ -302,9 +302,9 @@ structure Verdict₀ : Prop where
         Tendsto (fun h => S.readError₀ h σ u p (σh h) (uh h) (ph h)) S.l (𝓝 0)) :
     ∃ U : ℝ → Total W a m →L[𝕜] Total W a m,
       (∀ x ∈ (sq (H.wave a m)).domain, ∀ T,
-        IsStrongSolution (sq (H.wave a m)) (Icc 0 T) fun t => U t x) ∧
+        IsStrongSolution (sq (H.wave a m)).graph (Icc 0 T) fun t => U t x) ∧
       (∀ x ∈ (sq (H.wave a m)).domain, ∀ T (y : ℝ → Total W a m), y 0 = x →
-        IsStrongSolution (sq (H.wave a m)) (Icc 0 T) y → EqOn y (fun t => U t x) (Icc 0 T)) ∧
+        IsStrongSolution (sq (H.wave a m)).graph (Icc 0 T) y → EqOn y (fun t => U t x) (Icc 0 T)) ∧
       (∀ x, U 0 x = x) ∧ (∀ x t, 0 ≤ t → ‖U t x‖ ≤ ‖x‖) ∧
       ∀ (x : Total W a m) (v : ∀ h, S.X h), Tendsto (fun h => S.incl h (v h)) S.l (𝓝 x) →
         ∀ T, TendstoUniformlyOn (fun h (t : ℝ) => S.incl h (semiflow

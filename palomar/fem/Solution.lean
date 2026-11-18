@@ -74,7 +74,7 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) :
     ∃ (H : HilbertComplex ℝ (L2Form Ω)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ),
       (∀ k, H.d k (k + 1) = dMax Ω k) ∧ F.l = atTop ∧
-      (∀ N k, ((F.V N).V k : Set (L2Form Ω k)) = femSpace Ω (M N) S k) ∧
+      (∀ N k, ((F.V N).V k : Set (L2Form Ω k)) = femSpace Ω (M N) S ∅ k) ∧
       (∃ C : ℝ, ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ C ∧
         (∀ x, P x ∈ (F.V N).V i) ∧
           ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i)) ∧
@@ -127,7 +127,7 @@ theorem femMin [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) :
     ∃ (H : HilbertComplex ℝ (L2Form Ω)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ),
       (∀ k, H.d k (k + 1) = dMin Ω k) ∧ F.l = atTop ∧
-      (∀ N k, ((F.V N).V k : Set (L2Form Ω k)) = femSpaceMin Ω (M N) S k) ∧
+      (∀ N k, ((F.V N).V k : Set (L2Form Ω k)) = femSpace Ω (M N) S (M N).boundaryFacets k) ∧
       (∃ C : ℝ, ∀ N i, ∃ P : L2Form Ω i →L[ℝ] L2Form Ω i, ‖P‖ ≤ C ∧
         (∀ x, P x ∈ (F.V N).V i) ∧
           ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form Ω i)) ∧
@@ -246,7 +246,7 @@ the mesh to the cube) are the challenge's. -/
 theorem maximalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.SimplicialMesh n)
     {Ω : Set (Fin n → ℝ)} (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω) (k : ℤ) :
     (SetLike.coe (((deRham ℝ n).maximalSubcomplexOfEq h hm hΩ (S.toFeec.subcomplex m hm)).V k) :
-      Set (L2Form Ω k)) = femSpace Ω (SimplicialMesh.ofFeec m) S k := by
+      Set (L2Form Ω k)) = femSpace Ω (SimplicialMesh.ofFeec m) S ∅ k := by
   obtain ⟨T, d, h1, h2, h3⟩ := m
   subst h
   ext u
@@ -254,7 +254,7 @@ theorem maximalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.Simplici
 
 theorem poly_V_eq [NeZero n] (S : PolySeq) (N : ℕ) (k : ℤ) :
     (SetLike.coe ((Feec.Models.Cube.FEM.poly n S.toFeec N).V k) : Set (L2Form (cube n) k)) =
-      femSpace (cube n) (SimplicialMesh.ofFeec (Feec.Models.Cube.FEM.mesh n N)) S k :=
+      femSpace (cube n) (SimplicialMesh.ofFeec (Feec.Models.Cube.FEM.mesh n N)) S ∅ k :=
   maximalSubcomplexOfEq_V S _ _ _ _ k
 
 theorem meshSize_cube [NeZero n] (N : ℕ) :
@@ -270,7 +270,7 @@ theorem exists_infDist_le_of_isSobolevForm [NeZero n] (S : PolySeq) (s : ℕ) (j
       (∀ k : ℕ, (k : ℤ) = j → polySpace n s k ≤ S.toFeec.space n k) →
       IsSobolevForm (cube n) (s + 1) j L x →
       Metric.infDist x (femSpace (cube n) (SimplicialMesh.ofFeec (Feec.Models.Cube.FEM.mesh n N))
-        S j) ≤ c * (L * meshSize (SimplicialMesh.ofFeec (Feec.Models.Cube.FEM.mesh n N)) ^
+        S ∅ j) ≤ c * (L * meshSize (SimplicialMesh.ofFeec (Feec.Models.Cube.FEM.mesh n N)) ^
           ((s : ℝ) + 1)) := by
   rcases lt_or_ge j 0 with hj | hj
   · refine ⟨0, le_rfl, fun N L x _ _ _ => ?_⟩
@@ -323,11 +323,10 @@ theorem LinearPMap.apply_of_eq {E F : Type*} [AddCommGroup E] [Module ℝ E] [Ad
   subst h; rfl
 
 theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cube n) M ∧
-    (∀ N, ∀ T ∈ (M N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
-      T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))) ∧
-    ∀ S : PolySeq, ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ)
-      (J : F.Jackson ℕ), (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
-      (∀ N k, ((F.V N).V k : Set (L2Form (cube n) k)) = femSpace (cube n) (M N) S k) ∧
+    IsFreudenthal M ∧ ∀ S : PolySeq, ∃ (H : HilbertComplex ℝ (L2Form (cube n)))
+      (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ), (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧
+      F.l = atTop ∧
+      (∀ N k, ((F.V N).V k : Set (L2Form (cube n) k)) = femSpace (cube n) (M N) S ∅ k) ∧
       (∃ C : ℝ, ∀ N i, ∃ P : L2Form (cube n) i →L[ℝ] L2Form (cube n) i, ‖P‖ ≤ C ∧
         (∀ x, P x ∈ (F.V N).V i) ∧
           ∀ x : (H.d i (i + 1)).domain, P x = ((F.π N).π i x : L2Form (cube n) i)) ∧
@@ -440,17 +439,17 @@ theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cu
 
 theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ → SimplicialMesh 3}
     (hM : IsMeshFamily Ω M) (S : PolySeq) :
-    (∀ N, proxy0 '' femSpace Ω (M N) S 0 ⊆ (grad Ω).domain ∧
-      proxy1 '' femSpace Ω (M N) S 1 ⊆ (curl Ω).domain ∧
-      proxy2 '' femSpace Ω (M N) S 2 ⊆ (div Ω).domain) ∧
-    (∀ N T σh₀ Eh₀ Bh₀, σh₀ ∈ proxy0 '' femSpace Ω (M N) S 0 →
-      Eh₀ ∈ proxy1 '' femSpace Ω (M N) S 1 → Bh₀ ∈ proxy2 '' femSpace Ω (M N) S 2 →
+    (∀ N, proxy0 '' femSpace Ω (M N) S ∅ 0 ⊆ (grad Ω).domain ∧
+      proxy1 '' femSpace Ω (M N) S ∅ 1 ⊆ (curl Ω).domain ∧
+      proxy2 '' femSpace Ω (M N) S ∅ 2 ⊆ (div Ω).domain) ∧
+    (∀ N T σh₀ Eh₀ Bh₀, σh₀ ∈ proxy0 '' femSpace Ω (M N) S ∅ 0 →
+      Eh₀ ∈ proxy1 '' femSpace Ω (M N) S ∅ 1 → Bh₀ ∈ proxy2 '' femSpace Ω (M N) S ∅ 2 →
       ∃ σh Eh Bh, σh 0 = σh₀ ∧ Eh 0 = Eh₀ ∧ Bh 0 = Bh₀ ∧
-        IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0) (proxy1 '' femSpace Ω (M N) S 1)
-          (proxy2 '' femSpace Ω (M N) S 2) T σh Eh Bh ∧
+        IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S ∅ 0) (proxy1 '' femSpace Ω (M N) S ∅ 1)
+          (proxy2 '' femSpace Ω (M N) S ∅ 2) T σh Eh Bh ∧
         ∀ σ₁ E₁ B₁, σ₁ 0 = σh₀ → E₁ 0 = Eh₀ → B₁ 0 = Bh₀ →
-          IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0) (proxy1 '' femSpace Ω (M N) S 1)
-            (proxy2 '' femSpace Ω (M N) S 2) T σ₁ E₁ B₁ →
+          IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S ∅ 0) (proxy1 '' femSpace Ω (M N) S ∅ 1)
+            (proxy2 '' femSpace Ω (M N) S ∅ 2) T σ₁ E₁ B₁ →
           ∀ t ∈ Icc 0 T, σ₁ t = σh t ∧ E₁ t = Eh t ∧ B₁ t = Bh t) ∧
     ∀ σ₀ E₀ B₀, σ₀ ∈ (grad Ω).domain → E₀ ∈ (curl Ω).domain → E₀ ∈ (grad Ω)†.domain →
       B₀ ∈ (curl Ω)†.domain → ∀ T, ∃ σ E B, σ 0 = σ₀ ∧ E 0 = E₀ ∧ B 0 = B₀ ∧
@@ -461,16 +460,16 @@ theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ 
         (σ₀ = 0 → (E₀, 0) ∈ (grad Ω)†.graph → (B₀, 0) ∈ (div Ω).graph → ∀ t ∈ Icc 0 T,
           σ t = 0 ∧ (E t, 0) ∈ (grad Ω)†.graph ∧ (B t, 0) ∈ (div Ω).graph) ∧
         (∀ (σh : ℕ → ℝ → L2Field Ω (Fin 1)) (Eh Bh : ℕ → ℝ → L2Field Ω (Fin 3)),
-          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0)
-            (proxy1 '' femSpace Ω (M N) S 1) (proxy2 '' femSpace Ω (M N) S 2) T
+          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S ∅ 0)
+            (proxy1 '' femSpace Ω (M N) S ∅ 1) (proxy2 '' femSpace Ω (M N) S ∅ 2) T
             (σh N) (Eh N) (Bh N)) →
           Tendsto (fun N => σh N 0) atTop (𝓝 σ₀) → Tendsto (fun N => Eh N 0) atTop (𝓝 E₀) →
           Tendsto (fun N => Bh N 0) atTop (𝓝 B₀) →
           TendstoUniformlyOn σh σ atTop (Icc 0 T) ∧ TendstoUniformlyOn Eh E atTop (Icc 0 T) ∧
             TendstoUniformlyOn Bh B atTop (Icc 0 T)) ∧
         ∃ (σh : ℕ → ℝ → L2Field Ω (Fin 1)) (Eh Bh : ℕ → ℝ → L2Field Ω (Fin 3)),
-          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S 0)
-            (proxy1 '' femSpace Ω (M N) S 1) (proxy2 '' femSpace Ω (M N) S 2) T
+          (∀ N, IsMaxwellGalerkin Ω (proxy0 '' femSpace Ω (M N) S ∅ 0)
+            (proxy1 '' femSpace Ω (M N) S ∅ 1) (proxy2 '' femSpace Ω (M N) S ∅ 2) T
             (σh N) (Eh N) (Bh N)) ∧
           Tendsto (fun N => σh N 0) atTop (𝓝 σ₀) ∧ Tendsto (fun N => Eh N 0) atTop (𝓝 E₀) ∧
           Tendsto (fun N => Bh N 0) atTop (𝓝 B₀) := by
@@ -479,11 +478,11 @@ theorem maxwell {Ω : Set (Fin 3 → ℝ)} (hΩ : IsStarShapedBall Ω) {M : ℕ 
     (meshFamilyOf hΩ hM).polyFamily S.toFeec
   let G := vFamily hO F
   have V := Feec.Instances.Maxwell.maxwellFEEC G 0
-  have hA₀ : ∀ N u, u ∈ proxy0 '' femSpace Ω (M N) S 0 ↔ u ∈ (G.V N).V 0 := fun N =>
+  have hA₀ : ∀ N u, u ∈ proxy0 '' femSpace Ω (M N) S ∅ 0 ↔ u ∈ (G.V N).V 0 := fun N =>
     mem_proxy0_iff hO F N fun w => (mem_V_iff S (M N) Ω (hM.1 N) w).symm
-  have hA₁ : ∀ N u, u ∈ proxy1 '' femSpace Ω (M N) S 1 ↔ u ∈ (G.V N).V 1 := fun N =>
+  have hA₁ : ∀ N u, u ∈ proxy1 '' femSpace Ω (M N) S ∅ 1 ↔ u ∈ (G.V N).V 1 := fun N =>
     mem_proxy1_iff hO F N fun w => (mem_V_iff S (M N) Ω (hM.1 N) w).symm
-  have hA₂ : ∀ N u, u ∈ proxy2 '' femSpace Ω (M N) S 2 ↔ u ∈ (G.V N).V 2 := fun N =>
+  have hA₂ : ∀ N u, u ∈ proxy2 '' femSpace Ω (M N) S ∅ 2 ↔ u ∈ (G.V N).V 2 := fun N =>
     mem_proxy2_iff hO F N fun w => (mem_V_iff S (M N) Ω (hM.1 N) w).symm
   refine ⟨fun N => ⟨fun u hu => (mem_grad_domain hO).2 ((G.V N).le_domain 0 1 ((hA₀ N u).1 hu)),
     fun u hu => (mem_curl_domain hO).2 ((G.V N).le_domain 1 2 ((hA₁ N u).1 hu)),

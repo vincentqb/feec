@@ -9,8 +9,10 @@ public import Solution.Trace
 
 On a mesh `M` of `Ω`, the glued spaces `Vₕᵏ`, `V̊ₕᵏ` of the element family
 `Feec.FiniteElement.polyElement n S` of an admissible sequence (piecewise fields whose degrees of
-freedom agree on shared faces, resp. also vanish on boundary faces) are the spaces `femSpace`,
-`femSpaceMin` of the challenge (`mem_V_iff`, `mem_V₀_iff`): degrees of freedom agree on a face
+freedom agree on shared faces, resp. also vanish on boundary faces) are the spaces `femSpace`
+of the challenge with `Γ = ∅`, resp. `Γ` the boundary facets (`mem_V_iff`, `mem_V₀_iff`; these are
+the former `femSpace` and `femSpaceMin`: `femSpace_empty`,
+`SimplicialMesh.mem_boundaryFacets_iff`): degrees of freedom agree on a face
 iff the tangential traces do (`Feec.FiniteElement.PolySeq.dof_congr` and trace determination on
 faces of every dimension, `Feec.FiniteElement.PolySeq.tangentialTraceEq_of_dof_eq_face`), and the
 glued field is the element field almost everywhere on each simplex (the frontiers of simplices are
@@ -34,6 +36,22 @@ namespace TimeStepping
 open Feec.Domain Feec.FiniteElement Feec.ExteriorFibre
 
 variable {n : ℕ}
+
+/-- **With no facet in `Γ`, `femSpace` is the space of finite element pieces** (no boundary
+condition: the former `femSpace`). -/
+theorem femSpace_empty (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq) (k : ℤ) :
+    femSpace Ω M S ∅ k = {u | ∃ p, IsFemPieces Ω M S k u p} :=
+  Set.ext fun _ => ⟨fun ⟨p, hp, _⟩ => ⟨p, hp⟩,
+    fun ⟨p, hp⟩ => ⟨p, hp, fun _ _ _ _ _ h => absurd h (Set.notMem_empty _)⟩⟩
+
+/-- **A facet of a simplex `T` of the mesh is a boundary facet iff `T` is the only simplex
+containing it** (the condition of the former `femSpaceMin`). -/
+theorem SimplicialMesh.mem_boundaryFacets_iff {M : SimplicialMesh n}
+    {T : Affine.Simplex ℝ (Fin n → ℝ) n} (hT : T ∈ M.simplices) {F : Finset (Fin n → ℝ)}
+    (hFT : F ⊆ vertexSet T) :
+    F ∈ M.boundaryFacets ↔ F.card = n ∧ ∀ T' ∈ M.simplices, F ⊆ vertexSet T' → T' = T :=
+  ⟨fun ⟨hF, _, _, hu⟩ => ⟨hF, fun T' hT' hFT' => (hu T' ⟨hT', hFT'⟩).trans (hu T ⟨hT, hFT⟩).symm⟩,
+    fun ⟨hF, hu⟩ => ⟨hF, T, ⟨hT, hFT⟩, fun T' h => hu T' h.1 h.2⟩⟩
 
 /-- Almost every point of a simplex lies in its interior. -/
 theorem ae_mem_interior (Ω : Set (Fin n → ℝ)) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
@@ -158,7 +176,8 @@ theorem isFemPieces_glue {k : ℤ}
 omit [NeZero n] in
 /-- **The glued space `Vₕᵏ` is the finite element space of the challenge.** -/
 theorem mem_V_iff {k : ℤ} (u : L2Form Ω k) :
-    u ∈ (polyElement n S.toFeec).V (M.toFeec Ω hdom) k ↔ u ∈ femSpace Ω M S k := by
+    u ∈ (polyElement n S.toFeec).V (M.toFeec Ω hdom) k ↔ u ∈ femSpace Ω M S ∅ k := by
+  rw [femSpace_empty]
   constructor
   · rintro ⟨v, rfl⟩
     exact ⟨_, isFemPieces_glue S M Ω hdom v⟩
@@ -196,7 +215,8 @@ theorem eq_of_isBoundaryFacet {F : Finset (Fin n → ℝ)} (hF : (M.toFeec Ω hd
 omit [NeZero n] in
 /-- **The glued space `V̊ₕᵏ` is the finite element space with vanishing boundary traces.** -/
 theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
-    u ∈ (polyElement n S.toFeec).V₀ (M.toFeec Ω hdom) k ↔ u ∈ femSpaceMin Ω M S k := by
+    u ∈ (polyElement n S.toFeec).V₀ (M.toFeec Ω hdom) k ↔
+      u ∈ femSpace Ω M S M.boundaryFacets k := by
   constructor
   · rintro ⟨v, rfl⟩
     set w : (polyElement n S.toFeec).Piecewise (M.toFeec Ω hdom) k.toNat := v.1 with hw
@@ -204,7 +224,8 @@ theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
       (polyElement n S.toFeec).globalSpace₀_le (M.toFeec Ω hdom) k.toNat v.2
     have hpieces := isFemPieces_glue S M Ω hdom ⟨w, hv1⟩
     simp only [LinearMap.coe_comp, Function.comp_apply, Submodule.coe_subtype]
-    refine ⟨_, hpieces, fun T hT F hFT hF hu x hx => ?_⟩
+    refine ⟨_, hpieces, fun T hT F hFT hF hB x hx => ?_⟩
+    have hu := ((SimplicialMesh.mem_boundaryFacets_iff hT hFT).1 hB).2
     rw [LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT, traceEq_iff]
     exact (polyElement n S.toFeec).tangentialTraceEq_zero_of_mem_globalSpace₀ (M.toFeec Ω hdom)
       v.2 (isBoundaryFacet_of M Ω hdom hT hFT hF hu) ⟨T, hT⟩
@@ -219,7 +240,8 @@ theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
       (w := ⟨p T, S.toFeec.space_le_contForms n k.toNat
         ((mem_space_iff S (T := T) _ _).2 (hp.1 T T.2))⟩)
       (η := 0) fun x hx => by
-      have := hb T T.2 F hFT' hF.1.1 (eq_of_isBoundaryFacet M Ω hdom hF T.2 hFT') x
+      have := hb T T.2 F hFT' hF.1.1 ((SimplicialMesh.mem_boundaryFacets_iff T.2 hFT').2
+        ⟨hF.1.1, eq_of_isBoundaryFacet M Ω hdom hF T.2 hFT'⟩) x
         (convexHull_mono (Finset.coe_subset.2 hg) hx)
       exact ((traceEq_iff _ _ _ _).1 this).mono hg
     exact h.trans (map_zero _)

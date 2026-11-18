@@ -81,17 +81,18 @@ theorem rowInner_ofD (a b : DState (whitneyRow N)) : rowInner (ofD N a) (ofD N b
   rw [ofD, ofD, inner_toRow, inner_dEmb]
 
 theorem mem_whitney (k : ℤ) {x : L2Form (cube 3) k} :
-    x ∈ (whitney 3 N).V k ↔ x ∈ femSpace (cube 3) (cubeMesh N) topSeq k := by
+    x ∈ (whitney 3 N).V k ↔ x ∈ femSpace (cube 3) (cubeMesh N) topSeq ∅ k := by
   rw [← whitney_V_eq N k]; rfl
 
 theorem mem_whitneyMin (k : ℤ) {x : L2Form (cube 3) k} :
-    x ∈ (whitneyMin 3 N).V k ↔ x ∈ femSpaceMin (cube 3) (cubeMesh N) topSeq k := by
+    x ∈ (whitneyMin 3 N).V k ↔
+      x ∈ femSpace (cube 3) (cubeMesh N) topSeq (cubeMesh N).boundaryFacets k := by
   rw [← whitneyMin_V_eq N k]; rfl
 
 theorem rowMem_iff (M : SimplicialMesh 3) (b : Bool) (x : Row) : RowMem M b x ↔
-    x.1 ∈ (if b then femSpaceMin (cube 3) M topSeq else femSpace (cube 3) M topSeq) 0 ∧
-      x.2.1 ∈ (if b then femSpaceMin (cube 3) M topSeq else femSpace (cube 3) M topSeq) 1 ∧
-      x.2.2 ∈ (if b then femSpaceMin (cube 3) M topSeq else femSpace (cube 3) M topSeq) 2 :=
+    x.1 ∈ femSpace (cube 3) M topSeq (if b then M.boundaryFacets else ∅) 0 ∧
+      x.2.1 ∈ femSpace (cube 3) M topSeq (if b then M.boundaryFacets else ∅) 1 ∧
+      x.2.2 ∈ femSpace (cube 3) M topSeq (if b then M.boundaryFacets else ∅) 2 :=
   Iff.rfl
 
 /-- **The challenge's `Vₕ` is the image of the Whitney row.** -/

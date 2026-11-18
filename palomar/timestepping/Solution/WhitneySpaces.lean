@@ -9,8 +9,9 @@ public import Feec.Models.Cube.InhomogeneousError
 The Whitney sequence `topSeq` (`P₁Λ⁰ → P₁⁻Λ¹ → ⋯`) has the spaces of the trimmed sequence
 `P₁⁻Λ` (`P₁⁻Λ⁰ = P₁Λ⁰`, `Feec.Koszul.polyFormMinus_zero_right`), whose element is equivalent to the
 Whitney element (`Feec.FiniteElement.whitneyElement_equivalent_trimmed`). So on the Freudenthal
-meshes of the cube `femSpace` and `femSpaceMin` of `topSeq` are the spaces of `Feec`'s Whitney
-complexes `Feec.Models.Cube.FEM.whitney` and `whitneyMin` (`whitney_V_eq`, `whitneyMin_V_eq`).
+meshes of the cube the spaces `femSpace` of `topSeq` without boundary condition and with
+vanishing traces on the boundary facets are the spaces of `Feec`'s Whitney complexes
+`Feec.Models.Cube.FEM.whitney` and `whitneyMin` (`whitney_V_eq`, `whitneyMin_V_eq`).
 
 ## References
 
@@ -45,7 +46,7 @@ theorem whitneySeq_toFeec :
 
 theorem topSeq_space (k : ℕ) : topSeq.space n k = whitneySeq.space n k := by
   rcases k with _ | k
-  · change (polyForm (n := n) 1 0).map evalForm = (polyFormMinus (n := n) 1 0).map evalForm
+  · change (polyForm ℝ n 1 0).map evalForm = (polyFormMinus ℝ n 1 0).map evalForm
     rw [polyForm_eq, polyFormMinus_eq, Feec.Koszul.polyFormMinus_zero_right le_rfl]
   · rfl
 
@@ -55,13 +56,9 @@ theorem isFemPieces_topSeq {Ω : Set (Fin n → ℝ)} {M : SimplicialMesh n} {k 
   unfold IsFemPieces
   rw [topSeq_space]
 
-theorem femSpace_topSeq (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (k : ℤ) :
-    femSpace Ω M topSeq k = femSpace Ω M whitneySeq k := by
-  ext u
-  exact exists_congr fun p => isFemPieces_topSeq
-
-theorem femSpaceMin_topSeq (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (k : ℤ) :
-    femSpaceMin Ω M topSeq k = femSpaceMin Ω M whitneySeq k := by
+theorem femSpace_topSeq (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n)
+    (Γ : Set (Finset (Fin n → ℝ))) (k : ℤ) :
+    femSpace Ω M topSeq Γ k = femSpace Ω M whitneySeq Γ k := by
   ext u
   exact exists_congr fun p => and_congr_left' isFemPieces_topSeq
 
@@ -69,7 +66,7 @@ theorem femSpaceMin_topSeq (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (k 
 theorem maximalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.SimplicialMesh n)
     {Ω : Set (Fin n → ℝ)} (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω) (k : ℤ) :
     (SetLike.coe (((deRham ℝ n).maximalSubcomplexOfEq h hm hΩ (S.toFeec.subcomplex m hm)).V k) :
-      Set (L2Form Ω k)) = femSpace Ω (SimplicialMesh.ofFeec m) S k := by
+      Set (L2Form Ω k)) = femSpace Ω (SimplicialMesh.ofFeec m) S ∅ k := by
   obtain ⟨T, d, h1, h2, h3⟩ := m
   subst h
   ext u
@@ -78,7 +75,7 @@ theorem maximalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.Simplici
 /-- **The Whitney spaces `Vₕᵏ` of the Freudenthal meshes are the challenge's.** -/
 theorem whitney_V_eq (N : ℕ) (k : ℤ) :
     (SetLike.coe ((whitney 3 N).V k) : Set (L2Form (cube 3) k)) =
-      femSpace (cube 3) (cubeMesh N) topSeq k := by
+      femSpace (cube 3) (cubeMesh N) topSeq ∅ k := by
   have h := maximalSubcomplexOfEq_V whitneySeq (mesh 3 N) (mesh_domain 3 N)
     (isOpen_mesh_domain 3 N) (isOpen_cubeDomain 3) k
   have e : whitney 3 N = (deRham ℝ 3).maximalSubcomplexOfEq (mesh_domain 3 N)
@@ -93,7 +90,7 @@ theorem whitney_V_eq (N : ℕ) (k : ℤ) :
 /-- **The Whitney spaces `V̊ₕᵏ` with vanishing boundary DOFs are the challenge's.** -/
 theorem whitneyMin_V_eq (N : ℕ) (k : ℤ) :
     (SetLike.coe ((whitneyMin 3 N).V k) : Set (L2Form (cube 3) k)) =
-      femSpaceMin (cube 3) (cubeMesh N) topSeq k := by
+      femSpace (cube 3) (cubeMesh N) topSeq (cubeMesh N).boundaryFacets k := by
   have h := minimalSubcomplexOfEq_V whitneySeq (mesh 3 N) (mesh_domain 3 N)
     (isOpen_mesh_domain 3 N) (isOpen_cubeDomain 3) (center 3) (strictStar_mesh 3 N) k
   have e : whitneyMin 3 N = (deRham ℝ 3).minimalSubcomplexOfEq (mesh_domain 3 N)
@@ -103,7 +100,7 @@ theorem whitneyMin_V_eq (N : ℕ) (k : ℤ) :
     rw [whitneySeq_toFeec]
     unfold whitneyMin whitneySubcomplexMin Feec.FiniteElement.PolySeq.subcomplexMin
     rw [whitneyElement_equivalent_trimmed.subcomplexMin_eq]
-  rw [femSpaceMin_topSeq, e]
+  rw [femSpace_topSeq, e]
   exact h
 
 end TimeStepping

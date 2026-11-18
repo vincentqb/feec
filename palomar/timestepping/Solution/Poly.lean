@@ -25,23 +25,23 @@ open MvPolynomial
 
 namespace TimeStepping
 
-variable {n : ℕ}
+variable {n : ℕ} {K : Type*} [Field K]
 
-theorem mem_polyForm {r k : ℕ} {p : PolyForm n} :
-    p ∈ polyForm r k ↔ ∀ s, (s.card = k → p s ∈ restrictTotalDegree (Fin n) ℝ r) ∧
+theorem mem_polyForm {r k : ℕ} {p : PolyForm K n} :
+    p ∈ polyForm K n r k ↔ ∀ s, (s.card = k → p s ∈ restrictTotalDegree (Fin n) K r) ∧
       (s.card ≠ k → p s = 0) := by
   simp only [polyForm, Submodule.mem_pi, Set.mem_univ, true_implies]
   refine forall_congr' fun s => ?_
   by_cases hs : s.card = k <;> simp [hs]
 
-theorem mem_homForm {r k : ℕ} {p : PolyForm n} :
-    p ∈ homForm r k ↔ ∀ s, (s.card = k → p s ∈ homogeneousSubmodule (Fin n) ℝ r) ∧
+theorem mem_homForm {r k : ℕ} {p : PolyForm K n} :
+    p ∈ homForm K n r k ↔ ∀ s, (s.card = k → p s ∈ homogeneousSubmodule (Fin n) K r) ∧
       (s.card ≠ k → p s = 0) := by
   simp only [homForm, Submodule.mem_pi, Set.mem_univ, true_implies]
   refine forall_congr' fun s => ?_
   by_cases hs : s.card = k <;> simp [hs]
 
-theorem polyForm_eq (r k : ℕ) : polyForm (n := n) r k = Feec.Koszul.polyForm ℝ (Fin n) r k := by
+theorem polyForm_eq (r k : ℕ) : polyForm K n r k = Feec.Koszul.polyForm K (Fin n) r k := by
   ext p
   rw [mem_polyForm]
   change _ ↔ Feec.ExteriorFibre.IsDeg k p ∧ ∀ s, (p s).totalDegree ≤ r
@@ -54,7 +54,7 @@ theorem polyForm_eq (r k : ℕ) : polyForm (n := n) r k = Feec.Koszul.polyForm �
   · rintro ⟨h1, h2⟩ s
     exact ⟨fun _ => (mem_restrictTotalDegree _ _ _).2 (h2 s), h1 s⟩
 
-theorem homForm_eq (r k : ℕ) : homForm (n := n) r k = Feec.Koszul.homForm ℝ (Fin n) r k := by
+theorem homForm_eq (r k : ℕ) : homForm K n r k = Feec.Koszul.homForm K (Fin n) r k := by
   ext p
   rw [mem_homForm]
   change _ ↔ Feec.ExteriorFibre.IsDeg k p ∧ Feec.Koszul.IsHomogeneousForm r p
@@ -67,7 +67,7 @@ theorem homForm_eq (r k : ℕ) : homForm (n := n) r k = Feec.Koszul.homForm ℝ 
   · rintro ⟨h1, h2⟩ s
     exact ⟨fun _ => (mem_homogeneousSubmodule _ _).2 (h2 s), h1 s⟩
 
-theorem koszul_eq : koszul (n := n) = Feec.Koszul.koszulₗ ℝ (Fin n) := by
+theorem koszul_eq : koszul K n = Feec.Koszul.koszulₗ K (Fin n) := by
   refine LinearMap.ext fun p => funext fun s => ?_
   rw [koszul, LinearMap.pi_apply, LinearMap.sum_apply, Feec.Koszul.koszulₗ_apply,
     Feec.Koszul.koszul_apply]
@@ -76,11 +76,11 @@ theorem koszul_eq : koszul (n := n) = Feec.Koszul.koszulₗ ℝ (Fin n) := by
     sgn, Feec.ExteriorFibre.sgn, smul_eq_C_mul, map_pow, map_neg, map_one, mul_assoc]
 
 theorem polyFormMinus_eq (r k : ℕ) :
-    polyFormMinus (n := n) r k = Feec.Koszul.polyFormMinus ℝ (Fin n) r k := by
+    polyFormMinus K n r k = Feec.Koszul.polyFormMinus K (Fin n) r k := by
   cases r with
   | zero => rfl
   | succ r =>
-    change polyForm r k ⊔ (homForm r (k + 1)).map koszul = _
+    change polyForm K n r k ⊔ (homForm K n r (k + 1)).map (koszul K n) = _
     rw [polyForm_eq, homForm_eq, koszul_eq]
     rfl
 

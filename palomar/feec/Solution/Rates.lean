@@ -200,10 +200,10 @@ theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated₀ J where
           (1 + max c 0) * (2 * |J.B s j|)) * (L * J.meshSize h ^ J.ord s)) :=
         mul_le_mul_of_nonneg_left key (le_max_right C 0)
       _ = _ := by ring
-  wave a m ha r hr p hp s := by
+  wave a m ha P Q hr p hp s := by
     have : ∀ i, IsScalarTower ℝ 𝕜 (W i) := fun _ => RCLike.isScalarTower_of_normedSpace
     obtain ⟨S, hS⟩ := F.waveVerdict a m (F.approximates_window a m ha.1 ha.2)
-    obtain ⟨K, hK⟩ := hS.evolution.rational_temporal r hr hp
+    obtain ⟨K, hK⟩ := hS.evolution.rational_temporal P Q hr hp
     refine ⟨S, hS, 2 * (1 + 4 * √3) * ((1 + m) * ∑ i : Fin m, |J.B s (a + (i : ℕ))|), K,
       fun x hx hx2 L hL h τ hτ n v hreg => ?_⟩
     set M := (1 + m) * (∑ i : Fin m, |J.B s (a + (i : ℕ))|) * (L * J.meshSize h ^ J.ord s)
@@ -214,9 +214,9 @@ theorem rated {ρ : Type*} (J : F.Jackson ρ) : F.Rated₀ J where
       · rw [hy]; exact (hreg t ht i).1
       · rw [hy]; exact (hreg t ht i).2
     have e2 := hK h hτ n v
-    have e3 : ‖S (n * τ) x - ((r.apply ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
+    have e3 : ‖S (n * τ) x - ((rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v : Total W a m)‖ ≤
         ‖S (n * τ) x - (semiflow (F.Lh a m h) (n * τ) v : Total W a m)‖ +
-          ‖semiflow (F.Lh a m h) (n * τ) v - (r.apply ((τ : 𝕜) • F.Lh a m h) ^ n) v‖ := by
+          ‖semiflow (F.Lh a m h) (n * τ) v - (rationalApply P Q ((τ : 𝕜) • F.Lh a m h) ^ n) v‖ := by
       rw [← Submodule.norm_coe, Submodule.coe_sub]
       exact norm_sub_le_norm_sub_add_norm_sub _ _ _
     have e4 : 2 * (1 + 4 * √3) * (1 + n * τ) * M = 2 * (1 + 4 * √3) *

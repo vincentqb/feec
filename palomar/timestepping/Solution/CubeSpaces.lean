@@ -9,7 +9,8 @@ public import Feec.Models.Parallelepiped.StarShaped
 The Freudenthal meshes of `Feec.Models.Cube.FEM.mesh` are a mesh family of the challenge
 (`isMeshFamily_cube`, from `Feec.Models.StarShaped.CubeWitness.meshFamily`) named by their
 vertices (`points_cube`), and the finite element spaces with vanishing boundary DOFs of a `Feec`
-mesh are the challenge's `femSpaceMin` (`minimalSubcomplexOfEq_V`, from `mem_V₀_iff`).
+mesh are the challenge's `femSpace` with vanishing traces on the boundary facets
+(`minimalSubcomplexOfEq_V`, from `mem_V₀_iff`).
 
 ## References
 
@@ -78,7 +79,7 @@ theorem minimalSubcomplexOfEq_V (S : PolySeq) (m : Feec.Mesh.SimplicialMesh 3)
     (k : ℤ) :
     (SetLike.coe (((deRham ℝ 3).minimalSubcomplexOfEq h hm hΩ
       (S.toFeec.subcomplexMin m hm x₀ hstar)).V k) : Set (L2Form Ω k)) =
-      femSpaceMin Ω (SimplicialMesh.ofFeec m) S k := by
+      femSpace Ω (SimplicialMesh.ofFeec m) S (SimplicialMesh.ofFeec m).boundaryFacets k := by
   obtain ⟨T, d, h1, h2, h3⟩ := m
   subst h
   ext u

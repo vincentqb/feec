@@ -502,7 +502,7 @@ theorem heatVerdict
     (fun x v hv T => V.converges (hZ x) hv T)
     (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>
       (Feec.HilbertComplex.dissipFEEC_fullyDiscrete (F.heatCore hcr' hcP hP' hconv')
-        (F.toHeat.rationalScheme r.toFeec hr hp hp0 τ hτ)).converges_iterates
+        (F.toHeat.rationalScheme r hr hp hp0 τ hτ)).converges_iterates
         (hZ x) hv hτ0 T hε)
 
 end CrimeFamily

@@ -289,7 +289,7 @@ status:
     Formalized and compared: FEEC.feec, FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff, FEEC.crimeFEEC,
     FEEC.crime_nonvacuous, FEEC.feec_cube, FEEC.bggCohomology, FEEC.bggFinrank and
-    FEEC.bggHilbert (Challenge.lean, 999 lines; the definitions were redesigned to fit the limit,
+    FEEC.bggHilbert (Challenge.lean, 998 lines; the definitions were redesigned to fit the limit,
     see review.notes). The weak-symmetry theorems of the former
     palomar/bgg (FEEC.bggWeakSymmetry and its definitions WeakSymmetryData, Discretization) moved
     to palomar/einsteinbianchi, where its finite element instance on the cube (Table 5.1),
@@ -458,7 +458,22 @@ fidelity:
     degree i + 1. (14) Generality beyond the source: the algebraic theorems hold over any ring, on
     Z, for arbitrary S; the hypothesis is weaker than (23): S^i injective only for i < J and onto
     modulo d for i >= J (bounded below for i < J in the Hilbert setting). (15) The equality
-    criterion (27) is stated degreewise, which implies Arnold-Hu's all-degree form.
+    criterion (27) is stated degreewise, which implies Arnold-Hu's all-degree form. (16) Shared
+    vocabulary: the notions this entry shares with the other Palomar entries are copied from the
+    canonical blocks of palomar/shared/vocabulary.lean.txt (HilbertComplex with Subcomplex,
+    CochainProjection, SubcomplexFamily, graphDist, IsGraphBoundedBy, IsGraphBounded, Approximates
+    and Jackson; IsStrongSolution; IsAStable, HasOrder, rationalApply; the differential forms; IsCsForm),
+    and the gate checks them byte for byte. Two of them read differently from the earlier text, with
+    the same meaning. Strong solutions are those of an operator given by its graph, a relation
+    A ⊆ X × X (Mathlib's SetRel), so the evolution verdict states IsStrongSolution A.graph
+    (definitionally the earlier LinearPMap form, Solution: FEEC.isStrongSolution_graph_iff). A
+    rational scheme is a pair (P, Q) of real polynomials, A-stable when Q has no zero and
+    |P/Q| <= 1 on the closed left half-plane ([HairerWanner1996], §IV.3), of order p when
+    P(z)/Q(z) - e^z = O(z^(p+1)) at 0, instead of a structure n/d with deg n <= deg d and no pole in
+    re z <= 0, A-stable on the imaginary axis, of order p when X^(p+1) divides n - d T_p; the
+    Solution proves the two forms equivalent (FEEC.isAStable_iff, the converse by the maximum
+    modulus principle on the unit disc through the Cayley transform w -> (w - 1)/(w + 1);
+    FEEC.hasOrder_iff).
 
 review:
   status: "self-assessed"
@@ -499,7 +514,10 @@ review:
     (Feec.HilbertComplex.Subcomplex.exists_cochainProjection), and no gap in the source's proof is
     claimed. Every merge of the library was gated by a full build (zero warnings), an axiom audit
     (propext, Classical.choice, Quot.sound only), regression snapshots and an independent AI
-    review. No external mathematical review.
+    review. No external mathematical review. Vocabulary pass (2026-11-18): the shared notions are
+    the canonical blocks of palomar/shared/vocabulary.lean.txt (fidelity (16)); the rational
+    schemes are pairs (P, Q) with A-stability on the closed half-plane and the order by O(z^(p+1)),
+    the strong solutions those of a graph, both proved equivalent to the earlier text.
 
 alignment:
   namespace: "FEEC"

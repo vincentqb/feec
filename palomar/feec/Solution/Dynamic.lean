@@ -1,6 +1,7 @@
 module
 
 public import Solution.Bridge
+public import Solution.Rational
 public import Feec.HilbertComplex.Approximation.Crown
 public import Feec.HilbertComplex.Reducing
 public import Feec.Semigroup.DissipativeInvariance
@@ -15,7 +16,7 @@ of `Solution.Bridge`, restricted to the degrees `a, …, a + m - 1`) is a
 the projections in the window are those of `Feec` (`SubcomplexFamily.isGraphBounded_window`; in the
 last degree through the continuous extension of a projection bounded in `W`). This module identifies
 the challenge's window operators, discrete operators and rational schemes
-(`RationalScheme.toFeec`) with those of `Feec`, and turns the verdicts of
+(`IsAStable.scheme`, `Solution.Rational`) with those of `Feec`, and turns the verdicts of
 `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.dissipFEEC_fullyDiscrete` (with
 `Feec.HilbertComplex.DissipFEEC.rationalScheme`), `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC`
 and the conforming rate `Feec.HilbertComplex.ConstrainedFEEC.rate_le` into the conclusions of the
@@ -63,24 +64,29 @@ variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [Complete
   [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] {κ : Type*}
 
 omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
-theorem IsStrongSolution.congr {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u v : ℝ → E}
+theorem IsStrongSolution.congr {A : SetRel E E} {I : Set ℝ} {u v : ℝ → E}
     (hu : IsStrongSolution A I u) (h : EqOn v u I) : IsStrongSolution A I v :=
   ⟨hu.1.congr h, fun t ht => by
     obtain ⟨w, hw, hd⟩ := hu.2 t ht
     exact ⟨w, h ht ▸ hw, hd.congr h (h ht)⟩⟩
 
 omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
+/-- **The strong solutions are those of the earlier challenge** (stated for a `LinearPMap`): for
+the graph of `A`, continuous on `I` with, at every `t ∈ I`, a derivative `v` within `I` and
+`(u t, v) ∈ A.graph`. -/
+theorem isStrongSolution_graph_iff {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u : ℝ → E} :
+    IsStrongSolution A.graph I u ↔
+      ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A.graph ∧ HasDerivWithinAt u v I t :=
+  Iff.rfl
+
+omit [CompleteSpace E] [IsScalarTower ℝ 𝕜 E] in
 theorem isStrongSolution_iff {A : E →ₗ.[𝕜] E} {I : Set ℝ} {u : ℝ → E} :
-    IsStrongSolution A I u ↔ Feec.Evolution.IsStrongSolution A I 0 u := by
+    IsStrongSolution A.graph I u ↔ Feec.Evolution.IsStrongSolution A I 0 u := by
   refine ⟨fun h => ⟨h.1, fun t ht => ?_⟩, fun h => ⟨h.continuousOn, fun t ht => ?_⟩⟩
   · obtain ⟨v, hv, hd⟩ := h.2 t ht
     exact ⟨v, hv, by simpa using hd⟩
   · obtain ⟨v, hv, hd⟩ := h.deriv t ht
     exact ⟨v, hv, by simpa using hd⟩
-
-/-- The rational scheme as a `Feec` rational scheme (the same fields). -/
-def RationalScheme.toFeec (r : RationalScheme) : Feec.TimeStepping.RationalScheme :=
-  ⟨r.num, r.den, r.natDegree_num_le, r.aeval_den_ne_zero⟩
 
 omit [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] in
 theorem isReducing_iff (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] :
@@ -130,11 +136,11 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
     (hconv : ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => ι h (v h)) l (𝓝 x) → ∀ T : ℝ,
       TendstoUniformlyOn (fun h t => ι h ((Feec.C0Group.ofBounded (B h)).S t (v h)))
         (fun t => S' t x) l (Icc 0 T))
-    (hrat : ∀ (r : RationalScheme) (_ : r.toFeec.IsAStable) {p : ℕ} (_ : r.toFeec.HasOrder p)
+    (hrat : ∀ (r : Feec.TimeStepping.RationalScheme) (_ : r.IsAStable) {p : ℕ} (_ : r.HasOrder p)
       (_ : 0 < p) (τ : κ → ℝ) (_ : ∀ h, 0 < τ h), Tendsto τ l (𝓝 0) →
       ∀ (x : E) (v : ∀ h, X h), Tendsto (fun h => ι h (v h)) l (𝓝 x) → ∀ (T ε : ℝ), 0 < ε →
         ∀ᶠ h in l, ∀ n : ℕ, (n : ℝ) * τ h ∈ Icc 0 T →
-          ‖S' (n * τ h) x - ι h ((r.toFeec.apply ((τ h : 𝕜) • B h) ^ n) (v h))‖ < ε) :
+          ‖S' (n * τ h) x - ι h ((r.apply ((τ h : 𝕜) • B h) ^ n) (v h))‖ < ε) :
     EvolutionVerdict A l X ι B S where
   dense := hA.dense_domain
   solution x hx T := (isStrongSolution_iff.2 (hsol ⟨x, hx⟩ T).toIsStrongSolution).congr
@@ -149,14 +155,16 @@ theorem evolutionVerdict_of {A : E →ₗ.[𝕜] E} {l : Filter κ} {X : κ → 
   semidiscrete x v hv T := by
     simpa only [semiflow, Feec.C0Group.ofBounded_S] using
       (hconv x v hv T).congr_right fun t ht => by simp only [hSS' t ht.1]
-  rational r hr p hp hp0 τ hτ hτ0 x v hv T ε hε := by
-    filter_upwards [hrat r hr hp hp0 τ hτ hτ0 x v hv T ε hε] with h hh n hn
-    rw [hSS' _ hn.1]
+  rational P Q hr p hp hp0 τ hτ hτ0 x v hv T ε hε := by
+    filter_upwards [hrat hr.scheme hr.scheme_isAStable (hr.scheme_hasOrder hp) hp0 τ hτ hτ0 x v hv
+      T ε hε] with h hh n hn
+    rw [hSS' _ hn.1, hr.rationalApply_eq]
     exact hh n hn
-  rational_temporal r hr p hp :=
-    ⟨(r.toFeec.remainder p).supNorm + 1 / (p + 1).factorial, fun h τ hτ n w => by
-      rw [norm_sub_rev]
-      exact r.toFeec.norm_apply_pow_sub_exp_le (hB h) hr hp hτ n w⟩
+  rational_temporal P Q hr p hp :=
+    ⟨(hr.scheme.remainder p).supNorm + 1 / (p + 1).factorial, fun h τ hτ n w => by
+      rw [norm_sub_rev, hr.rationalApply_eq]
+      exact hr.scheme.norm_apply_pow_sub_exp_le (hB h) hr.scheme_isAStable (hr.scheme_hasOrder hp)
+        hτ n w⟩
   reducing_iff K _ := by
     rw [isReducing_iff, hA.isReducing_iff]
     refine and_congr (forall_congr' fun t => forall_congr' fun ht => ?_)
@@ -518,7 +526,7 @@ theorem waveVerdict : ∃ S, F.WaveVerdict a m S := by
       (fun x v hv T => V.converges (G.mem_toCore_closure x) hv T)
       (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>
         (Feec.HilbertComplex.dissipFEEC_fullyDiscrete G.toCore
-          (G.toApprox.rationalScheme r.toFeec hr hp hp0 τ hτ)).converges_iterates
+          (G.toApprox.rationalScheme r hr hp hp0 τ hτ)).converges_iterates
           (G.mem_toCore_closure x) hv hτ0 T hε)
   have hadd : ∀ s t, G.toApprox.U (s + t) = G.toApprox.U s ∘L G.toApprox.U t :=
     fun s t => G.toApprox.isSkewAdjoint.group.map_add s t
@@ -561,7 +569,7 @@ theorem heatVerdict (hπ : ∀ i : Fin m, (i : ℕ) + 1 < m → F.IsGraphBounded
     (fun x v hv T => V.converges (hZ x) hv T)
     (fun r hr _ hp hp0 τ hτ hτ0 x v hv T ε hε =>
       (Feec.HilbertComplex.dissipFEEC_fullyDiscrete (G.heatCore hcrw hb)
-        (G.toHeat.rationalScheme r.toFeec hr hp hp0 τ hτ)).converges_iterates
+        (G.toHeat.rationalScheme r hr hp hp0 τ hτ)).converges_iterates
         (hZ x) hv hτ0 T hε)
 
 end HilbertComplex.SubcomplexFamily

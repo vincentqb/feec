@@ -362,9 +362,10 @@ automation:
     (Feec.FiniteElement.p1Grad_eq_vecMul, Feec.FiniteElement.p1Grad_nodalIndicator); earlier, the
     compatible-data estimate behind fdHeat
     (Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible); on 2026-11-18, the iterated
-    derivatives on coordinate vectors as partial derivatives (iteratedFDeriv_succ_apply_single,
-    iteratedFDeriv_apply_single_eq_iterate, FiniteDifference.iteratedFDeriv_apply_pairs) and the
-    converse of the Lumer-Phillips theorem for bounded generators
+    derivatives on coordinate vectors of C^p functions as iterated partial derivatives
+    (iteratedFDeriv_apply_single_eq_foldr, with its pure and paired cases
+    iteratedFDeriv_apply_single_eq_iterate and FiniteDifference.iteratedFDeriv_apply_pairs) and
+    the converse of the Lumer-Phillips theorem for bounded generators
     (Feec.TimeStepping.re_inner_le_zero_of_norm_exp_le_one).
 
 fidelity:
@@ -476,7 +477,7 @@ fidelity:
     of u(0) (u~ = u(0) on the closed cube, odd under the 2n face reflections) of class C^(2m+2),
     with |D^(2m+2) u~(e_(l 0), e_(l 0), ..., e_(l m), e_(l m))| <= B' on R^n for every sequence
     of directions l (only l 0, ..., l m enter), that is the words d^2_(l 0) ... d^2_(l m) u~ of
-    pure second derivatives (Feec.FiniteDifference.iteratedFDeriv_apply_pairs); this is the usual
+    pure second derivatives (FiniteDifference.iteratedFDeriv_apply_pairs); this is the usual
     Fourier-type condition (for n = 1: the even derivatives of u(0) of order <= 2m + 2 vanish at
     both ends), stronger than the vanishing of Delta^j u(0) on the boundary in general. Class
     C^(2m+2) asks one vanishing order more (2m + 2) than the bound needs: a Lipschitz derivative
@@ -517,7 +518,11 @@ review:
     Hilbert one restated for the parallelogram law and contraction semigroups, equivalent),
     TimeStepping.backwardEuler now asserts its resolvent, and TimeStepping.fdHeat states its
     derivatives as iterated derivatives (equivalent under its smoothness hypotheses); no
-    conclusion was weakened. TimeStepping.fdHeat was restated 2026-11-17 after an independent
+    conclusion was weakened (an independent agent review derived the sixteen former statements
+    from the twelve in Lean, a scratch check outside the entry, with Feec's
+    Feec.TimeStepping.norm_exp_le_one for the Hilbert clause of TimeStepping.converges and
+    iteratedFDeriv_apply_single_eq_iterate and FiniteDifference.iteratedFDeriv_apply_pairs for
+    TimeStepping.fdHeat). TimeStepping.fdHeat was restated 2026-11-17 after an independent
     cold audit found that its earlier form (an arbitrary discrete datum v, with the temporal term
     K k tau tau^m ||Delta_h^(m+1) v||) was advertised as O(h^2 + tau^m): it starts from I_h u(0)
     and bounds the temporal term by the compatible initial value. Independent agent editorial

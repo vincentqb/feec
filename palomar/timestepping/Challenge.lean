@@ -290,7 +290,7 @@ levels `nτₕ ∈ [0, T]`, for every `x`, no smoothness of `x` or `vₕ` assume
 conclusion only through `S(nτₕ) x`, the limit of the semidiscrete solutions), for:
 
 * every time scheme `Pₕ` that is power bounded (`‖Pₕⁿ‖ ≤ Mₛ(t)` for `nτₕ ≤ t`) and consistent
-  of order `m ≥ 1` (`‖Pₕ y - e^{τₕLₕ} y‖ ≤ K τₕ^{m+1} ‖Lₕ^{m+1} y‖`);
+  of order `m ≥ 1` (`‖Pₕ y - e^{τₕLₕ} y‖ ≤ K τₕ^{m+1} ‖Lₕ^{m+1} y‖`, `K ≥ 0`);
 * backward Euler `Pₕ = (1 - τₕLₕ)⁻¹`, with no assumption on the scheme (power bounded by
   Hille–Yosida, `backwardEuler`, of order `1`);
 * every A-stable `r = p/q` of order `m ≥ 1`, `Pₕ = r(τₕLₕ)`, when the `Xₕ` are Hilbert spaces
@@ -590,13 +590,13 @@ theorem crankNicolson_isAStable : IsAStable (2 + X) (2 - X) ∧ HasOrder (2 + X)
 
 /-! ### The classical inputs -/
 
-/-- **The Hille–Yosida estimates** ([Pazy1983], §1.5), the input of `backwardEuler` and of the
-resolvent form of `r(τA)`. Let `S` be a strongly continuous semigroup of a complex Banach space
-(real ones are covered by complexification in `Feec`, not here) with `‖S t‖ ≤ M e^{ωt}`,
-generator `A`. Every `z` with `re z > ω` is in the resolvent set of `A`: there is a bounded `R`
-with `R (z x - A x) = x` on `D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and
-`‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. At `z = 1/τ`, `ωτ < 1`, the resolvent `(1 - τA)⁻¹ = z R`
-defines the rational schemes `r(τA)` (`rationalOfResolvent`) and is backward Euler. -/
+/-- **The Hille–Yosida estimates** ([Pazy1983], §1.5), a classical input of the answer. Let `S`
+be a strongly continuous semigroup of a complex Banach space (real ones are covered by
+complexification in `Feec`, not here) with `‖S t‖ ≤ M e^{ωt}`, generator `A`. Every `z` with
+`re z > ω` is in the resolvent set of `A`: there is a bounded `R` with `R (z x - A x) = x` on
+`D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. At
+`z = 1/τ`, `ωτ < 1`, the resolvent `(1 - τA)⁻¹ = z R` defines the rational schemes `r(τA)`
+(`rationalOfResolvent`) and is backward Euler (`backwardEuler`). -/
 theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
     (S : ℝ → E →L[ℂ] E) (hS : IsC0Semigroup S) {M ω : ℝ}
     (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) (z : ℂ) (hz : ω < z.re) :
@@ -605,11 +605,11 @@ theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [Comp
       ∀ m : ℕ, ‖R ^ m‖ ≤ M / (z.re - ω) ^ m := by
   sorry
 
-/-- **Von Neumann's inequality** ([VonNeumann1951]), for rational functions, the input of
-`contractive`. For a contraction `T` of a complex Hilbert space and complex polynomials `p`, `q`
-with `q` free of zeros in the closed unit disc, `q(T)` is invertible and
-`‖p(T) q(T)⁻¹‖ ≤ sup_{|ζ| = 1} |p(ζ)/q(ζ)|` (for `q = 1`, `‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|`).
-Through the Cayley transform it gives `contractive`. -/
+/-- **Von Neumann's inequality** ([VonNeumann1951]) for rational functions, a classical input of
+the answer: through the Cayley transform it gives `contractive`. For a contraction `T` of a
+complex Hilbert space and complex polynomials `p`, `q` with `q` free of zeros in the closed unit
+disc, `q(T)` is invertible and `‖p(T) q(T)⁻¹‖ ≤ sup_{|ζ| = 1} |p(ζ)/q(ζ)|` (for `q = 1`,
+`‖p(T)‖ ≤ sup_{|ζ| = 1} |p(ζ)|`). -/
 theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
     [CompleteSpace E] {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) (p q : ℂ[X])
     (hq : ∀ z : ℂ, ‖z‖ ≤ 1 → q.eval z ≠ 0) :

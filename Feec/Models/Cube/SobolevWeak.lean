@@ -61,9 +61,9 @@ The truncation `u_M = (x_M)|_Q` is the restriction of the smooth form `truncFiel
 parts of the exponential sums `expSum`, `trigLift_eq_re_expSum`). Its iterated partial derivatives
 are exponential sums with the symbols `symb l` (`iterPartial_re_expSum`), the iterated Fréchet
 derivative on coordinate vectors is the iterated partial derivative
-(`iteratedFDeriv_single_eq_iterPartial`), multilinear maps are bounded by their coordinate values
-(`norm_le_sum_apply_single`, `norm_le_sum_proj`), and Parseval on `Q ⊆ 𝕋ⁿ`
-(`integral_re_expSum_sq_le`) gives **`sum_norm_iteratedFDeriv_truncQ_sq_le`**:
+(`iteratedFDeriv_apply_single_eq_foldr`, `iterPartial_eq_foldr`), multilinear maps are bounded
+by their coordinate values (`norm_le_sum_apply_single`, `norm_le_sum_proj`), and Parseval on
+`Q ⊆ 𝕋ⁿ` (`integral_re_expSum_sq_le`) gives **`sum_norm_iteratedFDeriv_truncQ_sq_le`**:
 `‖Dᵖ u_M‖²_{L²(Q)} ≤ 2ⁿ nᵖ (1 + n(2πM)²)^{p-s} ‖x‖²_{Hˢ(𝕋ⁿ)}` for `s ≤ p`. This generalizes
 `grad_Jinvf_sum_le`, `grad_truncQ_le` (`p = 1`) to every order.
 
@@ -334,21 +334,6 @@ theorem iterPartial_zero (l : List (Fin n)) : iterPartial l (fun _ => (0 : ℝ))
     funext y
     simp [partialDeriv]
 
-/-- **Iterated Fréchet derivatives on coordinate vectors are iterated partial derivatives**:
-`Dᵖ f(y)(e_{r₀}, …, e_{r_{p-1}}) = ∂_{r₀} ⋯ ∂_{r_{p-1}} f(y)`. -/
-theorem iteratedFDeriv_single_eq_iterPartial {f : (Fin n → ℝ) → ℝ} (hf : ContDiff ℝ ∞ f) :
-    ∀ (p : ℕ) (r : Fin p → Fin n) (y : Fin n → ℝ),
-      iteratedFDeriv ℝ p f y (fun l => Pi.single (r l) 1) = iterPartial (List.ofFn r) f y
-  | 0, r, y => by simp
-  | p + 1, r, y => by
-    rw [iteratedFDeriv_succ_apply_left, List.ofFn_succ, iterPartial_cons]
-    have ih : iterPartial (List.ofFn fun i => r i.succ) f =
-        fun z => iteratedFDeriv ℝ p f z (fun l => Pi.single (r l.succ) 1) :=
-      funext fun z => (iteratedFDeriv_single_eq_iterPartial hf p (fun i => r i.succ) z).symm
-    rw [ih, partialDeriv, fderiv_continuousMultilinear_apply_const_apply
-      (hf.differentiable_iteratedFDeriv (by exact_mod_cast WithTop.coe_lt_top _) y)]
-    rfl
-
 /-- **A multilinear map on `(ℝⁿ, sup)` is bounded by its values on coordinate vectors**:
 `‖A‖ ≤ Σ_r ‖A(e_{r₀}, …, e_{r_{p-1}})‖`. -/
 theorem norm_le_sum_apply_single {F : Type*} [NormedAddCommGroup F] [NormedSpace ℝ F] {p : ℕ}
@@ -402,7 +387,8 @@ theorem norm_iteratedFDeriv_le_sum_iterPartial {ι : Type*} [Fintype ι]
         (iteratedFDeriv ℝ p w y) := e
   rw [← e']
   refine (norm_le_sum_apply_single _).trans (le_of_eq (Finset.sum_congr rfl fun r _ => ?_))
-  rw [iteratedFDeriv_single_eq_iterPartial hs, Real.norm_eq_abs]
+  rw [iteratedFDeriv_apply_single_eq_foldr hs (by exact_mod_cast le_top), iterPartial_eq_foldr,
+    Real.norm_eq_abs]
 
 /-- `Σ_r |symb_r(m)|² = |2πm|^{2p}` over the words `r` of length `p`. -/
 theorem sum_norm_symb_sq (p : ℕ) (m : Fin n → ℤ) :

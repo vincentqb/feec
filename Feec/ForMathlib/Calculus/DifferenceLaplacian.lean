@@ -66,35 +66,23 @@ theorem contDiff_secondPartials {f : (Fin n → ℝ) → ℝ} (w : List (Fin n))
 /-- **Words of pure second partial derivatives are iterated derivatives on paired coordinate
 vectors**: for `f ∈ C^{2m}` and directions `l`,
 `D^{2m} f(x)(e_{l 0}, e_{l 0}, …, e_{l (m-1)}, e_{l (m-1)}) = ∂²_{l 0} ⋯ ∂²_{l (m-1)} f(x)`. -/
-theorem iteratedFDeriv_apply_pairs {f : (Fin n → ℝ) → ℝ} :
-    ∀ {m : ℕ}, ContDiff ℝ (2 * m : ℕ) f → ∀ (l : ℕ → Fin n) (x : Fin n → ℝ),
-      iteratedFDeriv ℝ (2 * m) f x (fun j => Pi.single (l ((j : ℕ) / 2)) 1) =
-        secondPartials (List.ofFn fun i : Fin m => l i) f x
-  | 0, _, l, x => by simp [secondPartials]
-  | m + 1, hf, l, x => by
-    have hf' : ContDiff ℝ (2 * m : ℕ) f := hf.of_le (by exact_mod_cast (by omega))
-    have h1 : ((2 * m + 1 : ℕ) : WithTop ℕ∞) < (2 * (m + 1) : ℕ) := by exact_mod_cast (by omega)
-    have h0 : ((2 * m : ℕ) : WithTop ℕ∞) < (2 * (m + 1) : ℕ) := by exact_mod_cast (by omega)
-    have e : (fun y => iteratedFDeriv ℝ (2 * m + 1) f y
-        fun j : Fin (2 * m + 1) => Pi.single (l (((j : ℕ) + 1) / 2)) 1) =
-        partialDeriv (l 0) (secondPartials (List.ofFn fun i : Fin m => l (i + 1)) f) := by
-      funext y
-      rw [iteratedFDeriv_succ_apply_single hf h0
-        (fun j : Fin (2 * m + 1) => l (((j : ℕ) + 1) / 2))]
-      simp only [Fin.val_zero, Fin.val_succ]
-      congr 1
-      funext z
-      rw [← iteratedFDeriv_apply_pairs hf' (fun k => l (k + 1)) z]
-      congr 2
-      funext j
-      congr 2
-      omega
-    show iteratedFDeriv ℝ (2 * m + 1 + 1) f x
-      (fun j : Fin (2 * m + 1 + 1) => Pi.single (l ((j : ℕ) / 2)) 1) = _
-    rw [iteratedFDeriv_succ_apply_single hf h1 (fun j : Fin (2 * m + 1 + 1) => l ((j : ℕ) / 2))]
-    simp only [Fin.val_zero, Fin.val_succ, Nat.zero_div]
-    rw [e, List.ofFn_succ]
-    rfl
+theorem iteratedFDeriv_apply_pairs {f : (Fin n → ℝ) → ℝ} {m : ℕ} (hf : ContDiff ℝ (2 * m : ℕ) f)
+    (l : ℕ → Fin n) (x : Fin n → ℝ) :
+    iteratedFDeriv ℝ (2 * m) f x (fun j => Pi.single (l ((j : ℕ) / 2)) 1) =
+      secondPartials (List.ofFn fun i : Fin m => l i) f x := by
+  have e : ∀ (q : ℕ) (l : ℕ → Fin n), (List.ofFn fun j : Fin (2 * q) => l ((j : ℕ) / 2)).foldr
+      partialDeriv f = secondPartials (List.ofFn fun i : Fin q => l i) f := by
+    intro q
+    induction q with
+    | zero => intro l; simp [secondPartials]
+    | succ q ih =>
+      intro l
+      have h := ih fun k => l (k + 1)
+      simp only [secondPartials] at h ⊢
+      show (List.ofFn (n := 2 * q + 1 + 1) fun j => l ((j : ℕ) / 2)).foldr partialDeriv f = _
+      simp only [List.ofFn_succ, List.foldr_cons, Fin.val_zero, Fin.val_succ, Nat.zero_div,
+        show ∀ j : ℕ, (j + 1 + 1) / 2 = j / 2 + 1 by omega, h]
+  rw [iteratedFDeriv_apply_single_eq_foldr hf le_rfl, e]
 
 theorem _root_.ContDiff.diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} {k : WithTop ℕ∞}
     (hf : ContDiff ℝ k f) : ContDiff ℝ k (FiniteDifference.diffLaplacian h f) := by

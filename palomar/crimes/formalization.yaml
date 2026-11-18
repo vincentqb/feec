@@ -290,10 +290,12 @@ fidelity:
     copied from the canonical blocks of palomar/shared/vocabulary.lean.txt (HilbertComplex; window
     with Total, sq, totalDomain, totalD and wave; boundaries; the mixed problem MixedSpace,
     mixedForm, galerkin and IsMixedSolution; the evolution verdict semiflow and EvolutionVerdict;
-    IsStrongSolution; IsAStable, HasOrder, rationalApply), shared with palomar/feec (and the
-    windows with palomar/constraints), and the gate checks them byte for byte; the definitions of
-    the crimes (CrimeFamily and its notions) and of the mixed Hodge Laplacian of a window
-    (totalHarmonic, totalMixedSpace) are this entry's.
+    IsStrongSolution; IsAStable, HasOrder, rationalApply), all shared with palomar/feec
+    (HilbertComplex also with palomar/fem and palomar/constraints, the windows with
+    palomar/constraints, IsStrongSolution with palomar/constraints and palomar/einsteinbianchi,
+    the rational schemes with palomar/timestepping), and the gate checks them byte for byte; the
+    definitions of the crimes (CrimeFamily and its notions) and of the mixed Hodge Laplacian of a
+    window (totalHarmonic, totalMixedSpace) are this entry's.
 
 review:
   status: "self-assessed"

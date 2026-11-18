@@ -354,12 +354,15 @@ fidelity:
     constraint-propagation conclusions of the former wave and evolution verdicts are compared in
     palomar/constraints as FEEC.constraint_propagation. (10) Shared vocabulary: the notions this
     entry shares with the other Palomar entries are copied from the canonical blocks of
-    palomar/shared/vocabulary.lean.txt (HilbertComplex; SubcomplexFamily with graphNorm,
-    Subcomplex, CochainProjection, graphDist, IsGraphBoundedBy, IsGraphBounded, Approximates and
-    Jackson, shared with palomar/fem; window with Total, sq, totalDomain, totalD and wave, shared
-    with palomar/constraints and palomar/crimes; boundaries, the mixed problem (MixedSpace,
-    mixedForm, galerkin, IsMixedSolution) and the evolution verdict (semiflow, EvolutionVerdict),
-    shared with palomar/crimes; IsStrongSolution; IsAStable, HasOrder, rationalApply), and the
+    palomar/shared/vocabulary.lean.txt (HilbertComplex, shared with palomar/fem,
+    palomar/constraints and palomar/crimes; SubcomplexFamily with graphNorm, Subcomplex,
+    CochainProjection, graphDist, IsGraphBoundedBy, IsGraphBounded, Approximates and Jackson,
+    shared with palomar/fem; window with Total, sq, totalDomain, totalD and wave, shared with
+    palomar/constraints and palomar/crimes; boundaries, the mixed problem (MixedSpace, mixedForm,
+    galerkin, IsMixedSolution) and the evolution verdict (semiflow, EvolutionVerdict), shared with
+    palomar/crimes; IsStrongSolution, shared with palomar/constraints, palomar/crimes and
+    palomar/einsteinbianchi; IsAStable, HasOrder, rationalApply, shared with palomar/crimes and
+    palomar/timestepping), and the
     gate checks them byte for byte. Two of them read differently from the earlier text, with the
     same meaning. Strong solutions are those of an operator given by its graph, a relation
     A ⊆ X × X (Mathlib's SetRel), so the evolution verdict states IsStrongSolution A.graph

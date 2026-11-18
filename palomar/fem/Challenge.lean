@@ -758,8 +758,9 @@ window `[a, a + m)` (`femTotal`): some `C₀` has `h_N ‖𝐝 x‖ ≤ C₀ ‖
 and for every `s` such that `S` reproduces `P_sΛ` in the degrees of the window, some `C`
 (independent of `N`, `Δt`, `T`, `L`, `U`, `c`, `C₀`) bounds the errors of the iterates `uₖ ∈ Xₕ`,
 from any starting values in `Xₕ`, for every solution `U` of `U' = (𝐝 - 𝐝*) U` on `[0, T]` (with
-the boundary conditions of `H`), `C³` in time with `‖∂ₜ³U‖ ≤ L`, whose values and time increments
-are in the Jackson class of `fem` with the bounds `L`, `L |t' - t|`, `Δt > 0`, `K Δt ≤ T`:
+the boundary conditions of `H`), `C³` in time on `ℝ` with `‖∂ₜ³U‖ ≤ L` on `[0, T]`, whose values
+and time increments are in the Jackson class of `fem` with the bounds `L`, `L |t' - t|`, `Δt > 0`,
+`K Δt ≤ T`:
 `‖u_K - U(K Δt)‖ ≤ ‖u₀ - U(0)‖ + C (1 + T) L (h_N^{s+1} + Δt²)` for **Crank–Nicolson** (every
 time step), and `(1 - c) ‖u_K - U(K Δt)‖ ≤ ‖u₀ - U(0)‖ + ‖u₁ - U(Δt)‖ + C (1 + T) L (h_N^{s+1} +
 Δt²)` for **leapfrog** under the CFL condition `2 C₀ Δt ≤ c h_N`, `c < 1`, for every constant
@@ -776,9 +777,8 @@ theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall �
     (∃ C₀, IsInv C₀) ∧
     ∀ s : ℕ, (∀ i : Fin m, S.PolyOrderAt n s (a + (i : ℕ))) → ∃ C : ℝ,
       ∀ (T L : ℝ) (U U₁ U₂ U₃ : ℝ → Total (L2Form Ω) a m),
-      (∀ t ∈ Icc 0 T, HasDerivWithinAt U (U₁ t) (Icc 0 T) t ∧
-        HasDerivWithinAt U₁ (U₂ t) (Icc 0 T) t ∧ HasDerivWithinAt U₂ (U₃ t) (Icc 0 T) t ∧
-        ‖U₃ t‖ ≤ L ∧ (U t, U₁ t) ∈ (H.wave a m).graph) →
+      (∀ t, HasDerivAt U (U₁ t) t ∧ HasDerivAt U₁ (U₂ t) t ∧ HasDerivAt U₂ (U₃ t) t) →
+      (∀ t ∈ Icc 0 T, ‖U₃ t‖ ≤ L ∧ (U t, U₁ t) ∈ (H.wave a m).graph) →
       (∀ t ∈ Icc 0 T, ∀ t' ∈ Icc 0 T, ∀ i : Fin m, Reg s (a + (i : ℕ)) L (U t i) ∧
         Reg s (a + (i : ℕ)) (L * |t' - t|) (U t' i - U t i)) →
       ∀ N (Δt : ℝ) (K : ℕ) (u : ℕ → Total (L2Form Ω) a m), 0 < Δt → K * Δt ≤ T →

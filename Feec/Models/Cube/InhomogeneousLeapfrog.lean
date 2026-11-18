@@ -34,7 +34,9 @@ estimate of `TimeStepping.norm_succ_sub_le_of_isDirichletLeapfrogStep` then give
   discrete differentials `Vₕⁱ → Vₕʲ` bounds `‖𝐝ₕ‖ ≤ K` and `‖𝐝ₕ − 𝐝ₕ*‖ ≤ 2 K`.
 * **`exists_mul_norm_discreteD_whitneyRow_le`**: the inverse estimate
   `h_N ‖𝐝ₕ v‖ ≤ K ‖v‖` on the Whitney row, `K` independent of `N`.
-* `norm_leapfrog_error_le`, `norm_leapfrog_error_le_of_eq`: the abstract error estimate.
+* `norm_leapfrog_error_le`, `norm_leapfrog_error_le_of_eq`: the abstract error estimate;
+  `norm_leapfrog_error_le_of_sub_mem`, the same from any starting values with the boundary DOFs of
+  the comparison fields (for `U = 0`, the stability `(1 − c) ‖u_M‖ ≤ ‖u₀‖ + ‖u₁‖`).
 * **`RowSolution.whitney_leapfrog_error_le_row`**: for a smooth `RowSolution` with bound `L`,
   `2 K Δt ≤ c h_N`, `0 ≤ c < 1`, the leapfrog iterates from `u₀ = Π_h U(0)`, `u₁ = Π_h U(Δt)` with
   the boundary DOFs of `Π_h U(tₙ)` satisfy
@@ -341,6 +343,125 @@ theorem norm_leapfrog_error_le_of_eq (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x,
     nlinarith
   rw [le_div_iff₀ (by linarith), mul_comm]
   linarith
+
+/-- **Error of the Dirichlet leapfrog scheme from any starting values**: in the setting of
+`norm_leapfrog_error_le`, for iterates started from `u₀`, `u₁` with the boundary DOFs of `w₀`,
+`w₁` (`u₀ - w₀`, `u₁ - w₁ ∈ V₀`), for `M Δt ≤ T`,
+`(1 − c) ‖emb u_M − U(t_M)‖ ≤ ‖emb u₀ − U(0)‖ + ‖emb u₁ − U(Δt)‖ + 3 a + T (L₃ Δt² / 3 + 4 a)`;
+for `U = 0` the stability `(1 − c) ‖u_M‖ ≤ ‖u₀‖ + ‖u₁‖`. -/
+theorem norm_leapfrog_error_le_of_sub_mem (hemb : ∀ x y, ⟪emb x, emb y⟫ = ⟪x, y⟫)
+    (hD₀ : ∀ v ∈ V₀, D v ∈ V₀) (hDD : ∀ v ∈ V₀, D (D v) = 0) {A : V →ₗ[ℝ] V}
+    (hA : ∀ x y, ⟪A x, y⟫ = ⟪D x, y⟫ - ⟪x, D y⟫) {Δt T L₃ a c : ℝ} (hΔt : 0 < Δt)
+    (hc : Δt * ‖LinearMap.toContinuousLinearMap A‖ ≤ c) (hc1 : c < 1)
+    {U U₁ U₂ U₃ DU : ℝ → X} (hU₁ : ∀ t, HasDerivAt U (U₁ t) t)
+    (hU₂ : ∀ t, HasDerivAt U₁ (U₂ t) t) (hU₃ : ∀ t, HasDerivAt U₂ (U₃ t) t)
+    (hL₃ : ∀ t ∈ Icc 0 T, ‖U₃ t‖ ≤ L₃)
+    (hweak : ∀ t ∈ Icc 0 T, ∀ v ∈ V₀, ⟪U₁ t, emb v⟫ = ⟪DU t, emb v⟫ - ⟪U t, emb (D v)⟫)
+    {w : ℕ → V}
+    (hA1 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (w n) - U (n * Δt)‖ ≤ a)
+    (hA2 : ∀ n : ℕ, (n : ℝ) * Δt ≤ T → ‖emb (D (w n)) - DU (n * Δt)‖ ≤ a)
+    (hA3 : ∀ n : ℕ, ((n + 1 : ℕ) : ℝ) * Δt ≤ T →
+      ‖(emb (w (n + 1)) - U ((n + 1 : ℕ) * Δt)) - (emb (w n) - U (n * Δt))‖ ≤ a * Δt)
+    {M : ℕ} (hM : (M : ℝ) * Δt ≤ T) {u g : ℕ → V}
+    (hstep : ∀ k, k + 2 ≤ M → TimeStepping.IsDirichletLeapfrogStep V₀ A Δt (g (k + 2)) (u k)
+      (u (k + 1)) (u (k + 2)))
+    (hg : ∀ k, k + 2 ≤ M → g (k + 2) - w (k + 2) ∈ V₀) (hu0 : u 0 - w 0 ∈ V₀)
+    (hu1 : u 1 - w 1 ∈ V₀) :
+    (1 - c) * ‖emb (u M) - U (M * Δt)‖ ≤
+      ‖emb (u 0) - U 0‖ + ‖emb (u 1) - U Δt‖ + 3 * a + T * (L₃ * Δt ^ 2 / 3 + 4 * a) := by
+  obtain ⟨ũ, ρ, hũw, hũn, hũe, hρ, hρb⟩ :=
+    exists_leapfrog_comparison hemb hD₀ hDD hA hΔt hU₁ hU₂ hU₃ hL₃ hweak hA2 hA3
+  have hT0 : 0 ≤ T := (mul_nonneg (Nat.cast_nonneg M) hΔt.le).trans hM
+  have hL0 : 0 ≤ L₃ := (norm_nonneg _).trans (hL₃ 0 ⟨le_rfl, hT0⟩)
+  have ha0 : 0 ≤ a := (norm_nonneg _).trans (hA1 0 (by simpa using hT0))
+  have hc0 : 0 ≤ c := (mul_nonneg hΔt.le (norm_nonneg _)).trans hc
+  set Y := L₃ * Δt ^ 2 / 3 + 4 * a
+  have hY : 0 ≤ Y := by positivity
+  have hTY : 0 ≤ T * Y := mul_nonneg hT0 hY
+  have hE0 := norm_nonneg (emb (u 0) - U 0)
+  have hE1 := norm_nonneg (emb (u 1) - U Δt)
+  have hfin : ∀ m : ℕ, (m : ℝ) * Δt ≤ T → ‖emb (ũ m) - U (m * Δt)‖ ≤ a := fun m hm =>
+    (hũe m).trans (hA1 m hm)
+  rcases M with _ | n
+  · have h : (1 - c) * ‖emb (u 0) - U ((0 : ℕ) * Δt)‖ ≤ ‖emb (u 0) - U 0‖ := by
+      rw [Nat.cast_zero, zero_mul]
+      exact mul_le_of_le_one_left (norm_nonneg _) (by linarith)
+    linarith
+  · have hAs : ∀ x y, ⟪A x, y⟫ = -⟪x, A y⟫ := fun x y => by
+      have h1 := hA x y
+      have h2 := hA y x
+      have c1 := real_inner_comm (A y) x
+      have c2 := real_inner_comm (D y) x
+      have c3 := real_inner_comm y (D x)
+      linarith
+    have hmem : ∀ k, u k - ũ k = (u k - w k) - (ũ k - w k) := fun k => by abel
+    have h0 : u 0 - ũ 0 ∈ V₀ := by rw [hmem]; exact V₀.sub_mem hu0 (hũw 0)
+    have h1 : u 1 - ũ 1 ∈ V₀ := by rw [hmem]; exact V₀.sub_mem hu1 (hũw 1)
+    have key := TimeStepping.norm_succ_sub_le_of_isDirichletLeapfrogStep (V₀ := V₀) (n := n)
+      (g := g) (u := u) (ũ := ũ) (ρ := ρ) hAs hΔt.le hc hc1
+      (fun k hk => hstep k (by omega))
+      (fun k hk => by
+        have := V₀.sub_mem (hũw (k + 2)) (hg k (by omega))
+        rwa [sub_sub_sub_cancel_right] at this)
+      h0 h1 (fun k _ => hρ k)
+    have hΔT : ((1 : ℕ) : ℝ) * Δt ≤ T := by
+      have : (1 : ℝ) ≤ ((n + 1 : ℕ) : ℝ) := by exact_mod_cast Nat.succ_pos n
+      push_cast at hM ⊢
+      nlinarith
+    -- the starting errors against the comparison fields
+    have he : ∀ m : ℕ, (m : ℝ) * Δt ≤ T →
+        ‖u m - ũ m‖ ≤ ‖emb (u m) - U (m * Δt)‖ + a := fun m hm => by
+      have e : emb (u m - ũ m) = (emb (u m) - U (m * Δt)) - (emb (ũ m) - U (m * Δt)) := by
+        rw [map_sub]; abel
+      rw [← norm_emb hemb, e]
+      exact (norm_sub_le _ _).trans (add_le_add le_rfl (hfin m hm))
+    have he0 : ‖u 0 - ũ 0‖ ≤ ‖emb (u 0) - U 0‖ + a := by
+      simpa using he 0 (by simpa using hT0)
+    have he1 : ‖u 1 - ũ 1‖ ≤ ‖emb (u 1) - U Δt‖ + a := by
+      simpa using he 1 hΔT
+    set s := √(1 - c)
+    have hs : 0 < s := Real.sqrt_pos.2 (by linarith)
+    have hs2 : s ^ 2 = 1 - c := Real.sq_sqrt (by linarith)
+    -- `s √((1 + c)(e₀² + e₁²)) ≤ e₀ + e₁`
+    have hstart : s * √((1 + c) * (‖u 0 - ũ 0‖ ^ 2 + ‖u 1 - ũ 1‖ ^ 2)) ≤
+        ‖u 0 - ũ 0‖ + ‖u 1 - ũ 1‖ := by
+      rw [← Real.sqrt_mul (by linarith), ← mul_assoc]
+      have hx := norm_nonneg (u 0 - ũ 0)
+      have hy := norm_nonneg (u 1 - ũ 1)
+      rw [show ‖u 0 - ũ 0‖ + ‖u 1 - ũ 1‖ = √((‖u 0 - ũ 0‖ + ‖u 1 - ũ 1‖) ^ 2) from
+        (Real.sqrt_sq (by positivity)).symm]
+      refine Real.sqrt_le_sqrt ?_
+      have : (1 - c) * (1 + c) ≤ 1 := by nlinarith
+      have hq : 0 ≤ ‖u 0 - ũ 0‖ ^ 2 + ‖u 1 - ũ 1‖ ^ 2 := by positivity
+      nlinarith [mul_le_mul_of_nonneg_right this hq]
+    have hsum : ∑ k ∈ Finset.range n, ‖ρ k‖ ≤ T * Y := by
+      calc ∑ k ∈ Finset.range n, ‖ρ k‖ ≤ ∑ _k ∈ Finset.range n, Δt * Y :=
+            Finset.sum_le_sum fun k hk => hρb k (by
+              have : k + 2 ≤ n + 1 := by have := Finset.mem_range.1 hk; omega
+              exact (mul_le_mul_of_nonneg_right (by exact_mod_cast this) hΔt.le).trans hM)
+        _ = n * Δt * Y := by rw [Finset.sum_const, Finset.card_range, nsmul_eq_mul]; ring
+        _ ≤ T * Y := by
+            refine mul_le_mul_of_nonneg_right ((mul_le_mul_of_nonneg_right ?_ hΔt.le).trans hM) hY
+            exact_mod_cast Nat.le_succ n
+    -- `(1 - c) ‖u_M - ũ_M‖ ≤ e₀ + e₁ + T Y`
+    have hk : (1 - c) * ‖u (n + 1) - ũ (n + 1)‖ ≤ ‖u 0 - ũ 0‖ + ‖u 1 - ũ 1‖ + T * Y := by
+      have h3 := mul_le_mul_of_nonneg_left key hs.le
+      rw [mul_add, mul_div_cancel₀ _ hs.ne'] at h3
+      rw [← hs2]
+      nlinarith [hstart]
+    have hsplit : emb (u (n + 1)) - U ((n + 1 : ℕ) * Δt) =
+        emb (u (n + 1) - ũ (n + 1)) + (emb (ũ (n + 1)) - U ((n + 1 : ℕ) * Δt)) := by
+      rw [map_sub]; abel
+    have hn := norm_add_le (emb (u (n + 1) - ũ (n + 1))) (emb (ũ (n + 1)) - U ((n + 1 : ℕ) * Δt))
+    rw [norm_emb hemb, ← hsplit] at hn
+    have hfa := hfin (n + 1) hM
+    have h1c : 0 ≤ 1 - c := by linarith
+    have h1c' : 1 - c ≤ 1 := by linarith
+    have := mul_le_mul_of_nonneg_left hn h1c
+    have : (1 - c) * ‖emb (ũ (n + 1)) - U ((n + 1 : ℕ) * Δt)‖ ≤ a := by
+      have := mul_le_mul_of_nonneg_left hfa h1c
+      nlinarith
+    nlinarith
 
 end Abstract
 

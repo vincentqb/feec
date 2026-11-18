@@ -109,16 +109,18 @@ def IsStrongSolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A :
   ContinuousOn u I ∧ ∀ t ∈ I, ∃ v, (u t, v) ∈ A ∧ HasDerivWithinAt u v I t
 -- palomar-shared-end: IsStrongSolution
 
-/-- `S` is an **evolution** of `u' = A u` on `I` (`I = ℝ`: a group; `I = [0, ∞)`: a semigroup),
-for an operator given by its graph, a relation `A ⊆ X × X`: bounded `𝕜`-linear operators `S t`
-(`𝕜 = ℝ` or `ℂ`) with `S 0 = 1` such that from every `x ∈ D(A)` the orbit `t ↦ S t x` is a strong
-solution of `u' = A u` on `I`. (For the generators of `PropagationCriterion` it is unique.) -/
+/-- `S` is an **evolution** of `u' = A u` on `I` (`I = ℝ` or `[0, ∞)`), for an operator given by
+its graph, a relation `A ⊆ X × X`: bounded `𝕜`-linear operators `S t` (`𝕜 = ℝ` or `ℂ`) with
+`S 0 = 1` such that from every `x ∈ D(A)` the orbit `t ↦ S t x` is a strong solution of
+`u' = A u` on `I`. No group or semigroup law is assumed: for the generators of
+`PropagationCriterion` the evolution is unique (on `I = [0, ∞)`, at `t ≥ 0`), the unitary group or
+the contraction semigroup. -/
 def IsEvolution (𝕜 : Type*) {X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
     [NormedSpace ℝ X] (A : SetRel X X) (I : Set ℝ) (S : ℝ → X →L[𝕜] X) : Prop :=
   (∀ x, S 0 x = x) ∧ ∀ x y, (x, y) ∈ A → IsStrongSolution A I fun t => S t x
 
 /-- The **invariant core** `K* = {x | S t x ∈ K for all t ∈ ℝ}` of a constraint `K ⊆ X` under an
-evolution group `S`: the data whose evolution stays in `K` at all times. -/
+evolution `S` on `ℝ`: the data whose evolution stays in `K` at all times. -/
 def invariantCore {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
     (S : ℝ → X →L[𝕜] X) (K : Set X) : Set X :=
   {x | ∀ t, S t x ∈ K}
@@ -321,13 +323,13 @@ def IsTSD₀ {Ω : Set (Fin 3 → ℝ)} (E : Fin 3 → Fin 3 → Lp ℝ 2 (volum
   IsTSD E ∧ ∀ a (φ : (Fin 3 → ℝ) → ℝ), ContDiff ℝ 1 φ →
     ∑ c, ∫ x in Ω, E a c x * partialDeriv c φ x = 0
 
-/-- **The linearized Einstein–Bianchi system (4.14) with the boundary conditions natural for its
-complex** on `Ω ⊆ ℝ³` ([QuennevilleBelair2015], §4.10): the Hodge wave equation `U' = L U`
+/-- **The linearized Einstein–Bianchi system (4.14) with the electric boundary conditions** on
+`Ω ⊆ ℝ³` ([QuennevilleBelair2015], §4.10): the Hodge wave equation `U' = L U`
 (`IsHodgeWave`) of `H̊Λ⁰(Ω) ⊗ ℝ³ → H̊Λ¹(Ω) ⊗ ℝ³ → L²Λ²(Ω) ⊗ ℝ³`, the minimal exterior
 derivative row by row (in vector proxies `H̊¹(Ω; ℝ³) → H̊(curl, Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)`, the
 `grad` and `curl` of the rows), on states `U = (σ, u, ρ)` with electric field `E = mat1 u` and
 magnetic field `B = mat2 ρ`: `σ' = -div E`, `E' = -grad σ - curl* B`, `B' = curl E`, with
-`σ = 0` and the electric boundary condition `n × E = 0` on `∂Ω`. -/
+`σ = 0` and the electric boundary condition `n × E = 0` on `∂Ω` (vanishing tangential traces). -/
 def gradCurlWave (Ω : Set (Fin 3 → ℝ)) :
     SetRel (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :=
   {p | IsHodgeWave (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) p.1 p.2}
@@ -337,7 +339,7 @@ electric and magnetic fields are TSD. -/
 def tsdConstraint (Ω : Set (Fin 3 → ℝ)) : Set (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :=
   {U | U.1 = 0 ∧ IsTSD (mat1 U.2.1) ∧ IsTSD (mat2 U.2.2)}
 
-/-- `v ∈ L²(Ω; Λ¹ ⊗ ℝ³)` is an **eigenfield** of `curl* curl` with frequency `ξ` (the natural
+/-- `v ∈ L²(Ω; Λ¹ ⊗ ℝ³)` is an **eigenfield** of `curl* curl` with frequency `ξ` (the electric
 boundary conditions, row by row): `v ∈ D(d¹) = H̊(curl)`, `d¹v ∈ D(d¹*)` and `d¹* d¹ v = ξ² v`
 (for `v` also weakly divergence-free, e.g. TSD, `(0, v, 0)` and `(0, 0, d¹v)` then span a plane
 invariant under the system (4.14), on which `L² = -ξ²`). -/
@@ -411,7 +413,7 @@ end WeakSymmetryData
 abbrev FormData (Ω : Set (Fin 3 → ℝ)) : Type :=
   WeakSymmetryData (L2Form Ω 0) (L2Form Ω 1) (L2Form Ω 2) (L2Vec Ω 0) (L2Vec Ω 1) (L2Vec Ω 2)
 
-/-- **The BGG data (4.16) on `Ω ⊆ ℝ³` with the boundary conditions natural for the complex**
+/-- **The BGG data (4.16) on `Ω ⊆ ℝ³` with the electric boundary conditions**
 ([QuennevilleBelair2015], §5.3, §6.3): the top row `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → L²Λ²(Ω)` and,
 componentwise, the bottom row `H̊Λ⁰(Ω) ⊗ ℝ³ → H̊Λ¹(Ω) ⊗ ℝ³ → L²Λ²(Ω) ⊗ ℝ³` of the minimal
 exterior derivative, with `S⁰ = S¹ = Σₐ dxₐ ∧ ·` (`wedge`). In vector proxies the rows are
@@ -502,15 +504,16 @@ def tsdPair : Set (WithLp 2 (L2Mat (cube 3) × L2Mat (cube 3))) :=
 for the derivatives in time, is any one (it is the restriction of scalars). -/
 structure PropagationCriterion : Prop where
   /-- (**groups**) A densely defined skew-adjoint `L` (`L* = -L`) has a unique evolution `S` on
-  `ℝ`, by isometries (Stone's theorem), and every strong solution on `[0, T]` from
-  `x ∈ D(L)` is its orbit. A closed subspace `K` reduces `L` iff `S t K ⊆ K` for all `t ∈ ℝ`, iff
-  `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`; and the invariant core `K*` is a closed subspace reducing
-  `L` that contains every closed subspace of `K` reducing `L`: `K*` is the largest of them. -/
+  `ℝ`, a group of isometries (Stone's theorem: a unitary group), and every strong solution on
+  `[0, T]` from `x ∈ D(L)` is its orbit. A closed subspace `K` reduces `L` iff `S t K ⊆ K` for all
+  `t ∈ ℝ`, iff `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`; and the invariant core `K*` is a closed
+  subspace reducing `L` that contains every closed subspace of `K` reducing `L`: `K*` is the
+  largest of them. -/
   group {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [CompleteSpace E] [NormedSpace ℝ E] (L : E →ₗ.[𝕜] E) (hL : Dense (L.domain : Set E))
     (hskew : L† = -L) :
     ∃ S, IsEvolution 𝕜 L.graph univ S ∧ (∀ S', IsEvolution 𝕜 L.graph univ S' → S' = S) ∧
-      (∀ t x, ‖S t x‖ = ‖x‖) ∧
+      (∀ s t, S (s + t) = S s ∘L S t) ∧ (∀ t x, ‖S t x‖ = ‖x‖) ∧
       (∀ x ∈ L.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution L.graph (Icc 0 T) u →
         EqOn u (fun t => S t x) (Icc 0 T)) ∧
       ∀ (K : Submodule 𝕜 E) [K.HasOrthogonalProjection],
@@ -521,16 +524,16 @@ structure PropagationCriterion : Prop where
           (Ks : Set E) = invariantCore S K ∧ IsReducing L Ks ∧
           ∀ (M : Submodule 𝕜 E) [M.HasOrthogonalProjection], M ≤ K → IsReducing L M → M ≤ Ks
   /-- (**semigroups**) An m-dissipative `A` (`re ⟪A x, x⟫ ≤ 0`, `1 - A` onto) has an evolution
-  `S` on `[0, ∞)` by contractions (Lumer–Phillips), unique at `t ≥ 0`, and every strong solution
-  on `[0, T]` from `x ∈ D(A)` is its orbit; a closed subspace `K` reduces `A` iff `S t`, `t ≥ 0`,
-  keeps `K` and `Kᗮ`. -/
+  `S` on `[0, ∞)`, unique at `t ≥ 0`, a semigroup of contractions (Lumer–Phillips), and every
+  strong solution on `[0, T]` from `x ∈ D(A)` is its orbit; a closed subspace `K` reduces `A` iff
+  `S t`, `t ≥ 0`, keeps `K` and `Kᗮ`. -/
   semigroup {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [CompleteSpace E] [NormedSpace ℝ E] (A : E →ₗ.[𝕜] E)
     (hdiss : ∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0)
     (hsurj : ∀ y, ∃ x : A.domain, (x : E) - A x = y) :
     ∃ S, IsEvolution 𝕜 A.graph (Ici 0) S ∧
       (∀ S', IsEvolution 𝕜 A.graph (Ici 0) S' → ∀ t, 0 ≤ t → S' t = S t) ∧
-      (∀ t, 0 ≤ t → ∀ x, ‖S t x‖ ≤ ‖x‖) ∧
+      (∀ s t, 0 ≤ s → 0 ≤ t → S (s + t) = S s ∘L S t) ∧ (∀ t, 0 ≤ t → ∀ x, ‖S t x‖ ≤ ‖x‖) ∧
       (∀ x ∈ A.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution A.graph (Icc 0 T) u →
         EqOn u (fun t => S t x) (Icc 0 T)) ∧
       ∀ (K : Submodule 𝕜 E) [K.HasOrthogonalProjection],
@@ -572,12 +575,12 @@ structure PropagationCriterion : Prop where
 
 /-! ### The verdicts -/
 
-/-- **The verdict of the boundary conditions natural for the complex on `Ω ⊆ ℝ³`**
-([QuennevilleBelair2015], §4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`,
-constraint `tsdConstraint`) and the system (6.1) with weak symmetry (`bggData`, constraint
-`IsTSDState`); `TSDVerdict.natural` asserts it on every nonempty bounded open `Ω`, with no
-regularity of `∂Ω`. -/
-structure NaturalVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
+/-- **The verdict of the electric boundary conditions on `Ω ⊆ ℝ³`** ([QuennevilleBelair2015],
+§4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`, constraint `tsdConstraint`)
+and the system (6.1) with weak symmetry (`bggData`, constraint `IsTSDState`);
+`TSDVerdict.electric` asserts it on every nonempty bounded open `Ω`, with no regularity of
+`∂Ω`. -/
+structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex: densely
   defined closed operators with `d¹ d⁰ = 0` -/
   complex :
@@ -607,16 +610,23 @@ structure NaturalVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
       (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
       ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω
-  /-- the magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD with `(0, 0, β) ∈ D(L)`, and every
-  strong solution on `[0, T]`, `T > 0`, from any `(0, E₀, β)` has a non-TSD electric field at
-  some `t ∈ [0, T]` -/
+  /-- the magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD with `(0, 0, β) ∈ D(L)`; and for
+  every boundary condition containing `n × E = 0`, that is for every short Hilbert complex
+  `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` whose `d¹` is a restriction of the minimal curl (that of (4.14)
+  among them, `W⁰` and `d⁰` arbitrary), every strong solution of its Hodge wave equation on
+  `[0, T]`, `T > 0`, from any `(0, E₀, β)` has a non-TSD electric field at some `t ∈ [0, T]` -/
   beta : ∃ ρ : L2Vec Ω 2, (∀ a b, ⇑(mat2 ρ a b) =ᵐ[volume.restrict Ω]
       fun x => if (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) then x 2 else 0) ∧
     (0, 0, ρ) ∈ tsdConstraint Ω ∧ (∃ V, ((0, 0, ρ), V) ∈ gradCurlWave Ω) ∧
-    ∀ u T U, 0 < T → U 0 = (0, u, ρ) → IsStrongSolution (gradCurlWave Ω) (Icc 0 T) U →
-      ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)
-  /-- the projection hypothesis fails, so `K` does not reduce `L`: the orthogonal projection
-  onto `L²(TSD)` of some field with test-function entries leaves `H̊(curl)` -/
+    ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
+      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
+      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      d1 ≤ vecOp (fun _ => dMin Ω 1) → ∀ u T (U : ℝ → W0 × L2Vec Ω 1 × L2Vec Ω 2), 0 < T →
+        U 0 = (0, u, ρ) → IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
+        ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)
+  /-- `K` does not reduce `L`, already because `P_K D(L) ⊄ D(L)`: the orthogonal projection onto
+  `L²(TSD)` of some field with test-function entries (so `(0, u, 0) ∈ D(L)`) leaves `H̊(curl)` -/
   projection : ∃ u : L2Vec Ω 1,
     (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
       ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
@@ -633,10 +643,10 @@ structure NaturalVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
       ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a
 
-/-- **The verdict of the natural boundary conditions on a domain `Ω` star-shaped with respect to a
-ball** ([QuennevilleBelair2015], Prop 4.17), for the system (4.14): the density gap of
-`NaturalVerdict` is the boundary condition of `H̊(curl)`, and whether only stationary data keep the
-constraint is a spectral question. -/
+/-- **The verdict of the electric boundary conditions on a domain `Ω` star-shaped with respect to
+a ball** ([QuennevilleBelair2015], Prop 4.17), for the system (4.14): the density gap of
+`ElectricVerdict` is the boundary condition of `H̊(curl)`, and whether only stationary data keep
+the constraint is a spectral question. -/
 structure StarShapedVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   /-- `L²(TSD) ∩ HΛ¹(Ω)³` (the rows in `H(curl)`) is dense in `L²(TSD)`, while the closure of
   `L²(TSD) ∩ H̊(curl)` is `L²(TSD₀)` -/
@@ -652,7 +662,7 @@ structure StarShapedVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
         ∀ h, ¬∃ w ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
           mat1 w = mat2 ((vecOp fun _ => dMin Ω 1) ⟨v, h⟩)
 
-/-- **The verdict of the natural boundary conditions on the box `∏ᵢ (aᵢ, aᵢ + ℓᵢ)`**, for the
+/-- **The verdict of the electric boundary conditions on the box `∏ᵢ (aᵢ, aᵢ + ℓᵢ)`**, for the
 system (4.14): only stationary data keep the constraint. -/
 structure BoxVerdict (a ℓ : Fin 3 → ℝ) : Prop where
   /-- for every evolution, `K* = K ∩ N(L)`, with vanishing electric field -/
@@ -713,23 +723,23 @@ domain only stationary data keep the constraint is open and not claimed: on the 
 equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)` (`StarShapedVerdict`),
 which `ball` proves only for the eigenfields `C²` up to the boundary. -/
 structure TSDVerdict : Prop where
-  /-- the natural boundary conditions on every nonempty bounded open `Ω ⊆ ℝ³` -/
-  natural (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) : NaturalVerdict Ω
-  /-- the natural boundary conditions on every nonempty bounded open `Ω ⊆ ℝ³` star-shaped with
+  /-- the electric boundary conditions on every nonempty bounded open `Ω ⊆ ℝ³` -/
+  electric (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) : ElectricVerdict Ω
+  /-- the electric boundary conditions on every nonempty bounded open `Ω ⊆ ℝ³` star-shaped with
   respect to a ball -/
   starShaped (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty)
     (hstar : ∃ x₀ s, 0 < s ∧ ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     StarShapedVerdict Ω
-  /-- the natural boundary conditions on the unit ball: every TSD eigenfield of `curl* curl`
+  /-- the electric boundary conditions on the unit ball: every TSD eigenfield of `curl* curl`
   (`ξ ≠ 0`) that is `C²` on a neighbourhood of the closed ball vanishes -/
   ball (ξ : ℝ) (hξ : ξ ≠ 0) (v : L2Vec unitBall 1) (hv : IsTSD (mat1 v))
     (hE : IsEigenfield unitBall ξ v)
     (hC : ∃ O : Set (Fin 3 → ℝ), IsOpen O ∧ {x | ∑ i, x i ^ 2 ≤ 1} ⊆ O ∧
       ∃ Φ : Fin 3 → Fin 3 → (Fin 3 → ℝ) → ℝ, (∀ a b, ContDiffOn ℝ 2 (Φ a b) O) ∧
         ∀ a b, ⇑(mat1 v a b) =ᵐ[volume.restrict unitBall] Φ a b) : v = 0
-  /-- the natural boundary conditions on every box -/
+  /-- the electric boundary conditions on every box -/
   box (a ℓ : Fin 3 → ℝ) (hℓ : ∀ i, 0 < ℓ i) : BoxVerdict a ℓ
   /-- the absorbing boundary conditions on the cube -/
   absorbing : AbsorbingVerdict

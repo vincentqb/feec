@@ -101,7 +101,7 @@ theorem window_of [∀ i, NormedSpace ℝ (W i)] :
       (Feec.HilbertComplex.totalSub fun i : Fin m => Z (a + (i : ℕ))) := by
     rw [isReducing_iff, wave_eq]
     exact hR.isReducing_wave
-  obtain ⟨S₀, -, huniq, -, -, hK⟩ := group_of (H.wave a m) hD hskew
+  obtain ⟨S₀, -, huniq, -, -, -, hK⟩ := group_of (H.wave a m) hD hskew
   rw [huniq S hS]
   exact ((hK _).1.1 hred) t x hx i
 

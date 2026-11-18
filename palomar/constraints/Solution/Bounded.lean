@@ -454,7 +454,7 @@ end Orbit
 
 /-! ### The theorem -/
 
-/-- **With the boundary conditions natural for the complex the constraints of (6.1) are lost**
+/-- **With the electric boundary conditions the constraints of (6.1) are lost**
 (the clause of `FEEC.tsd_boundary_conditions` for the system (6.1)). -/
 theorem tsd_not_propagates_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,

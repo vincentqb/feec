@@ -211,7 +211,7 @@ omit [IsScalarTower ℝ 𝕜 E] in
 /-- **Stone's group and its invariant subspaces.** -/
 theorem group_of (L : E →ₗ.[𝕜] E) (hL : Dense (L.domain : Set E)) (hskew : L† = -L) :
     ∃ S, IsEvolution 𝕜 L.graph univ S ∧ (∀ S', IsEvolution 𝕜 L.graph univ S' → S' = S) ∧
-      (∀ t x, ‖S t x‖ = ‖x‖) ∧
+      (∀ s t, S (s + t) = S s ∘L S t) ∧ (∀ t x, ‖S t x‖ = ‖x‖) ∧
       (∀ x ∈ L.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution L.graph (Icc 0 T) u →
         EqOn u (fun t => S t x) (Icc 0 T)) ∧
       ∀ (K : Submodule 𝕜 E) [K.HasOrthogonalProjection],
@@ -237,7 +237,7 @@ theorem group_of (L : E →ₗ.[𝕜] E) (hL : Dense (L.domain : Set E)) (hskew 
     have hD' : Dense (hM.semigroup.generator.domain : Set E) := by rw [hMgen]; exact hL
     exact eq_semigroup_of_isEvolution hM.semigroup hD' hev ht
   refine ⟨G.S, hgen ▸ isEvolution_group G, fun S' hS' => eq_group_of_isEvolution G hD
-    (hgen ▸ hS'), hG, fun x hx T u hu0 hu => eqOn_group G (hgen ▸ hx) hu0 (hgen ▸ hu),
+    (hgen ▸ hS'), G.map_add, hG, fun x hx T u hu0 hu => eqOn_group G (hgen ▸ hx) hu0 (hgen ▸ hu),
     fun K _ => ⟨?_, ?_, ?_⟩⟩
   · rw [isReducing_iff, ← hgen, hG.isReducing_iff_invariant, Feec.C0Group.map_le_iff_forall]
   · rw [isReducing_iff, hM.isReducing_iff]
@@ -254,7 +254,7 @@ theorem semigroup_of (A : E →ₗ.[𝕜] E) (hdiss : ∀ x : A.domain, RCLike.r
     (hsurj : ∀ y, ∃ x : A.domain, (x : E) - A x = y) :
     ∃ S, IsEvolution 𝕜 A.graph (Ici 0) S ∧
       (∀ S', IsEvolution 𝕜 A.graph (Ici 0) S' → ∀ t, 0 ≤ t → S' t = S t) ∧
-      (∀ t, 0 ≤ t → ∀ x, ‖S t x‖ ≤ ‖x‖) ∧
+      (∀ s t, 0 ≤ s → 0 ≤ t → S (s + t) = S s ∘L S t) ∧ (∀ t, 0 ≤ t → ∀ x, ‖S t x‖ ≤ ‖x‖) ∧
       (∀ x ∈ A.domain, ∀ T (u : ℝ → E), u 0 = x → IsStrongSolution A.graph (Icc 0 T) u →
         EqOn u (fun t => S t x) (Icc 0 T)) ∧
       ∀ (K : Submodule 𝕜 E) [K.HasOrthogonalProjection],
@@ -266,7 +266,7 @@ theorem semigroup_of (A : E →ₗ.[𝕜] E) (hdiss : ∀ x : A.domain, RCLike.r
   set G := hA.semigroup
   have hgen : G.generator = A := hA.generator_semigroup
   refine ⟨G.S, hgen ▸ isEvolution_semigroup G, fun S' hS' t ht =>
-    eq_semigroup_of_isEvolution G G.dense_domain_generator (hgen ▸ hS') ht,
+    eq_semigroup_of_isEvolution G G.dense_domain_generator (hgen ▸ hS') ht, G.map_add,
     fun t ht x => ?_, fun x hx T u hu0 hu => eqOn_semigroup G (hgen ▸ hx) hu0 (hgen ▸ hu),
     fun K _ => ?_⟩
   · exact ((G.S t).le_opNorm x).trans

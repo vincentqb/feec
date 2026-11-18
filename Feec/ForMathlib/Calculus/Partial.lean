@@ -26,6 +26,8 @@ on `ℝⁿ`, space-time `ℝ¹⁺ⁿ`, and their components.
 * Regularity and support: `ContDiff.partialDeriv`, `ContDiff.partialDeriv_infty`,
   `ContDiff.continuous_partialDeriv`,
   `ContDiff.differentiable_partialDeriv`, `partialDeriv_partialDeriv` (`∂ᵢ∂ⱼ f = f'' eᵢ eⱼ`),
+  iterated derivatives on coordinate vectors (`iteratedFDeriv_succ_apply_single`, and
+  `iteratedFDeriv_apply_single_eq_iterate`: `Dᵖ f(x)(eᵢ, …, eᵢ) = ∂ᵢᵖ f(x)` for `Cᵖ` functions),
   `HasCompactSupport.partialDeriv`, `tsupport_partialDeriv_subset`,
   `eq_zero_of_partialDeriv_eq_zero` (compact support and `∇f = 0` give `f = 0`);
 * **Schwarz**: `partialDeriv_comm` (partial derivatives of a `C²` function commute);
@@ -221,6 +223,32 @@ theorem partialDeriv_partialDeriv {f : (ι → 𝕜) → F} {x : ι → 𝕜}
       fderiv 𝕜 (fderiv 𝕜 f) x (Pi.single i 1) (Pi.single j 1) := by
   rw [partialDeriv_fun j f, partialDeriv, fderiv_clm_apply hf (differentiableAt_const _)]
   simp
+
+/-- **Iterated derivatives on coordinate vectors, one partial derivative at a time**: for `f` of
+class `Cᵏ` and `p < k`,
+`D^{p+1} f(x)(e_{r 0}, …, e_{r p}) = ∂_{r 0} (D^p f(·)(e_{r 1}, …, e_{r p}))(x)`. -/
+theorem iteratedFDeriv_succ_apply_single {f : (ι → 𝕜) → F} {k : WithTop ℕ∞} (hf : ContDiff 𝕜 k f)
+    {p : ℕ} (hp : (p : WithTop ℕ∞) < k) (r : Fin (p + 1) → ι) (x : ι → 𝕜) :
+    iteratedFDeriv 𝕜 (p + 1) f x (fun l => Pi.single (r l) 1) =
+      partialDeriv (r 0) (fun y => iteratedFDeriv 𝕜 p f y fun l => Pi.single (r l.succ) 1) x := by
+  rw [iteratedFDeriv_succ_apply_left, partialDeriv,
+    fderiv_continuousMultilinear_apply_const_apply (hf.differentiable_iteratedFDeriv hp x)]
+  rfl
+
+/-- **Pure iterated derivatives are iterated partial derivatives**: for `f` of class `Cᵏ` and
+`p ≤ k`, `Dᵖ f(x)(eᵢ, …, eᵢ) = ∂ᵢᵖ f(x)`. -/
+theorem iteratedFDeriv_apply_single_eq_iterate {f : (ι → 𝕜) → F} {k : WithTop ℕ∞}
+    (hf : ContDiff 𝕜 k f) (i : ι) :
+    ∀ {p : ℕ}, (p : WithTop ℕ∞) ≤ k → ∀ x : ι → 𝕜,
+      iteratedFDeriv 𝕜 p f x (fun _ => Pi.single i 1) = (partialDeriv i)^[p] f x
+  | 0, _, x => by simp
+  | p + 1, hp, x => by
+    have hlt : (p : WithTop ℕ∞) < k :=
+      lt_of_lt_of_le (by exact_mod_cast p.lt_succ_self) hp
+    rw [iteratedFDeriv_succ_apply_single hf hlt (fun _ => i), Function.iterate_succ_apply']
+    congr 1
+    funext y
+    exact iteratedFDeriv_apply_single_eq_iterate hf i (hlt.le) y
 
 omit [Fintype ι] in
 theorem tsupport_partialDeriv_subset (f : (ι → 𝕜) → F) (i : ι) :

@@ -3,14 +3,12 @@ module
 public import Mathlib.Analysis.Calculus.ContDiff.Basic
 public import Mathlib.Analysis.Calculus.FDeriv.Basic
 public import Mathlib.Analysis.Convex.Hull
-public import Mathlib.Analysis.InnerProductSpace.LinearPMap
-public import Mathlib.Analysis.InnerProductSpace.PiL2
-public import Mathlib.Analysis.Normed.Lp.PiLp
+public import Mathlib.Analysis.InnerProductSpace.OfNorm
 public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
 public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
 public import Mathlib.LinearAlgebra.Matrix.ToLin
-public import Mathlib.MeasureTheory.Function.L2Space
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
 public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 public import Mathlib.Analysis.InnerProductSpace.Basic
 public import Mathlib.Algebra.Polynomial.AlgebraMap
@@ -120,60 +118,19 @@ def rationalApply {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedS
     Ring.inverse (Polynomial.aeval L (q.map (algebraMap ℝ 𝕜)))
 -- palomar-shared-end: rationalScheme
 
-/-! ### The input: Hille–Yosida -/
-
 /-! ### Banach spaces: Brenner–Thomée -/
 
 /-! ### Hilbert spaces: von Neumann -/
 
-/-! ### Families of space discretizations -/
+/-! ### Convergence for every datum: Lax -/
 
-/-! ### The heat equation in the maximum norm -/
+/-! ### Where the Banach theory is needed: the heat equation in the maximum norm -/
 
 /-- `L` is a **sub-Markov generator** on `ℝ^ι` (`ι` finite, maximum norm): `L + c` is positive
 for some `c ≥ 0` and `L 𝟙 ≤ 0`. For a matrix: nonnegative off-diagonal entries and nonpositive
 row sums. -/
 def IsSubMarkovGenerator {ι : Type*} [Fintype ι] (L : (ι → ℝ) →L[ℝ] (ι → ℝ)) : Prop :=
   (∃ c : ℝ, 0 ≤ c ∧ ∀ v : ι → ℝ, 0 ≤ v → 0 ≤ L v + c • v) ∧ ∀ i, L (fun _ => 1) i ≤ 0
-
--- palomar-shared: forms
-/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
-`s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
-abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
-/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
-abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
-  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
-/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
-`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
-abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
-/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
-  (-1) ^ (s.filter fun l => l < j).card
-/-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
-def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
-  fderiv ℝ f x (Pi.single j 1)
-/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
-def extDeriv {n : ℕ} (w : FormField n) : FormField n :=
-  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
-/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, formal adjoint of `d`. -/
-def codiff {n : ℕ} (ψ : FormField n) : FormField n :=
-  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
-open scoped ContDiff in
-/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
-def IsTestFn {n : ℕ} (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
-  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
-/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`: the adjoint of the closure of
-the codifferential on test forms (the span of the pairs `(ψ, dᵗψ)`), so `du = w` iff
-`⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`; its domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
-def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
-  (Submodule.span ℝ {p : L2Form Ω (k + 1) × L2Form Ω k | ∃ ψ : FormField n,
-    (∀ s, IsTestFn Ω fun x => ψ x s) ∧
-    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
-    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
-    ).topologicalClosure.toLinearPMap†
-/-- The cube `(0, ½)ⁿ`. -/
-def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
--- palomar-shared-end: forms
 
 -- palomar-shared: SimplicialMesh
 /-- The vertex set `{v₀, …, v_k}` of a simplex. -/
@@ -295,5 +252,7 @@ def gridInterp {n : ℕ} (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (f : (Fin n →
   fun g => f (gridPoint b h g)
 
 /-! ### The hypotheses on `r` are met -/
+
+/-! ### The classical inputs -/
 
 end TimeStepping

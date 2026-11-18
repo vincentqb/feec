@@ -25,8 +25,8 @@ layers.
   (`IsConsistent`) if `‖P y - e^{τL} y‖ ≤ K τ^{p+1} ‖L^{p+1} y‖`, and for `‖e^{tL}‖ ≤ M`,
   `‖Pⁿ y - e^{nτL} y‖ ≤ Mₛ K M (n τ) τᵖ ‖L^{p+1} y‖`
   (`norm_pow_apply_sub_exp_le_of_norm_exp_le`), on every Banach space.
-* **Bounded dissipative generators** (`re ⟪L x, x⟫ ≤ 0`, so `e^{tL}` is a contraction for `t ≥ 0`):
-  the Taylor remainder `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`
+* **Bounded dissipative generators** (`re ⟪L x, x⟫ ≤ 0`, so `e^{tL}` is a contraction for `t ≥ 0`,
+  `norm_exp_le_one`, and conversely, `re_inner_le_zero_of_norm_exp_le_one`): the Taylor remainder `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`
   (`norm_exp_sub_taylor_le`); consistency of order `p` follows from an expansion
   `P = Σ_{j≤p} τʲ/j! Lʲ + τ^{p+1} ρ L^{p+1}` with `‖ρ‖ ≤ K₀` (`isConsistent_of_eq`,
   `K = K₀ + 1/(p+1)!`);
@@ -439,6 +439,20 @@ theorem norm_exp_le_one (hL : ∀ x, RCLike.re ⟪L x, x⟫ ≤ 0) {t : ℝ} (ht
     ‖(C0Group.ofBounded L).S t‖ ≤ 1 :=
   ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x => by
     simpa using LumerPhillips.norm_exp_smul_apply_le hL ht x
+
+/-- **A bounded generator of contractions is dissipative**, the converse of `norm_exp_le_one`
+(Lumer–Phillips for bounded `L`): if `‖e^{tL}‖ ≤ 1` for `t ≥ 0`, then `re ⟪L x, x⟫ ≤ 0`
+(`C0Semigroup.IsContraction.isDissipative_generator`). -/
+theorem re_inner_le_zero_of_norm_exp_le_one
+    (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ 1) (x : X) :
+    RCLike.re ⟪L x, x⟫ ≤ 0 := by
+  have h := C0Semigroup.IsContraction.isDissipative_generator
+    (G := (C0Group.ofBounded L).toC0Semigroup) (fun t ht => by simpa using hL t ht)
+    ⟨x, C0Group.mem_domain_generator_ofBounded L x⟩
+  have e : (C0Group.ofBounded L).toC0Semigroup.generator
+      ⟨x, C0Group.mem_domain_generator_ofBounded L x⟩ = L x :=
+    C0Group.generator_ofBounded_apply L ⟨x, C0Group.mem_domain_generator_ofBounded L x⟩
+  rwa [e] at h
 
 /-- **The Taylor remainder of a contraction semigroup**: for bounded dissipative `L`, `t ≥ 0`,
 `‖e^{tL} y - Σ_{j<p} tʲ/j! Lʲ y‖ ≤ tᵖ/p! ‖Lᵖ y‖`, Taylor's formula for the semigroup

@@ -1,22 +1,18 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["TimeStepping.hilleYosida",
-    "TimeStepping.backwardEuler",
-    "TimeStepping.stable",
+  "theorem_names": ["TimeStepping.stable",
     "TimeStepping.error",
-    "TimeStepping.vonNeumann",
+    "TimeStepping.backwardEuler",
     "TimeStepping.contractive",
-    "TimeStepping.stable_of_bounded",
-    "TimeStepping.error_of_bounded",
     "TimeStepping.converges",
-    "TimeStepping.converges_backwardEuler",
-    "TimeStepping.converges_contractive",
     "TimeStepping.subMarkov",
     "TimeStepping.maxNormHeat",
     "TimeStepping.fdHeat",
     "TimeStepping.backwardEuler_isAStable",
-    "TimeStepping.crankNicolson_isAStable"
+    "TimeStepping.crankNicolson_isAStable",
+    "TimeStepping.hilleYosida",
+    "TimeStepping.vonNeumann"
   ],
   "definition_names": [],
   "permitted_axioms": [

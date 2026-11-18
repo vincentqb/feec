@@ -10,30 +10,36 @@ The theorems of `Challenge.lean`, proved from `Feec` through the bridges `Soluti
 rational schemes, semigroups, bounded generators and sub-Markov generators) and `Solution.Lumped`
 (meshes and the lumped-mass `P₁` Laplacian).
 
-* The input: the Hille–Yosida estimates from `Feec.C0Semigroup.isResolvent_resolvent` and
-  `Feec.C0Semigroup.norm_resolvent_pow_le`; backward Euler from
-  `Feec.TimeStepping.norm_pow_le_of_generator` and
-  `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`.
 * Banach spaces: Brenner–Thomée's stability bound from
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`
   (the Hille–Phillips calculus on the complexification) and the sharp error from
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`
-  (Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).
-* Hilbert spaces: `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
-  `Feec.TimeStepping.RationalScheme.norm_step_le` with
+  (Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`); for
+  bounded generators, the bounds of `Feec.TimeStepping.StableFamily` for a one-member family
+  (`TimeStepping.norm_rationalApply_pow_le`, `TimeStepping.norm_rationalApply_pow_sub_le`);
+  backward Euler from the resolvent `Feec.C0Semigroup.isResolvent_resolvent_ofReal`,
+  `Feec.TimeStepping.norm_pow_le_of_generator` and
+  `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`.
+* Hilbert spaces: `Feec.TimeStepping.RationalScheme.norm_step_le` with
   `Feec.TimeStepping.RationalScheme.step_eq_resolventEval`.
-* Families: the bounded-generator bounds of `Feec.TimeStepping.StableFamily` for a one-member
-  family (`TimeStepping.norm_rationalApply_pow_le`, `TimeStepping.norm_rationalApply_pow_sub_le`);
-  the convergence theorem `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, with
-  `Feec.TimeStepping.StableFamily.backwardEuler` for backward Euler.
+* Convergence: `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, with
+  `Feec.TimeStepping.StableFamily.backwardEuler` for backward Euler and, on Hilbert spaces, the
+  inner product of the parallelogram law (`InnerProductSpace.ofNorm`), in which a generator of
+  contractions is dissipative (`Feec.TimeStepping.re_inner_le_zero_of_norm_exp_le_one`), so that
+  `Feec.TimeStepping.RationalScheme.norm_apply_le_one` bounds the scheme.
 * The maximum norm: `IsSubMarkovGenerator.norm_exp_smul_le_one` and the other sub-Markov facts of
   `Feec.ForMathlib.Analysis.SubMarkov`; the discrete maximum principle
   `Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn` and
   `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mesh
   `Feec.Mesh.freudenthalMesh`, non-obtuse by `Feec.FiniteElement.isNonobtuse_freudenthalMesh`,
   whose lumped-mass Laplacian is the finite difference Laplacian
-  (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`); and the compatible-data estimate
+  (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`); the derivatives of the challenge as
+  partial derivatives (`iteratedFDeriv_apply_single_eq_iterate`,
+  `FiniteDifference.iteratedFDeriv_apply_pairs`); and the compatible-data estimate
   `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`.
+* The inputs: the Hille–Yosida estimates from `Feec.C0Semigroup.isResolvent_resolvent` and
+  `Feec.C0Semigroup.norm_resolvent_pow_le`; von Neumann's inequality from
+  `ContinuousLinearMap.norm_aeval_mul_inverse_le`.
 
 ## References
 
@@ -57,99 +63,72 @@ open Polynomial Asymptotics Filter Set Feec.TimeStepping
 
 namespace TimeStepping
 
-/-! ### The input: Hille–Yosida -/
-
-/-- **The Hille–Yosida estimates** ([Pazy1983], §1.5). Let `S` be a strongly continuous
-semigroup of a complex Banach space (real ones are covered by complexification in `Feec`, not
-here) with `‖S t‖ ≤ M e^{ωt}`, generator `A`. Every `z` with
-`re z > ω` is in the resolvent set of `A`: there is a bounded `R` with `R (z x - A x) = x` on
-`D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. -/
-theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
-    (S : ℝ → E →L[ℂ] E) (hS : IsC0Semigroup S) {M ω : ℝ}
-    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) (z : ℂ) (hz : ω < z.re) :
-    ∃ R : E →L[ℂ] E, (∀ x y : E, (x, y) ∈ generatorGraph S → R (z • x - y) = x) ∧
-      (∀ y : E, (R y, z • R y - y) ∈ generatorGraph S) ∧
-      ∀ m : ℕ, ‖R ^ m‖ ≤ M / (z.re - ω) ^ m := by
-  set G := hS.toC0
-  have hR := G.isResolvent_resolvent hSb hz
-  refine ⟨Feec.Operator.resolvent G.generator z, fun x y h => ?_, fun y => ?_,
-    G.norm_resolvent_pow_le hSb hz⟩
-  · obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 ((mem_graph_iff G).2 h)
-    exact hR.apply_sub ⟨x, hx⟩
-  · rw [← hR.apply_resolvent y]
-    exact G.hasDerivWithinAt_generator (hR.toDomain y)
-
-/-- **Backward Euler on Banach spaces**: `Feec.TimeStepping.norm_pow_le_of_generator` and
-`Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`. -/
-theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
-    (hS : IsC0Semigroup S) {M ω : ℝ} (hω : 0 ≤ ω)
-    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) {τ : ℝ} (hτ : 0 < τ)
-    (hωτ : ω * τ < 1) (R : E →L[𝕜] E)
-    (hR : ∀ x y : E, (x, y) ∈ generatorGraph S → R (x - (τ : 𝕜) • y) = x) :
-    (∀ k : ℕ, ‖R ^ k‖ ≤ M / (1 - ω * τ) ^ k) ∧
-      ∀ (n : ℕ) (u : ℕ → E), (∀ j < 2, (u j, u (j + 1)) ∈ generatorGraph S) →
-        ‖(R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤ M / (1 - ω * τ) ^ n *
-          (M / (1 - ω * τ) + M * Real.exp (ω * (n * τ)) / 2) * (M * Real.exp (ω * (n * τ))) *
-            (n * τ) * τ * ‖u 2‖ := by
-  set G := hS.toC0
-  have hR' : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x :=
-    fun x y hxy => hR x y ((mem_graph_iff G).1 hxy)
-  exact ⟨norm_pow_le_of_generator G hSb hτ hωτ hR', fun n u hu =>
-    RationalScheme.norm_backwardEuler_pow_sub_S_le G hω hSb hτ hωτ hR' n
-      fun j hj => (mem_graph_iff G).2 (hu j hj)⟩
-
 /-! ### Banach spaces: Brenner–Thomée -/
 
-/-- **Brenner–Thomée's stability bound** ([BrennerThomee1979]). For every A-stable `r = p/q`
-(`|r(∞)| = 1` allowed) there is `C ≥ 0`, depending on `r` only, such that for every strongly
-continuous semigroup `S` of a real or complex Banach space with `‖S t‖ ≤ M` (`t ≥ 0`), generator
-`A`, and every `τ > 0`: exactly one bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the
-resolvent `(1 - τA)⁻¹`), `Q(R)` is invertible, and `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` for every `n`. -/
+/-- **Brenner–Thomée's stability bound** ([BrennerThomee1979]), with the constant `sqrtConst` of
+`Feec` for semigroups and for bounded generators. -/
 theorem stable (p q : ℝ[X]) (hr : IsAStable p q) :
-    ∃ C : ℝ, 0 ≤ C ∧ ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-      [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (M : ℝ),
-      IsC0Semigroup S → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) → ∀ τ : ℝ, 0 < τ → ∃ R : E →L[𝕜] E,
-        (∀ T : E →L[𝕜] E,
-          (∀ x y : E, (x, y) ∈ generatorGraph S → T (x - (τ : 𝕜) • y) = x) ↔ T = R) ∧
-        IsUnit (resolventPoly q.natDegree q R) ∧
-        ∀ n : ℕ, ‖rationalOfResolvent p q R ^ n‖ ≤ M * (1 + C * √n) := by
-  refine ⟨hr.scheme.sqrtConst, hr.scheme.sqrtConst_nonneg, ?_⟩
-  intro 𝕜 E _ _ _ _ _ _ S M hS hM τ hτ
-  set G := hS.toC0
-  have hM' : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M := hM
-  have hres := G.isResolvent_resolvent_ofReal (M := M) (ω := 0) (by simpa using hM')
-    (inv_pos.2 hτ)
-  rw [RCLike.ofReal_inv] at hres
-  set R := (τ : 𝕜)⁻¹ • Feec.Operator.resolvent G.generator (τ : 𝕜)⁻¹
-  have hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x :=
-    fun x y hxy => hres.inv_smul_apply_sub hτ.ne' hxy
-  refine ⟨R, fun T => ⟨fun hT => hres.eq_inv_smul_of_apply_sub hτ.ne'
-    fun x y hxy => hT x y ((mem_graph_iff G).1 hxy), fun hT => ?_⟩, ?_, fun n => ?_⟩
-  · subst hT
-    exact fun x y hxy => hR x y ((mem_graph_iff G).2 hxy)
-  · have := hr.scheme.isUnit_resolventEval_den_of_resolvent G hM' hτ hR
-    rwa [resolventPoly_eq] at this
-  · rw [← resolventStep_eq hr]
-    exact RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable G hM'
-      hr.scheme_isAStable hτ hR n
+    ∃ C : ℝ, 0 ≤ C ∧
+      (∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
+        [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (M : ℝ),
+        IsC0Semigroup S → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) → ∀ τ : ℝ, 0 < τ → ∃ R : E →L[𝕜] E,
+          (∀ T : E →L[𝕜] E,
+            (∀ x y : E, (x, y) ∈ generatorGraph S → T (x - (τ : 𝕜) • y) = x) ↔ T = R) ∧
+          IsUnit (resolventPoly q.natDegree q R) ∧
+          ∀ n : ℕ, ‖rationalOfResolvent p q R ^ n‖ ≤ M * (1 + C * √n)) ∧
+      ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X]
+        (L : X →L[𝕜] X) (M : ℝ), (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) →
+        ∀ τ : ℝ, 0 < τ → IsUnit (aeval ((τ : 𝕜) • L) (q.map (algebraMap ℝ 𝕜))) ∧
+          ∀ n : ℕ, ‖rationalApply p q ((τ : 𝕜) • L) ^ n‖ ≤ M * (1 + C * √n) := by
+  refine ⟨hr.scheme.sqrtConst, hr.scheme.sqrtConst_nonneg, ?_, ?_⟩
+  · intro 𝕜 E _ _ _ _ _ _ S M hS hM τ hτ
+    set G := hS.toC0
+    have hM' : ∀ t, 0 ≤ t → ‖G.S t‖ ≤ M := hM
+    have hres := G.isResolvent_resolvent_ofReal (M := M) (ω := 0) (by simpa using hM')
+      (inv_pos.2 hτ)
+    rw [RCLike.ofReal_inv] at hres
+    set R := (τ : 𝕜)⁻¹ • Feec.Operator.resolvent G.generator (τ : 𝕜)⁻¹
+    have hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x :=
+      fun x y hxy => hres.inv_smul_apply_sub hτ.ne' hxy
+    refine ⟨R, fun T => ⟨fun hT => hres.eq_inv_smul_of_apply_sub hτ.ne'
+      fun x y hxy => hT x y ((mem_graph_iff G).1 hxy), fun hT => ?_⟩, ?_, fun n => ?_⟩
+    · subst hT
+      exact fun x y hxy => hR x y ((mem_graph_iff G).2 hxy)
+    · have := hr.scheme.isUnit_resolventEval_den_of_resolvent G hM' hτ hR
+      rwa [resolventPoly_eq] at this
+    · rw [← resolventStep_eq hr]
+      exact RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable G hM'
+        hr.scheme_isAStable hτ hR n
+  · intro 𝕜 X _ _ _ _ L M hL τ hτ
+    let : NormedSpace ℝ X := NormedSpace.restrictScalars ℝ 𝕜 X
+    have : IsScalarTower ℝ 𝕜 X := IsScalarTower.of_algebraMap_smul fun _ _ => rfl
+    exact norm_rationalApply_pow_le hτ L hL hr
 
 /-- **Brenner–Thomée's smooth-data error estimate** ([BrennerThomee1979]; [GomilkoTomilov2024],
-Thm 1.1(ii)). For every A-stable `r = p/q` of order `m` (`|r(∞)| = 1` allowed) there is `K`,
-depending on `r` and `m` only, such that for every strongly continuous semigroup `S` of a real or
-complex Banach space with `‖S t‖ ≤ M` (`t ≥ 0`), generator `A`, every `τ > 0` and the resolvent
-`R` (as in `stable`), `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖` for every `n` and
-`x ∈ D(A^{m+1})` (a chain `u 0 = x, …, u (m + 1) = A^{m+1} x` in the graph of `A`): order `m`
-at fixed `T = nτ`, without the `√n` of the stability bound. -/
+Thm 1.1(ii)), with the constant `sharpConst` of `Feec` for semigroups and for bounded generators,
+and along trajectories. -/
 theorem error (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
-    ∃ K : ℝ, ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-      [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (M : ℝ),
-      IsC0Semigroup S → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) → ∀ τ : ℝ, 0 < τ → ∀ R : E →L[𝕜] E,
-        (∀ x y : E, (x, y) ∈ generatorGraph S → R (x - (τ : 𝕜) • y) = x) →
-        ∀ (n : ℕ) (u : ℕ → E), (∀ j < m + 1, (u j, u (j + 1)) ∈ generatorGraph S) →
-          ‖(rationalOfResolvent p q R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
-            K * M * (n * τ) * τ ^ m * ‖u (m + 1)‖ := by
-  refine ⟨hr.scheme.sharpConst m, ?_⟩
+    ∃ K : ℝ,
+      (∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E] [CompleteSpace E]
+        [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E) (M : ℝ),
+        IsC0Semigroup S → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) → ∀ τ : ℝ, 0 < τ → ∀ R : E →L[𝕜] E,
+          (∀ x y : E, (x, y) ∈ generatorGraph S → R (x - (τ : 𝕜) • y) = x) →
+          ∀ (n : ℕ) (u : ℕ → E), (∀ j < m + 1, (u j, u (j + 1)) ∈ generatorGraph S) →
+            ‖(rationalOfResolvent p q R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤
+              K * M * (n * τ) * τ ^ m * ‖u (m + 1)‖) ∧
+      ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X]
+        [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) (M : ℝ),
+        (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
+        ∀ (n : ℕ) (v : X),
+          ‖(rationalApply p q ((τ : 𝕜) • L) ^ n) v -
+              NormedSpace.exp (((n * τ : ℝ) : 𝕜) • L) v‖ ≤
+            K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ ∧
+          ∀ (U U' : ℝ → X) (D : ℝ), (∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s) →
+            (∀ s ∈ Icc 0 (n * τ), ‖U' s - L (U s)‖ ≤ D) →
+            ‖U (n * τ) - (rationalApply p q ((τ : 𝕜) • L) ^ n) v‖ ≤
+              M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ := by
+  refine ⟨hr.scheme.sharpConst m, ?_,
+    fun L _ hL _ hτ n v => norm_rationalApply_pow_sub_le hτ L hL hr hm n v⟩
   intro 𝕜 E _ _ _ _ _ _ S M hS hM τ hτ R hR n u hu
   set G := hS.toC0
   have h := RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent G hM
@@ -158,24 +137,38 @@ theorem error (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m
     fun j hj => (mem_graph_iff G).2 (hu j hj)
   rwa [resolventStep_eq hr] at h
 
-/-! ### Hilbert spaces: von Neumann -/
+/-- **Backward Euler is power bounded on every Banach space**: the resolvent of
+`Feec.C0Semigroup.isResolvent_resolvent_ofReal`, `Feec.TimeStepping.norm_pow_le_of_generator`
+and `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`. -/
+theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
+    (hS : IsC0Semigroup S) {M ω : ℝ} (hω : 0 ≤ ω)
+    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) {τ : ℝ} (hτ : 0 < τ)
+    (hωτ : ω * τ < 1) :
+    ∃ R : E →L[𝕜] E,
+      (∀ T : E →L[𝕜] E,
+        (∀ x y : E, (x, y) ∈ generatorGraph S → T (x - (τ : 𝕜) • y) = x) ↔ T = R) ∧
+      (∀ k : ℕ, ‖R ^ k‖ ≤ M / (1 - ω * τ) ^ k) ∧
+      ∀ (n : ℕ) (u : ℕ → E), (∀ j < 2, (u j, u (j + 1)) ∈ generatorGraph S) →
+        ‖(R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤ M / (1 - ω * τ) ^ n *
+          (M / (1 - ω * τ) + M * Real.exp (ω * (n * τ)) / 2) * (M * Real.exp (ω * (n * τ))) *
+            (n * τ) * τ * ‖u 2‖ := by
+  set G := hS.toC0
+  have hres := G.isResolvent_resolvent_ofReal hSb
+    (show ω < τ⁻¹ by rw [← one_div]; exact (lt_div_iff₀ hτ).2 hωτ)
+  rw [RCLike.ofReal_inv] at hres
+  set R := (τ : 𝕜)⁻¹ • Feec.Operator.resolvent G.generator (τ : 𝕜)⁻¹
+  have hR : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x :=
+    fun x y hxy => hres.inv_smul_apply_sub hτ.ne' hxy
+  refine ⟨R, fun T => ⟨fun hT => hres.eq_inv_smul_of_apply_sub hτ.ne'
+    fun x y hxy => hT x y ((mem_graph_iff G).1 hxy), fun hT => ?_⟩,
+    norm_pow_le_of_generator G hSb hτ hωτ hR, fun n u hu =>
+    RationalScheme.norm_backwardEuler_pow_sub_S_le G hω hSb hτ hωτ hR n
+      fun j hj => (mem_graph_iff G).2 (hu j hj)⟩
+  subst hT
+  exact fun x y hxy => hR x y ((mem_graph_iff G).2 hxy)
 
-/-- **Von Neumann's inequality** ([VonNeumann1951]), for rational functions. -/
-theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
-    [CompleteSpace E] {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) (p q : ℂ[X])
-    (hq : ∀ z : ℂ, ‖z‖ ≤ 1 → q.eval z ≠ 0) :
-    IsUnit (aeval T q) ∧
-      ‖aeval T p * Ring.inverse (aeval T q)‖ₑ ≤
-        ⨆ ζ ∈ Metric.sphere (0 : ℂ) 1, ‖p.eval ζ / q.eval ζ‖ₑ := by
-  obtain ⟨K, hK⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
-    (f := fun z => p.eval z / q.eval z) (p.continuous.continuousOn.div q.continuous.continuousOn
-      fun z hz => hq z (mem_sphere_zero_iff_norm.1 hz).le)
-  refine ⟨(ContinuousLinearMap.norm_aeval_mul_inverse_le hT hq
-    fun ζ hζ _ => hK ζ (mem_sphere_zero_iff_norm.2 hζ)).1, ?_⟩
-  rw [iSup_subtype']
-  exact enorm_le_iSup _ _ fun C hC =>
-    (ContinuousLinearMap.norm_aeval_mul_inverse_le hT hq
-      fun ζ hζ _ => hC ⟨ζ, mem_sphere_zero_iff_norm.2 hζ⟩).2
+/-! ### Hilbert spaces: von Neumann -/
 
 /-- **Rational schemes for m-dissipative operators: von Neumann's theorem** ([HairerWanner1996],
 §IV.11; [Pazy1983], §1.4). Let `A` be a possibly unbounded operator of a real or complex Hilbert
@@ -209,68 +202,17 @@ theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [Inner
   rw [← e]
   exact h.trans (RationalScheme.supNorm_ofBounded_le hq hC)
 
-/-! ### Families of space discretizations -/
-
-/-- **Brenner–Thomée's stability bound for bounded generators**:
-`TimeStepping.norm_rationalApply_pow_le`. -/
-theorem stable_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) :
-    ∃ C : ℝ, 0 ≤ C ∧ ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-      [CompleteSpace X] (L : X →L[𝕜] X) (M : ℝ),
-      (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
-        IsUnit (aeval ((τ : 𝕜) • L) (q.map (algebraMap ℝ 𝕜))) ∧
-        ∀ n : ℕ, ‖rationalApply p q ((τ : 𝕜) • L) ^ n‖ ≤ M * (1 + C * √n) := by
-  refine ⟨hr.scheme.sqrtConst, hr.scheme.sqrtConst_nonneg, ?_⟩
-  intro 𝕜 X _ _ _ _ L M hL τ hτ
-  let : NormedSpace ℝ X := NormedSpace.restrictScalars ℝ 𝕜 X
-  have : IsScalarTower ℝ 𝕜 X := IsScalarTower.of_algebraMap_smul fun _ _ => rfl
-  exact norm_rationalApply_pow_le hτ L hL hr
-
-/-- **The error of A-stable schemes for bounded generators**:
-`TimeStepping.norm_rationalApply_pow_sub_le`. -/
-theorem error_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
-    ∃ K : ℝ, ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
-      [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) (M : ℝ),
-      (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
-      ∀ (n : ℕ) (v : X),
-        ‖(rationalApply p q ((τ : 𝕜) • L) ^ n) v - NormedSpace.exp (((n * τ : ℝ) : 𝕜) • L) v‖ ≤
-          K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ ∧
-        ∀ (U U' : ℝ → X) (D : ℝ), (∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s) →
-          (∀ s ∈ Icc 0 (n * τ), ‖U' s - L (U s)‖ ≤ D) →
-          ‖U (n * τ) - (rationalApply p q ((τ : 𝕜) • L) ^ n) v‖ ≤
-            M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ :=
-  ⟨hr.scheme.sharpConst m, fun L _ hL _ hτ n v => norm_rationalApply_pow_sub_le hτ L hL hr hm n v⟩
+/-! ### Convergence for every datum: Lax -/
 
 /-- **Stability and consistency give convergence for every datum**:
-`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
+`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, for a time scheme of the challenge, for
+backward Euler (`Feec.TimeStepping.StableFamily.backwardEuler`) and, on Hilbert spaces, for the
+rational time scheme `Feec.TimeStepping.StableFamily.rationalScheme`, power bounded by
+`Feec.TimeStepping.RationalScheme.norm_apply_le_one` in the inner product of the parallelogram
+law. -/
 theorem converges {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
     [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
     (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
-    [∀ h, NormedAddCommGroup (X h)] [∀ h, NormedSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
-    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h) (M : ℝ)
-    (hL : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ M)
-    (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h)
-    (hπι : ∀ h x, π h (ι h x) = x) (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ)
-    (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (P : ∀ h, X h →L[𝕜] X h) (Ms : ℝ → ℝ)
-    (hP : ∀ (T : ℝ) (h : κ) (n : ℕ), n * τ h ≤ T → ‖P h ^ n‖ ≤ Ms T) {p : ℕ} (hp : 0 < p)
-    {K : ℝ} (hK : 0 ≤ K) (hcons : ∀ h (y : X h), ‖P h y - NormedSpace.exp ((τ h : 𝕜) • L h) y‖ ≤
-      K * τ h ^ (p + 1) * ‖(L h ^ (p + 1)) y‖) (x : E) (v : ∀ h, X h)
-    (hsd : ∀ T : ℝ, TendstoUniformlyOn
-      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
-    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T → ‖S (n * τ h) x - ι h ((P h ^ n) (v h))‖ < ε := by
-  let B : BanachFEEC hS.toC0 κ :=
-    { X := X, L := L, M := M, norm_exp_le := hL, l := l, incl := ι, proj := π,
-      proj_incl := hπι, bound := hC, norm_S_le := hSM }
-  let Θ : B.TimeScheme :=
-    { τ := τ, τ_pos := hτ, P := P, M := Ms, stable := hP, p := p, p_pos := hp, K := K,
-      K_nonneg := hK, consistent := hcons }
-  exact Θ.converges (x := x) (v := v) hsd hτ0 T hε
-
-/-- **Backward Euler converges for every datum**: `Feec.TimeStepping.StableFamily.backwardEuler`
-in `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
-theorem converges_backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
-    [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-    (S : ℝ → E →L[𝕜] E) (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
     [∀ h, NormedAddCommGroup (X h)] [∀ h, NormedSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
     [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h) (M : ℝ)
     (hL : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ M)
@@ -280,56 +222,50 @@ theorem converges_backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGro
     (hsd : ∀ T : ℝ, TendstoUniformlyOn
       (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
     (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
-      ‖S (n * τ h) x - ι h ((Ring.inverse (1 - (τ h : 𝕜) • L h) ^ n) (v h))‖ < ε := by
+    (∀ (P : ∀ h, X h →L[𝕜] X h) (Ms : ℝ → ℝ),
+      (∀ (t : ℝ) (h : κ) (n : ℕ), n * τ h ≤ t → ‖P h ^ n‖ ≤ Ms t) → ∀ {m : ℕ}, 0 < m →
+      ∀ {K : ℝ}, 0 ≤ K → (∀ h (y : X h), ‖P h y - NormedSpace.exp ((τ h : 𝕜) • L h) y‖ ≤
+        K * τ h ^ (m + 1) * ‖(L h ^ (m + 1)) y‖) →
+      ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T → ‖S (n * τ h) x - ι h ((P h ^ n) (v h))‖ < ε) ∧
+    (∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
+      ‖S (n * τ h) x - ι h ((Ring.inverse (1 - (τ h : 𝕜) • L h) ^ n) (v h))‖ < ε) ∧
+    ((∀ h, InnerProductSpaceable (X h)) → M ≤ 1 → ∀ p q : ℝ[X], IsAStable p q →
+      ∀ m : ℕ, HasOrder p q m → 0 < m →
+      ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
+        ‖S (n * τ h) x - ι h ((rationalApply p q ((τ h : 𝕜) • L h) ^ n) (v h))‖ < ε) := by
   let B : BanachFEEC hS.toC0 κ :=
     { X := X, L := L, M := M, norm_exp_le := hL, l := l, incl := ι, proj := π,
       proj_incl := hπι, bound := hC, norm_S_le := hSM }
-  let Θ : B.TimeScheme := B.toStableFamily.backwardEuler τ hτ
-  filter_upwards [Θ.converges (x := x) (v := v) hsd hτ0 T hε] with h hh n hn
-  have e : Ring.inverse (1 - (τ h : 𝕜) • L h) = Θ.P h :=
-    (inverse_eq_res B.toStableFamily (hτ h) h).trans
-      (B.toStableFamily.step_theta_one (τ h) h).symm
-  rw [e]
-  exact hh n hn
-
-/-- **Every A-stable scheme converges for every datum in the Hilbert case**: the rational time
-scheme `Feec.TimeStepping.StableFamily.rationalScheme` with `M = 1`
-(`Feec.TimeStepping.norm_exp_le_one`), power bounded by
-`Feec.TimeStepping.RationalScheme.norm_apply_le_one`, in
-`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
-theorem converges_contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
-    [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
-    (S : ℝ → E →L[𝕜] E) (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
-    [∀ h, NormedAddCommGroup (X h)] [∀ h, InnerProductSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
-    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h)
-    (hL : ∀ h (y : X h), RCLike.re ⟪L h y, y⟫_𝕜 ≤ 0) (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ 1)
-    (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h) (hπι : ∀ h x, π h (ι h x) = x)
-    (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h)
-    (hτ0 : Tendsto τ l (𝓝 0)) (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m)
-    (hm0 : 0 < m) (x : E) (v : ∀ h, X h)
-    (hsd : ∀ T : ℝ, TendstoUniformlyOn
-      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
-    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
-      ‖S (n * τ h) x - ι h ((rationalApply p q ((τ h : 𝕜) • L h) ^ n) (v h))‖ < ε := by
-  have hL1 : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ 1 := fun h t ht => by
-    simpa using Feec.TimeStepping.norm_exp_le_one (hL h) ht
-  let B : BanachFEEC hS.toC0 κ :=
-    { X := X, L := L, M := 1, norm_exp_le := hL1, l := l, incl := ι, proj := π,
-      proj_incl := hπι, bound := hC, norm_S_le := hSM }
-  have e : ∀ h, B.toStableFamily.step hr.scheme (τ h) h = rationalApply p q ((τ h : 𝕜) • L h) :=
-    fun h => (step_eq B.toStableFamily (hτ h) h hr.scheme).2
-  let Θ : B.TimeScheme := B.toStableFamily.rationalScheme hr.scheme hr.scheme_isAStable
-    (hr.scheme_hasOrder hm) hm0 τ hτ (fun _ => 1) fun _ h n _ => by
+  refine ⟨fun P Ms hP m hm K hK hcons => ?_, ?_, fun hX hM1 p q hr m hm hm0 => ?_⟩
+  · let Θ : B.TimeScheme :=
+      { τ := τ, τ_pos := hτ, P := P, M := Ms, stable := hP, p := m, p_pos := hm, K := K,
+        K_nonneg := hK, consistent := hcons }
+    exact Θ.converges (x := x) (v := v) hsd hτ0 T hε
+  · let Θ : B.TimeScheme := B.toStableFamily.backwardEuler τ hτ
+    filter_upwards [Θ.converges (x := x) (v := v) hsd hτ0 T hε] with h hh n hn
+    have e : Ring.inverse (1 - (τ h : 𝕜) • L h) = Θ.P h :=
+      (inverse_eq_res B.toStableFamily (hτ h) h).trans
+        (B.toStableFamily.step_theta_one (τ h) h).symm
+    rw [e]
+    exact hh n hn
+  · have e : ∀ h, B.toStableFamily.step hr.scheme (τ h) h =
+        rationalApply p q ((τ h : 𝕜) • L h) :=
+      fun h => (step_eq B.toStableFamily (hτ h) h hr.scheme).2
+    have hP : ∀ h (n : ℕ), ‖B.toStableFamily.step hr.scheme (τ h) h ^ n‖ ≤ 1 := by
+      intro h n
       rw [e h]
+      let : InnerProductSpace 𝕜 (X h) := InnerProductSpace.ofNorm 𝕜 (hX h).parallelogram_identity
+      have hd : ∀ y : X h, RCLike.re ⟪L h y, y⟫_𝕜 ≤ 0 :=
+        re_inner_le_zero_of_norm_exp_le_one fun t ht => (hL h t ht).trans hM1
       exact Feec.TimeStepping.norm_pow_le_one (hr.scheme.norm_apply_le_one
-        (RationalScheme.dissipative_smul (hL h) (hτ h).le) hr.scheme_isAStable) n
-  filter_upwards [Θ.converges (x := x) (v := v) hsd hτ0 T hε] with h hh n hn
-  rw [← e h]
-  exact hh n hn
+        (RationalScheme.dissipative_smul hd (hτ h).le) hr.scheme_isAStable) n
+    let Θ : B.TimeScheme := B.toStableFamily.rationalScheme hr.scheme hr.scheme_isAStable
+      (hr.scheme_hasOrder hm) hm0 τ hτ (fun _ => 1) fun _ h n _ => hP h n
+    filter_upwards [Θ.converges (x := x) (v := v) hsd hτ0 T hε] with h hh n hn
+    rw [← e h]
+    exact hh n hn
 
-/-! ### The heat equation in the maximum norm -/
+/-! ### Where the Banach theory is needed: the heat equation in the maximum norm -/
 
 /-- **Sub-Markov generators are contractive in the maximum norm**: the sub-Markov facts of
 `Feec.ForMathlib.Analysis.SubMarkov`, backward Euler through `TimeStepping.exists_res`. -/
@@ -401,7 +337,8 @@ principle `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mes
 `Feec.Mesh.freudenthalMesh`, whose lumped-mass Laplacian is the finite difference Laplacian
 (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`), and the compatible-data estimate
 `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`, the classical solution as a
-`Feec.Models.Cube.MaxNormHeat.HeatSolution`. -/
+`Feec.Models.Cube.MaxNormHeat.HeatSolution` and its derivatives as partial derivatives
+(`iteratedFDeriv_apply_single_eq_iterate`, `FiniteDifference.iteratedFDeriv_apply_pairs`). -/
 theorem fdHeat :
     (∀ {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ),
       IsSubMarkovGenerator (fdLaplacian G h)) ∧
@@ -415,16 +352,16 @@ theorem fdHeat :
       (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (u t)) →
       (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Ioo (b i) (b i + s),
         HasDerivAt (fun t => u t x) (u₁ t x) t ∧
-          u₁ t x = ∑ i, partialDeriv i (partialDeriv i (u t)) x) →
+          u₁ t x = ∑ i, iteratedFDeriv ℝ 2 (u t) x fun _ => Pi.single i 1) →
       (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s),
         x ∉ univ.pi (fun i => Ioo (b i) (b i + s)) → u t x = 0) →
       (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ∀ i,
-        |(partialDeriv i)^[4] (u t) x| ≤ B) →
+        |iteratedFDeriv ℝ 4 (u t) x fun _ => Pi.single i 1| ≤ B) →
       ContDiff ℝ (2 * m + 2) ũ → (∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ũ x = u 0 x) →
       (∀ i x, ũ (Function.update x i (2 * b i - x i)) = -ũ x ∧
         ũ (Function.update x i (2 * (b i + s) - x i)) = -ũ x) →
-      (∀ (l : Fin (m + 1) → Fin n) x,
-        |(List.ofFn l).foldr (fun i f => partialDeriv i (partialDeriv i f)) ũ x| ≤ B') →
+      (∀ (l : ℕ → Fin n) x,
+        |iteratedFDeriv ℝ (2 * m + 2) ũ x fun j => Pi.single (l ((j : ℕ) / 2)) 1| ≤ B') →
       ∀ (N : ℕ) (τ : ℝ), 0 < τ → ∀ k : ℕ, k * τ ≤ T →
         ‖gridInterp b (s / (N + 1 : ℕ)) N (u (k * τ)) -
             (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k)
@@ -441,11 +378,33 @@ theorem fdHeat :
     exact (Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq b hs N).symm
   refine ⟨hr.scheme.sharpConst m, ?_⟩
   intro n b s T B B' u u₁ ũ hs hu hh hbd hB hũ hũu hodd hB' N τ hτ k hk
+  have hheat : ∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Ioo (b i) (b i + s),
+      u₁ t x = laplacian (u t) x := by
+    intro t ht x hx
+    rw [(hh t ht x hx).2, laplacian_apply]
+    exact Finset.sum_congr rfl fun i _ =>
+      iteratedFDeriv_apply_single_eq_iterate (hu t ht) i (by norm_num) x
+  have hB₄ : ∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ∀ i,
+      |(partialDeriv i)^[4] (u t) x| ≤ B := fun t ht x hx i => by
+    rw [← iteratedFDeriv_apply_single_eq_iterate (hu t ht) i (by norm_num) x]
+    exact hB t ht x hx i
+  have hB'' : ∀ (l : Fin (m + 1) → Fin n) x,
+      |FiniteDifference.secondPartials (List.ofFn l) ũ x| ≤ B' := by
+    intro l x
+    set l' : ℕ → Fin n := fun j => l ⟨min j m, by omega⟩
+    have e : List.ofFn l = List.ofFn fun i : Fin (m + 1) => l' i := by
+      congr 1
+      funext i
+      congr 1
+      ext
+      exact (min_eq_left (Nat.lt_succ_iff.1 i.2)).symm
+    rw [e, ← FiniteDifference.iteratedFDeriv_apply_pairs (m := m + 1) (by exact_mod_cast hũ) l' x]
+    exact hB' l' x
   let S : Feec.Models.Cube.MaxNormHeat.HeatSolution b s T :=
     { u := u, u₁ := u₁, contDiff := hu, hasDerivAt := fun t ht x hx => (hh t ht x hx).1,
-      heat := fun t ht x hx => (hh t ht x hx).2, boundary := hbd, B₄ := B, bound₄ := hB }
+      heat := hheat, boundary := hbd, B₄ := B, bound₄ := hB₄ }
   have H := Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible hs S hr.scheme_isAStable
-    (hr.scheme_hasOrder hm) hũ (fun i => ⟨fun x => (hodd i x).1, fun x => (hodd i x).2⟩) hũu hB'
+    (hr.scheme_hasOrder hm) hũ (fun i => ⟨fun x => (hodd i x).1, fun x => (hodd i x).2⟩) hũu hB''
     N hτ hk
   have e := (step_eq (Feec.Models.Cube.FiniteDifferenceHeat.family n s) hτ N hr.scheme).2
   simp only [RCLike.ofReal_real_eq_id, id] at e
@@ -489,5 +448,44 @@ theorem crankNicolson_isAStable : IsAStable (2 + X) (2 - X) ∧ HasOrder (2 + X)
   refine ⟨h0, ?_⟩
   rw [norm_div, div_le_one (by positivity)]
   nlinarith [norm_nonneg ((2 : ℂ) + z), norm_nonneg ((2 : ℂ) - z)]
+
+/-! ### The classical inputs -/
+
+/-- **The Hille–Yosida estimates** ([Pazy1983], §1.5). Let `S` be a strongly continuous
+semigroup of a complex Banach space (real ones are covered by complexification in `Feec`, not
+here) with `‖S t‖ ≤ M e^{ωt}`, generator `A`. Every `z` with
+`re z > ω` is in the resolvent set of `A`: there is a bounded `R` with `R (z x - A x) = x` on
+`D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. -/
+theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
+    (S : ℝ → E →L[ℂ] E) (hS : IsC0Semigroup S) {M ω : ℝ}
+    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) (z : ℂ) (hz : ω < z.re) :
+    ∃ R : E →L[ℂ] E, (∀ x y : E, (x, y) ∈ generatorGraph S → R (z • x - y) = x) ∧
+      (∀ y : E, (R y, z • R y - y) ∈ generatorGraph S) ∧
+      ∀ m : ℕ, ‖R ^ m‖ ≤ M / (z.re - ω) ^ m := by
+  set G := hS.toC0
+  have hR := G.isResolvent_resolvent hSb hz
+  refine ⟨Feec.Operator.resolvent G.generator z, fun x y h => ?_, fun y => ?_,
+    G.norm_resolvent_pow_le hSb hz⟩
+  · obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 ((mem_graph_iff G).2 h)
+    exact hR.apply_sub ⟨x, hx⟩
+  · rw [← hR.apply_resolvent y]
+    exact G.hasDerivWithinAt_generator (hR.toDomain y)
+
+/-- **Von Neumann's inequality** ([VonNeumann1951]), for rational functions. -/
+theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
+    [CompleteSpace E] {T : E →L[ℂ] E} (hT : ‖T‖ ≤ 1) (p q : ℂ[X])
+    (hq : ∀ z : ℂ, ‖z‖ ≤ 1 → q.eval z ≠ 0) :
+    IsUnit (aeval T q) ∧
+      ‖aeval T p * Ring.inverse (aeval T q)‖ₑ ≤
+        ⨆ ζ ∈ Metric.sphere (0 : ℂ) 1, ‖p.eval ζ / q.eval ζ‖ₑ := by
+  obtain ⟨K, hK⟩ := (isCompact_sphere (0 : ℂ) 1).exists_bound_of_continuousOn
+    (f := fun z => p.eval z / q.eval z) (p.continuous.continuousOn.div q.continuous.continuousOn
+      fun z hz => hq z (mem_sphere_zero_iff_norm.1 hz).le)
+  refine ⟨(ContinuousLinearMap.norm_aeval_mul_inverse_le hT hq
+    fun ζ hζ _ => hK ζ (mem_sphere_zero_iff_norm.2 hζ)).1, ?_⟩
+  rw [iSup_subtype']
+  exact enorm_le_iSup _ _ fun C hC =>
+    (ContinuousLinearMap.norm_aeval_mul_inverse_le hT hq
+      fun ζ hζ _ => hC ⟨ζ, mem_sphere_zero_iff_norm.2 hζ⟩).2
 
 end TimeStepping

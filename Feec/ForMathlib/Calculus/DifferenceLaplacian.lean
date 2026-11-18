@@ -14,7 +14,9 @@ derivatives:
 * `Dₕ` commutes with the partial derivatives of a differentiable function
   (`FiniteDifference.partialDeriv_diffLaplacian`), hence with the words
   `∂²_{i₁} ⋯ ∂²_{i_k}` of pure second partial derivatives (`FiniteDifference.secondPartials`,
-  `FiniteDifference.secondPartials_diffLaplacian`);
+  `FiniteDifference.secondPartials_diffLaplacian`), the iterated derivatives
+  `D^{2k} f(x)(e_{i₁}, e_{i₁}, …, e_{i_k}, e_{i_k})` of a `C^{2k}` function
+  (`FiniteDifference.iteratedFDeriv_apply_pairs`);
 * `|Dₕ g| ≤ n B` for `|∂ᵢ² g| ≤ B` (`FiniteDifference.abs_diffLaplacian_le`, the second
   difference `Feec.abs_axis_secondDiff_le`), so `|Dₕᵏ f| ≤ nᵏ B` for `f ∈ C^{2k}` with
   `|∂²_{i₁} ⋯ ∂²_{i_k} f| ≤ B` (`FiniteDifference.abs_iterate_diffLaplacian_le`).
@@ -60,6 +62,39 @@ theorem contDiff_secondPartials {f : (Fin n → ℝ) → ℝ} (w : List (Fin n))
     have h1 : ContDiff ℝ (m + 1 : ℕ) (partialDeriv i (secondPartials w f)) :=
       h.partialDeriv (by exact_mod_cast le_refl (m + 1 + 1)) i
     exact h1.partialDeriv (by exact_mod_cast le_refl (m + 1)) i
+
+/-- **Words of pure second partial derivatives are iterated derivatives on paired coordinate
+vectors**: for `f ∈ C^{2m}` and directions `l`,
+`D^{2m} f(x)(e_{l 0}, e_{l 0}, …, e_{l (m-1)}, e_{l (m-1)}) = ∂²_{l 0} ⋯ ∂²_{l (m-1)} f(x)`. -/
+theorem iteratedFDeriv_apply_pairs {f : (Fin n → ℝ) → ℝ} :
+    ∀ {m : ℕ}, ContDiff ℝ (2 * m : ℕ) f → ∀ (l : ℕ → Fin n) (x : Fin n → ℝ),
+      iteratedFDeriv ℝ (2 * m) f x (fun j => Pi.single (l ((j : ℕ) / 2)) 1) =
+        secondPartials (List.ofFn fun i : Fin m => l i) f x
+  | 0, _, l, x => by simp [secondPartials]
+  | m + 1, hf, l, x => by
+    have hf' : ContDiff ℝ (2 * m : ℕ) f := hf.of_le (by exact_mod_cast (by omega))
+    have h1 : ((2 * m + 1 : ℕ) : WithTop ℕ∞) < (2 * (m + 1) : ℕ) := by exact_mod_cast (by omega)
+    have h0 : ((2 * m : ℕ) : WithTop ℕ∞) < (2 * (m + 1) : ℕ) := by exact_mod_cast (by omega)
+    have e : (fun y => iteratedFDeriv ℝ (2 * m + 1) f y
+        fun j : Fin (2 * m + 1) => Pi.single (l (((j : ℕ) + 1) / 2)) 1) =
+        partialDeriv (l 0) (secondPartials (List.ofFn fun i : Fin m => l (i + 1)) f) := by
+      funext y
+      rw [iteratedFDeriv_succ_apply_single hf h0
+        (fun j : Fin (2 * m + 1) => l (((j : ℕ) + 1) / 2))]
+      simp only [Fin.val_zero, Fin.val_succ]
+      congr 1
+      funext z
+      rw [← iteratedFDeriv_apply_pairs hf' (fun k => l (k + 1)) z]
+      congr 2
+      funext j
+      congr 2
+      omega
+    show iteratedFDeriv ℝ (2 * m + 1 + 1) f x
+      (fun j : Fin (2 * m + 1 + 1) => Pi.single (l ((j : ℕ) / 2)) 1) = _
+    rw [iteratedFDeriv_succ_apply_single hf h1 (fun j : Fin (2 * m + 1 + 1) => l ((j : ℕ) / 2))]
+    simp only [Fin.val_zero, Fin.val_succ, Nat.zero_div]
+    rw [e, List.ofFn_succ]
+    rfl
 
 theorem _root_.ContDiff.diffLaplacian (h : ℝ) {f : (Fin n → ℝ) → ℝ} {k : WithTop ℕ∞}
     (hf : ContDiff ℝ k f) : ContDiff ℝ k (FiniteDifference.diffLaplacian h f) := by

@@ -1,35 +1,39 @@
 module
 
 public import Solution.Bridge
-public import Solution.Leapfrog
-public import Solution.PlaneWave
+public import Solution.Lumped
 
 /-!
-# Rational time stepping on Banach spaces, with its instances (solution)
+# A-stable rational time stepping for `C₀`-semigroups (solution)
 
 The theorems of `Challenge.lean`, proved from `Feec` through the bridges `Solution.Bridge` (the
-rational schemes) and
-`Solution.CubeSpaces`, `Solution.WhitneySpaces`, `Solution.WhitneyInterp`,
-`Solution.WhitneyScheme` (the Whitney schemes of the cube).
+rational schemes, semigroups, bounded generators and sub-Markov generators) and `Solution.Lumped`
+(meshes and the lumped-mass `P₁` Laplacian).
 
-* Banach spaces: the Hille–Yosida estimates from `Feec.C0Semigroup.isResolvent_resolvent` and
-  `Feec.C0Semigroup.norm_resolvent_pow_le`; Brenner–Thomée's stability bound from
+* The input: the Hille–Yosida estimates from `Feec.C0Semigroup.isResolvent_resolvent` and
+  `Feec.C0Semigroup.norm_resolvent_pow_le`; backward Euler from
+  `Feec.TimeStepping.norm_pow_le_of_generator` and
+  `Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`.
+* Banach spaces: Brenner–Thomée's stability bound from
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_le_of_resolvent_of_isAStable`
   (the Hille–Phillips calculus on the complexification) and the sharp error from
   `Feec.TimeStepping.RationalScheme.norm_resolventStep_pow_sub_S_le_sharp_of_resolvent`
-  (Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`); the
-  convergence theorem `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`.
+  (Brenner–Thomée's error kernel, `Feec.HalfLineAlgebra.integral_norm_errorKernel_le`).
 * Hilbert spaces: `ContinuousLinearMap.norm_aeval_mul_inverse_le`,
   `Feec.TimeStepping.RationalScheme.norm_step_le` with
   `Feec.TimeStepping.RationalScheme.step_eq_resolventEval`.
-* Finite differences: `Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat` with
-  compatible data (`Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`).
-* The Whitney schemes: the Freudenthal meshes are `Feec`'s (`cubeMesh`), the challenge's Whitney
-  spaces, interpolant and steps are `Feec`'s, and the errors are
-  `Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row` and
-  `RowSolution.whitney_leapfrog_error_le_row`, the latter for every constant of the inverse
-  estimate; the global inverse estimate is `Feec.FiniteElement.PolySeq.exists_mul_norm_d_le`;
-  non-vacuity from row `0` of `Feec`'s plane wave (`Solution.PlaneWave`).
+* Families: the bounded-generator bounds of `Feec.TimeStepping.StableFamily` for a one-member
+  family (`TimeStepping.norm_rationalApply_pow_le`, `TimeStepping.norm_rationalApply_pow_sub_le`);
+  the convergence theorem `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`, with
+  `Feec.TimeStepping.StableFamily.backwardEuler` for backward Euler.
+* The maximum norm: `IsSubMarkovGenerator.norm_exp_smul_le_one` and the other sub-Markov facts of
+  `Feec.ForMathlib.Analysis.SubMarkov`; the discrete maximum principle
+  `Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn` and
+  `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mesh
+  `Feec.Mesh.freudenthalMesh`, non-obtuse by `Feec.FiniteElement.isNonobtuse_freudenthalMesh`,
+  whose lumped-mass Laplacian is the finite difference Laplacian
+  (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`); and the compatible-data estimate
+  `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`.
 
 ## References
 
@@ -40,10 +44,8 @@ rational schemes) and
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.5, §3.4
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
-* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 7
-* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 15
+* [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -55,7 +57,7 @@ open Polynomial Asymptotics Filter Set Feec.TimeStepping
 
 namespace TimeStepping
 
-/-! ### Banach spaces -/
+/-! ### The input: Hille–Yosida -/
 
 /-- **The Hille–Yosida estimates** ([Pazy1983], §1.5). Let `S` be a strongly continuous
 semigroup of a complex Banach space (real ones are covered by complexification in `Feec`, not
@@ -76,6 +78,28 @@ theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [Comp
     exact hR.apply_sub ⟨x, hx⟩
   · rw [← hR.apply_resolvent y]
     exact G.hasDerivWithinAt_generator (hR.toDomain y)
+
+/-- **Backward Euler on Banach spaces**: `Feec.TimeStepping.norm_pow_le_of_generator` and
+`Feec.TimeStepping.RationalScheme.norm_backwardEuler_pow_sub_S_le`. -/
+theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
+    (hS : IsC0Semigroup S) {M ω : ℝ} (hω : 0 ≤ ω)
+    (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) {τ : ℝ} (hτ : 0 < τ)
+    (hωτ : ω * τ < 1) (R : E →L[𝕜] E)
+    (hR : ∀ x y : E, (x, y) ∈ generatorGraph S → R (x - (τ : 𝕜) • y) = x) :
+    (∀ k : ℕ, ‖R ^ k‖ ≤ M / (1 - ω * τ) ^ k) ∧
+      ∀ (n : ℕ) (u : ℕ → E), (∀ j < 2, (u j, u (j + 1)) ∈ generatorGraph S) →
+        ‖(R ^ n) (u 0) - S (n * τ) (u 0)‖ ≤ M / (1 - ω * τ) ^ n *
+          (M / (1 - ω * τ) + M * Real.exp (ω * (n * τ)) / 2) * (M * Real.exp (ω * (n * τ))) *
+            (n * τ) * τ * ‖u 2‖ := by
+  set G := hS.toC0
+  have hR' : ∀ x y, (x, y) ∈ G.generator.graph → R (x - (τ : 𝕜) • y) = x :=
+    fun x y hxy => hR x y ((mem_graph_iff G).1 hxy)
+  exact ⟨norm_pow_le_of_generator G hSb hτ hωτ hR', fun n u hu =>
+    RationalScheme.norm_backwardEuler_pow_sub_S_le G hω hSb hτ hωτ hR' n
+      fun j hj => (mem_graph_iff G).2 (hu j hj)⟩
+
+/-! ### Banach spaces: Brenner–Thomée -/
 
 /-- **Brenner–Thomée's stability bound** ([BrennerThomee1979]). For every A-stable `r = p/q`
 (`|r(∞)| = 1` allowed) there is `C ≥ 0`, depending on `r` only, such that for every strongly
@@ -134,43 +158,7 @@ theorem error (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m
     fun j hj => (mem_graph_iff G).2 (hu j hj)
   rwa [resolventStep_eq hr] at h
 
-/-- **Stability and consistency give convergence** (the Lax equivalence theorem in the
-Brenner–Thomée form, [BrennerThomee1979]; [Thomee2006], Ch. 7; [Pazy1983], §3.4). Let `S` be a
-strongly continuous semigroup of a Banach space `E` over `𝕜 = ℝ` or `ℂ` with `‖S t‖ ≤ M`, and
-let Banach spaces `Xₕ` (`h : κ`, refined along a filter `l`) carry bounded generators `Lₕ` with
-`‖e^{tLₕ}‖ ≤ M` for `t ≥ 0`, uniformly in `h`, read in `E` by `ιₕ` with left inverses `πₕ`
-(`πₕ ιₕ = 1`), `‖ιₕ‖, ‖πₕ‖ ≤ C`. Let `Pₕ` be a time scheme with steps `τₕ > 0`, `τₕ → 0`,
-power bounded (`‖Pₕⁿ‖ ≤ Mₛ(T)` for `nτₕ ≤ T`) and consistent of order `p ≥ 1`
-(`‖Pₕ y - e^{τₕLₕ} y‖ ≤ K τₕ^{p+1} ‖Lₕ^{p+1} y‖`). If the semidiscrete solutions
-`ιₕ e^{tLₕ} vₕ` converge to `S(t) x` uniformly on every `[0, T]`, then the fully discrete
-solutions `ιₕ Pₕⁿ vₕ` converge to `S(nτₕ) x` uniformly over the time levels `nτₕ ∈ [0, T]`: no
-smoothness of `x` or `vₕ` is assumed. (`S` enters the conclusion only through
-`S(nτₕ) x`, the limit of the semidiscrete solutions.) -/
-theorem converges {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
-    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
-    (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
-    [∀ h, NormedAddCommGroup (X h)] [∀ h, NormedSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
-    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h) (M : ℝ)
-    (hL : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ M)
-    (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h)
-    (hπι : ∀ h x, π h (ι h x) = x) (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ)
-    (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (P : ∀ h, X h →L[𝕜] X h) (Ms : ℝ → ℝ)
-    (hP : ∀ (T : ℝ) (h : κ) (n : ℕ), n * τ h ≤ T → ‖P h ^ n‖ ≤ Ms T) {p : ℕ} (hp : 0 < p)
-    {K : ℝ} (hK : 0 ≤ K) (hcons : ∀ h (y : X h), ‖P h y - NormedSpace.exp ((τ h : 𝕜) • L h) y‖ ≤
-      K * τ h ^ (p + 1) * ‖(L h ^ (p + 1)) y‖) (x : E) (v : ∀ h, X h)
-    (hsd : ∀ T : ℝ, TendstoUniformlyOn
-      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
-    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
-    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T → ‖S (n * τ h) x - ι h ((P h ^ n) (v h))‖ < ε := by
-  let B : BanachFEEC hS.toC0 κ :=
-    { X := X, L := L, M := M, norm_exp_le := hL, l := l, incl := ι, proj := π,
-      proj_incl := hπι, bound := hC, norm_S_le := hSM }
-  let Θ : B.TimeScheme :=
-    { τ := τ, τ_pos := hτ, P := P, M := Ms, stable := hP, p := p, p_pos := hp, K := K,
-      K_nonneg := hK, consistent := hcons }
-  exact Θ.converges (x := x) (v := v) hsd hτ0 T hε
-
-/-! ### Hilbert spaces -/
+/-! ### Hilbert spaces: von Neumann -/
 
 /-- **Von Neumann's inequality** ([VonNeumann1951]), for rational functions. -/
 theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
@@ -221,12 +209,160 @@ theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [Inner
   rw [← e]
   exact h.trans (RationalScheme.supNorm_ofBounded_le hq hC)
 
-/-! ### Finite differences in the maximum norm -/
+/-! ### Families of space discretizations -/
 
-/-- **The heat equation in the maximum norm by finite differences, from compatible data**:
+/-- **Brenner–Thomée's stability bound for bounded generators**:
+`TimeStepping.norm_rationalApply_pow_le`. -/
+theorem stable_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) :
+    ∃ C : ℝ, 0 ≤ C ∧ ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+      [CompleteSpace X] (L : X →L[𝕜] X) (M : ℝ),
+      (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
+        IsUnit (aeval ((τ : 𝕜) • L) (q.map (algebraMap ℝ 𝕜))) ∧
+        ∀ n : ℕ, ‖rationalApply p q ((τ : 𝕜) • L) ^ n‖ ≤ M * (1 + C * √n) := by
+  refine ⟨hr.scheme.sqrtConst, hr.scheme.sqrtConst_nonneg, ?_⟩
+  intro 𝕜 X _ _ _ _ L M hL τ hτ
+  let : NormedSpace ℝ X := NormedSpace.restrictScalars ℝ 𝕜 X
+  have : IsScalarTower ℝ 𝕜 X := IsScalarTower.of_algebraMap_smul fun _ _ => rfl
+  exact norm_rationalApply_pow_le hτ hr L hL
+
+/-- **The error of A-stable schemes for bounded generators**:
+`TimeStepping.norm_rationalApply_pow_sub_le`. -/
+theorem error_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
+    ∃ K : ℝ, ∀ {𝕜 X : Type*} [RCLike 𝕜] [NormedAddCommGroup X] [NormedSpace 𝕜 X]
+      [CompleteSpace X] [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) (M : ℝ),
+      (∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) → ∀ τ : ℝ, 0 < τ →
+      ∀ (n : ℕ) (v : X),
+        ‖(rationalApply p q ((τ : 𝕜) • L) ^ n) v - NormedSpace.exp (((n * τ : ℝ) : 𝕜) • L) v‖ ≤
+          K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ ∧
+        ∀ (U U' : ℝ → X) (D : ℝ), (∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s) →
+          (∀ s ∈ Icc 0 (n * τ), ‖U' s - L (U s)‖ ≤ D) →
+          ‖U (n * τ) - (rationalApply p q ((τ : 𝕜) • L) ^ n) v‖ ≤
+            M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ :=
+  ⟨hr.scheme.sharpConst m, fun L _ hL _ hτ n v => norm_rationalApply_pow_sub_le hτ hr L hL hm n v⟩
+
+/-- **Stability and consistency give convergence for every datum**:
+`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
+theorem converges {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
+    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] (S : ℝ → E →L[𝕜] E)
+    (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
+    [∀ h, NormedAddCommGroup (X h)] [∀ h, NormedSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
+    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h) (M : ℝ)
+    (hL : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ M)
+    (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h)
+    (hπι : ∀ h x, π h (ι h x) = x) (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ)
+    (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (P : ∀ h, X h →L[𝕜] X h) (Ms : ℝ → ℝ)
+    (hP : ∀ (T : ℝ) (h : κ) (n : ℕ), n * τ h ≤ T → ‖P h ^ n‖ ≤ Ms T) {p : ℕ} (hp : 0 < p)
+    {K : ℝ} (hK : 0 ≤ K) (hcons : ∀ h (y : X h), ‖P h y - NormedSpace.exp ((τ h : 𝕜) • L h) y‖ ≤
+      K * τ h ^ (p + 1) * ‖(L h ^ (p + 1)) y‖) (x : E) (v : ∀ h, X h)
+    (hsd : ∀ T : ℝ, TendstoUniformlyOn
+      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
+    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T → ‖S (n * τ h) x - ι h ((P h ^ n) (v h))‖ < ε := by
+  let B : BanachFEEC hS.toC0 κ :=
+    { X := X, L := L, M := M, norm_exp_le := hL, l := l, incl := ι, proj := π,
+      proj_incl := hπι, bound := hC, norm_S_le := hSM }
+  let Θ : B.TimeScheme :=
+    { τ := τ, τ_pos := hτ, P := P, M := Ms, stable := hP, p := p, p_pos := hp, K := K,
+      K_nonneg := hK, consistent := hcons }
+  exact Θ.converges (x := x) (v := v) hsd hτ0 T hε
+
+/-- **Backward Euler converges for every datum**: `Feec.TimeStepping.StableFamily.backwardEuler`
+in `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
+theorem converges_backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+    (S : ℝ → E →L[𝕜] E) (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
+    [∀ h, NormedAddCommGroup (X h)] [∀ h, NormedSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
+    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h) (M : ℝ)
+    (hL : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ M)
+    (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M) (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h)
+    (hπι : ∀ h x, π h (ι h x) = x) (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ)
+    (hτ : ∀ h, 0 < τ h) (hτ0 : Tendsto τ l (𝓝 0)) (x : E) (v : ∀ h, X h)
+    (hsd : ∀ T : ℝ, TendstoUniformlyOn
+      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
+    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
+      ‖S (n * τ h) x - ι h ((Ring.inverse (1 - (τ h : 𝕜) • L h) ^ n) (v h))‖ < ε := by
+  let B : BanachFEEC hS.toC0 κ :=
+    { X := X, L := L, M := M, norm_exp_le := hL, l := l, incl := ι, proj := π,
+      proj_incl := hπι, bound := hC, norm_S_le := hSM }
+  let Θ : B.TimeScheme := B.toStableFamily.backwardEuler τ hτ
+  filter_upwards [Θ.converges (x := x) (v := v) hsd hτ0 T hε] with h hh n hn
+  have e : Ring.inverse (1 - (τ h : 𝕜) • L h) = Θ.P h :=
+    (inverse_eq_res B.toStableFamily (hτ h) h).trans
+      (B.toStableFamily.step_theta_one (τ h) h).symm
+  rw [e]
+  exact hh n hn
+
+/-! ### The heat equation in the maximum norm -/
+
+/-- **Sub-Markov generators are contractive in the maximum norm**: the sub-Markov facts of
+`Feec.ForMathlib.Analysis.SubMarkov`, backward Euler through `TimeStepping.exists_res`. -/
+theorem subMarkov {ι : Type*} [Fintype ι] {L : (ι → ℝ) →L[ℝ] (ι → ℝ)}
+    (hL : IsSubMarkovGenerator L) :
+    (∀ t : ℝ, 0 ≤ t → (∀ v, 0 ≤ v → 0 ≤ NormedSpace.exp (t • L) v) ∧
+      ‖NormedSpace.exp (t • L)‖ ≤ 1) ∧
+    ∀ τ : ℝ, 0 < τ → IsUnit (1 - τ • L) ∧ (∀ v, 0 ≤ v → 0 ≤ Ring.inverse (1 - τ • L) v) ∧
+      ‖Ring.inverse (1 - τ • L)‖ ≤ 1 := by
+  have hL' := hL.toFeec
+  refine ⟨fun t ht => ⟨fun v hv => hL'.exp_smul_apply_nonneg ht hv,
+    hL'.norm_exp_smul_le_one ht⟩, fun τ hτ => ?_⟩
+  obtain ⟨R, h1, h2, h3⟩ := exists_res (𝕜 := ℝ) L (M := 1)
+    (fun t ht => by simpa using hL'.norm_exp_smul_le_one ht) hτ
+  simp only [RCLike.ofReal_real_eq_id, id] at h1 h2
+  rw [show Ring.inverse (1 - τ • L) = R from Ring.inverse_unit ⟨_, R, h2, h1⟩]
+  refine ⟨⟨⟨_, R, h2, h1⟩, rfl⟩, fun v hv => hL'.nonneg_of_sub_smul_apply_nonneg hτ.le ?_, h3⟩
+  have e : R v - τ • L (R v) = v := by simpa using ContinuousLinearMap.ext_iff.1 h2 v
+  rw [e]
+  exact hv
+
+/-- **The lumped-mass heat equation on non-obtuse meshes**: the discrete maximum principle
+`Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn`, then `subMarkov` and the
+bounded-generator bounds with `M = 1`. -/
+theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
+    ∃ (C : ℝ) (K : ℕ → ℝ), 0 ≤ C ∧ ∀ (n : ℕ) (M : SimplicialMesh n), IsNonobtuse M →
+      ∀ {ι : Type*} [Fintype ι] (x : ι → Fin n → ℝ), Function.Injective x →
+        IsSubMarkovGenerator (lumpedLaplacian M x) ∧
+        (∀ τ : ℝ, 0 < τ → ∀ k : ℕ,
+          ‖rationalApply p q (τ • lumpedLaplacian M x) ^ k‖ ≤ 1 + C * √k) ∧
+        ∀ m : ℕ, HasOrder p q m → ∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
+          (ε : ℝ) (v : ι → ℝ),
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i)) (u₁ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₁ s ∘ x - lumpedLaplacian M x (u s ∘ x)‖ ≤ ε) →
+          ‖u (k * τ) ∘ x - (rationalApply p q (τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * ε +
+              K m * (k * τ) * τ ^ m * ‖(lumpedLaplacian M x ^ (m + 1)) v‖ := by
+  refine ⟨hr.scheme.sqrtConst, hr.scheme.sharpConst, hr.scheme.sqrtConst_nonneg, ?_⟩
+  intro n M hM ι _ x hx
+  have hL : IsSubMarkovGenerator (lumpedLaplacian M x) := by
+    rw [lumpedLaplacian_eq]
+    exact .ofFeec (Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn
+      ((isNonobtuse_iff M).1 hM) hx)
+  have h1 : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp (((t : ℝ) : ℝ) • lumpedLaplacian M x)‖ ≤ 1 :=
+    fun t ht => by simpa using hL.toFeec.norm_exp_smul_le_one ht
+  refine ⟨hL, fun τ hτ k => ?_, fun m hm τ hτ k u u₁ ε v hu hε => ?_⟩
+  · simpa using (norm_rationalApply_pow_le hτ hr _ h1).2 k
+  · have h := (norm_rationalApply_pow_sub_le hτ hr _ h1 hm k v).2 (fun s => u s ∘ x)
+      (fun s => u₁ s ∘ x) ε (fun s hs => hasDerivAt_pi.2 (hu s hs)) hε
+    simpa using h
+
+/-- **The discrete maximum principle for finite differences**:
+`FiniteDifference.isSubMarkovGenerator_laplacian`. -/
+theorem isSubMarkovGenerator_fdLaplacian {ι : Type*} [Fintype ι] [DecidableEq ι]
+    (G : Finset (ι → ℤ)) (h : ℝ) : IsSubMarkovGenerator (fdLaplacian G h) := by
+  rw [fdLaplacian_eq]
+  exact .ofFeec (FiniteDifference.isSubMarkovGenerator_laplacian G h)
+
+/-- **The heat equation in the maximum norm by finite differences**: the Freudenthal mesh
+`Feec.Mesh.freudenthalMesh`, whose lumped-mass Laplacian is the finite difference Laplacian
+(`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`), and the compatible-data estimate
 `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`, the classical solution as a
 `Feec.Models.Cube.MaxNormHeat.HeatSolution`. -/
-theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m) :
+theorem fdHeat :
+    (∀ (n N : ℕ) (b : Fin n → ℝ) (s : ℝ), 0 < s → ∃ M : SimplicialMesh n,
+      M.domain = univ.pi (fun i => Ioo (b i) (b i + s)) ∧ IsNonobtuse M ∧
+      lumpedLaplacian M (fun g : gridNodes n N => gridPoint b (s / (N + 1 : ℕ)) g) =
+        fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ∧
+    ∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →
     ∃ K : ℝ, ∀ (n : ℕ) (b : Fin n → ℝ) (s T B B' : ℝ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
       (ũ : (Fin n → ℝ) → ℝ), 0 < s →
       (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (u t)) →
@@ -247,6 +383,12 @@ theorem fdHeat (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q 
             (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k)
               (gridInterp b (s / (N + 1 : ℕ)) N (u 0))‖ ≤
           k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m) := by
+  refine ⟨fun n N b s hs => ⟨SimplicialMesh.ofFeec (Feec.Mesh.freudenthalMesh b s hs (N + 1)),
+    Feec.Mesh.freudenthalMesh_domain b s hs (N + 1), ?_, ?_⟩, fun p q hr m hm => ?_⟩
+  · rw [isNonobtuse_iff, SimplicialMesh.toFeec_ofFeec]
+    exact Feec.FiniteElement.isNonobtuse_freudenthalMesh b hs (N + 1)
+  · rw [lumpedLaplacian_eq, SimplicialMesh.toFeec_ofFeec, fdLaplacian_eq]
+    exact (Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq b hs N).symm
   refine ⟨hr.scheme.sharpConst m, ?_⟩
   intro n b s T B B' u u₁ ũ hs hu hh hbd hB hũ hũu hodd hB' N τ hτ k hk
   let S : Feec.Models.Cube.MaxNormHeat.HeatSolution b s T :=
@@ -297,242 +439,5 @@ theorem crankNicolson_isAStable : IsAStable (2 + X) (2 - X) ∧ HasOrder (2 + X)
   refine ⟨h0, ?_⟩
   rw [norm_div, div_le_one (by positivity)]
   nlinarith [norm_nonneg ((2 : ℂ) + z), norm_nonneg ((2 : ℂ) - z)]
-
-/-! ### The Whitney schemes on the cube -/
-
-section Cube
-
-open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM
-
-open Feec.Models.Cube.Inhomogeneous hiding RowSolution in
-theorem crankNicolson_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    IsFreudenthal 𝒯 ∧
-    (∀ N k (w : FormField 3), Continuous w → ∃! x, IsWhitneyInterp (cube 3) (𝒯 N) k w x) ∧
-    (∀ N Δt g u, RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → ∃! u', IsCNStep (𝒯 N) Δt g u u') ∧
-    (∀ N, ∃ v ∈ femSpace (cube 3) (𝒯 N) topSeq (𝒯 N).boundaryFacets 1, v ≠ 0) ∧
-    ∀ N T L (X : RowSolution T L) (Δt : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → M * Δt ≤ T →
-      (∀ m < M, IsCNStep (𝒯 N) Δt (g (m + 1)) (u m) (u (m + 1))) →
-      (∀ m < M, ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 1 : ℕ) * Δt)) w ∧
-        RowMem (𝒯 N) true (g (m + 1) - w)) →
-      IsRowInterp (𝒯 N) (X.u 0) (u 0) → ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
-        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
-        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) := by
-  refine ⟨cubeMesh, cnConst, isMeshFamily_cube, points_cube, ?_, ?_, ?_, ?_⟩
-  · intro N k w hw
-    exact ⟨FEMInterp.canonicalInterp N k ⟨w, hw⟩, (isWhitneyInterp_cube_iff N k ⟨w, hw⟩ _).2 rfl,
-      fun x hx => (isWhitneyInterp_cube_iff N k ⟨w, hw⟩ _).1 hx⟩
-  · intro N Δt g u hg hu
-    obtain ⟨g', rfl⟩ := (rowMem_false_iff N g).1 hg
-    obtain ⟨u', rfl⟩ := (rowMem_false_iff N u).1 hu
-    obtain ⟨a, ha, hau⟩ := whitney_existsUnique_cnStep N (Δt / 2) 0 g' u'
-    refine ⟨ofD N a, (isCNStep_ofD_iff N Δt g' u' _).2 ⟨a, rfl, ha⟩, fun x hx => ?_⟩
-    obtain ⟨b, rfl, hb⟩ := (isCNStep_ofD_iff N Δt g' u' x).1 hx
-    rw [hau b hb]
-  · intro N
-    obtain ⟨v, hv, hv0⟩ := Submodule.exists_mem_ne_zero_of_ne_bot (whitneyMin_one_ne_bot N)
-    exact ⟨v, (mem_whitneyMin N 1).1 hv, hv0⟩
-  · intro N T L X Δt M u g hΔt hM hstep hg hu0 U hU0 hU1 hU2
-    have hL0 := zero_le_L X hΔt hM
-    have hu : ∀ m ≤ M, RowMem (cubeMesh N) false (u m) := by
-      intro m hm
-      rcases m with _ | m
-      · rw [ofD_interp X hu0]; exact (rowMem_false_iff N _).2 ⟨_, rfl⟩
-      · exact (hstep m hm).1
-    have hgm : ∀ m < M, ∃ c ∈ whitneyInterior N,
-        g (m + 1) = ofD N (c + X.toFeec.interp N ((m + 1 : ℕ) * Δt)) := by
-      intro m hm
-      obtain ⟨w, hw, hgw⟩ := hg m hm
-      obtain ⟨c, hc, hce⟩ := (rowMem_true_iff N _).1 hgw
-      refine ⟨c, hc, ?_⟩
-      rw [ofD_add, ← hce, ← ofD_interp X hw, sub_add_cancel]
-    classical
-    set a : ℕ → DState (whitneyRow N) := fun m =>
-      if h : RowMem (cubeMesh N) false (u m) then ((rowMem_false_iff N _).1 h).choose else 0
-      with hadef
-    have ha : ∀ m ≤ M, u m = ofD N (a m) := fun m hm => by
-      rw [hadef]; dsimp only; rw [dite_eq_left (hu m hm)]
-      exact ((rowMem_false_iff N _).1 (hu m hm)).choose_spec
-    set b : ℕ → DState (whitneyRow N) := fun m =>
-      if h : RowMem (cubeMesh N) false (g m) then ((rowMem_false_iff N _).1 h).choose else 0
-      with hbdef
-    have hgM : ∀ m < M, RowMem (cubeMesh N) false (g (m + 1)) := fun m hm => by
-      obtain ⟨c, -, hc⟩ := hgm m hm
-      exact (rowMem_false_iff N _).2 ⟨_, hc⟩
-    have hb : ∀ m < M, g (m + 1) = ofD N (b (m + 1)) := fun m hm => by
-      rw [hbdef]; dsimp only; rw [dite_eq_left (hgM m hm)]
-      exact ((rowMem_false_iff N _).1 (hgM m hm)).choose_spec
-    have hstep' : ∀ m < M, Feec.TimeStepping.IsDirichletCNStep (whitneyInterior N)
-        (discreteWave (whitneyRow N)) (Δt / 2) 0 (b (m + 1)) (a m) (a (m + 1)) := by
-      intro m hm
-      have h := hstep m hm
-      rw [hb m hm, ha m hm.le, ha (m + 1) hm] at h
-      obtain ⟨u', hu', h'⟩ := (isCNStep_ofD_iff N Δt _ _ _).1 h
-      rwa [← ofD_injective N hu'] at h'
-    have hg' : ∀ m < M, b (m + 1) - X.toFeec.interp N ((m + 1 : ℕ) * Δt) ∈ whitneyInterior N := by
-      intro m hm
-      obtain ⟨c, hc, hce⟩ := hgm m hm
-      rw [hb m hm] at hce
-      rw [ofD_injective N hce, add_sub_cancel_right]
-      exact hc
-    have hu0' : a 0 = X.toFeec.interp N 0 :=
-      ofD_injective N ((ha 0 (Nat.zero_le M)).symm.trans (ofD_interp X hu0))
-    have key := X.toFeec.whitney_cn_error_le_row N hΔt hL0 hM hstep' hg' hu0'
-    rw [toRow_field X hU0 hU1 hU2, ha M le_rfl, ofD, ← toRow_sub, rowNorm, norm_toRow,
-      meshSize_cubeMesh]
-    exact key
-
-theorem inverse_estimate {n : ℕ} [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
-    {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
-    (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :
-    ∃ C, ∀ N, ∀ v ∈ femSpace Ω (M N) S ∅ k, ∃ hv : v ∈ (dMax Ω k).domain,
-      meshSize (M N) * ‖dMax Ω k ⟨v, hv⟩‖ ≤ C * ‖v‖ := by
-  obtain ⟨hdom, ⟨σ, q, hq, hsq⟩, hpos, -⟩ := hM
-  obtain ⟨T₀, hT₀⟩ := exists_mem_simplices (hpos 0)
-  have hσ := pos_of_isShapeRegular (hsq 0).1 hT₀
-  obtain ⟨K, -, hK⟩ := S.toFeec.exists_mul_norm_d_le (n := n) k (C := max n σ)
-    (c := 1 / ((n.factorial : ℝ) * σ ^ n)) (le_max_of_le_right hσ.le) (by positivity)
-  refine ⟨K / q, fun N v hv => ?_⟩
-  set m := (M N).toFeec Ω (hdom N)
-  have hv' : v ∈ (S.toFeec.subcomplex m hΩ).V k := (mem_V_iff S (M N) Ω (hdom N) v).2 hv
-  have hd : v ∈ ((extDerivOp ℝ n k).maximal m.domain).domain :=
-    (polyElement n S.toFeec).V_le_maximal_domain m hΩ k hv'
-  have hdM : dMax Ω k = (extDerivOp ℝ n k).maximal Ω := dMax_eq Ω k
-  refine ⟨hdM ▸ hd, ?_⟩
-  have hb := hK m hΩ (hint N) (isShapeRegular_toFeec (hdom N) (hsq N).1)
-    (h := q * meshSize (M N)) (mul_pos hq (hpos N)) (fun T hT => (hsq N).2 T hT) ⟨v, hd⟩ hv'
-  have e : dMax Ω k ⟨v, hdM ▸ hd⟩ = (extDerivOp ℝ n k).maximal m.domain ⟨v, hd⟩ :=
-    LinearPMap.apply_of_eq' hdM _
-  have hb' : q * meshSize (M N) * ‖(extDerivOp ℝ n k).maximal m.domain ⟨v, hd⟩‖ ≤ K * ‖v‖ := hb
-  rw [e, div_mul_eq_mul_div, le_div_iff₀ hq]
-  rw [mul_comm _ q, ← mul_assoc]
-  exact hb'
-
-set_option maxHeartbeats 800000 in
-open Feec.Models.Cube.Inhomogeneous hiding RowSolution in
-theorem leapfrog_cube : ∃ (𝒯 : ℕ → SimplicialMesh 3) (C : ℝ), IsMeshFamily (cube 3) 𝒯 ∧
-    IsFreudenthal 𝒯 ∧
-    (∃ C₀, ∀ N v, RowMem (𝒯 N) false v →
-      meshSize (𝒯 N) * √(‖wd 0 v.1‖ ^ 2 + ‖wd 1 v.2.1‖ ^ 2) ≤ C₀ * rowNorm v) ∧
-    (∀ N Δt g u u', RowMem (𝒯 N) false g → RowMem (𝒯 N) false u → RowMem (𝒯 N) false u' →
-      ∃! u'', IsLeapfrogStep (𝒯 N) Δt g u u' u'') ∧
-    ∀ C₀, 0 ≤ C₀ → (∀ N v, RowMem (𝒯 N) false v →
-      meshSize (𝒯 N) * √(‖wd 0 v.1‖ ^ 2 + ‖wd 1 v.2.1‖ ^ 2) ≤ C₀ * rowNorm v) →
-    (∀ N Δt c (u : ℕ → Row) m, 0 ≤ Δt → c < 1 → 2 * C₀ * Δt ≤ c * meshSize (𝒯 N) →
-      (∀ k < m, IsLeapfrogStep (𝒯 N) Δt 0 (u k) (u (k + 1)) (u (k + 2))) →
-      RowMem (𝒯 N) true (u 0) → RowMem (𝒯 N) true (u 1) →
-      √(1 - c) * rowNorm (u (m + 1)) ≤ √((1 + c) * (rowNorm (u 0) ^ 2 + rowNorm (u 1) ^ 2))) ∧
-    ∀ N T L (X : RowSolution T L) (Δt c : ℝ) (M : ℕ) (u g : ℕ → Row), 0 < Δt → c < 1 →
-      2 * C₀ * Δt ≤ c * meshSize (𝒯 N) → M * Δt ≤ T →
-      (∀ m, m + 2 ≤ M → IsLeapfrogStep (𝒯 N) Δt (g (m + 2)) (u m) (u (m + 1)) (u (m + 2))) →
-      (∀ m, m + 2 ≤ M → ∃ w, IsRowInterp (𝒯 N) (X.u ((m + 2 : ℕ) * Δt)) w ∧
-        RowMem (𝒯 N) true (g (m + 2) - w)) →
-      IsRowInterp (𝒯 N) (X.u 0) (u 0) → IsRowInterp (𝒯 N) (X.u Δt) (u 1) →
-      ∀ U : Row, IsRepr (cube 3) 0 (X.u (M * Δt) 0) U.1 →
-        IsRepr (cube 3) 1 (X.u (M * Δt) 1) U.2.1 → IsRepr (cube 3) 2 (X.u (M * Δt) 2) U.2.2 →
-        rowNorm (u M - U) ≤ C * L * (1 + T) * (meshSize (𝒯 N) + Δt ^ 2) / (1 - c) := by
-  obtain ⟨K, -, hK⟩ := exists_mul_norm_discreteD_whitneyRow_le
-  refine ⟨cubeMesh, leapfrogConst, isMeshFamily_cube, points_cube, ⟨K, ?_⟩, ?_,
-    fun C₀ hC₀ hC₀' => ?_⟩
-  · intro N v hv
-    obtain ⟨a, rfl⟩ := (rowMem_false_iff N v).1 hv
-    rw [meshSize_cubeMesh, rowNorm_ofD, ← norm_discreteD_eq]
-    exact hK N a
-  · intro N Δt g u u' hg hu hu'
-    obtain ⟨g', rfl⟩ := (rowMem_false_iff N g).1 hg
-    obtain ⟨u₀, rfl⟩ := (rowMem_false_iff N u).1 hu
-    obtain ⟨u₁, rfl⟩ := (rowMem_false_iff N u').1 hu'
-    obtain ⟨a, ha, hau⟩ := Feec.TimeStepping.existsUnique_isDirichletLeapfrogStep
-      (V₀ := whitneyInterior N) (A := discreteWave (whitneyRow N)) Δt g' u₀ u₁
-    refine ⟨ofD N a, (isLeapfrogStep_ofD_iff N Δt g' u₀ u₁ _).2 ⟨a, rfl, ha⟩, fun x hx => ?_⟩
-    obtain ⟨b, rfl, hb⟩ := (isLeapfrogStep_ofD_iff N Δt g' u₀ u₁ x).1 hx
-    rw [hau b hb]
-  have hC : ∀ N (x : DState (whitneyRow N)),
-      Feec.Models.Cube.FEM.meshSize N * ‖discreteD (whitneyRow N) x‖ ≤ C₀ * ‖x‖ := fun N x => by
-    have := hC₀' N (ofD N x) ((rowMem_false_iff N _).2 ⟨x, rfl⟩)
-    rwa [meshSize_cubeMesh, rowNorm_ofD, ← norm_discreteD_eq] at this
-  refine ⟨?_, ?_⟩
-  · intro N Δt c u m hΔt hc1 hcfl hstep hu0 hu1
-    have hmem : ∀ k ≤ m + 1, RowMem (cubeMesh N) false (u k) := by
-      intro k hk
-      rcases k with _ | _ | k
-      · exact rowMem_false_of_true N hu0
-      · exact rowMem_false_of_true N hu1
-      · exact (hstep k (by omega)).1
-    obtain ⟨a, ha⟩ := exists_seq_ofD N hmem
-    have hstep' : ∀ k < m, Feec.TimeStepping.IsDirichletLeapfrogStep (whitneyInterior N)
-        (discreteWave (whitneyRow N)) Δt 0 (a k) (a (k + 1)) (a (k + 2)) := by
-      intro k hk
-      have h := hstep k hk
-      rw [← ofD_zero N, ha k (by omega), ha (k + 1) (by omega), ha (k + 2) (by omega)] at h
-      obtain ⟨u', hu', h'⟩ := (isLeapfrogStep_ofD_iff N Δt _ _ _ _).1 h
-      rwa [← ofD_injective N hu'] at h'
-    have ha0 : a 0 ∈ whitneyInterior N := by
-      have h := hu0; rw [ha 0 (by omega)] at h; exact (rowMem_true_ofD_iff N _).1 h
-    have ha1 : a 1 ∈ whitneyInterior N := by
-      have h := hu1; rw [ha 1 (by omega)] at h; exact (rowMem_true_ofD_iff N _).1 h
-    rw [meshSize_cubeMesh] at hcfl
-    have key := whitney_leapfrog_stable N hC₀ (hC N) hΔt hc1 hcfl hstep' ha0 ha1
-    rwa [ha 0 (by omega), ha 1 (by omega), ha (m + 1) le_rfl, rowNorm_ofD, rowNorm_ofD,
-      rowNorm_ofD]
-  · intro N T L X Δt c M u g hΔt hc1 hcfl hM hstep hg hu0 hu1 U hU0 hU1 hU2
-    have hL0 := zero_le_L X hΔt hM
-    have hmem : ∀ k ≤ M, RowMem (cubeMesh N) false (u k) := by
-      intro k hk
-      rcases k with _ | _ | k
-      · rw [ofD_interp X hu0]; exact (rowMem_false_iff N _).2 ⟨_, rfl⟩
-      · rw [ofD_interp X hu1]; exact (rowMem_false_iff N _).2 ⟨_, rfl⟩
-      · exact (hstep k hk).1
-    obtain ⟨a, ha⟩ := exists_seq_ofD N hmem
-    have hgm : ∀ k, k + 2 ≤ M → ∃ e ∈ whitneyInterior N,
-        g (k + 2) = ofD N (e + X.toFeec.interp N ((k + 2 : ℕ) * Δt)) := by
-      intro k hk
-      obtain ⟨w, hw, hgw⟩ := hg k hk
-      obtain ⟨e, he, hee⟩ := (rowMem_true_iff N _).1 hgw
-      refine ⟨e, he, ?_⟩
-      rw [ofD_add, ← hee, ← ofD_interp X hw, sub_add_cancel]
-    choose! e he hge using hgm
-    set gD : ℕ → DState (whitneyRow N) := fun j => e (j - 2) + X.toFeec.interp N (j * Δt)
-    have hgD : ∀ k, gD (k + 2) = e k + X.toFeec.interp N ((k + 2 : ℕ) * Δt) := fun k => by
-      simp only [gD, Nat.add_sub_cancel]
-    have hstep' : ∀ k, k + 2 ≤ M → Feec.TimeStepping.IsDirichletLeapfrogStep (whitneyInterior N)
-        (discreteWave (whitneyRow N)) Δt (gD (k + 2)) (a k) (a (k + 1)) (a (k + 2)) := by
-      intro k hk
-      have h := hstep k hk
-      rw [hge k hk, ha k (by omega), ha (k + 1) (by omega), ha (k + 2) hk] at h
-      obtain ⟨u', hu', h'⟩ := (isLeapfrogStep_ofD_iff N Δt _ _ _ _).1 h
-      rw [← ofD_injective N hu'] at h'
-      rwa [hgD]
-    have hg' : ∀ k, k + 2 ≤ M →
-        gD (k + 2) - X.toFeec.interp N ((k + 2 : ℕ) * Δt) ∈ whitneyInterior N := by
-      intro k hk
-      rw [hgD, add_sub_cancel_right]
-      exact he k hk
-    have hu0' : a 0 = X.toFeec.interp N 0 :=
-      ofD_injective N ((ha 0 (Nat.zero_le M)).symm.trans (ofD_interp X hu0))
-    rcases Nat.eq_zero_or_pos M with hM0 | hM0
-    · subst hM0
-      set a' := Function.update a 1 (X.toFeec.interp N Δt)
-      have key := X.toFeec.whitney_leapfrog_error_le_row N hC₀ (hC N) hΔt hc1
-        (by rwa [meshSize_cubeMesh] at hcfl) hL0 hM (u := a') (g := gD)
-        (fun k hk => absurd hk (by omega)) (fun k hk => absurd hk (by omega))
-        (by simp [a', hu0']) (by simp [a'])
-      rw [toRow_field X hU0 hU1 hU2, ha 0 le_rfl, ofD, ← toRow_sub, rowNorm, norm_toRow,
-        meshSize_cubeMesh]
-      simpa [a'] using key
-    have hu1' : a 1 = X.toFeec.interp N Δt :=
-      ofD_injective N ((ha 1 hM0).symm.trans (ofD_interp X hu1))
-    have key := X.toFeec.whitney_leapfrog_error_le_row N hC₀ (hC N) hΔt hc1
-      (by rwa [meshSize_cubeMesh] at hcfl) hL0 hM hstep' hg' hu0' hu1'
-    rw [toRow_field X hU0 hU1 hU2, ha M le_rfl, ofD, ← toRow_sub, rowNorm, norm_toRow,
-      meshSize_cubeMesh]
-    exact key
-
-/-- **Non-vacuity of the Whitney error bounds**: row `0` of the plane wave
-(`Solution.PlaneWave`). -/
-theorem rowSolution_nonvacuous (T : ℝ) :
-    ∃ L, ∃ X : RowSolution T L, ∀ t, ∃ y ∈ cube 3, X.u t 1 y ≠ 0 ∧ X.u₁ t 1 y ≠ 0 :=
-  exists_rowSolution T
-
-end Cube
 
 end TimeStepping

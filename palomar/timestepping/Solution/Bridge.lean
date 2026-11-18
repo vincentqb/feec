@@ -21,7 +21,13 @@ The challenge is stated over Mathlib's polynomials and bounded operators. The di
   `p(τL) q(τL)⁻¹` (`TimeStepping.step_eq`, from `Feec.TimeStepping.resolventEval_eq_mul_aeval`);
 * a `TimeStepping.IsC0Semigroup` is a `Feec.C0Semigroup` (`TimeStepping.IsC0Semigroup.toC0`),
   whose generator has the graph `TimeStepping.generatorGraph` (`TimeStepping.mem_graph_iff`);
-* the finite difference Laplacian is that of `Feec` (`TimeStepping.fdLaplacian_eq`).
+* a bounded `L` with `‖e^{tL}‖ ≤ M` is a one-member `Feec.TimeStepping.StableFamily`
+  (`TimeStepping.single`), whose resolvent is `(1 - τL)⁻¹` (`TimeStepping.inverse_eq_res`), and
+  Brenner–Thomée's bounds for it are `TimeStepping.norm_rationalApply_pow_le` and
+  `TimeStepping.norm_rationalApply_pow_sub_le`, with the constants of `Feec`;
+* a sub-Markov generator is one of `Feec` (`TimeStepping.IsSubMarkovGenerator.toFeec`,
+  `TimeStepping.IsSubMarkovGenerator.ofFeec`), and the finite difference Laplacian is that of
+  `Feec` (`TimeStepping.fdLaplacian_eq`).
 
 `TimeStepping.enorm_le_iSup` and `TimeStepping.enorm_pow_le_iSup_pow` pass from real bounds to
 suprema in `[0, ∞]`.
@@ -158,6 +164,16 @@ section Bounded
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
+/-- A bounded `L` with `‖e^{tL}‖ ≤ M` as a one-member uniformly stable family. -/
+def single {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X]
+    [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) {M : ℝ}
+    (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) : StableFamily 𝕜 Unit where
+  X _ := X
+  L _ := L
+  M := M
+  M_nonneg := (norm_nonneg _).trans (hL 0 le_rfl)
+  norm_exp_le _ t ht := hL t ht
+
 variable {κ : Type*} (F : StableFamily 𝕜 κ) {τ : ℝ} (hτ : 0 < τ) (h : κ)
 include hτ
 
@@ -168,6 +184,21 @@ theorem res_mul : F.res τ h * (1 - (τ : 𝕜) • F.L h) = 1 := by
 theorem mul_res : (1 - (τ : 𝕜) • F.L h) * F.res τ h = 1 := by
   ext x
   simpa using F.res_sub_smul_apply_res hτ h x
+
+/-- **Backward Euler is the discrete resolvent**: `(1 - τLₕ)⁻¹ = Rₕ`. -/
+theorem inverse_eq_res : Ring.inverse (1 - (τ : 𝕜) • F.L h) = F.res τ h :=
+  Ring.inverse_unit ⟨_, _, mul_res F hτ h, res_mul F hτ h⟩
+
+omit hτ in
+/-- **The resolvent of a bounded `L` with `‖e^{tL}‖ ≤ M`**: a two-sided inverse of `1 - τL`, of
+norm at most `M`. -/
+theorem exists_res {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X]
+    [NormedSpace ℝ X] [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) {M : ℝ}
+    (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M) {τ : ℝ} (hτ : 0 < τ) :
+    ∃ R : X →L[𝕜] X, R * (1 - (τ : 𝕜) • L) = 1 ∧ (1 - (τ : 𝕜) • L) * R = 1 ∧ ‖R‖ ≤ M :=
+  ⟨(single L hL).res τ (), res_mul (single L hL) hτ (), mul_res (single L hL) hτ (), by
+    have := (single L hL).norm_res_pow_le hτ () 1
+    rwa [pow_one] at this⟩
 
 /-- **For a bounded generator the resolvent form is `p(τL) q(τL)⁻¹`**, and `q(τL)` is
 invertible. -/
@@ -203,9 +234,58 @@ theorem step_eq (r : RationalScheme) :
     Ring.mul_inverse_mul_of_commute hU (hcN _) (hcN _)]
   rfl
 
+omit hτ
+
+variable {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X] [NormedSpace ℝ X]
+  [IsScalarTower ℝ 𝕜 X] {p q : ℝ[X]} (hr : IsAStable p q) (L : X →L[𝕜] X) {M : ℝ}
+  (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M)
+include hr hL hτ
+
+/-- **Brenner–Thomée's stability bound for a bounded generator**, with the constant
+`sqrtConst` of `Feec`: `q(τL)` is invertible and `‖r(τL)ⁿ‖ ≤ M (1 + C √n)`. -/
+theorem norm_rationalApply_pow_le :
+    IsUnit (aeval ((τ : 𝕜) • L) (q.map (algebraMap ℝ 𝕜))) ∧
+      ∀ n : ℕ, ‖rationalApply p q ((τ : 𝕜) • L) ^ n‖ ≤ M * (1 + hr.scheme.sqrtConst * √n) := by
+  have e := step_eq (single L hL) hτ () hr.scheme
+  refine ⟨e.1, fun n => ?_⟩
+  have h := (single L hL).norm_step_pow_le hr.scheme_isAStable hτ () n
+  rw [e.2] at h
+  exact h
+
+/-- **Brenner–Thomée's error for a bounded generator**, with the constant `sharpConst` of `Feec`,
+and along trajectories with a defect. -/
+theorem norm_rationalApply_pow_sub_le {m : ℕ} (hm : HasOrder p q m) (n : ℕ) (v : X) :
+    ‖(rationalApply p q ((τ : 𝕜) • L) ^ n) v - NormedSpace.exp (((n * τ : ℝ) : 𝕜) • L) v‖ ≤
+        hr.scheme.sharpConst m * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ ∧
+      ∀ (U U' : ℝ → X) (D : ℝ), (∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U' s) s) →
+        (∀ s ∈ Icc 0 (n * τ), ‖U' s - L (U s)‖ ≤ D) →
+        ‖U (n * τ) - (rationalApply p q ((τ : 𝕜) • L) ^ n) v‖ ≤
+          M * ‖U 0 - v‖ + M * (n * τ) * D +
+            hr.scheme.sharpConst m * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ := by
+  have e := (step_eq (single L hL) hτ () hr.scheme).2
+  refine ⟨?_, fun U U' D hU hD => ?_⟩
+  · have h := (single L hL).norm_step_pow_sub_exp_le hr.scheme_isAStable (hr.scheme_hasOrder hm)
+      hτ () n v
+    rw [e] at h
+    exact h
+  · have h := (single L hL).norm_sub_step_pow_le_of_traj hr.scheme_isAStable
+      (hr.scheme_hasOrder hm) hτ () (U := U) (U' := U') hU hD v
+    rw [e] at h
+    exact h
+
 end Bounded
 
 /-! ### The maximum norm -/
+
+/-- A sub-Markov generator of the challenge is one of `Feec`. -/
+theorem IsSubMarkovGenerator.toFeec {ι : Type*} [Fintype ι] {L : (ι → ℝ) →L[ℝ] (ι → ℝ)}
+    (hL : IsSubMarkovGenerator L) : _root_.IsSubMarkovGenerator L :=
+  ⟨hL.1, hL.2⟩
+
+/-- A sub-Markov generator of `Feec` is one of the challenge. -/
+theorem IsSubMarkovGenerator.ofFeec {ι : Type*} [Fintype ι] {L : (ι → ℝ) →L[ℝ] (ι → ℝ)}
+    (hL : _root_.IsSubMarkovGenerator L) : IsSubMarkovGenerator L :=
+  ⟨hL.exists_shift, hL.apply_one_nonpos⟩
 
 /-- The finite difference Laplacian of the challenge is `FiniteDifference.laplacian`. -/
 theorem fdLaplacian_eq {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ) :

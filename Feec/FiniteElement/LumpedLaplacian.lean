@@ -21,7 +21,10 @@ the boundary condition is the natural one. A node that is not a vertex of the me
 * **`isSubMarkovGenerator_lumpedLaplacianOn`** (the discrete maximum principle, Ciarlet–Raviart):
   on a non-obtuse mesh `Lₕ` is a sub-Markov generator: nonnegative off-diagonal entries, and
   `Lₕ 𝟙 ≤ 0` because `a(φₚ, 1) = 0` and the vertices outside the nodes couple nonpositively;
-* `lumpedLaplacianOn_apply_one`: `Lₕ 𝟙 = 0` when every vertex of the mesh is a node.
+* `lumpedLaplacianOn_apply_one`: `Lₕ 𝟙 = 0` when every vertex of the mesh is a node;
+* `p1Grad_eq_vecMul`, `p1Grad_nodalIndicator`: the `P₁` gradient by the edge matrix,
+  `∇Πₜu = E⁻ᵀ δ`, and the `P₁` interpolant of the hat function at a vertex is its barycentric
+  coordinate (the entries `a(φ_{x p}, φ_{x q})` in terms of `∇λⱼ`).
 
 ## References
 
@@ -40,6 +43,29 @@ namespace Feec.FiniteElement
 open Feec.Mesh
 
 variable {n : ℕ} {ι : Type*} [Fintype ι]
+
+/-! ### `P₁` gradients -/
+
+/-- **The `P₁` gradient by the edge matrix**: `∇Πₜu = E⁻ᵀ δ` with `δₗ = u(pₗ₊₁) - u(p₀)`, the
+vector `g` with `g · (pₗ₊₁ - p₀) = δₗ` for every edge `pₗ₊₁ - p₀` (the columns of `E`) when `E`
+is invertible. -/
+theorem p1Grad_eq_vecMul (p : Fin (n + 1) → Fin n → ℝ) (u : (Fin n → ℝ) → ℝ) :
+    p1Grad p u = Matrix.vecMul (fun l => u (p l.succ) - u (p 0)) (edgeMatrix p)⁻¹ := by
+  funext i
+  simp only [p1Grad_apply, Finset.sum_apply, Pi.smul_apply, smul_eq_mul, Fin.sum_univ_succ,
+    baryGrad, Fin.cons_zero, Fin.cons_succ, Matrix.vecMul, dotProduct, sub_mul, sum_sub_distrib,
+    mul_neg, mul_sum]
+  ring
+
+/-- **The `P₁` interpolant of the hat function at the vertex `pⱼ` is the barycentric coordinate
+`λⱼ`**: its gradient is `∇λⱼ` (the vertices distinct). -/
+theorem p1Grad_nodalIndicator {p : Fin (n + 1) → Fin n → ℝ} (hp : Function.Injective p)
+    (j : Fin (n + 1)) : p1Grad p (nodalIndicator (p j)) = baryGrad p j := by
+  rw [p1Grad_apply, Finset.sum_eq_single j (fun i _ hij => by simp [nodalIndicator, hp.ne hij])
+    (by simp)]
+  simp [nodalIndicator]
+
+/-! ### The lumped-mass Laplacian -/
 
 variable (M : SimplicialMesh n) (x : ι → Fin n → ℝ)
 

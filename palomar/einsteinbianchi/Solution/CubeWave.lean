@@ -9,10 +9,10 @@ public import Feec.Models.Cube.WeakSymmetrySobolevRate
 
 A classical solution of (6.2) of the challenge for `𝒟` is a `Feec.BGG.ExactWave` of
 `bggSegment` with the source `srcFun f` (`toExactWave`), and the solutions of `Feec`'s
-semi-discrete system for `cubeWave` are those of the challenge's (6.5) for `cubeQ`
-(`isDiscreteWave_of`), and conversely on every `[0, T']`, `T' < T` (`toDiscreteSolution`). The
-rate is `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_tr'` and the uniqueness
-`Feec.Models.Cube.WeakSymmetry.cubeWave_exists_unique`.
+semi-discrete system for `cubeWave` are solutions of the challenge's (6.5) for `cubeQ`, so the
+rate for `H¹` states is `Feec.Models.Cube.WeakSymmetry.cubeWave_rate_sobolev_of_one_le`
+(`cube_wave_rate_sob`). The converse, on every `[0, T']`, `T' < T`, is `exists_toDS`
+(`Solution.CubeUnique`).
 
 ## References
 
@@ -196,62 +196,6 @@ section Disc
 variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hT : PolySmoothingEstimatesMin 3 PolySeq.lowestOrder p C)
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C) (N : ℕ)
-
-set_option maxHeartbeats 8000000 in
-/-- **The rate of (6.5) on the cube** (`cubeWave_rate_tr'`, the solution of `Feec`'s (6.3) for
-`cubeWave` being a solution of (6.5) for `cubeQ`). -/
-theorem cube_wave_rate : ∃ K, ∀ N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L, 0 < T →
-    ContinuousOn f (Icc 0 T) → 𝒟.IsWaveSolution T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' →
-    (∀ t ∈ Icc 0 T, IsSmoothStateTr L (σ t) (e0 (φ t)) (e1 (u t)) (M t) (ρ t) ∧
-      IsSmoothStateTr L (σ' t) (e0 (φ' t)) (e1 (u' t)) (M' t) (ρ' t) ∧ ‖lam t‖ ≤ L ∧
-      ‖lam' t‖ ≤ L) →
-    ∃ σh φh uh Mh ρh lamh, (cubeQ hT hB N).IsDiscreteWave T f σh φh uh Mh ρh lamh ∧
-      ∀ t ∈ Icc 0 T, √(‖(σ t : W0) - σh t‖ ^ 2 + ‖(u t : Wv W1) - uh t‖ ^ 2 +
-        ‖M t - Mh t‖ ^ 2 + ‖ρ t - ρh t‖ ^ 2) ≤
-          K * L * (1 + t) * Feec.Models.Cube.FEM.meshSize N := by
-  obtain ⟨K, -, hK⟩ := cubeWave_rate_tr' hT hB
-  refine ⟨K, fun N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L hT0 hf hw hreg => ?_⟩
-  have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT0.le⟩
-  have hL0 : 0 ≤ L := (norm_nonneg _).trans (hreg 0 h0).2.2.1
-  obtain ⟨sh, -, hsh⟩ := hK N hT0 hf (toExactWave hw) hL0
-    (fun t ht => ⟨(hreg t ht).1, (hreg t ht).2.1⟩) (fun t ht μ =>
-      ⟨(abs_real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right (hreg t ht).2.2.1
-        (norm_nonneg _)),
-       (abs_real_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right (hreg t ht).2.2.2
-        (norm_nonneg _))⟩)
-  refine ⟨fun t => ((sh.σ t : U0) : 𝒟.d0.domain), fun t => e0.symm (sh.φ t : Wv U0),
-    fun t => ofWv1 (sh.u t : Wv U1), fun t => (sh.M t : W2), fun t => (sh.ρ t : Wv W2),
-    fun t => ((sh.lam t : U1) : W1), ⟨?_, ?_, ?_, ?_, fun t ht => ?_,
-      fun t => ((sh.σ' t : U0) : W0), fun t => ((ofWv1 (sh.u' t : Wv U1) : 𝒟.dt1.domain) : Wv W1),
-      fun t => (sh.M' t : W2), fun t => (sh.ρ' t : Wv W2), fun t ht => ?_⟩, fun t ht => ?_⟩
-  · exact continuous_subtype_val.comp_continuousOn (continuous_subtype_val.comp_continuousOn sh.cσ)
-  · exact incl1CLM.continuous.comp_continuousOn (continuous_subtype_val.comp_continuousOn sh.cu)
-  · exact continuous_subtype_val.comp_continuousOn sh.cM
-  · exact continuous_subtype_val.comp_continuousOn sh.cρ
-  · have hc := sh.constraint ht
-    exact ⟨(sh.σ t).2, fun a => (sh.φ t).2 a, fun a => (sh.u t).2 a, (sh.M t).2,
-      fun a => (sh.ρ t).2 a, (sh.lam t).2,
-      (congrArg (fun x : (cubeFEM hT hB N).V1h => ((x : U1) : W1)) hc :)⟩
-  · have ht' : t ∈ Icc 0 T := Ico_subset_Icc_self ht
-    have hu1 := hasDerivWithinAt_coe _ (sh.du t ht)
-    have hu2 := hasDerivWithinAt_piCoe D1.domain hu1
-    refine ⟨hasDerivWithinAt_coe _ (hasDerivWithinAt_coe _ (sh.dσ t ht)), hu2,
-      hasDerivWithinAt_coe _ (sh.dM t ht), hasDerivWithinAt_coe _ (sh.dρ t ht),
-      fun τ ψ hτ hψ => ?_, fun v hv => ?_, fun z hz => ?_, fun z hz => ?_⟩
-    · exact sh.ea t ht' ⟨τ, hτ⟩ ⟨e0 ψ, e0_mem hT hB N hψ⟩
-    · have := sh.eb t ht ⟨e1 v, e1_mem hT hB N hv⟩
-      have hs := inner_cubeSource hT hB N f t ⟨e1 v, e1_mem hT hB N hv⟩
-      exact this.trans hs
-    · have := sh.ec t ht ⟨z, hz⟩
-      exact sub_eq_zero.1 this
-    · have := sh.ed t ht ⟨z, fun a => hz a⟩
-      exact sub_eq_zero.1 this
-  · have e1' : (u t : Wv W1) - ((ofWv1 (sh.u t : Wv U1) : 𝒟.dt1.domain) : Wv W1) =
-        incl1 (e1 (u t) - (sh.u t : Wv U1)) := by rw [map_sub]; rfl
-    have hn : ‖(u t : Wv W1) - ((ofWv1 (sh.u t : Wv U1) : 𝒟.dt1.domain) : Wv W1)‖ =
-        ‖e1 (u t) - (sh.u t : Wv U1)‖ := by rw [e1']; exact norm_incl1 _
-    rw [hn]
-    exact hsh t ht
 
 set_option maxHeartbeats 8000000 in
 /-- **The rate of (6.5) on the cube for `H¹_univ` states** (`cubeWave_rate_sobolev_of_one_le`,

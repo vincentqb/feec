@@ -128,13 +128,14 @@ theorem weakSymmetry_cube (bc : CubeBC) : ∃ (𝒯 : ℕ → SimplicialMesh 3)
       (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0,
         (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
           ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
-      (∀ N T U₀ V₁ V₂ V₃ U, 0 < T → bc.data.IsWave U₀ V₁ → bc.data.IsWave V₁ V₂ →
-        bc.data.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
-        IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
-        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
-          stateNorm (U t - Uh t) ≤
-            K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
-              meshSize (𝒯 N)) ∧
+      (∀ N T U₀ V₁ V₂ V₃, 0 < T → bc.data.IsWave U₀ V₁ → bc.data.IsWave V₁ V₂ →
+        bc.data.IsWave V₂ V₃ → IsTSDState U₀ →
+        (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U) ∧
+        ∀ U, U 0 = U₀ → IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
+          (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
+            stateNorm (U t - Uh t) ≤
+              K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
+                meshSize (𝒯 N)) ∧
       ∃ U₀ V₁ V₂ V₃, bc.data.IsWave U₀ V₁ ∧ bc.data.IsWave V₁ V₂ ∧ bc.data.IsWave V₂ V₃ ∧
         IsTSDState U₀ ∧ V₁ ≠ 0) := by
   cases bc with

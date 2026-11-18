@@ -135,8 +135,8 @@ theorem exists_mirror_chain : ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V�
     exact eq_zero_of_realL hc1 hr (by rw [← ew]; exact h0)
   · exact exists_chain x hc h1 h2 hr
 
-/-- **Propagation of the constraints under mirror boundary conditions**
-(`FEEC.mirror_tsd_propagates`). -/
+/-- **Propagation of the constraints under mirror boundary conditions** (stated in
+`palomar/constraints`, `MirrorVerdict`; used here for the limit of the mirror scheme). -/
 theorem mirror_tsd_propagates_of :
     (∀ T U U', IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
       IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U' → U 0 = U' 0 →
@@ -177,19 +177,21 @@ theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ Uh ∈ (Q N).trajectories T 0,
       (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
         ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
-    (∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
-      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
-      IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
-      (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
-        stateNorm (U t - Uh t) ≤
-          K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
-            meshSize (𝒯 N)) ∧
+    (∀ N T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
+      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ →
+      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
+          stateNorm (U t - Uh t) ≤
+            K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
+              meshSize (𝒯 N)) ∧
     ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
       mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
   obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, -, hK⟩ := mirror_fem_main
-  obtain ⟨-, -, hprop, -⟩ := mirror_tsd_propagates_of
+  obtain ⟨-, hex, hprop, -⟩ := mirror_tsd_propagates_of
   refine ⟨𝒯, Q, C, K, hQ, hBGG, fun T hT => (hG T hT).mono fun N hN => ?_,
-    fun N T U₀ V₁ V₂ V₃ U hT h1 h2 h3 hU₀ hU0 hUs => ?_, exists_mirror_chain⟩
+    fun N T U₀ V₁ V₂ V₃ hT h1 h2 h3 hU₀ => ⟨hex U₀ V₁ h1 hU₀ T, fun U hU0 hUs => ?_⟩,
+    exists_mirror_chain⟩
   · obtain ⟨σ, φ, u, M, ρ, lam, hw, hg, hu, t, ht, hM⟩ := hN
     exact ⟨_, mem_trajectories hw, hg, hu, t, ht, hM⟩
   have hTSD : ∀ t ∈ Icc 0 T, IsTSDState (U t) := fun t ht => hprop T U hUs (hU0 ▸ hU₀) t ht

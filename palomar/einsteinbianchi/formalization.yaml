@@ -78,9 +78,9 @@ project:
     computes a solution that is not a gravitational wave. With the mirror boundary conditions,
     for every T > 0 and all large N a trajectory of (6.5) with u_h(0) != 0 satisfies the discrete
     Gauss law at t = 0 and has M_h not constant, and for every TSD state U_0 with U_0, L U_0,
-    L^2 U_0 in D(L) and every strong solution U from U_0, U stays TSD and some trajectory of
-    (6.5) is within K (sum_{k <= 3} ||L^k U_0||) (1 + t) h_N of U; some such datum has
-    L U_0 != 0: the method computes the TSD solution.
+    L^2 U_0 in D(L) strong solutions from U_0 exist on every [0, T], and every one, U, stays TSD
+    and some trajectory of (6.5) is within K (sum_{k <= 3} ||L^k U_0||) (1 + t) h_N of U; some
+    such datum has L U_0 != 0: the method computes the TSD solution.
     FEEC.weakSymmetry_cube_nonvacuous: with the electric boundary conditions, (5.3) has a
     nontrivial smooth solution meeting the hypotheses of the static rate, and for every T > 0,
     (6.2) has a nontrivial classical solution on [0, T] meeting those of the wave rate.
@@ -105,16 +105,18 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 ((4.14), Prop 4.17: propagation of the TSD constraints), Ch. 5 ((5.1)-(5.6), Props 5.3, 5.4, 5.9, Thm 5.5, Table 5.1), Ch. 6 ((6.1)-(6.5), §6.3, Prop 6.2)"
+    location: "Ch. 5 ((5.1)-(5.6), Props 5.3, 5.4, 5.9, Thm 5.5, Table 5.1), Ch. 6 ((6.1)-(6.5), §6.1-§6.3, Prop 6.2)"
     relationship: "formalizes"
     note: >-
-      The system, the complex with weak symmetry, its boundary conditions (§6.3) and the methods
-      (5.6), (6.5) are the thesis', and so is the abstract theorem FEEC.bggWeakSymmetry (Prop 5.4,
-      Thm 5.5), with the consistency of S_h asked on regular potentials (cf. Prop 5.9; the cube
-      clause on best approximation by the Raviart-Thomas space shows why). FEEC.tsd_not_propagates
-      and FEEC.box_stationary concern the propagation of the TSD constraints (Prop 4.17) under
-      these boundary conditions; the mirror boundary conditions, their propagation theorem and the
-      rate of (6.5) with them are new in Feec. The formalization is by the thesis author.
+      The system, the complex with weak symmetry, its electric boundary conditions (§6.3) and
+      the methods (5.6), (6.5) are the thesis', and so is the abstract theorem
+      FEEC.bggWeakSymmetry (Prop 5.4, Thm 5.5), with the consistency of S_h asked on regular
+      potentials (cf. Prop 5.9; the clause on best approximation by the Raviart-Thomas space shows
+      why), and the rates of (5.6) and (6.5) on the cube. The convergence of (6.5) from every datum
+      of D(L) without regularity, the identification of its limit from the TSD datum
+      (0, 0, 0, *beta) as a solution that leaves TSD, the mirror boundary conditions and the rate
+      of (6.5) to the TSD solution with them are new in Feec. The thesis is cited as the source of
+      the system and of the method. The formalization is by the thesis author.
     author_endorsement: "participated"
   - title: "The Initial Boundary Value Problem for Einstein's Vacuum Field Equation"
     authors:
@@ -244,33 +246,32 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: FEEC.bggWeakSymmetry (all BGG data on real Hilbert spaces in one
-    universe, every discretization; its non-vacuity with S_h != S is the cube instance in
-    FEEC.weakSymmetry_cube, replacing the data on R of the former palomar/bgg entry); FEEC.tsd_not_propagates
-    (thesis boundary conditions, every nonempty bounded open set in R^3, the explicit datum
-    (0, 0, 0, *beta)); FEEC.box_stationary (grad-curl system, thesis boundary conditions, every open
-    box, every pair of subspaces of TSD fields); FEEC.mirror_tsd_propagates (mirror boundary
-    conditions on Q: uniqueness, existence from TSD data of D(L), propagation, a TSD datum of
-    D(L^3) with L U_0 != 0); FEEC.mirror_weakSymmetry_cube (the method (6.5) with mirror boundary
-    conditions: spaces, bounded projections with (5.4), consistency, BGG data, a non-stationary
-    solution with u_h(0) != 0 in the discrete Gauss law, the rate (1 + t) h for TSD data of D(L^3)); FEEC.weakSymmetry_cube and
-    FEEC.weakSymmetry_cube_nonvacuous (the cube instance of the abstract theorem with the thesis'
-    boundary conditions, S_h != S, no O(h) best approximation of S^1 on V~_h^1 by the
-    Raviart-Thomas space, C^2 and H^1 rates, non-vacuity). With the thesis' boundary conditions the
-    method of FEEC.weakSymmetry_cube converges to a solution that is not TSD: from the TSD datum
-    (0, 0, 0, *beta) on Q the exact solution leaves TSD (FEEC.tsd_not_propagates), and (6.5)
-    converges to it with no regularity hypothesis, its discrete fields leaving TSD too
-    (Feec.EinsteinBianchi.BoundedConvergence.waveFEM_converges_to_non_tsd, not compared: stating it
-    needs the identification of the challenge's strong solutions with those of Feec's forms model
-    of (6.1) on Q, which this entry does not build; the compared rates assume C^2 or H^1 regularity
-    that this solution is not shown to have). Open, and not claimed: that only stationary data keep
-    TSD on general bounded domains (proved on boxes and cubes for the grad-curl system; on the ball
-    only under an elliptic regularity hypothesis). Not compared here (proved in Feec): the
-    lower bound for the canonical interpolant onto the Raviart-Thomas space
-    (exists_interpolationError_ge, implied by the compared best-approximation clause); absorbing boundary conditions, which do not keep the
-    TSD pair invariant (Feec.Models.Cube.Absorbing.not_invariant_tsdPair); the mirror conditions on
-    every open cube and box for the grad-curl system and their weak trace characterization; the
-    O(h^s) rates of the mirror scheme for H^(2+s) data and its convergence without rate for D(L^2)
-    data; the sym-curl and ball versions of the obstruction.
+    universe, every discretization); FEEC.weakSymmetry_cube (the cube Q = (0, 1/2)^3, the elements
+    of Table 5.1 on Freudenthal meshes, both boundary conditions of CubeBC; with the electric
+    conditions the instance of the abstract theorem with S_h != S, the Raviart-Thomas
+    best-approximation bound, the H^1 static and wave rates, uniqueness for (6.5), the
+    convergence of (6.5) from every datum of D(L) and the non-TSD limit of the datum
+    (0, 0, 0, *beta) and of its discrete fields; with the mirror conditions the discrete Gauss
+    witness, the rate (1 + t) h to the TSD solution for TSD data of D(L^3), and a moving such
+    datum); FEEC.weakSymmetry_cube_nonvacuous (nontrivial solutions meet the hypotheses of the
+    electric rates). The C^2 rates of the thesis (states C^2 up to the boundary with vanishing
+    tangential traces) are corollaries of the H^1 rates: such states are of class H^1 with a
+    universal factor on the bound (Feec.Models.Cube.FEM.IsCsFormTr.exists_h1Data, from the
+    Lipschitz extension Feec.Domain.exists_h1Data_cube; Solution/Smooth.lean,
+    exists_isH1State_of_isSmoothStateTr), so the challenge states the H^1 rates only. The
+    propagation of the TSD constraints by the exact evolution under each boundary condition
+    (formerly FEEC.tsd_not_propagates, FEEC.box_stationary and FEEC.mirror_tsd_propagates here)
+    is compared in palomar/constraints, in FEEC.tsd_boundary_conditions (ElectricVerdict,
+    BoxVerdict, MirrorVerdict); this entry restates only what identifies the limit of the method:
+    the exact solution from (0, 0, 0, *beta) leaves TSD, and those from TSD data stay TSD with
+    the mirror conditions. Not compared here (proved in Feec): the lower bound for the canonical
+    interpolant onto the Raviart-Thomas space (exists_interpolationError_ge, implied by the
+    compared best-approximation clause); the O(h^s) rates of the mirror scheme for H^(2+s) data
+    (mirror_waveFEM_rate_sobolev_of_add_two) and its convergence without rate for D(L^2) TSD data
+    (Feec.Models.Cube.MirrorWeakSymmetryTSD.mirror_waveFEM); the rates h^(min(s,1)) for relative
+    class H^s data (cubeWave_rate_sobolev). Not claimed: convergence from every datum of D(L)
+    with the mirror conditions; the existence of trajectories of (6.5) whose initial states
+    converge to a general datum of D(L) (stated for (0, 0, 0, *beta)).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -305,21 +306,26 @@ automation:
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written by an AI agent for this submission, to be reviewed by the author; the Solution
     identifies them with the definitions of the library Feec and applies its theorems:
-    Solution/Proxy.lean (the electric and magnetic fields as Feec's matrix fields, d_min as the
-    minimal curl, IsTSD as Feec's tsd), Bounded.lean (the datum and the strong solutions of the
-    obstruction), MirrorData.lean (dPart as Feec's d_J), MirrorTSD.lean, MirrorState.lean,
-    MirrorForward.lean, MirrorChain.lean (TSD states of the challenge as the real parts of the
-    constrained states of Feec's complex mirror complex on Q), DiscreteWave.lean, MirrorFEM.lean,
-    MirrorSpaces.lean, MirrorRate.lean, MirrorMain.lean (the mirror scheme, the non-stationary Gauss solution from
-    Feec.BGG.exists_discreteSolution_iff_compatible_u), MirrorTheorems.lean; Abstract.lean (the
-    abstract theorem through Feec.BGG.Discrete, from the former palomar/bgg entry) and Cube*.lean (the thesis-BC
-    weak-symmetry theorems), Instance.lean (S^0_h != S^0 on V~_h^0 and the best-approximation clause from
-    Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge); Box.lean (the challenge's Hodge wave
-    operator carried to Feec's by unitary maps, the componentwise minimal exterior derivatives as
-    Feec's minimal grad and curl through Feec.Domain.ConstCoeffOp.minimal_ofMatrixCLM_of_comm in
-    both directions, Feec.Counterexamples.BoxStationary.forward_iff_stationary_box); Forms.lean,
-    Poly.lean, Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean, Sobolev.lean adapted from
-    palomar/fem.
+    Solution/Abstract.lean (the abstract theorem through Feec.BGG.Discrete, from the former
+    palomar/bgg entry), DiscreteWave.lean (uniqueness and the discrete Gauss law for (6.5), by
+    energy), Cube*.lean and Instance.lean (the electric conditions: the cube data are Feec's,
+    the hypotheses, S^0_h != S^0, the best-approximation clause from
+    Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge, the H^1 rates, uniqueness),
+    Converge.lean (new: the challenge's system (6.1) is Feec's forms model
+    Feec.EinsteinBianchi.MatrixModel.formsShort through the state map toWS, a pair of the graph
+    of its wave operator is a pair of IsWave by the identities of (6.1) at a point of D(L), and
+    conversely since IsWave is skew and the wave operator skew-adjoint, hence maximal skew,
+    LinearPMap.IsSkewAdjoint.mem_graph_of_inner (new in Feec); the challenge's solutions of (6.5)
+    are Feec's on the whole interval (compatibility of their data, existence and uniqueness);
+    convergence is Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution; the datum
+    (0, 0, 0, *beta) and its discrete data from Feec.EinsteinBianchi.BoundedFailure), Bounded.lean
+    and Proxy.lean (the datum, its strong solutions and their loss of TSD, the fields as Feec's
+    matrix fields), Smooth.lean (the C^2 states are H^1 states), MirrorData.lean, MirrorTSD.lean,
+    MirrorState.lean, MirrorForward.lean, MirrorChain.lean (TSD states as the real parts of the
+    constrained states of Feec's complex mirror complex on Q), MirrorFEM.lean, MirrorSpaces.lean,
+    MirrorRate.lean, MirrorMain.lean, MirrorTheorems.lean (the mirror scheme, its rate, the Gauss
+    witness from Feec.BGG.exists_discreteSolution_iff_compatible_u); Forms.lean, Poly.lean,
+    Mesh.lean, Trace.lean, Spaces.lean, Sobolev.lean adapted from palomar/fem.
 
 fidelity:
   divergences: >-
@@ -327,101 +333,105 @@ fidelity:
     palomar/fem (divergences (1)-(5), (8) there; the shared blocks of
     palomar/shared/vocabulary.lean.txt); the finite element spaces of the cube have vanishing
     traces on the facets in the faces normal to e_j, j in J, the facets cubeFacets J of the
-    shared femSpace (definitionally the earlier cube-only femSpace J; on Freudenthal meshes
-    J = univ gives the vanishing of traces on boundary facets, Solution femSpace_univ_eq). Strong
-    solutions are those of the shared IsStrongSolution for an operator given by its graph, a
-    relation (Mathlib's SetRel), here the graph {p | IsWave p.1 p.2} of the wave operator
-    (definitionally the earlier relation form, Solution isStrongSolution_setOf_iff); polynomial
-    forms are over a field K, used at K = R, the sign sgn takes values in any ring, and dMax, dMin
-    state their test graphs inline (definitionally the earlier real forms, codiffMin and
-    testGraph); W~^k = L^2(Omega;
-    Lambda^k) ⊗ R^3 is the l^2 sum of three copies (L2Vec). The fields of a state are read as
-    matrices, E_ab = (u_a)_{dx_b},
-    B_ai = (-1)^i (rho_a)_{{i}^c}; IsTSD is symmetric, trace-free and weakly divergence-free
-    (against test functions of Omega, no boundary condition). The Freudenthal meshes are asserted
-    existentially, named by their vertices (IsFreudenthal).
+    shared femSpace (on Freudenthal meshes J = univ gives the vanishing of traces on boundary
+    facets, Solution femSpace_univ_eq). Strong solutions are those of the shared
+    IsStrongSolution for an operator given by its graph, a relation (Mathlib's SetRel), here the
+    graph {p | IsWave p.1 p.2} of the wave operator; W~^k = L^2(Omega; Lambda^k) (x) R^3 is the
+    l^2 sum of three copies (L2Vec). The fields of a state are read as matrices,
+    E_ab = (u_a)_{dx_b}, B_ai = (-1)^i (rho_a)_{{i}^c}; IsTSD is symmetric, trace-free and weakly
+    divergence-free (against test functions of Omega, no boundary condition). The Einstein-Bianchi
+    vocabulary is the canonical text shared with palomar/constraints (the blocks L2Vec, IsTSD,
+    wedge, WeakSymmetryData, bggData, IsTSDState, mirrorData; IsWave is part of the block
+    WeakSymmetryData; the docstring of WeakSymmetryData no longer names IsBGG, which follows it
+    here). The Freudenthal meshes are asserted existentially, named by their vertices
+    (IsFreudenthal).
     (2) The wave operator is the Hodge wave operator of Gamma -> V~^1 -> W^2 x W~^2 given by its
     graph in the sign convention of (6.2) (IsWave), not as a closed operator; strong solutions
     are continuous on [0, T] with derivative within [0, T] in the graph (IsStrongSolution). The
-    datum classes are D(L) (FEEC.tsd_not_propagates, existence and propagation in
-    FEEC.mirror_tsd_propagates) and D(L^3) (the rate, with the norm sum_{k <= 3} ||L^k U_0||,
-    stated as chains IsWave U_0 V_1, IsWave V_1 V_2, IsWave V_2 V_3).
-    (3) FEEC.tsd_not_propagates is the obstruction from one explicit datum on every bounded
-    domain, not "only stationary data stay TSD"; the latter is FEEC.box_stationary, on boxes only
-    and for the grad-curl system (4.14) (the states (sigma, u, rho) of
-    H°Lambda^0 (x) R^3 -> H°Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3, without the multiplier M of
-    the Ch. 6 system; IsHodgeWave), with strong solutions on [0, infinity) (Feec's statement is about
-    the wave group orbit of every vector; strong solutions are the orbits of the vectors of D(L));
-    on general bounded domains it is open in Feec and not claimed. Both use the boundary conditions
-    of the thesis, minimal exterior derivatives (bggData, and its bottom row for the box). The
-    violation of B's symmetry is stated as B(t)_ai != B(t)_ia for some t, a, i.
-    (4) Mirror boundary conditions: on the cube Q = (0, 1/2)^3 only (not other domains); the
-    bottom row component a is the closure of d_max on forms vanishing near the faces normal to
-    e_a (dPart), the top row d_max. In Feec the theorem is proved for a complex Hilbert complex of
-    matrix fields defined by the Fourier series of the reflection-symmetric extensions (the
-    parity model, a compression of the torus complex); the Solution identifies the challenge's
-    real forms states with the real parts of its constrained states. Non-vacuity of the data
-    classes is the last clause of FEEC.mirror_tsd_propagates (the datum E_0 = 2 cos(2 pi x_3)
-    diag(1, -1, 0), or -i times it, read as a real state).
-    (5) The mirror scheme of FEEC.mirror_weakSymmetry_cube is the variant of (6.5) with
-    S^0_h = pi^1 S^0 and S^1_h = pi^2 S^1 for parity-smoothed cochain projections (one smoother
-    for both rows), not the thesis' coupling through the canonical interpolants; the
-    discretizations are asserted existentially, their spaces named (Table 5.1 with mirror
-    boundary conditions), their projections not. The rate asserts some semi-discrete solution:
-    in Feec the one from the elliptic projection (6.4) of the exact data; existence for arbitrary
-    discrete data is not stated. The error compares u, rho of the exact solution with u_h, rho_h
-    and sigma_h, M_h with 0 (sigma = M = 0 for TSD solutions).
-    (6) The discrete Gauss law (IsGauss: sigma_h = 0 and u_h orthogonal to d~psi for the discrete
+    datum classes are D(L) (the convergence and the non-TSD limit, electric) and D(L^3) (the
+    mirror rate, with the norm sum_{k <= 3} ||L^k U_0||, stated as chains IsWave U_0 V_1,
+    IsWave V_1 V_2, IsWave V_2 V_3). The solutions of (6.5) enter through their trajectories,
+    the paths of (sigma_h, u_h, M_h, rho_h) (Discretization.trajectories); errors are the state
+    norm (||sigma - sigma_h||^2 + ||u - u_h||^2 + ||M - M_h||^2 + ||rho - rho_h||^2)^(1/2).
+    (3) One theorem over the boundary conditions: CubeBC has two constructors, electric and
+    mirror, with their data (CubeBC.data: bggData (cube 3), mirrorData) and the faces of the
+    finite element spaces (CubeBC.top, CubeBC.bottom); FEEC.weakSymmetry_cube states for every
+    bc the spaces (IsTable51 with these faces) and IsBGG, then the clauses of each boundary
+    condition under bc = electric and bc = mirror. The two families of clauses differ because the
+    two limits differ (the electric limit leaves TSD, the mirror limit is the TSD solution), and
+    because their hypotheses differ: the mirror data satisfy IsBGG but not IsStable (d_max has the
+    constants in its kernel), so the static rate and the instance of the stability theorem are
+    electric only; the electric rates are for classical solutions of (6.2) of class H^1, the
+    mirror rate for TSD data of D(L^3).
+    (4) Electric conditions, rates: the multiplier lambda is assumed in L^2 = W^1 and
+    ||lambda|| <= L; regularity H^1(Q) (the components sigma, phi_a, d~phi_a, u_a, d~u_a for (5.3);
+    IsH1State for (6.2), with M and rho_a in the domain of d_min). The C^2 rates of the thesis are
+    not stated: their class (C^2 up to the boundary with vanishing tangential traces, values and
+    first derivatives of the fields and of their exterior derivatives bounded by L on the closed
+    cube) lies in the H^1 class with bound c L (Feec.Models.Cube.FEM.IsCsFormTr.exists_h1Data:
+    the field agrees on the closed cube with chi (f o r), r the nearest-point retraction and chi a
+    fixed bump, a compactly supported Lipschitz function with weak derivatives its line
+    derivatives, Feec.Domain.H1Data.ofLipschitz; Solution exists_isH1State_of_isSmoothStateTr),
+    so they are corollaries. The discretizations are asserted existentially with named spaces
+    (Table 5.1 with vanishing boundary traces) and unnamed projections (smoothed projections of
+    one smoother in Feec); the continuous hypotheses of the abstract theorem (IsStable: Poincare
+    inequalities, exactness, Hodge and regular decompositions) are a clause, so the cube is
+    visibly an instance of FEEC.bggWeakSymmetry with S^0_h != S^0. The best-approximation clause
+    is for N >= 2 (Feec's lower bound is proved on the level-(N + 2) meshes) and measures v in the
+    graph norm; it shows that no projection onto the Raviart-Thomas space makes S^1_h consistent
+    at the order h on V~_h^1 in the graph norm, which is why IsConsistent asks consistency on
+    regular potentials only.
+    (5) Electric conditions, convergence and limit: for every datum U_0 of D(L) and T > 0 a strong
+    solution exists (Stone's theorem in Feec), and every family of trajectories of (6.5) without
+    source whose initial states converge to U_0 converges to every strong solution from U_0
+    uniformly on [0, T] (Lax: stability of (6.1) and (6.5) and convergence on the dense D(L^2));
+    no regularity is assumed, and no rate is claimed. The existence of such families is stated
+    for the TSD datum (0, 0, 0, *beta) only (in Feec, the trajectories from (0, 0, 0, P rho(0)),
+    P the orthogonal projection onto V~_h^2), not for a general datum of D(L). The loss of TSD is
+    stated as E(t) not TSD at some t and B(t') not symmetric (B(t')_ai != B(t')_ia for some a, i)
+    at some t'; the discrete fields lose TSD at the same times for all large N, since TSD and
+    symmetry are closed conditions. That the exact solution leaves TSD is the restriction to Q of
+    ElectricVerdict.weakSymmetry of palomar/constraints, restated here as the identification of
+    the limit of the method.
+    (6) Mirror conditions: on the cube Q only; the bottom row component a is the closure of d_max
+    on forms vanishing near the faces normal to e_a (dPart), the top row d_max. In Feec the
+    theorems are proved for a complex Hilbert complex of matrix fields defined by the Fourier
+    series of the reflection-symmetric extensions (the parity model); the Solution identifies the
+    challenge's real states with the real parts of its constrained states. The scheme is the
+    variant of (6.5) with S^0_h = pi^1 S^0, S^1_h = pi^2 S^1 for parity-smoothed cochain
+    projections (one smoother for both rows), not the thesis' coupling through the canonical
+    interpolants. The rate asserts some trajectory (in Feec the one from the elliptic projection
+    (6.4) of the exact data). That strong solutions exist from these data and stay TSD is
+    MirrorVerdict.exists_solution and MirrorVerdict.propagates of palomar/constraints, restated
+    as the identification of the limit; the moving datum
+    (E_0 = 2 cos(2 pi x_3) diag(1, -1, 0), or -i times it, read as a real state) is
+    MirrorVerdict.moving, restated as the non-vacuity of the rate.
+    (7) The discrete Gauss law (IsGauss: sigma_h = 0 and u_h orthogonal to d~psi for the discrete
     constraint pairs d tau = pi^1 S^0 psi) is only the degree-0 (div E = 0) part of the TSD
-    constraint; the discrete fields of the method need not be TSD (Feec shows TSD is strictly
-    stronger, and the discrete Gauss constraints converge only weakly). Its preservation is
-    stated in FEEC.bggWeakSymmetry, for every discretization of BGG data, as an invariance of
-    solutions of (6.5) without source satisfying it at t = 0. It constrains only (sigma_h, u_h)
-    and leaves (M_h, rho_h) free; its non-vacuity in FEEC.mirror_weakSymmetry_cube is, for all
-    large N, a solution from (0, u_0, 0, 0) with u_0 != 0 orthogonal to the discrete constraint
-    gradients (u_0 represents v -> <M, pi^2 S^1 v> on V~_h^1 for M = pi^2 S^1 v_1 != 0, and
-    pi^2 S^1 d~psi = 0 for the discrete pairs), whose M_h is not constant (pi^2 S^1 u_0 != 0).
-    (7) The thesis-BC theorems FEEC.weakSymmetry_cube, FEEC.weakSymmetry_cube_nonvacuous: the
-    multiplier lambda is assumed in L^2 = W^1 and ||lambda|| <= L in the rates; regularity C^2 up to
-    the boundary with vanishing tangential traces (IsTangentialC2) or H^1(Q) (IsH1State); the
-    discretizations are asserted existentially with named spaces (Table 5.1 with vanishing boundary
-    traces) and unnamed projections (smoothed projections of one smoother in Feec); the continuous
-    hypotheses of the abstract theorem (IsBGG, IsStable: Poincare inequalities, exactness, Hodge
-    and regular decompositions) are stated as clauses, so the cube is visibly an instance of
-    FEEC.bggWeakSymmetry with S^0_h != S^0; unique solvability of (5.6) is that instance (no
-    separate clause). The best-approximation clause is for N >= 2 (Feec's lower bound is proved on
-    the level-(N + 2) meshes) and measures v in the graph norm (||v||^2 + ||d~v||^2)^(1/2); it
-    shows that no projection onto the Raviart-Thomas space makes S^1_h consistent at the order h on
-    V~_h^1 in the graph norm, which is why IsConsistent asks consistency on regular potentials
-    only. The discrete S^0_h != S^0 clause follows from the same field: v_N = d~psi_N is a row-wise
-    discrete gradient, and S^0 psi_N in V_h^1 would put S^1 v_N = -d^1 S^0 psi_N in V_h^2. With these boundary
-    conditions the exact evolution itself leaves TSD from TSD data (FEEC.tsd_not_propagates, Q
-    being one of its domains): the method converges, but to solutions of (6.2) that need not be the
-    constrained Einstein-Bianchi evolution. The compared rates assume a regularity (C^2 or H^1
-    classes) that the solution from (0, 0, 0, *beta) is not shown to have; Feec proves, not
-    compared, that (6.5) converges with no rate and no regularity hypothesis to that solution,
-    which leaves TSD (waveFEM_converges_to_non_tsd).
-    (8) FEEC.bggWeakSymmetry is the statement of the former palomar/bgg entry with its definitions (verbatim up to
-    grouping of structure fields on lines), extended by two clauses that hold for every
-    discretization: uniqueness for (6.5) (no hypothesis) and the discrete Gauss law (for IsBGG
-    data). Its compared non-vacuity is the cube instance with the thesis' boundary conditions
-    (spaces of Table 5.1, S_h != S) in FEEC.weakSymmetry_cube, whose rates are nonvacuous by
-    FEEC.weakSymmetry_cube_nonvacuous; the mirror data satisfy IsBGG but not IsStable (d_max has
-    the constants in its kernel), so only the first two clauses apply to the mirror scheme.
+    constraint. Its preservation is stated in FEEC.bggWeakSymmetry for every discretization of BGG
+    data; its non-vacuity in the mirror clause is, for all large N, a trajectory from
+    (0, u_0, 0, 0) with u_0 != 0 orthogonal to the discrete constraint gradients, whose M_h is not
+    constant.
+    (8) FEEC.bggWeakSymmetry is the statement of the former palomar/bgg entry with its
+    definitions, extended by two clauses that hold for every discretization: uniqueness for (6.5)
+    and the discrete Gauss law (for IsBGG data). Its compared non-vacuity is the electric cube
+    instance (spaces of Table 5.1, S_h != S) of FEEC.weakSymmetry_cube, whose rates are nonvacuous
+    by FEEC.weakSymmetry_cube_nonvacuous.
 
 review:
   status: "self-assessed"
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the seven compared theorems and their
-    definitions, 2026-11-17: FEEC.bggWeakSymmetry moved from the former palomar/bgg entry with two added clauses,
-    FEEC.box_stationary new, FEEC.weakSymmetry_cube restated as the cube instance with S_h != S
-    and the best-approximation clause, the Gauss non-vacuity of FEEC.mirror_weakSymmetry_cube new: u_h(0) != 0, M_h not
-    constant).
-    Every merge of the library
-    was gated by a full build (zero warnings), an axiom audit (propext, Classical.choice,
-    Quot.sound only) and an independent AI review. No external mathematical review.
+    Not yet reviewed by the author: the Challenge statement (2026-11-18: one story, three compared
+    theorems; FEEC.weakSymmetry_cube is new, over the boundary conditions CubeBC, replacing the
+    former FEEC.weakSymmetry_cube and FEEC.mirror_weakSymmetry_cube; its convergence from every
+    datum of D(L) and its non-TSD limit are new as compared statements; the C^2 rate clauses are
+    replaced by their H^1 generalization; FEEC.tsd_not_propagates, FEEC.box_stationary and
+    FEEC.mirror_tsd_propagates moved to palomar/constraints; the "thesis' boundary conditions"
+    are named electric, as in palomar/constraints). Every merge of the library was gated by a full
+    build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound only) and an
+    independent AI review. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
@@ -435,67 +445,24 @@ alignment:
         weakConsistency_of_potential_of_bound (Solution/Abstract.lean, weakSymmetry_of, from
         the former palomar/bgg entry); uniqueness and the discrete Gauss law by energy arguments
         (Solution/DiscreteWave.lean).
-    - source: "[QuennevilleBelair2015] Prop 4.17, §6.3 (the thesis' boundary conditions)"
-      lean: "FEEC.tsd_not_propagates"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.Counterexamples.BoundedBGG (the datum beta = x_3 (e_1 e_2^T + e_2 e_1^T), its
-        adjoint, the path criteria); the challenge's system as the wave operator of the short
-        Hilbert complex u -> (S^1 u, d~u) (Solution/Bounded.lean, shortD1), its fields as Feec's
-        matrix fields and d_min as the minimal curl (Solution/Proxy.lean), uniqueness of strong
-        solutions by energy (Solution/Wave.lean).
-    - source: "[QuennevilleBelair2015] (4.14), Prop 4.17, §6.3 (boxes, grad-curl system)"
-      lean: "FEEC.box_stationary"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.Counterexamples.BoxStationary.forward_iff_stationary_box (the anisotropic parity
-        model of Feec.Models.Box), with Feec.HilbertComplex eq_waveGroup_of_isStrongSolution,
-        isStrongSolution_waveGroup, wave_eq_zero_of_mem_stationary,
-        mem_stationary_of_wave_eq_zero; the challenge's operator is Feec's gradCurl through
-        field0, fieldE, fieldB (Solution/Box.lean).
-    - source: "[QuennevilleBelair2015] Ch. 6 (with mirror boundary conditions)"
-      lean: "FEEC.mirror_tsd_propagates"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.Models.Cube.MirrorBGG.reducingSubcomplexQ, propagatesQ, cosStateQ and
-        Feec.Models.Cube.MirrorWeakSymmetry.cosDatum_LLU₀_mem; on the operator domains the
-        mirror constraint is plain TSD (Feec.Models.Cube.MirrorConstraint, added for this entry);
-        the challenge's states are the real parts of the constrained states
-        (Solution/MirrorState.lean, isWave_realL; Solution/MirrorChain.lean, forward).
-    - source: "[QuennevilleBelair2015] §6.2, §6.3, (6.4), (6.5), Table 5.1 (mirror BCs)"
-      lean: "FEEC.mirror_weakSymmetry_cube"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain with
-        exists_mirror_estimates (Solution/MirrorRate.lean, MirrorMain.lean); the spaces through
-        Feec's glued spaces VPartial (Solution/MirrorSpaces.lean); uniqueness and the discrete
-        Gauss law by energy arguments for any discretization of BGG data
-        (Solution/DiscreteWave.lean); the Gauss solution from
-        Feec.BGG.exists_discreteSolution_iff_compatible_u with the nonzero u_0 of
-        exists_isGauss_ne_zero (Solution/DiscreteWave.lean; S^1 != 0 from the cube's
-        best-approximation field, pi^2 S^1 pi~^1 x -> S^1 x by strong convergence of the
-        projections, Solution/MirrorMain.lean) and non-stationarity by IsDiscreteWave.exists_M_ne.
-    - source: "[QuennevilleBelair2015] §5.3, Table 5.1, Prop 5.4, Prop 5.9, Thm 5.5, §6.3, Prop 6.2"
+    - source: "[QuennevilleBelair2015] §5.3, Table 5.1, Prop 5.4, Prop 5.9, Thm 5.5, §6.1-§6.3, Prop 6.2"
       lean: "FEEC.weakSymmetry_cube"
       module: "Challenge"
       status: "proved"
       note: >-
-        The cube data are Feec's bggSegment (cubeData_eq); the discretizations from
-        Feec.Models.Cube.FEM.tableRows_uniform_cochainProjection and cubeFEM, their spaces through
-        polyPartial_univ_V; IsStable from bggStability_of with the regular decomposition
-        exists_curlPotential_bound; S^0_h != S^0 on V~_h^0 from the row-wise gradient v_N = d~psi_N
-        of Feec.Models.Cube.WeakSymmetry.phiN, whose S^1 v_N is away from the Raviart-Thomas space
-        (le_norm_sq_wsL2_vN_sub_glue), and IsBGG (Solution/Instance.lean, cube_S0h_ne);
-        the best-approximation clause from exists_bestApproxError_ge; the static rates through
-        the abstract theorem
-        (Solution/Abstract.lean, weakSymmetry_of: Feec.BGG.Discrete.existsUnique_mixed_h,
-        error_estimate_of_weakConsistency); the wave clauses from cubeWave_rate_tr',
-        cubeWave_rate_sobolev_of_one_le and Feec.BGG.DiscreteSolution.unique; the H^1 classes
-        through Feec.Domain.H1Restriction and Feec.Models.Cube.WeakSymmetryH1.
+        By cases on the boundary conditions. Electric: the cube data are Feec's bggSegment
+        (bggData_cube_eq); the discretizations from
+        Feec.Models.Cube.WeakSymmetry.tableRows_uniform_cochainProjection and cubeFEM;
+        IsStable from bggStability_of; S^0_h != S^0 and the best-approximation clause from
+        exists_bestApproxError_ge; the H^1 rates from staticFEM_rate_sobolev and
+        cubeWave_rate_sobolev_of_one_le through the Gaffney transfer sobRel_of_h1_*; uniqueness
+        from Feec.BGG.DiscreteSolution.unique; the convergence from every datum of D(L) and the
+        non-TSD limit from Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution,
+        Feec.EinsteinBianchi.BoundedFailure.exists_betaDiscrete and
+        Feec.Counterexamples.BoundedBGG (Solution/Converge.lean, Bounded.lean). Mirror:
+        Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain with
+        exists_mirror_estimates, Feec.Models.Cube.MirrorBGG.propagatesQ and cosStateQ
+        (Solution/Mirror*.lean).
     - source: "[QuennevilleBelair2015] Thm 5.5, §6.3"
       lean: "FEEC.weakSymmetry_cube_nonvacuous"
       module: "Challenge"

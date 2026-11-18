@@ -822,10 +822,11 @@ discrete Gauss law), such that, with `L = bc.data.IsWave`:
     some trajectory of (6.5) without source has `uₕ(0) ≠ 0`, satisfies the law at `t = 0` (so at
     every `t`) and has a non-constant `Mₕ`;
   - (*the rate, to the TSD solution*) for every TSD datum `U₀` with `U₀`, `L U₀`, `L² U₀` in
-    `D(L)` and every strong solution `U` of `U' = L U` from `U₀`, `U` stays TSD and some trajectory
-    of (6.5) without source (from the elliptic projection (6.4) of `U₀`) is within
-    `K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` of `U` on `[0, T]`; and some such datum is not stationary
-    (`L U₀ ≠ 0`; in the proof `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, `σ₀ = 0`, `M₀ = 0`, `B₀ = 0`).
+    `D(L)`, `U' = L U` has strong solutions from `U₀` on every `[0, T]`, and every such solution
+    `U` stays TSD and some trajectory of (6.5) without source (from the elliptic projection (6.4)
+    of `U₀`) is within `K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` of `U` on `[0, T]`; and some such
+    datum is not stationary (`L U₀ ≠ 0`; in the proof `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`,
+    `σ₀ = 0`, `M₀ = 0`, `B₀ = 0`).
 
 The rates of [QuennevilleBelair2015] for states `C²` up to `∂Q` with vanishing tangential traces
 are corollaries: such states are of class `H¹`. The projections are asserted, not named (in the
@@ -884,13 +885,14 @@ theorem weakSymmetry_cube (bc : CubeBC) : ∃ (𝒯 : ℕ → SimplicialMesh 3)
       (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0,
         (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
           ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
-      (∀ N T U₀ V₁ V₂ V₃ U, 0 < T → bc.data.IsWave U₀ V₁ → bc.data.IsWave V₁ V₂ →
-        bc.data.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
-        IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
-        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
-          stateNorm (U t - Uh t) ≤
-            K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
-              meshSize (𝒯 N)) ∧
+      (∀ N T U₀ V₁ V₂ V₃, 0 < T → bc.data.IsWave U₀ V₁ → bc.data.IsWave V₁ V₂ →
+        bc.data.IsWave V₂ V₃ → IsTSDState U₀ →
+        (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U) ∧
+        ∀ U, U 0 = U₀ → IsStrongSolution {p | bc.data.IsWave p.1 p.2} (Icc 0 T) U →
+          (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
+            stateNorm (U t - Uh t) ≤
+              K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
+                meshSize (𝒯 N)) ∧
       ∃ U₀ V₁ V₂ V₃, bc.data.IsWave U₀ V₁ ∧ bc.data.IsWave V₁ V₂ ∧ bc.data.IsWave V₂ V₃ ∧
         IsTSDState U₀ ∧ V₁ ≠ 0) := by
   sorry

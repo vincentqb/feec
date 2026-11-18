@@ -1,0 +1,319 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of variational crimes for Hilbert complexes
+# (`palomar/crimes/`): the a priori theory of [HolstStern2012], §3, for discrete complexes that
+# are not subcomplexes, and the Hodge heat equation with crimes. Its theorem and witness were
+# Theorem 4 of palomar/feec until 2026-11-18 (review.notes).
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: "Variational crimes for Hilbert complexes: stability and the Strang lemma, cochain reading maps and cohomology, and the Hodge heat equation"
+  description: >-
+    What survives of the approximation theory of Hilbert complexes when the discrete spaces are
+    not subspaces of the continuous ones? On curved or approximated domains, on hypersurfaces,
+    with quadrature or with nonconforming spaces, a Galerkin method works on a discrete complex
+    (X_h, d_h) with its own inner product, compared with the Hilbert complex W through reading
+    maps i_h : X_h -> W that are not isometries and need not be cochain maps (variational crimes).
+    Holst and Stern ([HolstStern2012] §3) answered for the mixed Hodge Laplacian. The compared
+    theorem FEEC.crimeFEEC states the answer on every window W^a + ... + W^(a+m-1) of consecutive
+    degrees of a Hilbert complex of closed densely defined operators on Z (any RCLike field) with
+    closed ranges in the degrees a+1, ..., a+m-1, for every approximating family of discrete
+    differential spaces (FEEC.HilbertComplex.CrimeFamily: finite-dimensional Hilbert spaces X_h
+    with d_h^2 = 0, read in the window by uniformly bounded maps i_h with uniformly bounded left
+    inverses, refined along any filter), in three clauses. (static) Under a uniform discrete
+    Poincare inequality ||v|| <= c_P ||d_h v|| on N(d_h)^perp, the mixed Hodge Laplacian of the
+    window and its discretizations with the load i_h* f are uniquely solvable, the discrete
+    solutions are stable (||sigma_h|| + ||d_h sigma_h|| + ||u_h|| + ||d_h u_h|| + ||p_h|| <= C
+    ||f||), satisfy the Strang lemma (the read error of the discrete solution is at most the read
+    error of any discrete triple plus C times its residual in the dual graph norm), and converge
+    for every datum once the method is consistent on a dense set of data; the reading maps need
+    not be cochain maps nor map into D(d). (cochain) For cochain reading maps (i_h X_h in D(d),
+    d i_h = i_h d_h) with cochain projections pi_h bounded in the graph norm: the uniform discrete
+    Poincare inequality; convergence for every datum when the inner-product defect ||1 - i_h*
+    i_h|| tends to 0 and i_h pi_h -> 1 on D(d); eventually an isomorphism H(d) = H(d_h) induced by
+    pi_h (for finite-dimensional harmonic forms with i_h pi_h q -> q on them); and the error at
+    most K eps for data whose sigma, u, p and P_B u are within eps of i_h X_h in the graph norm
+    with ||1 - i_h* i_h|| ||(sigma, u, p)|| <= eps. (heat) When ||1 - i_h* i_h|| -> 0 and the
+    static method converges for every datum: the Hodge heat equation u' = L^2 u = -Delta u of the
+    window is well posed (a contraction semigroup U characterized by its strong solutions), the
+    semidiscrete solutions of u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h read by i_h converge to its
+    solutions uniformly on bounded time intervals for every family of initial values with
+    i_h v_h -> x, and so do the iterates of every A-stable rational scheme r = P/Q of order
+    p >= 1 as h and tau tend to 0, with the temporal error K n tau tau^p ||Delta_h^(p+1) w||
+    (K independent of h). The compared witness FEEC.crime_nonvacuous shows that the hypotheses
+    admit genuine crimes: on the window R --id--> R --0--> R (closed ranges, harmonic forms
+    R (0, 0, 1)), the cochain reading maps i_n = 1 + h_n N, N(a, b, c) = (0, c, 0), h_n = 1/(n+1),
+    with cochain projections pi_n = 1 - h_n N meet the hypotheses of the three clauses (i_n pi_n =
+    1, ||1 - i_n* i_n|| -> 0, the discrete Poincare inequality and convergence for every datum),
+    the reading maps are not isometric (i_n* i_n != 1), a discrete harmonic form is read off the
+    harmonic forms, and the error at the datum (0, 0, 1) is positive at every level. The
+    conforming case (subcomplexes with cochain projections, the inclusion as reading map) is the
+    Palomar entry palomar/feec. The statement is self-contained over Mathlib; the proof is the
+    library Feec of this repository.
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.NA", "math.FA"]
+  msc2020: ["65N30", "65N12", "65M60", "65M12", "58A14"]
+
+sources:
+  - title: "Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces"
+    authors:
+      - "Michael Holst"
+      - "Ari Stern"
+    id: "doi:10.1007/s10208-012-9119-7"
+    type: "article"
+    location: "Found. Comput. Math. 12 (2012), 263-293, §3 (Thms 3.3, 3.5, 3.9, 3.10, Cors 3.4, 3.11)"
+    relationship: "formalizes"
+    note: >-
+      Approximating families of discrete Hilbert complexes with non-isometric reading maps: the
+      stability and Strang-type error estimates of the mixed Hodge Laplacian with the load i_h* f,
+      and, for cochain reading maps with bounded cochain projections, the discrete Poincare
+      inequality, the isomorphism on cohomology and the error estimate (checked against
+      arXiv:1005.4455: Thms 3.3, 3.5 in §3.1, Thms 3.9, 3.10, Cor 3.11 in §3.3). Generalized here to
+      reading maps that need not be cochain maps (for the static and heat statements).
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.1-§3.4"
+    relationship: "background"
+    note: >-
+      The conforming theory (Hilbert complexes, the mixed Hodge Laplacian, its stability), of
+      which the statements here are the version with crimes.
+    author_endorsement: "not-contacted"
+  - title: "On Rational Approximations of Semigroups"
+    authors:
+      - "Philip Brenner"
+      - "Vidar Thomée"
+    id: "doi:10.1137/0716051"
+    type: "article"
+    location: "SIAM J. Numer. Anal. 16 (1979)"
+    relationship: "formalizes"
+    note: >-
+      The temporal error K n tau tau^p ||B^(p+1) w|| of A-stable rational schemes of order p, for
+      the bounded dissipative discrete generators -Delta_h (by von Neumann's inequality).
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus for evolution problems"
+    authors:
+      - "Andrew Gillette"
+      - "Michael Holst"
+      - "Yunrong Zhu"
+    id: "doi:10.4208/jcm.1610-m2015-0319"
+    type: "article"
+    location: "J. Comput. Math. 35 (2017)"
+    relationship: "background"
+    note: >-
+      The semidiscrete Hodge heat equation in FEEC (conforming), whose route the heat clause
+      follows with crimes.
+    author_endorsement: "not-contacted"
+  - title: "A priori L2 error estimates for Galerkin approximations to parabolic partial differential equations"
+    authors:
+      - "Mary F. Wheeler"
+    id: "doi:10.1137/0710062"
+    type: "article"
+    location: "SIAM J. Numer. Anal. 10 (1973)"
+    relationship: "background"
+    note: >-
+      The elliptic projection as comparison function; the heat clause uses the elliptic (Ritz)
+      projection built from the static theory with crimes.
+    author_endorsement: "not-contacted"
+  - title: "Solving Ordinary Differential Equations II"
+    authors:
+      - "Ernst Hairer"
+      - "Gerhard Wanner"
+    id: "doi:10.1007/978-3-642-05221-7"
+    type: "book"
+    location: "Springer, 2nd ed., 1996, §IV.3"
+    relationship: "background"
+    note: "Rational stability functions, A-stability and order."
+    author_endorsement: "not-contacted"
+  - title: "Hilbert complexes"
+    authors:
+      - "Jochen Brüning"
+      - "Matthias Lesch"
+    id: "doi:10.1016/0022-1236(92)90147-B"
+    type: "article"
+    location: "J. Funct. Anal. 108 (1992)"
+    relationship: "background"
+    note: "The abstract setting of Hilbert complexes of closed densely defined operators."
+    author_endorsement: "not-contacted"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: the theorem FEEC.crimeFEEC and the witness FEEC.crime_nonvacuous
+    (Challenge.lean, 384 lines), formerly Theorem 4 and a witness of palomar/feec (the statement
+    of FEEC.crimeFEEC unchanged; the witness now also states the discrete Poincare inequality and
+    convergence for every datum, so that it meets the hypotheses of the three clauses). Not
+    compared, proved in Feec: the wave equation with crimes, the rates of the heat equation with
+    crimes (Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static), the splitting
+    of the residual into an inner-product and a cochain defect
+    (Feec.HilbertComplex.ApproxComplexCrime.feec), witnesses whose reading maps are not cochain
+    maps (Feec.HilbertComplex.Approximation.StaticCrimeWitness), and the instances (every
+    conforming window read as a family with crimes; the weak-symmetry scheme (6.5) of
+    [QuennevilleBelair2015] for the linearized Einstein-Bianchi equations,
+    Feec.Instances.EinsteinBianchiFEMCrown).
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals (the FEEC literature, the theory of variational
+        crimes), the statement design and the review standard; agents proposed and proved
+        lemmas, and wrote this challenge from the former Theorem 4 of palomar/feec.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge restates over Mathlib the objects of the
+    library Feec; the Solution translates them (Solution/Bridge.lean for the complex,
+    Solution/Dynamic.lean for the windows and evolutions, Solution/Rational.lean for the rational
+    schemes, Solution/Crime.lean for the families with crimes, Solution/Legacy.lean and
+    Solution/Convert.lean for the componentwise forms of the mixed problems, Solution/Witness.lean
+    for the witness) and applies Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC, the
+    cochain case Feec.HilbertComplex.Approximation.StaticCochain,
+    Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC,
+    Feec.HilbertComplex.dissipFEEC_fullyDiscrete and
+    Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le.
+
+fidelity:
+  divergences: >-
+    (1) Encoding (inherent): the differential is a family d i j : W^i -> W^j of closed densely
+    defined operators (Mathlib LinearPMap) for all pairs, zero unless j = i + 1; complexes are on Z,
+    the scalars any RCLike field, the refinement h -> 0 any filter. Mathlib has no
+    C0-semigroups: the exact heat evolution is an operator family asserted to exist and
+    characterized by its strong solutions (unique, D(A) dense, contractions). The theorem is a
+    conjunction of three clauses, each with its own hypotheses, with the verdict structures
+    CrimeFamily.StaticVerdict, CrimeFamily.CochainVerdict and EvolutionVerdict as conclusions.
+    (2) Windows and total complexes: the discrete differential spaces are total (ungraded)
+    complexes (X_h, d_h), d_h^2 = 0, read in a window W^a + ... + W^(a+m-1) (the l2 sum of m
+    consecutive degrees); the mixed problems are those of the total differentials (the mixed
+    Hodge Laplacian of the total complex of the window, the direct sum of the degreewise
+    problems), stated as their variational equations; the continuous and discrete solutions are
+    quantified universally (they are unique). Closed ranges are assumed in the degrees a+1, ...,
+    a+m-1 (those of the window). (3) Reading maps: the static verdict is stated for reading maps
+    that need not be cochain maps nor map into D(d), which generalizes [HolstStern2012] (cochain
+    morphisms); the read error compares d sigma with i_h d_h sigma_h. A family carries left
+    inverses of the reading maps bounded in W uniformly in h (so ||v|| <= C ||i_h v||), as in the
+    library; [HolstStern2012] assume V-bounded projections only (uniform injectivity follows there
+    from ||1 - i_h* i_h|| < 1), so this is an extra hypothesis of the verdicts that do not assume
+    ||1 - i_h* i_h|| -> 0 (static, cochain poincare and rate). (4) The Strang lemma takes the
+    residual in the form |B(x; y) - <i_h v, f>| <= eps (||tau|| + ||d_h tau|| + ||v|| + ||d_h v|| +
+    ||q||) at every discrete test function y = (tau, v, q), B the mixed form of d_h. (5) The
+    cohomology isomorphism is stated elementwise (onto: every discrete cycle is pi_h of a cycle
+    modulo a discrete boundary; one-to-one: a cycle whose image is a discrete boundary is a
+    boundary), for finite-dimensional harmonic forms with i_h pi_h q -> q on them. The cochain
+    projections are bounded in the graph norm, ||pi_h x|| <= C_pi (||x|| + ||dx||) on D(d)
+    (equivalent up to constants to the V-bounds of [HolstStern2012] §3.3), and need not be the left
+    inverses of the family. (6) The heat clause assumes convergence of the static method for every
+    datum (which the cochain clause supplies for cochain reading maps) and the inner-product defect
+    ||1 - i_h* i_h|| -> 0; the discrete generator is (d_h - d_h*)^2 = -Delta_h, and the evolution
+    verdict is that of the conforming heat equation of palomar/feec (the same structure, with
+    i_h as reading map): density of D(L^2), existence and uniqueness of strong solutions,
+    contractions, semidiscrete and fully discrete convergence, temporal error. This clause
+    combines [HolstStern2012] with the route of [GilletteHolstZhu2017] and the elliptic
+    projection of [Wheeler1973]; it is not a theorem of a single source. (7) Non-vacuity:
+    FEEC.crime_nonvacuous is a finite-dimensional complex (R in every degree), with reading maps
+    that are cochain maps and bijective; it shows that the hypotheses of the three clauses admit
+    non-isometric reading maps, discrete harmonic forms read off the harmonic forms and positive
+    errors, on a complex with nonzero harmonic forms. No compared witness has reading maps that are
+    not cochain maps (such witnesses, with a nonzero cochain defect, are proved in Feec,
+    Feec.HilbertComplex.Approximation.StaticCrimeWitness, and not compared), and none is an
+    infinite-dimensional finite element instance (the weak-symmetry scheme of palomar/einsteinbianchi
+    is one in Feec, not compared here). (8) The heat statement assumes a real structure
+    [NormedSpace R (W i)] for derivatives in time, and nothing relating it to the K-structure: a
+    real normed-space structure on a normed K-space is the restricted one, which the solution
+    proves. (9) Shared vocabulary: the notions this entry shares with the other Palomar entries are
+    copied from the canonical blocks of palomar/shared/vocabulary.lean.txt (HilbertComplex; window
+    with Total, sq, totalDomain, totalD and wave; boundaries; the mixed problem MixedSpace,
+    mixedForm, galerkin and IsMixedSolution; the evolution verdict semiflow and EvolutionVerdict;
+    IsStrongSolution; IsAStable, HasOrder, rationalApply), shared with palomar/feec (and the
+    windows with palomar/constraints), and the gate checks them byte for byte; the definitions of
+    the crimes (CrimeFamily and its notions) and of the mixed Hodge Laplacian of a window
+    (totalHarmonic, totalMixedSpace) are this entry's.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    Not yet reviewed by the author. New entry (2026-11-18, one story per entry): FEEC.crimeFEEC
+    and FEEC.crime_nonvacuous were Theorem 4 and a witness of palomar/feec; they move here with
+    the definitions only they use (CrimeFamily and its notions, totalHarmonic, totalMixedSpace);
+    the statement of FEEC.crimeFEEC is unchanged (its three clauses are those of the former
+    CrimeFamily.Verdict), and the witness gains the conjuncts (exists cP, S.IsPoincare cP) and
+    (forall f, S.ConvergesAt f), consequences of the cochain clause, so that it meets the
+    hypotheses of all three clauses. The shared definitions with palomar/feec are canonical
+    blocks (fidelity (9)); boundaries, mixed and evolution are new blocks (the text of
+    palomar/feec). Earlier history (in palomar/feec): the crime problems were redesigned as
+    triples with one residual (CrimeFamily.IsSolution, ResidualLE, readGap, ConvergesAt, defect)
+    and one evolution verdict for the conforming and crime heat equations; the Solution proves
+    the componentwise forms (Solution/Legacy.lean) and converts (Solution/Convert.lean). Every merge
+    of the library was gated by a full build (zero warnings), an axiom audit (propext,
+    Classical.choice, Quot.sound only), regression snapshots and an independent AI review. No
+    external mathematical review.
+
+alignment:
+  namespace: "FEEC"
+  statements:
+    - source: "[HolstStern2012], §3 (Thms 3.3, 3.5, Cor 3.4)"
+      lean: "FEEC.HilbertComplex.CrimeFamily.StaticVerdict"
+      module: "Challenge"
+      status: "proved"
+      note: "The conclusion of the static clause of FEEC.crimeFEEC (reading maps not necessarily cochain maps)."
+    - source: "[HolstStern2012], §3.3 (Thms 3.9, 3.10, Cor 3.11)"
+      lean: "FEEC.HilbertComplex.CrimeFamily.CochainVerdict"
+      module: "Challenge"
+      status: "proved"
+      note: "The conclusion of the cochain clause of FEEC.crimeFEEC."
+    - source: "[HolstStern2012], §3 (Thms 3.3, 3.5, 3.9, 3.10, Cors 3.4, 3.11); [GilletteHolstZhu2017]; [Wheeler1973]; [BrennerThomee1979]"
+      lean: "FEEC.crimeFEEC"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        The static, cochain and heat clauses: HilbertComplex.CrimeFamily.staticVerdict,
+        cochainVerdict and heatVerdict (Solution/Crime.lean, through
+        Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC,
+        Feec.HilbertComplex.Approximation.StaticCochain and
+        Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC), converted by
+        Solution/Convert.lean.
+    - source: "[HolstStern2012], §3 (non-vacuity)"
+      lean: "FEEC.crime_nonvacuous"
+      module: "Challenge"
+      status: "proved"
+      note: "Proved in Solution/Witness.lean and Solution.lean, with the cochain clause of FEEC.crimeFEEC."
+
+acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

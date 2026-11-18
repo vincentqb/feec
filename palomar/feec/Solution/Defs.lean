@@ -4,6 +4,7 @@ public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.MeasureTheory.Function.L2Space
 
 /-!
 # The definitions of the challenge
@@ -26,7 +27,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
-open Filter Topology Set LinearPMap
+open Filter Topology Set LinearPMap MeasureTheory
 
 universe u v w
 
@@ -482,4 +483,19 @@ end HilbertComplex
 /-! ### The three theorems -/
 
 variable [∀ i, NormedSpace ℝ (W i)]
+/-! ### Non-vacuity: spectral Galerkin for the de Rham complex of the torus -/
+
+/-- **`L²` `k`-forms on the torus `𝕋ⁿ = ℝⁿ/ℤⁿ`, in Fourier coefficients**: `ℓ²(ℤⁿ; Λᵏ)`, where
+`u ξ s` is the coefficient of `e^{2πi ξ·x} dx_s` (`ξ ∈ ℤⁿ`, `s` a `k`-subset of `Fin n`; no
+coefficients unless `0 ≤ k ≤ n`); by Parseval, the complex `L²(𝕋ⁿ; Λᵏ)`. -/
+abbrev TorusForm (n : ℕ) (k : ℤ) : Type :=
+  Lp (EuclideanSpace ℂ {s : Finset (Fin n) // (s.card : ℤ) = k}) 2
+    (Measure.count : Measure (Fin n → ℤ))
+/-- **The exterior derivative in Fourier coefficients**: `(du) ξ s = 2πi Σ_{j ∈ s} ε(j, s) ξⱼ
+u ξ (s ∖ j)` with `ε(j, s) = (-1)^{#{l ∈ s | l < j}}`, the symbol `2πi ξ ∧ ·` of `d` on `𝕋ⁿ` (at
+the `(k + 1)`-subsets `s`, where every `s ∖ j` is a `k`-subset). -/
+def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Finset (Fin n)) : ℂ :=
+  2 * Real.pi * Complex.I * ∑ j ∈ s, (-1) ^ (s.filter fun l => l < j).card * (ξ j : ℂ) *
+    if h : ((s.erase j).card : ℤ) = k then u ξ ⟨s.erase j, h⟩ else 0
+
 end FEEC

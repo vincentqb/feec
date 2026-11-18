@@ -4,6 +4,7 @@ public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.MeasureTheory.Function.L2Space
 
 /-!
 # Galerkin approximation of Hilbert complexes
@@ -28,9 +29,14 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
    rational scheme ([BrennerThomee1979]), the wave equation at the Jackson rates.
 
 The elliptic and parabolic problems need bounded cochain projections, which are uniform discrete
-stability; the hyperbolic one needs only approximation. The differential is a family
-`d i j : Wⁱ → Wʲ` of all pairs, zero unless `j = i + 1` (windows need no casts). Mathlib has no
-`C₀`-semigroups: exact evolutions are operator families characterized by their strong solutions.
+stability; the hyperbolic one needs only approximation. The witness `FEEC.spectral_nonvacuous`
+shows that a nontrivial family meets the hypotheses of the three theorems: the spectral Galerkin
+spaces of band-limited forms of the de Rham complex of the torus, with the Fourier truncations as
+cochain projections. The finite element families that meet them are the subject of the Palomar
+entry `palomar/fem`, the discrete complexes that are not subcomplexes (variational crimes) that of
+`palomar/crimes`. The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero unless
+`j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions are operator
+families characterized by their strong solutions.
 
 ## References
 
@@ -45,7 +51,7 @@ Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace
-open Filter Topology Set LinearPMap
+open Filter Topology Set LinearPMap MeasureTheory
 
 universe u v w
 
@@ -557,6 +563,48 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
         IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) →
       ∃ S, EvolutionVerdict (sq (H.wave a m)) F.l (fun h => F.Xh a m h)
         (fun h => (F.Xh a m h).subtypeL) (fun h => F.Lh a m h ^ 2) S) := by
+  sorry
+
+/-! ### Non-vacuity: spectral Galerkin for the de Rham complex of the torus -/
+
+/-- **`L²` `k`-forms on the torus `𝕋ⁿ = ℝⁿ/ℤⁿ`, in Fourier coefficients**: `ℓ²(ℤⁿ; Λᵏ)`, where
+`u ξ s` is the coefficient of `e^{2πi ξ·x} dx_s` (`ξ ∈ ℤⁿ`, `s` a `k`-subset of `Fin n`; no
+coefficients unless `0 ≤ k ≤ n`); by Parseval, the complex `L²(𝕋ⁿ; Λᵏ)`. -/
+abbrev TorusForm (n : ℕ) (k : ℤ) : Type :=
+  Lp (EuclideanSpace ℂ {s : Finset (Fin n) // (s.card : ℤ) = k}) 2
+    (Measure.count : Measure (Fin n → ℤ))
+/-- **The exterior derivative in Fourier coefficients**: `(du) ξ s = 2πi Σ_{j ∈ s} ε(j, s) ξⱼ
+u ξ (s ∖ j)` with `ε(j, s) = (-1)^{#{l ∈ s | l < j}}`, the symbol `2πi ξ ∧ ·` of `d` on `𝕋ⁿ` (at
+the `(k + 1)`-subsets `s`, where every `s ∖ j` is a `k`-subset). -/
+def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Finset (Fin n)) : ℂ :=
+  2 * Real.pi * Complex.I * ∑ j ∈ s, (-1) ^ (s.filter fun l => l < j).card * (ξ j : ℂ) *
+    if h : ((s.erase j).card : ℤ) = k then u ξ ⟨s.erase j, h⟩ else 0
+
+/-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus.** On
+`𝕋ⁿ`, `n ≥ 1`, the `L²` de Rham complex in Fourier coefficients (the graph of `d` is that of the
+multiplier `torusD`, on its maximal domain), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier
+truncations as cochain projections: in every degree `0 ≤ k ≤ n` the harmonic forms are nonzero and
+no `V_Nᵏ` is the whole space; and the family meets the hypotheses of the three theorems: closed
+ranges, the Poincaré inequality with constant `√(1 + (2π)⁻²)`, the discrete Poincaré inequality
+and the harmonic bound uniformly in `N` (Theorem 1), projections bounded by `1` in the graph norm
+and in `L²` (Theorems 2 and 3), and approximation in the graph norm in every degree and on every
+window (Theorems 2 and 3). -/
+theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
+    ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
+      (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
+        ∀ ξ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}), w ξ s = torusD u ξ s.1) ∧
+      F.l = atTop ∧
+      (∀ N k (u : TorusForm n k), u ∈ (F.V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0) ∧
+      (∀ N k (x : (H.d k (k + 1)).domain) ξ, ((F.π N).π k x : TorusForm n k) ξ =
+        if ∀ j, |ξ j| ≤ N then (x : TorusForm n k) ξ else 0) ∧
+      (∀ k : ℤ, 0 ≤ k → k ≤ n → (∃ q ∈ H.harmonic k, q ≠ 0) ∧ ∀ N, (F.V N).V k ≠ ⊤) ∧
+      (∀ k, IsClosed (H.boundaries k : Set (TorusForm n k))) ∧
+      (∀ k, H.PoincareBy k (√(1 + (2 * Real.pi)⁻¹ ^ 2))) ∧
+      (∀ k, ∃ c₁ c₂ : ℝ, ∀ N, (F.V N).PoincareBy k c₁ ∧ (F.V N).HarmonicBoundBy k c₂) ∧
+      (∀ k, F.IsGraphBoundedBy k 1) ∧
+      (∀ N k (x : (H.d k (k + 1)).domain),
+        ‖((F.π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖) ∧
+      (∀ k, F.Approximates k) ∧ ∀ a m, F.ApproximatesOn a m := by
   sorry
 
 end FEEC

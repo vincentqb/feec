@@ -2,6 +2,7 @@ module
 
 public import Solution.Convert
 public import Solution.Existence
+public import Solution.Torus
 
 /-!
 # Galerkin approximation of Hilbert complexes (solution)
@@ -14,7 +15,9 @@ through `Feec.HilbertComplex.SubcomplexFamily.staticFEEC` and `Solution.Bridge`)
 `Solution.Rates`; Theorem 3 (`FEEC.evolutionFEEC`) from the wave and heat verdicts
 (`HilbertComplex.SubcomplexFamily.waveVerdict`, `heatVerdict`, through
 `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
-`Solution.Dynamic`) and `Solution.Rates`.
+`Solution.Dynamic`) and `Solution.Rates`. The witness `FEEC.spectral_nonvacuous` from the
+spectral Galerkin family of the torus (`Solution.Torus`), the hypotheses of Theorem 1 through
+Theorem 1 itself.
 
 ## References
 
@@ -135,5 +138,32 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
     fun ha => (F.waveVerdict a m (F.approximates_window a m ha.1 ha.2)).imp fun _ hS =>
       ⟨hS, fun J s => hS.hasWaveRate J s⟩,
     fun ha hπ hπ' hcr => F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩
+
+/-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus**: the
+band subcomplexes of `Solution.Torus` with the Fourier truncations; the discrete Poincaré
+inequality and the harmonic bound from Theorem 1, under closed ranges, since the truncations are
+bounded in the graph norm. -/
+theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
+    ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
+      (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
+        ∀ ξ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}), w ξ s = torusD u ξ s.1) ∧
+      F.l = atTop ∧
+      (∀ N k (u : TorusForm n k), u ∈ (F.V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0) ∧
+      (∀ N k (x : (H.d k (k + 1)).domain) ξ, ((F.π N).π k x : TorusForm n k) ξ =
+        if ∀ j, |ξ j| ≤ N then (x : TorusForm n k) ξ else 0) ∧
+      (∀ k : ℤ, 0 ≤ k → k ≤ n → (∃ q ∈ H.harmonic k, q ≠ 0) ∧ ∀ N, (F.V N).V k ≠ ⊤) ∧
+      (∀ k, IsClosed (H.boundaries k : Set (TorusForm n k))) ∧
+      (∀ k, H.PoincareBy k (√(1 + (2 * Real.pi)⁻¹ ^ 2))) ∧
+      (∀ k, ∃ c₁ c₂ : ℝ, ∀ N, (F.V N).PoincareBy k c₁ ∧ (F.V N).HarmonicBoundBy k c₂) ∧
+      (∀ k, F.IsGraphBoundedBy k 1) ∧
+      (∀ N k (x : (H.d k (k + 1)).domain),
+        ‖((F.π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖) ∧
+      (∀ k, F.Approximates k) ∧ ∀ a m, F.ApproximatesOn a m :=
+  ⟨Torus.complexC n, Torus.family n, Torus.mem_graph_iff, rfl, Torus.mem_V_iff, Torus.π_apply,
+    fun _ hk0 hkn => ⟨Torus.exists_harmonic_ne_zero hk0 hkn, Torus.V_ne_top hk0 hkn⟩,
+    Torus.isClosed_boundaries, Torus.poincareBy,
+    ((projectionFEEC atTop (Torus.family n).V).2 Torus.isClosed_boundaries).1
+      ⟨Torus.family n, rfl, rfl, fun k => ⟨1, Torus.isGraphBoundedBy k⟩⟩,
+    Torus.isGraphBoundedBy, Torus.norm_π_le, Torus.approximates, Torus.approximatesOn⟩
 
 end FEEC

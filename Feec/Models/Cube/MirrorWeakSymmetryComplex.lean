@@ -171,7 +171,7 @@ theorem coexactProj_reflForm (j : Fin n) (v : Form ℂ (Fin n) k) :
 /-- Entrywise complex conjugation of a form at one frequency. -/
 def cjForm (v : Form ℂ (Fin n) k) : Form ℂ (Fin n) k := WithLp.toLp 2 fun t => conj (v t)
 
-@[simp] theorem cjForm_apply (v : Form ℂ (Fin n) k) (t : {s : Finset (Fin n) // #s = k}) :
+@[simp] theorem cjForm_apply (v : Form ℂ (Fin n) k) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
     cjForm v t = conj (v t) := rfl
 
 theorem cjForm_sub (v w : Form ℂ (Fin n) k) : cjForm (v - w) = cjForm v - cjForm w := by
@@ -325,11 +325,11 @@ theorem pcJ_symmDiff_empty (J s : Finset (Fin n)) : pcJ (symmDiff J s) ∅ = pcJ
 /-- **The coefficients of a component as a `0`-form**: the extension of `w_s` in the class
 `J ∆ s` has the coefficients of the component `s` of the extension of `w` in the class `J`. -/
 theorem coeff_JfJ_zeroForm (J : Finset (Fin n)) (k : ℕ) (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
-    (s : formIdx n (k : ℤ)) (m : Fin n → ℤ) (t₀ : {r : Finset (Fin n) // #r = 0}) :
+    (s : formIdx n (k : ℤ)) (m : Fin n → ℤ) (t₀ : {r : Finset (Fin n) // (#r : ℤ) = 0}) :
     (JfJ (symmDiff J s.1) 0 (zeroForm (w s)) : (Fin n → ℤ) → Form ℂ (Fin n) 0) m t₀ =
       (JfJ J k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s) := by
   rw [coeff_JfJ, coeff_JfJ]
-  have ht : t₀.1 = ∅ := Finset.card_eq_zero.1 t₀.2
+  have ht : t₀.1 = ∅ := Finset.card_eq_zero.1 (by exact_mod_cast t₀.2)
   rw [ht, pcJ_symmDiff_empty, zeroForm_apply, Equiv.symm_apply_apply, idx_val]
 
 /-- `‖d_ξ c‖ = |ξ| ‖c‖` on `0`-forms. -/
@@ -342,10 +342,11 @@ theorem norm_deRham_zero (ξ : EuclideanSpace ℝ (Fin n)) (c : Form ℂ (Fin n)
   rw [h0, norm_zero, zero_pow two_ne_zero, add_zero, ← mul_pow] at h
   exact (sq_eq_sq₀ (norm_nonneg _) (by positivity)).1 h
 
-theorem norm_form_zero (c : Form ℂ (Fin n) 0) (t₀ : {r : Finset (Fin n) // #r = 0}) :
+theorem norm_form_zero (c : Form ℂ (Fin n) 0) (t₀ : {r : Finset (Fin n) // (#r : ℤ) = 0}) :
     ‖c‖ = ‖c t₀‖ := by
-  have hsub : Subsingleton {r : Finset (Fin n) // #r = 0} :=
-    ⟨fun a b => Subtype.ext ((Finset.card_eq_zero.1 a.2).trans (Finset.card_eq_zero.1 b.2).symm)⟩
+  have hsub : Subsingleton {r : Finset (Fin n) // (#r : ℤ) = 0} :=
+    ⟨fun a b => Subtype.ext ((Finset.card_eq_zero.1 (by exact_mod_cast a.2)).trans
+      (Finset.card_eq_zero.1 (by exact_mod_cast b.2)).symm)⟩
   rw [EuclideanSpace.norm_eq, Fintype.sum_subsingleton _ t₀, Real.sqrt_sq (norm_nonneg _)]
 
 /-- **A criterion for `D(d_J)` by summability**, with the norm of `d_J u` as an `ℓ²` sum. -/
@@ -449,7 +450,7 @@ theorem exists_coexact_potential (u : (dPart (Q (Fin n)) J (k : ℤ)).domain) :
     have hcoef : ∀ (s : formIdx n (k : ℤ)) m, ‖(JfJ (symmDiff J s.1) 0 (zeroForm (w₀ s)) :
         (Fin n → ℤ) → Form ℂ (Fin n) 0) m‖ = ‖(Y : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖ :=
       fun s m => by
-        rw [norm_form_zero _ ⟨∅, Finset.card_empty⟩, coeff_JfJ_zeroForm, hJw]
+        rw [norm_form_zero _ ⟨∅, by simp⟩, coeff_JfJ_zeroForm, hJw]
     have hsum_s : ∀ (s : formIdx n (k : ℤ)), Summable fun m =>
         ‖(Feec.Fourier.Exterior.deRham (Fin n)).m 0 (0 + 1) (freq m)
           ((JfJ (symmDiff J s.1) 0 (zeroForm (w₀ s)) : (Fin n → ℤ) → Form ℂ (Fin n) 0) m)‖ ^ 2 :=
@@ -505,7 +506,7 @@ theorem mem_dPart_of_coeff (w : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
   have hzn : ∀ (s : formIdx n (k : ℤ)) m, ‖(JfJ (symmDiff J s.1) (0 + 1) (g s) :
       (Fin n → ℤ) → Form ℂ (Fin n) (0 + 1)) m‖ = ‖freq m‖ * ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m
         (idx k s)‖ := fun s m => by
-    rw [hz, norm_deRham_zero, norm_form_zero _ ⟨∅, Finset.card_empty⟩, coeff_JfJ_zeroForm]
+    rw [hz, norm_deRham_zero, norm_form_zero _ ⟨∅, by simp⟩, coeff_JfJ_zeroForm]
   have hsum_s : ∀ s : formIdx n (k : ℤ), Summable fun m => (‖freq m‖ *
       ‖(x : (Fin n → ℤ) → Form ℂ (Fin n) k) m (idx k s)‖) ^ 2 := fun s =>
     (summable_norm_sq_count' (JfJ (symmDiff J s.1) (0 + 1) (g s))).congr fun m => by rw [hzn]

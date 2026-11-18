@@ -1160,12 +1160,13 @@ section Maxwell
 
 open Feec.Models.Euclidean.DeRham Feec.Instances.Maxwell Feec.Fourier.Exterior
 
-variable (d : Type*) [Fintype d] [LinearOrder d] (a : ℕ)
+variable (d : Type*) [Fintype d] [LinearOrder d] (a : ℤ)
 
 /-- The index map `i ↦ a + i` of the window reflects the relation. -/
-theorem window_rel (i j : Fin 3) (h : (ComplexShape.up ℕ).Rel (a + (i : ℕ)) (a + (j : ℕ))) :
+theorem window_rel (i j : Fin 3)
+    (h : (ComplexShape.up ℤ).Rel (a + ((i : ℕ) : ℤ)) (a + ((j : ℕ) : ℤ))) :
     (ComplexShape.window 3).Rel i j := by
-  change a + (i : ℕ) + 1 = a + j at h
+  change a + ((i : ℕ) : ℤ) + 1 = a + ((j : ℕ) : ℤ) at h
   change i.val + 1 = j.val
   omega
 
@@ -1173,7 +1174,8 @@ theorem window_rel (i j : Fin 3) (h : (ComplexShape.up ℕ).Rel (a + (i : ℕ)) 
 abbrev maxwellSymbol :
     SymbolComplex ℂ (volume : Measure (EuclideanSpace ℝ d)) (ComplexShape.window 3)
       fun i : Fin 3 => Form ℂ d (a + i) :=
-  (Euclidean.symbolComplex (deRham d)).restrict (fun i : Fin 3 => a + (i : ℕ)) (window_rel a)
+  (Euclidean.symbolComplex (deRham d)).restrict (fun i : Fin 3 => a + ((i : ℕ) : ℤ))
+    (window_rel a)
 
 theorem continuous_maxwellSymbol_m (i j : Fin 3) : Continuous ((maxwellSymbol d a).m i j) :=
   continuous_symbolComplex_m (deRham d) _ _
@@ -1198,16 +1200,16 @@ theorem scale_inv_smul (ξ : EuclideanSpace ℝ d) :
     Euclidean.scale ((2 * Real.pi)⁻¹ • ξ) = ξ := by
   rw [Euclidean.scale, smul_smul, mul_inv_cancel₀ (by positivity), one_smul]
 
-/-- The electric arrow `Λᵃ → Λᵃ⁺¹` of the window is not zero for `a < d`. -/
-theorem maxwellSymbol_m01_ne_zero (h : a < Fintype.card d) :
+/-- The electric arrow `Λᵃ → Λᵃ⁺¹` of the window is not zero for `0 ≤ a < d`. -/
+theorem maxwellSymbol_m01_ne_zero (h0 : 0 ≤ a) (h : a < Fintype.card d) :
     (maxwellSymbol d a).m 0 1 ≠ 0 := by
-  intro h0
-  apply deRham_m_ne_zero h
+  intro hm
+  refine deRham_m_ne_zero (i := a + ((0 : Fin 3) : ℕ)) (j := a + ((1 : Fin 3) : ℕ)) (by simp)
+    (by simpa using h0) (by simpa using h) ?_
   funext ξ
-  have := congrFun h0 ((2 * Real.pi)⁻¹ • ξ)
-  change (deRham d).m (a + 0) (a + 1) (Euclidean.scale ((2 * Real.pi)⁻¹ • ξ)) = 0 at this
-  rw [scale_inv_smul] at this
-  exact this
+  have := congrFun hm ((2 * Real.pi)⁻¹ • ξ)
+  change (deRham d).m _ _ (Euclidean.scale ((2 * Real.pi)⁻¹ • ξ)) = 0 at this
+  rwa [scale_inv_smul] at this
 
 /-! #### Exact preservation of the Gauss laws -/
 
@@ -1266,18 +1268,20 @@ theorem maxwell_euclidean_band : EuclideanMaxwellVerdict d a :=
 abbrev maxwellPotentialApprox : ApproxFEEC ((complex d).window a 3) ℕ :=
   (maxwellBands d a).toApprox (potential ℂ fun i : Fin 3 => L2Form d (a + i)) isClosed_potential
 
-/-- **The vanishing-field constraint does not reduce Maxwell's operator on `ℝᵈ`** (`a < d`). -/
-theorem maxwell_euclidean_not_isReducing_potential (h : a < Fintype.card d) :
+/-- **The vanishing-field constraint does not reduce Maxwell's operator on `ℝᵈ`**
+(`0 ≤ a < d`). -/
+theorem maxwell_euclidean_not_isReducing_potential (h0 : 0 ≤ a) (h : a < Fintype.card d) :
     ¬ ((complex d).window a 3).wave.IsReducing (potential ℂ fun i : Fin 3 => L2Form d (a + i)) := by
   obtain ⟨N, u, -, hu, hdu⟩ := exists_band_d_ne_zero (maxwellSymbol d a)
-    (continuous_maxwellSymbol_m d a) (maxwellSymbol_m01_ne_zero d a h)
+    (continuous_maxwellSymbol_m d a) (maxwellSymbol_m01_ne_zero d a h0 h)
   exact not_isReducing_potential _ ⟨⟨u, hu⟩, hdu⟩
 
-/-- **Item 4 of `approxFEEC`, non-reducing branch, on `ℝᵈ`** (`a < d`): for the vanishing-field
+/-- **Item 4 of `approxFEEC`, non-reducing branch, on `ℝᵈ`** (`0 ≤ a < d`): for the vanishing-field
 constraint, for every `T > 0` some datum of `D(L) ∩ K` leaves `K` at some `t ∈ [0, T]`, and the
 residuals of the truncated solutions `ι_N e^{tL_N} π_N ξ₀` tend to `dist(e^{tL} ξ₀, K) > 0`,
 eventually staying above half of it. -/
-theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} (hT : 0 < T) :
+theorem maxwell_euclidean_potential_residual (h0 : 0 ≤ a) (h : a < Fintype.card d) {T : ℝ}
+    (hT : 0 < T) :
     ∃ x : ((complex d).window a 3).wave.domain,
       (x : PiLp 2 _) ∈ potential ℂ (fun i : Fin 3 => L2Form d (a + i)) ∧ ∃ t ∈ Icc 0 T,
       ((complex d).window a 3).waveGroup.S t x ∉ potential ℂ (fun i : Fin 3 => L2Form d (a + i)) ∧
@@ -1294,7 +1298,7 @@ theorem maxwell_euclidean_potential_residual (h : a < Fintype.card d) {T : ℝ} 
           (potential ℂ (fun i : Fin 3 => L2Form d (a + i)) : Set _) := by
   have V := ((maxwellBands d a).feec _ isClosed_potential).toApprox
   obtain ⟨x, ⟨hxD, hxK⟩, t, ht, hout⟩ := V.leaves_smooth isClosed_potential
-    (fun hk => maxwell_euclidean_not_isReducing_potential d a h
+    (fun hk => maxwell_euclidean_not_isReducing_potential d a h0 h
       ((V.isReducing_iff_keeps (p := fun i : Fin 3 => decide (Odd i.val))
         (fun _ _ h => ComplexShape.window_parity h) (fun _ hx => reversal_mem_totalSub hx)
         (dense_potential _)).2 hk)) (dense_potential _) hT

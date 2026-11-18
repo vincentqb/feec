@@ -541,10 +541,10 @@ def zeroF {Ω : Set (Fin n → ℝ)} (f : L2 ℝ Ω) : L2F ℝ Ω (formIdx n ((0
   WithLp.toLp 2 fun _ => f
 
 /-- The index `∅` of `Λ⁰`. -/
-def t₀ : {s : Finset (Fin n) // #s = 0} := ⟨∅, Finset.card_empty⟩
+def t₀ : {s : Finset (Fin n) // (#s : ℤ) = 0} := ⟨∅, by simp⟩
 
-theorem eq_t₀ (t : {s : Finset (Fin n) // #s = 0}) : t = t₀ :=
-  Subtype.ext (Finset.card_eq_zero.1 t.2)
+theorem eq_t₀ (t : {s : Finset (Fin n) // (#s : ℤ) = 0}) : t = t₀ :=
+  Subtype.ext (Finset.card_eq_zero.1 (by exact_mod_cast t.2))
 
 theorem norm_form_zero_sq (a : Form ℂ (Fin n) 0) : ‖a‖ ^ 2 = ‖a t₀‖ ^ 2 := by
   rw [EuclideanSpace.norm_sq_eq, Fintype.sum_eq_single t₀ fun t ht => absurd (eq_t₀ t) ht]

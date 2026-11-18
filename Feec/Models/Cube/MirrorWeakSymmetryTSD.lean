@@ -76,15 +76,15 @@ open Feec.Fourier.Exterior (Form koszul_apply koszulDeg_apply res_apply ext_appl
   ext_apply_of_ne deRham_m_succ)
 open Feec.Fourier.GradCurl (Mat Vec curl curl_apply)
 
-def sub1 (b : Fin 3) : {s : Finset (Fin 3) // #s = 1} := ⟨{b}, Finset.card_singleton b⟩
-def sub2 (i : Fin 3) : {s : Finset (Fin 3) // #s = 2} :=
+def sub1 (b : Fin 3) : {s : Finset (Fin 3) // (#s : ℤ) = 1} := ⟨{b}, by simp⟩
+def sub2 (i : Fin 3) : {s : Finset (Fin 3) // (#s : ℤ) = 2} :=
   ⟨univ.erase i, by rw [Finset.card_erase_of_mem (mem_univ i)]; rfl⟩
 
 theorem sub1_bijective : Function.Bijective sub1 := by decide
 theorem sub2_bijective : Function.Bijective sub2 := by decide
 
-def e1 : Fin 3 ≃ {s : Finset (Fin 3) // #s = 1} := Equiv.ofBijective sub1 sub1_bijective
-def e2 : Fin 3 ≃ {s : Finset (Fin 3) // #s = 2} := Equiv.ofBijective sub2 sub2_bijective
+def e1 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 1} := Equiv.ofBijective sub1 sub1_bijective
+def e2 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 2} := Equiv.ofBijective sub2 sub2_bijective
 
 @[simp] theorem e1_apply (b : Fin 3) : e1 b = sub1 b := rfl
 @[simp] theorem e2_apply (i : Fin 3) : e2 i = sub2 i := rfl
@@ -116,7 +116,7 @@ theorem koszulDeg_sub2 (ξ : EuclideanSpace ℝ (Fin 3)) (x : Form ℂ (Fin 3) 1
   rw [koszulDeg_apply, res_apply]
   change Feec.Fourier.Exterior.koszul ξ (Feec.Fourier.Exterior.ext 1 x) (univ.erase i) = _
   rw [hs, koszul_apply, Finset.sum_pair hjk, h1, h2, sgn_val, sgn_val, hj, hk,
-    ext_apply 1 _ (Finset.card_singleton _), ext_apply 1 _ (Finset.card_singleton _)]
+    ext_apply 1 _ (by simp), ext_apply 1 _ (by simp)]
   simp only [pow_zero, pow_one, one_mul, neg_mul]
   rw [← sub_eq_add_neg]
   rfl
@@ -151,17 +151,17 @@ theorem deRham_rowF (ξ : EuclideanSpace ℝ (Fin 3)) (M : Mat) (a : Fin 3) :
     ring
 
 theorem koszulDeg_sub1 (ξ : EuclideanSpace ℝ (Fin 3)) (c : Form ℂ (Fin 3) 0) (b : Fin 3) :
-    Feec.Fourier.Exterior.koszulDeg 0 ξ c (sub1 b) = (ξ b : ℂ) * c ⟨∅, Finset.card_empty⟩ := by
+    Feec.Fourier.Exterior.koszulDeg 0 ξ c (sub1 b) = (ξ b : ℂ) * c ⟨∅, by simp⟩ := by
   rw [koszulDeg_apply, res_apply]
   change Feec.Fourier.Exterior.koszul ξ (Feec.Fourier.Exterior.ext 0 c) {b} = _
   rw [koszul_apply, Finset.sum_singleton, sgn_val, Finset.erase_singleton,
-    ext_apply 0 _ Finset.card_empty]
+    ext_apply 0 _ (by simp)]
   simp [Finset.filter_singleton]
 
 /-- `d_ξ c = i c ξ` on `0`-forms, in the coordinates `dx_b`. -/
 theorem deRham_zero_sub1 (ξ : EuclideanSpace ℝ (Fin 3)) (c : Form ℂ (Fin 3) 0) (b : Fin 3) :
     (Feec.Fourier.Exterior.deRham (Fin 3)).m 0 (0 + 1) ξ c (sub1 b) =
-      Complex.I * ((ξ b : ℂ) * c ⟨∅, Finset.card_empty⟩) := by
+      Complex.I * ((ξ b : ℂ) * c ⟨∅, by simp⟩) := by
   rw [deRham_m_succ, smul_apply, PiLp.smul_apply, koszulDeg_sub1, smul_eq_mul]
 
 theorem curl_neg (ξ : EuclideanSpace ℝ (Fin 3)) (M : Mat) : curl (-ξ) M = -curl ξ M := by
@@ -489,7 +489,7 @@ theorem inner_rowRe_dPart_zero (E : MQ)
       simp only [map_add, map_mul, Complex.conj_conj, map_div₀, map_one, map_ofNat]
       linear_combination (1 / 2 * Complex.I *
           (JfJ {a} 0 (ψ : L2F ℝ (Q (Fin 3)) (formIdx 3 ((0 : ℕ) : ℤ))) :
-            (Fin 3 → ℤ) → Form ℂ (Fin 3) 0) m ⟨∅, Finset.card_empty⟩) * (h1c + -h2a)
+            (Fin 3 → ℤ) → Form ℂ (Fin 3) 0) m ⟨∅, by simp⟩) * (h1c + -h2a)
     calc _ = RCLike.re (∫ _m, (0 : ℂ) ∂Measure.count) := by
           congr 1; exact integral_congr_ae (Eventually.of_forall hpt)
       _ = 0 := by simp

@@ -143,23 +143,23 @@ theorem reflSign_erase {j l : d} {s : Finset d} (hl : l ∈ s) :
     simp [h, this]
 
 /-- `R_j^*` on the coefficients of a `k`-form at one frequency. -/
-def reflForm (j : d) (k : ℕ) : Form ℂ d k →L[ℂ] Form ℂ d k :=
+def reflForm (j : d) (k : ℤ) : Form ℂ d k →L[ℂ] Form ℂ d k :=
   LinearMap.toContinuousLinearMap
     { toFun := fun v => WithLp.toLp 2 fun t => reflSign j t.1 * v t
       map_add' := fun v w => by ext t; simp [mul_add]
       map_smul' := fun a v => by ext t; simp; ring }
 
-theorem reflForm_apply (j : d) (k : ℕ) (v : Form ℂ d k) (t : {s : Finset d // #s = k}) :
+theorem reflForm_apply (j : d) (k : ℤ) (v : Form ℂ d k) (t : {s : Finset d // (#s : ℤ) = k}) :
     reflForm j k v t = reflSign j t.1 * v t := rfl
 
-theorem reflForm_reflForm (j : d) (k : ℕ) (v : Form ℂ d k) : reflForm j k (reflForm j k v) = v := by
+theorem reflForm_reflForm (j : d) (k : ℤ) (v : Form ℂ d k) : reflForm j k (reflForm j k v) = v := by
   ext t; rw [reflForm_apply, reflForm_apply, ← mul_assoc, reflSign_mul_self, one_mul]
 
-theorem reflForm_comm (j l : d) (k : ℕ) (v : Form ℂ d k) :
+theorem reflForm_comm (j l : d) (k : ℤ) (v : Form ℂ d k) :
     reflForm j k (reflForm l k v) = reflForm l k (reflForm j k v) := by
   ext t; simp only [reflForm_apply]; ring
 
-theorem inner_reflForm (j : d) (k : ℕ) (v w : Form ℂ d k) :
+theorem inner_reflForm (j : d) (k : ℤ) (v w : Form ℂ d k) :
     ⟪reflForm j k v, reflForm j k w⟫_ℂ = ⟪v, w⟫_ℂ := by
   simp only [PiLp.inner_apply, reflForm_apply]
   refine Finset.sum_congr rfl fun t _ => ?_
@@ -167,7 +167,7 @@ theorem inner_reflForm (j : d) (k : ℕ) (v w : Form ℂ d k) :
 
 /-- **The Koszul symbol is reflection-equivariant**: `κ_{R_j ξ} (R_j^* v) = R_j^* (κ_ξ v)`
 (`R_j^*` is an algebra automorphism of `Λ` with `R_j^* ξ = R_j ξ`). -/
-theorem koszulDeg_reflForm (j : d) (k : ℕ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d k) :
+theorem koszulDeg_reflForm (j : d) (k : ℤ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d k) :
     koszulDeg k (reflFreq j ξ) (reflForm j k v) = reflForm j (k + 1) (koszulDeg k ξ v) := by
   ext u
   rw [reflForm_apply, koszulDeg_apply, koszulDeg_apply, res_apply, res_apply, koszul_apply,
@@ -175,14 +175,14 @@ theorem koszulDeg_reflForm (j : d) (k : ℕ) (ξ : EuclideanSpace ℝ d) (v : Fo
   refine Finset.sum_congr rfl fun l hl => ?_
   have he : (ext k (reflForm j k v) : Lam ℂ d) (u.1.erase l) =
       reflSign j (u.1.erase l) * (ext k v : Lam ℂ d) (u.1.erase l) := by
-    by_cases h : #(u.1.erase l) = k
+    by_cases h : (#(u.1.erase l) : ℤ) = k
     · rw [ext_apply k _ h, ext_apply k _ h, reflForm_apply]
     · rw [ext_apply_of_ne k _ h, ext_apply_of_ne k _ h, mul_zero]
   rw [he, ← reflSign_erase hl, reflFreq_apply]
   split_ifs <;> push_cast <;> ring
 
 /-- **The de Rham symbol is reflection-equivariant**, in every pair of degrees. -/
-theorem deRham_reflForm (j : d) (p q : ℕ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d p) :
+theorem deRham_reflForm (j : d) (p q : ℤ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ d p) :
     (deRham d).m p q (reflFreq j ξ) (reflForm j p v) = reflForm j q ((deRham d).m p q ξ v) := by
   by_cases h : p + 1 = q
   · subst h
@@ -208,7 +208,7 @@ variable (d) in
 `n ↦ flip_j n` on the frequencies, `v ↦ ± R_j^* v` on the coefficients. -/
 def symmetries (rel : Bool) : (windowSymbol d).Symmetries d where
   R j := Reflection.count_of_involutive (flipAt j) (flipAt_involutive j)
-  ρ j i := parSign rel • reflForm j (i : ℕ)
+  ρ j i := parSign rel • reflForm j i
   invol j i v := by
     simp only [_root_.smul_apply, _root_.map_smul, reflForm_reflForm, smul_smul,
       parSign_mul_self, one_smul]
@@ -359,7 +359,7 @@ theorem mem_harmonic_iff {rel : Bool} {i : Fin (Fintype.card d + 1)} {x : (actio
 
 /-- The zero mode of a fixed form is fixed by every `± R_j^*`. -/
 theorem parSign_reflForm_zero {rel : Bool} {i : Fin (Fintype.card d + 1)}
-    (x : (action d rel).fixed i) (j : d) (t : {s : Finset d // #s = (i : ℕ)}) :
+    (x : (action d rel).fixed i) (j : d) (t : {s : Finset d // (#s : ℤ) = (i : ℕ)}) :
     parSign rel * reflSign j t.1 *
         (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t =
       (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t := by
@@ -369,7 +369,7 @@ theorem parSign_reflForm_zero {rel : Bool} {i : Fin (Fintype.card d + 1)}
 
 /-- A harmonic form whose zero-mode coefficients vanish off `t₀` vanishes off `t₀`. -/
 theorem harmonic_eq_bot_of {rel : Bool} {i : Fin (Fintype.card d + 1)}
-    (h : ∀ t : {s : Finset d // #s = (i : ℕ)}, ∃ j, parSign rel * reflSign j t.1 ≠ 1) :
+    (h : ∀ t : {s : Finset d // (#s : ℤ) = (i : ℕ)}, ∃ j, parSign rel * reflSign j t.1 ≠ 1) :
     (complex d rel).harmonic i = ⊥ := by
   rw [eq_bot_iff]
   intro x hx
@@ -390,7 +390,7 @@ theorem harmonic_eq_bot_of {rel : Bool} {i : Fin (Fintype.card d + 1)}
 /-- A harmonic space whose degree has a single index set `t₀` fixed by every `± R_j^*` is
 one-dimensional, spanned by the constant form `dx_{t₀}`. -/
 theorem finrank_harmonic_eq_one {rel : Bool} {i : Fin (Fintype.card d + 1)}
-    (t₀ : {s : Finset d // #s = (i : ℕ)}) (ht : ∀ t, t = t₀)
+    (t₀ : {s : Finset d // (#s : ℤ) = (i : ℕ)}) (ht : ∀ t, t = t₀)
     (hs : ∀ j, parSign rel * reflSign j t₀.1 = 1) :
     Module.finrank ℂ ((complex d rel).harmonic i) = 1 := by
   set e₀ : Form ℂ d i := EuclideanSpace.single t₀ 1
@@ -443,7 +443,8 @@ theorem finrank_harmonic_eq_one {rel : Bool} {i : Fin (Fintype.card d + 1)}
 theorem relative_harmonic_eq_bot {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) ≠ Fintype.card d) :
     (relative d).harmonic i = ⊥ := by
   refine harmonic_eq_bot_of fun t => ?_
-  have hne : t.1 ≠ Finset.univ := fun h => hi (by rw [← t.2, h, Finset.card_univ])
+  have hne : t.1 ≠ Finset.univ := fun h => hi (by
+    have := t.2; rw [h, Finset.card_univ] at this; exact_mod_cast this.symm)
   obtain ⟨j, hj⟩ : ∃ j, j ∉ t.1 := by
     by_contra h; push Not at h; exact hne (Finset.eq_univ_iff_forall.2 h)
   exact ⟨j, by simp [parSign, reflSign, hj]; norm_num⟩
@@ -452,22 +453,24 @@ theorem relative_harmonic_eq_bot {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) 
 (`ℌⁿ = span (dx_1 ∧ ⋯ ∧ dx_n)`, `Hⁿ(Q, ∂Q) ≅ ℂ`). -/
 theorem finrank_relative_harmonic_top :
     Module.finrank ℂ ((relative d).harmonic (Fin.last (Fintype.card d))) = 1 := by
-  refine finrank_harmonic_eq_one ⟨Finset.univ, Finset.card_univ⟩
-    (fun t => Subtype.ext (Finset.eq_univ_of_card _ t.2)) fun j => ?_
+  refine finrank_harmonic_eq_one ⟨Finset.univ, by simp⟩
+    (fun t => Subtype.ext (Finset.eq_univ_of_card _ (by
+      have := t.2; simp only [Fin.val_last] at this; exact_mod_cast this))) fun j => ?_
   simp [parSign, reflSign]
 
 /-- **Absolute boundary conditions: no harmonic forms above degree `0`.** -/
 theorem absolute_harmonic_eq_bot {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) ≠ 0) :
     (absolute d).harmonic i = ⊥ := by
   refine harmonic_eq_bot_of fun t => ?_
-  obtain ⟨j, hj⟩ : t.1.Nonempty := Finset.card_pos.1 (by rw [t.2]; omega)
+  obtain ⟨j, hj⟩ : t.1.Nonempty := Finset.card_pos.1 (by have := t.2; omega)
   exact ⟨j, by simp [parSign, reflSign, hj]; norm_num⟩
 
 /-- **Absolute boundary conditions: the harmonic `0`-forms are the constants**
 (`H⁰(Q) ≅ ℂ`). -/
 theorem finrank_absolute_harmonic_zero : Module.finrank ℂ ((absolute d).harmonic 0) = 1 := by
-  refine finrank_harmonic_eq_one ⟨∅, Finset.card_empty⟩
-    (fun t => Subtype.ext (Finset.card_eq_zero.1 t.2)) fun j => ?_
+  refine finrank_harmonic_eq_one ⟨∅, by simp⟩
+    (fun t => Subtype.ext (Finset.card_eq_zero.1 (by
+      have := t.2; simp only [Fin.val_zero, Nat.cast_zero] at this; exact_mod_cast this))) fun j => ?_
   simp [parSign, reflSign]
 
 /-- **Duality of the harmonic forms** (Poincaré–Lefschetz, numerically): the relative harmonic
@@ -530,29 +533,30 @@ end LpMap
 
 variable (d) in
 /-- Complementation `s ↦ sᶜ` of the index sets of `k`-forms and `k'`-forms, `k + k' = n`. -/
-def complIdx {k k' : ℕ} (h : k + k' = Fintype.card d) :
-    {s : Finset d // #s = k} ≃ {s : Finset d // #s = k'} where
-  toFun t := ⟨t.1ᶜ, by rw [Finset.card_compl, t.2]; omega⟩
-  invFun t := ⟨t.1ᶜ, by rw [Finset.card_compl, t.2]; omega⟩
+def complIdx {k k' : ℤ} (h : k + k' = Fintype.card d) :
+    {s : Finset d // (#s : ℤ) = k} ≃ {s : Finset d // (#s : ℤ) = k'} where
+  toFun t := ⟨t.1ᶜ, by have := t.2; have := Finset.card_le_univ t.1; rw [Finset.card_compl]; omega⟩
+  invFun t := ⟨t.1ᶜ, by have := t.2; have := Finset.card_le_univ t.1; rw [Finset.card_compl]; omega⟩
   left_inv t := Subtype.ext (compl_compl _)
   right_inv t := Subtype.ext (compl_compl _)
 
 variable (d) in
 /-- **The Hodge star up to sign**, `dx_s ↦ dx_{sᶜ}`, an isometry of `k`-forms onto `k'`-forms,
 `k + k' = n`. -/
-noncomputable def complForm {k k' : ℕ} (h : k + k' = Fintype.card d) : Form ℂ d k ≃ₗᵢ[ℂ] Form ℂ d k' :=
+noncomputable def complForm {k k' : ℤ} (h : k + k' = Fintype.card d) :
+    Form ℂ d k ≃ₗᵢ[ℂ] Form ℂ d k' :=
   LinearIsometryEquiv.piLpCongrLeft 2 ℂ ℂ (complIdx d h)
 
-theorem complForm_apply {k k' : ℕ} (h : k + k' = Fintype.card d) (v : Form ℂ d k)
-    (t : {s : Finset d // #s = k'}) : complForm d h v t = v ⟨t.1ᶜ, by
-      rw [Finset.card_compl, t.2]; omega⟩ := by
+theorem complForm_apply {k k' : ℤ} (h : k + k' = Fintype.card d) (v : Form ℂ d k)
+    (t : {s : Finset d // (#s : ℤ) = k'}) : complForm d h v t = v ⟨t.1ᶜ, by
+      have := t.2; have := Finset.card_le_univ t.1; rw [Finset.card_compl]; omega⟩ := by
   simp [complForm, LinearIsometryEquiv.piLpCongrLeft_apply, Equiv.piCongrLeft'_apply]
   rfl
 
 theorem reflSign_compl (j : d) (s : Finset d) : reflSign j sᶜ = -reflSign j s := by
   unfold reflSign; by_cases hj : j ∈ s <;> simp [hj]
 
-theorem reflForm_complForm {k k' : ℕ} (h : k + k' = Fintype.card d) (j : d) (v : Form ℂ d k) :
+theorem reflForm_complForm {k k' : ℤ} (h : k + k' = Fintype.card d) (j : d) (v : Form ℂ d k) :
     reflForm j k' (complForm d h v) = -complForm d h (reflForm j k v) := by
   ext t
   simp only [reflForm_apply, complForm_apply, PiLp.neg_apply]
@@ -565,7 +569,8 @@ theorem parSign_not (rel : Bool) : parSign (!rel) = -parSign rel := by
   cases rel <;> norm_num [parSign]
 
 omit [LinearOrder d] in
-theorem add_val_rev (i : Fin (Fintype.card d + 1)) : (i : ℕ) + (i.rev : ℕ) = Fintype.card d := by
+theorem add_val_rev (i : Fin (Fintype.card d + 1)) :
+    ((i : ℕ) : ℤ) + (i.rev : ℕ) = Fintype.card d := by
   rw [Fin.val_rev]; have := i.isLt; omega
 
 variable (d) in

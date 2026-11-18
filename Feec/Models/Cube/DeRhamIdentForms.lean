@@ -35,7 +35,7 @@ in the neighbouring parity class. Green's identity holds
 ## Main results
 
 * **`inner_Jf`**, `Jinvf_Jf`, `Jf_realPar`, **`Jf_Jinvf`**, `injective_Jf`.
-* `deRham_m_apply`, `ext_Jf`, `formalAdj_single1_apply`, `greenFor_of_inner`,
+* `ext_Jf`, `formalAdj_single1_apply`, `greenFor_of_inner`,
   **`coeff_d_of_greenFor`**.
 * **`greenFor_minimal`**, `mem_closure_formalAdj_single1`, **`greenFor_maximal`**;
   `coeff_d_minimal`, `coeff_d_maximal`.
@@ -98,21 +98,20 @@ theorem update_pcF_erase (rel : Bool) {s : Finset (Fin n)} {j : Fin n} (hj : j �
     simp [pcF, DeRham.reflSign, Finset.mem_erase, hi]
 
 /-- `formIdx n k` and the `k`-subsets of `Fin n` (the index set of `Form ℂ (Fin n) k`). -/
-def idx (k : ℕ) : formIdx n (k : ℤ) ≃ {s : Finset (Fin n) // #s = k} :=
-  Equiv.subtypeEquivRight fun _ => Nat.cast_inj
+def idx (k : ℕ) : formIdx n (k : ℤ) ≃ {s : Finset (Fin n) // (#s : ℤ) = k} :=
+  Equiv.refl _
 
 @[simp] theorem idx_val (k : ℕ) (s : formIdx n (k : ℤ)) : ((idx k s) : Finset (Fin n)) = s.1 := rfl
 
 /-- The coefficient sequences of `L²` fields indexed by `formIdx n k`, as `ℓ²(ℤⁿ; Λᵏ)`. -/
 def reidx (k : ℕ) : Lp (EuclideanSpace ℂ (formIdx n (k : ℤ))) 2 (Measure.count : Measure (Fin n → ℤ))
     ≃ₗᵢ[ℂ] Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ)) :=
-  DeRham.lpCongr (LinearIsometryEquiv.piLpCongrLeft 2 ℂ ℂ (idx k))
+  LinearIsometryEquiv.refl ℂ _
 
 theorem reidx_apply (k : ℕ)
     (w : Lp (EuclideanSpace ℂ (formIdx n (k : ℤ))) 2 (Measure.count : Measure (Fin n → ℤ)))
-    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // #s = k}) :
-    (reidx k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m t = w m ((idx k).symm t) := by
-  rw [reidx, DeRham.lpCongr_apply, LinearIsometryEquiv.piLpCongrLeft_apply]
+    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
+    (reidx k w : (Fin n → ℤ) → Form ℂ (Fin n) k) m t = w m ((idx k).symm t) :=
   rfl
 
 theorem reidx_symm_apply (k : ℕ)
@@ -135,7 +134,7 @@ theorem Jf_apply (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k :
 
 /-- **The coefficients of `Jf`**: `(Jf u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
-    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // #s = k}) :
+    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
     (Jf rel k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m t =
       ∫ y in Q (Fin n), (((u ((idx k).symm t) : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
         fold (pcF rel t.1) (mFourier (-m)) y := by
@@ -201,16 +200,6 @@ abbrev uExt {k : ℤ} (u : L2F ℝ (Q (Fin n)) (formIdx n k)) (r : Finset (Fin n
     L2 ℝ (Q (Fin n)) :=
   formExt (fun s => (u s : L2 ℝ (Q (Fin n)))) r
 
-/-- **The de Rham symbol in coordinates**: `(d_ξ v)_t = i Σ_{j ∈ t} ε(j, t) ξ_j v_{t ∖ j}`. -/
-theorem deRham_m_apply (k : ℕ) (ξ : EuclideanSpace ℝ (Fin n)) (v : Form ℂ (Fin n) k)
-    (t : {s : Finset (Fin n) // #s = k + 1}) :
-    (Feec.Fourier.Exterior.deRham (Fin n)).m k (k + 1) ξ v t =
-      Complex.I * ∑ j ∈ t.1, (Feec.ExteriorFibre.sgn j t.1 : ℂ) * (ξ j : ℂ) *
-        Feec.Fourier.Exterior.ext k v (t.1.erase j) := by
-  rw [Feec.Fourier.Exterior.deRham_m_succ, smul_apply,
-    Feec.Fourier.Exterior.koszulDeg_apply]
-  rfl
-
 /-- **The coefficients of `Jf` on all index sets**: `ext (Jf u (m)) r = ∫_Q u_r · fold_{c(r)}
 e_{-m}` (both sides vanish off the `k`-subsets). -/
 theorem ext_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
@@ -218,7 +207,7 @@ theorem ext_Jf (rel : Bool) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : �
     Feec.Fourier.Exterior.ext k ((Jf rel k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m) r =
       ∫ y in Q (Fin n), (((uExt u r : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
         fold (pcF rel r) (mFourier (-m)) y := by
-  by_cases h : #r = k
+  by_cases h : (#r : ℤ) = k
   · rw [Feec.Fourier.Exterior.ext_apply k _ h, coeff_Jf, uExt,
       formExt_of_card _ (by exact_mod_cast h)]
     rfl
@@ -523,7 +512,7 @@ theorem coeff_d_of_greenFor {rel : Bool} {k : ℕ} {u : L2F ℝ (Q (Fin n)) (for
     push_cast
     simp only [← Finset.sum_neg_distrib, Finset.mul_sum, ← Finset.sum_add_distrib]
     refine Finset.sum_congr rfl fun j _ => by ring
-  rw [deRham_m_apply, coeff_Jf]
+  rw [Feec.Fourier.Exterior.deRham_m_succ_apply, coeff_Jf]
   change _ = ∫ y in Q (Fin n), (((w t : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) * F y
   rw [hG, Finset.mul_sum, ← Finset.sum_neg_distrib]
   refine Finset.sum_congr rfl fun j hj => ?_

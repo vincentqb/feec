@@ -593,12 +593,14 @@ def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Fin
 `𝕋ⁿ`, `n ≥ 1`, the `L²` de Rham complex in Fourier coefficients (the graph of `d` is that of the
 multiplier `torusD`, on its maximal domain; that this multiplier is the weak exterior derivative
 of `L²(𝕋ⁿ; Λᵏ)` is not part of the statement), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier
-truncations as cochain projections: in every degree `0 ≤ k ≤ n` the harmonic forms are nonzero and
-no `V_Nᵏ` is the whole space; and the family meets the hypotheses of the three theorems: closed
-ranges (Theorems 1 and 3), the Poincaré inequality with constant `√(1 + (2π)⁻²)` (Theorem 2), the
+truncations as cochain projections: the harmonic forms are finite-dimensional in every degree,
+of dimension `(n choose k)` in degree `k` (the constant forms), and no `V_Nᵏ`, `0 ≤ k ≤ n`, is
+the whole space; and the family meets the hypotheses of the three theorems: closed ranges
+(Theorems 1 and 3), the Poincaré inequality with constant `√(1 + (2π)⁻²)` (Theorem 2), the
 discrete Poincaré inequality and the harmonic bound uniformly in `N` (Theorem 1), projections
-bounded by `1` in the graph norm (Theorems 1–3) and in `L²` (Theorem 3), and approximation in the
-graph norm in every degree (Theorem 2), hence on every window (`ApproximatesOn`, Theorem 3). -/
+bounded by `1` in the graph norm (Theorems 1–3) and in `L²` (Theorem 3), approximation in the
+graph norm in every degree (Theorem 2, with the finite-dimensional harmonic forms of its
+cohomology clause), hence on every window (`ApproximatesOn`, Theorem 3). -/
 theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
@@ -607,7 +609,9 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
       (∀ N k (u : TorusForm n k), u ∈ (F.V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0) ∧
       (∀ N k (x : (H.d k (k + 1)).domain) ξ, ((F.π N).π k x : TorusForm n k) ξ =
         if ∀ j, |ξ j| ≤ N then (x : TorusForm n k) ξ else 0) ∧
-      (∀ k : ℤ, 0 ≤ k → k ≤ n → (∃ q ∈ H.harmonic k, q ≠ 0) ∧ ∀ N, (F.V N).V k ≠ ⊤) ∧
+      (∀ k, FiniteDimensional ℂ (H.harmonic k)) ∧
+      (∀ k : ℕ, Module.finrank ℂ (H.harmonic k) = n.choose k) ∧
+      (∀ k : ℤ, 0 ≤ k → k ≤ n → ∀ N, (F.V N).V k ≠ ⊤) ∧
       (∀ k, IsClosed (H.boundaries k : Set (TorusForm n k))) ∧
       (∀ k, H.PoincareBy k (√(1 + (2 * Real.pi)⁻¹ ^ 2))) ∧
       (∀ k, ∃ c₁ c₂ : ℝ, ∀ N, (F.V N).PoincareBy k c₁ ∧ (F.V N).HarmonicBoundBy k c₂) ∧

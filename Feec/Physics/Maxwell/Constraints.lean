@@ -20,7 +20,8 @@ constrained.
 
 ## Main definitions
 
-* `Maxwell.window H a`: the short complex `V a → V (a+1) → V (a+2)` of a complex on `up ℕ`;
+* `Maxwell.window H a`: the short complex `V a → V (a+1) → V (a+2)` of a complex on `up α`
+  (`α = ℕ, ℤ`);
   `Maxwell.gauss H a`: the constraint family `{0} × N(d†) × N(d)`.
 * On an open `Ω ⊆ ℝ³`: `Maxwell.pec Ω` (perfect electric conductor: `H̊¹ → H̊(curl) → L²`, the
   minimal complex) and `Maxwell.pmc Ω` (perfect magnetic conductor: `H¹ → H(curl) → L²`, the
@@ -28,7 +29,7 @@ constrained.
 
 ## Main results
 
-* `gauss_propagates`, `gauss_existsUnique`: for every Hilbert complex on `up ℕ` and every
+* `gauss_propagates`, `gauss_existsUnique`: for every Hilbert complex on `up α` and every
   degree; instances `torus_gauss_propagates` (`𝕋ᵈ`, any `d`, any degree) and
   `euclidean_gauss_propagates` (`ℝᵈ`, any `d`, any degree).
 * `pec_gauss_propagates`, `pmc_gauss_propagates`: on every open `Ω ⊆ ℝ³` (bounded or not; cubes
@@ -58,27 +59,28 @@ universe u
 
 section Window
 
-variable {𝕜 : Type*} [RCLike 𝕜] {V : ℕ → Type u} [∀ i, NormedAddCommGroup (V i)]
-  [∀ i, InnerProductSpace 𝕜 (V i)] [∀ i, CompleteSpace (V i)]
-  (H : HilbertComplex 𝕜 (ComplexShape.up ℕ) V) (a : ℕ)
+variable {𝕜 : Type*} [RCLike 𝕜] {α : Type*} [AddCommMonoidWithOne α] [IsCancelAdd α]
+  [CharZero α] {V : α → Type u} [∀ i, NormedAddCommGroup (V i)] [∀ i, InnerProductSpace 𝕜 (V i)]
+  [∀ i, CompleteSpace (V i)] (H : HilbertComplex 𝕜 (ComplexShape.up α) V) (a : α)
 
-/-- The Maxwell window `V a → V (a+1) → V (a+2)` of a complex on `ComplexShape.up ℕ`. -/
+/-- The Maxwell window `V a → V (a+1) → V (a+2)` of a complex on `ComplexShape.up α`. -/
 abbrev window := (H.window a 3).toShort
 
 /-- The magnetic Gauss law `dB = 0`: the kernel of `d : V (a+2) → V (a+3)`. -/
-abbrev closedSub : Submodule 𝕜 (V (a + 2)) := (H.d (a + 2) (a + 3)).ker
+abbrev closedSub : Submodule 𝕜 (V (a + ((2 : Fin 3) : α))) :=
+  (H.d (a + ((2 : Fin 3) : α)) (a + ((2 : Fin 3) : α) + 1)).ker
 
 instance : (closedSub H a).HasOrthogonalProjection :=
   hasOrthogonalProjection_ker _ (H.closed _ _)
 
 /-- `R(d) ⊆ N(d)`: the curl of an electric field satisfies the magnetic Gauss law. -/
-theorem d_mem_closedSub (x : (window H a).d₁.domain) : (window H a).d₁ x ∈ closedSub H a := by
-  have h := H.d_comp_d (a + 1) (a + 2) (a + 3) x
-  exact LinearPMap.mem_ker_iff.2 ⟨⟨_, H.mapsTo (a + 1) (a + 2) (a + 3) x⟩, rfl, h⟩
+theorem d_mem_closedSub (x : (window H a).d₁.domain) : (window H a).d₁ x ∈ closedSub H a :=
+  LinearPMap.mem_ker_iff.2 ⟨⟨_, H.mapsTo _ _ (a + ((2 : Fin 3) : α) + 1) x⟩, rfl,
+    H.d_comp_d _ _ _ x⟩
 
 /-- The total space `V a × V (a+1) × V (a+2)` of the Maxwell window. -/
-abbrev Space := PiLp 2 (ShortHilbertComplex.W3 (V (a + ((0 : Fin 3) : ℕ)))
-  (V (a + ((1 : Fin 3) : ℕ))) (V (a + ((2 : Fin 3) : ℕ))))
+abbrev Space := PiLp 2 (ShortHilbertComplex.W3 (V (a + ((0 : Fin 3) : α)))
+  (V (a + ((1 : Fin 3) : α))) (V (a + ((2 : Fin 3) : α))))
 
 /-- The Gauss-law constraint family `{0} × N(d†) × N(d)` of the Maxwell window. -/
 abbrev gauss := (window H a).divFreeSub (closedSub H a)
@@ -123,13 +125,12 @@ end Window
 
 section Models
 
-variable (d : Type) [Fintype d] [LinearOrder d] (a : ℕ)
+variable (d : Type) [Fintype d] [LinearOrder d] (a : ℤ)
 
 /-- **Maxwell on the torus `𝕋ᵈ`** (any `d`, any degree `a`; `a = 0`, `d = 3` is the classical
 system): the Gauss laws propagate. [QuennevilleBelair2015], Prop 4.16 -/
 theorem torus_gauss_propagates {t₀ t₁ : ℝ}
-    {F U : ℝ → Space a (V := fun k => MeasureTheory.Lp (Fourier.Exterior.Form ℂ d k) 2
-      (MeasureTheory.Measure.count : MeasureTheory.Measure (d → ℤ)))}
+    {F U : ℝ → Space a (V := Models.Torus.DeRham.L2Form d)}
     (hU : Evolution.IsStrongSolution (window (Models.Torus.DeRham.complex d) a).wave
       (Icc t₀ t₁) F U)
     (h0 : U t₀ ∈ HilbertComplex.totalSub (gauss (Models.Torus.DeRham.complex d) a))

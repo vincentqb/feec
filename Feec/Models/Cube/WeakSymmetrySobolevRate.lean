@@ -992,7 +992,7 @@ open Feec.Models.Cube.Geometry (Q)
 open Feec.Fourier.Exterior (Form)
 
 /-- The index `{1, 2}` of the `2`-form `dx₁ ∧ dx₂`. -/
-def t12 : {s : Finset (Fin 3) // s.card = 2} := ⟨{1, 2}, by decide⟩
+def t12 : {s : Finset (Fin 3) // (#s : ℤ) = 2} := ⟨{1, 2}, by decide⟩
 
 open scoped Classical in
 /-- **The coefficients of the sawtooth `2`-form** `f(y₀) dx₁ ∧ dx₂`, `f(y₀) = Σ_{c ≠ 0}

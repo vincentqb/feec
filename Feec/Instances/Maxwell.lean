@@ -438,20 +438,17 @@ def torusFamily : ConformingFamily (complex d) ℕ where
     rw [one_mul, bandProj_apply]; exact Submodule.norm_starProjection_apply_le _ x⟩
   approx k y := by
     refine (tendsto_infDist_submodule_iff _ y).2 fun ε hε => ?_
-    have h := Fourier.tendsto_starProjection_band
-      (Fourier.Torus.symbolComplex (Fourier.Exterior.deRham d))
-      (fun N => (Fourier.Torus.finite_bandN N).measurableSet) Fourier.Torus.bandN_mono
-      Fourier.Torus.exists_mem_bandN k y
-    filter_upwards [(tendsto_iff_norm_sub_tendsto_zero.1 h).eventually (gt_mem_nhds hε)] with N hN
+    filter_upwards [(tendsto_iff_norm_sub_tendsto_zero.1 (tendsto_starProjection_band k y)).eventually
+      (gt_mem_nhds hε)] with N hN
     exact ⟨_, Submodule.starProjection_apply_mem _ _, by rwa [norm_sub_rev]⟩
 
 /-- **Maxwell's equations on the torus `𝕋ᵈ`** (degree `a`; `d = 3`, `a = 0` is the classical
 system) with the **spectral Galerkin** spaces of band-limited forms `|n|_∞ ≤ N` and the Fourier
 truncations, as a constrained FEEC discretization with the Gauss laws. -/
-def torus (a : ℕ) : ConstrainedFEEC ((complex d).window a 3) ℕ :=
+def torus (a : ℤ) : ConstrainedFEEC ((complex d).window a 3) ℕ :=
   feec (torusFamily d) a
 
-variable {d} {a : ℕ}
+variable {d} {a : ℤ}
 
 /-- The de Rham symbol `d_ξ = i ξ ∧ ·` is injective on `0`-forms for `ξ ≠ 0`. -/
 theorem deRham_m_zero_one_ne_zero {ξ : EuclideanSpace ℝ d} (hξ : ξ ≠ 0)
@@ -472,16 +469,11 @@ theorem torus_exists_d_ne_zero [Nonempty d] :
   obtain ⟨j⟩ := ‹Nonempty d›
   set q : d → ℤ := Pi.single j 1
   have hq : q ≠ 0 := fun h => by simpa [q] using congrFun h j
-  set v : Fourier.Exterior.Form ℂ d 0 := EuclideanSpace.single ⟨∅, Finset.card_empty⟩ 1
+  set v : Fourier.Exterior.Form ℂ d 0 := EuclideanSpace.single ⟨∅, by simp⟩ 1
   have hv : v ≠ 0 := by simp [v]
-  set u : L2Form d 0 :=
-    lp.equivLpCount ℂ (d → ℤ) (Fourier.Exterior.Form ℂ d 0) 2 (lp.single 2 q v)
+  set u : L2Form d 0 := mode 0 q v
   have hu : ∀ p, (u : (d → ℤ) → Fourier.Exterior.Form ℂ d 0) p = if p = q then v else 0 :=
-    fun p => by
-      rw [lp.coeFn_equivLpCount, lp.single_apply]
-      split_ifs with h
-      · subst h; simp
-      · simp [Pi.single, Function.update, h]
+    mode_apply 0 q v
   have hband : u ∈ (bandSubcomplex d 1).V 0 := by
     refine (Fourier.mem_band_iff
       (S := Fourier.Torus.symbolComplex (Fourier.Exterior.deRham d))).2

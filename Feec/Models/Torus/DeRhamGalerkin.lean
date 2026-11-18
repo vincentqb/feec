@@ -18,7 +18,8 @@ shows the hypotheses of the abstract theory are satisfiable by a nontrivial fami
 
 ## Main results
 
-* `bandSubcomplex`, `bandProj`, `isGraphBounded_bandProj`, `bandProj_harmonic`.
+* `bandSubcomplex`, `bandProj`, `isGraphBounded_bandProj`, `bandProj_harmonic`; coefficientwise,
+  `mem_band_iff` and `coeFn_starProjection_band`; `tendsto_starProjection_band`.
 * `norm_sub_le_bandGalerkin`: the quasi-optimal estimate for the spectral Galerkin method.
 * **`tendsto_bandGalerkin`**: convergence of the discrete mixed solutions.
 
@@ -44,13 +45,13 @@ namespace Feec.Models.Torus.DeRham
 variable {d : Type*} [Fintype d] [LinearOrder d]
 
 /-- The band-limited `k`-forms `|n|_∞ ≤ N`. -/
-abbrev band (N k : ℕ) : Submodule ℂ (L2Form d k) :=
+abbrev band (N : ℕ) (k : ℤ) : Submodule ℂ (L2Form d k) :=
   (Fourier.Torus.symbolComplex (deRham d)).band (Fourier.Torus.bandN N) k
 
-instance (N k : ℕ) : (band (d := d) N k).HasOrthogonalProjection :=
+instance (N : ℕ) (k : ℤ) : (band (d := d) N k).HasOrthogonalProjection :=
   Fourier.hasOrthogonalProjection_band _ (Fourier.Torus.finite_bandN N).measurableSet k
 
-instance (N k : ℕ) : FiniteDimensional ℂ (band (d := d) N k) :=
+instance (N : ℕ) (k : ℤ) : FiniteDimensional ℂ (band (d := d) N k) :=
   Fourier.finiteDimensional_band _ (Fourier.Torus.finite_bandN N) k
 
 theorem reducingSubcomplex_band (N : ℕ) : (complex d).ReducingSubcomplex (band (d := d) N) :=
@@ -64,7 +65,7 @@ def bandSubcomplex (N : ℕ) : (complex d).Subcomplex where
     ((reducingSubcomplex_band N).reduces k j).le_domain ((complex d).dense k j)
   mapsTo _ _ x hx := (reducingSubcomplex_band N).mapsTo ⟨x, _⟩ hx
 
-instance (N k : ℕ) : FiniteDimensional ℂ ((bandSubcomplex d N).V k) :=
+instance (N : ℕ) (k : ℤ) : FiniteDimensional ℂ ((bandSubcomplex d N).V k) :=
   inferInstanceAs (FiniteDimensional ℂ (band (d := d) N k))
 
 variable (d) in
@@ -75,11 +76,38 @@ def bandProj (N : ℕ) : (bandSubcomplex d N).CochainProjection where
   proj _ _ hx := Submodule.starProjection_eq_self_iff.2 hx
   comm k j x := ((reducingSubcomplex_band N).reduces k j).comm x
 
-theorem bandProj_apply (N k : ℕ) (x : L2Form d k) :
+theorem bandProj_apply (N : ℕ) (k : ℤ) (x : L2Form d k) :
     (bandProj d N).π k x = (band (d := d) N k).starProjection x := rfl
 
+/-- **The band-limited forms, coefficientwise**: `u ∈ V_Nᵏ` iff `û(n) = 0` for `|n|_∞ > N`. -/
+theorem mem_band_iff {N : ℕ} {k : ℤ} {u : L2Form d k} :
+    u ∈ band N k ↔ ∀ n, n ∉ Fourier.Torus.bandN N → u n = 0 := by
+  rw [Fourier.mem_band_iff, Measure.ae_count_iff]
+
+open scoped Classical in
+/-- **The Fourier truncation, coefficientwise**: `(π_N x)(n) = x(n)` for `|n|_∞ ≤ N`, else
+`0`. -/
+theorem coeFn_starProjection_band (N : ℕ) (k : ℤ) (x : L2Form d k) (n : d → ℤ) :
+    ((band N k).starProjection x : L2Form d k) n =
+      if n ∈ Fourier.Torus.bandN N then x n else 0 := by
+  rw [Measure.ae_count_iff.1 (Operator.coeFn_starProjection_fibreSub
+    (μ := (Measure.count : Measure (d → ℤ)))
+    (Fourier.bandFibre (𝕜 := ℂ) (E := Form ℂ d) (Fourier.Torus.bandN N) k)
+    AEStronglyMeasurable.of_discrete x) n]
+  dsimp only
+  rw [Fourier.starProjection_bandFibre]
+  by_cases hn : n ∈ Fourier.Torus.bandN N
+  · simp [hn, Operator.cutoff_apply_of_mem hn]
+  · simp [hn, Operator.cutoff_apply_of_notMem hn]
+
+/-- **The Fourier truncations converge**: `π_N u → u` as `N → ∞`. -/
+theorem tendsto_starProjection_band (k : ℤ) (u : L2Form d k) :
+    Tendsto (fun N => (band (d := d) N k).starProjection u) atTop (𝓝 u) :=
+  Fourier.tendsto_starProjection_band _ (fun N => (Fourier.Torus.finite_bandN N).measurableSet)
+    Fourier.Torus.bandN_mono Fourier.Torus.exists_mem_bandN k u
+
 /-- The Fourier truncation has graph norm `1`. -/
-theorem isGraphBounded_bandProj (N k j : ℕ) : (bandProj d N).IsGraphBounded k j 1 := by
+theorem isGraphBounded_bandProj (N : ℕ) (k j : ℤ) : (bandProj d N).IsGraphBounded k j 1 := by
   intro x
   have hc := ((reducingSubcomplex_band (d := d) N).reduces k j).comm x
   have e : (complex d).d k j ⟨(bandProj d N).π k x, (bandSubcomplex d N).le_domain k j
@@ -93,7 +121,7 @@ omit [Fintype d] [LinearOrder d] in
 theorem zero_mem_bandN (N : ℕ) : (0 : d → ℤ) ∈ Fourier.Torus.bandN N := fun j => by simp
 
 /-- **Harmonic forms are band-limited**: `π q = q` on `ℌᵏ`, for every `N`. -/
-theorem bandProj_harmonic (N : ℕ) {k : ℕ} {q : L2Form d k} (hq : q ∈ (complex d).harmonic k) :
+theorem bandProj_harmonic (N : ℕ) {k : ℤ} {q : L2Form d k} (hq : q ∈ (complex d).harmonic k) :
     (bandProj d N).π k q = q := by
   refine (bandProj d N).proj k q ?_
   change q ∈ band N k
@@ -102,16 +130,16 @@ theorem bandProj_harmonic (N : ℕ) {k : ℕ} {q : L2Form d k} (hq : q ∈ (comp
   exact mem_harmonic_iff.1 hq n fun h => hn (h ▸ zero_mem_bandN N)
 
 /-- The harmonic gap of the Fourier truncation vanishes. -/
-theorem norm_sub_bandProj_harmonic (N : ℕ) {k : ℕ} :
+theorem norm_sub_bandProj_harmonic (N : ℕ) {k : ℤ} :
     ∀ q ∈ (complex d).harmonic k, ‖q - (bandProj d N).π k q‖ ≤ 0 * ‖q‖ := fun q hq => by
   rw [bandProj_harmonic N hq, sub_self, norm_zero, zero_mul]
 
 /-- The Poincaré inequality of the torus in the form of the abstract theory. -/
-theorem poincare {i j : ℕ} (hij : (ComplexShape.up ℕ).Rel i j)
+theorem poincare {i j : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
     (z : ((complex d).d i j).domain) (hz : (z : L2Form d i) ∈ ((complex d).cycles i)ᗮ) :
     ‖(z : L2Form d i)‖ ≤ (2 * Real.pi)⁻¹ * ‖(complex d).d i j z‖ := by
   obtain rfl : i + 1 = j := hij
-  rw [(complex d).cycles_eq (show (ComplexShape.up ℕ).Rel i (i + 1) from rfl)] at hz
+  rw [(complex d).cycles_eq (show (ComplexShape.up ℤ).Rel i (i + 1) from rfl)] at hz
   exact norm_le_of_mem_orthogonal z hz
 
 /-- The constant of the spectral Galerkin estimate. -/
@@ -120,8 +148,8 @@ def bandConst : ℝ := (1 + 144 * (1 * √(1 + ((2 * Real.pi)⁻¹) ^ 2)) ^ 2) *
 set_option maxHeartbeats 2000000 in
 /-- **Quasi-optimality of the spectral Galerkin mixed method** on the torus: the abstract
 estimate ([AFW2010], Thm 3.9) with `C = 1`, `c_P = (2π)⁻¹` and `μ = 0`. -/
-theorem norm_sub_le_bandGalerkin (N : ℕ) {i j k : ℕ} (hij : (ComplexShape.up ℕ).Rel i j)
-    (hjk : (ComplexShape.up ℕ).Rel j k) {f : L2Form d j} {σ : (complex d).domainSpace i}
+theorem norm_sub_le_bandGalerkin (N : ℕ) {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2Form d j} {σ : (complex d).domainSpace i}
     {u : (complex d).domainSpace j} {p : (complex d).harmonic j}
     (hs : (complex d).IsMixedSolution i j k f σ u p) :
     ‖σ - (bandSubcomplex d N).embD i
@@ -147,59 +175,55 @@ theorem norm_sub_le_bandGalerkin (N : ℕ) {i j k : ℕ} (hij : (ComplexShape.up
 
 variable (d) in
 /-- The truncation of a point of `Vⁱ` as a point of the discrete domain space. -/
-def truncD (N i : ℕ) (x : (complex d).domainSpace i) : (bandSubcomplex d N).toHilbertComplex.domainSpace i :=
-  ((bandSubcomplex d N).toHilbertComplex.d i ((ComplexShape.up ℕ).next i)).toGraphSpace
+def truncD (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) : (bandSubcomplex d N).toHilbertComplex.domainSpace i :=
+  ((bandSubcomplex d N).toHilbertComplex.d i ((ComplexShape.up ℤ).next i)).toGraphSpace
     ⟨⟨(band (d := d) N i).starProjection ((complex d).domainIncl i x),
       Submodule.starProjection_apply_mem _ _⟩, Submodule.mem_top⟩
 
 set_option maxHeartbeats 2000000 in
 /-- `‖x - E(P_N x)‖_V ≤ ‖x - P_N x‖ + ‖d x - P_N d x‖`. -/
-theorem norm_sub_embD_truncD_le (N i : ℕ) (x : (complex d).domainSpace i) :
+theorem norm_sub_embD_truncD_le (N : ℕ) (i : ℤ) (x : (complex d).domainSpace i) :
     ‖x - (bandSubcomplex d N).embD i (truncD d N i x)‖ ≤
       ‖(complex d).domainIncl i x - (band (d := d) N i).starProjection ((complex d).domainIncl i x)‖ +
-        ‖(complex d).d i ((ComplexShape.up ℕ).next i)
-            ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x) -
-          (band (d := d) N ((ComplexShape.up ℕ).next i)).starProjection
-            ((complex d).d i ((ComplexShape.up ℕ).next i)
-              ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x))‖ := by
+        ‖(complex d).d i ((ComplexShape.up ℤ).next i)
+            ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x) -
+          (band (d := d) N ((ComplexShape.up ℤ).next i)).starProjection
+            ((complex d).d i ((ComplexShape.up ℤ).next i)
+              ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x))‖ := by
   have hsq := (complex d).norm_sq_domainSpace i (x - (bandSubcomplex d N).embD i (truncD d N i x))
   have h1 : (complex d).domainIncl i (x - (bandSubcomplex d N).embD i (truncD d N i x)) =
       (complex d).domainIncl i x - (band (d := d) N i).starProjection ((complex d).domainIncl i x) := by
     rw [_root_.map_sub]; rfl
-  have h2 : (complex d).d i ((ComplexShape.up ℕ).next i) ((complex d).domainCoord i ((ComplexShape.up ℕ).next i)
+  have h2 : (complex d).d i ((ComplexShape.up ℤ).next i) ((complex d).domainCoord i ((ComplexShape.up ℤ).next i)
         (x - (bandSubcomplex d N).embD i (truncD d N i x))) =
-      (complex d).d i ((ComplexShape.up ℕ).next i) ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x) -
-        (band (d := d) N ((ComplexShape.up ℕ).next i)).starProjection
-          ((complex d).d i ((ComplexShape.up ℕ).next i) ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x)) := by
+      (complex d).d i ((ComplexShape.up ℤ).next i) ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x) -
+        (band (d := d) N ((ComplexShape.up ℤ).next i)).starProjection
+          ((complex d).d i ((ComplexShape.up ℤ).next i) ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x)) := by
     rw [_root_.map_sub, LinearPMap.map_sub]
     congr 1
-    exact ((reducingSubcomplex_band (d := d) N).reduces i ((ComplexShape.up ℕ).next i)).comm
-      ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x)
+    exact ((reducingSubcomplex_band (d := d) N).reduces i ((ComplexShape.up ℤ).next i)).comm
+      ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x)
   rw [h1, h2] at hsq
   have hA := norm_nonneg ((complex d).domainIncl i x -
     (band (d := d) N i).starProjection ((complex d).domainIncl i x))
-  have hB := norm_nonneg ((complex d).d i ((ComplexShape.up ℕ).next i) ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x) -
-    (band (d := d) N ((ComplexShape.up ℕ).next i)).starProjection
-      ((complex d).d i ((ComplexShape.up ℕ).next i) ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x)))
+  have hB := norm_nonneg ((complex d).d i ((ComplexShape.up ℤ).next i) ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x) -
+    (band (d := d) N ((ComplexShape.up ℤ).next i)).starProjection
+      ((complex d).d i ((ComplexShape.up ℤ).next i) ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x)))
   refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
   rw [hsq]; nlinarith
 
-private theorem tendsto_norm_sub_starProjection_band {k : ℕ} (v : L2Form d k) :
-    Tendsto (fun N => ‖v - ((Fourier.Torus.symbolComplex (deRham d)).band
-      (Fourier.Torus.bandN N) k).starProjection v‖) atTop (𝓝 0) := by
-  have h := Fourier.tendsto_starProjection_band (Fourier.Torus.symbolComplex (deRham d))
-    (fun N => (Fourier.Torus.finite_bandN N).measurableSet) Fourier.Torus.bandN_mono
-    Fourier.Torus.exists_mem_bandN k v
-  have := (tendsto_iff_norm_sub_tendsto_zero.1 h)
-  simpa only [norm_sub_rev] using this
+private theorem tendsto_norm_sub_starProjection_band {k : ℤ} (v : L2Form d k) :
+    Tendsto (fun N => ‖v - (band (d := d) N k).starProjection v‖) atTop (𝓝 0) := by
+  simpa only [norm_sub_rev] using tendsto_iff_norm_sub_tendsto_zero.1
+    (tendsto_starProjection_band k v)
 
 /-- `dist_V(x, Vₕⁱ) → 0` as `N → ∞`. -/
-theorem tendsto_infDist_domainSub (i : ℕ) (x : (complex d).domainSpace i) :
+theorem tendsto_infDist_domainSub (i : ℤ) (x : (complex d).domainSpace i) :
     Tendsto (fun N => Metric.infDist x ((bandSubcomplex d N).domainSub i)) atTop (𝓝 0) := by
   have ht := (tendsto_norm_sub_starProjection_band (d := d) ((complex d).domainIncl i x)).add
     (tendsto_norm_sub_starProjection_band (d := d)
-      ((complex d).d i ((ComplexShape.up ℕ).next i)
-        ((complex d).domainCoord i ((ComplexShape.up ℕ).next i) x)))
+      ((complex d).d i ((ComplexShape.up ℤ).next i)
+        ((complex d).domainCoord i ((ComplexShape.up ℤ).next i) x)))
   rw [add_zero] at ht
   refine squeeze_zero (fun _ => Metric.infDist_nonneg) (fun N => ?_) ht
   refine (Metric.infDist_le_dist_of_mem ((bandSubcomplex d N).mem_domainSub (truncD d N i x))).trans ?_
@@ -207,7 +231,7 @@ theorem tendsto_infDist_domainSub (i : ℕ) (x : (complex d).domainSpace i) :
   exact norm_sub_embD_truncD_le N i x
 
 /-- Harmonic forms are discrete harmonic forms of every band subcomplex. -/
-theorem mem_harmonicW_band (N : ℕ) {j : ℕ} {p : L2Form d j} (hp : p ∈ (complex d).harmonic j) :
+theorem mem_harmonicW_band (N : ℕ) {j : ℤ} {p : L2Form d j} (hp : p ∈ (complex d).harmonic j) :
     p ∈ (bandSubcomplex d N).harmonicW j := by
   refine (bandSubcomplex d N).mem_harmonicW_iff.2 ⟨?_, (complex d).harmonic_le_cycles j hp,
     fun b hb => ?_⟩
@@ -218,8 +242,8 @@ theorem mem_harmonicW_band (N : ℕ) {j : ℕ} {p : L2Form d j} (hp : p ∈ (com
 /-- **Convergence of the spectral Galerkin mixed method** on the torus: the discrete mixed
 solutions on the bands `|n|_∞ ≤ N` converge to the solution of the mixed Hodge Laplacian in the
 norm of `Vⁱ × Vʲ × Wʲ`. -/
-theorem tendsto_bandGalerkin {i j k : ℕ} (hij : (ComplexShape.up ℕ).Rel i j)
-    (hjk : (ComplexShape.up ℕ).Rel j k) {f : L2Form d j} {σ : (complex d).domainSpace i}
+theorem tendsto_bandGalerkin {i j k : ℤ} (hij : (ComplexShape.up ℤ).Rel i j)
+    (hjk : (ComplexShape.up ℤ).Rel j k) {f : L2Form d j} {σ : (complex d).domainSpace i}
     {u : (complex d).domainSpace j} {p : (complex d).harmonic j}
     (hs : (complex d).IsMixedSolution i j k f σ u p) :
     Tendsto (fun N => ‖σ - (bandSubcomplex d N).embD i

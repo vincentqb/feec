@@ -104,7 +104,7 @@ variable (d) in
 Rham window: `n ↦ flip_j n` on the frequencies, `v ↦ ε_j R_j^* v` on the coefficients. -/
 def mixedSymmetries (J : Finset d) : (windowSymbol d).Symmetries d where
   R j := Reflection.count_of_involutive (flipAt j) (flipAt_involutive j)
-  ρ j i := mixedSign J j • reflForm j (i : ℕ)
+  ρ j i := mixedSign J j • reflForm j i
   invol j i v := by
     simp only [_root_.smul_apply, _root_.map_smul, reflForm_reflForm, smul_smul,
       mixedSign_mul_self, one_smul]
@@ -178,7 +178,7 @@ theorem mem_mixed_harmonic_iff {J : Finset d} {i : Fin (Fintype.card d + 1)}
 
 /-- The zero mode of a fixed form is fixed by every `ε_j R_j^*`. -/
 theorem mixedSign_reflForm_zero {J : Finset d} {i : Fin (Fintype.card d + 1)}
-    (x : (mixedAction d J).fixed i) (j : d) (t : {s : Finset d // #s = (i : ℕ)}) :
+    (x : (mixedAction d J).fixed i) (j : d) (t : {s : Finset d // (#s : ℤ) = (i : ℕ)}) :
     mixedSign J j * reflSign j t.1 *
         (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t =
       (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t := by
@@ -188,7 +188,7 @@ theorem mixedSign_reflForm_zero {J : Finset d} {i : Fin (Fintype.card d + 1)}
 
 /-- **The zero mode of a fixed form vanishes off `J`.** -/
 theorem coeff_zero_eq_zero_of_ne {J : Finset d} {i : Fin (Fintype.card d + 1)}
-    (x : (mixedAction d J).fixed i) {t : {s : Finset d // #s = (i : ℕ)}} (ht : t.1 ≠ J) :
+    (x : (mixedAction d J).fixed i) {t : {s : Finset d // (#s : ℤ) = (i : ℕ)}} (ht : t.1 ≠ J) :
     (x : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 t = 0 := by
   obtain ⟨j, hj⟩ : ∃ j, mixedSign J j * reflSign j t.1 ≠ 1 := by
     by_contra h
@@ -208,19 +208,19 @@ theorem mixed_harmonic_eq_bot {J : Finset d} {i : Fin (Fintype.card d + 1)}
   by_cases hn : n = 0
   · subst hn
     ext t
-    have ht : t.1 ≠ J := fun h => hi (by rw [← t.2, h])
+    have ht : t.1 ≠ J := fun h => hi (by have := t.2; rw [h] at this; exact_mod_cast this.symm)
     rw [coeff_zero_eq_zero_of_ne x ht]; rfl
   · exact mem_mixed_harmonic_iff.1 hx n hn
 
 /-- The constant form `dx_J` in degree `i = |J|`, on the Fourier side: the zero mode `dx_J`. -/
 def constMode (J : Finset d) {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) = #J) :
     Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ)) :=
-  Torus.DeRham.const i (EuclideanSpace.single ⟨J, hi.symm⟩ 1)
+  Torus.DeRham.const i (EuclideanSpace.single ⟨J, congrArg Nat.cast hi.symm⟩ 1)
 
 theorem constMode_apply (J : Finset d) {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) = #J)
     (n : d → ℤ) :
     (constMode J hi : (d → ℤ) → Form ℂ d i) n =
-      if n = 0 then EuclideanSpace.single ⟨J, hi.symm⟩ 1 else 0 :=
+      if n = 0 then EuclideanSpace.single ⟨J, congrArg Nat.cast hi.symm⟩ 1 else 0 :=
   Torus.DeRham.const_apply i _ n
 
 theorem constMode_mem_fixed (J : Finset d) {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) = #J) :
@@ -232,7 +232,7 @@ theorem constMode_mem_fixed (J : Finset d) {i : Fin (Fintype.card d + 1)} (hi : 
     simp only [flipAt_zero, ite_true]
     ext t
     rw [PiLp.smul_apply, reflForm_apply, smul_eq_mul, ← mul_assoc]
-    by_cases ht : t = ⟨J, hi.symm⟩
+    by_cases ht : t = ⟨J, congrArg Nat.cast hi.symm⟩
     · subst ht
       rw [forall_mixedSign_mul_reflSign_eq_one_iff.2 rfl j, one_mul]
     · simp [ht]
@@ -249,7 +249,7 @@ theorem constMode_mem_harmonic (J : Finset d) {i : Fin (Fintype.card d + 1)} (hi
 theorem constMode_ne_zero (J : Finset d) {i : Fin (Fintype.card d + 1)} (hi : (i : ℕ) = #J) :
     (⟨constMode J hi, constMode_mem_fixed J hi⟩ : (mixedAction d J).fixed i) ≠ 0 := by
   intro h0
-  have h1 : (constMode J hi : (d → ℤ) → Form ℂ d i) 0 ⟨J, hi.symm⟩ = 1 := by
+  have h1 : (constMode J hi : (d → ℤ) → Form ℂ d i) 0 ⟨J, congrArg Nat.cast hi.symm⟩ = 1 := by
     simp [constMode_apply]
   have h2 : constMode J hi = 0 := congrArg Subtype.val h0
   rw [h2, coeFn_zero_count] at h1
@@ -263,7 +263,7 @@ theorem mixed_harmonic_eq_span (J : Finset d) {i : Fin (Fintype.card d + 1)}
   refine le_antisymm (fun w hw => ?_) ((Submodule.span_singleton_le_iff_mem _ _).2
     (constMode_mem_harmonic J hi))
   rw [Submodule.mem_span_singleton]
-  refine ⟨(w : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 ⟨J, hi.symm⟩,
+  refine ⟨(w : Lp (Form ℂ d i) 2 (Measure.count : Measure (d → ℤ))) 0 ⟨J, congrArg Nat.cast hi.symm⟩,
     Subtype.ext (Lp.ext_count fun n => ?_)⟩
   rw [Submodule.coe_smul, coeFn_smul_count]
   change _ • (constMode J hi : (d → ℤ) → Form ℂ d i) n = _
@@ -272,7 +272,7 @@ theorem mixed_harmonic_eq_span (J : Finset d) {i : Fin (Fintype.card d + 1)}
   · subst hn
     simp only [ite_true]
     ext t
-    by_cases ht : t = ⟨J, hi.symm⟩
+    by_cases ht : t = ⟨J, congrArg Nat.cast hi.symm⟩
     · subst ht; simp
     · have ht' : t.1 ≠ J := fun h => ht (Subtype.ext h)
       simp [ht, coeff_zero_eq_zero_of_ne w ht']

@@ -44,28 +44,32 @@ namespace Feec.Models.Euclidean.DeRham
 variable (d : Type*) [Fintype d] [LinearOrder d]
 
 /-- `L²` `k`-forms on `ℝᵈ`, by their Fourier transforms. -/
-abbrev L2Form (k : ℕ) : Type _ := Lp (Form ℂ d k) 2 (volume : Measure (EuclideanSpace ℝ d))
+abbrev L2Form (k : ℤ) : Type _ := Lp (Form ℂ d k) 2 (volume : Measure (EuclideanSpace ℝ d))
 
 /-- **The `L²` de Rham complex of `ℝᵈ`** (Fourier side). -/
-abbrev complex : HilbertComplex ℂ (ComplexShape.up ℕ) (L2Form d) :=
+abbrev complex : HilbertComplex ℂ (ComplexShape.up ℤ) (L2Form d) :=
   Fourier.Euclidean.complex (deRham d)
 
 variable {d}
 
-/-- The de Rham symbol `Λᵏ → Λᵏ⁺¹` is not identically zero for `k < #d`. -/
-theorem deRham_m_ne_zero {k : ℕ} (hk : k < Fintype.card d) : (deRham d).m k (k + 1) ≠ 0 := by
+/-- The de Rham symbol `Λⁱ → Λʲ`, `j = i + 1`, is not identically zero for `0 ≤ i < #d`. -/
+theorem deRham_m_ne_zero {i j : ℤ} (hij : i + 1 = j) (hi0 : 0 ≤ i) (hi : i < Fintype.card d) :
+    (deRham d).m i j ≠ 0 := by
   classical
+  subst hij
+  obtain ⟨k, rfl⟩ := Int.eq_ofNat_of_zero_le hi0
+  have hk : k < Fintype.card d := by exact_mod_cast hi
   obtain ⟨s, hs⟩ : ∃ s : Finset d, s.card = k + 1 := by
     obtain ⟨s, -, hs⟩ := Finset.exists_subset_card_eq (s := (Finset.univ : Finset d)) (n := k + 1)
       (by rw [Finset.card_univ]; omega)
     exact ⟨s, hs⟩
   obtain ⟨j, hj⟩ : s.Nonempty := Finset.card_pos.1 (by omega)
-  have hsj : (s.erase j).card = k := by rw [Finset.card_erase_of_mem hj, hs]; rfl
+  have hsj : ((s.erase j).card : ℤ) = k := by rw [Finset.card_erase_of_mem hj, hs]; rfl
   intro h0
   set ω : Form ℂ d k := EuclideanSpace.single ⟨s.erase j, hsj⟩ 1
   set ξ : EuclideanSpace ℝ d := EuclideanSpace.single j 1
   have hval := congrArg (fun T : EuclideanSpace ℝ d → Form ℂ d k →L[ℂ] Form ℂ d (k + 1) =>
-    T ξ ω ⟨s, hs⟩) h0
+    T ξ ω ⟨s, by rw [hs]; push_cast; rfl⟩) h0
   simp only [Pi.zero_apply, _root_.zero_apply, PiLp.zero_apply] at hval
   rw [deRham_m_succ, _root_.smul_apply, PiLp.smul_apply, koszulDeg_apply, res_apply,
     koszul_apply, Finset.sum_eq_single j] at hval
@@ -79,15 +83,15 @@ theorem deRham_m_ne_zero {k : ℕ} (hk : k < Fintype.card d) : (deRham d).m k (k
 /-- **No closed range on `ℝᵈ`** in the degrees `1 ≤ k ≤ #d`. -/
 theorem not_closedRangeAt {k : ℕ} (hk : k < Fintype.card d) :
     ¬ (complex d).ClosedRangeAt (k + 1) := by
-  have hp : (ComplexShape.up ℕ).prev (k + 1) = k := (ComplexShape.up ℕ).prev_eq' rfl
-  have h1 : (deRham d).IsHomogeneous ((ComplexShape.up ℕ).prev (k + 1)) (k + 1) 1 := by
+  have hp : (ComplexShape.up ℤ).prev ((k : ℤ) + 1) = k := (ComplexShape.up ℤ).prev_eq' rfl
+  have h1 : (deRham d).IsHomogeneous ((ComplexShape.up ℤ).prev ((k : ℤ) + 1)) (k + 1) 1 := by
     rw [hp]; exact deRham_isHomogeneous k
-  have h2 : (deRham d).m ((ComplexShape.up ℕ).prev (k + 1)) (k + 1) ≠ 0 := by
-    rw [hp]; exact deRham_m_ne_zero hk
+  have h2 : (deRham d).m ((ComplexShape.up ℤ).prev ((k : ℤ) + 1)) (k + 1) ≠ 0 := by
+    rw [hp]; exact deRham_m_ne_zero rfl k.cast_nonneg (by exact_mod_cast hk)
   exact Fourier.Euclidean.not_closedRangeAt one_pos h1 h2
 
 /-- **There are no `L²` harmonic forms on `ℝᵈ`**, in any degree. -/
-theorem harmonic_eq_bot [Nonempty d] (k : ℕ) : (complex d).harmonic k = ⊥ := by
+theorem harmonic_eq_bot [Nonempty d] (k : ℤ) : (complex d).harmonic k = ⊥ := by
   rw [eq_bot_iff]
   intro u hu
   change u ∈ (Fourier.Euclidean.symbolComplex (deRham d)).toHilbertComplex.harmonic k at hu
@@ -114,7 +118,7 @@ theorem boundaries_ne_cycles {k : ℕ} (hk : k < Fintype.card d) :
 /-! ### Weak exterior derivatives -/
 
 /-- The exterior derivative of Schwartz `k`-forms, `d ψ = Σ_j dx_j ∧ ∂_j ψ`. -/
-def extDeriv (k : ℕ) :
+def extDeriv (k : ℤ) :
     𝓢(EuclideanSpace ℝ d, Form ℂ d k) → 𝓢(EuclideanSpace ℝ d, Form ℂ d (k + 1)) :=
   Weak.symbolOp ((deRham d).m k (k + 1))
 
@@ -125,7 +129,10 @@ variable (d) in
 def windowSymbol : SymbolComplex ℂ (volume : Measure (EuclideanSpace ℝ d))
     (ComplexShape.window (Fintype.card d + 1)) fun i : Fin (Fintype.card d + 1) => Form ℂ d i :=
   (Fourier.Euclidean.symbolComplex (deRham d)).restrict
-    (fun i : Fin (Fintype.card d + 1) => (i : ℕ)) fun _ _ h => h
+    (fun i : Fin (Fintype.card d + 1) => ((i : ℕ) : ℤ)) fun _ _ h => by
+      change ((_ : ℕ) : ℤ) + 1 = (_ : ℕ) at h
+      change (_ : ℕ) + 1 = _
+      omega
 
 variable (d) in
 /-- **The full `L²` de Rham complex of `ℝᵈ`** on the window `Fin (d + 1)`. -/

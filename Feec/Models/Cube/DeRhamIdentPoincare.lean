@@ -265,7 +265,7 @@ theorem mem_HQmax_harmonic_iff {a : Fin (Fintype.card (Fin n) + 1)} {x : WQ n a}
 `± ε_j`. -/
 theorem eq_zero_of_harmonic_parity {rel : Bool} {k : ℕ} {x : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))}
     (hx : ∀ m, m ≠ 0 → (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0)
-    (ht : ∀ t : {s : Finset (Fin n) // #s = k}, ∃ j, DeRham.parSign rel * DeRham.reflSign j t.1 ≠ 1) :
+    (ht : ∀ t : {s : Finset (Fin n) // (#s : ℤ) = k}, ∃ j, DeRham.parSign rel * DeRham.reflSign j t.1 ≠ 1) :
     x = 0 := by
   refine injective_Jf rel k ((Lp.ext_count fun m => ?_).trans (_root_.map_zero _).symm)
   rw [DeRham.coeFn_zero_count]
@@ -288,7 +288,7 @@ theorem HQmax_harmonic_eq_bot {a : Fin (Fintype.card (Fin n) + 1)} (ha : (a : �
   intro x hx
   rw [Submodule.mem_bot]
   refine eq_zero_of_harmonic_parity (rel := false) (mem_HQmax_harmonic_iff.1 hx) fun t => ?_
-  obtain ⟨j, hj⟩ : t.1.Nonempty := Finset.card_pos.1 (by rw [t.2]; omega)
+  obtain ⟨j, hj⟩ : t.1.Nonempty := Finset.card_pos.1 (by have := t.2; omega)
   exact ⟨j, by simp [DeRham.parSign, DeRham.reflSign, hj]; norm_num⟩
 
 /-- **No harmonic forms of `H̊Λ(Q)` below the top degree** (window). -/
@@ -298,7 +298,8 @@ theorem HQmin_harmonic_eq_bot {a : Fin (Fintype.card (Fin n) + 1)}
   intro x hx
   rw [Submodule.mem_bot]
   refine eq_zero_of_harmonic_parity (rel := true) (mem_HQmin_harmonic_iff.1 hx) fun t => ?_
-  have hne : t.1 ≠ Finset.univ := fun h => ha (by rw [← t.2, h, Finset.card_univ])
+  have hne : t.1 ≠ Finset.univ := fun h => ha (by
+    have := t.2; rw [h, Finset.card_univ] at this; exact_mod_cast this.symm)
   obtain ⟨j, hj⟩ : ∃ j, j ∉ t.1 := by
     by_contra h
     push Not at h
@@ -306,7 +307,7 @@ theorem HQmin_harmonic_eq_bot {a : Fin (Fintype.card (Fin n) + 1)}
   exact ⟨j, by simp [DeRham.parSign, DeRham.reflSign, hj]; norm_num⟩
 
 /-- The real part of the zero-mode coefficient `t₀` of the extension. -/
-def zeroCoeff (rel : Bool) (k : ℕ) (t₀ : {s : Finset (Fin n) // #s = k})
+def zeroCoeff (rel : Bool) (k : ℕ) (t₀ : {s : Finset (Fin n) // (#s : ℤ) = k})
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))) : S →ₗ[ℝ] ℝ where
   toFun x := ((Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 t₀).re
   map_add' x y := by
@@ -321,7 +322,7 @@ def zeroCoeff (rel : Bool) (k : ℕ) (t₀ : {s : Finset (Fin n) // #s = k})
 
 /-- **A degree with a single index set has at most one harmonic direction**: on forms whose
 extension has only the zero mode, the real zero-mode coefficient is injective. -/
-theorem injective_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) // #s = k})
+theorem injective_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) // (#s : ℤ) = k})
     (h₀ : ∀ t, t = t₀) (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
     Function.Injective (zeroCoeff rel k t₀ S) := by
@@ -341,13 +342,13 @@ theorem injective_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) /
     exact congrArg (fun r : ℝ => (r : ℂ)) hxy
   · rw [hS _ x.2 m hm, hS _ y.2 m hm]
 
-theorem finiteDimensional_of_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) // #s = k})
+theorem finiteDimensional_of_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) // (#s : ℤ) = k})
     (h₀ : ∀ t, t = t₀) (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
     FiniteDimensional ℝ S :=
   Module.Finite.of_injective _ (injective_zeroCoeff t₀ h₀ S hS)
 
-theorem finrank_le_one_of_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) // #s = k})
+theorem finrank_le_one_of_zeroCoeff {rel : Bool} {k : ℕ} (t₀ : {s : Finset (Fin n) // (#s : ℤ) = k})
     (h₀ : ∀ t, t = t₀) (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (Jf rel k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
     Module.finrank ℝ S ≤ 1 := by
@@ -762,8 +763,8 @@ theorem Hmax_harmonic_zero_spec :
     have hS : ∀ x ∈ (Hmax n).harmonic ((a : ℕ) : ℤ), ∀ m, m ≠ 0 →
         (Jf false (a : ℕ) x : (Fin n → ℤ) → Form ℂ (Fin n) a) m = 0 := fun x hx =>
       mem_HQmax_harmonic_iff.1 (Feec.HilbertComplex.harmonic_le_window (Hmax n) ι_rel a hx)
-    have h₀ : ∀ t : {s : Finset (Fin n) // #s = (a : ℕ)}, t = ⟨∅, by simp [a]⟩ := fun t =>
-      Subtype.ext (Finset.card_eq_zero.1 t.2)
+    have h₀ : ∀ t : {s : Finset (Fin n) // (#s : ℤ) = (a : ℕ)}, t = ⟨∅, by simp [a]⟩ := fun t =>
+      Subtype.ext (Finset.card_eq_zero.1 (by have := t.2; simp only [a] at this; omega))
     exact ⟨finiteDimensional_of_zeroCoeff _ h₀ _ hS, finrank_le_one_of_zeroCoeff _ h₀ _ hS⟩
   have e : ((a : ℕ) : ℤ) = 0 := rfl
   rw [e] at key
@@ -789,9 +790,9 @@ theorem Hmin_harmonic_top_spec :
     have hS : ∀ x ∈ (Hmin n).harmonic ((a : ℕ) : ℤ), ∀ m, m ≠ 0 →
         (Jf true (a : ℕ) x : (Fin n → ℤ) → Form ℂ (Fin n) a) m = 0 := fun x hx =>
       mem_HQmin_harmonic_iff.1 (Feec.HilbertComplex.harmonic_le_window (Hmin n) ι_rel a hx)
-    have h₀ : ∀ t : {s : Finset (Fin n) // #s = (a : ℕ)},
+    have h₀ : ∀ t : {s : Finset (Fin n) // (#s : ℤ) = (a : ℕ)},
         t = ⟨Finset.univ, by simp [a]⟩ := fun t =>
-      Subtype.ext (Finset.eq_univ_of_card _ t.2)
+      Subtype.ext (Finset.eq_univ_of_card _ (by have := t.2; simp only [a] at this; omega))
     exact ⟨finiteDimensional_of_zeroCoeff _ h₀ _ hS, finrank_le_one_of_zeroCoeff _ h₀ _ hS⟩
   have e : ((a : ℕ) : ℤ) = (n : ℤ) := by simp [a]
   rw [e] at key

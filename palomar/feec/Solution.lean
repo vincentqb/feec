@@ -140,9 +140,10 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
     fun ha hπ hπ' hcr => F.heatVerdict a m (F.approximates_window a m ha.1 ha.2) hπ hπ' hcr⟩
 
 /-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus**: the
-band subcomplexes of `Solution.Torus` with the Fourier truncations; the discrete Poincaré
-inequality and the harmonic bound from Theorem 1, under closed ranges, since the truncations are
-bounded in the graph norm. -/
+band subcomplexes of `Feec.Models.Torus.DeRhamGalerkin` with the Fourier truncations, through
+`Solution.Torus`; the harmonic forms are the constant forms
+(`Feec.Models.Torus.DeRham.finrank_harmonic`); the discrete Poincaré inequality and the harmonic
+bound from Theorem 1, under closed ranges, since the truncations are bounded in the graph norm. -/
 theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
@@ -151,7 +152,9 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
       (∀ N k (u : TorusForm n k), u ∈ (F.V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0) ∧
       (∀ N k (x : (H.d k (k + 1)).domain) ξ, ((F.π N).π k x : TorusForm n k) ξ =
         if ∀ j, |ξ j| ≤ N then (x : TorusForm n k) ξ else 0) ∧
-      (∀ k : ℤ, 0 ≤ k → k ≤ n → (∃ q ∈ H.harmonic k, q ≠ 0) ∧ ∀ N, (F.V N).V k ≠ ⊤) ∧
+      (∀ k, FiniteDimensional ℂ (H.harmonic k)) ∧
+      (∀ k : ℕ, Module.finrank ℂ (H.harmonic k) = n.choose k) ∧
+      (∀ k : ℤ, 0 ≤ k → k ≤ n → ∀ N, (F.V N).V k ≠ ⊤) ∧
       (∀ k, IsClosed (H.boundaries k : Set (TorusForm n k))) ∧
       (∀ k, H.PoincareBy k (√(1 + (2 * Real.pi)⁻¹ ^ 2))) ∧
       (∀ k, ∃ c₁ c₂ : ℝ, ∀ N, (F.V N).PoincareBy k c₁ ∧ (F.V N).HarmonicBoundBy k c₂) ∧
@@ -160,7 +163,7 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
         ‖((F.π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖) ∧
       (∀ k, F.Approximates k) ∧ ∀ a m, F.ApproximatesOn a m :=
   ⟨Torus.complexC n, Torus.family n, Torus.mem_graph_iff, rfl, Torus.mem_V_iff, Torus.π_apply,
-    fun _ hk0 hkn => ⟨Torus.exists_harmonic_ne_zero hk0 hkn, Torus.V_ne_top hk0 hkn⟩,
+    fun _ => inferInstance, Torus.finrank_harmonic, fun _ hk0 hkn => Torus.V_ne_top hk0 hkn,
     Torus.isClosed_boundaries, Torus.poincareBy,
     ((projectionFEEC atTop (Torus.family n).V).2 Torus.isClosed_boundaries).1
       ⟨Torus.family n, rfl, rfl, fun k => ⟨1, Torus.isGraphBoundedBy k⟩⟩,

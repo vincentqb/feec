@@ -143,7 +143,7 @@ theorem JfJ_univ (k : ℕ) : JfJ (Finset.univ : Finset (Fin n)) k = Jf true k :=
 
 /-- **The coefficients of `JfJ`**: `(JfJ u)(m)_t = ∫_Q u_t · fold_{c(t)} e_{-m}`. -/
 theorem coeff_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))
-    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // #s = k}) :
+    (m : Fin n → ℤ) (t : {s : Finset (Fin n) // (#s : ℤ) = k}) :
     (JfJ J k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m t =
       ∫ y in Q (Fin n), (((u ((idx k).symm t) : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
         fold (pcJ J t.1) (mFourier (-m)) y := by
@@ -332,7 +332,7 @@ theorem ext_JfJ (J : Finset (Fin n)) (k : ℕ) (u : L2F ℝ (Q (Fin n)) (formIdx
     Feec.Fourier.Exterior.ext k ((JfJ J k u : (Fin n → ℤ) → Form ℂ (Fin n) k) m) r =
       ∫ y in Q (Fin n), (((uExt u r : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) *
         fold (pcJ J r) (mFourier (-m)) y := by
-  by_cases h : #r = k
+  by_cases h : (#r : ℤ) = k
   · rw [Feec.Fourier.Exterior.ext_apply k _ h, coeff_JfJ, uExt,
       formExt_of_card _ (by exact_mod_cast h)]
     rfl
@@ -470,7 +470,7 @@ theorem coeff_d_of_greenForJ {J : Finset (Fin n)} {k : ℕ}
     push_cast
     simp only [← Finset.sum_neg_distrib, Finset.mul_sum, ← Finset.sum_add_distrib]
     refine Finset.sum_congr rfl fun j _ => by ring
-  rw [deRham_m_apply, coeff_JfJ]
+  rw [Feec.Fourier.Exterior.deRham_m_succ_apply, coeff_JfJ]
   change _ = ∫ y in Q (Fin n), (((w t : (Fin n → ℝ) → ℝ) y : ℝ) : ℂ) * F y
   rw [hG, Finset.mul_sum, ← Finset.sum_neg_distrib]
   refine Finset.sum_congr rfl fun j hj => ?_
@@ -1413,7 +1413,7 @@ theorem mem_HQpart_harmonic_iff {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin
 
 /-- The zero mode of a mixed extension vanishes off the index set `J`. -/
 theorem JfJ_zero_eq_zero_of_ne {J : Finset (Fin n)} {k : ℕ}
-    (x : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) {t : {s : Finset (Fin n) // #s = k}}
+    (x : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))) {t : {s : Finset (Fin n) // (#s : ℤ) = k}}
     (ht : t.1 ≠ J) : (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 t = 0 := by
   obtain ⟨j, hj⟩ : ∃ j, DeRham.mixedSign J j * DeRham.reflSign j t.1 ≠ 1 := by
     by_contra h
@@ -1436,12 +1436,13 @@ theorem HQpart_harmonic_eq_bot {J : Finset (Fin n)} {a : Fin (Fintype.card (Fin 
   by_cases hm : m = 0
   · subst hm
     ext t
-    rw [JfJ_zero_eq_zero_of_ne x (fun h => ha (by rw [← t.2, h]))]
+    rw [JfJ_zero_eq_zero_of_ne x (fun h => ha (by
+      have := t.2; rw [h] at this; exact_mod_cast this.symm))]
     rfl
   · exact hx' m hm
 
 /-- The real part of the zero-mode coefficient `t₀` of the mixed extension. -/
-def zeroCoeffJ (J : Finset (Fin n)) (k : ℕ) (t₀ : {s : Finset (Fin n) // #s = k})
+def zeroCoeffJ (J : Finset (Fin n)) (k : ℕ) (t₀ : {s : Finset (Fin n) // (#s : ℤ) = k})
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)))) : S →ₗ[ℝ] ℝ where
   toFun x := ((JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 t₀).re
   map_add' x y := by
@@ -1459,18 +1460,18 @@ is injective: such forms are multiples of `dx_J`. -/
 theorem injective_zeroCoeffJ {J : Finset (Fin n)} {k : ℕ} (hk : #J = k)
     (S : Submodule ℝ (L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ))))
     (hS : ∀ x ∈ S, ∀ m, m ≠ 0 → (JfJ J k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m = 0) :
-    Function.Injective (zeroCoeffJ J k ⟨J, hk⟩ S) := by
+    Function.Injective (zeroCoeffJ J k ⟨J, congrArg Nat.cast hk⟩ S) := by
   intro x y hxy
   refine Subtype.ext (injective_JfJ J k (Lp.ext_count fun m => ?_))
   by_cases hm : m = 0
   · subst hm
     ext t
     by_cases ht : t.1 = J
-    · obtain rfl : t = ⟨J, hk⟩ := Subtype.ext ht
+    · obtain rfl : t = ⟨J, congrArg Nat.cast hk⟩ := Subtype.ext ht
       have hr : ∀ z : L2F ℝ (Q (Fin n)) (formIdx n (k : ℤ)),
-          (JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, hk⟩ =
-            (((JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, hk⟩).re : ℂ) := fun z => by
-        have e := (JfJ_realParJ J k z).1 0 ⟨J, hk⟩
+          (JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, congrArg Nat.cast hk⟩ =
+            (((JfJ J k z : (Fin n → ℤ) → Form ℂ (Fin n) k) 0 ⟨J, congrArg Nat.cast hk⟩).re : ℂ) := fun z => by
+        have e := (JfJ_realParJ J k z).1 0 ⟨J, congrArg Nat.cast hk⟩
         rw [neg_zero] at e
         exact (Complex.conj_eq_iff_re.1 e.symm).symm
       rw [hr x, hr y]

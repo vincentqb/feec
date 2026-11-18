@@ -3,10 +3,11 @@ module
 public import Solution.Proxy
 
 /-!
-# The thesis' boundary conditions lose the constraints on every bounded domain
+# The electric boundary conditions lose the constraints on every bounded domain
 
-`FEEC.tsd_not_propagates` from the path criteria of `Feec.Counterexamples.BoundedBGG`. For the
-datum `U₀ = (0, 0, 0, ⋆β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `bggData Ω`:
+The limit clause of `FEEC.weakSymmetry_cube` (the exact solution, on `Ω = Q`), from the path
+criteria of `Feec.Counterexamples.BoundedBGG` (`datumBeta_spec`). For the datum
+`U₀ = (0, 0, 0, ⋆β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `bggData Ω`:
 
 * `U₀` lies in the domain of `L`, with `(L U₀)_u = B⁻¹ diag(1, -1, 0)`, from Green's formula for
   `curl_min` against the smooth `β` (`curl β = -diag(1, -1, 0)`, `inner_rhoBeta_dt1`); every
@@ -436,15 +437,17 @@ end Orbit
 
 /-! ### The theorem -/
 
-/-- **With the thesis' boundary conditions the constraints are lost**
-(`FEEC.tsd_not_propagates`). -/
-theorem tsd_not_propagates_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
-    ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
-      (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
+/-- **With the electric boundary conditions the constraints are lost**: the TSD datum
+`(0, 0, 0, ⋆β)` of `D(L)` has strong solutions on every `[0, T]`, and every one has at some
+times a non-TSD `E` and a non-symmetric `B`. -/
+theorem datumBeta_spec (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+    (∃ V, (bggData Ω).IsWave (datumBeta hΩ hb) V) ∧ IsTSDState (datumBeta hΩ hb) ∧ ∀ T > 0,
+      (∃ U, U 0 = datumBeta hΩ hb ∧
+        IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
+      ∀ U, U 0 = datumBeta hΩ hb → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →
         (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
         ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2.2 a i ≠ mat2 (U t).2.2.2 i a := by
-  refine ⟨datumBeta hΩ hb, ⟨_, isWave_datumBeta hΩ hb⟩, ⟨rfl, rfl, ?_, ?_⟩, fun T hT =>
+  refine ⟨⟨_, isWave_datumBeta hΩ hb⟩, ⟨rfl, rfl, ?_, ?_⟩, fun T hT =>
     ⟨exists_strongSolution_datumBeta hΩ hb T, fun U hU0 hU => ?_⟩⟩
   · rw [isTSD_iff, toIx_mat1]
     change fieldE (0 : L2Vec Ω 1) ∈ tsd Ω

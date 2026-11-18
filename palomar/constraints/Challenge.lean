@@ -238,10 +238,10 @@ end HilbertComplex
 
 /-! ### The linearized Einstein–Bianchi system (4.14) -/
 
+-- palomar-shared: L2Vec
 /-- `L²(Ω; Λᵏ ⊗ ℝⁿ)`: the vectors `v = (v₀, …, v_{n-1})` of `k`-forms of `L²(Ω; Λᵏ)`, an `ℓ²`
 sum. -/
 abbrev L2Vec {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type := PiLp 2 fun _ : Fin n => L2Form Ω k
-
 /-- The operators `Tₐ` acting componentwise on vectors, `(vₐ) ↦ (Tₐ vₐ)`, with domain
 `∏ₐ D(Tₐ)`. -/
 def vecOp {n : ℕ} {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
@@ -256,6 +256,7 @@ def vecOp {n : ℕ} {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ 
     { toFun := fun v => WithLp.toLp 2 fun a => T a ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
       map_add' := fun v w => PiLp.ext fun a => (T a).map_add ⟨_, v.2 a⟩ ⟨_, w.2 a⟩
       map_smul' := fun c v => PiLp.ext fun a => (T a).map_smul c ⟨_, v.2 a⟩ }
+-- palomar-shared-end: L2Vec
 
 /-- **The Hodge wave operator `L (σ, u, ρ) = (d⁰*u, -d⁰σ - d¹*ρ, d¹u)` of `W⁰ → W¹ → W²`**
 ([QuennevilleBelair2015], (4.5)): `L U = V` iff `σ ∈ D(d⁰)`, `u ∈ D(d¹)`, `⟪V_σ, τ⟫ = ⟪u, d⁰τ⟫`
@@ -281,22 +282,22 @@ def IsReducingSubcomplex {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProduc
   ∀ x : d1.domain, ∃ h : Z1.starProjection (x : W1) ∈ d1.domain,
     d1 ⟨_, h⟩ = Z2.starProjection (d1 x)
 
+-- palomar-shared: IsTSD
 /-- **The electric field** `E_{ab} = (uₐ)_{dx_b}` of a vector `1`-form `u` (its rows are the
 `uₐ`). -/
 def mat1 {Ω : Set (Fin 3 → ℝ)} (u : L2Vec Ω 1) (a b : Fin 3) : Lp ℝ 2 (volume.restrict Ω) :=
   u a ⟨{b}, by simp⟩
-
 /-- **The magnetic field** `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` of a vector `2`-form `ρ` (its rows are
 the `⋆ρₐ`, `⋆dxᵢ = (-1)ⁱ dx_{{i}ᶜ}`). -/
 def mat2 {Ω : Set (Fin 3 → ℝ)} (ρ : L2Vec Ω 2) (a i : Fin 3) : Lp ℝ 2 (volume.restrict Ω) :=
   (-1 : ℝ) ^ (i : ℕ) • ρ a ⟨Finset.univ.erase i, by simp⟩
-
 /-- A matrix field `E` on `Ω` is **TSD**: symmetric, trace-free and weakly divergence-free in
 `Ω`, `Σ_c ∫_Ω E_{ac} ∂_c ψ = 0` for every row `a` and every test function `ψ` (no boundary
 condition). -/
 def IsTSD {Ω : Set (Fin 3 → ℝ)} (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) : Prop :=
   (∀ a b, E a b = E b a) ∧ ∑ a, E a a = 0 ∧
     ∀ a ψ, IsTestFn Ω ψ → ∑ c, ∫ x in Ω, E a c x * partialDeriv c ψ x = 0
+-- palomar-shared-end: IsTSD
 
 /-- A matrix field `E` on a bounded `Ω` lies in **`L²(TSD₀)`**: it is TSD and its rows are weakly
 divergence-free with vanishing normal component on `∂Ω`, `Σ_c ∫_Ω E_{ac} ∂_c φ = 0` for every
@@ -339,6 +340,7 @@ def box (a ℓ : Fin 3 → ℝ) : Set (Fin 3 → ℝ) := univ.pi fun i => Ioo (a
 
 /-! ### The complex with weak symmetry ([QuennevilleBelair2015], Ch. 5–6) -/
 
+-- palomar-shared: wedge
 /-- **The connecting map** `S v = Σₐ dxₐ ∧ vₐ : L²(Ω; Λᵏ ⊗ ℝⁿ) → L²(Ω; Λᵏ⁺¹)`,
 `(S v)_s = Σ_{a ∈ s} ε(a, s) (vₐ)_{s ∖ a}`. On vector proxies, `S` is the identity `S⁰ = I` on
 vector `0`-forms (`(S v)_{a} = vₐ`), and on vector `1`-forms `vₐ = Σ_b u_{ab} dx_b`,
@@ -351,10 +353,14 @@ def wedge {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] 
           ⟨s.1.erase a, by
             rw [Finset.card_erase_of_mem h, Nat.cast_sub (Finset.card_pos.2 ⟨a, h⟩), s.2]
             ring⟩) ∘L PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin n => L2Form Ω k) a) else 0
+-- palomar-shared-end: wedge
 
+-- palomar-shared: WeakSymmetryData
 /-- **BGG data with weak symmetry**: two segments `W⁰ → W¹ → W²` and `W̃⁰ → W̃¹ → W̃²` of
-operators `d`, `d̃` between real Hilbert spaces (unbounded, `LinearPMap`s), with bounded
-connecting maps `S⁰ : W̃⁰ → W¹`, `S¹ : W̃¹ → W²`. -/
+operators `d`, `d̃` between real inner product spaces (unbounded, `LinearPMap`s; densely defined
+and closed in the applications, which is not required), with bounded connecting maps
+`S⁰ : W̃⁰ → W¹`, `S¹ : W̃¹ → W²`. No law is imposed: the complex and anticommutation laws are
+hypotheses where they are used. -/
 structure WeakSymmetryData (W0 W1 W2 Wt0 Wt1 Wt2 : Type*) [NormedAddCommGroup W0]
     [InnerProductSpace ℝ W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0]
@@ -366,19 +372,17 @@ structure WeakSymmetryData (W0 W1 W2 Wt0 Wt1 Wt2 : Type*) [NormedAddCommGroup W0
   (dt0 : Wt0 →ₗ.[ℝ] Wt1) (dt1 : Wt1 →ₗ.[ℝ] Wt2)
   /-- the connecting maps -/
   (S0 : Wt0 →L[ℝ] W1) (S1 : Wt1 →L[ℝ] W2)
-
 namespace WeakSymmetryData
-
 variable {W0 W1 W2 Wt0 Wt1 Wt2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
   [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
   [InnerProductSpace ℝ W2] [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0]
   [NormedAddCommGroup Wt1] [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2]
   [InnerProductSpace ℝ Wt2] (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2)
-
 /-- **The Hodge wave operator `L` of the complex with weak symmetry** `Γ → Ṽ¹ → W² × W̃²`,
 `Γ = {(σ, φ) ∈ D(d⁰) × D(d̃⁰) | d⁰σ = S⁰φ}`, with the operators `(σ, φ) ↦ d̃φ` and
-`u ↦ (S¹u, d̃u)` ([QuennevilleBelair2015], (6.1), (6.2)): `L U = V` for `U = (σ, u, M, ρ)` iff `σ`
-lies in `Γ` with some `φ`, `u ∈ D(d̃¹)`, `⟪V_σ, τ⟫ = ⟪u, d̃ψ⟫` for all `(τ, ψ) ∈ Γ`,
+`u ↦ (S¹u, d̃u)` ([QuennevilleBelair2015], (6.1), (6.2)), given by its graph in the sign
+convention of (6.2): `L U = V` for `U = (σ, u, M, ρ)` iff `σ` lies in `Γ` with some `φ`,
+`u ∈ D(d̃¹)`, `⟪V_σ, τ⟫ = ⟪u, d̃ψ⟫` for all `(τ, ψ) ∈ Γ`,
 `⟪V_u, v⟫ = -⟪d̃φ, v⟫ - ⟪M, S¹v⟫ - ⟪ρ, d̃v⟫` for all `v ∈ D(d̃¹)`, `V_M = S¹u` and `V_ρ = d̃u`. -/
 def IsWave (U V : W0 × Wt1 × W2 × Wt2) : Prop :=
   ∃ (σ : D.d0.domain) (φ : D.dt0.domain) (u : D.dt1.domain), (σ : W0) = U.1 ∧
@@ -388,28 +392,33 @@ def IsWave (U V : W0 × Wt1 × W2 × Wt2) : Prop :=
     (∀ v : D.dt1.domain, ⟪V.2.1, v⟫_ℝ =
       -⟪D.dt0 φ, v⟫_ℝ - ⟪U.2.2.1, D.S1 v⟫_ℝ - ⟪U.2.2.2, D.dt1 v⟫_ℝ) ∧
     V.2.2.1 = D.S1 u ∧ V.2.2.2 = D.dt1 u
-
 end WeakSymmetryData
+-- palomar-shared-end: WeakSymmetryData
 
+-- palomar-shared: bggData
 /-- BGG data on the forms of `Ω ⊆ ℝ³`: the rows `L²Λ⁰ → L²Λ¹ → L²Λ²` and
 `L²Λ⁰ ⊗ ℝ³ → L²Λ¹ ⊗ ℝ³ → L²Λ² ⊗ ℝ³`. -/
 abbrev FormData (Ω : Set (Fin 3 → ℝ)) : Type :=
   WeakSymmetryData (L2Form Ω 0) (L2Form Ω 1) (L2Form Ω 2) (L2Vec Ω 0) (L2Vec Ω 1) (L2Vec Ω 2)
-
 /-- **The BGG data (4.16) on `Ω ⊆ ℝ³` with the electric boundary conditions**
-([QuennevilleBelair2015], §5.3, §6.3): the top row `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → L²Λ²(Ω)` and,
-componentwise, the bottom row `H̊Λ⁰(Ω) ⊗ ℝ³ → H̊Λ¹(Ω) ⊗ ℝ³ → L²Λ²(Ω) ⊗ ℝ³` of the minimal
-exterior derivative, with `S⁰ = S¹ = Σₐ dxₐ ∧ ·` (`wedge`). In vector proxies the rows are
-`H̊¹ → H̊(curl) → L²(ℝ³)` and `S⁰ = I`, `S¹ = 2 vskw`. -/
+([QuennevilleBelair2015], §5.3, §6.3), vanishing tangential traces on `∂Ω` in both rows (on the
+states, `σ = 0` and `n × E = 0`): the top row `H̊Λ⁰(Ω) → H̊Λ¹(Ω) → L²Λ²(Ω)` and, componentwise,
+the bottom row `H̊Λ⁰(Ω) ⊗ ℝ³ → H̊Λ¹(Ω) ⊗ ℝ³ → L²Λ²(Ω) ⊗ ℝ³` of the minimal exterior derivative,
+with `S⁰ = S¹ = Σₐ dxₐ ∧ ·` (`wedge`). In vector proxies the rows are `H̊¹ → H̊(curl) → L²(ℝ³)`
+and `S⁰ = I`, `S¹ = 2 vskw`. -/
 def bggData (Ω : Set (Fin 3 → ℝ)) : FormData Ω :=
   ⟨dMin Ω 0, dMin Ω 1, vecOp fun _ => dMin Ω 0, vecOp fun _ => dMin Ω 1, wedge Ω 0, wedge Ω 1⟩
+-- palomar-shared-end: bggData
 
+-- palomar-shared: IsTSDState
 /-- A state `(σ, u, M, ρ)` of the system (6.1) satisfies **the constraint**: `σ = 0`, `M = 0`,
 and the electric and magnetic fields are TSD. -/
 def IsTSDState {Ω : Set (Fin 3 → ℝ)} (U : L2Form Ω 0 × L2Vec Ω 1 × L2Form Ω 2 × L2Vec Ω 2) :
     Prop :=
   U.1 = 0 ∧ U.2.2.1 = 0 ∧ IsTSD (mat1 U.2.1) ∧ IsTSD (mat2 U.2.2.2)
+-- palomar-shared-end: IsTSDState
 
+-- palomar-shared: mirrorData
 /-- **The exterior derivative with vanishing tangential traces on the faces normal to `eⱼ`,
 `j ∈ J`**, of the cube `(0, ½)ⁿ`: the closure of `dMax` on the forms of its domain vanishing
 almost everywhere near the faces `{y_j = 0}`, `{y_j = ½}`, `j ∈ J` (its domain is `H_JΛᵏ`;
@@ -420,7 +429,6 @@ def dPart {n : ℕ} (J : Finset (Fin n)) (k : ℤ) :
     ∃ h : p.1 ∈ (dMax (cube n) k).domain, dMax (cube n) k ⟨p.1, h⟩ = p.2 ∧
       ∃ δ > 0, ∀ s, ∀ᵐ y ∂volume.restrict (cube n),
         (∃ j ∈ J, y j < δ ∨ 1 / 2 - δ < y j) → p.1 s y = 0}).topologicalClosure.toLinearPMap
-
 /-- **The BGG data on the cube `Q = (0, ½)³` with mirror boundary conditions**: the top row
 `HΛ⁰(Q) → HΛ¹(Q) → L²Λ²(Q)` (no boundary condition) and the bottom row with component `a` in
 `H_{a}Λ⁰(Q) → H_{a}Λ¹(Q) → L²Λ²(Q)` (vanishing tangential traces on the faces normal to `eₐ`),
@@ -429,6 +437,7 @@ the faces with `E` a tensor, `B` a pseudotensor and `M` a pseudovector. -/
 def mirrorData : FormData (cube 3) :=
   ⟨dMax (cube 3) 0, dMax (cube 3) 1, vecOp fun a => dPart {a} 0, vecOp fun a => dPart {a} 1,
     wedge (cube 3) 0, wedge (cube 3) 1⟩
+-- palomar-shared-end: mirrorData
 
 /-! ### Absorbing boundary conditions on the cube -/
 

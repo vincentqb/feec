@@ -160,24 +160,39 @@ theorem mirror_tsd_propagates_of :
       (complexQ.isStrongSolution_waveGroup hd T) (by simpa using hc)
       (fun _ _ => Submodule.zero_mem _) t ht)
 
-/-- **The rate of the mirror scheme on TSD solutions** (`FEEC.mirror_weakSymmetry_cube`):
-`mirror_fem_main` read on `U = Re e^{tL} cplx U₀`. -/
+/-- **The trajectory of a solution of (6.5).** -/
+theorem mem_trajectories {D : FormData (cube 3)} {Q : D.Discretization} {T : ℝ}
+    {f : ℝ → L2Vec (cube 3) 1} {σ φ u M ρ lam}
+    (h : Q.IsDiscreteWave T f σ φ u M ρ lam) :
+    (fun t => ((σ t : L2Form (cube 3) 0), (u t : L2Vec (cube 3) 1), M t, ρ t)) ∈
+      Q.trajectories T f :=
+  ⟨σ, φ, u, M, ρ, lam, h, fun _ => rfl⟩
+
+/-- **The mirror conditions in `FEEC.weakSymmetry_cube`**: `mirror_fem_main` read on
+`U = Re e^{tL} cplx U₀` (`U` stays TSD, `mirror_tsd_propagates_of`), with the moving datum of
+`exists_mirror_chain`. -/
 theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (Q : ℕ → mirrorData.Discretization) (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧
     mirrorData.IsBGG ∧
-    (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ σ φ u M ρ lam,
-      (Q N).IsDiscreteWave T 0 σ φ u M ρ lam ∧ (Q N).IsGauss (σ 0) (u 0) ∧
-        (u 0 : L2Vec (cube 3) 1) ≠ 0 ∧ ∃ t ∈ Ioc 0 T, M t ≠ M 0) ∧
-    ∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
+    (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ Uh ∈ (Q N).trajectories T 0,
+      (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
+        ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
+    (∀ N T U₀ V₁ V₂ V₃ U, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
       mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → U 0 = U₀ →
       IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
-      ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T 0 σh φh uh Mh ρh lamh ∧ ∀ t ∈ Icc 0 T,
-        √(‖(σh t : L2Form (cube 3) 0)‖ ^ 2 + ‖(U t).2.1 - uh t‖ ^ 2 + ‖Mh t‖ ^ 2 +
-          ‖(U t).2.2.2 - ρh t‖ ^ 2) ≤
-        K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
-          meshSize (𝒯 N) := by
+      (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
+        stateNorm (U t - Uh t) ≤
+          K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
+            meshSize (𝒯 N)) ∧
+    ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
+      mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
   obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, -, hK⟩ := mirror_fem_main
-  refine ⟨𝒯, Q, C, K, hQ, hBGG, hG, fun N T U₀ V₁ V₂ V₃ U hT h1 h2 h3 hU₀ hU0 hUs => ?_⟩
+  obtain ⟨-, -, hprop, -⟩ := mirror_tsd_propagates_of
+  refine ⟨𝒯, Q, C, K, hQ, hBGG, fun T hT => (hG T hT).mono fun N hN => ?_,
+    fun N T U₀ V₁ V₂ V₃ U hT h1 h2 h3 hU₀ hU0 hUs => ?_, exists_mirror_chain⟩
+  · obtain ⟨σ, φ, u, M, ρ, lam, hw, hg, hu, t, ht, hM⟩ := hN
+    exact ⟨_, mem_trajectories hw, hg, hu, t, ht, hM⟩
+  have hTSD : ∀ t ∈ Icc 0 T, IsTSDState (U t) := fun t ht => hprop T U hUs (hU0 ▸ hU₀) t ht
   obtain ⟨hd0, hc0, hw0, hV₁⟩ := forward h1 hU₀
   obtain ⟨hd1, -, hw1, hV₂⟩ := forward h2 hV₁
   obtain ⟨hd2, -, hw2, hV₃⟩ := forward h3 hV₂
@@ -190,10 +205,15 @@ theorem mirror_weakSymmetry_cube_of : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (LinearPMap.apply_congr' _ _ hd2 eLL).trans hw2
   obtain ⟨σh, φh, uh, Mh, ρh, lamh, hW, hb⟩ := hK N D h3' T hT _ (by simp [D])
     (complexQ.isStrongSolution_waveGroup hd0 T)
-  refine ⟨σh, φh, uh, Mh, ρh, lamh, hW, fun t ht => ?_⟩
+  refine ⟨hTSD, _, mem_trajectories hW, fun t ht => ?_⟩
   have e := WeakSymmetryData.isStrongSolution_unique hUs (isStrongSolution_realL hd0 hc0 T)
     (hU0.trans (realL_orbit_zero hU₀.1 hU₀.2.1).symm) ht
-  rw [e]
+  have hn : stateNorm (U t - ((σh t : L2Form (cube 3) 0), (uh t : L2Vec (cube 3) 1), Mh t,
+      ρh t)) = √(‖(σh t : L2Form (cube 3) 0)‖ ^ 2 + ‖(U t).2.1 - uh t‖ ^ 2 + ‖Mh t‖ ^ 2 +
+        ‖(U t).2.2.2 - ρh t‖ ^ 2) := by
+    obtain ⟨h0, hM0, -, -⟩ := hTSD t ht
+    simp only [stateNorm, Prod.fst_sub, Prod.snd_sub, h0, hM0, zero_sub, norm_neg]
+  rw [hn, e]
   refine (hb t ht).trans_eq ?_
   change K * (‖cplx U₀‖ + ‖D.LU₀‖ + ‖D.LLU₀‖ + ‖complexQ.wave ⟨D.LLU₀, h3'⟩‖) * _ * _ = _
   rw [eL3, eL, eLL, norm_cplx hU₀.1 hU₀.2.1, norm_cplx hV₁.1 hV₁.2.1, norm_cplx hV₂.1 hV₂.2.1,

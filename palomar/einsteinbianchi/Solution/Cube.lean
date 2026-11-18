@@ -2,14 +2,14 @@ module
 
 public import Solution.Abstract
 public import Solution.Forms
-public import Solution.Regularity
+public import Feec.Models.Cube.TangentialRate
 public import Feec.Models.Cube.WeakSymmetryFEM
 
 /-!
 # The BGG data (4.16) of the challenge on the cube are those of `Feec`
 
-`cubeData` is `cubeDataOf D0 D1` for `Feec`'s minimal realizations `D0`, `D1` on the cube
-(`cubeData_eq`, from `dMin_eq`), the connecting map `wedge` is `Feec.FiniteElement.wsL2`
+`bggData (cube 3)` is `cubeDataOf D0 D1` for `Feec`'s minimal realizations `D0`, `D1` on the
+cube (`bggData_cube_eq`, from `dMin_eq`), the connecting map `wedge` is `Feec.FiniteElement.wsL2`
 (`wedge_eq`), and the domain of the componentwise operator is isometric to `Feec`'s vectors of
 domain elements (`vecEquiv`). Through these, `IsBGG` and `IsStable` follow from
 `Feec.Models.Cube.WeakSymmetry.bggStability_of` with the constant of
@@ -107,13 +107,13 @@ end Vec
 
 /-! ### The cube data -/
 
-/-- **The cube data in `Feec`'s types and operators**: `cubeData` with `D0`, `D1`, `wsL2`
-(`cubeData_eq`). -/
+/-- **The cube data in `Feec`'s types and operators**: `bggData (cube 3)` with `D0`, `D1`, `wsL2`
+(`bggData_cube_eq`). -/
 abbrev 𝒟 : WeakSymmetryData W0 W1 W2 (Wv W0) (Wv W1) (Wv W2) :=
   ⟨D0, D1, vecOpC D0, vecOpC D1, wsL2 (Ω := cubeDomain 3) 0, wsL2 (Ω := cubeDomain 3) 1⟩
 
-/-- **`cubeData` is the data of `Feec`'s minimal realizations.** -/
-theorem cubeData_eq : cubeData = (𝒟 : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1)
+/-- **`bggData (cube 3)` is the data of `Feec`'s minimal realizations.** -/
+theorem bggData_cube_eq : bggData (cube 3) = (𝒟 : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1)
     (L2Form (cube 3) 2) (L2Vec (cube 3) 0) (L2Vec (cube 3) 1) (L2Vec (cube 3) 2)) := by
   change (⟨dMin (cube 3) 0, dMin (cube 3) 1, vecOpC (dMin (cube 3) 0), vecOpC (dMin (cube 3) 1),
     wedge (cube 3) 0, wedge (cube 3) 1⟩ : WeakSymmetryData (L2Form (cube 3) 0) (L2Form (cube 3) 1)

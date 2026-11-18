@@ -2,7 +2,7 @@ module
 
 public import Solution.CubeMain
 public import Solution.MirrorSpaces
-public import Solution.Box
+public import Solution.Bounded
 public import Feec.Models.Cube.WeakSymmetryEstimates
 
 /-!

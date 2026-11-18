@@ -23,10 +23,11 @@ project:
     forms, with the definitions of forms, minimal exterior derivatives, Hilbert complexes, their
     windows (Total, sq, totalDomain, totalD, wave) and strong solutions shared with palomar/fem
     and palomar/feec (the windows with palomar/feec alone; the canonical blocks of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), and the fields (L2Vec,
-    vecOp, mat1, mat2, IsTSD, IsTSDState), IsHodgeWave, the system (6.1) (wedge, WeakSymmetryData,
-    IsWave, bggData) and the mirror data (dPart, mirrorData) with the statements of
-    palomar/einsteinbianchi. Operators are given by their graphs (relations), an evolution S of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), and the
+    Einstein-Bianchi vocabulary shared with palomar/einsteinbianchi as canonical blocks too: the
+    vector forms (L2Vec, vecOp), the fields (mat1, mat2, IsTSD), the system (6.1) (wedge,
+    WeakSymmetryData with IsWave, FormData, bggData), its constraint (IsTSDState) and the mirror
+    data (dPart, mirrorData). Operators are given by their graphs (relations), an evolution S of
     u' = A u on I (IsEvolution: bounded linear S t over the scalars, S 0 = 1, every orbit from
     D(A) a strong solution on I; no group law assumed) and the invariant core
     K* = {x | S t x in K for all t} (invariantCore) are the common notions of the two compared

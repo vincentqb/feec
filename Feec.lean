@@ -48,6 +48,7 @@ public import Feec.Domain.Constrained
 public import Feec.Domain.ConstrainedComplex
 public import Feec.Domain.Cutoff
 public import Feec.Domain.DeRham
+public import Feec.Domain.H1Lipschitz
 public import Feec.Domain.H1Restriction
 public import Feec.Domain.DiagonalPullback
 public import Feec.Domain.DivDivBGG
@@ -165,6 +166,7 @@ public import Feec.ForMathlib.LinearPMap.Intertwines
 public import Feec.ForMathlib.LinearPMap.Reducing
 public import Feec.ForMathlib.LinearPMap.RestrictScalars
 public import Feec.ForMathlib.LinearPMap.Skew
+public import Feec.ForMathlib.LinearPMap.SkewMaximal
 public import Feec.ForMathlib.Lp.CountEquiv
 public import Feec.ForMathlib.Lp.ProdEquiv
 public import Feec.Fourier.BGGSymbol
@@ -381,6 +383,7 @@ public import Feec.Models.Cube.SobolevRateHigh
 public import Feec.Models.Cube.SobolevRestriction
 public import Feec.Models.Cube.SobolevWeak
 public import Feec.Models.Cube.Static
+public import Feec.Models.Cube.TangentialH1
 public import Feec.Models.Cube.TangentialRate
 public import Feec.Models.Cube.TorusHelmholtz
 public import Feec.Models.Cube.WeakSymmetryComplex

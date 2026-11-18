@@ -32,10 +32,11 @@ cube `Q = (0, ½)³`, with the elements of Table 5.1 on Freudenthal meshes (`IsT
 answer has two parts.
 
 * `FEEC.weakSymmetry_electric`: with the **electric** boundary conditions of the thesis
-  (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) the method converges, with no regularity from every datum
-  of `D(L)`, and at the rates `h` (static) and `(1 + t) h` (wave) for solutions of class `H¹`;
-  but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and so do its discrete fields: it
-  computes a solution that is not a gravitational wave.
+  (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) the solutions of the method are determined by their
+  initial values, and it converges, with no regularity from every datum of `D(L)`, and at the
+  rates `h` (static) and `(1 + t) h` (wave) for solutions of class `H¹`; but from the TSD datum
+  `(0, 0, 0, ⋆β)` its limit leaves TSD, and so do its discrete fields: it computes a solution
+  that is not a gravitational wave.
 * `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges at the rate
   `(1 + t) h` from the TSD data of `D(L³)` to the exact solution, which stays TSD, and keeps the
   discrete Gauss law along non-stationary discrete solutions: it computes the gravitational wave.
@@ -763,6 +764,8 @@ Prop 6.2; [AFW2010], §5.5; [ChristiansenWinther2008]). There are discretization
 * (*an instance of `FEEC.bggWeakSymmetry`*) `bggData Q` satisfies `IsBGG` and the continuous
   hypotheses with constant `C` (so (5.6) is uniquely solvable and converges), and for `N ≥ 2`
   the method changes `S⁰` on the discrete space: `S⁰ₕψ = π¹S⁰ψ ≠ S⁰ψ` for some `ψ ∈ Ṽₕ⁰`;
+* (*uniqueness for (6.5)*) solutions of (6.5) are determined by `(σₕ, uₕ, Mₕ, ρₕ)(0)`, and so
+  are `φₕ`, `λₕ` on `[0, T)`;
 * (*convergence from every datum of `D(L)`, no regularity*) for every `U₀ ∈ D(L)` and `T > 0`,
   `U' = L U` has a strong solution on `[0, T]` from `U₀`, and for every such solution `U`, every
   family of trajectories of (6.5) without source whose initial states converge to `U₀`
@@ -795,6 +798,11 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (bggData (cube 3)).IsStable C ∧
     (∀ N, 2 ≤ N → ∃ ψ : (bggData (cube 3)).dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
       (Q N).π1 ((bggData (cube 3)).S0 ψ) ≠ (bggData (cube 3)).S0 ψ) ∧
+    (∀ N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T → ContinuousOn f (Icc 0 T) →
+      (Q N).IsDiscreteWave T f σ φ u M ρ lam → (Q N).IsDiscreteWave T f σ' φ' u' M' ρ' lam' →
+      σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
+      (∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
+        ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
     (∀ U₀ V T, (bggData (cube 3)).IsWave U₀ V → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U) ∧
       ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →

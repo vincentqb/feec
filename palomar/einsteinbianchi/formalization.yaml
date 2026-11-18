@@ -67,7 +67,8 @@ project:
     Freudenthal meshes of Q = (0, 1/2)^3, with bounded projections, (5.4) and consistency at the
     order h_N (IsTable51 with all faces in both rows), such that: the data satisfy IsBGG and the
     continuous hypotheses of FEEC.bggWeakSymmetry (an instance with S_h != S: for N >= 2,
-    pi^1 S^0 psi != S^0 psi for some psi in V~_h^0); for every datum U_0 of D(L) strong
+    pi^1 S^0 psi != S^0 psi for some psi in V~_h^0); solutions of (6.5) are determined by their
+    initial values (also phi_h, lambda_h on [0, T)); for every datum U_0 of D(L) strong
     solutions exist on every [0, T] and every family of trajectories of (6.5) without source
     whose initial states converge to U_0 converges to every strong solution uniformly on [0, T]
     (no regularity hypothesis); the TSD datum (0, 0, 0, *beta), beta = x_3 (e_1 e_2^T + e_2
@@ -257,7 +258,8 @@ status:
     Formalized and compared: FEEC.bggWeakSymmetry (all BGG data on real Hilbert spaces in one
     universe, every discretization); FEEC.weakSymmetry_electric (the cube Q = (0, 1/2)^3, the
     elements of Table 5.1 on Freudenthal meshes with the electric conditions: the instance of the
-    abstract theorem with S_h != S, the convergence of (6.5) from every datum of D(L), the
+    abstract theorem with S_h != S, uniqueness for (6.5) (also phi_h, lambda_h), the
+    convergence of (6.5) from every datum of D(L), the
     non-TSD limit of the datum (0, 0, 0, *beta) and of its discrete fields, the H^1 static and
     wave rates, the Raviart-Thomas best-approximation bound); FEEC.weakSymmetry_mirror (the same
     elements with the mirror conditions: the rate (1 + t) h to the TSD solution for TSD data of
@@ -277,10 +279,7 @@ status:
     is compared in palomar/constraints, in FEEC.tsd_boundary_conditions (ElectricVerdict,
     BoxVerdict, MirrorVerdict); this entry restates only what identifies the limit of the method:
     the exact solution from (0, 0, 0, *beta) leaves TSD, and those from TSD data stay TSD with
-    the mirror conditions. Not compared here (proved in Feec or in the Solution): the
-    uniqueness of phi_h and lambda_h on [0, T) for (6.5) on the cube with the electric conditions
-    (Solution cube_wave_unique, from Feec.BGG.DiscreteSolution.unique; the trajectories are
-    determined by their initial values by FEEC.bggWeakSymmetry); the lower bound for the canonical
+    the mirror conditions. Not compared here (proved in Feec): the lower bound for the canonical
     interpolant onto the Raviart-Thomas space (exists_interpolationError_ge, implied by the
     compared best-approximation clause); the O(h^s) rates of the mirror scheme for H^(2+s) data
     (mirror_waveFEM_rate_sobolev_of_add_two) and its convergence without rate for D(L^2) TSD data
@@ -326,8 +325,8 @@ automation:
     palomar/bgg entry), DiscreteWave.lean (uniqueness and the discrete Gauss law for (6.5), by
     energy), Cube*.lean and Instance.lean (the electric conditions: the cube data are Feec's,
     the hypotheses, S^0_h != S^0, the best-approximation clause from
-    Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge, the H^1 rates, the uniqueness of
-    the solutions of (6.5) used by Converge.lean),
+    Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge, the H^1 rates, uniqueness for (6.5),
+    CubeUnique.lean, also used by Converge.lean),
     Converge.lean (new: the challenge's system (6.1) is Feec's forms model
     Feec.EinsteinBianchi.MatrixModel.formsShort through the state map toWS, a pair of the graph
     of its wave operator is a pair of IsWave by the identities of (6.1) at a point of D(L), and
@@ -449,8 +448,8 @@ review:
     the former FEEC.weakSymmetry_cube and FEEC.mirror_weakSymmetry_cube; the electric
     convergence from every datum of D(L) and its non-TSD limit are new as compared statements; the
     C^2 rate clauses are replaced by their H^1 generalization, from which Solution/Smooth.lean
-    derives them; the uniqueness of phi_h, lambda_h on the cube is no longer compared;
-    FEEC.weakSymmetry_cube_nonvacuous is renamed FEEC.weakSymmetry_electric_nonvacuous;
+    derives them; FEEC.weakSymmetry_cube_nonvacuous is renamed
+    FEEC.weakSymmetry_electric_nonvacuous;
     FEEC.tsd_not_propagates, FEEC.box_stationary and FEEC.mirror_tsd_propagates moved to
     palomar/constraints; the "thesis' boundary conditions" are named electric, as in
     palomar/constraints). Every merge of the library was gated by a full
@@ -477,12 +476,13 @@ alignment:
         The cube data are Feec's bggSegment (bggData_cube_eq); the discretizations from
         Feec.Models.Cube.WeakSymmetry.tableRows_uniform_cochainProjection and cubeFEM;
         IsStable from bggStability_of; S^0_h != S^0 and the best-approximation clause from
-        exists_bestApproxError_ge; the convergence from every datum of D(L) and the non-TSD limit
-        from Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution,
+        exists_bestApproxError_ge; uniqueness for (6.5) from Feec.BGG.DiscreteSolution.unique
+        (Solution/CubeUnique.lean); the convergence from every datum of D(L) and the non-TSD
+        limit from Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution,
         Feec.EinsteinBianchi.BoundedFailure.exists_betaDiscrete and
-        Feec.Counterexamples.BoundedBGG, with uniqueness from Feec.BGG.DiscreteSolution.unique
-        (Solution/Converge.lean, Bounded.lean); the H^1 rates from staticFEM_rate_sobolev and
-        cubeWave_rate_sobolev_of_one_le through the Gaffney transfer sobRel_of_h1_*.
+        Feec.Counterexamples.BoundedBGG (Solution/Converge.lean, Bounded.lean); the H^1 rates
+        from staticFEM_rate_sobolev and cubeWave_rate_sobolev_of_one_le through the Gaffney
+        transfer sobRel_of_h1_*.
     - source: "[QuennevilleBelair2015] §6.1-§6.3, (6.4), (6.5)"
       lean: "FEEC.weakSymmetry_mirror"
       module: "Challenge"

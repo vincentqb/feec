@@ -81,6 +81,11 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (bggData (cube 3)).IsStable C ∧
     (∀ N, 2 ≤ N → ∃ ψ : (bggData (cube 3)).dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
       (Q N).π1 ((bggData (cube 3)).S0 ψ) ≠ (bggData (cube 3)).S0 ψ) ∧
+    (∀ N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T → ContinuousOn f (Icc 0 T) →
+      (Q N).IsDiscreteWave T f σ φ u M ρ lam → (Q N).IsDiscreteWave T f σ' φ' u' M' ρ' lam' →
+      σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
+      (∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
+        ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
     (∀ U₀ V T, (bggData (cube 3)).IsWave U₀ V → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U) ∧
       ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
@@ -127,7 +132,10 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
   obtain ⟨cw, hcw, hcwH⟩ := isSobolevStateTr_of
   set K := max |Ks * cs| |Kw * cw| with hKdef
   refine ⟨cubeMesh, cubeQ hT hB, C, K, ⟨isMeshFamily_cube, points_cube, fun N => ?_⟩, isBGG_𝒟,
-    hS, cube_S0h_ne hT hB, fun U₀ V T hW hT0 => cube_converges hT hB hW hT0, cube_beta hT hB,
+    hS, cube_S0h_ne hT hB,
+    fun N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam' hT0 _ h1 h2 e0' e1' e2' e3' =>
+      cube_wave_unique hT hB N hT0 h1 h2 e0' e1' e2' e3',
+    fun U₀ V T hW hT0 => cube_converges hT hB hW hT0, cube_beta hT hB,
     fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hdφ hu hdu hl hd => ?_,
     fun N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L hT0 hf hw hreg => ?_, cube_bestApprox hT hB⟩
   · obtain ⟨s0, s1, s2, s3, s4, s5⟩ := cubeQ_spaces hT hB N

@@ -246,3 +246,36 @@ theorem mem_V₀_iff {k : ℤ} (u : L2Form Ω k) :
     exact h.trans (map_zero _)
 
 end FEEC
+
+namespace FEEC
+
+open Feec.Domain
+
+variable {n : ℕ}
+
+/-- The finite element spaces of a `Feec` mesh, transported to its domain, are the challenge's. -/
+theorem maximalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.SimplicialMesh n)
+    {Ω : Set (Fin n → ℝ)} (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω) (k : ℤ) :
+    (SetLike.coe (((deRham ℝ n).maximalSubcomplexOfEq h hm hΩ (S.toFeec.subcomplex m hm)).V k) :
+      Set (L2Form Ω k)) = femSpace Ω (SimplicialMesh.ofFeec m) S ∅ k := by
+  obtain ⟨T, d, h1, h2, h3⟩ := m
+  subst h
+  ext u
+  exact mem_V_iff S (SimplicialMesh.ofFeec ⟨T, d, h1, h2, h3⟩) _ rfl u
+
+/-- The finite element spaces with vanishing boundary DOFs of a `Feec` mesh, transported to its
+domain, are the challenge's with vanishing traces on the boundary facets. -/
+theorem minimalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.SimplicialMesh n)
+    {Ω : Set (Fin n → ℝ)} (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω)
+    (x₀ : Fin n → ℝ)
+    (hstar : ∀ x ∈ closure m.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ m.domain)
+    (k : ℤ) :
+    (SetLike.coe (((deRham ℝ n).minimalSubcomplexOfEq h hm hΩ
+      (S.toFeec.subcomplexMin m hm x₀ hstar)).V k) : Set (L2Form Ω k)) =
+      femSpace Ω (SimplicialMesh.ofFeec m) S (SimplicialMesh.ofFeec m).boundaryFacets k := by
+  obtain ⟨T, d, h1, h2, h3⟩ := m
+  subst h
+  ext u
+  exact mem_V₀_iff S (SimplicialMesh.ofFeec ⟨T, d, h1, h2, h3⟩) _ rfl u
+
+end FEEC

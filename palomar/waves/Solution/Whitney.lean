@@ -9,11 +9,9 @@ public import Feec.Numerics.PlaneWaveCubeError
 /-!
 # The Whitney schemes of the cube
 
-**Meshes.** A `Feec` mesh is a mesh of the challenge (`SimplicialMesh.ofFeec`), a `Feec` mesh
-family a mesh family of the challenge (`isMeshFamily_ofFeec`), and the Freudenthal meshes of the
-cube (`cubeMesh`, from `Feec.Models.StarShaped.CubeWitness.meshFamily`) are named by their
-vertices (`points_cube`). The finite element spaces of a `Feec` mesh, transported to its domain,
-are the challenge's (`maximalSubcomplexOfEq_V`, `minimalSubcomplexOfEq_V`).
+**Meshes.** The Freudenthal meshes of the cube (`cubeMesh`, the meshes of the challenge of
+`Feec.Models.StarShaped.CubeWitness.meshFamily`, `SimplicialMesh.ofFeec`) are named by their
+vertices (`points_cube`).
 
 **Whitney spaces.** The Whitney sequence `topSeq` has the spaces of the trimmed sequence `P₁⁻Λ`
 (`topSeq_space`), whose element is equivalent to the Whitney element
@@ -63,48 +61,6 @@ open Feec.Domain Feec.FiniteElement Feec.Models.Cube.FEM Feec.Models.StarShaped
 variable {n : ℕ}
 
 /-! ### Meshes -/
-
-/-- A `Feec` mesh as a mesh of the challenge. -/
-def SimplicialMesh.ofFeec (M : Feec.Mesh.SimplicialMesh n) : SimplicialMesh n where
-  simplices := M.simplices
-  domain := M.domain
-  biUnion_closedInterior := M.biUnion_closedInterior
-  pairwise_disjoint_interior := M.pairwise_disjoint_interior
-  inter_closedInterior T hT T' hT' := by
-    rw [vertexSet_eq, vertexSet_eq]; exact M.inter_closedInterior T hT T' hT'
-
-/-- A `Feec` mesh family is a mesh family of the challenge: its simplices contain balls of radius
-`h_T / (2 n C)` (`Feec.Mesh.exists_ball_of_isShapeRegular`). -/
-theorem isMeshFamily_ofFeec [NeZero n] {D : StarDomain n} (F : MeshFamily D) :
-    IsMeshFamily D.Ω fun N => SimplicialMesh.ofFeec (F.mesh N) :=
-  ⟨F.domain_eq, ⟨2 * n * F.C, F.q, F.q_pos, fun N =>
-    ⟨Feec.Mesh.exists_ball_of_isShapeRegular (F.data N).shape, (F.data N).quasi⟩⟩,
-    fun N => (F.data N).meshSize_pos, F.tendsto_meshSize⟩
-
-/-- The finite element spaces of a `Feec` mesh, transported to its domain, are the challenge's. -/
-theorem maximalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.SimplicialMesh n)
-    {Ω : Set (Fin n → ℝ)} (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω) (k : ℤ) :
-    (SetLike.coe (((deRham ℝ n).maximalSubcomplexOfEq h hm hΩ (S.toFeec.subcomplex m hm)).V k) :
-      Set (L2Form Ω k)) = femSpace Ω (SimplicialMesh.ofFeec m) S ∅ k := by
-  obtain ⟨T, d, h1, h2, h3⟩ := m
-  subst h
-  ext u
-  exact mem_V_iff S (SimplicialMesh.ofFeec ⟨T, d, h1, h2, h3⟩) _ rfl u
-
-/-- The finite element spaces with vanishing boundary DOFs of a `Feec` mesh, transported to its
-domain, are the challenge's with vanishing traces on the boundary facets. -/
-theorem minimalSubcomplexOfEq_V [NeZero n] (S : PolySeq) (m : Feec.Mesh.SimplicialMesh n)
-    {Ω : Set (Fin n → ℝ)} (h : m.domain = Ω) (hm : IsOpen m.domain) (hΩ : IsOpen Ω)
-    (x₀ : Fin n → ℝ)
-    (hstar : ∀ x ∈ closure m.domain, ∀ t : ℝ, 0 ≤ t → t < 1 → x₀ + t • (x - x₀) ∈ m.domain)
-    (k : ℤ) :
-    (SetLike.coe (((deRham ℝ n).minimalSubcomplexOfEq h hm hΩ
-      (S.toFeec.subcomplexMin m hm x₀ hstar)).V k) : Set (L2Form Ω k)) =
-      femSpace Ω (SimplicialMesh.ofFeec m) S (SimplicialMesh.ofFeec m).boundaryFacets k := by
-  obtain ⟨T, d, h1, h2, h3⟩ := m
-  subst h
-  ext u
-  exact mem_V₀_iff S (SimplicialMesh.ofFeec ⟨T, d, h1, h2, h3⟩) _ rfl u
 
 /-- The Freudenthal meshes of the cube `(0, ½)³`. -/
 abbrev cubeMesh (N : ℕ) : SimplicialMesh 3 := SimplicialMesh.ofFeec (mesh 3 N)

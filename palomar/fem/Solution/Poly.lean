@@ -75,15 +75,6 @@ theorem koszul_eq : koszul K n = Feec.Koszul.koszulₗ K (Fin n) := by
   rw [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.proj_apply, LinearMap.mulLeft_apply,
     sgn, Feec.ExteriorFibre.sgn, smul_eq_C_mul, map_pow, map_neg, map_one, mul_assoc]
 
-theorem polyExtDeriv_eq : polyExtDeriv K n = Feec.Koszul.extDerivₗ K (Fin n) := by
-  refine LinearMap.ext fun p => funext fun s => ?_
-  rw [polyExtDeriv, LinearMap.pi_apply, LinearMap.sum_apply, Feec.Koszul.extDerivₗ_apply,
-    Feec.Koszul.extDeriv_apply]
-  refine Finset.sum_congr rfl fun j _ => ?_
-  rw [LinearMap.smul_apply, LinearMap.comp_apply, LinearMap.proj_apply, sgn,
-    Feec.ExteriorFibre.sgn, smul_eq_C_mul, map_pow, map_neg, map_one]
-  rfl
-
 theorem polyFormMinus_eq (r k : ℕ) :
     polyFormMinus K n r k = Feec.Koszul.polyFormMinus K (Fin n) r k := by
   cases r with

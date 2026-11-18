@@ -226,12 +226,14 @@ def IsFreudenthal {n : ℕ} (𝒯 : ℕ → SimplicialMesh n) : Prop :=
 
 /-! ### The finite element spaces -/
 
--- palomar-shared: femSpace
+-- palomar-shared: covEval
 /-- The value `α(v₁, …, v_k) = Σ_{#s = k} α_s det (v_l(s_i))_{i,l}` of the `k`-covector `α` on
 the vectors `v₁, …, v_k`. -/
 def covEval {n k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) : ℝ :=
   ∑ s : Finset (Fin n), if h : s.card = k then
     α s * (Matrix.of fun i l => v l (s.orderEmbOfFin h i)).det else 0
+-- palomar-shared-end: covEval
+-- palomar-shared: femSpace
 /-- The `k`-covectors `α`, `β` have the **same tangential trace** on the face spanned by the
 points `g`: they agree on all `k`-tuples of vectors tangent to the face. -/
 def TraceEq {n : ℕ} (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=

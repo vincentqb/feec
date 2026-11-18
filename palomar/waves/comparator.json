@@ -1,0 +1,8 @@
+{
+  "challenge_module": "Challenge",
+  "solution_module": "Solution",
+  "theorem_names": ["FEEC.fem_wave", "FEEC.inverse_estimate", "FEEC.crankNicolson_cube",
+    "FEEC.leapfrog_cube", "FEEC.rowSolution_nonvacuous", "FEEC.maxwell"],
+  "definition_names": [],
+  "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
+}

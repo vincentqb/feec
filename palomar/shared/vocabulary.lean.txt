@@ -292,6 +292,19 @@ def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) 
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
 -- palomar-shared-end: IsCsForm
 
+-- palomar-shared: IsCsFormMin
+/-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` **vanishing outside `Ω`** with
+`‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L` on `cl Ω` (true in negative degrees): the regularity class of the
+order `h^{s+1}` with vanishing traces; the derivatives of `w` of order at most `s + 2` vanish on
+`∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`. -/
+def IsCsFormMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+  j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
+    (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧ (∀ y ∉ Ω, w y = 0) ∧
+    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
+    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
+    ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
+-- palomar-shared-end: IsCsFormMin
+
 -- palomar-shared: IsSobolevForm
 /-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
 restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
@@ -358,6 +371,14 @@ def PolySeq.space (S : PolySeq) (n k : ℕ) : Submodule ℝ (FormField n) :=
   (if S.full k then polyForm ℝ n (S.deg k) k else polyFormMinus ℝ n (S.deg k) k).map evalForm
 -- palomar-shared-end: PolySeq
 
+-- palomar-shared: PolyOrderAt
+/-- The admissible sequence `S` **reproduces polynomial forms of degree `s`** in the form degrees
+`j` and `j + 1`: `P_sΛʲ ⊆ S_j` and `P_sΛʲ⁺¹ ⊆ S_{j+1}` (vacuous for `j < 0`). -/
+def PolySeq.PolyOrderAt (S : PolySeq) (n s : ℕ) (j : ℤ) : Prop :=
+  ∀ k : ℕ, (k : ℤ) = j → (polyForm ℝ n s k).map evalForm ≤ S.space n k ∧
+    (polyForm ℝ n s (k + 1)).map evalForm ≤ S.space n (k + 1)
+-- palomar-shared-end: PolyOrderAt
+
 -- palomar-shared: topSeq
 /-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³ → ⋯` (in `ℝ³` the Lagrange, Nédélec
 edge and Raviart–Thomas face elements and the piecewise constants; [Whitney1957], [AFW2006],
@@ -420,12 +441,23 @@ def IsFreudenthal {n : ℕ} (𝒯 : ℕ → SimplicialMesh n) : Prop :=
     T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
 -- palomar-shared-end: SimplicialMesh
 
--- palomar-shared: femSpace
+-- palomar-shared: IsStarShapedBall
+/-- `Ω` is a **bounded open domain star-shaped with respect to a ball** `B(x₀, s₀)`: the segment
+from every point of the ball to every point of `Ω` lies in `Ω`. -/
+def IsStarShapedBall {n : ℕ} (Ω : Set (Fin n → ℝ)) : Prop :=
+  IsOpen Ω ∧ Bornology.IsBounded Ω ∧ ∃ x₀ : Fin n → ℝ, ∃ s₀ : ℝ, 0 < s₀ ∧
+    ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω
+-- palomar-shared-end: IsStarShapedBall
+
+-- palomar-shared: covEval
 /-- The value `α(v₁, …, v_k) = Σ_{#s = k} α_s det (v_l(s_i))_{i,l}` of the `k`-covector `α` on
 the vectors `v₁, …, v_k`. -/
 def covEval {n k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) : ℝ :=
   ∑ s : Finset (Fin n), if h : s.card = k then
     α s * (Matrix.of fun i l => v l (s.orderEmbOfFin h i)).det else 0
+-- palomar-shared-end: covEval
+
+-- palomar-shared: femSpace
 /-- The `k`-covectors `α`, `β` have the **same tangential trace** on the face spanned by the
 points `g`: they agree on all `k`-tuples of vectors tangent to the face. -/
 def TraceEq {n : ℕ} (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=

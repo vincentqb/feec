@@ -12,7 +12,9 @@ size; shape regularity by inscribed balls gives that of `Feec` by edge matrices
 (`isShapeRegular_toFeec`, from `Feec.Mesh.isShapeRegular_of_ball`) and quasi-uniformity is that
 of `Feec` (`isQuasiUniform_toFeec`). A domain star-shaped with respect to a ball
 is a `Feec.Models.StarShaped.StarDomain` (`starDomainOf`) and a mesh family of the challenge is a
-`Feec.Models.StarShaped.MeshFamily` (`meshFamilyOf`).
+`Feec.Models.StarShaped.MeshFamily` (`meshFamilyOf`). Conversely a `Feec` mesh is a mesh of the
+challenge (`SimplicialMesh.ofFeec`), and a `Feec` mesh family a mesh family of the challenge
+(`isMeshFamily_ofFeec`).
 
 ## References
 
@@ -132,5 +134,23 @@ def meshFamilyOf [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall �
 @[simp] theorem meshFamilyOf_mesh [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (N : ℕ) :
     (meshFamilyOf hΩ hM).mesh N = (M N).toFeec Ω (hM.1 N) := rfl
+
+/-- A `Feec` mesh as a mesh of the challenge. -/
+def SimplicialMesh.ofFeec (M : Feec.Mesh.SimplicialMesh n) : SimplicialMesh n where
+  simplices := M.simplices
+  domain := M.domain
+  biUnion_closedInterior := M.biUnion_closedInterior
+  pairwise_disjoint_interior := M.pairwise_disjoint_interior
+  inter_closedInterior T hT T' hT' := by
+    rw [vertexSet_eq, vertexSet_eq]; exact M.inter_closedInterior T hT T' hT'
+
+/-- A `Feec` mesh family is a mesh family of the challenge: its simplices contain balls of radius
+`h_T / (2 n C)` (`Feec.Mesh.exists_ball_of_isShapeRegular`). -/
+theorem isMeshFamily_ofFeec [NeZero n] {D : Feec.Models.StarShaped.StarDomain n}
+    (F : Feec.Models.StarShaped.MeshFamily D) :
+    IsMeshFamily D.Ω fun N => SimplicialMesh.ofFeec (F.mesh N) :=
+  ⟨F.domain_eq, ⟨2 * n * F.C, F.q, F.q_pos, fun N =>
+    ⟨Feec.Mesh.exists_ball_of_isShapeRegular (F.data N).shape, (F.data N).quasi⟩⟩,
+    fun N => (F.data N).meshSize_pos, F.tendsto_meshSize⟩
 
 end FEEC

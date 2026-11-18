@@ -1,23 +1,17 @@
 module
 
-public import Mathlib.Algebra.MvPolynomial.PDeriv
 public import Mathlib.Analysis.Calculus.ContDiff.Basic
-public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.Calculus.FDeriv.Basic
 public import Mathlib.Analysis.Convex.Hull
 public import Mathlib.Analysis.InnerProductSpace.Adjoint
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
-public import Mathlib.Analysis.LocallyConvex.AbsConvexOpen
 public import Mathlib.Analysis.Normed.Lp.PiLp
 public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
-public import Mathlib.LinearAlgebra.Dimension.Finrank
 public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
-public import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup.Defs
 public import Mathlib.MeasureTheory.Function.L2Space
 public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
-public import Mathlib.Topology.UniformSpace.UniformConvergence
 
 /-!
 # The definitions of the challenge
@@ -30,17 +24,14 @@ theorems (`Solution.lean`).
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3–§5
+  §3, §5
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.3–§3.5, §4, §5
-* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018], Ch. 6, 7
+* [D. N. Arnold, *Finite Element Exterior Calculus*][Arnold2018],
+  Ch. 6, 7
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [L. C. Evans, *Partial Differential Equations*][Evans2010], §5.2
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
-* [P. Joly, *Variational Methods for Time-Dependent Wave Propagation Problems*][Joly2003]
-* [H. Whitney, *Geometric Integration Theory*][Whitney1957], Ch. IV
-* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  Ch. 4
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -50,11 +41,9 @@ open Filter Topology Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 
-universe u
-
 namespace FEEC
 
-/-! ### Hilbert complexes, families of subcomplexes and windows (the text of `palomar/feec`) -/
+/-! ### Hilbert complexes and families of subcomplexes (the notions of `palomar/feec`) -/
 
 -- palomar-shared: HilbertComplex
 /-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
@@ -132,43 +121,6 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
         B s i * (L * meshSize h ^ ord s)
 end HilbertComplex
 -- palomar-shared-end: SubcomplexFamily
--- palomar-shared: window
-/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of the **window** `[a, a + m)` (an `ℓ²` sum). -/
-abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
-/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
-def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-    (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
-  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
-    obtain ⟨y, hy, hyx⟩ := x.2.1
-    exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
-namespace HilbertComplex
-variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
-  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 W) (a : ℤ)
-  (m : ℕ)
-/-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
-def totalDomain : Submodule 𝕜 (Total W a m) where
-  carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
-  add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
-  zero_mem' _ _ := (H.d _ _).domain.zero_mem
-  smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
-/-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
-def totalD : Total W a m →ₗ.[𝕜] Total W a m where
-  domain := H.totalDomain a m
-  toFun :=
-    { toFun := fun x => WithLp.toLp 2 fun j : Fin m =>
-        ∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, x.2 i j⟩
-      map_add' := fun x y => PiLp.ext fun j => by
-        rw [PiLp.add_apply, PiLp.toLp_apply, PiLp.toLp_apply, PiLp.toLp_apply,
-          ← Finset.sum_add_distrib]
-        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_add ⟨_, x.2 i j⟩ ⟨_, y.2 i j⟩
-      map_smul' := fun c x => PiLp.ext fun j => by
-        rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
-          Finset.smul_sum]
-        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
-/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
-def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
-end HilbertComplex
--- palomar-shared-end: window
 
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
@@ -185,33 +137,6 @@ def SubcomplexFamily.Jackson.ProjRate {F : H.SubcomplexFamily κ} {ρ : Type*} (
     ‖(x : W i) - ((F.π h).π i x : W i)‖ ≤ B' s i * (L * J.meshSize h ^ J.ord s) ∧
       ‖H.d i (i + 1) x - H.d i (i + 1) ⟨_, (F.V h).le_domain i (i + 1) ((F.π h).π i x).2⟩‖ ≤
         B' s i * (L * J.meshSize h ^ J.ord s)
-end HilbertComplex
-
-/-! ### The fully discrete Hodge wave equation on a window -/
-
-namespace HilbertComplex
-variable {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace ℝ (W i)]
-  [∀ i, CompleteSpace (W i)] (H : HilbertComplex ℝ W) (a : ℤ) (m : ℕ)
-
-open Classical in
-/-- The total differential `𝐝 x` of `x ∈ D(𝐝)`, read as `0` off `D(𝐝)` (it is only applied to
-finite element forms, which lie in `D(𝐝)`). -/
-def dApply (x : Total W a m) : Total W a m :=
-  if h : x ∈ (H.totalD a m).domain then H.totalD a m ⟨x, h⟩ else 0
-/-- The **form of the Hodge wave operator** `L = 𝐝 - 𝐝*` of the window,
-`a(x, y) = ⟪𝐝 x, y⟫ - ⟪x, 𝐝 y⟫` on `D(𝐝)`, so that `a(x, y) = ⟪L x, y⟫` for `x ∈ D(L)`. -/
-def waveForm (x y : Total W a m) : ℝ := ⟪H.dApply a m x, y⟫_ℝ - ⟪x, H.dApply a m y⟫_ℝ
-/-- One **Crank–Nicolson step** of the Hodge wave equation in the trial space `V`, with test space
-`V₀ ⊆ V` and boundary values `g`: `u' ∈ V`, `u' - g ∈ V₀` (the boundary degrees of freedom of `g`),
-`⟪u' - u, v⟫ = (Δt / 2) a(u' + u, v)` on `V₀`. For `V₀ = V`, `g = 0` (homogeneous boundary
-conditions) `u' = r(Δt Lₕ) u`, `r(z) = (2 + z) / (2 - z)`, `Lₕ` the discrete wave operator. -/
-def IsCNStep (V V₀ : Set (Total W a m)) (Δt : ℝ) (g u u' : Total W a m) : Prop :=
-  u' ∈ V ∧ u' - g ∈ V₀ ∧ ∀ v ∈ V₀, ⟪u' - u, v⟫_ℝ = Δt / 2 * H.waveForm a m (u' + u) v
-/-- One **leapfrog step** ([Joly2003]), trial space `V`, test space `V₀ ⊆ V`, boundary values `g`:
-`u'' ∈ V`, `u'' - g ∈ V₀`, `⟪u'' - u, v⟫ = 2 Δt a(u', v)` on `V₀`; the explicit three-level
-scheme `uₙ₊₂ = uₙ + 2 Δt Lₕ uₙ₊₁` (one solve with the mass matrix). -/
-def IsLeapfrogStep (V V₀ : Set (Total W a m)) (Δt : ℝ) (g u u' u'' : Total W a m) : Prop :=
-  u'' ∈ V ∧ u'' - g ∈ V₀ ∧ ∀ v ∈ V₀, ⟪u'' - u, v⟫_ℝ = 2 * Δt * H.waveForm a m u' v
 end HilbertComplex
 
 /-! ### Differential forms on `ℝⁿ` and the `L²` de Rham complexes -/
@@ -269,7 +194,7 @@ def dMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[�
     ).topologicalClosure.toLinearPMap
 -- palomar-shared-end: dMin
 
-/-! ### Polynomial differential forms ([AFW2006], §3) -/
+/-! ### Polynomial differential forms and admissible sequences ([AFW2006], §3, §5) -/
 
 -- palomar-shared: PolyForm
 /-- **Polynomial differential forms** on `Kⁿ` in coordinates: a polynomial coefficient `ω_s` for
@@ -299,75 +224,6 @@ def evalForm {n : ℕ} : PolyForm ℝ n →ₗ[ℝ] FormField n :=
   LinearMap.pi fun x => LinearMap.pi fun s =>
     (MvPolynomial.aeval x).toLinearMap ∘ₗ LinearMap.proj s
 -- palomar-shared-end: PolyForm
-
-section Poly
-variable (K : Type*) [Field K] (n : ℕ)
-
-/-- The **exterior derivative** of polynomial forms, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
-def polyExtDeriv : PolyForm K n →ₗ[K] PolyForm K n :=
-  LinearMap.pi fun s => ∑ j ∈ s,
-    (sgn j s : K) • ((MvPolynomial.pderiv j).toLinearMap ∘ₗ LinearMap.proj (s.erase j))
-/-- The **pullback** of polynomial forms along the affine map `φ(x) = B x + b` of `Kⁿ`:
-`(φ^*ω)_t = Σ_{#s = #t} det B_{s,t} · (ω_s ∘ φ)`, `B_{s,t}` the submatrix of the rows `s` and the
-columns `t` (that is, `φ^* dx_i = Σ_l B_{il} dx_l`). -/
-def pullback (B : Matrix (Fin n) (Fin n) K) (b : Fin n → K) : PolyForm K n →ₗ[K] PolyForm K n :=
-  LinearMap.pi fun t => ∑ s : Finset (Fin n), if h : s.card = t.card then
-    (B.submatrix (s.orderEmbOfFin h) (t.orderEmbOfFin rfl)).det •
-      ((MvPolynomial.aeval fun i => ∑ l, MvPolynomial.C (B i l) * MvPolynomial.X l +
-        MvPolynomial.C (b i)).toLinearMap ∘ₗ LinearMap.proj s) else 0
-/-- `V` is **affinely invariant**: mapped into itself by the pullback along every affine map of
-`Kⁿ`, singular ones included. -/
-def IsAffineInvariant (V : Submodule K (PolyForm K n)) : Prop :=
-  ∀ B b, V.map (pullback K n B b) ≤ V
-/-- `V` is mapped into itself by the pullback along every linear map `x ↦ B x` of `Kⁿ`. -/
-def IsLinearInvariant (V : Submodule K (PolyForm K n)) : Prop :=
-  ∀ B, V.map (pullback K n B 0) ≤ V
-/-- `V` is mapped into itself by the pullback along every `g ∈ GL(n, K)`. -/
-def IsGLInvariant (V : Submodule K (PolyForm K n)) : Prop :=
-  ∀ g : GL (Fin n) K, V.map (pullback K n g 0) ≤ V
-/-- `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` ([AFW2006], Theorem 3.5), used for `k ≥ 1` and
-`s ≥ 0`; the source's case `s = -1` is `dP_{r+1}Λ^{k-1}`. -/
-def invariantForm (r s k : ℕ) : Submodule K (PolyForm K n) :=
-  (polyForm K n (r + 1) (k - 1)).map (polyExtDeriv K n) ⊔
-    (polyForm K n s (k + 1)).map (koszul K n)
-/-- **The classification of the invariant spaces of polynomial forms** on `Kⁿ`, `K` of
-characteristic `0` ([AFW2006], §3.4). -/
-structure AffineInvariantForms [CharZero K] : Prop where
-  /-- the images `dH_rΛᵏ` and `κH_rΛᵏ` are linearly invariant, among them the summands
-  `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` (§3.4) -/
-  isLinearInvariant_map_homForm (r k : ℕ) :
-    IsLinearInvariant K n ((homForm K n r k).map (polyExtDeriv K n)) ∧
-      IsLinearInvariant K n ((homForm K n r k).map (koszul K n))
-  /-- every `GL(n)`-invariant subspace of `H_{r+1}Λ^{k+1}` is `0`, `dH_{r+2}Λᵏ`, `κH_rΛ^{k+2}`
-  or `H_{r+1}Λ^{k+1}`: the summands of (3.10) are irreducible (§3.4, before Lemma 3.7) -/
-  eq_of_le_homForm (r k : ℕ) (W : Submodule K (PolyForm K n)) (hW : IsGLInvariant K n W)
-    (hle : W ≤ homForm K n (r + 1) (k + 1)) :
-    W = ⊥ ∨ W = (homForm K n (r + 2) k).map (polyExtDeriv K n) ∨
-      W = (homForm K n r (k + 2)).map (koszul K n) ∨ W = homForm K n (r + 1) (k + 1)
-  /-- `dP_{r+1}Λ^{k-1}` is affinely invariant ((3.18)) -/
-  isAffineInvariant_map_extDeriv (r k : ℕ) :
-    IsAffineInvariant K n ((polyForm K n (r + 1) (k - 1)).map (polyExtDeriv K n))
-  /-- `X(r, s, k)` is affinely invariant for `s ≤ r`, `k ≥ 1` (Theorem 3.5) -/
-  isAffineInvariant_invariantForm (r s k : ℕ) (hk : 1 ≤ k) (hs : s ≤ r) :
-    IsAffineInvariant K n (invariantForm K n r s k)
-  /-- `X(r, r, k) = P_{r+1}⁻Λᵏ` (Theorem 3.5, case `s = r`) -/
-  invariantForm_eq_polyFormMinus (r k : ℕ) (hk : 1 ≤ k) :
-    invariantForm K n r r k = polyFormMinus K n (r + 1) k
-  /-- `X(r + 1, r, k) = P_{r+1}Λᵏ` (Theorem 3.5, case `s = r - 1`) -/
-  invariantForm_eq_polyForm (r k : ℕ) (hk : 1 ≤ k) :
-    invariantForm K n (r + 1) r k = polyForm K n (r + 1) k
-  /-- `dP_1Λ^{k-1} = P_0Λᵏ`, `X(0, -1, k)` (Theorem 3.5, case `s = r - 1`, `r = 0`) -/
-  map_extDeriv_polyForm_one (k : ℕ) (hk : 1 ≤ k) :
-    (polyForm K n 1 (k - 1)).map (polyExtDeriv K n) = polyForm K n 0 k
-  /-- for `0 < k < n` every nonzero finite-dimensional space of `k`-forms invariant under the
-  invertible affine maps is `dP_{r+1}Λ^{k-1}` or `X(r, s, k)`, `s ≤ r` (Theorem 3.6) -/
-  eq_invariantForm (k : ℕ) (hk : 0 < k) (hkn : k < n) (V : Submodule K (PolyForm K n))
-    [FiniteDimensional K V] (hV : ∀ (g : GL (Fin n) K) b, V.map (pullback K n g b) ≤ V)
-    (hdeg : ∀ w ∈ V, ∀ s, s.card ≠ k → w s = 0) (hne : V ≠ ⊥) :
-    ∃ r, V = (polyForm K n (r + 1) (k - 1)).map (polyExtDeriv K n) ∨
-      ∃ s ≤ r, V = invariantForm K n r s k
-end Poly
-
 -- palomar-shared: PolySeq
 /-- **An admissible sequence** of polynomial families ([AFW2006], §5; [AFW2010], §5.2): in every
 form degree `k` the full space `P_{r_k}Λᵏ` (`full k = true`) or the trimmed space `P_{r_k}⁻Λᵏ`,
@@ -387,28 +243,15 @@ structure PolySeq where
 def PolySeq.space (S : PolySeq) (n k : ℕ) : Submodule ℝ (FormField n) :=
   (if S.full k then polyForm ℝ n (S.deg k) k else polyFormMinus ℝ n (S.deg k) k).map evalForm
 -- palomar-shared-end: PolySeq
--- palomar-shared: topSeq
-/-- **The Whitney sequence** `P₁Λ⁰ → P₁⁻Λ¹ → P₁⁻Λ² → P₁⁻Λ³ → ⋯` (in `ℝ³` the Lagrange, Nédélec
-edge and Raviart–Thomas face elements and the piecewise constants; [Whitney1957], [AFW2006],
-§3–4). -/
-def topSeq : PolySeq where
-  full k := k == 0
-  deg _ := 1
-  one_le_deg _ := le_rfl
-  transition _ := Or.inl ⟨rfl, rfl⟩
--- palomar-shared-end: topSeq
-
-namespace PolySeq
-variable (S : PolySeq)
-
-/-- `S` **reproduces polynomial forms of degree `s`** in the form degrees `j` and `j + 1`:
-`P_sΛʲ ⊆ S_j` and `P_sΛʲ⁺¹ ⊆ S_{j+1}` (vacuous for `j < 0`). -/
-def PolyOrderAt (n s : ℕ) (j : ℤ) : Prop :=
+-- palomar-shared: PolyOrderAt
+/-- The admissible sequence `S` **reproduces polynomial forms of degree `s`** in the form degrees
+`j` and `j + 1`: `P_sΛʲ ⊆ S_j` and `P_sΛʲ⁺¹ ⊆ S_{j+1}` (vacuous for `j < 0`). -/
+def PolySeq.PolyOrderAt (S : PolySeq) (n s : ℕ) (j : ℤ) : Prop :=
   ∀ k : ℕ, (k : ℤ) = j → (polyForm ℝ n s k).map evalForm ≤ S.space n k ∧
     (polyForm ℝ n s (k + 1)).map evalForm ≤ S.space n (k + 1)
-end PolySeq
+-- palomar-shared-end: PolyOrderAt
 
-/-! ### Simplicial meshes -/
+/-! ### Domains and simplicial meshes -/
 
 -- palomar-shared: SimplicialMesh
 /-- The vertex set `{v₀, …, v_k}` of a simplex. -/
@@ -460,24 +303,28 @@ def IsFreudenthal {n : ℕ} (𝒯 : ℕ → SimplicialMesh n) : Prop :=
   ∀ N, ∀ T ∈ (𝒯 N).simplices, ∃ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)), ∀ j i,
     T.points j i = ((z i : ℝ) + if (σ.symm i : ℕ) < (j : ℕ) then 1 else 0) / (2 * (N + 1))
 -- palomar-shared-end: SimplicialMesh
-
+-- palomar-shared: IsStarShapedBall
 /-- `Ω` is a **bounded open domain star-shaped with respect to a ball** `B(x₀, s₀)`: the segment
 from every point of the ball to every point of `Ω` lies in `Ω`. -/
-def IsStarShapedBall (Ω : Set (Fin n → ℝ)) : Prop :=
+def IsStarShapedBall {n : ℕ} (Ω : Set (Fin n → ℝ)) : Prop :=
   IsOpen Ω ∧ Bornology.IsBounded Ω ∧ ∃ x₀ : Fin n → ℝ, ∃ s₀ : ℝ, 0 < s₀ ∧
     ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω
+-- palomar-shared-end: IsStarShapedBall
+
 /-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal). -/
 def parallelepiped (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) : Set (Fin n → ℝ) :=
   (fun x => A.mulVec x + b) '' Set.univ.pi fun _ => Set.Ioo 0 1
 
 /-! ### The finite element spaces -/
 
--- palomar-shared: femSpace
+-- palomar-shared: covEval
 /-- The value `α(v₁, …, v_k) = Σ_{#s = k} α_s det (v_l(s_i))_{i,l}` of the `k`-covector `α` on
 the vectors `v₁, …, v_k`. -/
 def covEval {n k : ℕ} (α : Finset (Fin n) → ℝ) (v : Fin k → Fin n → ℝ) : ℝ :=
   ∑ s : Finset (Fin n), if h : s.card = k then
     α s * (Matrix.of fun i l => v l (s.orderEmbOfFin h i)).det else 0
+-- palomar-shared-end: covEval
+-- palomar-shared: femSpace
 /-- The `k`-covectors `α`, `β` have the **same tangential trace** on the face spanned by the
 points `g`: they agree on all `k`-tuples of vectors tangent to the face. -/
 def TraceEq {n : ℕ} (g : Finset (Fin n → ℝ)) (k : ℕ) (α β : Finset (Fin n) → ℝ) : Prop :=
@@ -505,43 +352,7 @@ def femSpace {n : ℕ} (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : Po
     F ∈ Γ → ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
 -- palomar-shared-end: femSpace
 
-/-- The finite element space `Xₕ = S_a(M) ⊕ ⋯ ⊕ S_{a+m-1}(M)` of the window `[a, a + m)`, with
-vanishing traces on the facets `Γ`: the forms of the window whose components lie in `femSpace`. -/
-def femTotal (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq)
-    (Γ : Set (Finset (Fin n → ℝ))) (a : ℤ) (m : ℕ) : Set (Total (L2Form Ω) a m) :=
-  {x | ∀ i : Fin m, x i ∈ femSpace Ω M S Γ (a + (i : ℕ))}
-/-- The **integral of a `k`-form over the oriented `k`-simplex** `p` in `ℝⁿ`: `∫_p w =
-∫_{T̂_k} w(F(x))(p₁ - p₀, …, p_k - p₀) dx`, `F(x) = p₀ + Σᵢ xᵢ (pᵢ₊₁ - p₀)`, `T̂_k` as above. -/
-def simplexIntegral {k : ℕ} (p : Fin (k + 1) → Fin n → ℝ) (w : FormField n) : ℝ :=
-  ∫ x in {x : Fin k → ℝ | (∀ i, 0 ≤ x i) ∧ ∑ i, x i ≤ 1},
-    covEval (w (p 0 + ∑ i, x i • (p i.succ - p 0))) fun i => p i.succ - p 0
-/-- `x` is **the Whitney interpolant** `Π_h w` of the form fields `w = (w_a, …, w_{a+m-1})` on the
-mesh `M` ([Whitney1957], Ch. IV; [Arnold2018], Ch. 7): in every degree `k = a + i ≥ 0` of the
-window, `xᵢ` lies in the Whitney space `P₁⁻Λᵏ(M)` with pieces `p_T` having the degrees of freedom of
-`wᵢ`, `∫_f p_T = ∫_f wᵢ` on every oriented `k`-face `f` of every simplex `T`. -/
-def IsWhitneyInterp (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (a : ℤ) (m : ℕ)
-    (w : Fin m → FormField n) (x : Total (L2Form Ω) a m) : Prop :=
-  ∀ i : Fin m, ∃ p, IsFemPieces Ω M topSeq (a + (i : ℕ)) (x i) p ∧ ∀ T ∈ M.simplices,
-    ∀ q : Fin ((a + (i : ℕ)).toNat + 1) → Fin (n + 1), Function.Injective q →
-      simplexIntegral (T.points ∘ q) (p T) = simplexIntegral (T.points ∘ q) (w i)
-/-- `x` is (almost everywhere on `Ω`) the form fields `w = (w_a, …, w_{a+m-1})` of the window. -/
-def IsRepr (Ω : Set (Fin n → ℝ)) (a : ℤ) (m : ℕ) (w : Fin m → FormField n)
-    (x : Total (L2Form Ω) a m) : Prop :=
-  ∀ i : Fin m, ∀ s : FormIdx n (a + (i : ℕ)), ⇑(x i s) =ᵐ[volume.restrict Ω] fun y => w i y s.1
-/-- The **moment** `∫_f tr_f w ∧ η` ([AFW2006], §4) of a form field `w` on `ℝⁿ` against `η` on
-`ℝᵐ`, over the `m`-face `f` of the simplex `p` with the vertices `p_{e 0}, …, p_{e m}`,
-parametrized by `φ(y) = p_{e 0} + Σ_l y_l (p_{e (l+1)} - p_{e 0})` on the reference simplex
-`T̂_m = {y ≥ 0, Σ_l y_l ≤ 1}`: the integrand is the `dy_0 ∧ ⋯ ∧ dy_{m-1}` coefficient
-`Σ_s ε(s, sᶜ) (φ^*w)_s η_{sᶜ}` of `φ^*w ∧ η`, `(φ^*w)_s(y) = w(φ y)(∂_{s₁}φ, …)` and
-`ε(s, sᶜ) = Π_{a ∈ s} ε(a, sᶜ)` the sign of `dy_s ∧ dy_{sᶜ}`. -/
-def faceMoment (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ} (e : Fin (m + 1) ↪o Fin (n + 1))
-    (η : FormField m) (w : FormField n) : ℝ :=
-  ∫ y in {y : Fin m → ℝ | (∀ l, 0 ≤ y l) ∧ ∑ l, y l ≤ 1}, ∑ s : Finset (Fin m),
-    (∏ a ∈ s, sgn a sᶜ) *
-      covEval (w fun i => p (e 0) i + ∑ l, y l * (p (e l.succ) i - p (e 0) i))
-        (fun j i => p (e (s.orderEmbOfFin rfl j).succ) i - p (e 0) i) * η y sᶜ
-
-/-! ### Smooth forms and smooth waves -/
+/-! ### Regularity classes -/
 
 -- palomar-shared: IsCsForm
 /-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` with `‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L`
@@ -553,16 +364,18 @@ def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) 
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
 -- palomar-shared-end: IsCsForm
-
-/-- `IsCsForm` for a form `w` vanishing outside `Ω` (the class of `H̊Λ(Ω)`): its derivatives of
-order at most `s + 2` vanish on `∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`. -/
-def IsCsFormMin (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
+-- palomar-shared: IsCsFormMin
+/-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` **vanishing outside `Ω`** with
+`‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L` on `cl Ω` (true in negative degrees): the regularity class of the
+order `h^{s+1}` with vanishing traces; the derivatives of `w` of order at most `s + 2` vanish on
+`∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`. -/
+def IsCsFormMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
   j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
     (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧ (∀ y ∉ Ω, w y = 0) ∧
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
     (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
     ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
-
+-- palomar-shared-end: IsCsFormMin
 -- palomar-shared: IsSobolevForm
 /-- `x ∈ L²(Ω; Λʲ)` **lies in `Hᵐ(Ω; Λʲ)` with norm at most `L`**, for `Hᵐ(Ω) = Hᵐ(ℝⁿ)|_Ω` (the
 restriction definition, weak derivatives as in [Evans2010], §5.2; on Lipschitz domains, by
@@ -580,97 +393,6 @@ def IsSobolevForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : 
     ∀ t, ⇑(x t) =ᵐ[volume.restrict Ω] D t []
 -- palomar-shared-end: IsSobolevForm
 
-/-- A **smooth solution of the Hodge wave equation** `U' = (d - dᵗ) U` on the window
-`Λ⁰ → Λ¹ → Λ²` of `ℝ³` (no boundary condition; one row of [QuennevilleBelair2015], (4.14)): forms
-`u t i` of degree `i` (`σ`, `E`, `B`), `C²` in space and `C³` in time with jointly continuous time
-derivatives `u₁, u₂, u₃`, solving `σ' = -dᵗE`, `E' = dσ - dᵗB`, `B' = dE` pointwise, with
-`‖Du‖, ‖D du‖ ≤ L` on `cl Q`, `Q = (0, ½)³`, these `L`-Lipschitz in `t ∈ [0, T]`, and
-`|∂ₜ³u| ≤ L` on `[0, T] × Q`. -/
-structure RowSolution (T L : ℝ) where
-  /-- the fields and their first three time derivatives -/
-  u : ℝ → Fin 3 → FormField 3
-  u₁ : ℝ → Fin 3 → FormField 3
-  u₂ : ℝ → Fin 3 → FormField 3
-  u₃ : ℝ → Fin 3 → FormField 3
-  isDeg : ∀ t (i : Fin 3) y (s : Finset (Fin 3)), s.card ≠ i → u t i y s = 0
-  contDiff : ∀ t i, ContDiff ℝ 2 (u t i)
-  continuous₁ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₁ p.1 i p.2 s
-  continuous₂ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₂ p.1 i p.2 s
-  continuous₃ : ∀ i s, Continuous fun p : ℝ × (Fin 3 → ℝ) => u₃ p.1 i p.2 s
-  hasDerivAt₁ : ∀ t i y s, HasDerivAt (fun τ => u τ i y s) (u₁ t i y s) t
-  hasDerivAt₂ : ∀ t i y s, HasDerivAt (fun τ => u₁ τ i y s) (u₂ t i y s) t
-  hasDerivAt₃ : ∀ t i y s, HasDerivAt (fun τ => u₂ τ i y s) (u₃ t i y s) t
-  pde₀ : ∀ t, u₁ t 0 = -codiff (u t 1)
-  pde₁ : ∀ t, u₁ t 1 = extDeriv (u t 0) - codiff (u t 2)
-  pde₂ : ∀ t, u₁ t 2 = extDeriv (u t 1)
-  bound : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cube 3),
-    ‖fderiv ℝ (u t i) y‖ ≤ L ∧ ‖fderiv ℝ (extDeriv (u t i)) y‖ ≤ L
-  lipschitz : ∀ t ∈ Icc 0 T, ∀ t' ∈ Icc 0 T, ∀ i, ∀ y ∈ closure (cube 3),
-    ‖fderiv ℝ (u t' i) y - fderiv ℝ (u t i) y‖ ≤ L * |t' - t| ∧
-      ‖fderiv ℝ (extDeriv (u t' i)) y - fderiv ℝ (extDeriv (u t i)) y‖ ≤ L * |t' - t|
-  bound₃ : ∀ t ∈ Icc 0 T, ∀ i, ∀ y ∈ cube 3, ∀ s, |u₃ t i y s| ≤ L
-
-/-! ### Maxwell's equations in vector proxies (`n = 3`) -/
-
-/-- `L²(Ω; ℝ^ι)`: the square-integrable fields on `Ω ⊆ ℝ³` with components indexed by `ι`
-(`Fin 1`: scalar fields, `Fin 3`: vector fields), an `ℓ²` sum of copies of `L²(Ω)`. -/
-abbrev L2Field (Ω : Set (Fin 3 → ℝ)) (ι : Type) [Fintype ι] : Type :=
-  PiLp 2 fun _ : ι => Lp ℝ 2 (volume.restrict Ω)
-/-- The **weak realization** `A : L²(Ω; ℝ^ι) → L²(Ω; ℝ^κ)` of the first-order operator with
-formal adjoint `Aᵗ` (as `dMax`): the adjoint of the closure of `Aᵗ` on test fields, so that
-`u ∈ D(A)` iff some `w` has `⟪w, ψ⟫ = ⟪u, Aᵗψ⟫` for every test field `ψ`, and then `A u = w`. -/
-def weakOp (Ω : Set (Fin 3 → ℝ)) {ι κ : Type} [Fintype ι] [Fintype κ]
-    (At : ((Fin 3 → ℝ) → κ → ℝ) → (Fin 3 → ℝ) → ι → ℝ) : L2Field Ω ι →ₗ.[ℝ] L2Field Ω κ :=
-  (Submodule.span ℝ {p : L2Field Ω κ × L2Field Ω ι | ∃ ψ : (Fin 3 → ℝ) → κ → ℝ,
-    (∀ j, IsTestFn Ω fun x => ψ x j) ∧ (∀ j, ⇑(p.1 j) =ᵐ[volume.restrict Ω] fun x => ψ x j) ∧
-    ∀ i, ⇑(p.2 i) =ᵐ[volume.restrict Ω] fun x => At ψ x i}).topologicalClosure.toLinearPMap†
-/-- The **weak gradient** `grad : H¹(Ω) ⊆ L²(Ω) → L²(Ω; ℝ³)` (formal adjoint `-div`). -/
-def grad (Ω : Set (Fin 3 → ℝ)) : L2Field Ω (Fin 1) →ₗ.[ℝ] L2Field Ω (Fin 3) :=
-  weakOp Ω fun ψ x _ => -∑ j, partialDeriv j (fun y => ψ y j) x
-/-- The **weak curl** `curl : H(curl, Ω) ⊆ L²(Ω; ℝ³) → L²(Ω; ℝ³)`,
-`(curl v)ᵢ = ∂_{i+1} v_{i+2} - ∂_{i+2} v_{i+1}` (indices mod 3; formally self-adjoint). -/
-def curl (Ω : Set (Fin 3 → ℝ)) : L2Field Ω (Fin 3) →ₗ.[ℝ] L2Field Ω (Fin 3) :=
-  weakOp Ω fun ψ x i =>
-    partialDeriv (i + 1) (fun y => ψ y (i + 2)) x - partialDeriv (i + 2) (fun y => ψ y (i + 1)) x
-/-- The **weak divergence** `div : H(div, Ω) ⊆ L²(Ω; ℝ³) → L²(Ω)` (formal adjoint `-grad`). -/
-def div (Ω : Set (Fin 3 → ℝ)) : L2Field Ω (Fin 3) →ₗ.[ℝ] L2Field Ω (Fin 1) :=
-  weakOp Ω fun ψ x j => -partialDeriv j (fun y => ψ y 0) x
-/-- The **vector proxy** of a `0`-form: the scalar `f_∅`. -/
-def proxy0 {Ω : Set (Fin 3 → ℝ)} (u : L2Form Ω 0) : L2Field Ω (Fin 1) :=
-  WithLp.toLp 2 fun _ => u ⟨∅, rfl⟩
-/-- The **vector proxy** of a `1`-form `Σⱼ vⱼ dxⱼ`: the vector `v`. -/
-def proxy1 {Ω : Set (Fin 3 → ℝ)} (u : L2Form Ω 1) : L2Field Ω (Fin 3) :=
-  WithLp.toLp 2 fun j => u ⟨{j}, by simp⟩
-/-- The **vector proxy** of a `2`-form `ω`: the vector `(ω₁₂, -ω₀₂, ω₀₁)`. -/
-def proxy2 {Ω : Set (Fin 3 → ℝ)} (u : L2Form Ω 2) : L2Field Ω (Fin 3) :=
-  WithLp.toLp 2 fun i => (-1 : ℝ) ^ (i : ℕ) • u ⟨Finset.univ.erase i, by simp⟩
-/-- `(σ, E, B)` is a **strong solution of Maxwell's equations** on `[0, T]`: `σ' = -grad* E`,
-`E' = grad σ - curl* B`, `B' = curl E` for the weak `grad`, `curl` and their adjoints
-(`grad* = -div` with `E · n = 0`, `curl* = curl` with `B × n = 0`), the derivatives in `L²`;
-`B ∈ L²(Ω; ℝ³)` is the last space of the window `H¹ → H(curl) → L²(Ω; ℝ³)`. -/
-def IsMaxwellSolution (Ω : Set (Fin 3 → ℝ)) (T : ℝ) (σ : ℝ → L2Field Ω (Fin 1))
-    (E B : ℝ → L2Field Ω (Fin 3)) : Prop :=
-  ∀ t ∈ Icc 0 T, ∃ σ' E' B' g c, HasDerivWithinAt σ σ' (Icc 0 T) t ∧
-    HasDerivWithinAt E E' (Icc 0 T) t ∧ HasDerivWithinAt B B' (Icc 0 T) t ∧
-    (E t, -σ') ∈ (grad Ω)†.graph ∧ (σ t, g) ∈ (grad Ω).graph ∧ (B t, c) ∈ (curl Ω)†.graph ∧
-    E' = g - c ∧ (E t, B') ∈ (curl Ω).graph
-/-- `(σ, E, B)` is a **semi-discrete (Galerkin) solution of Maxwell's equations** on `[0, T]` in
-`V⁰ × V¹ × V²`: `⟪σ', τ⟫ + ⟪E', F⟫ + ⟪B', G⟫ = ⟪grad σ, F⟫ + ⟪curl E, G⟫ - ⟪E, grad τ⟫ -
-⟪B, curl F⟫` for all `τ ∈ V⁰`, `F ∈ V¹`, `G ∈ V²`. -/
-def IsMaxwellGalerkin (Ω : Set (Fin 3 → ℝ)) (V₀ : Set (L2Field Ω (Fin 1)))
-    (V₁ V₂ : Set (L2Field Ω (Fin 3))) (T : ℝ) (σ : ℝ → L2Field Ω (Fin 1))
-    (E B : ℝ → L2Field Ω (Fin 3)) : Prop :=
-  ∀ t ∈ Icc 0 T, σ t ∈ V₀ ∧ E t ∈ V₁ ∧ B t ∈ V₂ ∧ ∃ σ' E' B', HasDerivWithinAt σ σ' (Icc 0 T) t ∧
-    HasDerivWithinAt E E' (Icc 0 T) t ∧ HasDerivWithinAt B B' (Icc 0 T) t ∧
-    ∀ τ ∈ V₀, ∀ F ∈ V₁, ∀ G ∈ V₂, ∀ gσ gτ cE cF, (σ t, gσ) ∈ (grad Ω).graph →
-      (τ, gτ) ∈ (grad Ω).graph → (E t, cE) ∈ (curl Ω).graph → (F, cF) ∈ (curl Ω).graph →
-        ⟪σ', τ⟫_ℝ + ⟪E', F⟫_ℝ + ⟪B', G⟫_ℝ =
-          ⟪gσ, F⟫_ℝ + ⟪cE, G⟫_ℝ - ⟪E t, gτ⟫_ℝ - ⟪B t, cF⟫_ℝ
-
 /-! ### Uniform stability -/
-
-/-! ### The fully discrete Hodge wave equation -/
-
-/-! ### The shape functions -/
 
 end FEEC

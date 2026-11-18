@@ -198,7 +198,7 @@ status:
     set of R^3, on those star-shaped with respect to a ball, on the unit ball and on every open
     box, for the system (4.14), and on every nonempty bounded open set for the system (6.1); the
     absorbing boundary conditions on the cube; the mirror boundary conditions on the cube for the
-    system (6.1)). The Challenge is 562 lines. Open, and not claimed: that only stationary data
+    system (6.1)). The Challenge is 563 lines. Open, and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
     fields C^2 up to the boundary; Feec proves it on the ball only under an elliptic regularity

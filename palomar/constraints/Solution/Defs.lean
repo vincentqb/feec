@@ -109,7 +109,8 @@ def IsStrongSolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A :
 /-- `S` is an **evolution** of `u' = A u` on `I` (`I = ℝ`: a group; `I = [0, ∞)`: a semigroup),
 for an operator given by its graph, a relation `A ⊆ X × X`: bounded operators `S t` with `S 0 = 1`
 such that from every `x ∈ D(A)` the orbit `t ↦ S t x` is a strong solution of `u' = A u` on `I`.
-(When strong solutions are unique and `D(A)` is dense, `S t`, `t ∈ I`, is determined by `A`.) -/
+(When strong solutions on intervals are unique and `D(A)` is dense, `S t`, `t ∈ I`, is
+determined by `A`.) -/
 def IsEvolution {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A : SetRel X X)
     (I : Set ℝ) (S : ℝ → X →L[ℝ] X) : Prop :=
   (∀ x, S 0 x = x) ∧ ∀ x y, (x, y) ∈ A → IsStrongSolution A I fun t => S t x
@@ -201,8 +202,8 @@ def tsdConstraint (Ω : Set (Fin 3 → ℝ)) : Set (L2Vec Ω 0 × L2Vec Ω 1 × 
 
 /-- `v ∈ L²(Ω; Λ¹ ⊗ ℝ³)` is an **eigenfield** of `curl* curl` with frequency `ξ` (the natural
 boundary conditions, row by row): `v ∈ D(d¹) = H̊(curl)`, `d¹v ∈ D(d¹*)` and `d¹* d¹ v = ξ² v`
-(then `(0, v, 0)` and `(0, 0, d¹v)` span an invariant plane of the system (4.14) on which `L²`
-is `-ξ²`). -/
+(for `v` also weakly divergence-free, e.g. TSD, `(0, v, 0)` and `(0, 0, d¹v)` then span a plane
+invariant under the system (4.14), on which `L² = -ξ²`). -/
 def IsEigenfield (Ω : Set (Fin 3 → ℝ)) (ξ : ℝ) (v : L2Vec Ω 1) : Prop :=
   ∃ (h1 : v ∈ (vecOp fun _ => dMin Ω 1).domain)
     (h2 : (vecOp fun _ => dMin Ω 1) ⟨v, h1⟩ ∈ (vecOp fun _ => dMin Ω 1)†.domain),

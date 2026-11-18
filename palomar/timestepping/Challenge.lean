@@ -49,18 +49,18 @@ bounded semigroups), and when is the Banach-space theory needed?
   bounded strongly continuous semigroup (`‖S(t)‖ ≤ M`) of a real or complex Banach space,
   `‖r(τA)ⁿ‖ ≤ M (1 + C √n)` (`stable`), and for `r` of order `m` the error for smooth data has
   the order of the scheme, without the `√n`: `‖r(τA)ⁿ x - S(nτ) x‖ ≤ K M nτ τᵐ ‖A^{m+1} x‖`
-  (`error`). `C` and `K` depend on `r` and `m` only: the second clauses state both bounds for
-  bounded generators `L` with `‖e^{tL}‖ ≤ M`, uniformly in `L`, the error also along trajectories
-  with a consistency defect. The `√n` is optimal in general ([GomilkoTomilov2024]); backward
-  Euler is power bounded on every Banach space (`backwardEuler`).
+  (`error`); both bounds are optimal in general ([GomilkoTomilov2024]). `C` and `K` depend on `r`
+  and `m` only: the second clauses state both bounds for bounded generators `L` with
+  `‖e^{tL}‖ ≤ M`, uniformly in `L`, the error also along trajectories with a consistency defect.
+  Backward Euler is power bounded for bounded semigroups of every Banach space (`backwardEuler`).
 * **Hilbert spaces: von Neumann** ([HairerWanner1996], §IV.11). For an m-dissipative `A` (the
   generator of a contraction semigroup) every A-stable scheme is a contraction (`contractive`):
   no `√n`.
 * **Convergence for every datum: Lax** ([Thomee2006], Ch. 7). For a family of space
   discretizations whose semidiscrete solutions converge, power-bounded consistent schemes converge
   for every datum, without smoothness: backward Euler on Banach spaces, and every A-stable scheme
-  of contraction semigroups on Hilbert spaces (`converges`). The schemes that are only
-  `√n`-stable converge at their order for smooth data (`error`).
+  of order `m ≥ 1` of contraction semigroups on Hilbert spaces (`converges`). The schemes that are
+  only `√n`-stable converge at their order for smooth data (`error`).
 * **Where the Banach theory is needed: the heat equation in the maximum norm**
   ([CiarletRaviart1973]; [Thomee2006], Ch. 15). The maximum norm is not a Hilbert norm. A
   sub-Markov generator generates positive contractions of it (`subMarkov`), so `M = 1`; the
@@ -231,11 +231,11 @@ theorem error (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m
               M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ := by
   sorry
 
-/-- **Backward Euler is power bounded on every Banach space** ([Pazy1983], §1.5;
-[BrennerThomee1979]): the A-stable scheme `r(z) = 1/(1 - z)` without the `√n` of `stable`, under
-growth. Let `S` be a strongly continuous semigroup of a real or complex Banach space with
-`‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`), generator `A`, and `τ > 0` with `ωτ < 1`. Exactly one bounded `R`
-satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`, so `r(τA) = R`);
+/-- **Backward Euler is stable on every Banach space, power bounded for bounded semigroups**
+([Pazy1983], §1.5; [BrennerThomee1979]): the A-stable scheme `r(z) = 1/(1 - z)` without the `√n`
+of `stable`, under growth. Let `S` be a strongly continuous semigroup of a real or complex Banach
+space with `‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`), generator `A`, and `τ > 0` with `ωτ < 1`. Exactly one
+bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`, so `r(τA) = R`);
 `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` (Hille–Yosida: power bounded for `ω = 0`, stable on bounded time intervals
 for `ω > 0`), and for every `n` and `x ∈ D(A²)` (a chain `u 0 = x, u 1 = A x, u 2 = A² x` in the
 graph of `A`), the first-order error

@@ -11,70 +11,68 @@ project:
   description: >-
     To solve an evolution equation u' = A u numerically, a one-step method replaces the exact
     evolution e^(tau A) over a time step tau by a rational function r(tau A) of the step, for
-    instance backward Euler r(z) = 1/(1 - z) or Crank-Nicolson r(z) = (2 + z)/(2 - z). The
-    method is A-stable if |r(z)| <= 1 on the closed left half-plane. The entry asks how the powers
-    r(tau A)^n of an A-stable scheme behave, with constants depending on r alone (hence uniformly
-    over every family of space discretizations with uniformly bounded semigroups), and when the
-    Banach-space theory is needed. The answer. On Banach spaces, Brenner and Thomee (1979):
-    ||r(tau A)^n|| <= M (1 + C sqrt(n)) for every bounded semigroup, ||e^(tA)|| <= M, and the error
-    for smooth data has the order of the scheme with no sqrt(n) loss; this is the headline, and
-    backward Euler is power bounded on every Banach space. On Hilbert spaces, von Neumann: for
-    m-dissipative A every A-stable scheme is a contraction. For families of space
-    discretizations, the sufficiency half of the Lax equivalence theorem: power-bounded consistent
-    schemes converge for every datum, so backward Euler on Banach spaces and every A-stable scheme
-    of contraction semigroups on Hilbert spaces converge for every datum, while the schemes that
-    are only sqrt(n)-stable converge at their order for smooth data. The Banach theory is needed
-    for the heat equation in the maximum norm, which is not a Hilbert norm: sub-Markov generators
-    generate positive contractions of the maximum norm (M = 1), the lumped-mass P1 Laplacian of
-    every non-obtuse simplicial mesh is one (the discrete maximum principle of Ciarlet and
-    Raviart), so every A-stable scheme is (1 + C sqrt(k))-stable in the maximum norm uniformly
-    over all non-obtuse meshes in every dimension, with error bounds whose constants are
-    independent of the mesh; the witness: on a cube the classical finite difference scheme is the
-    lumped-mass method of the Freudenthal mesh, and from compatible initial data its maximum-norm
-    error is O(h^2 + tau^m), uniformly in h. In Lean 4 over Mathlib, twelve compared theorems:
-    (1) Brenner-Thomee's stability bound for every A-stable real rational r (|r(infinity)| = 1
-    included) and every bounded strongly continuous semigroup of a real or complex Banach space,
-    with the resolvent shown to exist and be unique and r(tau A) defined through it, and with the
-    same constant for bounded generators L with ||e^(tL)|| <= M, written with
-    p(tau L) q(tau L)^(-1) (TimeStepping.stable); (2) the sharp smooth-data error
-    ||r(tau A)^n x - S(n tau) x|| <= K M n tau tau^m ||A^(m+1) x|| for r of order m
-    (Gomilko-Tomilov 2024, Thm 1.1(ii)), with the same constant for bounded generators, also
-    along every trajectory with a consistency defect (TimeStepping.error); (3) backward Euler on
-    real or complex Banach spaces under growth M e^(omega t): the resolvent exists and is unique,
-    ||R^k|| <= M/(1 - omega tau)^k (power bounded for omega = 0), with an explicit first-order
-    error (TimeStepping.backwardEuler); (4) the contractivity ||r(tau A)^n|| <= (sup_y |r(iy)|)^n
-    of rational schemes for m-dissipative, possibly unbounded, operators on real or complex
-    Hilbert spaces (TimeStepping.contractive); (5) the convergence half of the Lax equivalence
-    theorem for families of bounded generators on Banach spaces X_h read in a Banach space E:
-    power-bounded consistent schemes converge for every datum, and so do, with no hypothesis on
-    the scheme, backward Euler on Banach spaces and every A-stable scheme of order m >= 1 when the
-    X_h are Hilbert spaces and the semigroups contractions (TimeStepping.converges); (6)
-    sub-Markov generators of R^iota generate positive contractions of the maximum norm, and their
-    backward Euler steps are positive contractions (TimeStepping.subMarkov); (7) the lumped-mass
-    P1 Laplacian of every non-obtuse simplicial mesh, on any injective set of nodes, is a
-    sub-Markov generator, backward Euler has nodal error
-    ||I_h u(k tau) - (1 - tau L_h)^(-k) v|| <= ||I_h u(0) - v|| + k tau (3/2 tau B + eps) (B a
-    bound of the second time derivative of u at the nodes, eps the nodal consistency error), and
-    every A-stable scheme has ||r(tau L_h)^k|| <= 1 + C sqrt(k) and nodal error
-    ||I_h u(k tau) - r(tau L_h)^k v|| <= ||I_h u(0) - v|| + k tau eps +
-    K k tau tau^m ||L_h^(m+1) v||, with C, K depending on r and m only (TimeStepping.maxNormHeat);
-    (8) the witness: the finite difference Laplacian on every finite grid is a sub-Markov
-    generator, on a cube b + (0, s)^n it is the lumped-mass Laplacian of a non-obtuse mesh of the
-    cube, and for every A-stable r of order m, every classical solution u with bounded fourth
-    derivatives whose initial value satisfies the compatibility conditions of order m (its odd
-    2s-periodic extension is of class C^(2m+2), with the words d^2_(i_1) ... d^2_(i_(m+1)) of its
-    derivatives bounded by B'), the scheme started from the nodal interpolant has maximum-norm
-    error ||I_h u(k tau) - r(tau Delta_h)^k I_h u(0)|| <= k tau (n B h^2/12 + K n^(m+1) B' tau^m)
-    (TimeStepping.fdHeat); (9) backward Euler (order 1) and Crank-Nicolson (order 2,
-    |r(infinity)| = 1) satisfy the hypotheses on r (TimeStepping.backwardEuler_isAStable,
-    TimeStepping.crankNicolson_isAStable); (10) the two classical inputs, the Hille-Yosida
-    resolvent estimates on complex Banach spaces (TimeStepping.hilleYosida) and von Neumann's
-    inequality for rational functions of contractions of complex Hilbert spaces
-    (TimeStepping.vonNeumann). The statements use Mathlib's polynomials, bounded operators,
-    LinearPMap, Ring.inverse, NormedSpace.exp, InnerProductSpaceable, Asymptotics.IsBigO,
-    HasDerivWithinAt, iteratedFDeriv, matrices, affine simplices, the Lebesgue measure and
-    TendstoUniformlyOn; the definition of simplicial meshes is that of palomar/fem (shared
-    block). The proof is the library Feec of this repository (Feec.TimeStepping.*,
+    instance backward Euler r(z) = 1/(1 - z) or Crank-Nicolson r(z) = (2 + z)/(2 - z). The method is
+    A-stable if |r(z)| <= 1 on the closed left half-plane. The entry asks how the powers r(tau A)^n
+    of an A-stable scheme behave, with constants depending on r alone (hence uniformly over every
+    family of space discretizations with uniformly bounded semigroups), and when the Banach-space
+    theory is needed. The answer. On Banach spaces, Brenner and Thomee (1979): ||r(tau A)^n|| <= M
+    (1 + C sqrt(n)) for every bounded semigroup, ||e^(tA)|| <= M, and the error for smooth data has
+    the order of the scheme with no sqrt(n) loss, both bounds optimal in general; this is the
+    headline, and backward Euler is power bounded for bounded semigroups of every Banach space. On
+    Hilbert spaces, von Neumann: for m-dissipative A every A-stable scheme is a contraction. For
+    families of space discretizations, the sufficiency half of the Lax equivalence theorem:
+    power-bounded consistent schemes converge for every datum, so backward Euler on Banach spaces
+    and every A-stable scheme of order m >= 1 of contraction semigroups on Hilbert spaces converge
+    for every datum, while the schemes that are only sqrt(n)-stable converge at their order for
+    smooth data. The Banach theory is needed for the heat equation in the maximum norm, which is not
+    a Hilbert norm: sub-Markov generators generate positive contractions of the maximum norm (M =
+    1), the lumped-mass P1 Laplacian of every non-obtuse simplicial mesh is one (the discrete
+    maximum principle of Ciarlet and Raviart), so every A-stable scheme is (1 + C sqrt(k))-stable in
+    the maximum norm uniformly over all non-obtuse meshes in every dimension, with error bounds
+    whose constants are independent of the mesh; the witness: on a cube the classical finite
+    difference scheme is the lumped-mass method of the Freudenthal mesh, and from compatible initial
+    data its maximum-norm error is O(h^2 + tau^m), uniformly in h. In Lean 4 over Mathlib, twelve
+    compared theorems: (1) Brenner-Thomee's stability bound for every A-stable real rational r
+    (|r(infinity)| = 1 included) and every bounded strongly continuous semigroup of a real or
+    complex Banach space, with the resolvent shown to exist and be unique and r(tau A) defined
+    through it, and with the same constant for bounded generators L with ||e^(tL)|| <= M, written
+    with p(tau L) q(tau L)^(-1) (TimeStepping.stable); (2) the sharp smooth-data error ||r(tau A)^n
+    x - S(n tau) x|| <= K M n tau tau^m ||A^(m+1) x|| for r of order m (Gomilko-Tomilov 2024, Thm
+    1.1(ii)), with the same constant for bounded generators, also along every trajectory with a
+    consistency defect (TimeStepping.error); (3) backward Euler on real or complex Banach spaces
+    under growth M e^(omega t): the resolvent exists and is unique, ||R^k|| <= M/(1 - omega tau)^k
+    (power bounded for omega = 0), with an explicit first-order error (TimeStepping.backwardEuler);
+    (4) the contractivity ||r(tau A)^n|| <= (sup_y |r(iy)|)^n of rational schemes for m-dissipative,
+    possibly unbounded, operators on real or complex Hilbert spaces (TimeStepping.contractive); (5)
+    the convergence half of the Lax equivalence theorem for families of bounded generators on Banach
+    spaces X_h read in a Banach space E: power-bounded consistent schemes converge for every datum,
+    and so do, with no hypothesis on the scheme, backward Euler on Banach spaces and every A-stable
+    scheme of order m >= 1 when the X_h are Hilbert spaces and the semigroups contractions
+    (TimeStepping.converges); (6) sub-Markov generators of R^iota generate positive contractions of
+    the maximum norm, and their backward Euler steps are positive contractions
+    (TimeStepping.subMarkov); (7) the lumped-mass P1 Laplacian of every non-obtuse simplicial mesh,
+    on any injective set of nodes, is a sub-Markov generator, backward Euler has nodal error ||I_h
+    u(k tau) - (1 - tau L_h)^(-k) v|| <= ||I_h u(0) - v|| + k tau (3/2 tau B + eps) (B a bound of
+    the second time derivative of u at the nodes, eps the nodal consistency error), and every
+    A-stable scheme has ||r(tau L_h)^k|| <= 1 + C sqrt(k) and nodal error ||I_h u(k tau) - r(tau
+    L_h)^k v|| <= ||I_h u(0) - v|| + k tau eps + K k tau tau^m ||L_h^(m+1) v||, with C, K depending
+    on r and m only (TimeStepping.maxNormHeat); (8) the witness: the finite difference Laplacian on
+    every finite grid is a sub-Markov generator, on a cube b + (0, s)^n it is the lumped-mass
+    Laplacian of a non-obtuse mesh of the cube, and for every A-stable r of order m, every classical
+    solution u with bounded fourth derivatives whose initial value satisfies the compatibility
+    conditions of order m (its odd 2s-periodic extension is of class C^(2m+2), with the words
+    d^2_(i_1) ... d^2_(i_(m+1)) of its derivatives bounded by B'), the scheme started from the nodal
+    interpolant has maximum-norm error ||I_h u(k tau) - r(tau Delta_h)^k I_h u(0)|| <= k tau (n B
+    h^2/12 + K n^(m+1) B' tau^m) (TimeStepping.fdHeat); (9) backward Euler (order 1) and
+    Crank-Nicolson (order 2, |r(infinity)| = 1) satisfy the hypotheses on r
+    (TimeStepping.backwardEuler_isAStable, TimeStepping.crankNicolson_isAStable); (10) the two
+    classical inputs, the Hille-Yosida resolvent estimates on complex Banach spaces
+    (TimeStepping.hilleYosida) and von Neumann's inequality for rational functions of contractions
+    of complex Hilbert spaces (TimeStepping.vonNeumann). The statements use Mathlib's polynomials,
+    bounded operators, LinearPMap, Ring.inverse, NormedSpace.exp, InnerProductSpaceable,
+    Asymptotics.IsBigO, HasDerivWithinAt, iteratedFDeriv, matrices, affine simplices, the Lebesgue
+    measure and TendstoUniformlyOn; the definition of simplicial meshes is that of palomar/fem
+    (shared block). The proof is the library Feec of this repository (Feec.TimeStepping.*,
     Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.ForMathlib.Analysis.SubMarkov,
     Feec.ForMathlib.Calculus.Partial, Feec.ForMathlib.Calculus.DifferenceLaplacian,
     Feec.FiniteElement.LumpedMass, Feec.FiniteElement.LumpedLaplacian,

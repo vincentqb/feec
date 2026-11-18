@@ -31,7 +31,7 @@ public import Mathlib.Analysis.CStarAlgebra.Classes
 /-!
 # The definitions of the challenge
 
-A verbatim copy of the definitions of `Challenge.lean` (everything but its sixteen theorems),
+A verbatim copy of the definitions of `Challenge.lean` (everything but its twelve theorems),
 compiled against Mathlib alone so that their elaborated values are those of the challenge: its
 imports, opens and definitions, the rational schemes of semigroups (`TimeStepping.IsC0Semigroup`,
 `TimeStepping.generatorGraph`, `TimeStepping.rationalOfResolvent`, `TimeStepping.IsAStable`,
@@ -55,8 +55,6 @@ proves the theorems (`Solution.lean`).
   §IV.11
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9, 15
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
-* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §4
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
 * [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 

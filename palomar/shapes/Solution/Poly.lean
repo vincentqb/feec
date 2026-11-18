@@ -1,7 +1,7 @@
 module
 
 public import Solution.Defs
-public import Feec.FiniteElement.PolyOrder
+public import Feec.FiniteElement.Whitney
 
 /-!
 # The polynomial spaces of the challenge are those of `Feec`

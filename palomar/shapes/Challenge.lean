@@ -1,17 +1,8 @@
 module
 
 public import Mathlib.Algebra.MvPolynomial.PDeriv
-public import Mathlib.Analysis.Calculus.ContDiff.Basic
-public import Mathlib.Analysis.Calculus.FDeriv.Basic
-public import Mathlib.Analysis.InnerProductSpace.LinearPMap
-public import Mathlib.Analysis.InnerProductSpace.PiL2
-public import Mathlib.Analysis.Normed.Lp.PiLp
-public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
-public import Mathlib.LinearAlgebra.Dimension.Finrank
-public import Mathlib.LinearAlgebra.Matrix.Determinant.Basic
-public import Mathlib.LinearAlgebra.Matrix.GeneralLinearGroup.Defs
-public import Mathlib.MeasureTheory.Function.L2Space
-public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
+public import Mathlib.MeasureTheory.Measure.Haar.OfBasis
 public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 
 /-!
@@ -59,9 +50,6 @@ increasing order of their vertices.
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
-
-open scoped InnerProductSpace ContDiff
-open Filter Topology Set LinearPMap MeasureTheory
 
 @[expose] public noncomputable section
 

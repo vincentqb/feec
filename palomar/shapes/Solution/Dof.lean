@@ -2,7 +2,6 @@ module
 
 public import Solution.Poly
 public import Feec.FiniteElement.LocalDof
-public import Feec.FiniteElement.Whitney
 
 /-!
 # The bridge for the degrees of freedom

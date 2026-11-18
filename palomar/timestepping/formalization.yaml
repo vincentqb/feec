@@ -107,9 +107,10 @@ sources:
       (TimeStepping.error), as stated in Gomilko-Tomilov 2024, Thm 1.1(ii) with s = m + 1, which
       attributes it to Thms 1 and 4 and the remarks of this paper; the proof (translates of
       kernels in the Hille-Phillips calculus and an L^1 bound O(n) of the error kernel) is not the
-      paper's. Its bounded-generator forms (TimeStepping.stable_of_bounded,
-      TimeStepping.error_of_bounded), backward Euler (TimeStepping.backwardEuler) and its
-      maximum-norm applications (TimeStepping.maxNormHeat, TimeStepping.fdHeat). The paper itself
+      paper's. The bounded-generator forms (TimeStepping.stable_of_bounded,
+      TimeStepping.error_of_bounded) and the maximum-norm applications (TimeStepping.maxNormHeat,
+      TimeStepping.fdHeat) are instances of the two bounds, and so is the error of backward Euler
+      (TimeStepping.backwardEuler) for omega = 0, with explicit constants. The paper itself
       was not consulted beyond its abstract (||r^n(hA)|| <= C n^(1/2) for nh bounded and
       A-acceptable r, checked 2026-11-18 through OpenAlex); Thms 1 and 4 were checked as restated
       in Gomilko-Tomilov 2024, Thm 1.1 (arXiv:2403.14411v2).
@@ -544,7 +545,7 @@ alignment:
       lean: "TimeStepping.contractive"
       module: "Challenge"
       status: "proved"
-      note: "The Hilbert case of the headline. Real rational r, m-dissipative A on real or complex Hilbert spaces: ||r(tau A)^n|| <= (sup_y |r(iy)|)^n."
+      note: "The Hilbert counterpart of the headline (M = 1, no sqrt(n)). Real rational r, m-dissipative A on real or complex Hilbert spaces: ||r(tau A)^n|| <= (sup_y |r(iy)|)^n."
     - source: "[BrennerThomee1979]"
       lean: "TimeStepping.stable_of_bounded"
       module: "Challenge"

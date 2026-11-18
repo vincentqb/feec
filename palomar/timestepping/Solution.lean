@@ -223,7 +223,7 @@ theorem stable_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) :
   intro 𝕜 X _ _ _ _ L M hL τ hτ
   let : NormedSpace ℝ X := NormedSpace.restrictScalars ℝ 𝕜 X
   have : IsScalarTower ℝ 𝕜 X := IsScalarTower.of_algebraMap_smul fun _ _ => rfl
-  exact norm_rationalApply_pow_le hτ hr L hL
+  exact norm_rationalApply_pow_le hτ L hL hr
 
 /-- **The error of A-stable schemes for bounded generators**:
 `TimeStepping.norm_rationalApply_pow_sub_le`. -/
@@ -238,7 +238,7 @@ theorem error_of_bounded (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : Has
           (∀ s ∈ Icc 0 (n * τ), ‖U' s - L (U s)‖ ≤ D) →
           ‖U (n * τ) - (rationalApply p q ((τ : 𝕜) • L) ^ n) v‖ ≤
             M * ‖U 0 - v‖ + M * (n * τ) * D + K * M * (n * τ) * τ ^ m * ‖(L ^ (m + 1)) v‖ :=
-  ⟨hr.scheme.sharpConst m, fun L _ hL _ hτ n v => norm_rationalApply_pow_sub_le hτ hr L hL hm n v⟩
+  ⟨hr.scheme.sharpConst m, fun L _ hL _ hτ n v => norm_rationalApply_pow_sub_le hτ L hL hr hm n v⟩
 
 /-- **Stability and consistency give convergence for every datum**:
 `Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
@@ -324,6 +324,13 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
         IsSubMarkovGenerator (lumpedLaplacian M x) ∧
         (∀ τ : ℝ, 0 < τ → ∀ k : ℕ,
           ‖rationalApply p q (τ • lumpedLaplacian M x) ^ k‖ ≤ 1 + C * √k) ∧
+        (∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u u₁ u₂ : ℝ → (Fin n → ℝ) → ℝ) (B ε : ℝ) (v : ι → ℝ),
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i)) (u₁ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u₁ s (x i)) (u₂ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₂ s ∘ x‖ ≤ B) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₁ s ∘ x - lumpedLaplacian M x (u s ∘ x)‖ ≤ ε) →
+          ‖u (k * τ) ∘ x - (Ring.inverse (1 - τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * (3 / 2 * τ * B + ε)) ∧
         ∀ m : ℕ, HasOrder p q m → ∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
           (ε : ℝ) (v : ι → ℝ),
           (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i)) (u₁ s (x i)) s) →
@@ -337,11 +344,18 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
     rw [lumpedLaplacian_eq]
     exact .ofFeec (Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn
       ((isNonobtuse_iff M).1 hM) hx)
-  have h1 : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp (((t : ℝ) : ℝ) • lumpedLaplacian M x)‖ ≤ 1 :=
+  have h1 : ∀ t : ℝ, 0 ≤ t →
+      ‖NormedSpace.exp ((RCLike.ofReal t : ℝ) • lumpedLaplacian M x)‖ ≤ 1 :=
     fun t ht => by simpa using hL.toFeec.norm_exp_smul_le_one ht
-  refine ⟨hL, fun τ hτ k => ?_, fun m hm τ hτ k u u₁ ε v hu hε => ?_⟩
-  · simpa using (norm_rationalApply_pow_le hτ hr _ h1).2 k
-  · have h := (norm_rationalApply_pow_sub_le hτ hr _ h1 hm k v).2 (fun s => u s ∘ x)
+  refine ⟨hL, fun τ hτ k => ?_, fun τ hτ k u u₁ u₂ B ε v hu hu₁ hB hε => ?_,
+    fun m hm τ hτ k u u₁ ε v hu hε => ?_⟩
+  · simpa using (norm_rationalApply_pow_le (𝕜 := ℝ) hτ (lumpedLaplacian M x) h1 hr).2 k
+  · have h := norm_sub_inverse_pow_le (𝕜 := ℝ) hτ (lumpedLaplacian M x) h1
+      (U := fun s => u s ∘ x) (U₁ := fun s => u₁ s ∘ x) (U₂ := fun s => u₂ s ∘ x)
+      (fun s hs => hasDerivAt_pi.2 (hu s hs)) (fun s hs => hasDerivAt_pi.2 (hu₁ s hs)) hB hε v
+    simpa using h
+  · have h := (norm_rationalApply_pow_sub_le (𝕜 := ℝ) hτ (lumpedLaplacian M x) h1 hr hm k v).2
+      (fun s => u s ∘ x)
       (fun s => u₁ s ∘ x) ε (fun s hs => hasDerivAt_pi.2 (hu s hs)) hε
     simpa using h
 

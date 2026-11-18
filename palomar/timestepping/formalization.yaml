@@ -46,10 +46,12 @@ project:
     every datum), and its instance for backward Euler, which needs no hypothesis on the scheme;
     (8) sub-Markov generators of R^iota generate positive contractions of the maximum norm, as
     does backward Euler; (9) the lumped-mass P1 Laplacian of every non-obtuse simplicial mesh,
-    on any injective set of nodes, is a sub-Markov generator, and every A-stable scheme for it
-    has ||r(tau L_h)^k|| <= 1 + C sqrt(k) and nodal error ||I_h u(k tau) - r(tau L_h)^k v|| <=
-    ||I_h u(0) - v|| + k tau eps + K k tau tau^m ||L_h^(m+1) v|| (eps the nodal consistency
-    error), with C, K depending on r and m only; (10) the finite difference Laplacian on every
+    on any injective set of nodes, is a sub-Markov generator, backward Euler has nodal error
+    ||I_h u(k tau) - (1 - tau L_h)^(-k) v|| <= ||I_h u(0) - v|| + k tau (3/2 tau B + eps) (B a
+    bound of the second time derivative of u at the nodes, eps the nodal consistency error), and
+    every A-stable scheme has ||r(tau L_h)^k|| <= 1 + C sqrt(k) and nodal error
+    ||I_h u(k tau) - r(tau L_h)^k v|| <= ||I_h u(0) - v|| + k tau eps + K k tau tau^m
+    ||L_h^(m+1) v||, with C, K depending on r and m only; (10) the finite difference Laplacian on every
     finite grid is a sub-Markov generator; (11) on a cube b + (0, s)^n the finite difference
     Laplacian is the lumped-mass Laplacian of a non-obtuse mesh of the cube, and for every
     A-stable r of order m, every classical solution u with bounded fourth derivatives whose
@@ -362,14 +364,18 @@ fidelity:
     not a compared statement). For an A-stable scheme on a Banach space without uniform power
     bounds (only M (1 + C sqrt(n))) it does not apply, and convergence for every datum is not
     claimed; such schemes converge at their order for data in D(A^(m+1)) (TimeStepping.error).
-    (4) Temporal error and uniformity in h. In TimeStepping.error_of_bounded and
-    TimeStepping.maxNormHeat the temporal term K M n tau tau^m ||L_h^(m+1) v|| is that of the
-    discrete datum v, not of the exact solution: for v = I_h u(0) it is bounded uniformly in h
-    only when the discrete Laplacians of the data are, which needs compatibility conditions at
-    the boundary (without them it can grow like h^(-2(m+1))). No general bound in h is claimed.
-    On the cube TimeStepping.fdHeat bounds it uniformly in h for initial data satisfying the
-    compatibility conditions of order m, ||Delta_h^(m+1) I_h u(0)|| <= n^(m+1) B', which gives
-    the O(h^2 + tau^m) estimate.
+    (4) Temporal error and uniformity in h. In TimeStepping.error_of_bounded and in the last
+    clause of TimeStepping.maxNormHeat the temporal term K M n tau tau^m ||L_h^(m+1) v|| is that
+    of the discrete datum v, not of the exact solution: for v = I_h u(0) it is bounded uniformly
+    in h only when the discrete Laplacians of the data are, which needs compatibility conditions
+    at the boundary (without them it can grow like h^(-2(m+1))). No general bound in h is
+    claimed for these schemes, which are only sqrt(k)-stable. Backward Euler, power bounded, has
+    a temporal term of the exact solution instead (the backward Euler clause of maxNormHeat,
+    k tau 3/2 tau B with B a bound of the second time derivative of u at the nodes), uniform in
+    h without compatibility conditions. On the cube TimeStepping.fdHeat bounds the temporal term
+    of every A-stable scheme uniformly in h for initial data satisfying the compatibility
+    conditions of order m, ||Delta_h^(m+1) I_h u(0)|| <= n^(m+1) B', which gives the
+    O(h^2 + tau^m) estimate.
     (5) TimeStepping.maxNormHeat. The P1 gradient grad Pi_T u is defined through the edge matrix
     (g = E^(-T) delta, the gradient of the affine interpolant of the vertex values), the
     stiffness form by elementwise assembly sum_T int_T grad Pi_T u . grad Pi_T w on vertex
@@ -382,9 +388,10 @@ fidelity:
     dihedral angles at most pi/2), with grad lambda_j the P1 gradient of the vertex hat values. No
     shape regularity, quasi-uniformity, mesh family or condition on the domain is assumed: the
     discrete maximum principle holds on every non-obtuse mesh, and the constants C, K are
-    uniform over all of them and all dimensions. The error is in the maximum norm at the nodes,
-    for every function u with time derivative u_1 at the nodes, against its nodal consistency
-    error eps (for a classical solution of u_t = Delta u, u_1 = Delta u); eps is a hypothesis
+    uniform over all of them and all dimensions. The errors are in the maximum norm at the
+    nodes, for every function u with time derivative u_1 (and, for backward Euler, u_2) at the
+    nodes, against its nodal consistency error eps (for a classical solution of u_t = Delta u,
+    u_1 = Delta u); eps is a hypothesis
     and depends on the mesh: it is O(h^2) on the Freudenthal meshes of a cube (Feec, the
     consistency clause behind fdHeat) but need not be small on a general non-obtuse mesh, so no
     rate in h is claimed there. The error of the finite element function in L^infinity of the
@@ -518,9 +525,10 @@ alignment:
       note: >-
         The application. On every non-obtuse mesh and set of nodes, the lumped-mass P1 Laplacian
         is a sub-Markov generator (Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn),
-        and every A-stable scheme has ||r(tau L_h)^k|| <= 1 + C sqrt(k) and the nodal error
-        bound, C and K(m) uniform over all non-obtuse meshes (Solution/Lumped.lean identifies the
-        definitions with Feec's).
+        backward Euler has a first-order nodal error with the constants of the solution
+        (Feec.TimeStepping.StableFamily.norm_sub_res_pow_le_of_traj), and every A-stable scheme
+        has ||r(tau L_h)^k|| <= 1 + C sqrt(k) and the nodal error bound, C and K(m) uniform over
+        all non-obtuse meshes (Solution/Lumped.lean identifies the definitions with Feec's).
     - source: "[Thomee2006], Ch. 15"
       lean: "TimeStepping.isSubMarkovGenerator_fdLaplacian"
       module: "Challenge"

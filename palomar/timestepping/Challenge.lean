@@ -524,22 +524,32 @@ maximum norm:
 * (**the discrete maximum principle**) is a sub-Markov generator, so (`subMarkov`) `e^{tLₕ}` and
   backward Euler are positive contractions of the maximum norm;
 * (**stability**, `stable_of_bounded` with `M = 1`) `‖r(τLₕ)ᵏ‖_∞ ≤ 1 + C √k` for `τ > 0`;
-* (**the error**, `error_of_bounded`) if `r` has order `m`: for every `u : ℝ → ℝⁿ → ℝ` with time
-  derivative `u₁` at the nodes on `[0, kτ]` and nodal consistency error
+* (**backward Euler**, power bounded) for every `u : ℝ → ℝⁿ → ℝ` with time derivatives `u₁`, `u₂`
+  at the nodes on `[0, kτ]`, `‖Iₕ u₂(s)‖_∞ ≤ B` and nodal consistency error
   `‖Iₕ u₁(s) - Lₕ Iₕ u(s)‖_∞ ≤ ε` there (`Iₕ f = f ∘ x` the nodal values; for a solution of
   `uₜ = Δu`, `u₁ = Δu`) and every discrete datum `v`,
-  `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ ε + K m kτ τᵐ ‖Lₕ^{m+1} v‖_∞`.
+  `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B + ε)`: first order, with a
+  temporal term of the solution `u` alone;
+* (**every A-stable scheme**, `error_of_bounded`) if `r` has order `m`: for `u`, `u₁` and `ε` as
+  above, `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ ε + K m kτ τᵐ ‖Lₕ^{m+1} v‖_∞`.
 
-The error is at the nodes. The consistency error `ε` depends on the mesh (`O(h²)` on the
-Freudenthal meshes of a cube, `fdHeat`; on a general non-obtuse mesh it need not be small), and
-the temporal term on the discrete datum `v` (bounded uniformly in the mesh for compatible data on
-a cube, `fdHeat`). -/
+The errors are at the nodes. The consistency error `ε` depends on the mesh (`O(h²)` on the
+Freudenthal meshes of a cube, `fdHeat`; on a general non-obtuse mesh it need not be small). The
+temporal term of a scheme that is only `√k`-stable is that of the discrete datum `v`: it is
+bounded uniformly in the mesh for compatible data on a cube (`fdHeat`), not in general. -/
 theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
     ∃ (C : ℝ) (K : ℕ → ℝ), 0 ≤ C ∧ ∀ (n : ℕ) (M : SimplicialMesh n), IsNonobtuse M →
       ∀ {ι : Type*} [Fintype ι] (x : ι → Fin n → ℝ), Function.Injective x →
         IsSubMarkovGenerator (lumpedLaplacian M x) ∧
         (∀ τ : ℝ, 0 < τ → ∀ k : ℕ,
           ‖rationalApply p q (τ • lumpedLaplacian M x) ^ k‖ ≤ 1 + C * √k) ∧
+        (∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u u₁ u₂ : ℝ → (Fin n → ℝ) → ℝ) (B ε : ℝ) (v : ι → ℝ),
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i)) (u₁ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u₁ s (x i)) (u₂ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₂ s ∘ x‖ ≤ B) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₁ s ∘ x - lumpedLaplacian M x (u s ∘ x)‖ ≤ ε) →
+          ‖u (k * τ) ∘ x - (Ring.inverse (1 - τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * (3 / 2 * τ * B + ε)) ∧
         ∀ m : ℕ, HasOrder p q m → ∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
           (ε : ℝ) (v : ι → ℝ),
           (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i)) (u₁ s (x i)) s) →

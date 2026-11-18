@@ -237,9 +237,27 @@ theorem step_eq (r : RationalScheme) :
 omit hτ
 
 variable {X : Type*} [NormedAddCommGroup X] [NormedSpace 𝕜 X] [CompleteSpace X] [NormedSpace ℝ X]
-  [IsScalarTower ℝ 𝕜 X] {p q : ℝ[X]} (hr : IsAStable p q) (L : X →L[𝕜] X) {M : ℝ}
+  [IsScalarTower ℝ 𝕜 X] (L : X →L[𝕜] X) {M : ℝ}
   (hL : ∀ t : ℝ, 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L)‖ ≤ M)
-include hr hL hτ
+include hL hτ
+
+/-- **Backward Euler for a bounded generator along a trajectory**: for a `C²` curve `U` on
+`[0, nτ]` with `‖U''‖ ≤ B` and defect `‖U' - L U‖ ≤ D`,
+`‖U(nτ) - (1 - τL)⁻ⁿ v‖ ≤ M ‖U(0) - v‖ + M² nτ (3/2 τ B + D)`
+(`Feec.TimeStepping.StableFamily.norm_sub_res_pow_le_of_traj`). -/
+theorem norm_sub_inverse_pow_le {U U₁ U₂ : ℝ → X} {n : ℕ} {B D : ℝ}
+    (hU : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U (U₁ s) s)
+    (hU₁ : ∀ s ∈ Icc 0 (n * τ), HasDerivAt U₁ (U₂ s) s) (hB : ∀ s ∈ Icc 0 (n * τ), ‖U₂ s‖ ≤ B)
+    (hD : ∀ s ∈ Icc 0 (n * τ), ‖U₁ s - L (U s)‖ ≤ D) (v : X) :
+    ‖U (n * τ) - (Ring.inverse (1 - (τ : 𝕜) • L) ^ n) v‖ ≤
+      M * ‖U 0 - v‖ + M ^ 2 * (n * τ) * (3 / 2 * τ * B + D) := by
+  have e : Ring.inverse (1 - (τ : 𝕜) • L) = (single L hL).res τ () :=
+    inverse_eq_res (single L hL) hτ ()
+  rw [e]
+  exact (single L hL).norm_sub_res_pow_le_of_traj hτ () hU hU₁ hB hD v
+
+variable {p q : ℝ[X]} (hr : IsAStable p q)
+include hr
 
 /-- **Brenner–Thomée's stability bound for a bounded generator**, with the constant
 `sqrtConst` of `Feec`: `q(τL)` is invertible and `‖r(τL)ⁿ‖ ≤ M (1 + C √n)`. -/

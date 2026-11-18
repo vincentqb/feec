@@ -1,5 +1,6 @@
 module
 
+public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2

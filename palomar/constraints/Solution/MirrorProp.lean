@@ -134,7 +134,7 @@ theorem exists_mirror_chain : ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V�
   · exact exists_chain x hc h1 h2 hr
 
 /-- **Propagation of the constraints under mirror boundary conditions**
-(`FEEC.mirror_tsd_propagates`). -/
+(the mirror clause of `FEEC.tsd_boundary_conditions`). -/
 theorem mirror_tsd_propagates_of :
     (∀ T U U', IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
       IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U' → U 0 = U' 0 →

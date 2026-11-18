@@ -18,7 +18,8 @@ the componentwise minimal exterior derivatives are the minimal row-wise `grad` a
 transposes intertwine the operators on smooth fields, and
 `Feec.Domain.ConstCoeffOp.minimal_ofMatrixCLM_of_comm` carries the minimal graphs both ways).
 So the challenge's grad–curl system on a box is `Feec.Models.BoundedDomain.gradCurl`, and
-`FEEC.box_stationary` is `Feec.Counterexamples.BoxStationary.forward_iff_stationary_box`: the
+the box clause of `FEEC.tsd_boundary_conditions` is
+`Feec.Counterexamples.BoxStationary.forward_iff_stationary_box`: the
 strong solutions are the orbits of the wave group (`eq_waveGroup_of_isStrongSolution`), and the
 stationary vectors are the zeros of `L`.
 

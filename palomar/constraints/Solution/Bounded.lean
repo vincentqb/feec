@@ -3,9 +3,10 @@ module
 public import Solution.Proxy
 
 /-!
-# The thesis' boundary conditions lose the constraints on every bounded domain
+# The system (6.1) loses the constraints on every bounded domain
 
-`FEEC.tsd_not_propagates` from the path criteria of `Feec.Counterexamples.BoundedBGG`. For the
+The clause of `FEEC.tsd_boundary_conditions` for the system (6.1), from the path criteria of
+`Feec.Counterexamples.BoundedBGG`. For the
 datum `U₀ = (0, 0, 0, ⋆β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `bggData Ω`:
 
 * `U₀` lies in the domain of `L`, with `(L U₀)_u = B⁻¹ diag(1, -1, 0)`, from Green's formula for
@@ -453,8 +454,8 @@ end Orbit
 
 /-! ### The theorem -/
 
-/-- **With the thesis' boundary conditions the constraints are lost**
-(`FEEC.tsd_not_propagates`). -/
+/-- **With the boundary conditions natural for the complex the constraints of (6.1) are lost**
+(the clause of `FEEC.tsd_boundary_conditions` for the system (6.1)). -/
 theorem tsd_not_propagates_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧

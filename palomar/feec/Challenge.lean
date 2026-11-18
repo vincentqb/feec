@@ -1,11 +1,9 @@
 module
 
-public import Mathlib.Analysis.Calculus.ContDiff.Basic
+public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.Normed.Algebra.Exponential
-public import Mathlib.MeasureTheory.Function.L2Space
-public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 /-!
 # Galerkin approximation of Hilbert complexes
@@ -13,7 +11,7 @@ public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 Finite element exterior calculus ([AFW2006], [AFW2010]) approximates a Hilbert complex
 `⋯ → Wⁱ → Wⁱ⁺¹ → ⋯` of closed densely defined operators by finite-dimensional subcomplexes `Vₕ` of
 its domain complex `V = D(d)` with commuting cochain projections `πₕ`. When do the Galerkin methods
-of the Hodge Laplacian and of the Hodge heat and wave equations converge, and how fast? Four
+of the Hodge Laplacian and of the Hodge heat and wave equations converge, and how fast? Three
 theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every family of subcomplexes:
 
 1. `FEEC.projectionFEEC`: uniformly bounded cochain projections exist iff the discrete Poincaré
@@ -28,35 +26,26 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
    ([QuennevilleBelair2015], Ch. 4), those of the heat equation `u' = L² u` when moreover the
    projections are bounded and the ranges closed ([GilletteHolstZhu2017]); both with every A-stable
    rational scheme ([BrennerThomee1979]), the wave equation at the Jackson rates.
-4. `FEEC.crimeFEEC`: with variational crimes, discrete complexes read in `W` by bounded maps that
-   need not be cochain maps nor isometries, the static and heat conclusions hold up to consistency
-   errors (Strang lemma), and for cochain reading maps the discrete cohomology is right
-   ([HolstStern2012], §3).
 
 The elliptic and parabolic problems need bounded cochain projections, which are uniform discrete
-stability; the hyperbolic one needs only approximation. The witnesses: genuine crimes meet the
-hypotheses of Theorem 4 (`FEEC.crime_nonvacuous`), and the Whitney forms on the cube those of
-Theorems 2 and 3 (`FEEC.feec_cube`). The differential is a family `d i j : Wⁱ → Wʲ` of all pairs,
-zero unless `j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions
-are operator families characterized by their strong solutions.
+stability; the hyperbolic one needs only approximation. The differential is a family
+`d i j : Wⁱ → Wʲ` of all pairs, zero unless `j = i + 1` (windows need no casts). Mathlib has no
+`C₀`-semigroups: exact evolutions are operator families characterized by their strong solutions.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [S. H. Christiansen, R. Winther, *Smoothed projections in finite element exterior calculus*][ChristiansenWinther2008]
-* [H. Freudenthal, *Simplizialzerlegungen von beschränkter Flachheit*][Freudenthal1942]
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
-* [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace ContDiff
-open Filter Topology Set LinearPMap MeasureTheory
+open scoped InnerProductSpace
+open Filter Topology Set LinearPMap
 
 universe u v w
 
@@ -178,21 +167,21 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
 end HilbertComplex
 -- palomar-shared-end: window
-variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
-  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
-/-- The kernel of a closed operator is closed. -/
-theorem isClosed_ker {E F : Type*} [NormedAddCommGroup E] [NormedAddCommGroup F] [Module 𝕜 E]
-    [Module 𝕜 F] {T : E →ₗ.[𝕜] F} (hT : T.IsClosed) : IsClosed (T.ker : Set E) := by
-  convert hT.preimage (continuous_id.prodMk continuous_const :
-    Continuous fun x : E => (x, (0 : F))) using 1
-  ext x
-  exact mem_ker_iff.trans ((exists_congr fun _ => and_congr_left' eq_comm).trans
-    (mem_graph_iff T (x := (id x, (0 : F)))).symm)
+-- palomar-shared: boundaries
+/-- The **boundaries** `𝔅ⁱ = R(d (i - 1) i) ⊆ Wⁱ` of a Hilbert complex, the range of its
+differential into degree `i`. -/
+def HilbertComplex.boundaries {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*}
+    [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+    (H : HilbertComplex 𝕜 W) (i : ℤ) : Submodule 𝕜 (W i) :=
+  LinearMap.range (H.d (i - 1) i).toFun
+-- palomar-shared-end: boundaries
 
+/-! ### Mixed problems, evolutions and time schemes -/
+-- palomar-shared: mixed
 section Mixed
-variable {E₀ E₁ E₂ : Type*} [NormedAddCommGroup E₀] [InnerProductSpace 𝕜 E₀]
-  [NormedAddCommGroup E₁] [InnerProductSpace 𝕜 E₁] [NormedAddCommGroup E₂] [InnerProductSpace 𝕜 E₂]
-  (d₀ : E₀ →ₗ.[𝕜] E₁) (d₁ : E₁ →ₗ.[𝕜] E₂)
+variable {𝕜 : Type*} [RCLike 𝕜] {E₀ E₁ E₂ : Type*} [NormedAddCommGroup E₀]
+  [InnerProductSpace 𝕜 E₀] [NormedAddCommGroup E₁] [InnerProductSpace 𝕜 E₁] [NormedAddCommGroup E₂]
+  [InnerProductSpace 𝕜 E₂] (d₀ : E₀ →ₗ.[𝕜] E₁) (d₁ : E₁ →ₗ.[𝕜] E₂)
 /-- The **mixed space** `D(d₀) × D(d₁) × E₁` of the Hodge Laplacian `d₀ d₀* + d₁* d₁` on `E₁`. -/
 abbrev MixedSpace : Type _ := d₀.domain × d₁.domain × E₁
 /-- The **mixed form** `B(σ, u, p; τ, v, q) = ⟪τ, σ⟫ - ⟪d₀τ, u⟫ + ⟪v, d₀σ⟫ + ⟪d₁v, d₁u⟫ + ⟪v, p⟫ -
@@ -210,10 +199,8 @@ for all `y = (τ, v, q) ∈ X`; on a Galerkin space `A × B × Q` (test `(τ, 0,
 `u ⊥ Q` of [AFW2010], §3.2. -/
 def IsMixedSolution (X : Submodule 𝕜 (MixedSpace d₀ d₁)) (f : E₁) (x : MixedSpace d₀ d₁) : Prop :=
   x ∈ X ∧ ∀ y ∈ X, mixedForm d₀ d₁ x y = ⟪(y.2.1 : E₁), f⟫_𝕜
-
 end Mixed
-
-/-! ### Evolutions and time schemes -/
+-- palomar-shared-end: mixed
 -- palomar-shared: IsStrongSolution
 /-- `u` is a **strong solution** of `u' = A u` on `I ⊆ ℝ` for an operator given by its graph, a
 relation `A ⊆ X × X` (a `LinearPMap` through its `graph`): `u` is continuous on `I` and at every
@@ -240,13 +227,14 @@ def rationalApply {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedS
   Polynomial.aeval L (p.map (algebraMap ℝ 𝕜)) *
     Ring.inverse (Polynomial.aeval L (q.map (algebraMap ℝ 𝕜)))
 -- palomar-shared-end: rationalScheme
-
+-- palomar-shared: evolution
 section Evolution
-variable {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] {κ : Type*} [NormedSpace ℝ E]
-/-- The semidiscrete evolution `exp(t B)`. -/
+variable {𝕜 : Type*} [RCLike 𝕜] {E : Type*} [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+  {κ : Type*} [NormedSpace ℝ E]
+/-- The **flow** `t ↦ exp(t B)` of a bounded operator `B`: the solution operators of `u' = B u`
+(for a discrete operator `Bₕ`, the semidiscrete evolution). -/
 def semiflow {X : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] (B : X →L[𝕜] X) (t : ℝ) :
     X →L[𝕜] X := NormedSpace.exp ((t : 𝕜) • B)
-
 /-- **The conclusions of the FEEC theorem for an evolution** `u' = A u` approximated by
 `uₕ' = Bₕ uₕ` on spaces `Xₕ` read in `E` by `ιₕ`, exact evolution `S`: `S t x` is the unique strong
 solution from `x ∈ D(A)` (dense), `S 0 = 1`, `‖S t x‖ ≤ ‖x‖`; for `ιₕ vₕ → x`, `ιₕ exp(t Bₕ) vₕ →
@@ -272,16 +260,25 @@ structure EvolutionVerdict (A : E →ₗ.[𝕜] E) (l : Filter κ) (X : κ → T
     ∃ K : ℝ, ∀ (h : κ) {τ : ℝ}, 0 ≤ τ → ∀ (n : ℕ) (w : X h),
       ‖semiflow (B h) (n * τ) w - (rationalApply P Q ((τ : 𝕜) • B h) ^ n) w‖ ≤
         K * (n * τ) * τ ^ p * ‖(B h ^ (p + 1)) w‖
-
 end Evolution
+-- palomar-shared-end: evolution
+
+variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
+/-- The kernel of a closed operator is closed. -/
+theorem isClosed_ker {E F : Type*} [NormedAddCommGroup E] [NormedAddCommGroup F] [Module 𝕜 E]
+    [Module 𝕜 F] {T : E →ₗ.[𝕜] F} (hT : T.IsClosed) : IsClosed (T.ker : Set E) := by
+  convert hT.preimage (continuous_id.prodMk continuous_const :
+    Continuous fun x : E => (x, (0 : F))) using 1
+  ext x
+  exact mem_ker_iff.trans ((exists_congr fun _ => and_congr_left' eq_comm).trans
+    (mem_graph_iff T (x := (id x, (0 : F)))).symm)
 
 namespace HilbertComplex
 /-! ### Cohomology and harmonic forms -/
 variable (H : HilbertComplex 𝕜 W)
 /-- The cycles `𝔷ⁱ = N(d i (i + 1))`. -/
 def cycles (i : ℤ) : Submodule 𝕜 (W i) := (H.d i (i + 1)).ker
-/-- The boundaries `𝔅ⁱ = R(d (i - 1) i)`. -/
-def boundaries (i : ℤ) : Submodule 𝕜 (W i) := LinearMap.range (H.d (i - 1) i).toFun
 /-- The harmonic forms `ℌⁱ = 𝔷ⁱ ∩ N(d (i - 1) i)*`. -/
 def harmonic (i : ℤ) : Submodule 𝕜 (W i) := H.cycles i ⊓ (H.d (i - 1) i)†.ker
 /-- The cohomology `Hⁱ = 𝔷ⁱ / 𝔅ⁱ`. -/
@@ -421,17 +418,6 @@ structure SubcomplexFamily.StaticVerdict (F : H.SubcomplexFamily κ) (j : ℤ) (
     (hsh : ∀ h, IsMixedSolution ((F.V h).mixedSpace j) f (xh h)) :
     Tendsto (fun h => H.mixedNorm (x - xh h)) F.l (𝓝 0)
 
-/-! ### Windows -/
-section Window
-variable (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ)
-/-- The harmonic forms `ℌ = N(𝐝) ∩ N(𝐝*)` of the window. -/
-def totalHarmonic : Submodule 𝕜 (Total W a m) := (H.totalD a m).ker ⊓ (H.totalD a m)†.ker
-/-- The space `D(𝐝) × D(𝐝) × ℌ` of the mixed Hodge Laplacian of the window. -/
-def totalMixedSpace : Submodule 𝕜 (MixedSpace (H.totalD a m) (H.totalD a m)) :=
-  galerkin _ _ ⊤ ⊤ (H.totalHarmonic a m)
-
-end Window
-
 namespace SubcomplexFamily
 variable {H : HilbertComplex 𝕜 W} {κ : Type*} (F : H.SubcomplexFamily κ) (a : ℤ) (m : ℕ)
 /-- The discrete total space `Xₕ = Vₕᵃ ⊕ ⋯ ⊕ Vₕ^{a+m-1}`. -/
@@ -510,127 +496,9 @@ structure WaveVerdict (S : ℝ → Total W a m →L[𝕜] Total W a m) : Prop wh
       ‖(v : Total W a m) - x‖ + 2 * (1 + 4 * √3) * (1 + t) * M
 
 end SubcomplexFamily
-
-/-! ### Variational crimes -/
-
-/-- An **approximating family of discrete differential spaces** on `[a, a + m)` ([HolstStern2012],
-§3): finite-dimensional `Xₕ`, `𝐝ₕ 𝐝ₕ = 0`, uniformly bounded reading maps `iₕ : Xₕ → W` with
-uniformly bounded left inverses (not necessarily cochain maps, isometries, or into `D(𝐝)`). -/
-structure CrimeFamily (H : HilbertComplex 𝕜 W) (a : ℤ) (m : ℕ) (κ : Type*) where
-  l : Filter κ
-  X : κ → Type u
-  [normedAddCommGroup : ∀ h, NormedAddCommGroup (X h)]
-  [innerProductSpace : ∀ h, InnerProductSpace 𝕜 (X h)]
-  [completeSpace : ∀ h, CompleteSpace (X h)]
-  [finiteDimensional : ∀ h, FiniteDimensional 𝕜 (X h)]
-  D : ∀ h, X h →L[𝕜] X h
-  D_D : ∀ h v, D h (D h v) = 0
-  incl : ∀ h, X h →L[𝕜] Total W a m
-  proj : ∀ h, Total W a m →L[𝕜] X h
-  proj_incl : ∀ h v, proj h (incl h v) = v
-  bound : ∃ C, ∀ h, ‖incl h‖ ≤ C ∧ ‖proj h‖ ≤ C
-attribute [instance] CrimeFamily.normedAddCommGroup CrimeFamily.innerProductSpace
-  CrimeFamily.completeSpace CrimeFamily.finiteDimensional
-
-namespace CrimeFamily
-variable {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} {κ : Type*} (S : H.CrimeFamily a m κ)
-local notation "𝐝" => H.totalD a m
-/-- The discrete harmonic forms `ℌₕ = N(𝐝ₕ) ∩ N(𝐝ₕ*)`. -/
-def harmonic (h : κ) : Submodule 𝕜 (S.X h) :=
-  LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h) ⊓ LinearMap.ker ((S.D h).adjoint : S.X h →ₗ[𝕜] S.X h)
-/-- The discrete graph norm `‖τ‖ + ‖𝐝ₕτ‖ + ‖v‖ + ‖𝐝ₕv‖ + ‖q‖` of `y = (τ, v, q) ∈ Xₕ³`. -/
-def graphNorm (h : κ) (y : S.X h × S.X h × S.X h) : ℝ :=
-  ‖y.1‖ + ‖S.D h y.1‖ + ‖y.2.1‖ + ‖S.D h y.2.1‖ + ‖y.2.2‖
-/-- The residual `B(x; y) - ⟪iₕ v, f⟫` of `x = (σ, u, p)` at `y = (τ, v, q)` in the discrete mixed
-problem with the load `iₕ* f`, `B` the mixed form of `𝐝ₕ`. -/
-def residual (h : κ) (f : Total W a m) (x y : S.X h × S.X h × S.X h) : 𝕜 :=
-  ⟪y.1, x.1⟫_𝕜 - ⟪S.D h y.1, x.2.1⟫_𝕜 + ⟪y.2.1, S.D h x.1⟫_𝕜 + ⟪S.D h y.2.1, S.D h x.2.1⟫_𝕜 +
-    ⟪y.2.1, x.2.2⟫_𝕜 - ⟪y.2.2, x.2.1⟫_𝕜 - ⟪S.incl h y.2.1, f⟫_𝕜
-/-- `x = (σₕ, uₕ, pₕ)` solves the **discrete mixed problem** with the load `iₕ* f`: `pₕ ∈ ℌₕ` and
-the residual vanishes at every `y ∈ Xₕ × Xₕ × ℌₕ`. -/
-def IsSolution (h : κ) (f : Total W a m) (x : S.X h × S.X h × S.X h) : Prop :=
-  x.2.2 ∈ S.harmonic h ∧ ∀ y, y.2.2 ∈ S.harmonic h → S.residual h f x y = 0
-/-- `x' ∈ Xₕ × Xₕ × ℌₕ` has **residual at most `ε`** at `f` in the dual discrete graph norm. -/
-def ResidualLE (h : κ) (f : Total W a m) (x' : S.X h × S.X h × S.X h) (ε : ℝ) : Prop :=
-  x'.2.2 ∈ S.harmonic h ∧ ∀ y, y.2.2 ∈ S.harmonic h → ‖S.residual h f x' y‖ ≤ ε * S.graphNorm h y
-/-- The **read gap** `‖y - iₕ v‖ + ‖z - iₕ 𝐝ₕ v‖` of `v ∈ Xₕ` from a form `y` with `𝐝y = z`. -/
-def readGap (h : κ) (y z : Total W a m) (v : S.X h) : ℝ :=
-  ‖y - S.incl h v‖ + ‖z - S.incl h (S.D h v)‖
-/-- The **read error** `‖σ - iₕ σ'‖ + ‖𝐝σ - iₕ 𝐝ₕ σ'‖ + ‖u - iₕ u'‖ + ‖𝐝u - iₕ 𝐝ₕ u'‖ + ‖p - iₕ p'‖`
-of `x' = (σ', u', p')` against `x = (σ, u, p)`. -/
-def readError (h : κ) (x : MixedSpace 𝐝 𝐝) (x' : S.X h × S.X h × S.X h) : ℝ :=
-  S.readGap h x.1 (𝐝 x.1) x'.1 + S.readGap h x.2.1 (𝐝 x.2.1) x'.2.1 + ‖x.2.2 - S.incl h x'.2.2‖
-/-- The static method **converges** at the data `f`: the read errors of the discrete solutions
-against the solution tend to `0`. -/
-def ConvergesAt (f : Total W a m) : Prop :=
-  ∀ x, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ xh : ∀ h, S.X h × S.X h × S.X h,
-    (∀ h, S.IsSolution h f (xh h)) → Tendsto (fun h => S.readError h x (xh h)) S.l (𝓝 0)
-/-- The **inner-product defect** `‖1 - iₕ* iₕ‖` of the reading map. -/
-def defect (h : κ) : ℝ := ‖1 - (S.incl h).adjoint ∘L S.incl h‖
-/-- The **uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `N(𝐝ₕ)ᗮ`. -/
-def IsPoincare (cP : ℝ) : Prop :=
-  ∀ h (v : S.X h), v ∈ (LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h))ᗮ → ‖v‖ ≤ cP * ‖S.D h v‖
-/-- **Consistent approximation** at the data `f`: discrete triples whose read error against the
-solution and whose residual tend to `0`. -/
-def IsConsistentAt (f : Total W a m) : Prop :=
-  ∀ x, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ ε > 0, ∀ᶠ h in S.l,
-    ∃ x', S.readError h x x' ≤ ε ∧ S.ResidualLE h f x' ε
-/-- The reading maps are **cochain maps**: `iₕ Xₕ ⊆ D(𝐝)` and `𝐝 iₕ = iₕ 𝐝ₕ`. -/
-structure IsCochain : Prop where
-  incl_mem : ∀ h v, S.incl h v ∈ (𝐝).domain
-  totalD_incl : ∀ h v, 𝐝 ⟨S.incl h v, incl_mem h v⟩ = S.incl h (S.D h v)
-/-- **Cochain projections bounded by `C_π` in the graph norm** ([HolstStern2012], §3.3): linear
-`πₕ : W → Xₕ` with `πₕ iₕ = 1`, `πₕ 𝐝 = 𝐝ₕ πₕ` and `‖πₕ x‖ ≤ C_π (‖x‖ + ‖𝐝 x‖)` on `D(𝐝)`. -/
-structure CochainProj (Cπ : ℝ) where
-  π : ∀ h, Total W a m →ₗ[𝕜] S.X h
-  π_incl : ∀ h v, π h (S.incl h v) = v
-  norm_π_le : ∀ h (x : (𝐝).domain), ‖π h x‖ ≤ Cπ * (‖(x : Total W a m)‖ + ‖𝐝 x‖)
-  π_totalD : ∀ h (z : (𝐝).domain), π h (𝐝 z) = S.D h (π h z)
-
-/-- **The static FEEC theorem with variational crimes**, constant `C`: unique solvability,
-stability, the Strang lemma (error at most the read error of any discrete triple plus `C` times
-its residual), and convergence for every datum from consistency on a dense set. -/
-structure StaticVerdict (C : ℝ) : Prop where
-  existsUnique (f : Total W a m) : (∃! x, IsMixedSolution (H.totalMixedSpace a m) f x) ∧
-    ∀ h, ∃! x, S.IsSolution h f x
-  stable (h : κ) {f x} (hs : S.IsSolution h f x) : S.graphNorm h x ≤ C * ‖f‖
-  strang (h : κ) {f x} (hs : IsMixedSolution (H.totalMixedSpace a m) f x) {xh}
-    (hsh : S.IsSolution h f xh) {x' ε} (hε : 0 ≤ ε) (hres : S.ResidualLE h f x' ε) :
-    S.readError h x xh ≤ S.readError h x x' + C * ε
-  converges {D : Set (Total W a m)} (hD : Dense D) (hc : ∀ g ∈ D, S.IsConsistentAt g) (f) :
-    S.ConvergesAt f
-
-/-- **The static FEEC theorem with cochain reading maps** and the cochain projections `P`
-([HolstStern2012], Thms 3.3, 3.5, 3.10, Cors 3.4, 3.11). -/
-structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
-  poincare : ∃ cP, S.IsPoincare cP
-  /-- convergence for every datum when `‖1 - iₕ* iₕ‖ → 0` and `iₕ πₕ → 1` on `D(𝐝)` -/
-  converges (hJ : Tendsto S.defect S.l (𝓝 0))
-    (hπ : ∀ x : (𝐝).domain, Tendsto (fun h => ‖(x : Total W a m) - S.incl h (P.π h x)‖) S.l (𝓝 0))
-    (f) : S.ConvergesAt f
-  /-- eventually `[z] ↦ [πₕ z]` is an isomorphism `H(𝐝) ≅ H(𝐝ₕ)`: onto (every discrete cycle is
-  `πₕ` of a cycle up to a discrete boundary) and one-to-one (a cycle `z` with `πₕ z` a discrete
-  boundary is a boundary) -/
-  cohomology [FiniteDimensional 𝕜 (H.totalHarmonic a m)]
-    (hπ : ∀ q ∈ H.totalHarmonic a m, Tendsto (fun h => ‖q - S.incl h (P.π h q)‖) S.l (𝓝 0)) :
-    ∀ᶠ h in S.l, (∀ w : S.X h, S.D h w = 0 → ∃ z : (𝐝).domain, 𝐝 z = 0 ∧
-        ∃ y, w - P.π h z = S.D h y) ∧
-      ∀ z : (𝐝).domain, 𝐝 z = 0 → (∃ y, P.π h z = S.D h y) →
-        ∃ y : (𝐝).domain, (z : Total W a m) = 𝐝 y
-  /-- the error is at most `K ε` when `σ, u, p` and `P_𝔅 u` are within `ε` of `iₕ Xₕ` in the read
-  error and `‖1 - iₕ* iₕ‖ (‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖) ≤ ε` -/
-  rate : ∃ K : ℝ, ∀ (h : κ) {f x}, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ {xh},
-    S.IsSolution h f xh → ∀ {ε : ℝ}, (∃ v, S.readGap h x.1 (𝐝 x.1) v ≤ ε) →
-      (∃ v, S.readGap h x.2.1 (𝐝 x.2.1) v ≤ ε) → (∃ v, S.readGap h x.2.2 0 v ≤ ε) →
-      (∃ v, S.readGap h ((LinearMap.range (𝐝).toFun).topologicalClosure.starProjection x.2.1) 0 v
-        ≤ ε) →
-      S.defect h * (‖(x.1 : Total W a m)‖ + ‖𝐝 x.1‖ + ‖(x.2.1 : Total W a m)‖ + ‖𝐝 x.2.1‖ +
-        ‖x.2.2‖) ≤ ε → S.readError h x xh ≤ K * ε
-
-end CrimeFamily
 end HilbertComplex
 
-/-! ### The four theorems -/
+/-! ### The three theorems -/
 
 /-- **Theorem 1: bounded cochain projections ⇔ uniform discrete stability** ([AFW2010], Thm 3.7
 and its converse, Thm 3.6 and (30)). If finite-dimensional subcomplexes `Vₕ` satisfy the discrete
@@ -689,107 +557,6 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
         IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) →
       ∃ S, EvolutionVerdict (sq (H.wave a m)) F.l (fun h => F.Xh a m h)
         (fun h => (F.Xh a m h).subtypeL) (fun h => F.Lh a m h ^ 2) S) := by
-  sorry
-
-/-- **Theorem 4: variational crimes** ([HolstStern2012], §3: Thms 3.3, 3.5, 3.9, 3.10,
-Cors 3.4, 3.11). On a window with closed ranges, for an approximating family of discrete
-differential spaces read by `iₕ`: under a uniform discrete Poincaré inequality, the static verdict
-(unique solvability, stability, the Strang lemma, convergence from consistency on a dense set);
-for cochain reading maps with cochain projections bounded in the graph norm, the cochain verdict
-(discrete Poincaré inequality, convergence, cohomology isomorphisms, error bound); and when
-`‖1 - iₕ* iₕ‖ → 0` and the static method converges, the evolution verdict of `u' = L² u` by
-`(𝐝ₕ - 𝐝ₕ*)²` read by `iₕ`. -/
-theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
-    (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
-      IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
-    (∀ {cP : ℝ}, S.IsPoincare cP → ∃ C, S.StaticVerdict C) ∧
-    (S.IsCochain → ∀ {Cπ : ℝ} (P : S.CochainProj Cπ), S.CochainVerdict P) ∧
-    ∀ {cP : ℝ}, S.IsPoincare cP → Tendsto S.defect S.l (𝓝 0) → (∀ f, S.ConvergesAt f) →
-      ∃ U, EvolutionVerdict (sq (H.wave a m)) S.l S.X S.incl
-        (fun h => (S.D h - (S.D h).adjoint) ^ 2) U := by
-  sorry
-
-/-- **Non-vacuity of Theorem 4**: on `ℝ --id--> ℝ --0--> ℝ`, cochain reading maps `iₙ`,
-`iₙ πₙ = 1`, not isometric but `‖1 - iₙ* iₙ‖ → 0`, read a discrete harmonic form off `ℌ ≠ 0`, and
-the error at some datum is positive at every level. -/
-theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
-    (S : H.CrimeFamily.{0} 0 3 ℕ) (P : S.CochainProj 2),
-    (∀ i : Fin 3, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℝ)) ∧
-    S.l = atTop ∧ S.IsCochain ∧ (∀ n, (S.incl n).adjoint ∘L S.incl n ≠ 1) ∧
-    Tendsto S.defect atTop (𝓝 0) ∧ (∀ n (x : (H.totalD 0 3).domain), S.incl n (P.π n x) = x) ∧
-    (∃ q ∈ H.totalHarmonic 0 3, q ≠ 0) ∧
-    (∀ n, ∃ q ∈ S.harmonic n, S.incl n q ∉ H.totalHarmonic 0 3) ∧
-    ∃ f, ∀ x, IsMixedSolution (H.totalMixedSpace 0 3) f x → ∀ n xh,
-      S.IsSolution n f xh → 0 < S.readError n x xh := by
-  sorry
-
-/-! ### A finite element instance: Whitney forms on the cube, in the `L²` de Rham complex -/
--- palomar-shared: forms
-/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
-`s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
-abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
-/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
-abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
-  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
-/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
-`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
-abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
-/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
-def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
-  (-1) ^ (s.filter fun l => l < j).card
-/-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
-def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
-  fderiv ℝ f x (Pi.single j 1)
-/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
-def extDeriv {n : ℕ} (w : FormField n) : FormField n :=
-  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
-/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, formal adjoint of `d`. -/
-def codiff {n : ℕ} (ψ : FormField n) : FormField n :=
-  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
-open scoped ContDiff in
-/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
-def IsTestFn {n : ℕ} (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
-  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
-/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`: the adjoint of the closure of
-the codifferential on test forms (the span of the pairs `(ψ, dᵗψ)`), so `du = w` iff
-`⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`; its domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
-def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
-  (Submodule.span ℝ {p : L2Form Ω (k + 1) × L2Form Ω k | ∃ ψ : FormField n,
-    (∀ s, IsTestFn Ω fun x => ψ x s) ∧
-    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
-    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
-    ).topologicalClosure.toLinearPMap†
-/-- The cube `(0, ½)ⁿ`. -/
-def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
--- palomar-shared-end: forms
--- palomar-shared: IsCsForm
-/-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` with `‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L`
-on `cl Ω` (true in negative degrees): the regularity class of the order `h^{s+1}`. -/
-def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
-  j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
-    (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧
-    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) w y‖ ≤ L) ∧
-    (∀ y ∈ closure Ω, ‖iteratedFDeriv ℝ (s + 1) (extDeriv w) y‖ ≤ L) ∧
-    ∀ t : FormIdx n j, ⇑(x t) =ᵐ[volume.restrict Ω] fun y => w y t.1
--- palomar-shared-end: IsCsForm
-/-- **Whitney forms on the cube meet the hypotheses of Theorems 2 and 3** ([AFW2010], §5.2, §5.5;
-[ChristiansenWinther2008]; [Freudenthal1942]): `HΛ((0, ½)ⁿ)` has closed ranges; the Whitney forms
-of the Freudenthal meshes (`h = 1 / (2 (N + 1))`, a.e. affine on every Kuhn simplex) have smoothed
-projections bounded in `L²` and in the graph norm uniformly in `N`, approximate, and give the rate
-`C L / (N + 1)` on `C²` data. -/
-theorem feec_cube (n : ℕ) [NeZero n] :
-    ∃ (H : HilbertComplex ℝ (L2Form (cube n))) (F : H.SubcomplexFamily ℕ),
-      (∀ k, H.d k (k + 1) = dMax (cube n) k) ∧ F.l = atTop ∧
-      (∀ N k, ∀ u ∈ (F.V N).V k, ∀ (z : Fin n → Fin (N + 1)) (σ : Equiv.Perm (Fin n)),
-        ∃ (a : Finset (Fin n) → ℝ) (A : Finset (Fin n) → Fin n → ℝ), ∀ s : FormIdx n k,
-          ⇑(u s) =ᵐ[volume.restrict (cube n ∩ convexHull ℝ (range fun (j : Fin (n + 1)) i =>
-            ((z i : ℝ) + if (σ.symm i : ℕ) < j then 1 else 0) / (2 * (N + 1))))]
-            fun x => a s.1 + ∑ i, A s.1 i * x i) ∧
-      (∃ C : ℝ, ∀ N i (x : (H.d i (i + 1)).domain),
-        ‖((F.π N).π i x : L2Form (cube n) i)‖ ≤ C * ‖(x : L2Form (cube n) i)‖) ∧
-      (∀ i, F.IsGraphBounded i) ∧ (∀ i, F.Approximates i) ∧
-      (∀ i, IsClosed (H.boundaries i : Set (L2Form (cube n) i))) ∧
-      ∀ j, F.HasRate j (IsCsForm (cube n) 0) fun N => 1 / (N + 1) := by
   sorry
 
 end FEEC

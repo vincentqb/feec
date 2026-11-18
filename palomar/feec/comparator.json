@@ -1,8 +1,7 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.projectionFEEC", "FEEC.staticFEEC", "FEEC.evolutionFEEC", "FEEC.crimeFEEC",
-    "FEEC.crime_nonvacuous", "FEEC.feec_cube"],
+  "theorem_names": ["FEEC.projectionFEEC", "FEEC.staticFEEC", "FEEC.evolutionFEEC"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

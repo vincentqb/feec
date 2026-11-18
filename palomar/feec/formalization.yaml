@@ -157,6 +157,18 @@ sources:
     relationship: "background"
     note: "The semidiscrete Hodge heat equation in FEEC."
     author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus for parabolic problems"
+    authors:
+      - "Douglas N. Arnold"
+      - "Hongtao Chen"
+    id: "doi:10.1051/m2an/2016013"
+    type: "article"
+    location: "ESAIM Math. Model. Numer. Anal. 51 (2017), 17-34"
+    relationship: "background"
+    note: >-
+      The Hodge heat equation for forms of every degree in FEEC, with semidiscrete and fully
+      discrete mixed methods (an independent counterpart of [GilletteHolstZhu2017]).
+    author_endorsement: "not-contacted"
   - title: "Solving Ordinary Differential Equations II"
     authors:
       - "Ernst Hairer"
@@ -189,12 +201,21 @@ status:
     FEEC.exists_cochainProjection and FEEC.exists_subcomplexFamily_iff with no conclusion dropped,
     except those compared in other entries (the correspondence is in review.notes). Compared in
     other entries: the finite element families that meet the hypotheses of the three theorems in
-    palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube; the former witness
-    FEEC.feec_cube, the lowest-order Whitney forms on the Freudenthal meshes of the cube, was one
-    of them and is no longer compared here); the variational crimes of [HolstStern2012]
-    (FEEC.crimeFEEC and its witness FEEC.crime_nonvacuous, formerly Theorem 4 of this entry) in
-    palomar/crimes; the constraint-propagation conclusions of the former wave and evolution
-    verdicts (a closed constraint propagates iff it reduces the wave operator, the invariant core,
+    palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube). The former witness
+    FEEC.feec_cube (the lowest-order Whitney forms on the Freudenthal meshes of the cube
+    (0, 1/2)^n) is no longer compared, and none of its conclusions is lost: FEEC.fem on the cube
+    (star-shaped with respect to a ball by FEEC.fem_parallelepiped with A = 1/2, b = 0), with
+    the Freudenthal meshes of FEEC.fem_cube and the sequence P_1^- Lambda in every degree, gives
+    a family whose spaces are the Whitney forms (affine on every Kuhn simplex), with projections
+    bounded in L2 uniformly in N in every degree (the last degree of every window included) and
+    in the graph norm, approximation, and a Jackson estimate of order h_N = 1/(2(N+1)) on C^2
+    forms; FEEC.fem_parallelepiped gives the closed ranges; the former rate C L/(N+1) of the
+    mixed method on C^2 data is the rate conjunct of FEEC.staticFEEC for that estimate, not
+    restated (the estimate of FEEC.fem_cube asks x and dx in H^1 instead). Also compared in other
+    entries: the variational crimes of [HolstStern2012] (FEEC.crimeFEEC and its witness
+    FEEC.crime_nonvacuous, formerly Theorem 4 of this entry) in palomar/crimes; the
+    constraint-propagation conclusions of the former wave and evolution verdicts (a closed
+    constraint propagates iff it reduces the wave operator, the invariant core,
     the constraints of reducing subcomplexes, [QuennevilleBelair2015] Prop 4.16) in
     palomar/constraints (FEEC.constraint_propagation); the BGG theorems of [ArnoldHu2021] in
     palomar/bgg; the weak-symmetry theorem in palomar/einsteinbianchi. Not compared, proved in
@@ -307,20 +328,22 @@ fidelity:
     multiplier by the symbol 2 pi i xi wedge), and the family by its spaces (u(xi) = 0 for
     |xi|_inf > N) and projections (the truncation of the coefficients). By Parseval these are the
     L2 de Rham complex of T^n and its trigonometric polynomials of degree <= N in each variable;
-    that the
-    multiplier is the weak exterior derivative of L2(T^n; Lambda^k) is not part of the statement
-    (it is proved in Feec, Feec.Fourier.TorusWeak.mem_graph_iff_isWeak, and not compared). The
-    hypotheses of Theorem 1 (the discrete Poincare inequality and the harmonic bound, uniformly in
-    N) are obtained in the solution from the second clause of Theorem 1 itself (closed ranges and
-    graph-bounded projections); the constants are not stated. No Jackson estimate with nonempty
-    classes is stated for the family (the trigonometric approximation rates are not formalized),
-    so the rate conjuncts of Theorems 2 and 3 are exercised only by palomar/fem. The witness states
-    that the harmonic forms are nonzero, not that they are finite-dimensional (they are the
-    constant forms, of dimension (n choose k); proved in Feec for the complex graded by N,
+    that the multiplier is the weak exterior derivative of L2(T^n; Lambda^k) is not part of the
+    statement (Feec proves that the torus multiplier of every first-order constant-coefficient
+    symbol, linear in the frequency as this one is, is the weak realization of its operator,
+    Feec.Fourier.TorusWeak.mem_graph_iff_isWeak; the instance for this symbol is not stated in
+    Feec, and none of it is compared). The hypotheses of Theorem 1 (the discrete Poincare
+    inequality and the harmonic bound, uniformly in N) are obtained in the solution from the
+    second clause of Theorem 1 itself (closed ranges and graph-bounded projections); the
+    constants are not stated. No Jackson estimate with nonempty classes is stated for the family
+    (the trigonometric approximation rates are not formalized), so the rate conjuncts of
+    Theorems 2 and 3 are exercised only by palomar/fem. The witness states that the harmonic
+    forms are nonzero, not that they are finite-dimensional (they are the constant forms, of
+    dimension (n choose k); proved in Feec for the complex graded by N,
     Feec.Models.Torus.DeRham.harmonicEquiv, and not compared here), which the eventual cohomology
-    isomorphism of the static verdict assumes. The finite element families of palomar/fem (FEEC.fem, FEEC.fem_parallelepiped,
-    FEEC.fem_cube) meet the hypotheses too and are compared there, with the definitions of this
-    entry (item (10)).
+    isomorphism of the static verdict assumes. The finite element families of palomar/fem
+    (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube) meet the hypotheses too and are compared
+    there, with the definitions of this entry (item (10)).
     (8) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
     time, and nothing relating it to the K-structure: a real normed-space structure on a normed
     K-space is the restricted one (t x and (t : K) x are continuous in t and agree on Q), which the
@@ -397,7 +420,10 @@ review:
     schemes are pairs (P, Q) with A-stability on the closed half-plane and the order by
     O(z^(p+1)), the strong solutions those of a graph, both proved equivalent to the earlier text;
     the blocks boundaries, mixed and evolution are new (2026-11-18), the text of this entry,
-    shared with palomar/crimes.
+    shared with palomar/crimes. Independent review (2026-11-18): how the conclusions of the
+    former FEEC.feec_cube follow from palomar/fem and FEEC.staticFEEC (status.scope); the
+    Arnold-Chen paper on parabolic problems added to the sources; the identification of the
+    torus multiplier with the weak exterior derivative stated as Feec proves it (fidelity (7)).
 
 alignment:
   namespace: "FEEC"

@@ -45,7 +45,8 @@ project:
     i_h v_h -> x, and so do the iterates of every A-stable rational scheme r = P/Q of order
     p >= 1 as h and tau tend to 0, with the temporal error K n tau tau^p ||Delta_h^(p+1) w||
     (K independent of h). The clauses (static) and (heat) assume no cochain reading maps, which
-    goes beyond [HolstStern2012] (cochain morphisms). The compared witness FEEC.crime_nonvacuous
+    goes beyond [HolstStern2012] and, for the heat equation, [HolstTiee2018] (cochain morphisms).
+    The compared witness FEEC.crime_nonvacuous
     shows that the hypotheses admit genuine crimes: it states that a Hilbert complex with R in
     every degree, with closed ranges and nonzero harmonic forms on the window [0, 3), carries a
     family with cochain reading maps and cochain projections, i_n pi_n = 1, not isometric
@@ -124,6 +125,22 @@ sources:
       The semidiscrete Hodge heat equation in FEEC (conforming), whose route the heat clause
       follows with crimes.
     author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus for parabolic evolution problems on Riemannian hypersurfaces"
+    authors:
+      - "Michael Holst"
+      - "Christopher Tiee"
+    id: "doi:10.4208/jcm.1705-m2016-0545"
+    type: "article"
+    location: "J. Comput. Math. 36 (2018), 792-832, §4 (Thm 4.2)"
+    relationship: "background"
+    note: >-
+      The semidiscrete Hodge heat equation with the variational crimes of [HolstStern2012]
+      (injective cochain morphisms i_h with projection morphisms pi_h, the elliptic projection of
+      [Wheeler1973]): a priori error estimates (Thm 4.2), applied to hypersurfaces (checked against
+      arXiv:1509.05524). The closest source of the heat clause, which assumes no cochain reading
+      maps, states convergence for every datum (no rates) and adds the A-stable fully discrete
+      schemes.
+    author_endorsement: "not-contacted"
   - title: "A priori L2 error estimates for Galerkin approximations to parabolic partial differential equations"
     authors:
       - "Mary F. Wheeler"
@@ -161,7 +178,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: the theorem FEEC.crimeFEEC and the witness FEEC.crime_nonvacuous
-    (Challenge.lean, 391 lines), formerly Theorem 4 and a witness of palomar/feec (the statement
+    (Challenge.lean, 393 lines), formerly Theorem 4 and a witness of palomar/feec (the statement
     of FEEC.crimeFEEC unchanged; the witness now also states the discrete Poincare inequality and
     convergence for every datum, so that it meets the hypotheses of the three clauses). Not
     compared, proved in Feec: the wave equation with crimes, the rates of the heat equation with
@@ -249,10 +266,14 @@ fidelity:
     ||1 - i_h* i_h|| -> 0; the discrete generator is (d_h - d_h*)^2 = -Delta_h, and the evolution
     verdict is that of the conforming heat equation of palomar/feec (the same structure, with
     i_h as reading map): density of D(L^2), existence and uniqueness of strong solutions,
-    contractions, semidiscrete and fully discrete convergence, temporal error. This clause
-    combines [HolstStern2012] with the route of [GilletteHolstZhu2017] and the elliptic
-    projection of [Wheeler1973]; it is not a theorem of a single source. It also assumes the
-    uniform discrete Poincare inequality, as the static clause does. (7) Non-vacuity:
+    contractions, semidiscrete and fully discrete convergence, temporal error. Its proof combines
+    the static theory with crimes (the static clause) with the route of [GilletteHolstZhu2017]
+    and the elliptic projection of [Wheeler1973]. Its closest source, [HolstTiee2018] Thm 4.2,
+    gives a priori error estimates for the semidiscrete heat equation with the cochain morphisms
+    of [HolstStern2012]; this clause assumes no cochain reading maps, states convergence for
+    every datum (no rate) and includes the A-stable fully discrete schemes, so it is the theorem
+    of no single source. It also assumes the uniform discrete Poincare inequality, as the static
+    clause does. (7) Non-vacuity:
     FEEC.crime_nonvacuous is stated for some Hilbert complex with R in every degree (finite
     dimensional; the statement does not fix its differentials), with reading maps that are
     cochain maps (and, in the solution, bijective); it shows that the hypotheses of the three
@@ -287,7 +308,10 @@ review:
     (forall f, S.ConvergesAt f), consequences of the cochain clause, so that it meets the
     hypotheses of all three clauses. The shared definitions with palomar/feec are canonical
     blocks (fidelity (9)); boundaries, mixed and evolution are new blocks (the text of
-    palomar/feec). Earlier history (in palomar/feec): the crime problems were redesigned as
+    palomar/feec). Independent review (2026-11-18): [HolstTiee2018], the closest source of the
+    heat clause, added to the sources and to the module docstring (fidelity (6)); the identifiers
+    of the sources checked against Crossref, the theorem numbers of [HolstStern2012] against
+    arXiv:1005.4455. Earlier history (in palomar/feec): the crime problems were redesigned as
     triples with one residual (CrimeFamily.IsSolution, ResidualLE, readGap, ConvergesAt, defect)
     and one evolution verdict for the conforming and crime heat equations; the Solution proves
     the componentwise forms (Solution/Legacy.lean) and converts (Solution/Convert.lean). Every merge

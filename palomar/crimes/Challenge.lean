@@ -13,12 +13,13 @@ approximated domains and on hypersurfaces, with quadrature or with nonconforming
 discrete complex `(Xₕ, 𝐝ₕ)` has its own inner product and is compared with the continuous one
 through reading maps `iₕ : Xₕ → W` that are not isometries and need not be cochain maps. What
 survives of the approximation theory of finite element exterior calculus? Holst and Stern
-([HolstStern2012], §3) answered for the mixed Hodge Laplacian with cochain reading maps.
+([HolstStern2012], §3) answered for the mixed Hodge Laplacian with cochain reading maps, and Holst
+and Tiee ([HolstTiee2018], §4) for the semidiscrete Hodge heat equation, with error estimates.
 `FEEC.crimeFEEC` states the answer on every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` with closed ranges of a
 Hilbert complex (on `ℤ`, over `ℝ` or `ℂ`), for every family of discrete differential spaces
 (`CrimeFamily`: finite-dimensional, `𝐝ₕ² = 0`, uniformly bounded reading maps with uniformly
 bounded left inverses), in three clauses; the first and the third need no cochain reading maps,
-beyond [HolstStern2012]:
+beyond both sources:
 
 1. **Stability and the Strang lemma.** Under a uniform discrete Poincaré inequality, the mixed
    Hodge Laplacian of the window and its discretizations with the load `iₕ* f` are uniquely
@@ -53,6 +54,7 @@ projections) is the Palomar entry `palomar/feec`.
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
+* [M. Holst, C. Tiee, *Finite element exterior calculus for parabolic evolution problems on Riemannian hypersurfaces*][HolstTiee2018]
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
 
 Bibliography: [references.bib](../../docs/references.bib)

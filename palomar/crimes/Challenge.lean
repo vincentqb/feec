@@ -34,17 +34,17 @@ beyond [HolstStern2012]:
    defect.
 3. **The heat equation.** Under a uniform discrete Poincaré inequality, when `‖1 - iₕ* iₕ‖ → 0`
    and the static method converges for every datum, the Hodge heat equation `u' = -Δ u` of the
-   window is well posed and the semidiscrete
-   and A-stable fully discrete solutions of `uₕ' = (𝐝ₕ - 𝐝ₕ*)² uₕ`, read by `iₕ`, converge to its
-   solutions, with the temporal error of [BrennerThomee1979] (the route of [GilletteHolstZhu2017]
-   with the elliptic projection of [Wheeler1973] built from the static theory with crimes).
+   window is well posed and the semidiscrete and A-stable fully discrete solutions of
+   `uₕ' = (𝐝ₕ - 𝐝ₕ*)² uₕ`, read by `iₕ`, converge to its solutions, with the temporal error of
+   [BrennerThomee1979] (the route of [GilletteHolstZhu2017] with the elliptic projection of
+   [Wheeler1973] built from the static theory with crimes).
 
 The defects are the price of the crimes: the inner-product defect enters the estimates. The
 witness `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert
 complex with nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`
 meet the hypotheses of the three clauses, read a discrete harmonic form off the harmonic forms,
-and leave a positive error at every level. The conforming case (subcomplexes with cochain projections) is the
-Palomar entry `palomar/feec`.
+and leave a positive error at every level. The conforming case (subcomplexes with cochain
+projections) is the Palomar entry `palomar/feec`.
 
 ## References
 

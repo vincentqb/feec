@@ -82,14 +82,13 @@ over `𝕜 = ℝ` or `ℂ`): through the Cayley transform `C = (1 + τ A)(1 - τ
 ## References
 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (stability functions, A- and L-stability, Padé approximations)
+  §IV.3 (stability functions, A- and L-stability, Padé approximations), §IV.11 (von Neumann's
+  theorem: contractivity for dissipative problems)
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
   (consistency and global error of the θ-schemes)
-* [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
-  (A-stable rational approximations are contractive on Hilbert spaces through von Neumann's
-  inequality)
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
+  (von Neumann's inequality: the contractivity of A-stable rational schemes on Hilbert spaces)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   Prop 4.18 (constraint propagation, here at the discrete level)
 
@@ -484,7 +483,7 @@ variable [CompleteSpace V]
 
 /-- **Von Neumann's inequality in the half-plane**: for every m-dissipative `A` and `τ > 0`,
 `d̃(C)` is invertible and `‖r(τ A)‖ ≤ sup_y |r(iy)|`, uniformly in `A`. [VonNeumann1951];
-[CrouzeixLarssonPiskarevThomee1993] -/
+[HairerWanner1996], §IV.11 -/
 theorem norm_step_le {A : V →ₗ.[𝕜] V} (hA : A.IsMDissipative) {τ : ℝ} (hτ : 0 < τ) :
     IsUnit (aeval (cayley A τ) (r.cden.map (algebraMap ℝ 𝕜))) ∧ ‖r.step A τ‖ ≤ r.supNorm := by
   have hC : ‖cayley A τ‖ ≤ 1 := by

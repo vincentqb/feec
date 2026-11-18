@@ -49,7 +49,7 @@ freedom is the CN step (`isDirichletCNStep_top_iff`). The Crank–Nicolson resul
 
 On a Hilbert space, A-stability of a real rational `r` (`|r| ≤ 1` on `re z ≤ 0`) gives
 `‖r(τ A)‖ ≤ 1` for every m-dissipative `A` by von Neumann's inequality for the contraction
-`(1 + A)(1 - A)⁻¹` (cf. [CrouzeixLarssonPiskarevThomee1993]): this is
+`(1 + A)(1 - A)⁻¹` ([VonNeumann1951]; [HairerWanner1996], §IV.11): this is
 `Feec.TimeStepping.RationalScheme.norm_step_le` (`Feec.TimeStepping.Rational`); the product form
 above is the part of it obtained from the energy identity of each factor.
 
@@ -57,10 +57,11 @@ above is the part of it obtained from the energy identity of each factor.
 
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7
   (single step methods, `A`-stability), Ch. 9 (rational approximations through resolvents)
-* [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
-  (stability of A-stable rational approximations of semigroups)
+* [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
+  (von Neumann's inequality)
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
-  §IV.3 (A-stability, Padé approximations of the exponential)
+  §IV.3 (A-stability, Padé approximations of the exponential), §IV.11 (von Neumann's theorem:
+  contractivity for dissipative problems)
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
   §1.4 (resolvents of m-dissipative operators)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
@@ -300,7 +301,7 @@ theorem isThetaStep_thetaStep_of_isMDissipative (hA : A.IsMDissipative) (hθ : 0
     (fun h => by simp [h] at hθ) hτ.ne' u
 
 /-- **Stability uniformly in the generator**: `‖r_θ(τ A) u‖ ≤ ‖u‖` for every m-dissipative `A`,
-`re θ ≥ 1/2` and `τ > 0`. [Thomee2006], Ch. 7; [CrouzeixLarssonPiskarevThomee1993] -/
+`re θ ≥ 1/2` and `τ > 0`. [Thomee2006], Ch. 7 -/
 theorem norm_thetaStep_apply_le (hA : A.IsMDissipative) (hθ : 1 / 2 ≤ RCLike.re θ)
     (hτ : 0 < τ) (u : E) : ‖thetaStep A θ τ u‖ ≤ ‖u‖ :=
   (isThetaStep_thetaStep_of_isMDissipative hA (by linarith) hτ u).norm_le hA.dissipative hθ

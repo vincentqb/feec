@@ -54,7 +54,8 @@ of the closure of the core as `h, τ → 0`, and the constraint residuals.
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
-* [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
+* [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
+  (von Neumann's inequality: the unconditional stability of A-stable schemes on Hilbert spaces)
 * [A. Gomilko, Y. Tomilov, *Rational Approximation of Operator Semigroups via the B-Calculus*][GomilkoTomilov2024],
   Thm 1.1
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996],
@@ -86,8 +87,7 @@ variable (F : DissipFEEC.{u} A κ)
 
 /-- **An A-stable rational scheme of order `p ≥ 1` as a time scheme**: `Pₕ = r(τₕ Lₕ)`,
 unconditionally stable (`M = 1`) and consistent of order `p` with
-`K = sup_y |ρ(iy)| + 1/(p+1)!`, uniformly in `h`. [BrennerThomee1979];
-[CrouzeixLarssonPiskarevThomee1993] -/
+`K = sup_y |ρ(iy)| + 1/(p+1)!`, uniformly in `h`. [BrennerThomee1979]; [VonNeumann1951] -/
 def rationalScheme (r : RationalScheme) (hr : r.IsAStable) {p : ℕ} (hp : r.HasOrder p)
     (hp0 : 0 < p) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h) : F.TimeScheme where
   τ := τ

@@ -293,6 +293,42 @@ theorem converges_backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGro
   rw [e]
   exact hh n hn
 
+/-- **Every A-stable scheme converges for every datum in the Hilbert case**: the rational time
+scheme `Feec.TimeStepping.StableFamily.rationalScheme` with `M = 1`
+(`Feec.TimeStepping.norm_exp_le_one`), power bounded by
+`Feec.TimeStepping.RationalScheme.norm_apply_le_one`, in
+`Feec.TimeStepping.BanachFEEC.TimeScheme.converges`. -/
+theorem converges_contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E]
+    [NormedSpace 𝕜 E] [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E]
+    (S : ℝ → E →L[𝕜] E) (hS : IsC0Semigroup S) {κ : Type*} (l : Filter κ) (X : κ → Type*)
+    [∀ h, NormedAddCommGroup (X h)] [∀ h, InnerProductSpace 𝕜 (X h)] [∀ h, CompleteSpace (X h)]
+    [∀ h, NormedSpace ℝ (X h)] [∀ h, IsScalarTower ℝ 𝕜 (X h)] (L : ∀ h, X h →L[𝕜] X h)
+    (hL : ∀ h (y : X h), RCLike.re ⟪L h y, y⟫_𝕜 ≤ 0) (hSM : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ 1)
+    (ι : ∀ h, X h →L[𝕜] E) (π : ∀ h, E →L[𝕜] X h) (hπι : ∀ h x, π h (ι h x) = x)
+    (hC : ∃ C, ∀ h, ‖ι h‖ ≤ C ∧ ‖π h‖ ≤ C) (τ : κ → ℝ) (hτ : ∀ h, 0 < τ h)
+    (hτ0 : Tendsto τ l (𝓝 0)) (p q : ℝ[X]) (hr : IsAStable p q) {m : ℕ} (hm : HasOrder p q m)
+    (hm0 : 0 < m) (x : E) (v : ∀ h, X h)
+    (hsd : ∀ T : ℝ, TendstoUniformlyOn
+      (fun h (t : ℝ) => ι h (NormedSpace.exp ((t : 𝕜) • L h) (v h))) (fun t => S t x) l (Icc 0 T))
+    (T : ℝ) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in l, ∀ n : ℕ, n * τ h ∈ Icc 0 T →
+      ‖S (n * τ h) x - ι h ((rationalApply p q ((τ h : 𝕜) • L h) ^ n) (v h))‖ < ε := by
+  have hL1 : ∀ h (t : ℝ), 0 ≤ t → ‖NormedSpace.exp ((t : 𝕜) • L h)‖ ≤ 1 := fun h t ht => by
+    simpa using Feec.TimeStepping.norm_exp_le_one (hL h) ht
+  let B : BanachFEEC hS.toC0 κ :=
+    { X := X, L := L, M := 1, norm_exp_le := hL1, l := l, incl := ι, proj := π,
+      proj_incl := hπι, bound := hC, norm_S_le := hSM }
+  have e : ∀ h, B.toStableFamily.step hr.scheme (τ h) h = rationalApply p q ((τ h : 𝕜) • L h) :=
+    fun h => (step_eq B.toStableFamily (hτ h) h hr.scheme).2
+  let Θ : B.TimeScheme := B.toStableFamily.rationalScheme hr.scheme hr.scheme_isAStable
+    (hr.scheme_hasOrder hm) hm0 τ hτ (fun _ => 1) fun _ h n _ => by
+      rw [e h]
+      exact Feec.TimeStepping.norm_pow_le_one (hr.scheme.norm_apply_le_one
+        (RationalScheme.dissipative_smul (hL h) (hτ h).le) hr.scheme_isAStable) n
+  filter_upwards [Θ.converges (x := x) (v := v) hsd hτ0 T hε] with h hh n hn
+  rw [← e h]
+  exact hh n hn
+
 /-! ### The heat equation in the maximum norm -/
 
 /-- **Sub-Markov generators are contractive in the maximum norm**: the sub-Markov facts of
@@ -322,7 +358,7 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
     ∃ (C : ℝ) (K : ℕ → ℝ), 0 ≤ C ∧ ∀ (n : ℕ) (M : SimplicialMesh n), IsNonobtuse M →
       ∀ {ι : Type*} [Fintype ι] (x : ι → Fin n → ℝ), Function.Injective x →
         IsSubMarkovGenerator (lumpedLaplacian M x) ∧
-        (∀ τ : ℝ, 0 < τ → ∀ k : ℕ,
+        (∀ τ : ℝ, 0 < τ → IsUnit (aeval (τ • lumpedLaplacian M x) q) ∧ ∀ k : ℕ,
           ‖rationalApply p q (τ • lumpedLaplacian M x) ^ k‖ ≤ 1 + C * √k) ∧
         (∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u u₁ u₂ : ℝ → (Fin n → ℝ) → ℝ) (B ε : ℝ) (v : ι → ℝ),
           (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i)) (u₁ s (x i)) s) →
@@ -347,9 +383,10 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
   have h1 : ∀ t : ℝ, 0 ≤ t →
       ‖NormedSpace.exp ((RCLike.ofReal t : ℝ) • lumpedLaplacian M x)‖ ≤ 1 :=
     fun t ht => by simpa using hL.toFeec.norm_exp_smul_le_one ht
-  refine ⟨hL, fun τ hτ k => ?_, fun τ hτ k u u₁ u₂ B ε v hu hu₁ hB hε => ?_,
+  refine ⟨hL, fun τ hτ => ?_, fun τ hτ k u u₁ u₂ B ε v hu hu₁ hB hε => ?_,
     fun m hm τ hτ k u u₁ ε v hu hε => ?_⟩
-  · simpa using (norm_rationalApply_pow_le (𝕜 := ℝ) hτ (lumpedLaplacian M x) h1 hr).2 k
+  · have h := norm_rationalApply_pow_le (𝕜 := ℝ) hτ (lumpedLaplacian M x) h1 hr
+    exact ⟨by simpa using h.1, fun k => by simpa using h.2 k⟩
   · have h := norm_sub_inverse_pow_le (𝕜 := ℝ) hτ (lumpedLaplacian M x) h1
       (U := fun s => u s ∘ x) (U₁ := fun s => u₁ s ∘ x) (U₂ := fun s => u₂ s ∘ x)
       (fun s hs => hasDerivAt_pi.2 (hu s hs)) (fun s hs => hasDerivAt_pi.2 (hu₁ s hs)) hB hε v
@@ -359,19 +396,15 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
       (fun s => u₁ s ∘ x) ε (fun s hs => hasDerivAt_pi.2 (hu s hs)) hε
     simpa using h
 
-/-- **The discrete maximum principle for finite differences**:
-`FiniteDifference.isSubMarkovGenerator_laplacian`. -/
-theorem isSubMarkovGenerator_fdLaplacian {ι : Type*} [Fintype ι] [DecidableEq ι]
-    (G : Finset (ι → ℤ)) (h : ℝ) : IsSubMarkovGenerator (fdLaplacian G h) := by
-  rw [fdLaplacian_eq]
-  exact .ofFeec (FiniteDifference.isSubMarkovGenerator_laplacian G h)
-
-/-- **The heat equation in the maximum norm by finite differences**: the Freudenthal mesh
+/-- **The heat equation in the maximum norm by finite differences**: the discrete maximum
+principle `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mesh
 `Feec.Mesh.freudenthalMesh`, whose lumped-mass Laplacian is the finite difference Laplacian
 (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`), and the compatible-data estimate
 `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`, the classical solution as a
 `Feec.Models.Cube.MaxNormHeat.HeatSolution`. -/
 theorem fdHeat :
+    (∀ {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ),
+      IsSubMarkovGenerator (fdLaplacian G h)) ∧
     (∀ (n N : ℕ) (b : Fin n → ℝ) (s : ℝ), 0 < s → ∃ M : SimplicialMesh n,
       M.domain = univ.pi (fun i => Ioo (b i) (b i + s)) ∧ IsNonobtuse M ∧
       lumpedLaplacian M (fun g : gridNodes n N => gridPoint b (s / (N + 1 : ℕ)) g) =
@@ -397,8 +430,11 @@ theorem fdHeat :
             (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k)
               (gridInterp b (s / (N + 1 : ℕ)) N (u 0))‖ ≤
           k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m) := by
-  refine ⟨fun n N b s hs => ⟨SimplicialMesh.ofFeec (Feec.Mesh.freudenthalMesh b s hs (N + 1)),
+  refine ⟨fun G h => ?_, fun n N b s hs =>
+    ⟨SimplicialMesh.ofFeec (Feec.Mesh.freudenthalMesh b s hs (N + 1)),
     Feec.Mesh.freudenthalMesh_domain b s hs (N + 1), ?_, ?_⟩, fun p q hr m hm => ?_⟩
+  · rw [fdLaplacian_eq]
+    exact .ofFeec (FiniteDifference.isSubMarkovGenerator_laplacian G h)
   · rw [isNonobtuse_iff, SimplicialMesh.toFeec_ofFeec]
     exact Feec.FiniteElement.isNonobtuse_freudenthalMesh b hs (N + 1)
   · rw [lumpedLaplacian_eq, SimplicialMesh.toFeec_ofFeec, fdLaplacian_eq]

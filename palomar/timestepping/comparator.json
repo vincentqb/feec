@@ -11,9 +11,9 @@
     "TimeStepping.error_of_bounded",
     "TimeStepping.converges",
     "TimeStepping.converges_backwardEuler",
+    "TimeStepping.converges_contractive",
     "TimeStepping.subMarkov",
     "TimeStepping.maxNormHeat",
-    "TimeStepping.isSubMarkovGenerator_fdLaplacian",
     "TimeStepping.fdHeat",
     "TimeStepping.backwardEuler_isAStable",
     "TimeStepping.crankNicolson_isAStable"

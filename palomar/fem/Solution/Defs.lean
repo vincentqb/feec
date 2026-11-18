@@ -64,6 +64,8 @@ structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i
   closed : ∀ i j, (d i j).IsClosed
   mapsTo : ∀ i j k (x : (d i j).domain), (d i j x : W j) ∈ (d j k).domain
   d_comp_d : ∀ i j k (x : (d i j).domain), d j k ⟨_, mapsTo i j k x⟩ = 0
+-- palomar-shared-end: HilbertComplex
+-- palomar-shared: SubcomplexFamily
 namespace HilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex 𝕜 W} {κ : Type*}
@@ -126,7 +128,7 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
       ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
         B s i * (L * meshSize h ^ ord s)
 end HilbertComplex
--- palomar-shared-end: HilbertComplex
+-- palomar-shared-end: SubcomplexFamily
 
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]

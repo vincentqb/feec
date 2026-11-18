@@ -67,9 +67,9 @@ coefficients `ω_s` on `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s = {s₁ < ⋯
 vector `1`-form `u` is `E_{ab} = (uₐ)_{dx_b}` and the magnetic field of a vector `2`-form `ρ` is
 `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` (`⋆dxᵢ = (-1)ⁱ dx_{{i}ᶜ}`). Operators are given by their graphs,
 relations `A ⊆ X × X`, and strong solutions are continuous paths in `D(A)` with derivative `A u`
-(`IsStrongSolution`). Forms, the exterior derivatives, Hilbert complexes and strong solutions are
-stated in the words of the Palomar entries `palomar/fem` and `palomar/feec`, the fields, the
-system (6.1) and its boundary conditions in those of `palomar/einsteinbianchi`.
+(`IsStrongSolution`). Forms, the exterior derivatives, Hilbert complexes, their windows and strong
+solutions are stated in the words of the Palomar entries `palomar/fem` and `palomar/feec`, the
+fields, the system (6.1) and its boundary conditions in those of `palomar/einsteinbianchi`.
 
 ## References
 
@@ -83,7 +83,7 @@ system (6.1) and its boundary conditions in those of `palomar/einsteinbianchi`.
   §1.4, §1.10
 * [P. Monk, *Finite Element Methods for Maxwell's Equations*][Monk2003], §1.4, §4.6
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §3.5, §4
+  §4
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -184,9 +184,7 @@ def IsReducing {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProdu
     (A : E →ₗ.[𝕜] E) (K : Submodule 𝕜 E) [K.HasOrthogonalProjection] : Prop :=
   ∀ x : A.domain, ∃ hx : K.starProjection (x : E) ∈ A.domain, A ⟨_, hx⟩ = K.starProjection (A x)
 
-/-! ### Hilbert complexes and their windows (from `palomar/feec`)
-
-The shared block also states the families of subcomplexes of `palomar/feec`, not used here. -/
+/-! ### Hilbert complexes and their windows (from `palomar/feec`) -/
 
 -- palomar-shared: HilbertComplex
 /-- A **Hilbert complex** over `𝕜` on `ℤ`: closed densely defined operators `d i j : Wⁱ → Wʲ`,
@@ -199,93 +197,26 @@ structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i
   closed : ∀ i j, (d i j).IsClosed
   mapsTo : ∀ i j k (x : (d i j).domain), (d i j x : W j) ∈ (d j k).domain
   d_comp_d : ∀ i j k (x : (d i j).domain), d j k ⟨_, mapsTo i j k x⟩ = 0
-namespace HilbertComplex
-variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
-  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex 𝕜 W} {κ : Type*}
-/-- The **graph norm** `‖x‖_V = (‖x‖² + ‖d x‖²)^½` on `D(d i j)`. -/
-def graphNorm (H : HilbertComplex 𝕜 W) (i j : ℤ) (x : (H.d i j).domain) : ℝ :=
-  √(‖(x : W i)‖ ^ 2 + ‖H.d i j x‖ ^ 2)
-/-- A **subcomplex**: subspaces `Vⁱ ⊆ D(d i j)` with `d Vⁱ ⊆ Vʲ`. -/
-structure Subcomplex (H : HilbertComplex 𝕜 W) where
-  V : ∀ i, Submodule 𝕜 (W i)
-  le_domain : ∀ i j, V i ≤ (H.d i j).domain
-  mapsTo : ∀ i j (x : W i) (hx : x ∈ V i), (H.d i j ⟨x, le_domain i j hx⟩ : W j) ∈ V j
-/-- A **cochain projection** onto `S`: projections `πⁱ : D(dⁱ) → Sⁱ` of the domain complex
-commuting with `d`. -/
-structure Subcomplex.CochainProjection (S : H.Subcomplex) where
-  π : ∀ i, (H.d i (i + 1)).domain →ₗ[𝕜] S.V i
-  proj : ∀ i (x : (H.d i (i + 1)).domain), (x : W i) ∈ S.V i → (π i x : W i) = x
-  comm : ∀ i (x : (H.d i (i + 1)).domain),
-    H.d i (i + 1) ⟨π i x, S.le_domain i (i + 1) (π i x).2⟩ =
-      π (i + 1) ⟨H.d i (i + 1) x, H.mapsTo i (i + 1) (i + 1 + 1) x⟩
-/-- The distance `E(x) = inf_{v ∈ Vⁱ} ‖x - v‖_V` from `x ∈ D(d i j)` to `Vⁱ` in the graph norm. -/
-def Subcomplex.graphDist (S : H.Subcomplex) (i j : ℤ) (x : (H.d i j).domain) : ℝ :=
-  ⨅ v : S.V i, H.graphNorm i j (x - ⟨v, S.le_domain i j v.2⟩)
-/-- A **family of subcomplexes** of `H` along the filter `l` (the refinement `h → 0`):
-finite-dimensional subcomplexes `Vₕ` with cochain projections `πₕ` (no bound and no
-approximation property: these are hypotheses of the theorems). -/
-structure SubcomplexFamily (H : HilbertComplex 𝕜 W) (κ : Type*) where
-  l : Filter κ
-  V : κ → H.Subcomplex
-  [finiteDimensional : ∀ h i, FiniteDimensional 𝕜 ((V h).V i)]
-  π : ∀ h, (V h).CochainProjection
-attribute [instance] SubcomplexFamily.finiteDimensional
-/-- The cochain projections of `F` are **bounded in the graph norm by `C`** in degree `i`,
-uniformly in `h`: `‖πₕ x‖_V ≤ C ‖x‖_V` on `D(d i (i + 1))`. -/
-def SubcomplexFamily.IsGraphBoundedBy (F : H.SubcomplexFamily κ) (i : ℤ) (C : ℝ) : Prop :=
-  ∀ (h : κ) (x : (H.d i (i + 1)).domain),
-    H.graphNorm i (i + 1) ⟨(F.π h).π i x, (F.V h).le_domain i (i + 1) ((F.π h).π i x).2⟩ ≤
-      C * H.graphNorm i (i + 1) x
-/-- The cochain projections of `F` are **bounded in the graph norm** in degree `i`, uniformly in
-`h`: bounded by some `C`. -/
-def SubcomplexFamily.IsGraphBounded (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
-  ∃ C : ℝ, F.IsGraphBoundedBy i C
-/-- `F` **approximates** in degree `i` in the graph norm: the distance from every `x ∈ D(d)` to
-`Vₕⁱ` in the graph norm tends to `0`. -/
-def SubcomplexFamily.Approximates (F : H.SubcomplexFamily κ) (i : ℤ) : Prop :=
-  ∀ x : (H.d i (i + 1)).domain, Tendsto (fun h => (F.V h).graphDist i (i + 1) x) F.l (𝓝 0)
-/-- **A Jackson estimate** for `F` ([AFW2010], §3.5): a mesh size `hₕ → 0` and, for every
-regularity index `s : ρ`, classes `Reg s i L` of `s`-regular forms in `Wⁱ` with bound `L`,
-approximated in `Vₕⁱ` at the order `hₕ^{ord s}`: some `v ∈ Vₕⁱ` has `‖x - v‖ ≤ B L hₕ^{ord s}`
-and `‖d (x - v)‖ ≤ B L hₕ^{ord s}`. -/
-structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) where
-  meshSize : κ → ℝ
-  meshSize_nonneg : ∀ h, 0 ≤ meshSize h
-  tendsto_meshSize : Tendsto meshSize F.l (𝓝 0)
-  /-- `Reg s i L x`: `x ∈ Wⁱ` is `s`-regular with bound `L` -/
-  Reg : ρ → ∀ i, ℝ → W i → Prop
-  ord : ρ → ℝ
-  B : ρ → ℤ → ℝ
-  jackson : ∀ s h i {L : ℝ} (x : W i), 0 ≤ L → Reg s i L x → ∃ v, ∃ hv : v ∈ (F.V h).V i,
-    ‖x - v‖ ≤ B s i * (L * meshSize h ^ ord s) ∧ ∀ j (hx : x ∈ (H.d i j).domain),
-      ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
-        B s i * (L * meshSize h ^ ord s)
-end HilbertComplex
 -- palomar-shared-end: HilbertComplex
-
-/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of a window (an `ℓ²` sum). -/
+-- palomar-shared: window
+/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of the **window** `[a, a + m)` (an `ℓ²` sum). -/
 abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
-
 /-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
 def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
   A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
     obtain ⟨y, hy, hyx⟩ := x.2.1
     exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
-
 namespace HilbertComplex
-
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 W) (a : ℤ)
   (m : ℕ)
-
 /-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
 def totalDomain : Submodule 𝕜 (Total W a m) where
   carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
   add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
   zero_mem' _ _ := (H.d _ _).domain.zero_mem
   smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
-
 /-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
 def totalD : Total W a m →ₗ.[𝕜] Total W a m where
   domain := H.totalDomain a m
@@ -300,11 +231,10 @@ def totalD : Total W a m →ₗ.[𝕜] Total W a m where
         rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
           Finset.smul_sum]
         exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
-
 /-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
 def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
-
 end HilbertComplex
+-- palomar-shared-end: window
 
 /-! ### The linearized Einstein–Bianchi system (4.14) -/
 

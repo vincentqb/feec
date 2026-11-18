@@ -26,6 +26,9 @@ structure HilbertComplex (𝕜 : Type*) [RCLike 𝕜] (W : ℤ → Type*) [∀ i
   closed : ∀ i j, (d i j).IsClosed
   mapsTo : ∀ i j k (x : (d i j).domain), (d i j x : W j) ∈ (d j k).domain
   d_comp_d : ∀ i j k (x : (d i j).domain), d j k ⟨_, mapsTo i j k x⟩ = 0
+-- palomar-shared-end: HilbertComplex
+
+-- palomar-shared: SubcomplexFamily
 namespace HilbertComplex
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] {H : HilbertComplex 𝕜 W} {κ : Type*}
@@ -88,7 +91,45 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
       ‖H.d i j ⟨x - v, Submodule.sub_mem _ hx ((F.V h).le_domain i j hv)⟩‖ ≤
         B s i * (L * meshSize h ^ ord s)
 end HilbertComplex
--- palomar-shared-end: HilbertComplex
+-- palomar-shared-end: SubcomplexFamily
+
+-- palomar-shared: window
+/-- The total space `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}` of the **window** `[a, a + m)` (an `ℓ²` sum). -/
+abbrev Total (W : ℤ → Type*) (a : ℤ) (m : ℕ) : Type _ := PiLp 2 fun i : Fin m => W (a + (i : ℕ))
+/-- The square `A²` on `D(A²) = {x ∈ D(A) | A x ∈ D(A)}`. -/
+def sq {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    (A : E →ₗ.[𝕜] E) : E →ₗ.[𝕜] E :=
+  A.comp (A.domRestrict ((A.domain.comap A.toFun).map A.domain.subtype)) fun x => by
+    obtain ⟨y, hy, hyx⟩ := x.2.1
+    exact (congrArg (A · ∈ A.domain) (Subtype.ext hyx.symm : (⟨x, x.2.2⟩ : A.domain) = y)).mpr hy
+namespace HilbertComplex
+variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
+  [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)] (H : HilbertComplex 𝕜 W) (a : ℤ)
+  (m : ℕ)
+/-- The domain `{x | ∀ i j, xᵢ ∈ D(d (a + i) (a + j))}` of the total differential. -/
+def totalDomain : Submodule 𝕜 (Total W a m) where
+  carrier := {x | ∀ i j : Fin m, x i ∈ (H.d (a + (i : ℕ)) (a + (j : ℕ))).domain}
+  add_mem' hx hy i j := (H.d _ _).domain.add_mem (hx i j) (hy i j)
+  zero_mem' _ _ := (H.d _ _).domain.zero_mem
+  smul_mem' c _ hx i j := (H.d _ _).domain.smul_mem c (hx i j)
+/-- The **total differential** `(𝐝 x)ⱼ = ∑ᵢ d (a + i) (a + j) xᵢ` of the window. -/
+def totalD : Total W a m →ₗ.[𝕜] Total W a m where
+  domain := H.totalDomain a m
+  toFun :=
+    { toFun := fun x => WithLp.toLp 2 fun j : Fin m =>
+        ∑ i : Fin m, H.d (a + (i : ℕ)) (a + (j : ℕ)) ⟨(x : Total W a m) i, x.2 i j⟩
+      map_add' := fun x y => PiLp.ext fun j => by
+        rw [PiLp.add_apply, PiLp.toLp_apply, PiLp.toLp_apply, PiLp.toLp_apply,
+          ← Finset.sum_add_distrib]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_add ⟨_, x.2 i j⟩ ⟨_, y.2 i j⟩
+      map_smul' := fun c x => PiLp.ext fun j => by
+        rw [PiLp.smul_apply, PiLp.toLp_apply, PiLp.toLp_apply, RingHom.id_apply,
+          Finset.smul_sum]
+        exact Finset.sum_congr rfl fun i _ => (H.d _ _).map_smul c ⟨_, x.2 i j⟩ }
+/-- The **Hodge–Dirac (wave) operator** `L = 𝐝 - 𝐝*` of the window; `L² = -Δ`. -/
+def wave : Total W a m →ₗ.[𝕜] Total W a m := H.totalD a m - (H.totalD a m)†
+end HilbertComplex
+-- palomar-shared-end: window
 
 -- palomar-shared: IsStrongSolution
 /-- `u` is a **strong solution** of `u' = A u` on `I ⊆ ℝ` for an operator given by its graph, a

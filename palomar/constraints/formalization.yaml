@@ -20,11 +20,11 @@ project:
     studies whether TSD data stay TSD, the question of constraint-preserving boundary conditions
     of the initial boundary value problem of general relativity (Friedrich-Nagy, Kreiss-Winicour,
     Calabrese-Pullin-Reula-Sarbach-Tiglio). Stated over Mathlib in the vocabulary of differential
-    forms, with the definitions of forms, minimal exterior derivatives, Hilbert complexes and
-    strong solutions shared with palomar/fem and palomar/feec (the canonical blocks of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), the windows of
-    Hilbert complexes (Total, totalD, wave, sq) as in palomar/feec, and the fields (L2Vec, vecOp,
-    mat1, mat2, IsTSD, IsTSDState), IsHodgeWave, the system (6.1) (wedge, WeakSymmetryData,
+    forms, with the definitions of forms, minimal exterior derivatives, Hilbert complexes, their
+    windows (Total, sq, totalDomain, totalD, wave) and strong solutions shared with palomar/fem
+    and palomar/feec (the windows with palomar/feec alone; the canonical blocks of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), and the fields (L2Vec,
+    vecOp, mat1, mat2, IsTSD, IsTSDState), IsHodgeWave, the system (6.1) (wedge, WeakSymmetryData,
     IsWave, bggData) and the mirror data (dPart, mirrorData) with the statements of
     palomar/einsteinbianchi. Operators are given by their graphs (relations), an evolution S of
     u' = A u on I (IsEvolution: bounded linear S t over the scalars, S 0 = 1, every orbit from
@@ -230,7 +230,7 @@ status:
     box, for the system (4.14), and on every nonempty bounded open set for the system (6.1) and,
     from (0, E_0, beta), for every boundary condition containing n x E = 0; the absorbing boundary
     conditions on the cube; the mirror boundary conditions on the cube for the system (6.1)). The
-    Challenge is 813 lines. Open, and not claimed: that only stationary data
+    Challenge is 743 lines. Open, and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
     fields C^2 up to the boundary; Feec proves it on the ball only under the boundary regularity
@@ -315,8 +315,7 @@ fidelity:
     forward invariance. Over C the real structure of a space, for the derivatives in time, is any
     NormedSpace R instance (it is the restriction of scalars, RCLike.isScalarTower_of_normedSpace
     in the proof), as in palomar/feec. The three spaces of a short complex lie in one universe, as
-    the spaces of a Hilbert complex. The shared block HilbertComplex also states the families of
-    subcomplexes of palomar/feec, not used here.
+    the spaces of a Hilbert complex.
     (3) The system (4.14) is a relation on the product of the three spaces (IsHodgeWave), not an
     operator on their l^2 sum: its skew-adjointness on the l^2 sum (the hypothesis under which
     PropagationCriterion.group identifies K* as the largest reducing subspace of K) is proved in

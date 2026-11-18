@@ -2,7 +2,8 @@
 # formalization.yaml v0.4 for the Palomar submission of the Galerkin approximation of Hilbert
 # complexes (`palomar/feec/`; it replaces the former packages palomar/static and palomar/dynamic,
 # whose general compared theorems it contains). Its constraint-propagation conclusions are compared
-# in palomar/constraints, its BGG theorems in palomar/bgg (status.scope).
+# in palomar/constraints (FEEC.constraint_propagation), its BGG theorems in palomar/bgg
+# (status.scope).
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
@@ -229,7 +230,7 @@ status:
   scope: >-
     Formalized and compared: the four theorems FEEC.projectionFEEC, FEEC.staticFEEC,
     FEEC.evolutionFEEC and FEEC.crimeFEEC, and the witnesses FEEC.crime_nonvacuous and
-    FEEC.feec_cube (Challenge.lean, 788 lines). They restate the
+    FEEC.feec_cube (Challenge.lean, 795 lines). They restate the
     former compared theorems FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated,
     FEEC.staticFEEC_uniform, FEEC.exists_cochainProjection, FEEC.exists_subcomplexFamily_iff and
     FEEC.crimeFEEC with no conclusion dropped, except the constraint-propagation conclusions below
@@ -238,14 +239,15 @@ status:
     reduces the wave operator, in the sense of [Kato1995] §III.5.6; the invariant core K*, the
     largest closed reducing subspace of a constraint; the constraints of reducing subcomplexes,
     [QuennevilleBelair2015] Prop 4.16; the criterion "K reduces the generator iff S(t), t >= 0,
-    keeps K and its orthogonal complement" for the wave and heat generators) are compared in
-    palomar/constraints; the BGG theorems of [ArnoldHu2021] (FEEC.bggCohomology, FEEC.bggFinrank,
-    FEEC.bggHilbert) in palomar/bgg; the weak-symmetry theorem FEEC.bggWeakSymmetry in
-    palomar/einsteinbianchi; the higher-order families on general meshes in palomar/fem. Not
-    compared, proved in Feec: the wave rate on the cube; and, as before, the explicit constants,
-    the spatial heat rates, the uniform fully discrete rates, leapfrog, Runge-Kutta, bounded
-    perturbations, the wave equation with crimes, the residual splitting, and the physical
-    instances (Feec/Physics/EinsteinBianchi, Feec/Models/Cube, palomar/einsteinbianchi).
+    keeps K and its orthogonal complement" for the wave and heat generators), in
+    palomar/constraints, as the fields of FEEC.constraint_propagation; the BGG theorems of
+    [ArnoldHu2021] (FEEC.bggCohomology, FEEC.bggFinrank, FEEC.bggHilbert) in palomar/bgg; the
+    weak-symmetry theorem FEEC.bggWeakSymmetry in palomar/einsteinbianchi; the higher-order families
+    on general meshes in palomar/fem. Not compared, proved in Feec: the wave rate on the cube; and,
+    as before, the explicit constants, the spatial heat rates, the uniform fully discrete rates,
+    leapfrog, Runge-Kutta, bounded perturbations, the wave equation with crimes, the residual
+    splitting, and the physical instances (Feec/Physics/EinsteinBianchi, Feec/Models/Cube,
+    palomar/einsteinbianchi).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -374,7 +376,8 @@ fidelity:
     witnesses, with a nonzero cochain defect, are in Feec,
     Feec.HilbertComplex.Approximation.StaticCrimeWitness, and are not compared). (9) Constraints:
     the constraint-propagation conclusions of the former wave and evolution verdicts are not
-    stated here; they are compared in palomar/constraints (status.scope). (10) The evolution
+    stated here; they are compared in palomar/constraints as FEEC.constraint_propagation
+    (status.scope). (10) The evolution
     statements assume a real structure [NormedSpace R (W i)] for derivatives in time, and nothing
     relating it to the K-structure: a real normed-space structure on a normed K-space is the
     restricted one (t x and (t : K) x are continuous in t and agree on Q), which the solution
@@ -395,8 +398,9 @@ fidelity:
     and j only. HΛ is defined from test forms (the adjoint of the closure of the codifferential on
     test forms), as in palomar/fem. (12) Shared vocabulary: the notions this entry shares with the
     other Palomar entries are copied from the canonical blocks of
-    palomar/shared/vocabulary.lean.txt (HilbertComplex with Subcomplex, CochainProjection,
-    SubcomplexFamily, graphDist, IsGraphBoundedBy, IsGraphBounded, Approximates and Jackson;
+    palomar/shared/vocabulary.lean.txt (HilbertComplex; SubcomplexFamily with graphNorm,
+    Subcomplex, CochainProjection, graphDist, IsGraphBoundedBy, IsGraphBounded, Approximates and
+    Jackson; window with Total, sq, totalDomain, totalD and wave, shared with palomar/constraints;
     IsStrongSolution; IsAStable, HasOrder, rationalApply; the differential forms; IsCsForm), and the
     gate checks them byte for byte. The sign sgn takes values in any ring (here R, as in
     palomar/fem). Two of them read differently from the earlier text, with the same meaning.
@@ -464,6 +468,11 @@ review:
     the canonical blocks of palomar/shared/vocabulary.lean.txt (fidelity (12)); the rational
     schemes are pairs (P, Q) with A-stability on the closed half-plane and the order by
     O(z^(p+1)), the strong solutions those of a graph, both proved equivalent to the earlier text.
+    Windows shared with palomar/constraints (2026-11-18): Total, sq, totalDomain, totalD and wave
+    are the canonical block window (the same definitions; sq now carries its binders in its
+    signature, not as section variables), and the block of Hilbert complexes is split into
+    HilbertComplex (the structure, with palomar/fem and palomar/constraints) and SubcomplexFamily
+    (with palomar/fem); Challenge 795 lines.
 
 alignment:
   namespace: "FEEC"

@@ -14,10 +14,10 @@ project:
     algebra of their shape functions, stated over Mathlib. The abstract definitions (Hilbert
     complexes, subcomplex families with cochain projections, graph-norm bounds and
     approximation, Jackson estimates) are stated in full and self-contained in the challenge, in
-    the words of the Palomar entry palomar/feec (the shared block HilbertComplex of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), so that the families
-    of this entry are families in the sense of its theorems, whose conclusions are not restated
-    here: under the bounds,
+    the words of the Palomar entry palomar/feec (the shared blocks HilbertComplex and
+    SubcomplexFamily of palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), so
+    that the families of this entry are families in the sense of its theorems, whose conclusions
+    are not restated here: under the bounds,
     approximation and closed ranges proved here, FEEC.feec gives the fields static (the mixed
     method), wave (the Hodge wave equation, with constraint propagation: propagates_iff,
     invariantCore, subcomplex) and heat (the Hodge heat equation) of its Verdict, and

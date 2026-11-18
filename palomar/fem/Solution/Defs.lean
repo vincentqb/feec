@@ -122,6 +122,8 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
 end HilbertComplex
 -- palomar-shared-end: SubcomplexFamily
 
+/-! ### The rate attained by the cochain projections -/
+
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
 
@@ -311,7 +313,7 @@ def IsStarShapedBall {n : ℕ} (Ω : Set (Fin n → ℝ)) : Prop :=
     ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω
 -- palomar-shared-end: IsStarShapedBall
 
-/-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal). -/
+/-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal and invertible). -/
 def parallelepiped (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) : Set (Fin n → ℝ) :=
   (fun x => A.mulVec x + b) '' Set.univ.pi fun _ => Set.Ioo 0 1
 
@@ -367,8 +369,8 @@ def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) 
 -- palomar-shared: IsCsFormMin
 /-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` **vanishing outside `Ω`** with
 `‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L` on `cl Ω` (true in negative degrees): the regularity class of the
-order `h^{s+1}` with vanishing traces; the derivatives of `w` of order at most `s + 2` vanish on
-`∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`. -/
+order `h^{s+1}` with vanishing traces (for Lipschitz `Ω` the derivatives of `w` of order at most
+`s + 2` vanish on `∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`). -/
 def IsCsFormMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
   j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
     (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧ (∀ y ∉ Ω, w y = 0) ∧

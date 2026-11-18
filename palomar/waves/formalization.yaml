@@ -1,0 +1,455 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of the fully discrete finite element
+# methods for the Hodge wave and Maxwell equations (`palomar/waves/`). New on 2026-11-18, from
+# the former palomar/fem (FEEC.fem_wave, FEEC.inverse_estimate, FEEC.maxwell) and, through it,
+# the former palomar/timestepping (the Whitney schemes of the cube: FEEC.inverse_estimate,
+# FEEC.crankNicolson_cube, FEEC.leapfrog_cube, FEEC.rowSolution_nonvacuous).
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: "Fully discrete finite elements for the Hodge wave and Maxwell equations"
+  description: >-
+    Do fully discrete finite element schemes for the Hodge wave equation U' = (d - d*) U
+    converge, and under what time-step condition? Stated over Mathlib, on the finite element de
+    Rham complexes of the Palomar entry palomar/fem (same notions, through the shared blocks of
+    palomar/shared/vocabulary.lean.txt): Crank-Nicolson converges for every time step, leapfrog
+    under the CFL condition 2 C_0 Delta t <= c h_N, c < 1, with C_0 the constant of the inverse
+    estimate, and both errors are at most the starting errors plus C (1 + T) L (h_N^(s+1) +
+    Delta t^2), uniformly in the mesh. On the cube, with inhomogeneous Dirichlet data (the
+    boundary degrees of freedom of the exact solution, the runs of the author's thesis, Ch. 7),
+    both Whitney schemes converge at O(h + Delta t^2); Maxwell's equations in vector proxies are
+    the Hodge wave equation of the window [0, 3) in R^3. Six compared theorems.
+    FEEC.inverse_estimate: for every shape-regular quasi-uniform family of meshes of an open Omega
+    whose open simplices lie in Omega, every admissible sequence and every degree k, the forms of
+    S_k(M_N) lie in H Lambda^k(Omega) and h_N ||dv|| <= C ||v||, C independent of N; so the
+    discrete wave operator has norm at most 2 C / h_N.
+    FEEC.fem_wave (the headline: the fully discrete Hodge wave equation, homogeneous boundary
+    conditions): let Omega in R^n be a bounded open domain star-shaped with respect to a ball,
+    M_N shape-regular quasi-uniform simplicial meshes of Omega with h_N -> 0 and S an admissible
+    sequence (the setting of palomar/fem), for H Lambda(Omega) (natural boundary conditions) or
+    H°Lambda(Omega) (vanishing traces), on every window [a, a + m) of degrees, with the finite
+    element forms X_h of the window: some C_0 has h_N ||d x|| <= C_0 ||x|| on X_h (the inverse
+    estimate); and for every s such that S reproduces P_s Lambda in the degrees of the window,
+    some C bounds, for every solution U of the Hodge wave equation U' = (d - d*) U on [0, T] (in
+    the domain of the wave operator: the boundary conditions of the complex), C^3 in time with
+    ||U'''|| <= L on [0, T], whose values and time increments are C^(s+2) forms with the bounds
+    L and L |t' - t| (their (s+1)-st derivatives and those of their exterior derivatives; for
+    H°Lambda vanishing outside Omega), every N, time step Delta t > 0 and K Delta t <= T:
+    Crank-Nicolson iterates u_k in X_h (every time step, from any u_0 in X_h) have
+    ||u_K - U(K Delta t)|| <= ||u_0 - U(0)|| + C (1 + T) L (h_N^(s+1) + Delta t^2), and leapfrog
+    iterates (under the CFL condition 2 C_0 Delta t <= c h_N, c < 1, for every constant C_0 >= 0
+    of the inverse estimate, from any u_0, u_1 in X_h) have
+    (1 - c) ||u_K - U(K Delta t)|| <= ||u_0 - U(0)|| + ||u_1 - U(Delta t)|| +
+    C (1 + T) L (h_N^(s+1) + Delta t^2); C is independent of N, Delta t, T, L, U, c, C_0 and the
+    starting values. For U = 0 these are the stability bounds ||u_K|| <= ||u_0|| and
+    (1 - c) ||u_K|| <= ||u_0|| + ||u_1||.
+    FEEC.crankNicolson_cube and FEEC.leapfrog_cube, the runs of the thesis' Ch. 7 with the
+    boundary degrees of freedom of the exact solution (inhomogeneous data, which FEEC.fem_wave
+    does not cover): on the Freudenthal meshes of Q = (0, 1/2)^3, for H Lambda(Q), the Whitney
+    spaces V_h (the sequence topSeq: P_1 Lambda^0, P_1^- Lambda^1, P_1^- Lambda^2) of the window
+    [0, 3) with test space the fields of vanishing boundary traces: continuous form fields have
+    exactly one Whitney interpolant on every window [0, m) (face integrals as degrees of
+    freedom); the Crank-Nicolson and leapfrog steps with the boundary degrees of freedom of any
+    g are uniquely solvable for every time step; V_h^1 with vanishing traces is nonzero; some C_0
+    has h_N ||d v|| <= C_0 ||v|| on V_h; for every smooth solution U of the Hodge wave equation
+    on [0, T] x cl Q with bound L (RowSolution: C^2 in space, C^3 in time, bounds of the first
+    derivatives of U and dU, Lipschitz in time, and of the third time derivative), the
+    Crank-Nicolson iterates from Pi_h U(0) with the boundary degrees of freedom of Pi_h U(t_n)
+    have ||u_M - U(t_M)|| <= C L (1 + T) (h_N + Delta t^2), and, for every constant C_0 >= 0 of
+    the inverse estimate under 2 C_0 Delta t <= c h_N, c < 1, leapfrog iterates with vanishing
+    boundary data from u_0, u_1 have sqrt(1 - c) ||u_(m+1)|| <= sqrt((1 + c)(||u_0||^2 +
+    ||u_1||^2)) and the leapfrog iterates from Pi_h U(0), Pi_h U(Delta t) with the boundary
+    degrees of freedom of Pi_h U(t_n) have ||u_M - U(t_M)|| <= C L (1 + T) (h_N + Delta t^2) /
+    (1 - c), C independent of C_0, N, Delta t, c, T, L, U. FEEC.rowSolution_nonvacuous: for every
+    T a row solution (row 0 of the thesis' plane wave) has, at every time, a point of Q where the
+    electric field and its time derivative are nonzero.
+    FEEC.maxwell: the window [0, 3) of H Lambda(Omega) for n = 3 read in vector proxies, on the
+    domains and meshes of FEEC.fem_wave: the vector proxies V_N^0, V_N^1, V_N^2 of S_0(M_N),
+    S_1(M_N), S_2(M_N) (scalar fields, vector fields v_j = omega_j, vector fields
+    (omega_12, -omega_02, omega_01); for S = P_1^- the Lagrange, Nedelec edge and Raviart-Thomas
+    face elements) lie in the domains of the weak gradient, curl and divergence (each defined as
+    the adjoint of the closure of its formal adjoint on test fields), and they discretize
+    Maxwell's equations sigma' = -grad* E, E' = grad sigma - curl* B, B' = curl E (the Hodge wave
+    equation of the window H^1 -> H(curl) -> L^2(Omega; R^3), the electric field E in degree 1;
+    with H = -B and sigma = 0, E' = curl H, H' = -curl E with perfect-magnetic-conductor walls):
+    every datum in V_N^0 x V_N^1 x V_N^2 has a unique Galerkin solution on [0, T], and for data
+    in the domain of the Maxwell operator and every T there is a unique strong solution on
+    [0, T], it conserves the energy, satisfies the Gauss laws sigma = 0, grad* E = 0, div B = 0
+    for all t if the data do, and is the uniform limit on [0, T] of every family of Galerkin
+    solutions in V_N^0 x V_N^1 x V_N^2 whose initial data converge to the data; such families
+    exist.
+    The proof is the library Feec of this repository (Feec.FiniteElement,
+    Feec.FiniteElement.GlobalInverseEstimate, Feec.Models.StarShaped, Feec.Models.Cube.Inhomogeneous,
+    Feec.Models.Cube.InhomogeneousError, Feec.Models.Cube.InhomogeneousLeapfrog,
+    Feec.Numerics.PlaneWaveCubeError, Feec.Instances.Maxwell); FEEC.fem_wave is proved from the
+    uniform stability of palomar/fem (FEEC.fem), restated and proved in the solution, and from
+    FEEC.inverse_estimate.
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.NA", "math.AP"]
+  msc2020: ["65M60", "65M12", "65M15", "35L05", "35Q61", "58A14"]
+
+sources:
+  - title: "A New Approach to Finite Element Simulations of General Relativity"
+    authors:
+      - "Vincent Quenneville-Bélair"
+    id: "http://hdl.handle.net/11299/175309"
+    type: "PhD thesis, University of Minnesota, 2015"
+    location: "Ch. 4 (finite element approximation of Hilbert complexes; the Hodge wave equation and its constraints such as the Gauss laws, Prop 4.16), Ch. 7 (the Crank-Nicolson Whitney scheme; the boundary data from the exact solution are those of the thesis' runs, implemented in its code fem4gr)"
+    relationship: "formalizes"
+    note: >-
+      FEEC.maxwell is the thesis' Hodge wave equation (with the constraint propagation of
+      Prop 4.16 for the Gauss laws) for the concrete P_r Lambda / P_r^- Lambda families.
+      FEEC.crankNicolson_cube is one row of the thesis' Ch. 7 scheme (the rows decouple); its
+      error estimate O(h + Delta t^2), the unisolvence and well-posedness clauses, the leapfrog
+      variant and its CFL analysis (FEEC.leapfrog_cube), and the fully discrete theorem
+      FEEC.fem_wave are proved in Feec for this formalization, not in the thesis; they are of the
+      textbook type (energy arguments with comparison fields), not new mathematics beyond their
+      generality. The formalization is by the thesis author.
+    author_endorsement: "participated"
+  - title: "Variational Methods for Time-Dependent Wave Propagation Problems"
+    authors:
+      - "Patrick Joly"
+    id: "doi:10.1007/978-3-642-55483-4_6"
+    type: "book chapter"
+    location: "Topics in Computational Wave Propagation, LNCSE 31 (2003), pp. 201-264"
+    relationship: "background"
+    note: >-
+      The energy argument for leapfrog under the CFL condition (FEEC.leapfrog_cube and the
+      leapfrog clause of FEEC.fem_wave). Title, volume and pages checked against Crossref for the
+      former entry palomar/timestepping; no section locator (contents not rechecked).
+    author_endorsement: "not-contacted"
+  - title: "Galerkin Finite Element Methods for Parabolic Problems"
+    authors:
+      - "Vidar Thomée"
+    id: "doi:10.1007/3-540-33122-0"
+    type: "book"
+    location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 1, 7"
+    relationship: "background"
+    note: >-
+      Ch. 1 (The Standard Galerkin Method; the comparison with the projection of the exact
+      solution) and Ch. 7 (Single Step Fully Discrete Schemes): the Crank-Nicolson error argument,
+      stability plus consistency along the comparison trajectory, here for the skew discrete wave
+      operator (FEEC.fem_wave, FEEC.crankNicolson_cube). Chapter titles checked against Crossref
+      for the former entry palomar/timestepping; contents not consulted.
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Exterior Calculus"
+    authors:
+      - "Douglas N. Arnold"
+    id: "doi:10.1137/1.9781611975543"
+    type: "book"
+    location: "CBMS-NSF Regional Conference Series in Applied Mathematics 93 (2018), Ch. 7 (finite element spaces, Whitney forms), Ch. 8 (evolution problems)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §4 (the L^2 de Rham complex), §5 (the finite element complexes and their projections)"
+    relationship: "background"
+    note: "The setting of palomar/fem, whose uniform stability the proof of FEEC.fem_wave uses."
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus, homological techniques, and applications"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1017/S0962492906210018"
+    type: "article"
+    location: "Acta Numerica 15 (2006), §3 (the polynomial spaces), §5 (admissible sequences, the global spaces)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "The Finite Element Method for Elliptic Problems"
+    authors:
+      - "Philippe G. Ciarlet"
+    id: "doi:10.1137/1.9780898719208"
+    type: "book"
+    location: "§3.1-§3.2 (shape-regular families, inverse inequalities)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "The Mathematical Theory of Finite Element Methods"
+    authors:
+      - "Susanne C. Brenner"
+      - "L. Ridgway Scott"
+    id: "doi:10.1007/978-0-387-75934-0"
+    type: "book"
+    location: "Texts in Applied Mathematics 15, 3rd ed. (2008), §4.5 (inverse estimates)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Methods for Maxwell's Equations"
+    authors:
+      - "Peter Monk"
+    id: "doi:10.1093/acprof:oso/9780198508885.001.0001"
+    type: "book"
+    location: "Oxford University Press (2003), the spaces H(curl), H(div), the Nedelec and Raviart-Thomas elements, semi-discrete Maxwell"
+    relationship: "background"
+    note: >-
+      Background for FEEC.maxwell; the compared statement is the Hodge wave equation of the
+      Maxwell window in vector proxies, not Monk's (E, H) formulation.
+    author_endorsement: "not-contacted"
+  - title: "Geometric Integration Theory"
+    authors:
+      - "Hassler Whitney"
+    id: "doi:10.1515/9781400877577"
+    type: "book"
+    location: "Ch. IV (Whitney forms, face integrals as degrees of freedom)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+  - title: "Simplizialzerlegungen von beschränkter Flachheit"
+    authors:
+      - "Hans Freudenthal"
+    id: "doi:10.2307/1968813"
+    type: "article"
+    location: "Ann. of Math. 43 (1942) (the Freudenthal triangulations of the cube)"
+    relationship: "background"
+    author_endorsement: "not-contacted"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: FEEC.inverse_estimate on every open domain whose open mesh simplices
+    lie in it, every shape-regular quasi-uniform mesh family, every admissible sequence and
+    degree; FEEC.fem_wave for every bounded open domain star-shaped with respect to a ball, every
+    shape-regular quasi-uniform family of conforming simplicial meshes of it with h_N -> 0, every
+    admissible sequence, both boundary conditions, every window [a, a + m) and every s;
+    FEEC.crankNicolson_cube, FEEC.leapfrog_cube and FEEC.rowSolution_nonvacuous on
+    (0, 1/2)^3 with its Freudenthal meshes and the Whitney sequence; FEEC.maxwell for n = 3 on
+    the same domains and meshes as FEEC.fem_wave.
+    Not restated: the uniform stability of the finite element complexes (FEEC.fem of
+    palomar/fem, used by the proof of FEEC.fem_wave and restated proof-side, Solution/Fem.lean);
+    the semidiscrete Hodge wave equation and the A-stable rational schemes for abstract
+    families with the rates of the Jackson estimates (the wave clause of FEEC.evolutionFEEC of
+    palomar/feec, which applies to the families of palomar/fem); constraint propagation
+    (palomar/constraints; FEEC.maxwell restates that of the Gauss laws).
+    Not compared (proved in Feec, outside the statement): the three-row Einstein-Bianchi
+    scheme of the thesis' Ch. 7 and its constraint monitors (palomar/einsteinbianchi compares
+    the weak-symmetry method), the perfect-electric-conductor Maxwell discretization in vector
+    proxies (it is the window [0, 3) of FEEC.fem_wave with b = true in forms), the Whitney
+    forms as a separate family (they are the sequence topSeq).
+    Not formalized: the fully discrete wave equation with inhomogeneous boundary data on general
+    domains and meshes (fidelity (6)); rates for finite Sobolev regularity in time-dependent
+    problems; one-step starting procedures for leapfrog; the sharpness of the CFL condition.
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals (the thesis and the FEEC literature), the
+        statement design and the review standard; agents proposed and proved lemmas.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge statement and its definitions were
+    written by an AI agent for this submission, to be reviewed by the author; the Solution
+    identifies them with the definitions of the library Feec (Solution/Forms.lean, Poly.lean,
+    Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean, Maxwell.lean, Whitney.lean) and applies
+    its theorems. FEEC.fem_wave (2026-11-18) is proved from the uniform stability of
+    palomar/fem (femFamily, Solution/Fem.lean, the part of FEEC.fem it uses, on the subcomplex
+    families of palomar/fem restated proof-side in Solution/Family.lean) and from
+    FEEC.inverse_estimate (Solution/Wave.lean: the windows of the finite element subcomplexes as
+    Feec discrete states, the abstract Crank-Nicolson and leapfrog estimates of
+    Feec.Models.Cube.Inhomogeneous with the projections of the exact solution as comparison
+    fields). The entry was split off palomar/fem on 2026-11-18; the Whitney schemes and the
+    inverse estimate came there from the former palomar/timestepping, restated on windows.
+
+fidelity:
+  divergences: >-
+    (1) Coordinates: points of R^n are Fin n -> R (sup norm), forms are given by their
+    coefficients on dx_s, s an increasing k-subset of Fin n, and L^2(Omega; Lambda^k) is the
+    l^2 sum of copies of L^2(Omega); a window [a, a + m) is the l^2 sum Total of its degrees;
+    the standard coordinate model, not Mathlib's differential forms. The total differential of a
+    window in the schemes is a total function (HilbertComplex.dApply, 0 off its domain), only
+    applied to finite element forms, which lie in its domain.
+    (2) The finite element spaces, meshes, admissible sequences, domains and regularity classes
+    are those of palomar/fem (the canonical blocks of palomar/shared/vocabulary.lean.txt,
+    checked byte for byte by the gate; the Hilbert complexes and windows are those of
+    palomar/feec), with the same scope: domains star-shaped with respect to a ball,
+    quasi-uniform meshes, admissible sequences with r_k >= 1. The block window is copied whole,
+    as the gate requires; its square sq of an operator (used by the heat equation of
+    palomar/feec) is not used by this entry.
+    (3) FEEC.fem_wave. Homogeneous boundary conditions only: the trial and test spaces are the
+    finite element forms of the window (with vanishing boundary traces for b = true), the
+    boundary data of the steps vanish, the load is zero, and the exact solution lies in the
+    domain of the wave operator of the complex (natural, resp. essential, boundary conditions);
+    inhomogeneous data are the cube theorems (4) only. The exact solution is stated by its
+    hypotheses at the L^2 level: U, U_1, U_2, U_3 with two-sided derivatives at every real time
+    (U is defined on all of R, as solutions of the wave equation are), (U(t), U_1(t)) in the
+    graph of d - d* and ||U_3(t)|| <= L on [0, T], and the values and time increments in the
+    C^(s+2) classes IsCsForm, resp. IsCsFormMin, with the bounds L and L |t' - t| (a Lipschitz
+    condition in the class; one derivative more than the order requires, with sup instead of
+    H^(s+1) norms, and for b = true derivatives vanishing on the boundary up to order s + 2); no
+    compared witness exhibits a nonzero such solution (U = 0 satisfies the hypotheses and gives
+    the stability bounds; on boxes the cosine modes with the natural boundary conditions are
+    such solutions, not formalized). The rate is the spatial order h^(s+1) of the projections
+    and the temporal order Delta t^2 of both schemes, uniformly in N; the error is in L^2 at
+    t_K = K Delta t, from arbitrary starting values in X_h (with the starting errors added), not
+    in the energy norm. Crank-Nicolson is the only implicit scheme of the statement (every
+    A-stable rational scheme, with a temporal error in the discrete datum, is the wave clause of
+    FEEC.evolutionFEEC of palomar/feec); leapfrog is a two-step scheme, stable under the CFL
+    condition, the factor 1 - c from the energy argument; the constant C_0 of the inverse
+    estimate is asserted (from a norm equivalence on the reference simplex, by compactness, so
+    it has no explicit value), and the CFL condition is stated for every constant C_0 >= 0 of
+    the estimate. Its inverse estimate is that of the window, with the global mesh size; the
+    window is that of the given H (any Hilbert complex of the challenge whose differentials are
+    dMax, resp. dMin, is the complex of palomar/fem).
+    (4) FEEC.crankNicolson_cube and FEEC.leapfrog_cube (the runs of the thesis' Ch. 7): one row
+    of the thesis' three-row Einstein-Bianchi scheme (the rows decouple); the exact solution is
+    a classical solution on R x R^3 with the stated bounds on [0, T] (RowSolution), and no
+    boundary condition is imposed on it: the boundary degrees of freedom of the scheme are those
+    of the Whitney interpolant of the exact solution at every step for all three fields (any g_n
+    with g_n - Pi_h U(t_n) in the fields with vanishing traces), the initial value is the
+    interpolant of U(0), the load is zero. This is an interior error estimate with exact
+    Dirichlet data everywhere, not the natural boundary conditions of a well-posed
+    initial-boundary value problem. With vanishing boundary data the schemes are those of
+    FEEC.fem_wave (b = true, S = topSeq, s = 0), whose class (vanishing to second order on the
+    boundary) is smaller than the RowSolution bounds; for nonvanishing data neither theorem
+    implies the other. The error is in L^2 at t_M = M Delta t; rates for finite Sobolev
+    regularity and the constraint monitors are not stated. Everything is on one domain,
+    (0, 1/2)^3, and one mesh family. Leapfrog: the three-level scheme with the same boundary data
+    and the two starting values u_0 = Pi_h U(0), u_1 = Pi_h U(Delta t) (interpolants of the
+    exact solution; no one-step starting procedure); the stability clause is for vanishing
+    boundary degrees of freedom; the time step need not satisfy the CFL condition for
+    well-posedness (the step is explicit); sharpness of the CFL condition is not stated. With
+    vanishing boundary data a Crank-Nicolson step is r(Delta t A_h) on the fields with vanishing
+    traces, r(z) = (2 + z)/(2 - z), A_h skew-adjoint for the L^2 product (explained, not
+    compared). Non-vacuity of RowSolution is FEEC.rowSolution_nonvacuous (constant fields
+    inhabit it too; the witness is a plane wave with nonzero time derivative). The schemes are
+    stated with the same step notions as FEEC.fem_wave (HilbertComplex.IsCNStep,
+    IsLeapfrogStep on the window [0, 3), the trial space V_h, the test space of vanishing
+    traces), the rows as the window Total, the interpolant and the representatives of U(t) on
+    windows (IsWhitneyInterp, IsRepr).
+    (5) FEEC.inverse_estimate: the hypothesis that the open simplices lie in Omega (true when
+    Omega is the interior of its closure, e.g. for star-shaped or convex Omega; it makes the
+    L^2(Omega) norm the sum of the norms on whole simplices) replaces regularity of Omega; the
+    global estimate is stated with the mesh size h_N, not elementwise; C depends on n, S, k and
+    the shape-regularity and quasi-uniformity constants of the family.
+    (6) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
+    natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy and
+    H = -B the magnetic field): E . n = 0 and B x n = 0 (H x n = 0) enter through the adjoints
+    grad* and curl*, the physical PMC walls; the perfect electric conductor (the minimal
+    complex) is not compared in vector proxies. Scalar fields are L^2 fields with one component
+    (Fin 1), and the state is the triple (sigma, E, B) with the scalar potential sigma of the
+    Hodge wave equation (sigma = 0 is one of the Gauss laws). Data lie in the domain of the
+    Maxwell operator; the statement is semidiscrete and has no rate (the fully discrete rates of
+    the window [0, 3) in forms are those of FEEC.fem_wave; in vector proxies they are not
+    compared). The Galerkin solutions are differentiable in L^2 on [0, T] with values in V_N;
+    their derivatives are not required to lie in V_N (they do when T > 0, V_N being
+    finite-dimensional). Most of FEEC.maxwell is the transport of the window of H Lambda(Omega)
+    to vector proxies.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    Not yet reviewed by the author: the Challenge statement (the six compared theorems and their
+    definitions). FEEC.fem_wave new on 2026-11-18; FEEC.inverse_estimate, FEEC.crankNicolson_cube,
+    FEEC.leapfrog_cube and FEEC.rowSolution_nonvacuous from palomar/timestepping (2026-11-18,
+    restated on windows with the step notions of FEEC.fem_wave); FEEC.maxwell as of 2026-11-06 in
+    palomar/fem; all moved to this entry on 2026-11-18 with unchanged statements. Every merge of
+    the library was gated by a full build (zero warnings), an axiom audit (propext,
+    Classical.choice, Quot.sound only) and an independent AI review. No external mathematical
+    review.
+
+alignment:
+  namespace: "FEEC"
+  statements:
+    - source: "[QuennevilleBelair2015] Ch. 4, 7; [Joly2003]; [Thomee2006] Ch. 1, 7; [Arnold2018] Ch. 8"
+      lean: "FEEC.fem_wave"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From the uniform stability of palomar/fem (femFamily, Solution/Fem.lean: the proof of
+        FEEC.fem without its graph-norm clauses) and FEEC.inverse_estimate (Solution.lean): the
+        complex of femFamily is the given H (HilbertComplex.ext_of_d); the comparison fields are
+        the componentwise L^2 projections of the exact solution, whose errors (quasi-optimality
+        of a bounded projection with the Jackson estimate) and differentials (Jackson.ProjRate,
+        through HilbertComplex.norm_totalD_le) are O(L h^(s+1)); HilbertComplex.wave_error
+        (Solution/Wave.lean: the window of a subcomplex as Feec discrete states, the steps as
+        Feec Dirichlet steps with V0 = V, the weak form from the formal adjoint) applies
+        Feec.Models.Cube.Inhomogeneous.norm_cn_error_le and norm_leapfrog_error_le_of_sub_mem
+        (from any starting values), the CFL condition from the inverse estimate on the window.
+    - source: "[Ciarlet2002] §3.2; [BrennerScott2008] §4.5"
+      lean: "FEEC.inverse_estimate"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.FiniteElement.PolySeq.exists_mul_norm_d_le on the Feec meshes M.toFeec Omega (shape
+        regularity from the inscribed balls, isShapeRegular_toFeec), whose spaces are the
+        challenge's (mem_V_iff).
+    - source: "[QuennevilleBelair2015] Ch. 7; [Arnold2018] Ch. 7; [Monk2003]; [Thomee2006]"
+      lean: "FEEC.crankNicolson_cube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row on the Freudenthal
+        meshes (cubeMesh), with whitney_existsUnique_cnStep, whitneyMin_one_ne_bot and the
+        unisolvence of the face integrals (isWhitneyInterpAt_cube_iff), through
+        Solution/Whitney.lean (the Whitney spaces of topSeq are Feec's whitney and whitneyMin, the
+        challenge's interpolant in every degree is the glued global interpolant, the steps are
+        Feec's IsDirichletCNStep).
+    - source: "[Joly2003]; [QuennevilleBelair2015] Ch. 7"
+      lean: "FEEC.leapfrog_cube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Feec.Models.Cube.Inhomogeneous.exists_mul_norm_discreteD_whitneyRow_le (the inverse
+        estimate on the Whitney row), Feec.TimeStepping.existsUnique_isDirichletLeapfrogStep,
+        whitney_leapfrog_stable and RowSolution.whitney_leapfrog_error_le_row (for every constant
+        of the inverse estimate), through Solution/Whitney.lean.
+    - source: "[QuennevilleBelair2015] Ch. 7 (the plane wave)"
+      lean: "FEEC.rowSolution_nonvacuous"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Row 0 of Feec.Numerics.PlaneWaveCube.planeWaveRows (Solution/Whitney.lean,
+        exists_rowSolution: E_(dx_0)(t, y) = -sin (y_2 - t)).
+    - source: "[QuennevilleBelair2015] Ch. 4, Prop. 4.16; [AFW2010] §4; [Monk2003]"
+      lean: "FEEC.maxwell"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.Instances.Maxwell.maxwellFEEC for the vector proxies of
+        Feec.Models.StarShaped.MeshFamily.polyFamily (Solution/Maxwell.lean: the weak operators
+        are maximal realizations, weakOp_eq; the vector-proxy complex is the unitary transport of
+        H Lambda(Omega), vC_maximalComplex_eq; strong and Galerkin solutions of the challenge
+        are those of the Hodge wave equation of the window, isMaxwellSolution_of,
+        isStrongSolution_of, galerkin_of_semidiscrete, semidiscrete_of_galerkin; discrete
+        well-posedness, galerkin_wellPosed, from Feec.HodgeWave.exists_isSemidiscreteSolution
+        and IsSemidiscreteSolution.eqOn).
+
+acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

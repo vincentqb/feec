@@ -23,19 +23,20 @@ coefficients on the `dx_s` (`PolyForm`); `P_rΛᵏ` has coefficients of degree a
 homogeneous coefficients of degree `r`, `κ` is the Koszul differential and
 `P_r⁻Λᵏ = P_{r-1}Λᵏ + κH_{r-1}Λᵏ⁺¹` ([AFW2006], §3).
 
-* **The affinely invariant spaces are those of the `P_rΛ` and `P_r⁻Λ` families**
-  (`affineInvariantForms`; [AFW2006], §3.4, Theorems 3.5–3.6, over every field of characteristic
-  `0`): the summands `dH_{r+1}Λᵏ⁻¹` and `κH_{r-1}Λᵏ⁺¹` of `H_rΛᵏ` are its only nontrivial
-  `GL(n)`-invariant subspaces, and for `0 < k < n` the nonzero finite-dimensional affinely
-  invariant spaces of `k`-forms are `dP_{r+1}Λᵏ⁻¹` and the `dP_{r+1}Λᵏ⁻¹ + κP_sΛᵏ⁺¹`, `s ≤ r`,
-  among them `P_{r+1}Λᵏ` and `P_{r+1}⁻Λᵏ`.
+* **The affinely invariant spaces are classified** (`affineInvariantForms`; [AFW2006], §3.4,
+  Theorems 3.5–3.6, over every field of characteristic `0`): the summands `dH_{r+1}Λᵏ⁻¹` and
+  `κH_{r-1}Λᵏ⁺¹` of `H_rΛᵏ` are its only nontrivial `GL(n)`-invariant subspaces (`r, k ≥ 1`),
+  and for `0 < k < n` the nonzero finite-dimensional affinely invariant spaces of `k`-forms are
+  `dP_{r+1}Λᵏ⁻¹` and the `X(r, s, k) = dP_{r+1}Λᵏ⁻¹ + κP_sΛᵏ⁺¹`, `s ≤ r`, which lie between
+  `P_{s+1}⁻Λᵏ` and `P_{r+1}⁻Λᵏ`; the full and trimmed spaces are `P_{r+1}Λᵏ = X(r + 1, r, k)` and
+  `P_{r+1}⁻Λᵏ = X(r, r, k)`.
 * **Characteristic `0` is necessary**: over a field `K`, the classification of the invariant
   subspaces of `H_rΛᵏ` (`charZero_iff_classification`) and the homogeneous Poincaré lemma
   (`charZero_iff_closed_eq_exact`) hold in every dimension iff `K` has characteristic `0`.
 * **The degrees of freedom of [AFW2006], §4 are unisolvent** (`unisolvent`; Theorems 4.10,
-  4.14): on every `n`-simplex the moments `∫_f tr_f ω ∧ η` on its `m`-faces `f`, against
-  `η ∈ P⁻_{r+k-m}Λ^{m-k}` for `ω ∈ P_rΛᵏ` and `η ∈ P_{r+k-m-1}Λ^{m-k}` for `ω ∈ P_r⁻Λᵏ`, vanish
-  only for `ω = 0`, and they are as many as the dimension.
+  4.14): on every `n`-simplex, for `r ≥ 1`, the moments `∫_f tr_f ω ∧ η` on its `m`-faces `f`,
+  `k ≤ m < r + k`, against `η ∈ P⁻_{r+k-m}Λ^{m-k}` for `ω ∈ P_rΛᵏ` and `η ∈ P_{r+k-m-1}Λ^{m-k}` for
+  `ω ∈ P_r⁻Λᵏ`, vanish only for `ω = 0`, and they are as many as the dimension.
 
 Not claimed: the classification of the affinely invariant complexes built from these spaces (the
 periodic table of finite element exterior calculus; cf. [AFW2006], §3.5). The theorems classify

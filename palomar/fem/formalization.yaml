@@ -1,35 +1,25 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
-# formalization.yaml v0.4 for the Palomar submission of the finite element de Rham complexes
-# (`palomar/fem/`): their uniform stability, the convergence of their Galerkin methods (the fully
-# discrete Hodge wave equation, Maxwell's equations), and the algebra of their shape functions
-# (formerly `palomar/periodic/`).
+# formalization.yaml v0.4 for the Palomar submission of the uniformly bounded commuting
+# projections of the finite element de Rham complexes (`palomar/fem/`). Since 2026-11-18 the
+# entry is this one question: its fully discrete wave and Maxwell theorems are the entry
+# palomar/waves, its shape-function theorems (unisolvence, the classification of the affinely
+# invariant spaces) the entry palomar/shapes.
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
-  name: "Finite element de Rham complexes are uniformly stable, and their Galerkin methods converge"
+  name: "Uniformly bounded commuting projections for the finite element de Rham complexes"
   description: >-
-    The finite element de Rham complexes of Arnold-Falk-Winther on simplicial meshes are uniformly
-    stable, and so their Galerkin methods converge; stated over Mathlib. The abstract notions
-    (Hilbert complexes, their windows, subcomplex families with cochain projections, graph-norm
-    bounds and approximation, Jackson estimates) are those of the Palomar entry palomar/feec (the
-    shared blocks HilbertComplex, SubcomplexFamily and window of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate), whose theorems apply
-    to the families of this entry: FEEC.staticFEEC (the mixed method) needs graph-norm bounds in
-    the degrees j - 1, j, proved here in every degree, and Poincare inequalities, equivalent to
-    closed ranges (proved here on parallelepipeds), and its rates are those of the Jackson
-    estimates proved here; the wave clause of FEEC.evolutionFEEC needs only approximation on the
-    window (graph-norm approximation, proved here, and approximation in L^2 in the last degree,
-    which follows by density), so it holds on every domain of this entry with the rates h^(s+1);
-    its heat clause needs moreover graph-norm bounds, the L^2 bound of the projections in the last
-    degree (both proved here) and closed ranges (parallelepipeds); with closed ranges the converse
-    of FEEC.projectionFEEC gives the uniform discrete Poincare inequality and harmonic bound from
-    the graph-norm bounds; FEEC.crimeFEEC is for discrete spaces that are not subcomplexes (these
-    are). Constraint propagation is the entry palomar/constraints.
-    Thirteen compared theorems.
-    FEEC.fem (uniform stability): let Omega in R^n (n >= 1) be a bounded open domain star-shaped
+    Do the finite element de Rham complexes of finite element exterior calculus, built from the
+    polynomial spaces P_r Lambda^k and P_r^- Lambda^k of Arnold-Falk-Winther, admit cochain
+    projections bounded uniformly in the mesh? Stated over Mathlib, the answer is yes, with or
+    without boundary conditions, on every bounded open domain star-shaped with respect to a
+    ball, for every shape-regular quasi-uniform family of simplicial meshes and every admissible
+    sequence of polynomial spaces; the families approximate in the graph norm and the
+    projections attain the rate h^(s+1). Three compared theorems.
+    FEEC.fem (the headline): let Omega in R^n (n >= 1) be a bounded open domain star-shaped
     with respect to a ball, M_N conforming simplicial meshes of Omega (Mathlib's Affine.Simplex),
     uniformly shape regular (every simplex T contains a ball of radius rho with
     h_T <= sigma rho) and quasi-uniform (q h_N <= h_T), with mesh size h_N -> 0, and S an
@@ -48,105 +38,35 @@ project:
     (s+1)-st derivatives and those of dx are bounded by L on the closure of Omega (vanishing
     outside Omega for b = true), ||x - pi_N x|| and ||dx - d pi_N x|| are at most B L h_N^(s+1),
     in the degrees j where S contains P_s Lambda^j and P_s Lambda^(j+1).
-    FEEC.inverse_estimate: for every shape-regular quasi-uniform family of meshes of an open Omega
-    whose open simplices lie in Omega, every admissible sequence and every degree k, the forms of
-    S_k(M_N) lie in H Lambda^k(Omega) and h_N ||dv|| <= C ||v||, C independent of N.
-    FEEC.fem_wave (the fully discrete Hodge wave equation, homogeneous boundary conditions): under
-    the hypotheses of FEEC.fem, for H Lambda(Omega) (natural boundary conditions) or
-    H°Lambda(Omega) (vanishing traces), on every window [a, a + m) of degrees, with the finite
-    element forms X_h of the window: some C_0 has h_N ||d x|| <= C_0 ||x|| on X_h (the inverse
-    estimate); and for every s such that S reproduces P_s Lambda in the degrees of the window,
-    some C bounds, for every solution U of the Hodge wave equation U' = (d - d*) U on [0, T] (in
-    the domain of the wave operator: the boundary conditions of the complex), C^3 in time with
-    ||U'''|| <= L on [0, T], whose values and time increments lie in the Jackson class of
-    FEEC.fem with the bounds L and L |t' - t|, every N, time step Delta t > 0 and K Delta t <= T:
-    Crank-Nicolson iterates u_k in X_h (every time step, from any u_0 in X_h) have
-    ||u_K - U(K Delta t)|| <= ||u_0 - U(0)|| + C (1 + T) L (h_N^(s+1) + Delta t^2), and leapfrog
-    iterates (under the CFL condition 2 C_0 Delta t <= c h_N, c < 1, for every constant C_0 >= 0
-    of the inverse estimate, from any u_0, u_1 in X_h) have
-    (1 - c) ||u_K - U(K Delta t)|| <= ||u_0 - U(0)|| + ||u_1 - U(Delta t)|| +
-    C (1 + T) L (h_N^(s+1) + Delta t^2); C is independent of N, Delta t, T, L, U, c, C_0 and the
-    starting values. For U = 0 these are the stability bounds ||u_K|| <= ||u_0|| and
-    (1 - c) ||u_K|| <= ||u_0|| + ||u_1||.
     FEEC.fem_parallelepiped: every parallelepiped A (0,1)^n + b, A invertible (every open box), is
     such a domain, carries such a mesh family, and the weak and the minimal exterior derivatives
-    have closed range in every degree: the closed ranges that FEEC.staticFEEC, the heat clause of
-    FEEC.evolutionFEEC and the converse of FEEC.projectionFEEC need besides the conclusions of
-    FEEC.fem. FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries such a mesh family, the
-    Freudenthal meshes (stated by their vertices: every simplex of M_N is a Kuhn simplex
-    h (z + K_sigma), h = 1/(2(N+1)), with vertices h (z + e_sigma(0) + ... + e_sigma(j-1))), for
-    which the family of FEEC.fem (b = false) attains the rate h_N^(s+1) for Sobolev data: if x
-    and dx lie in H^(s+1)(Omega) with norm at most L (H^m(Omega) the restrictions to Omega of the
-    forms whose coefficients have weak derivatives in L^2(R^n) along all words of length at most
-    m), then ||x - pi_N x|| and ||d x - d pi_N x|| are at most B L h_N^(s+1), in every dimension.
-    FEEC.crankNicolson_cube and FEEC.leapfrog_cube, the runs of the thesis' Ch. 7 with the
-    boundary degrees of freedom of the exact solution (inhomogeneous data, which FEEC.fem_wave
-    does not cover): on the Freudenthal meshes of Q = (0, 1/2)^3, for H Lambda(Q), the Whitney
-    spaces V_h (the sequence topSeq: P_1 Lambda^0, P_1^- Lambda^1, P_1^- Lambda^2) of the window
-    [0, 3) with test space the fields of vanishing boundary traces: continuous form fields have
-    exactly one Whitney interpolant on every window [0, m) (face integrals as degrees of
-    freedom); the Crank-Nicolson and leapfrog steps with the boundary degrees of freedom of any
-    g are uniquely solvable for every time step; V_h^1 with vanishing traces is nonzero; some C_0
-    has h_N ||d v|| <= C_0 ||v|| on V_h; for every smooth solution U of the Hodge wave equation
-    on [0, T] x cl Q with bound L (RowSolution: C^2 in space, C^3 in time, bounds of the first
-    derivatives of U and dU, Lipschitz in time, and of the third time derivative), the
-    Crank-Nicolson iterates from Pi_h U(0) with the boundary degrees of freedom of Pi_h U(t_n)
-    have ||u_M - U(t_M)|| <= C L (1 + T) (h_N + Delta t^2), and, for every constant C_0 >= 0 of
-    the inverse estimate under 2 C_0 Delta t <= c h_N, c < 1, leapfrog iterates with vanishing
-    boundary data from u_0, u_1 have sqrt(1 - c) ||u_(m+1)|| <= sqrt((1 + c)(||u_0||^2 +
-    ||u_1||^2)) and the leapfrog iterates from Pi_h U(0), Pi_h U(Delta t) with the boundary
-    degrees of freedom of Pi_h U(t_n) have ||u_M - U(t_M)|| <= C L (1 + T) (h_N + Delta t^2) /
-    (1 - c), C independent of C_0, N, Delta t, c, T, L, U. FEEC.rowSolution_nonvacuous: for every
-    T a row solution (row 0 of the thesis' plane wave) has, at every time, a point of Q where the
-    electric field and its time derivative are nonzero.
-    FEEC.maxwell, the application: the window [0, 3) of FEEC.fem (b = false) for n = 3 read in
-    vector proxies: the vector proxies V_N^0, V_N^1, V_N^2 of S_0(M_N), S_1(M_N), S_2(M_N) (scalar
-    fields, vector fields v_j = omega_j, vector fields (omega_12, -omega_02, omega_01); for
-    S = P_1^- the Lagrange, Nedelec edge and Raviart-Thomas face elements) lie in the domains of
-    the weak gradient, curl and divergence (each defined as the adjoint of the closure of its
-    formal adjoint on test fields), and they discretize Maxwell's equations
-    sigma' = -grad* E, E' = grad sigma - curl* B, B' = curl E (the Hodge wave equation of the
-    window H^1 -> H(curl) -> L^2(Omega; R^3); with H = -B and sigma = 0, E' = curl H,
-    H' = -curl E with perfect-magnetic-conductor walls): every datum in V_N^0 x V_N^1 x V_N^2
-    has a unique Galerkin solution on [0, T], and for data in the domain of the Maxwell
-    operator and every T there is a unique strong solution on [0, T], it conserves the energy,
-    satisfies the Gauss laws sigma = 0, grad* E = 0, div B = 0 for all t if the data do, and is
-    the uniform limit on [0, T] of every family of Galerkin solutions in V_N^0 x V_N^1 x V_N^2
-    whose initial data converge to the data; such families exist.
-    The shape functions (algebra over a field; the analytic theorems do not use it; it belongs to
-    the deferred periodic-table entry and stays compared here until then): FEEC.unisolvent
-    (AFW2006 Theorems 4.10, 4.14): on every n-simplex T and for r >= 1, a form of P_r Lambda^k
-    (resp. P_r^- Lambda^k) whose moments int_f tr_f omega wedge eta vanish for all m-faces f of T
-    and all eta in P^-_(r+k-m) Lambda^(m-k)(R^m) (resp. P_(r+k-m-1) Lambda^(m-k)(R^m)),
-    k <= m < r + k, is zero, and the number of these moments, sum_m C(n+1, m+1) dim (test space),
-    is dim P_r Lambda^k (resp. dim P_r^- Lambda^k): the moments are unisolvent.
-    FEEC.affineInvariantForms (AFW2006 §3.4, over every field K of characteristic 0; polynomial
-    forms in coordinates, PolyForm K n, with the same P_r Lambda^k, H_r Lambda^k, kappa and
-    P_r^- Lambda^k as the finite element spaces, and the pullback (phi^* omega)_t =
-    sum_(#s = #t) det B_(s,t) (omega_s o phi) along phi(x) = B x + b): d H_r Lambda^k and
-    kappa H_r Lambda^k are invariant under the pullback of every linear map, and the subspaces of
-    H_r Lambda^k invariant under GL(n, K) are 0, d H_(r+1) Lambda^(k-1), kappa H_(r-1)
-    Lambda^(k+1) and H_r Lambda^k (r, k >= 1); d P_(r+1) Lambda^(k-1) and X(r, s, k) =
-    d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1) (s <= r, k >= 1) are invariant under the
-    pullback of every affine map, X(r, r, k) = P_(r+1)^- Lambda^k, X(r+1, r, k) = P_(r+1)
-    Lambda^k and d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every
-    nonzero finite-dimensional space of k-forms invariant under the invertible affine maps is
-    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6).
-    FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact: over every field K,
-    the classification of the GL(n)-invariant subspaces of H_(r+1) Lambda^(k+1), and the
-    homogeneous Poincare lemma ker d meet H_r Lambda^(k+1) = d H_(r+1) Lambda^k (AFW2006 (3.2)),
-    hold in every dimension and all degrees iff K has characteristic 0.
+    have closed range in every degree. FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries
+    such a mesh family, the Freudenthal meshes (stated by their vertices: every simplex of M_N is
+    a Kuhn simplex h (z + K_sigma), h = 1/(2(N+1)), with vertices
+    h (z + e_sigma(0) + ... + e_sigma(j-1))), for which the family of FEEC.fem (b = false)
+    attains the rate h_N^(s+1) for Sobolev data: if x and dx lie in H^(s+1)(Omega) with norm at
+    most L (H^m(Omega) the restrictions to Omega of the forms whose coefficients have weak
+    derivatives in L^2(R^n) along all words of length at most m), then ||x - pi_N x|| and
+    ||d x - d pi_N x|| are at most B L h_N^(s+1), in every dimension.
+    This is exactly what the Galerkin theorems of the Palomar entry palomar/feec need
+    (FEEC.projectionFEEC, FEEC.staticFEEC, FEEC.evolutionFEEC), in the same notions (the shared
+    blocks HilbertComplex and SubcomplexFamily of palomar/shared/vocabulary.lean.txt, checked
+    byte for byte by the gate): the converse of
+    FEEC.projectionFEEC (the uniform discrete Poincare inequality and harmonic bound) needs
+    uniformly graph-bounded cochain projections and closed ranges; FEEC.staticFEEC (the mixed
+    method) graph-norm bounds in two consecutive degrees and Poincare inequalities, which are
+    the closed ranges, and its rates are those of the Jackson estimates; the wave clause of
+    FEEC.evolutionFEEC needs approximation alone (in the last degree of the window in L^2, which
+    follows from graph-norm approximation by density), so it holds on every domain of this
+    entry; its heat clause moreover graph-norm bounds, the L^2 bound of the projections in the
+    last degree (both from FEEC.fem) and closed ranges (FEEC.fem_parallelepiped). On
+    parallelepipeds all of them apply, at the rates h^(s+1) (the cohomology clause of the static
+    verdict needs moreover finite-dimensional harmonic forms, not proved here). The rate attained
+    by the projections themselves (Jackson.ProjRate) is more than these theorems need: it gives
+    the comparison fields of the fully discrete schemes of palomar/waves.
     The proof is the library Feec of this repository (Feec.FiniteElement, Feec.Models.StarShaped,
-    Feec.Models.Parallelepiped, Feec.Mesh, Feec.Instances.Maxwell,
-    Feec.Models.Cube.SobolevRateHigh, Feec.Models.Cube.SobolevRestriction,
-    Feec.FiniteElement.GlobalInverseEstimate, Feec.Models.Cube.Inhomogeneous,
-    Feec.Models.Cube.InhomogeneousError, Feec.Models.Cube.InhomogeneousLeapfrog,
-    Feec.Numerics.PlaneWaveCubeError, Feec.FiniteElement.LocalDof,
-    Feec.FiniteElement.InvariantForm, Feec.FiniteElement.AffineInvariantForm,
-    Feec.Counterexamples.PositiveCharacteristic). This entry absorbs the former entry
-    palomar/periodic (its classification theorems) and the Whitney schemes of the former
-    palomar/timestepping (FEEC.inverse_estimate, FEEC.crankNicolson_cube, FEEC.leapfrog_cube,
-    FEEC.rowSolution_nonvacuous, formerly in the namespace TimeStepping).
+    Feec.Models.Parallelepiped, Feec.Mesh, Feec.Models.Cube.SobolevRateHigh,
+    Feec.Models.Cube.SobolevRestriction).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -155,8 +75,8 @@ project:
     - "Vincent Quenneville-Bélair"
 
 classification:
-  arxiv: ["math.NA", "math.FA", "math.AC"]
-  msc2020: ["65N30", "65M60", "65M12", "58A10", "58A14", "65N12", "65N15", "15A75"]
+  arxiv: ["math.NA", "math.FA"]
+  msc2020: ["65N30", "58A10", "58A14", "65N12", "65N15", "46E35"]
 
 sources:
   - title: "Finite element exterior calculus, homological techniques, and applications"
@@ -166,33 +86,15 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
     type: "article"
-    location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential; §3.4: (3.10), (3.18), Theorems 3.5-3.6), §4 (Theorems 4.10, 4.14: the degrees of freedom and their unisolvence), §5 (assembly of the global spaces with single-valued traces, admissible sequences (5.13))"
+    location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential), §5 (assembly of the global spaces with single-valued traces, admissible sequences (5.13))"
     relationship: "formalizes"
     note: >-
       The polynomial spaces are stated in coordinates (a polynomial coefficient for each dx_s),
-      P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1), over every field where only
-      algebra is involved. The global spaces are stated as piecewise polynomial forms with
-      single-valued tangential traces on every common face of two simplices; their equivalence
-      with the assembly from the degrees of freedom is proved in Feec and used in the solution,
-      not stated. The degrees of freedom are compared on a single simplex (FEEC.unisolvent:
-      vanishing moments force zero, and the moments are as many as the dimension, Theorems
-      4.9-4.10 and 4.13-4.14). §3.4: the invariance of the summands of (3.10) under the pullback
-      of linear maps and their irreducibility under GL(n), (3.18), Theorem 3.5 with its cases
-      s = r and s = r - 1 (r = 0 included), Theorem 3.6, over every field of characteristic 0.
-      AFW derive the irreducibility from Fulton-Harris (6.9); Feec proves it directly (weight
-      parts of diagonal pullbacks, an explicit generator and a pullback reaching it from every
-      form not in the other summand), first for invariance under all linear maps, then under
-      GL(n) alone (over an infinite field c -> (B + c I)^* omega is a polynomial curve, in a
-      GL(n)-invariant space at the cofinitely many c with det(B + c I) != 0, hence with its value
-      at c = 0). Characteristic 0 cannot be dropped (FEEC.charZero_iff_classification,
-      FEEC.charZero_iff_closed_eq_exact; the source works over R). Not formalized from §3.4: the
-      description of the third kind of Theorem 3.5 (s < r - 1) as {omega in P_r Lambda^k |
-      d omega in P_s Lambda^(k+1)}, the identities (3.4), (3.7), (3.19) and Lemma 3.7 as
-      separate statements (proved in Feec in the form the proofs use), the decomposition (3.20)
-      and the inequivalence of its summands, and the classification of the affinely invariant
-      subcomplexes (that the 2^(n-1) resolutions of §3.5 are the only ones; not proved in Feec).
-      Locators of §3.4 checked against the published text for the former entry
-      palomar/periodic; the others as cited in Feec, not rechecked for this entry.
+      P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1). The global spaces are stated
+      as piecewise polynomial forms with single-valued tangential traces on every common face of
+      two simplices; their equivalence with the assembly from the degrees of freedom is proved in
+      Feec and used in the solution, not stated (the degrees of freedom on one simplex are the
+      entry palomar/shapes). Locators as cited in Feec, not rechecked for this entry.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -232,19 +134,8 @@ sources:
       - "Philippe G. Ciarlet"
     id: "doi:10.1137/1.9780898719208"
     type: "book"
-    location: "§3.1-§3.2 (shape-regular families, interpolation error)"
+    location: "§3.1 (shape-regular families)"
     relationship: "background"
-    author_endorsement: "not-contacted"
-  - title: "Finite Element Methods for Maxwell's Equations"
-    authors:
-      - "Peter Monk"
-    id: "doi:10.1093/acprof:oso/9780198508885.001.0001"
-    type: "book"
-    location: "Oxford University Press (2003), the spaces H(curl), H(div), the Nedelec and Raviart-Thomas elements, semi-discrete Maxwell"
-    relationship: "background"
-    note: >-
-      Background for FEEC.maxwell; the compared statement is the Hodge wave equation of the
-      Maxwell window in vector proxies, not Monk's (E, H) formulation.
     author_endorsement: "not-contacted"
   - title: "Partial Differential Equations"
     authors:
@@ -271,74 +162,13 @@ sources:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
     type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 (finite element approximation of Hilbert complexes; the Hodge wave equation and its constraints such as the Gauss laws, Prop 4.16), Ch. 7 (the Crank-Nicolson Whitney scheme; the boundary data from the exact solution are those of the thesis' runs, implemented in its code fem4gr)"
-    relationship: "formalizes"
+    location: "Ch. 4 (finite element approximation of Hilbert complexes)"
+    relationship: "background"
     note: >-
-      FEEC.maxwell is the thesis' Hodge wave equation (with the constraint propagation of
-      Prop 4.16 for the Gauss laws) for the concrete P_r Lambda / P_r^- Lambda families.
-      FEEC.crankNicolson_cube is one row of the thesis' Ch. 7 scheme (the rows decouple); its
-      error estimate O(h + Delta t^2), the unisolvence and well-posedness clauses, the leapfrog
-      variant and its CFL analysis (FEEC.leapfrog_cube), and the fully discrete theorem
-      FEEC.fem_wave are proved in Feec for this formalization, not in the thesis; they are of the
-      textbook type (energy arguments with comparison fields), not new mathematics beyond their
-      generality. The finite element theory of the spaces themselves and the classification of
-      the shape spaces are not attributed to the thesis. The formalization is by the thesis
-      author.
+      The thesis uses the uniformly bounded cochain projections of the finite element complexes
+      (Ch. 4) for its Galerkin methods; the finite element theory of the spaces themselves is
+      not attributed to the thesis. The formalization is by the thesis author.
     author_endorsement: "participated"
-
-  - title: "Representation Theory: A First Course"
-    authors:
-      - "William Fulton"
-      - "Joe Harris"
-    id: "doi:10.1007/978-1-4612-0979-9"
-    type: "book"
-    location: "Graduate Texts in Mathematics 129, §6.1, (6.9)"
-    relationship: "background"
-    note: "The source of AFW2006's irreducibility claim in §3.4; the formalization proves it without representation theory."
-    author_endorsement: "not-contacted"
-  - title: "Variational Methods for Time-Dependent Wave Propagation Problems"
-    authors:
-      - "Patrick Joly"
-    id: "doi:10.1007/978-3-642-55483-4_6"
-    type: "book chapter"
-    location: "Topics in Computational Wave Propagation, LNCSE 31 (2003), pp. 201-264"
-    relationship: "background"
-    note: >-
-      The energy argument for leapfrog under the CFL condition (FEEC.leapfrog_cube and the
-      leapfrog clause of FEEC.fem_wave). Title, volume and pages checked against Crossref for the
-      former entry palomar/timestepping; no section locator (contents not rechecked).
-    author_endorsement: "not-contacted"
-  - title: "Galerkin Finite Element Methods for Parabolic Problems"
-    authors:
-      - "Vidar Thomée"
-    id: "doi:10.1007/3-540-33122-0"
-    type: "book"
-    location: "Springer Ser. Comput. Math. 25, 2nd ed. (2006), Ch. 1, 7"
-    relationship: "background"
-    note: >-
-      Ch. 1 (The Standard Galerkin Method; the comparison with the projection of the exact
-      solution) and Ch. 7 (Single Step Fully Discrete Schemes): the Crank-Nicolson error argument,
-      stability plus consistency along the comparison trajectory, here for the skew discrete wave
-      operator (FEEC.fem_wave, FEEC.crankNicolson_cube). Chapter titles checked against Crossref
-      for the former entry palomar/timestepping; contents not consulted.
-    author_endorsement: "not-contacted"
-  - title: "Geometric Integration Theory"
-    authors:
-      - "Hassler Whitney"
-    id: "doi:10.1515/9781400877577"
-    type: "book"
-    location: "Ch. IV (Whitney forms, face integrals as degrees of freedom)"
-    relationship: "background"
-    author_endorsement: "not-contacted"
-  - title: "The Mathematical Theory of Finite Element Methods"
-    authors:
-      - "Susanne C. Brenner"
-      - "L. Ridgway Scott"
-    id: "doi:10.1007/978-0-387-75934-0"
-    type: "book"
-    location: "Texts in Applied Mathematics 15, 3rd ed. (2008), §4.5 (inverse estimates)"
-    relationship: "background"
-    author_endorsement: "not-contacted"
 
 related_formalizations: []
 
@@ -347,40 +177,25 @@ status:
     Formalized and compared: FEEC.fem for both boundary conditions (H Lambda and H°Lambda), every
     dimension n >= 1, every bounded open domain star-shaped with respect to a ball, every
     shape-regular quasi-uniform family of conforming simplicial meshes of it with h_N -> 0, and
-    every admissible sequence with r_k >= 1; FEEC.inverse_estimate on every open domain whose
-    open mesh simplices lie in it; FEEC.fem_wave for the same data as FEEC.fem, both boundary
-    conditions, every window [a, a + m) and every s; FEEC.fem_parallelepiped for every
-    parallelepiped; FEEC.fem_cube for the cube (0, 1/2)^n, every n >= 1, every admissible
-    sequence and every s; FEEC.crankNicolson_cube, FEEC.leapfrog_cube and
-    FEEC.rowSolution_nonvacuous on (0, 1/2)^3 with its Freudenthal meshes and the Whitney
-    sequence; FEEC.maxwell for n = 3 on the same domains and meshes as FEEC.fem;
-    FEEC.unisolvent for every n-simplex, r >= 1 and k; FEEC.affineInvariantForms over every field
-    of characteristic 0 and every n, k, r, s; FEEC.charZero_iff_classification and
-    FEEC.charZero_iff_closed_eq_exact over every field.
+    every admissible sequence with r_k >= 1; FEEC.fem_parallelepiped for every parallelepiped;
+    FEEC.fem_cube for the cube (0, 1/2)^n, every n >= 1, every admissible sequence and every s.
     Not restated (compared in palomar/feec, whose theorems apply to the families of FEEC.fem as
     the project description explains): the uniform discrete Poincare inequality and harmonic
     bound (the converse of FEEC.projectionFEEC), the mixed method and its rates
     (FEEC.staticFEEC), the semidiscrete and A-stable fully discrete wave and heat equations with
-    the rates of the Jackson estimates (FEEC.evolutionFEEC), the variational crimes
-    (FEEC.crimeFEEC); constraint propagation is palomar/constraints (FEEC.maxwell restates that
-    of the Gauss laws).
+    the rates of the Jackson estimates (FEEC.evolutionFEEC). Compared in other entries since
+    2026-11-18 (formerly here): the inverse estimate, the fully discrete Hodge wave equation, the
+    Whitney schemes of the cube and Maxwell's equations (palomar/waves); the unisolvence of the
+    degrees of freedom and the classification of the affinely invariant spaces of polynomial
+    forms (palomar/shapes).
     Not compared (proved in Feec, outside the statement): the Whitney forms as a separate family
-    (they are the sequence topSeq), the assembly of the global spaces from the degrees of
-    freedom, the finite element theory of the cube with mixed boundary conditions, the cubical
-    and weak-symmetry elements, the Einstein-Bianchi instances (the three-row Ch. 7 scheme and its
-    constraint monitors), the perfect-electric-conductor Maxwell discretization in vector proxies
-    (it is the window [0, 3) of FEEC.fem with b = true in forms), the H^1 approximation of the
-    smoothed projections; the polynomial identities, dimension formulas and exactness of the
-    polynomial de Rham and Koszul complexes of P_r Lambda, P_r^- Lambda and Q_r^- Lambda (the
-    former FEEC.periodicTable of palomar/periodic; Feec.Algebra.PolynomialFormDim,
-    Feec.Algebra.CubicalForm), the classification with the summands as kernels
-    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker).
+    (they are the sequence topSeq of palomar/waves), the assembly of the global spaces from the
+    degrees of freedom, the finite element theory of the cube with mixed boundary conditions, the
+    cubical and weak-symmetry elements, the H^1 approximation of the smoothed projections.
     Not formalized: the closed range on general star-shaped or Lipschitz domains (true on
     Lipschitz domains by Picard 1984, Costabel-McIntosh 2010); Sobolev (H^(s+1)) rates on
     general star-shaped domains and mesh families (see fidelity (7)); merely shape-regular
-    (not quasi-uniform) meshes; Lipschitz polyhedral domains; the fully discrete wave equation
-    with inhomogeneous boundary data on general domains and meshes (fidelity (11)); the
-    classification of the affinely invariant subcomplexes.
+    (not quasi-uniform) meshes; Lipschitz polyhedral domains.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -415,55 +230,40 @@ automation:
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written by an AI agent for this submission, to be reviewed by the author; the Solution
     identifies them with the definitions of the library Feec (Solution/Forms.lean, Poly.lean,
-    Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean, Maxwell.lean, Dof.lean, Affine.lean)
-    and applies its theorems; the projections attain the Jackson rate by the quasi-optimality
-    of a bounded projection (Solution/Complex.lean, Jackson.projRate, from
-    Feec.ForMathlib.Analysis.QuasiOptimal). The classification statements and their bridge were
-    moved from the former entry palomar/periodic and restated on the coordinate forms of this
-    entry (2026-11-17). FEEC.fem_wave (2026-11-18) is proved from FEEC.fem and
-    FEEC.inverse_estimate of this entry (Solution/Wave.lean: the windows of the finite element
-    subcomplexes as Feec discrete states, the abstract Crank-Nicolson and leapfrog estimates of
-    Feec.Models.Cube.Inhomogeneous with the projections of the exact solution as comparison
-    fields); the Whitney schemes and the inverse estimate were moved from the former
-    palomar/timestepping and restated on windows (Solution/Whitney.lean).
+    Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean) and applies its theorems; the
+    projections attain the Jackson rate by the quasi-optimality of a bounded projection
+    (Solution/Complex.lean, Jackson.projRate, from Feec.ForMathlib.Analysis.QuasiOptimal).
+    Restructured on 2026-11-18 as one question: the theorems of the fully discrete wave and
+    Maxwell equations moved to palomar/waves, those of the shape functions to palomar/shapes,
+    with their definitions (the Challenge from 997 to 498 lines).
 
 fidelity:
   divergences: >-
     (1) Coordinates: points of R^n are Fin n -> R (sup norm), forms are given by their
     coefficients on dx_s, s an increasing k-subset of Fin n, and L^2(Omega; Lambda^k) is the
-    l^2 sum of copies of L^2(Omega); a window [a, a + m) is the l^2 sum Total of its degrees;
-    polynomial forms are coefficient functions Finset (Fin n) -> MvPolynomial (Fin n) K over a
-    field K, evaluated to form fields over R; this is the standard coordinate model, not
-    Mathlib's (alternating-map) differential forms or its exterior algebra (the former
-    palomar/periodic used P(K^n) (x) Lambda(K^n)*; the two are identified in Feec,
-    Feec.Algebra.ExteriorAlgebraForm). The pullback of polynomial forms is stated by minors,
-    (phi^* omega)_t = sum_(#s = #t) det B_(s,t) (omega_s o phi).
+    l^2 sum of copies of L^2(Omega); polynomial forms are coefficient functions
+    Finset (Fin n) -> MvPolynomial (Fin n) R, evaluated to form fields; this is the standard
+    coordinate model, not Mathlib's (alternating-map) differential forms or its exterior algebra
+    (the two are identified in Feec, Feec.Algebra.ExteriorAlgebraForm).
     (2) The weak exterior derivative is defined as the adjoint of the closure of the formal
     adjoint d^t on test forms (Mathlib's LinearPMap.adjoint), and the minimal one as the closure
     of d on test forms (Submodule.toLinearPMap of the closed graph); the docstrings state the
-    weak characterization, which is Mathlib's definition of the adjoint domain. The total
-    differential of a window in the schemes is a total function (HilbertComplex.dApply, 0 off its
-    domain), only applied to finite element forms, which lie in its domain.
+    weak characterization, which is Mathlib's definition of the adjoint domain.
     (3) The finite element spaces are stated as piecewise polynomial forms with single-valued
     tangential traces on every common face (the trace agreement on all subsimplices, not only on
     facets); the sources define them through degrees of freedom or as the piecewise polynomial
-    forms in H Lambda^k(Omega). The degrees of freedom are compared on one simplex
-    (FEEC.unisolvent); the equivalence of the two descriptions of the global spaces is proved in
-    the solution, not stated; the equivalence with membership in H Lambda^k is not stated (the
-    conformity direction is a consequence of the subcomplex property, which is compared).
-    FEEC.unisolvent states unisolvence as injectivity of the moments together with the count
-    (number of moments = dimension); bijectivity onto the dual for chosen bases of the test
-    spaces follows by linear algebra and is not stated. Faces are oriented by the increasing
-    order of their vertices (order embeddings Fin (m+1) -> Fin (n+1)); the moments are those of
-    AFW2006 §4 up to this orientation sign.
+    forms in H Lambda^k(Omega). The equivalence of the two descriptions of the global spaces is
+    proved in the solution, not stated; the equivalence with membership in H Lambda^k is not
+    stated (the conformity direction is a consequence of the subcomplex property, which is
+    compared).
     (4) Shape regularity is the bound h_T / rho_T <= sigma (Ciarlet §3.1), stated as: every
     simplex contains a ball of radius rho with h_T <= sigma rho, for the sup norm of Fin n -> R
     (Euclidean balls change sigma by a factor depending on n); Feec works with the equivalent
     edge-matrix bounds, and the two directions are proved there (Feec.Mesh.isShapeRegular_of_ball,
     Feec.Mesh.exists_ball_of_isShapeRegular). Quasi-uniformity is assumed (the smoothed
-    projections of Feec use a fixed mollification scale h_N; FEEC.inverse_estimate and the CFL
-    condition use the global mesh size); the sources' local variants for merely shape-regular
-    meshes (Christiansen-Winther 2008; Falk-Winther 2014) are not formalized.
+    projections of Feec use a fixed mollification scale h_N); the sources' local variants for
+    merely shape-regular meshes (Christiansen-Winther 2008; Falk-Winther 2014) are not
+    formalized.
     (5) Admissible sequences (PolySeq) have r_k >= 1 in every degree; the piecewise constants
     P_0 Lambda^n are the equal space P_1^- Lambda^n, and the sequences through P_0 Lambda^k with
     k < n are not covered (they continue with P_0^- Lambda = 0 and cannot approximate
@@ -475,18 +275,18 @@ fidelity:
     FEEC.staticFEEC (through Poincare inequalities), of the heat clause of FEEC.evolutionFEEC and
     of the converse of FEEC.projectionFEEC in palomar/feec, is proved only on parallelepipeds
     (FEEC.fem_parallelepiped); on other star-shaped domains it stays a hypothesis of these. The
-    wave clauses (FEEC.evolutionFEEC, FEEC.fem_wave) do not need it.
-    (7) Rates. On general star-shaped domains and mesh families (FEEC.fem, FEEC.fem_wave) the
-    Jackson class is C^(s+2) forms with sup bounds on the (s+1)-st derivatives of x and dx on
-    the closure of Omega: one derivative more than the order requires and a W^(s+1,infinity)
-    instead of an H^(s+1) norm. For b = true the smooth form must vanish outside Omega and be
-    C^(s+2) on R^n, so its derivatives up to order s+2 vanish on the boundary: a smaller class
-    than vanishing tangential trace. Sobolev data are compared only on the cube (0, 1/2)^n with
-    its Freudenthal meshes (FEEC.fem_cube; other mesh families of the cube are not covered) and
-    only for H Lambda; H^m(Omega) is defined by restriction of H^m(R^n) (weak derivatives in
-    L^2(R^n) along words, the norm a sum over words, equivalent to the multi-index norm), which
-    equals the weak-derivative space of Omega on Lipschitz domains (not formalized); the norm is
-    the full H^(s+1) norm, not the seminorm. In every case the rate is attained by the bounded
+    wave clause of FEEC.evolutionFEEC does not need it.
+    (7) Rates. On general star-shaped domains and mesh families (FEEC.fem) the Jackson class is
+    C^(s+2) forms with sup bounds on the (s+1)-st derivatives of x and dx on the closure of
+    Omega: one derivative more than the order requires and a W^(s+1,infinity) instead of an
+    H^(s+1) norm. For b = true the smooth form must vanish outside Omega and be C^(s+2) on R^n,
+    so its derivatives up to order s+2 vanish on the boundary: a smaller class than vanishing
+    tangential trace. Sobolev data are compared only on the cube (0, 1/2)^n with its Freudenthal
+    meshes (FEEC.fem_cube; other mesh families of the cube are not covered) and only for
+    H Lambda; H^m(Omega) is defined by restriction of H^m(R^n) (weak derivatives in L^2(R^n)
+    along words, the norm a sum over words, equivalent to the multi-index norm), which equals
+    the weak-derivative space of Omega on Lipschitz domains (not formalized); the norm is the
+    full H^(s+1) norm, not the seminorm. In every case the rate is attained by the bounded
     cochain projections themselves (Jackson.ProjRate), not only by some element of the space.
     The H^(s+1) estimate ||x - pi_N x|| <= C h^(s+1) ||x||_(H^(s+1)) on general star-shaped
     domains and mesh families (AFW2010 §5.5) is not proved in Feec: by the quasi-optimality of
@@ -502,113 +302,28 @@ fidelity:
     of facets serves both boundary conditions: Gamma = ∅ for H Lambda(Omega) and Gamma =
     M.boundaryFacets, the facets of a single simplex of the mesh, for the vanishing boundary
     traces of H°Lambda(Omega) (Solution: FEEC.femSpace_empty, FEEC.mem_boundaryFacets_iff), and
-    FEEC.fem (formerly FEEC.fem and FEEC.femMin) and FEEC.fem_wave take the boundary condition as
-    a Boolean b. The notions shared with other entries (Hilbert complexes, their windows and
-    families, differential and polynomial forms, admissible sequences and the Whitney sequence
-    topSeq, meshes with the Freudenthal meshes IsFreudenthal, finite element spaces, the
-    regularity classes IsCsForm and IsSobolevForm) are the canonical blocks of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate.
-    (9) FEEC.maxwell: the window is that of H Lambda(Omega), so the boundary conditions are
-    natural (perfect magnetic conductor in the (sigma, E, B) form, B the 2-form proxy and
-    H = -B the magnetic field): E . n = 0 and B x n = 0 (H x n = 0) enter through the adjoints
-    grad* and curl*, the physical PMC walls; the perfect electric conductor (the minimal
-    complex) is not compared in vector proxies. Scalar fields are L^2 fields with one component
-    (Fin 1), and the state is the triple (sigma, E, B) with the scalar potential sigma of the
-    Hodge wave equation (sigma = 0 is one of the Gauss laws). Data lie in the domain of the
-    Maxwell operator; the statement has no rate (the rates of the window [0, 3) of FEEC.fem in
-    forms are those of FEEC.fem_wave, fully discrete, and of the wave clause of
-    FEEC.evolutionFEEC of palomar/feec, semidiscrete; in vector proxies they are not compared).
-    The Galerkin solutions are differentiable in L^2 on [0, T] with values in V_N; their
-    derivatives are not required to lie in V_N (they do when T > 0, V_N being
-    finite-dimensional). Most of FEEC.maxwell is the transport of the window of FEEC.fem to
-    vector proxies.
-    (10) AFW2006 §3.4 is stated over every field K of characteristic 0 (the source works over
-    R). The hypothesis is necessary (FEEC.charZero_iff_classification,
-    FEEC.charZero_iff_closed_eq_exact), but both iff theorems quantify over all dimensions: in a
-    fixed dimension the classification can hold in characteristic p (in dimension 1 every
-    subspace of H_r Lambda^k is 0 or H_r Lambda^k); they do not identify the dimensions in which
-    it fails. The conclusions of invariance (the summands of (3.10), (3.18), Theorem 3.5) are
-    stated for the pullback of every linear (resp. affine) map, singular ones included; the
-    hypotheses of the classifications only for the invertible ones (GL(n, K) for the subspaces
-    of H_r Lambda^k; x -> g x + b for Theorem 3.6, which is stronger than AFW's hypothesis of all
-    affine maps). The irreducibility is stated for r, k >= 1 (H_(r+1) Lambda^(k+1)); Theorem
-    3.6's s >= -1 is stated as the two alternatives s = -1 (d P_(r+1) Lambda^(k-1)) and
-    0 <= s <= r.
-    (11) FEEC.fem_wave. Homogeneous boundary conditions only: the trial and test spaces are the
-    finite element forms of the window (with vanishing boundary traces for b = true), the
-    boundary data of the steps vanish, the load is zero, and the exact solution lies in the
-    domain of the wave operator of the complex (natural, resp. essential, boundary conditions);
-    inhomogeneous data are the cube theorems (12) only. The exact solution is stated by its
-    hypotheses at the L^2 level: U, U_1, U_2, U_3 with two-sided derivatives at every real time
-    (U is defined on all of R, as solutions of the wave equation are), (U(t), U_1(t)) in the
-    graph of d - d* and ||U_3(t)|| <= L on [0, T], and the values and time increments in the
-    Jackson class of FEEC.fem with the bounds L and L |t' - t| (a Lipschitz condition in the
-    class; the C^(s+2) surrogate of (7)); no compared witness exhibits a nonzero such solution
-    (U = 0 satisfies the hypotheses and gives the stability bounds; on boxes the cosine modes
-    with the natural boundary conditions are such solutions, not formalized). The rate is the
-    spatial order h^(s+1) of the projections and the temporal order Delta t^2 of both schemes,
-    uniformly in N; the error is in L^2 at t_K = K Delta t, from arbitrary starting values in
-    X_h (with the starting errors added), not in the energy norm. Crank-Nicolson is the only
-    implicit scheme of the statement (every A-stable rational scheme, with a temporal error in
-    the discrete datum, is the wave clause of FEEC.evolutionFEEC); leapfrog is a two-step
-    scheme, stable under the CFL condition, the factor 1 - c from the energy argument; the
-    constant C_0 of the inverse estimate is asserted (from a norm equivalence on the reference
-    simplex, by compactness, so it has no explicit value), and the CFL condition is stated for
-    every constant C_0 >= 0 of the estimate. Its inverse estimate is that of the window, with
-    the global mesh size; the window is that of the complex of FEEC.fem, the given H (any
-    Hilbert complex of the challenge whose differentials are dMax, resp. dMin, is this one).
-    (12) FEEC.crankNicolson_cube and FEEC.leapfrog_cube (the runs of the thesis' Ch. 7, from the
-    former palomar/timestepping): one row of the thesis' three-row Einstein-Bianchi scheme (the
-    rows decouple); the exact solution is a classical solution on R x R^3 with the stated bounds
-    on [0, T] (RowSolution), and no boundary condition is imposed on it: the boundary degrees of
-    freedom of the scheme are those of the Whitney interpolant of the exact solution at every
-    step for all three fields (any g_n with g_n - Pi_h U(t_n) in the fields with vanishing
-    traces), the initial value is the interpolant of U(0), the load is zero. This is an interior
-    error estimate with exact Dirichlet data everywhere, not the natural boundary conditions of
-    a well-posed initial-boundary value problem. With vanishing boundary data the schemes are
-    those of FEEC.fem_wave (b = true, S = topSeq, s = 0), whose Jackson class (vanishing to
-    second order on the boundary) is smaller than the RowSolution bounds; for nonvanishing data
-    neither theorem implies the other. The error is in L^2 at t_M = M Delta t; rates for finite
-    Sobolev regularity and the constraint monitors are not stated. Everything is on one domain,
-    (0, 1/2)^3, and one mesh family. Leapfrog: the three-level scheme with the same boundary data
-    and the two starting values u_0 = Pi_h U(0), u_1 = Pi_h U(Delta t) (interpolants of the exact
-    solution; no one-step starting procedure); the stability clause is for vanishing boundary
-    degrees of freedom; the time step need not satisfy the CFL condition for well-posedness
-    (the step is explicit); sharpness of the CFL condition is not stated. The relation to the
-    abstract theorems is explained, not compared: with vanishing boundary data a Crank-Nicolson
-    step is r(Delta t A_h) on the fields with vanishing traces, r(z) = (2 + z)/(2 - z), A_h
-    skew-adjoint for the L^2 product. Non-vacuity of RowSolution is FEEC.rowSolution_nonvacuous
-    (constant fields inhabit it too; the witness is a plane wave with nonzero time derivative).
-    The schemes are stated with the same step notions as FEEC.fem_wave (HilbertComplex.IsCNStep,
-    IsLeapfrogStep on the window [0, 3), the trial space Vh, the test space of vanishing traces),
-    the rows as the window Total, the interpolant and the representatives of U(t) on windows
-    (IsWhitneyInterp, IsRepr); the former statements (rows as triples, wd, waveForm, RowMem,
-    rowNorm, IsRowInterp, one degree per interpolant) are the same up to these identifications,
-    and the unisolvence clause is stated on every window [0, m) (formerly in every degree k).
-    (13) FEEC.inverse_estimate: the hypothesis that the open simplices lie in Omega (true when
-    Omega is the interior of its closure, e.g. for star-shaped or convex Omega; it makes the
-    L^2(Omega) norm the sum of the norms on whole simplices) replaces regularity of Omega; the
-    global estimate is stated with the mesh size h_N, not elementwise; C depends on n, S, k and
-    the shape-regularity and quasi-uniformity constants of the family.
+    FEEC.fem takes the boundary condition as a Boolean b. The notions shared with other entries
+    (Hilbert complexes and their families of subcomplexes, differential and polynomial forms,
+    admissible sequences and their polynomial orders, meshes with the Freudenthal meshes
+    IsFreudenthal, domains star-shaped with respect to a ball, covector values, finite element
+    spaces, the regularity classes IsCsForm, IsCsFormMin and IsSobolevForm) are the canonical
+    blocks of palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate; they are
+    shared with palomar/feec (the Hilbert complexes and their families) and palomar/waves (the
+    finite element notions).
 
 review:
   status: "self-assessed"
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the thirteen compared theorems and
+    Not yet reviewed by the author: the Challenge statement (the three compared theorems and
     their definitions); FEEC.fem (the former FEEC.fem and FEEC.femMin, one theorem over the
-    boundary condition since 2026-11-18), FEEC.fem_parallelepiped, FEEC.fem_cube, FEEC.maxwell as
-    of 2026-11-06, restated 2026-11-17 without the window verdicts (the static, wave and heat
-    theorems apply through palomar/feec) and with the projection rates (Jackson.ProjRate);
-    FEEC.inverse_estimate, FEEC.crankNicolson_cube, FEEC.leapfrog_cube and
-    FEEC.rowSolution_nonvacuous moved from palomar/timestepping (2026-11-18), the Whitney schemes
-    restated on windows with the step notions of FEEC.fem_wave; FEEC.fem_wave new on 2026-11-18;
-    FEEC.unisolvent and faceMoment new on 2026-11-17; the classification theorems moved from
-    palomar/periodic (2026-10-31 to 2026-11-04) and restated on the coordinate forms on
-    2026-11-17. Every merge of the library was gated by a full build (zero warnings), an axiom
-    audit (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
-    mathematical review.
+    boundary condition since 2026-11-18), FEEC.fem_parallelepiped and FEEC.fem_cube as of
+    2026-11-06, restated 2026-11-17 without the window verdicts (the static, wave and heat
+    theorems apply through palomar/feec) and with the projection rates (Jackson.ProjRate). Every
+    merge of the library was gated by a full build (zero warnings), an axiom audit (propext,
+    Classical.choice, Quot.sound only) and an independent AI review. No external mathematical
+    review.
 
 alignment:
   namespace: "FEEC"
@@ -624,29 +339,6 @@ alignment:
         exists_mem_poly_le_of_isCsForm (and their Min versions); the spaces through
         Solution/Spaces.lean (mem_V_iff, mem_V₀_iff); the projection rate from the Jackson
         estimate and the uniform bound (Solution/Complex.lean, Jackson.projRate).
-    - source: "[Ciarlet2002] §3.2; [BrennerScott2008] §4.5"
-      lean: "FEEC.inverse_estimate"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.FiniteElement.PolySeq.exists_mul_norm_d_le on the Feec meshes M.toFeec Omega (shape
-        regularity from the inscribed balls, isShapeRegular_toFeec), whose spaces are the
-        challenge's (mem_V_iff). From the former palomar/timestepping.
-    - source: "[QuennevilleBelair2015] Ch. 4, 7; [Joly2003]; [Thomee2006] Ch. 1, 7; [Arnold2018] Ch. 8"
-      lean: "FEEC.fem_wave"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        From FEEC.fem and FEEC.inverse_estimate (Solution.lean): the complex of FEEC.fem is the
-        given H (HilbertComplex.ext_of_d); the comparison fields are the componentwise L^2
-        projections of the exact solution, whose errors (quasi-optimality of a bounded projection
-        with the Jackson estimate) and differentials (Jackson.ProjRate, through
-        HilbertComplex.norm_totalD_le) are O(L h^(s+1)); HilbertComplex.wave_error
-        (Solution/Wave.lean: the window of a subcomplex as Feec discrete states, the steps as
-        Feec Dirichlet steps with V0 = V, the weak form from the formal adjoint) applies
-        Feec.Models.Cube.Inhomogeneous.norm_cn_error_le and norm_leapfrog_error_le_of_sub_mem (new
-        for this entry: from any starting values), the CFL condition from the inverse estimate on
-        the window.
     - source: "[Freudenthal1942]; [AFW2010] §4 (closed range)"
       lean: "FEEC.fem_parallelepiped"
       module: "Challenge"
@@ -668,84 +360,5 @@ alignment:
         Freudenthal simplices from Feec.Mesh.mem_freudenthalMesh_simplices, and the graph-norm
         bound and the projection rate (Jackson.projRate) through the uniformly L^2-bounded
         cochain projections of FEEC.fem.
-    - source: "[QuennevilleBelair2015] Ch. 7; [Arnold2018] Ch. 7; [Monk2003]; [Thomee2006]"
-      lean: "FEEC.crankNicolson_cube"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row on the Freudenthal
-        meshes (cubeMesh), with whitney_existsUnique_cnStep, whitneyMin_one_ne_bot and the
-        unisolvence of the face integrals (isWhitneyInterpAt_cube_iff), through
-        Solution/Whitney.lean (the Whitney spaces of topSeq are Feec's whitney and whitneyMin, the
-        challenge's interpolant in every degree is the glued global interpolant, the steps are
-        Feec's IsDirichletCNStep). From the former palomar/timestepping.
-    - source: "[Joly2003]; [QuennevilleBelair2015] Ch. 7"
-      lean: "FEEC.leapfrog_cube"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Feec.Models.Cube.Inhomogeneous.exists_mul_norm_discreteD_whitneyRow_le (the inverse
-        estimate on the Whitney row), Feec.TimeStepping.existsUnique_isDirichletLeapfrogStep,
-        whitney_leapfrog_stable and RowSolution.whitney_leapfrog_error_le_row (for every constant
-        of the inverse estimate), through Solution/Whitney.lean. From the former
-        palomar/timestepping.
-    - source: "[QuennevilleBelair2015] Ch. 7 (the plane wave)"
-      lean: "FEEC.rowSolution_nonvacuous"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        Row 0 of Feec.Numerics.PlaneWaveCube.planeWaveRows (Solution/Whitney.lean,
-        exists_rowSolution: E_(dx_0)(t, y) = -sin (y_2 - t)). From the former palomar/timestepping.
-    - source: "[QuennevilleBelair2015] Ch. 4, Prop. 4.16; [AFW2010] §4; [Monk2003]"
-      lean: "FEEC.maxwell"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        From Feec.Instances.Maxwell.maxwellFEEC for the vector proxies of
-        Feec.Models.StarShaped.MeshFamily.polyFamily (Solution/Maxwell.lean: the weak operators
-        are maximal realizations, weakOp_eq; the vector-proxy complex is the unitary transport of
-        H Lambda(Omega), vC_maximalComplex_eq; strong and Galerkin solutions of the challenge
-        are those of the Hodge wave equation of the window, isMaxwellSolution_of,
-        isStrongSolution_of, galerkin_of_semidiscrete, semidiscrete_of_galerkin; discrete
-        well-posedness, galerkin_wellPosed, from Feec.HodgeWave.exists_isSemidiscreteSolution
-        and IsSemidiscreteSolution.eqOn).
-    - source: "[AFW2006] Theorems 4.9, 4.10, 4.13, 4.14; [AFW2010] Thm 5.5"
-      lean: "FEEC.unisolvent"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        From Feec.FiniteElement.eq_zero_of_faceMoment_eq_zero_simplex,
-        eq_zero_of_faceMoment_eq_zero_minus_simplex and
-        Feec.FiniteElement.PolyKind.finrank_form_eq_sum (Solution/Dof.lean; the moment of the
-        challenge is Feec.FiniteElement.faceMoment, faceMoment_eq).
-    - source: "[AFW2006] §3.4: (3.10) irreducible, (3.18), Theorems 3.5-3.6"
-      lean: "FEEC.affineInvariantForms"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        The structure FEEC.AffineInvariantForms, fields: isLinearInvariant_map_homForm,
-        eq_of_le_homForm (the GL(n)-invariant subspaces of H_r Lambda^k),
-        isAffineInvariant_map_extDeriv ((3.18)), isAffineInvariant_invariantForm (Theorem 3.5),
-        invariantForm_eq_polyFormMinus, invariantForm_eq_polyForm, map_extDeriv_polyForm_one
-        (Theorem 3.5, s = r, s = r - 1 and r = 0, s = -1), eq_invariantForm (Theorem 3.6). From
-        Feec.FiniteElement.InvariantForm and Feec.FiniteElement.AffineInvariantForm through
-        Solution/Affine.lean (the pullback of the challenge is Feec.FiniteElement.polyPullback,
-        pullback_eq).
-    - source: "[AFW2006] §3.4 (the hypothesis: characteristic 0 is necessary for the irreducibility of the summands of (3.10))"
-      lean: "FEEC.charZero_iff_classification"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        From Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification
-        (Solution/Affine.lean). The source works over R; a fidelity statement about the
-        generalization (10).
-    - source: "[AFW2006] (3.2) (the hypothesis: characteristic 0 is necessary for the homogeneous Poincare lemma)"
-      lean: "FEEC.charZero_iff_closed_eq_exact"
-      module: "Challenge"
-      status: "proved"
-      note: >-
-        From Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact
-        (Solution/Affine.lean). The source works over R; a fidelity statement about the
-        generalization (10).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

@@ -1,0 +1,264 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
+# formalization.yaml v0.4 for the Palomar submission of the affinely invariant polynomial
+# differential forms and their degrees of freedom (`palomar/shapes/`). New on 2026-11-18, from the
+# former palomar/fem (FEEC.unisolvent, FEEC.affineInvariantForms,
+# FEEC.charZero_iff_classification, FEEC.charZero_iff_closed_eq_exact), which had taken the
+# classification theorems from the former palomar/periodic.
+# Open items before submitting (user decisions): the root licence file and `project.license`
+# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
+# a public GitHub repository and the 40-character commit to submit.
+version: "v0.4"
+
+project:
+  name: "Affinely invariant polynomial differential forms and their degrees of freedom"
+  description: >-
+    Which spaces of polynomial differential forms are the local spaces of finite element exterior
+    calculus, and do they have degrees of freedom? Stated over Mathlib, for polynomial forms in
+    coordinates (PolyForm K n: a polynomial coefficient omega_s in K[x_1, ..., x_n] for every
+    dx_s), with P_r Lambda^k (coefficients of degree at most r), H_r Lambda^k (homogeneous of
+    degree r), the Koszul differential kappa (contraction with the position vector field), the
+    trimmed spaces P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1) and the
+    pullback (phi^* omega)_t = sum_(#s = #t) det B_(s,t) (omega_s o phi) along phi(x) = B x + b.
+    Four compared theorems.
+    FEEC.affineInvariantForms (the headline; AFW2006 §3.4, over every field K of characteristic
+    0): d H_r Lambda^k and kappa H_r Lambda^k are invariant under the pullback of every linear
+    map, and the subspaces of H_r Lambda^k invariant under GL(n, K) are 0,
+    d H_(r+1) Lambda^(k-1), kappa H_(r-1) Lambda^(k+1) and H_r Lambda^k (r, k >= 1);
+    d P_(r+1) Lambda^(k-1) and X(r, s, k) = d P_(r+1) Lambda^(k-1) + kappa P_s Lambda^(k+1)
+    (s <= r, k >= 1) are invariant under the pullback of every affine map,
+    X(r, r, k) = P_(r+1)^- Lambda^k, X(r+1, r, k) = P_(r+1) Lambda^k and
+    d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
+    finite-dimensional space of k-forms invariant under the invertible affine maps is
+    d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). So for 0 < k < n the
+    affinely invariant spaces of polynomial k-forms are the d P_(r+1) Lambda^(k-1) and the
+    X(r, s, k), which lie between P_(s+1)^- Lambda^k and P_(r+1)^- Lambda^k; the full and trimmed
+    spaces are P_(r+1) Lambda^k = X(r+1, r, k) and P_(r+1)^- Lambda^k = X(r, r, k).
+    FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact: over every field K,
+    the classification of the GL(n)-invariant subspaces of H_(r+1) Lambda^(k+1), and the
+    homogeneous Poincare lemma ker d meet H_r Lambda^(k+1) = d H_(r+1) Lambda^k (AFW2006 (3.2)),
+    hold in every dimension and all degrees iff K has characteristic 0: the hypothesis of
+    FEEC.affineInvariantForms cannot be dropped.
+    FEEC.unisolvent (AFW2006 Theorems 4.10, 4.14): on every n-simplex T and for r >= 1, a real
+    form of P_r Lambda^k (resp. P_r^- Lambda^k) whose moments int_f tr_f omega wedge eta vanish
+    for all m-faces f of T and all eta in P^-_(r+k-m) Lambda^(m-k)(R^m) (resp.
+    P_(r+k-m-1) Lambda^(m-k)(R^m)), k <= m < r + k, is zero, and the number of these moments,
+    sum_m C(n+1, m+1) dim (test space), is dim P_r Lambda^k (resp. dim P_r^- Lambda^k): the
+    moments are unisolvent, so they are degrees of freedom of the spaces.
+    Not claimed: the classification of complexes. The theorems classify the affinely invariant
+    spaces of polynomial k-forms one degree at a time; that the complexes built from them, the
+    "periodic table" of finite element exterior calculus (the resolutions of AFW2006 §3.5), are
+    the only affinely invariant complexes of polynomial forms is neither stated nor proved.
+    The proof is the library Feec of this repository (Feec.FiniteElement.LocalDof,
+    Feec.FiniteElement.InvariantForm, Feec.FiniteElement.AffineInvariantForm,
+    Feec.Counterexamples.PositiveCharacteristic).
+  authors:
+    - "Vincent Quenneville-Bélair"
+  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
+  license: "TBD-BY-USER"
+  responsible_maintainers:
+    - "Vincent Quenneville-Bélair"
+
+classification:
+  arxiv: ["math.NA", "math.AC", "math.RT"]
+  msc2020: ["65N30", "15A75", "13A50", "58A10"]
+
+sources:
+  - title: "Finite element exterior calculus, homological techniques, and applications"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1017/S0962492906210018"
+    type: "article"
+    location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential; (3.2); §3.4: (3.10), (3.18), Theorems 3.5-3.6), §4 (Theorems 4.10, 4.14: the degrees of freedom and their unisolvence)"
+    relationship: "formalizes"
+    note: >-
+      The polynomial spaces are stated in coordinates (a polynomial coefficient for each dx_s),
+      over every field where only algebra is involved. The degrees of freedom are compared on a
+      single simplex (FEEC.unisolvent: vanishing moments force zero, and the moments are as many
+      as the dimension, Theorems 4.9-4.10 and 4.13-4.14). §3.4: the invariance of the summands of
+      (3.10) under the pullback of linear maps and their irreducibility under GL(n), (3.18),
+      Theorem 3.5 with its cases s = r and s = r - 1 (r = 0 included), Theorem 3.6, over every
+      field of characteristic 0. AFW derive the irreducibility from Fulton-Harris (6.9); Feec
+      proves it directly (weight parts of diagonal pullbacks, an explicit generator and a
+      pullback reaching it from every form not in the other summand), first for invariance
+      under all linear maps, then under GL(n) alone (over an infinite field c -> (B + c I)^* omega
+      is a polynomial curve, in a GL(n)-invariant space at the cofinitely many c with
+      det(B + c I) != 0, hence with its value at c = 0). Characteristic 0 cannot be dropped
+      (FEEC.charZero_iff_classification, FEEC.charZero_iff_closed_eq_exact; the source works over
+      R). Not formalized from §3.4: the description of the third kind of Theorem 3.5 (s < r - 1)
+      as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)}, the identities (3.4), (3.7),
+      (3.19) and Lemma 3.7 as separate statements (proved in Feec in the form the proofs use),
+      the decomposition (3.20) and the inequivalence of its summands, and the classification of
+      the affinely invariant subcomplexes (§3.5; not proved in Feec). Locators of §3.4 checked
+      against the published text for the former entry palomar/periodic; those of §4 as cited in
+      Feec, not rechecked for this entry.
+    author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), Thm 5.5 (the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k)"
+    relationship: "formalizes"
+    note: "Locator as cited in Feec, not rechecked for this entry."
+    author_endorsement: "not-contacted"
+  - title: "Representation Theory: A First Course"
+    authors:
+      - "William Fulton"
+      - "Joe Harris"
+    id: "doi:10.1007/978-1-4612-0979-9"
+    type: "book"
+    location: "Graduate Texts in Mathematics 129, §6.1, (6.9)"
+    relationship: "background"
+    note: "The source of AFW2006's irreducibility claim in §3.4; the formalization proves it without representation theory."
+    author_endorsement: "not-contacted"
+
+related_formalizations: []
+
+status:
+  scope: >-
+    Formalized and compared: FEEC.affineInvariantForms over every field of characteristic 0 and
+    every n, k, r, s; FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact over
+    every field; FEEC.unisolvent for every n-simplex, r >= 1 and k.
+    Not claimed: the classification of the affinely invariant complexes of polynomial forms (the
+    periodic table; AFW2006 §3.5): the theorems classify spaces, not complexes.
+    Not compared (proved in Feec, outside the statement): the polynomial identities, dimension
+    formulas and exactness of the polynomial de Rham and Koszul complexes of P_r Lambda,
+    P_r^- Lambda and Q_r^- Lambda (the former FEEC.periodicTable of palomar/periodic;
+    Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm), the classification with the
+    summands as kernels (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker),
+    the assembly of global finite element spaces from the degrees of freedom (used in
+    palomar/fem).
+  sorry_count: 0
+  sorry_in_definitions: 0
+  axioms: ["propext", "Classical.choice", "Quot.sound"]
+
+automation:
+  methods:
+    - method: "agent"
+      models: ["Claude (Anthropic)"]
+      framework: "Claude Code"
+      tool_setup: >-
+        AI agents wrote most Lean code and proofs under the author's direction, in git worktrees,
+        each change gated by a full build with zero errors and warnings, an axiom audit, naming,
+        layering and citation checks and an independent agent review before merging.
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "not tracked"
+        hardware: "local machine and API"
+      prompting_notes: >-
+        The author set the mathematical goals (the FEEC literature), the statement design and the
+        review standard; agents proposed and proved lemmas.
+    - method: "manual"
+      models: []
+      framework: "n/a"
+      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      cost:
+        wall_time: "not tracked"
+        spend_usd: "n/a"
+        hardware: "local machine"
+      prompting_notes: "n/a"
+  spend_usd: "not tracked"
+  notes: >-
+    Human-directed, AI-written development. The Challenge statement and its definitions were
+    written by an AI agent for this submission, to be reviewed by the author; the Solution
+    identifies them with the definitions of the library Feec (Solution/Poly.lean, Affine.lean,
+    Dof.lean) and applies its theorems. The classification statements and their bridge come
+    from the former entry palomar/periodic (restated on the coordinate forms on 2026-11-17), the
+    unisolvence from the former palomar/fem (2026-11-17); the entry was split off palomar/fem on
+    2026-11-18 with unchanged statements.
+
+fidelity:
+  divergences: >-
+    (1) Coordinates: polynomial forms are coefficient functions
+    Finset (Fin n) -> MvPolynomial (Fin n) K over a field K (the coefficient of dx_s, s a set of
+    indices), the standard coordinate model, not Mathlib's exterior algebra (the former
+    palomar/periodic used P(K^n) (x) Lambda(K^n)*; the two are identified in Feec,
+    Feec.Algebra.ExteriorAlgebraForm). The pullback of polynomial forms is stated by minors,
+    (phi^* omega)_t = sum_(#s = #t) det B_(s,t) (omega_s o phi). Real polynomial forms are
+    evaluated to form fields on R^n = Fin n -> R (evalForm) for the moments.
+    (2) AFW2006 §3.4 is stated over every field K of characteristic 0 (the source works over R).
+    The hypothesis is necessary (FEEC.charZero_iff_classification,
+    FEEC.charZero_iff_closed_eq_exact), but both iff theorems quantify over all dimensions: in a
+    fixed dimension the classification can hold in characteristic p (in dimension 1 every
+    subspace of H_r Lambda^k is 0 or H_r Lambda^k); they do not identify the dimensions in which
+    it fails. The conclusions of invariance (the summands of (3.10), (3.18), Theorem 3.5) are
+    stated for the pullback of every linear (resp. affine) map, singular ones included; the
+    hypotheses of the classifications only for the invertible ones (GL(n, K) for the subspaces
+    of H_r Lambda^k; x -> g x + b for Theorem 3.6, which is stronger than AFW's hypothesis of all
+    affine maps). The irreducibility is stated for r, k >= 1 (H_(r+1) Lambda^(k+1)); Theorem
+    3.6's s >= -1 is stated as the two alternatives s = -1 (d P_(r+1) Lambda^(k-1)) and
+    0 <= s <= r.
+    (3) FEEC.unisolvent states unisolvence as injectivity of the moments together with the count
+    (number of moments = dimension); bijectivity onto the dual for chosen bases of the test
+    spaces follows by linear algebra and is not stated. Faces are oriented by the increasing
+    order of their vertices (order embeddings Fin (m+1) -> Fin (n+1)); the moments are those of
+    AFW2006 §4 up to this orientation sign. The degrees of freedom are those of one simplex; the
+    global finite element spaces are those of palomar/fem, stated there through traces.
+    (4) Shared notions: the polynomial forms (PolyForm, polyForm, homForm, koszul, polyFormMinus,
+    evalForm) and the covector value covEval are the canonical blocks of
+    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate, shared with
+    palomar/fem and palomar/waves. The block of differential forms on R^n (forms) is copied
+    whole, as the gate requires, for the form fields and the sign epsilon(j, s) that the
+    polynomial forms and the moments use; its L^2 notions (L2Form, the test functions, the
+    partial and exterior derivatives, the codifferential, the weak exterior derivative dMax and
+    the cube) are not used by this entry.
+
+review:
+  status: "self-assessed"
+  reviewers:
+    - "none"
+  notes: >-
+    Not yet reviewed by the author: the Challenge statement (the four compared theorems and their
+    definitions); FEEC.unisolvent and faceMoment new on 2026-11-17; the classification theorems
+    moved from palomar/periodic (2026-10-31 to 2026-11-04) and restated on the coordinate forms
+    on 2026-11-17; all moved here from palomar/fem on 2026-11-18. Every merge of the library was
+    gated by a full build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound
+    only) and an independent AI review. No external mathematical review.
+
+alignment:
+  namespace: "FEEC"
+  statements:
+    - source: "[AFW2006] §3.4: (3.10) irreducible, (3.18), Theorems 3.5-3.6"
+      lean: "FEEC.affineInvariantForms"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        The structure FEEC.AffineInvariantForms, fields: isLinearInvariant_map_homForm,
+        eq_of_le_homForm (the GL(n)-invariant subspaces of H_r Lambda^k),
+        isAffineInvariant_map_extDeriv ((3.18)), isAffineInvariant_invariantForm (Theorem 3.5),
+        invariantForm_eq_polyFormMinus, invariantForm_eq_polyForm, map_extDeriv_polyForm_one
+        (Theorem 3.5, s = r, s = r - 1 and r = 0, s = -1), eq_invariantForm (Theorem 3.6). From
+        Feec.FiniteElement.InvariantForm and Feec.FiniteElement.AffineInvariantForm through
+        Solution/Affine.lean (the pullback of the challenge is Feec.FiniteElement.polyPullback,
+        pullback_eq).
+    - source: "[AFW2006] §3.4 (the hypothesis: characteristic 0 is necessary for the irreducibility of the summands of (3.10))"
+      lean: "FEEC.charZero_iff_classification"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification
+        (Solution/Affine.lean). The source works over R; a fidelity statement about the
+        generalization (2).
+    - source: "[AFW2006] (3.2) (the hypothesis: characteristic 0 is necessary for the homogeneous Poincare lemma)"
+      lean: "FEEC.charZero_iff_closed_eq_exact"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact
+        (Solution/Affine.lean). The source works over R; a fidelity statement about the
+        generalization (2).
+    - source: "[AFW2006] Theorems 4.9, 4.10, 4.13, 4.14; [AFW2010] Thm 5.5"
+      lean: "FEEC.unisolvent"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.FiniteElement.eq_zero_of_faceMoment_eq_zero_simplex,
+        eq_zero_of_faceMoment_eq_zero_minus_simplex and
+        Feec.FiniteElement.PolyKind.finrank_form_eq_sum (Solution/Dof.lean; the moment of the
+        challenge is Feec.FiniteElement.faceMoment, faceMoment_eq).
+
+acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

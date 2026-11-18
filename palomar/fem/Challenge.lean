@@ -24,16 +24,18 @@ simplicial meshes of `Ω` with `h_N → 0`, and `S` an admissible sequence (`P_{
 `S_k(M_N)` (`femSpace`) are the `L²` forms that are on every simplex a polynomial form of `S_k`,
 with single-valued tangential traces; `S̊_k(M_N)` have moreover vanishing traces on `∂Ω`.
 
-**They do** (`fem`; [AFW2010], §5.5; [ChristiansenWinther2008]): `S(M_N) ⊆ HΛ(Ω)` and
-`S̊(M_N) ⊆ H̊Λ(Ω)` are families of finite-dimensional subcomplexes whose smoothed cochain
-projections extend to projections of `L²(Ω; Λᵏ)` bounded uniformly in `N`, with or without
-boundary conditions; the families approximate in the graph norm, and the projections attain the
-rate `h_N^{s+1}` on `C^{s+2}` forms where `S` reproduces `P_sΛ`. On parallelepipeds the exterior
-derivatives have closed range (`fem_parallelepiped`); on the cube, with its Freudenthal meshes,
-the rate holds for `H^{s+1}` forms (`fem_cube`).
+**They do** (`fem`; [AFW2010], §5.5; [ChristiansenWinther2008]): with or without boundary
+conditions, `S(M_N) ⊆ HΛ(Ω)` and `S̊(M_N) ⊆ H̊Λ(Ω)` are families of finite-dimensional
+subcomplexes with cochain projections (the smoothed projections) that extend to projections of
+`L²(Ω; Λᵏ)` bounded uniformly in `N`; the families approximate in the graph norm, and the
+projections attain the rate `h_N^{s+1}` on `C^{s+2}` forms (for `S̊`, vanishing outside `Ω`) where
+`S` reproduces `P_sΛ`. On parallelepipeds the exterior derivatives have closed range
+(`fem_parallelepiped`); on the cube, with its Freudenthal meshes and without boundary conditions,
+the rate holds for the forms `x` with `x, dx ∈ H^{s+1}` (`fem_cube`).
 
-**This is exactly what the theorems of `palomar/feec` need**, in the same notions (the shared
-blocks `HilbertComplex` and `SubcomplexFamily`): the converse of `FEEC.projectionFEEC` (the
+**This is exactly what the Galerkin theorems of `palomar/feec` need** (`FEEC.projectionFEEC`,
+`FEEC.staticFEEC`, `FEEC.evolutionFEEC`), in the same notions (the shared blocks
+`HilbertComplex` and `SubcomplexFamily`): the converse of `FEEC.projectionFEEC` (the
 uniform discrete Poincaré inequality and harmonic bound) needs uniformly graph-bounded cochain
 projections and closed ranges; `FEEC.staticFEEC` (the mixed method) graph-norm bounds in two
 consecutive degrees and Poincaré inequalities, which are the closed ranges, and its rates are
@@ -41,7 +43,10 @@ those of the Jackson estimates; the wave clause of `FEEC.evolutionFEEC` needs ap
 (in the last degree of the window in `L²`, which follows from the graph norm by density), so it
 holds on every such `Ω`; its heat clause moreover graph-norm bounds, the `L²` bound of the
 projections in the last degree and closed ranges. On parallelepipeds all of them apply, at the
-rates `h^{s+1}`.
+rates `h^{s+1}` (the cohomology clause of the static verdict needs moreover finite-dimensional
+harmonic forms, not proved here). The rate attained by the projections themselves
+(`Jackson.ProjRate`) is more than they need: it gives the comparison fields of the fully
+discrete schemes of `palomar/waves`.
 
 ## Conventions
 
@@ -152,6 +157,8 @@ structure SubcomplexFamily.Jackson (F : H.SubcomplexFamily κ) (ρ : Type*) wher
         B s i * (L * meshSize h ^ ord s)
 end HilbertComplex
 -- palomar-shared-end: SubcomplexFamily
+
+/-! ### The rate attained by the cochain projections -/
 
 variable {𝕜 : Type*} [RCLike 𝕜] {W : ℤ → Type*} [∀ i, NormedAddCommGroup (W i)]
   [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
@@ -342,7 +349,7 @@ def IsStarShapedBall {n : ℕ} (Ω : Set (Fin n → ℝ)) : Prop :=
     ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s₀, segment ℝ z y ⊆ Ω
 -- palomar-shared-end: IsStarShapedBall
 
-/-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal). -/
+/-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal and invertible). -/
 def parallelepiped (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) : Set (Fin n → ℝ) :=
   (fun x => A.mulVec x + b) '' Set.univ.pi fun _ => Set.Ioo 0 1
 
@@ -398,8 +405,8 @@ def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) 
 -- palomar-shared: IsCsFormMin
 /-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` **vanishing outside `Ω`** with
 `‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L` on `cl Ω` (true in negative degrees): the regularity class of the
-order `h^{s+1}` with vanishing traces; the derivatives of `w` of order at most `s + 2` vanish on
-`∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`. -/
+order `h^{s+1}` with vanishing traces (for Lipschitz `Ω` the derivatives of `w` of order at most
+`s + 2` vanish on `∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`). -/
 def IsCsFormMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
   j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
     (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧ (∀ y ∉ Ω, w y = 0) ∧

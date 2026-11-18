@@ -27,21 +27,28 @@ spaces, in `HΛ(Ω)` or `H̊Λ(Ω)`, and the finite element forms `Xₕ` of a wi
 degrees.
 
 * **The inverse estimate** `h_N ‖dv‖ ≤ C ‖v‖` holds on the finite element forms
-  (`inverse_estimate`), so the discrete wave operator has `‖Lₕ‖ ≤ 2 C₀ / h_N`.
+  (`inverse_estimate`); on the window, `h_N ‖𝐝 x‖ ≤ C₀ ‖x‖` on `Xₕ`, so the discrete wave
+  operator has `‖Lₕ‖ ≤ 2 C₀ / h_N`.
 * **Crank–Nicolson converges for every time step, leapfrog under the CFL condition**
   `2 C₀ Δt ≤ c h_N`, `c < 1` (`fem_wave`; [QuennevilleBelair2015], Ch. 4, 7; [Joly2003]): from any
-  starting values in `Xₕ`, the error at `t_K = K Δt` is the starting error plus at most
-  `C (1 + T) L (h_N^{s+1} + Δt²)` (for leapfrog, after the factor `1 - c`), uniformly in `N`, for
-  every solution `C³` in time whose values are `C^{s+2}` forms with bound `L` where `S` reproduces
-  `P_sΛ`, with the homogeneous boundary conditions of the complex.
+  starting values in `Xₕ`, the error at `t_K = K Δt` (for leapfrog, `1 - c` times the error) is at
+  most the starting errors plus `C (1 + T) L (h_N^{s+1} + Δt²)`, uniformly in `N`, for every
+  solution with the homogeneous boundary conditions of the complex, `C³` in time with
+  `‖∂ₜ³U‖ ≤ L`, whose values and time increments are `C^{s+2}` forms (vanishing outside `Ω` in
+  `H̊Λ(Ω)`) with the bounds `L` and `L |t' - t|`, where `S` reproduces `P_sΛ` in the degrees of
+  the window.
 
 With inhomogeneous Dirichlet data, the boundary degrees of freedom of the exact solution (the runs
-of [QuennevilleBelair2015], Ch. 7: the Whitney forms on the Freudenthal meshes of the cube), both
-schemes converge at `O(h + Δt²)` (`crankNicolson_cube`, `leapfrog_cube`), for a plane wave that is
-neither zero nor stationary (`rowSolution_nonvacuous`). Maxwell's equations in vector proxies are
+of [QuennevilleBelair2015], Ch. 7: the Whitney forms on the Freudenthal meshes of the cube, in
+`HΛ`), both schemes converge at `O(h + Δt²)` for every smooth solution with bound `L`
+(`RowSolution`): Crank–Nicolson for every time step from `u₀ = Π_h U(0)`, leapfrog under the CFL
+condition, with the factor `1 / (1 - c)`, from `u₀ = Π_h U(0)` and `u₁ = Π_h U(Δt)`
+(`crankNicolson_cube`, `leapfrog_cube`); some of these solutions are neither zero nor stationary
+(`rowSolution_nonvacuous`). Maxwell's equations in vector proxies are
 the Hodge wave equation of the window `[0, 3)` of `HΛ(Ω)` in `ℝ³`, the electric field in degree
-`1` (`maxwell`): well-posedness, the energy, the Gauss laws, and the unique Galerkin solutions in
-the finite element spaces converge uniformly.
+`1` (`maxwell`): well-posedness, conservation of the energy and of the Gauss laws, and the
+Galerkin solutions in the finite element spaces, which are unique, converge uniformly on `[0, T]`
+when their initial data converge.
 
 ## Conventions
 
@@ -374,6 +381,8 @@ def femSpace {n : ℕ} (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : Po
     F ∈ Γ → ∀ x ∈ convexHull ℝ (F : Set (Fin n → ℝ)), TraceEq F k.toNat (p T x) 0}
 -- palomar-shared-end: femSpace
 
+/-! ### Finite element forms of a window and the Whitney interpolant -/
+
 /-- The finite element space `Xₕ = S_a(M) ⊕ ⋯ ⊕ S_{a+m-1}(M)` of the window `[a, a + m)`, with
 vanishing traces on the facets `Γ`: the forms of the window whose components lie in `femSpace`. -/
 def femTotal (Ω : Set (Fin n → ℝ)) (M : SimplicialMesh n) (S : PolySeq)
@@ -414,8 +423,8 @@ def IsCsForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) 
 -- palomar-shared: IsCsFormMin
 /-- `x ∈ L²(Ω; Λʲ)` is a.e. a `C^{s+2}` form `w` of degree `j` **vanishing outside `Ω`** with
 `‖D^{s+1} w‖, ‖D^{s+1} dw‖ ≤ L` on `cl Ω` (true in negative degrees): the regularity class of the
-order `h^{s+1}` with vanishing traces; the derivatives of `w` of order at most `s + 2` vanish on
-`∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`. -/
+order `h^{s+1}` with vanishing traces (for Lipschitz `Ω` the derivatives of `w` of order at most
+`s + 2` vanish on `∂Ω`, a class smaller than `H̊Λ(Ω) ∩ H^{s+1}`). -/
 def IsCsFormMin {n : ℕ} (Ω : Set (Fin n → ℝ)) (s : ℕ) (j : ℤ) (L : ℝ) (x : L2Form Ω j) : Prop :=
   j < 0 ∨ ∃ w : FormField n, ContDiff ℝ ((s + 2 : ℕ) : WithTop ℕ∞) w ∧
     (∀ y (t : Finset (Fin n)), (t.card : ℤ) ≠ j → w y t = 0) ∧ (∀ y ∉ Ω, w y = 0) ∧

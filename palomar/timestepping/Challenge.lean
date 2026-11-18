@@ -31,14 +31,15 @@ public import Mathlib.Order.CompletePartialOrder
 public import Mathlib.Analysis.CStarAlgebra.Classes
 
 /-!
-# A-stable rational time stepping for `C₀`-semigroups, and the heat equation in the maximum norm
+# A-stable rational time stepping for `C₀`-semigroups, applied to the heat equation in the maximum norm
 
 A one-step method for `u' = A u`, `A` the generator of a strongly continuous semigroup `S`,
 replaces the evolution `S(τ) = e^{τA}` over a time step `τ` by `r(τA)`, `r = p/q` a rational
 function with real coefficients: **A-stable** (`IsAStable`) if `q` has no zero and `|r| ≤ 1` on
 the closed left half-plane, of **order `m`** (`HasOrder`) if `r(z) - e^z = O(z^{m+1})` at `0`.
 The question is whether the powers `r(τA)ⁿ` are stable and accurate with constants that depend on
-`r` alone: then they hold uniformly over every family of space discretizations.
+`r` alone, hence uniformly over every family of space discretizations with uniformly bounded
+semigroups, and where that is needed.
 
 **The input: Hille–Yosida** (`hilleYosida`, [Pazy1983], §1.5). Under `‖S(t)‖ ≤ M e^{ωt}` and
 `ωτ < 1` the resolvent `R = (1 - τA)⁻¹` exists (on complex spaces; for `ω = 0` on real ones too,
@@ -60,28 +61,29 @@ contraction semigroup, `M = 1`) are contractions, `‖r(τA)ⁿ‖ ≤ (sup_y |r
 
 **Families of space discretizations.** For bounded generators `Lₕ` with `‖e^{tLₕ}‖ ≤ M` the two
 bounds hold with constants uniform in `h`, the error also along every trajectory with a
-consistency defect (`stable_of_bounded`, `error_of_bounded`). Power-bounded consistent schemes
-converge for every datum (`converges`, the sufficiency half of the Lax equivalence theorem,
-[Thomee2006], Ch. 7): backward Euler on every Banach space, by Hille–Yosida
-(`converges_backwardEuler`), and every A-stable scheme of order `m ≥ 1` for dissipative
-generators on Hilbert spaces, by `contractive` (`converges_contractive`). On a Banach space the
-other A-stable schemes need not be power bounded: they are `√n`-stable, and converge at their
-order for smooth data (`error`).
+consistency defect (`stable_of_bounded`, `error_of_bounded`; the temporal term of the error is
+that of the discrete datum `v`, `‖Lₕ^{m+1} v‖`). Power-bounded consistent schemes converge for
+every datum (`converges`, the sufficiency half of the Lax equivalence theorem, [Thomee2006],
+Ch. 7): backward Euler on every Banach space, by Hille–Yosida (`converges_backwardEuler`), and
+every A-stable scheme of order `m ≥ 1` for dissipative generators on Hilbert spaces, by
+`contractive` (`converges_contractive`). On a Banach space the other A-stable schemes need not be
+power bounded: they are `√n`-stable, and converge at their order for smooth data (`error`).
 
 **The application: the heat equation in the maximum norm** ([CiarletRaviart1973];
 [Thomee2006], Ch. 15). The maximum norm is not a Hilbert norm: `contractive` bounds the schemes
-in an `ℓ²` norm of the nodal values, which controls the maximum norm only up to a factor `√N` on
-`N` nodes. A sub-Markov generator (`IsSubMarkovGenerator`) generates positive contractions of the
-maximum norm (`subMarkov`), so `M = 1`. The lumped-mass `P₁` Laplacian of every non-obtuse
-simplicial mesh, in every dimension, is one (the discrete maximum principle): every A-stable
-scheme for it is `(1 + C √k)`-stable in the maximum norm, with error bounds whose constants are
-independent of the mesh, in terms of the initial error, the nodal consistency error and a
-temporal term, of the solution for backward Euler and of the discrete datum for every A-stable
-scheme (`maxNormHeat`; `√k` is what the contractivity of `e^{tLₕ}` alone gives). Finite differences satisfy the discrete maximum
-principle on every grid; on a cube they are the lumped-mass method of a non-obtuse mesh, and from
-initial data satisfying the compatibility conditions every A-stable scheme of order `m` has
-maximum-norm error `O(h² + τᵐ)`, uniformly in `h` (`fdHeat`). Backward Euler and Crank–Nicolson
-meet the hypotheses on `r` (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
+in a (weighted) `ℓ²` norm of the nodal values, which controls the maximum norm only up to a
+factor that grows with the number of nodes. A sub-Markov generator (`IsSubMarkovGenerator`)
+generates positive contractions of the maximum norm (`subMarkov`), so `M = 1`. The lumped-mass
+`P₁` Laplacian of every non-obtuse simplicial mesh, in every dimension, is one (the discrete
+maximum principle): every A-stable scheme for it is `(1 + C √k)`-stable in the maximum norm, with
+error bounds whose constants are independent of the mesh, in terms of the initial error, the
+nodal consistency error and a temporal term, of the solution for backward Euler and of the
+discrete datum for every A-stable scheme (`maxNormHeat`; the `√k` of `stable`, as only the
+contractivity of `e^{tLₕ}` is used). Finite differences satisfy the discrete maximum principle
+on every grid; on a cube they are the lumped-mass method of a non-obtuse mesh, and from initial
+data satisfying the compatibility conditions every A-stable scheme of order `m` has maximum-norm
+error `O(h² + τᵐ)`, uniformly in `h` (`fdHeat`). Backward Euler and Crank–Nicolson meet the
+hypotheses on `r` (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
 
 Mathlib has no `C₀`-semigroups: `IsC0Semigroup` is the definition and `generatorGraph` the graph
 of the generator (right derivatives at `0`). For a bounded `L`, `r(τL) = p(τL) q(τL)⁻¹`
@@ -91,8 +93,9 @@ of the generator (right derivatives at `0`). For a bounded `L`, `r(τL) = p(τL)
 ## Conventions
 
 Points of `ℝⁿ` are `Fin n → ℝ` (Lebesgue measure, sup norm); functions `ι → ℝ` on a finite set
-of nodes carry the maximum norm. The differential forms and simplicial meshes are stated in the words of the
-Palomar entry `palomar/fem`; of the forms only the partial derivatives are used here.
+of nodes carry the maximum norm. The differential forms and simplicial meshes are stated in the
+words of the Palomar entry `palomar/fem`; of the forms only the partial derivatives are used
+here, of the meshes only `SimplicialMesh` (no shape regularity or mesh family).
 
 ## References
 
@@ -105,6 +108,7 @@ Palomar entry `palomar/fem`; of the forms only the partial derivatives are used 
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3,
   §IV.11
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9, 15
+* [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §4
@@ -188,10 +192,10 @@ theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [Comp
 
 /-- **Backward Euler on Banach spaces** ([BrennerThomee1979]; [Pazy1983], §1.5), the A-stable
 scheme `r(z) = 1/(1 - z)` without the `√n` of `stable`, under growth (power bounded for `ω = 0`,
-stable on bounded time intervals for `ω > 0`). Let `S` be a strongly
-continuous semigroup of a real or complex Banach space with `‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`),
-generator `A`, `τ > 0` with `ωτ < 1`, and `R` with `R (x - τAx) = x` on `D(A)`, so that
-`r(τA) = R`. Then `‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` (Hille–Yosida), and for every `n` and `x ∈ D(A²)` (a chain
+stable on bounded time intervals for `ω > 0`). Let `S` be a strongly continuous semigroup of a
+real or complex Banach space with `‖S t‖ ≤ M e^{ωt}` (`ω ≥ 0`), generator `A`, `τ > 0` with
+`ωτ < 1`, and `R` with `R (x - τAx) = x` on `D(A)`, so that `r(τA) = R`. Then
+`‖Rᵏ‖ ≤ M/(1 - ωτ)ᵏ` (Hille–Yosida), and for every `n` and `x ∈ D(A²)` (a chain
 `u 0 = x, u 1 = A x, u 2 = A² x` in the graph of `A`)
 `‖Rⁿ x - S(nτ) x‖ ≤ (M/(1 - ωτ)ⁿ) (M/(1 - ωτ) + M e^{ωnτ}/2) M e^{ωnτ} nτ τ ‖A² x‖`. -/
 theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜 E]
@@ -259,13 +263,13 @@ theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
 
 /-- **Rational schemes for m-dissipative operators: von Neumann's theorem** ([HairerWanner1996],
 §IV.11; [Pazy1983], §1.4), the Hilbert-space counterpart of `stable` for contraction semigroups
-(`M = 1`). Let `A` be a possibly
-unbounded operator of a real or complex Hilbert space, dissipative (`re ⟪A x, x⟫ ≤ 0` on its
-domain) with `μ - A` onto for some `μ > 0` (m-dissipative), `r = p/q` a real rational function
-with `q` free of zeros in the closed left half-plane, and `τ > 0`. Exactly one bounded `R`
-satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`), `Q(R)` is invertible, and
-`‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n` (suprema in `[0, ∞]`; infinite when
-`deg p > deg q`). For A-stable `r` this is `≤ 1`: A-stable schemes are contractive. -/
+(`M = 1`). Let `A` be a possibly unbounded operator of a real or complex Hilbert space,
+dissipative (`re ⟪A x, x⟫ ≤ 0` on its domain) with `μ - A` onto for some `μ > 0`
+(m-dissipative), `r = p/q` a real rational function with `q` free of zeros in the closed left
+half-plane, and `τ > 0`. Exactly one bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the
+resolvent `(1 - τA)⁻¹`), `Q(R)` is invertible, and `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n`
+(suprema in `[0, ∞]`; infinite when `deg p > deg q`). For A-stable `r` this is `≤ 1`: A-stable
+schemes are contractive. -/
 theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [CompleteSpace E] {A : E →ₗ.[𝕜] E} (hA : ∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0)
     (hA' : ∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y)
@@ -563,17 +567,20 @@ nodes `x : ι → ℝⁿ`, the lumped-mass Laplacian `Lₕ` on `ℝ^ι` with the
   `uₜ = Δu`, `u₁ = Δu`) and every discrete datum `v`,
   `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B + ε)`: first order, with a
   temporal term of the solution `u` alone (bounded uniformly in the mesh when `uₜₜ` is bounded
-  on `[0, kτ] × Ω̄`: a compatibility condition of order `1`);
+  on `[0, kτ] × Ω̄` and the nodes lie in `Ω̄`; for a solution of the heat equation this asks a
+  compatibility condition of order `1` of its initial value);
 * (**every A-stable scheme**, `error_of_bounded`) if `r` has order `m`: for `u`, `u₁` and `ε` as
   above, `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ ε + K m kτ τᵐ ‖Lₕ^{m+1} v‖_∞`.
 
 The constants are independent of the mesh; the bounds are not convergence statements uniform in
 the mesh. The errors are at the nodes. The consistency error `ε` depends on the mesh (`O(h²)` on
-the Freudenthal meshes of a cube, `fdHeat`; on a general non-obtuse mesh it need not be small).
-The temporal term of the last bound is that of the discrete datum `v`: it is bounded uniformly in
-the mesh for compatible data on a cube (`fdHeat`), not in general. `√k` is what the contractivity
-of `e^{tLₕ}` alone gives; sharper bounds that use the analyticity of the heat semigroup are not
-stated here. -/
+the Freudenthal meshes of a cube, where `Lₕ` is the finite difference Laplacian of `fdHeat`; on a
+general non-obtuse mesh it need not be small). The temporal term of the last bound is that of the
+discrete datum `v`: it is bounded uniformly in the mesh for compatible data on a cube (`fdHeat`),
+not in general. `√k` is what the contractivity of `e^{tLₕ}` alone gives. For bounded analytic
+semigroups of Banach spaces the A-stable rational approximations, Crank–Nicolson included, are
+power bounded ([CrouzeixLarssonPiskarevThomee1993]); here that would need the analyticity of
+`e^{tLₕ}` in the maximum norm uniformly in the mesh, and neither is stated. -/
 theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
     ∃ (C : ℝ) (K : ℕ → ℝ), 0 ≤ C ∧ ∀ (n : ℕ) (M : SimplicialMesh n), IsNonobtuse M →
       ∀ {ι : Type*} [Fintype ι] (x : ι → Fin n → ℝ), Function.Injective x →

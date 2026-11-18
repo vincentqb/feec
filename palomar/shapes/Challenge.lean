@@ -27,9 +27,10 @@ homogeneous coefficients of degree `r`, `κ` is the Koszul differential and
   Theorems 3.5–3.6, over every field of characteristic `0`): the summands `dH_{r+1}Λᵏ⁻¹` and
   `κH_{r-1}Λᵏ⁺¹` of `H_rΛᵏ` are its only nontrivial `GL(n)`-invariant subspaces (`r, k ≥ 1`),
   and for `0 < k < n` the nonzero finite-dimensional affinely invariant spaces of `k`-forms are
-  `dP_{r+1}Λᵏ⁻¹` and the `X(r, s, k) = dP_{r+1}Λᵏ⁻¹ + κP_sΛᵏ⁺¹`, `s ≤ r`, which lie between
-  `P_{s+1}⁻Λᵏ` and `P_{r+1}⁻Λᵏ`; the full and trimmed spaces are `P_{r+1}Λᵏ = X(r + 1, r, k)` and
-  `P_{r+1}⁻Λᵏ = X(r, r, k)`.
+  exactly `P_rΛᵏ` (`r ≥ 0`), `P_r⁻Λᵏ` (`r ≥ 1`), `dP_{r+1}Λᵏ⁻¹` (`r ≥ 0`) and
+  `X(r, s, k) = dP_{r+1}Λᵏ⁻¹ + κP_sΛᵏ⁺¹` with `0 ≤ s ≤ r - 2`. The statement has the spaces
+  `dP_{r+1}Λᵏ⁻¹` and `X(r, s, k)`, `s ≤ r`, with `X(r, r, k) = P_{r+1}⁻Λᵏ`,
+  `X(r + 1, r, k) = P_{r+1}Λᵏ` and `dP_1Λᵏ⁻¹ = P_0Λᵏ`.
 * **Characteristic `0` is necessary**: over a field `K`, the classification of the invariant
   subspaces of `H_rΛᵏ` (`charZero_iff_classification`) and the homogeneous Poincaré lemma
   (`charZero_iff_closed_eq_exact`) hold in every dimension iff `K` has characteristic `0`.
@@ -238,9 +239,10 @@ def faceMoment (p : Fin (n + 1) → Fin n → ℝ) {m : ℕ} (e : Fin (m + 1) �
 
 /-- **The classification of the invariant spaces of polynomial differential forms** on `Kⁿ`, `K`
 of characteristic `0` ([AFW2006], §3.4, Theorems 3.5–3.6, over `ℝ`): for `0 < k < n` the nonzero
-finite-dimensional affinely invariant spaces of `k`-forms are the `dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}`,
-`-1 ≤ s ≤ r`, among them `P_rΛᵏ` and `P_{r+1}⁻Λᵏ`; the summands `dH_{r+1}Λ^{k-1}` and
-`κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under `GL(n)` (`AffineInvariantForms`). -/
+finite-dimensional affinely invariant spaces of `k`-forms are exactly `P_rΛᵏ`, `P_r⁻Λᵏ`,
+`dP_{r+1}Λ^{k-1}` and `X(r, s, k) = dP_{r+1}Λ^{k-1} + κP_sΛ^{k+1}` with `0 ≤ s ≤ r - 2`; the
+summands `dH_{r+1}Λ^{k-1}` and `κH_{r-1}Λ^{k+1}` of `H_rΛᵏ` are irreducible under `GL(n)`
+(`AffineInvariantForms`). -/
 theorem affineInvariantForms (K : Type u) [Field K] [CharZero K] (n : ℕ) :
     AffineInvariantForms K n := by
   sorry

@@ -36,7 +36,8 @@ sequence `S` of `P_rΛ` and `P_r⁻Λ` spaces, in `HΛ(Ω)` or `H̊Λ(Ω)`, and 
   in `N`, for every solution with the homogeneous boundary conditions of the complex, `C³` in time
   with `‖∂ₜ³U‖ ≤ L`, whose values and time increments are `C^{s+2}` forms (vanishing outside `Ω`
   in `H̊Λ(Ω)`) with the bounds `L` and `L |t' - t|`, where `S` reproduces `P_sΛ` in the degrees
-  `a, …, a + m`.
+  `a, …, a + m`. With the natural boundary conditions a standing wave of the cube meets these
+  hypotheses at all times and is neither zero nor stationary (`fem_wave_nonvacuous`).
 * **Fully discrete, inhomogeneous Dirichlet data**: with the boundary degrees of freedom of the
   exact solution (the runs of [QuennevilleBelair2015], Ch. 7: the Whitney forms on the Freudenthal
   meshes of the cube, in `HΛ`), both schemes converge at `O(h + Δt²)` for every smooth solution
@@ -579,6 +580,23 @@ theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall �
           (∀ k, k + 2 ≤ K → H.IsLeapfrogStep a m (X N) (X N) Δt 0 (u k) (u (k + 1)) (u (k + 2))) →
           u 0 ∈ X N → u 1 ∈ X N → (1 - c) * ‖u K - U (K * Δt)‖ ≤
             ‖u 0 - U 0‖ + ‖u 1 - U Δt‖ + C * (1 + T) * L * (meshSize (M N) ^ (s + 1) + Δt ^ 2) := by
+  sorry
+
+/-- **Non-vacuity of `fem_wave`: a standing wave with the natural boundary conditions.** The cube
+`Q = (0, ½)ⁿ` is star-shaped with respect to a ball and has a shape-regular, quasi-uniform family
+of meshes with `h_N → 0`, and on the window `[0, 2)` of `HΛ(Q)` (`b = false`) the standing wave
+`U(t) = (cos 2πt cos 2πx₀, -sin 2πt sin 2πx₀ dx₀)` (in the proof), a solution of `σ' = -d*E`,
+`E' = dσ` with `E · n = 0` on `∂Q`, meets the hypotheses of `fem_wave` on the exact solution at
+all times, for every `s`, with some bound `L`, and is neither zero nor stationary at any time. -/
+theorem fem_wave_nonvacuous [NeZero n] (s : ℕ) :
+    IsStarShapedBall (cube n) ∧ (∃ M, IsMeshFamily (cube n) M) ∧
+    ∀ H : HilbertComplex ℝ (L2Form (cube n)), (∀ k, H.d k (k + 1) = dMax (cube n) k) →
+    ∃ (L : ℝ) (U U₁ U₂ U₃ : ℝ → Total (L2Form (cube n)) 0 2),
+      (∀ t, HasDerivAt U (U₁ t) t ∧ HasDerivAt U₁ (U₂ t) t ∧ HasDerivAt U₂ (U₃ t) t) ∧
+      (∀ t, ‖U₃ t‖ ≤ L ∧ (U t, U₁ t) ∈ (H.wave 0 2).graph) ∧
+      (∀ t t' (i : Fin 2), IsCsForm (cube n) s ((0 : ℤ) + (i : ℕ)) L (U t i) ∧
+        IsCsForm (cube n) s ((0 : ℤ) + (i : ℕ)) (L * |t' - t|) (U t' i - U t i)) ∧
+      ∀ t, U t ≠ 0 ∧ U₁ t ≠ 0 := by
   sorry
 
 /-! ### The Whitney schemes of the cube with the boundary data of the exact solution -/

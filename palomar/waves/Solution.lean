@@ -2,20 +2,23 @@ module
 
 public import Solution.Fem
 public import Solution.Maxwell
+public import Solution.StandingWave
 public import Solution.Whitney
 
 /-!
-# Fully discrete finite elements for the Hodge wave and Maxwell equations (solution)
+# Finite element methods for the Hodge wave and Maxwell equations (solution)
 
 The compared theorems of `Challenge.lean`. `FEEC.inverse_estimate` is
 `Feec.FiniteElement.PolySeq.exists_mul_norm_d_le` on the `Feec` meshes. `FEEC.fem_wave` is a
 consequence of the uniform stability of `palomar/fem` (`femFamily`, `Solution.Fem`) and of
-`FEEC.inverse_estimate`: the complex of `femFamily` is the given one (`HilbertComplex.ext_of_d`),
-the comparison fields are the `L²` projections of the exact solution, componentwise (`‖P U - U‖`
-by the quasi-optimality of a bounded projection and the Jackson estimate, `‖𝐝 (P U - U)‖` by
-`Jackson.ProjRate`, both at `h^{s+1}`, through `HilbertComplex.norm_totalD_le`), and
-`HilbertComplex.wave_error` (`Solution.Wave`) gives the Crank–Nicolson and leapfrog errors, the
-CFL condition from the inverse estimate on the window.
+`FEEC.inverse_estimate`: the Hilbert complex is that of `femFamily`, the comparison fields are
+the `L²` projections of the exact solution, componentwise (`‖P U - U‖` by the quasi-optimality of
+a bounded projection and the Jackson estimate, `‖𝐝 (P U - U)‖` by `Jackson.ProjRate`, both at
+`h^{s+1}`, through `HilbertComplex.norm_totalD_le`), and `HilbertComplex.wave_error`
+(`Solution.Wave`) gives the Crank–Nicolson and leapfrog errors, the CFL condition from the inverse
+estimate on the window. `FEEC.fem_wave_nonvacuous` is the standing wave of
+`Solution.StandingWave` (`StandingWave.exists_standingWave`) on the cube, star-shaped with its
+Freudenthal meshes as for `FEEC.fem_cube` of `palomar/fem`.
 
 `FEEC.crankNicolson_cube` and `FEEC.leapfrog_cube` are
 `Feec.Models.Cube.Inhomogeneous.RowSolution.whitney_cn_error_le_row` and
@@ -304,6 +307,20 @@ theorem fem_wave [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall �
     have := hw.2 c hc0 hc1 hcfl' (fun k hk => hXeq ▸ hstep k hk) ((hXV N _).1 hu0)
       ((hXV N _).1 hu1)
     linarith [hfin.2]
+
+theorem fem_wave_nonvacuous [NeZero n] (s : ℕ) :
+    IsStarShapedBall (cube n) ∧ (∃ M, IsMeshFamily (cube n) M) ∧
+    ∀ H : HilbertComplex ℝ (L2Form (cube n)), (∀ k, H.d k (k + 1) = dMax (cube n) k) →
+    ∃ (L : ℝ) (U U₁ U₂ U₃ : ℝ → Total (L2Form (cube n)) 0 2),
+      (∀ t, HasDerivAt U (U₁ t) t ∧ HasDerivAt U₁ (U₂ t) t ∧ HasDerivAt U₂ (U₃ t) t) ∧
+      (∀ t, ‖U₃ t‖ ≤ L ∧ (U t, U₁ t) ∈ (H.wave 0 2).graph) ∧
+      (∀ t t' (i : Fin 2), IsCsForm (cube n) s ((0 : ℤ) + (i : ℕ)) L (U t i) ∧
+        IsCsForm (cube n) s ((0 : ℤ) + (i : ℕ)) (L * |t' - t|) (U t' i - U t i)) ∧
+      ∀ t, U t ≠ 0 ∧ U₁ t ≠ 0 := by
+  set D := CubeWitness.starDomain n
+  exact ⟨⟨D.isOpen, D.isBounded, D.x₀, D.s₀, D.s₀_pos, D.starBall⟩,
+    ⟨_, isMeshFamily_ofFeec (CubeWitness.meshFamily n)⟩,
+    fun H hH => StandingWave.exists_standingWave H hH s⟩
 
 /-! ### The Whitney schemes of the cube -/
 

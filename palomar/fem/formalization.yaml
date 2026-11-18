@@ -1,9 +1,9 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of the uniformly bounded commuting
 # projections of the finite element de Rham complexes (`palomar/fem/`). Since 2026-11-18 the
-# entry is this one question: its fully discrete wave and Maxwell theorems are the entry
-# palomar/waves, its shape-function theorems (unisolvence, the classification of the affinely
-# invariant spaces) the entry palomar/shapes.
+# entry is this one question: its theorems on the fully discrete Hodge wave equation and on
+# Maxwell's equations (semi-discrete) are the entry palomar/waves, its shape-function theorems
+# (unisolvence, the classification of the affinely invariant spaces) the entry palomar/shapes.
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
@@ -233,9 +233,9 @@ automation:
     Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean) and applies its theorems; the
     projections attain the Jackson rate by the quasi-optimality of a bounded projection
     (Solution/Complex.lean, Jackson.projRate, from Feec.ForMathlib.Analysis.QuasiOptimal).
-    Restructured on 2026-11-18 as one question: the theorems of the fully discrete wave and
-    Maxwell equations moved to palomar/waves, those of the shape functions to palomar/shapes,
-    with their definitions (the Challenge from 997 to 498 lines).
+    Restructured on 2026-11-18 as one question: the theorems of the fully discrete Hodge wave
+    equation and of Maxwell's equations moved to palomar/waves, those of the shape functions to
+    palomar/shapes, with their definitions (the Challenge from 997 to 498 lines).
 
 fidelity:
   divergences: >-

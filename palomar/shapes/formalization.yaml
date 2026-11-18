@@ -30,9 +30,10 @@ project:
     d P_1 Lambda^(k-1) = P_0 Lambda^k (Theorem 3.5); and for 0 < k < n every nonzero
     finite-dimensional space of k-forms invariant under the invertible affine maps is
     d P_(r+1) Lambda^(k-1) or some X(r, s, k), s <= r (Theorem 3.6). So for 0 < k < n the
-    affinely invariant spaces of polynomial k-forms are the d P_(r+1) Lambda^(k-1) and the
-    X(r, s, k), which lie between P_(s+1)^- Lambda^k and P_(r+1)^- Lambda^k; the full and trimmed
-    spaces are P_(r+1) Lambda^k = X(r+1, r, k) and P_(r+1)^- Lambda^k = X(r, r, k).
+    nonzero finite-dimensional affinely invariant spaces of polynomial k-forms are exactly
+    P_r Lambda^k (r >= 0), P_r^- Lambda^k (r >= 1), d P_(r+1) Lambda^(k-1) (r >= 0) and the
+    X(r, s, k) with 0 <= s <= r - 2 (X(r, r, k) = P_(r+1)^- Lambda^k and
+    X(r, r - 1, k) = P_r Lambda^k being the trimmed and full spaces).
     FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact: over every field K,
     the classification of the GL(n)-invariant subspaces of H_(r+1) Lambda^(k+1), and the
     homogeneous Poincare lemma ker d meet H_r Lambda^(k+1) = d H_(r+1) Lambda^k (AFW2006 (3.2)),
@@ -127,11 +128,11 @@ status:
     periodic table; AFW2006 §3.5): the theorems classify spaces, not complexes.
     Not compared (proved in Feec, outside the statement): the polynomial identities, dimension
     formulas and exactness of the polynomial de Rham and Koszul complexes of P_r Lambda,
-    P_r^- Lambda and Q_r^- Lambda (the former FEEC.periodicTable of palomar/periodic;
-    Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm), the classification with the
-    summands as kernels (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker),
-    the assembly of global finite element spaces from the degrees of freedom (used in
-    palomar/fem).
+    P_r^- Lambda and Q_r^- Lambda (formerly compared in palomar/periodic, exactness and
+    dimensions only; Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm), the
+    classification with the summands as kernels
+    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker), the assembly
+    of global finite element spaces from the degrees of freedom (used in palomar/fem).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]

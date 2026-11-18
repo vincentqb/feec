@@ -7,9 +7,8 @@ public import Feec.Models.Cube.InhomogeneousLeapfrog
 # The fully discrete Hodge wave equation on a window of a subcomplex
 
 A Hilbert complex of the challenge is a `Feec` complex on `ComplexShape.up ℤ`
-(`HilbertComplex.toFeec`, the converse of `HilbertComplex.ofFeec`), two complexes with the same
-differentials `d k (k + 1)` are equal (`HilbertComplex.ext_of_d`), and the total differential of a
-window is that of the `Feec` window (`totalD_eq`). The forms of the window whose components lie in
+(`HilbertComplex.toFeec`, the converse of `HilbertComplex.ofFeec`), and the total differential of
+a window is that of the `Feec` window (`totalD_eq`). The forms of the window whose components lie in
 a subcomplex `Vₕ` are the image of the discrete state space `DState` of the `Feec` window of `Vₕ`
 (`mem_iff_exists_dEmb`), on which the challenge's `𝐝` is `discreteD` (`dApply_dEmb`), its wave
 form that of `discreteWave` (`waveForm_dEmb`), and a strong solution of the Hodge wave equation
@@ -53,20 +52,6 @@ def toFeec (H : HilbertComplex ℝ W) : Feec.HilbertComplex ℝ (ComplexShape.up
   closed := H.closed
   mapsTo := H.mapsTo
   d_comp_d := H.d_comp_d
-
-/-- **Two Hilbert complexes with the same differentials `d k (k + 1)` are equal** (the others
-vanish). -/
-theorem ext_of_d {H H' : HilbertComplex ℝ W} (h : ∀ k, H.d k (k + 1) = H'.d k (k + 1)) :
-    H = H' := by
-  have hd : H.d = H'.d := by
-    funext i j
-    by_cases hij : i + 1 = j
-    · subst hij; exact h i
-    · rw [H.shape i j hij, H'.shape i j hij]
-  cases H
-  cases H'
-  cases hd
-  rfl
 
 variable (H : HilbertComplex ℝ W) (a : ℤ) (m : ℕ)
 

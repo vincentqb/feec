@@ -58,7 +58,7 @@ this is the time-uniform rate `‖e^{tL} x - ι_N e^{tL_N} π_N x‖ ≤ (N + 1)
   `ReducingFamily.feec`: the Gauss laws reduce `L` and the truncations preserve them, and the
   truncation error on `Hˢ` is `≤ (N + 1)^{-s} ‖ξ₀‖_{Hˢ}`.
   The vanishing-field constraint does not reduce `L`
-  (`maxwell_euclidean_not_isReducing_potential`, `a < d`, through a cut-off constant field `u`
+  (`maxwell_euclidean_not_isReducing_potential`, `0 ≤ a < d`, through a cut-off constant field `u`
   with `d u ≠ 0`, `exists_band_d_ne_zero`), and its residuals along the truncated solutions tend
   to a positive limit (`maxwell_euclidean_potential_residual`, item 4 of `approxFEEC`,
   non-reducing branch).

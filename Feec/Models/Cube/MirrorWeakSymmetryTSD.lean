@@ -83,25 +83,27 @@ def sub2 (i : Fin 3) : {s : Finset (Fin 3) // (#s : ℤ) = 2} :=
 theorem sub1_bijective : Function.Bijective sub1 := by decide
 theorem sub2_bijective : Function.Bijective sub2 := by decide
 
-def e1 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 1} := Equiv.ofBijective sub1 sub1_bijective
-def e2 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 2} := Equiv.ofBijective sub2 sub2_bijective
+/-- The index equivalence `Fin 3 ≃ formIdx 3 1`, `b ↦ dx_b`. -/
+def eq1 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 1} := Equiv.ofBijective sub1 sub1_bijective
+/-- The index equivalence `Fin 3 ≃ formIdx 3 2`, `i ↦ ⋆dx_i`. -/
+def eq2 : Fin 3 ≃ {s : Finset (Fin 3) // (#s : ℤ) = 2} := Equiv.ofBijective sub2 sub2_bijective
 
-@[simp] theorem e1_apply (b : Fin 3) : e1 b = sub1 b := rfl
-@[simp] theorem e2_apply (i : Fin 3) : e2 i = sub2 i := rfl
-@[simp] theorem e1_symm_sub1 (b : Fin 3) : e1.symm (sub1 b) = b := e1.symm_apply_apply b
-@[simp] theorem e2_symm_sub2 (i : Fin 3) : e2.symm (sub2 i) = i := e2.symm_apply_apply i
+@[simp] theorem eq1_apply (b : Fin 3) : eq1 b = sub1 b := rfl
+@[simp] theorem eq2_apply (i : Fin 3) : eq2 i = sub2 i := rfl
+@[simp] theorem eq1_symm_sub1 (b : Fin 3) : eq1.symm (sub1 b) = b := eq1.symm_apply_apply b
+@[simp] theorem eq2_symm_sub2 (i : Fin 3) : eq2.symm (sub2 i) = i := eq2.symm_apply_apply i
 
 def sg2 (i : Fin 3) : ℝ := if i = 1 then -1 else 1
 
 theorem sg2_mul_self (i : Fin 3) : sg2 i * sg2 i = 1 := by unfold sg2; split_ifs <;> norm_num
 
-def rowF (M : Mat) (a : Fin 3) : Form ℂ (Fin 3) 1 := WithLp.toLp 2 fun t => M (a, e1.symm t)
+def rowF (M : Mat) (a : Fin 3) : Form ℂ (Fin 3) 1 := WithLp.toLp 2 fun t => M (a, eq1.symm t)
 def rowF2 (M : Mat) (a : Fin 3) : Form ℂ (Fin 3) 2 :=
-  WithLp.toLp 2 fun t => (sg2 (e2.symm t) : ℂ) * M (a, e2.symm t)
+  WithLp.toLp 2 fun t => (sg2 (eq2.symm t) : ℂ) * M (a, eq2.symm t)
 
-@[simp] theorem rowF_apply (M : Mat) (a : Fin 3) (t) : rowF M a t = M (a, e1.symm t) := rfl
+@[simp] theorem rowF_apply (M : Mat) (a : Fin 3) (t) : rowF M a t = M (a, eq1.symm t) := rfl
 @[simp] theorem rowF2_apply (M : Mat) (a : Fin 3) (t) :
-    rowF2 M a t = (sg2 (e2.symm t) : ℂ) * M (a, e2.symm t) := rfl
+    rowF2 M a t = (sg2 (eq2.symm t) : ℂ) * M (a, eq2.symm t) := rfl
 
 theorem sgn_val (j : Fin 3) (s : Finset (Fin 3)) :
     (Feec.ExteriorFibre.sgn j s : ℂ) = (-1) ^ #({l ∈ s | l < j}) := rfl
@@ -137,8 +139,8 @@ theorem koszulDeg_sub2_two (ξ : EuclideanSpace ℝ (Fin 3)) (x : Form ℂ (Fin 
 theorem deRham_rowF (ξ : EuclideanSpace ℝ (Fin 3)) (M : Mat) (a : Fin 3) :
     (Feec.Fourier.Exterior.deRham (Fin 3)).m 1 (1 + 1) ξ (rowF M a) = rowF2 (curl ξ M) a := by
   ext t
-  obtain ⟨i, rfl⟩ := e2.surjective t
-  rw [deRham_m_succ, smul_apply, PiLp.smul_apply, e2_apply, rowF2_apply, e2_symm_sub2, curl_apply]
+  obtain ⟨i, rfl⟩ := eq2.surjective t
+  rw [deRham_m_succ, smul_apply, PiLp.smul_apply, eq2_apply, rowF2_apply, eq2_symm_sub2, curl_apply]
   obtain rfl | rfl | rfl : i = 0 ∨ i = 1 ∨ i = 2 := by fin_cases i <;> simp
   · rw [koszulDeg_sub2_zero]
     simp [Fin.sum_univ_three, leviCivita3_apply, sg2]
@@ -235,45 +237,45 @@ theorem mFourierCoeff_extL2_re {c : Fin 3 → ℂ} (hc : ∀ j, c j * c j = 1)
 /-- **The real part of the row `a` of a matrix field, as a `1`-form on `Q`**:
 `Σ_b Re E_{ab} dx_b`. -/
 def rowRe (E : MQ) (a : Fin 3) : L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)) :=
-  WithLp.toLp 2 fun s => reL _ (E (a, e1.symm s))
+  WithLp.toLp 2 fun s => reL _ (E (a, eq1.symm s))
 
 /-- **The real part of the row `a` of a matrix field, as a `2`-form on `Q`** (Hodge star):
 `Σ_i ± Re B_{ai} ⋆dx_i`. -/
 def rowRe2 (B : MQ) (a : Fin 3) : L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ)) :=
-  WithLp.toLp 2 fun s => sg2 (e2.symm s) • reL _ (B (a, e2.symm s))
+  WithLp.toLp 2 fun s => sg2 (eq2.symm s) • reL _ (B (a, eq2.symm s))
 
 theorem coeff_JfJ_rowRe (E : MQ) (a : Fin 3) (m : Fin 3 → ℤ) :
     (JfJ {a} 1 (rowRe E a) : (Fin 3 → ℤ) → Form ℂ (Fin 3) 1) m =
       (1 / 2 : ℂ) • (rowF ((MirrorBGG.J₁ E : (Fin 3 → ℤ) → Mat) m) a +
         cjForm (rowF ((MirrorBGG.J₁ E : (Fin 3 → ℤ) → Mat) (-m)) a)) := by
   ext t
-  obtain ⟨b, rfl⟩ := e1.surjective t
+  obtain ⟨b, rfl⟩ := eq1.surjective t
   rw [JfJ_apply, JR_apply, extF_coeff, ofRealF_apply]
-  simp only [PiLp.smul_apply, PiLp.add_apply, rowF_apply, cjForm_apply, e1_apply, e1_symm_sub1,
+  simp only [PiLp.smul_apply, PiLp.add_apply, rowF_apply, cjForm_apply, eq1_apply, eq1_symm_sub1,
     smul_eq_mul]
   rw [extF_coeff, extF_coeff,
     extL2_congr (show pcJF {a} (sub1 b) = Mirror.cE (a, b) from pcJ_one a b) _
       (cE_sq (a, b))]
   change mFourierCoeff (extL2 (cE_sq (a, b))
-    (ofRealL _ (reL _ (E (a, e1.symm (sub1 b))))) : _ → ℂ) m = _
-  rw [e1_symm_sub1, mFourierCoeff_extL2_re (cE_sq (a, b)) (conj_cE (a, b))]
+    (ofRealL _ (reL _ (E (a, eq1.symm (sub1 b))))) : _ → ℂ) m = _
+  rw [eq1_symm_sub1, mFourierCoeff_extL2_re (cE_sq (a, b)) (conj_cE (a, b))]
 
 theorem coeff_JfJ_rowRe2 (B : MQ) (a : Fin 3) (m : Fin 3 → ℤ) :
     (JfJ {a} 2 (rowRe2 B a) : (Fin 3 → ℤ) → Form ℂ (Fin 3) 2) m =
       (1 / 2 : ℂ) • (rowF2 ((extF (c := Mirror.cB) cB_sq B : (Fin 3 → ℤ) → Mat) m) a +
         cjForm (rowF2 ((extF (c := Mirror.cB) cB_sq B : (Fin 3 → ℤ) → Mat) (-m)) a)) := by
   ext t
-  obtain ⟨i, rfl⟩ := e2.surjective t
+  obtain ⟨i, rfl⟩ := eq2.surjective t
   rw [JfJ_apply, JR_apply, extF_coeff, ofRealF_apply]
-  simp only [PiLp.smul_apply, PiLp.add_apply, rowF2_apply, cjForm_apply, e2_apply, e2_symm_sub2,
+  simp only [PiLp.smul_apply, PiLp.add_apply, rowF2_apply, cjForm_apply, eq2_apply, eq2_symm_sub2,
     smul_eq_mul]
   rw [extF_coeff, extF_coeff,
     extL2_congr (show pcJF {a} (sub2 i) = Mirror.cB (a, i) from pcJ_two a i) _
       (cB_sq (a, i))]
   change mFourierCoeff (extL2 (cB_sq (a, i)) (ofRealL _
-    (sg2 (e2.symm (sub2 i)) •
-      reL _ (B (a, e2.symm (sub2 i))))) : _ → ℂ) m = _
-  rw [e2_symm_sub2, map_smul, real_smul_Lp, map_smul,
+    (sg2 (eq2.symm (sub2 i)) •
+      reL _ (B (a, eq2.symm (sub2 i))))) : _ → ℂ) m = _
+  rw [eq2_symm_sub2, map_smul, real_smul_Lp, map_smul,
     mFourierCoeff_smul', mFourierCoeff_extL2_re (cB_sq (a, i)) (conj_cB (a, i)), map_mul,
     Complex.conj_ofReal]
   ring
@@ -287,7 +289,7 @@ theorem cjForm_neg {k : ℕ} (v : Form ℂ (Fin 3) k) : cjForm (-v) = -cjForm v 
 theorem rowF2_injective {M N : Mat} {a : Fin 3} (h : rowF2 M a = rowF2 N a) (i : Fin 3) :
     M (a, i) = N (a, i) := by
   have e := congrArg (fun v : Form ℂ (Fin 3) 2 => v (sub2 i)) h
-  simp only [rowF2_apply, e2_symm_sub2] at e
+  simp only [rowF2_apply, eq2_symm_sub2] at e
   have hs : (sg2 i : ℂ) ≠ 0 := by unfold sg2; split_ifs <;> norm_num
   exact mul_left_cancel₀ hs e
 
@@ -346,8 +348,8 @@ theorem rowF_J₁_ofRealRows (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 :
     rowF ((MirrorBGG.J₁ (ofRealRows v) : (Fin 3 → ℤ) → Mat) m) a =
       (JfJ {a} 1 (v a) : (Fin 3 → ℤ) → Form ℂ (Fin 3) 1) m := by
   ext t
-  obtain ⟨b, rfl⟩ := e1.surjective t
-  rw [rowF_apply, e1_apply, e1_symm_sub1, JfJ_apply, JR_apply, extF_coeff,
+  obtain ⟨b, rfl⟩ := eq1.surjective t
+  rw [rowF_apply, eq1_apply, eq1_symm_sub1, JfJ_apply, JR_apply, extF_coeff,
     extF_coeff, ofRealF_apply,
     extL2_congr (show pcJF {a} (sub1 b) = Mirror.cE (a, b) from pcJ_one a b) _
       (cE_sq (a, b))]
@@ -358,8 +360,8 @@ theorem rowF2_extF_ofRealRows2 (w : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((2
     rowF2 ((extF (c := Mirror.cB) cB_sq (ofRealRows2 w) : (Fin 3 → ℤ) → Mat) m) a =
       (JfJ {a} 2 (w a) : (Fin 3 → ℤ) → Form ℂ (Fin 3) 2) m := by
   ext t
-  obtain ⟨i, rfl⟩ := e2.surjective t
-  rw [rowF2_apply, e2_apply, e2_symm_sub2, JfJ_apply, JR_apply, extF_coeff,
+  obtain ⟨i, rfl⟩ := eq2.surjective t
+  rw [rowF2_apply, eq2_apply, eq2_symm_sub2, JfJ_apply, JR_apply, extF_coeff,
     extF_coeff, ofRealF_apply,
     extL2_congr (show pcJF {a} (sub2 i) = Mirror.cB (a, i) from pcJ_two a i) _
       (cB_sq (a, i))]
@@ -409,24 +411,19 @@ theorem re_inner_ofRealL {α : Type*} [MeasurableSpace α] {μ : Measure α} (f 
   rw [h1, h2]
   simp [mul_comm]
 
-/-- The index equivalence `Fin 3 ≃ formIdx 3 1`, `b ↦ dx_b`. -/
-def eq1 : Fin 3 ≃ formIdx 3 ((1 : ℕ) : ℤ) := e1
-/-- The index equivalence `Fin 3 ≃ formIdx 3 2`, `i ↦ ⋆dx_i`. -/
-def eq2 : Fin 3 ≃ formIdx 3 ((2 : ℕ) : ℤ) := e2
-
 @[simp] theorem rowRe_eq1 (E : MQ) (a b : Fin 3) : rowRe E a (eq1 b) = reL _ (E (a, b)) := by
-  simp [rowRe, eq1]
+  simp [rowRe]
 
 @[simp] theorem rowRe2_eq2 (B : MQ) (a i : Fin 3) :
     rowRe2 B a (eq2 i) = sg2 i • reL _ (B (a, i)) := by
-  simp [rowRe2, eq2]
+  simp [rowRe2]
 
 theorem re_inner_ofRealRows (E : MQ) (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ))) :
     RCLike.re ⟪E, ofRealRows v⟫_ℂ = ∑ a, ⟪rowRe E a, v a⟫_ℝ := by
   rw [PiLp.inner_apply, map_sum, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun a _ => ?_
-  rw [PiLp.inner_apply, ← Fintype.sum_equiv eq1 (fun b => ⟪rowRe E a (eq1 b), v a (eq1 b)⟫_ℝ) _
-    fun _ => rfl]
+  rw [PiLp.inner_apply, ← Fintype.sum_equiv (κ := formIdx 3 ((1 : ℕ) : ℤ)) eq1
+    (fun b => ⟪rowRe E a (eq1 b), v a (eq1 b)⟫_ℝ) _ fun _ => rfl]
   refine Finset.sum_congr rfl fun b _ => ?_
   rw [rowRe_eq1]
   exact re_inner_ofRealL _ _
@@ -435,8 +432,8 @@ theorem re_inner_ofRealRows2 (B : MQ) (w : Fin 3 → L2F ℝ (Q (Fin 3)) (formId
     RCLike.re ⟪B, ofRealRows2 w⟫_ℂ = ∑ a, ⟪rowRe2 B a, w a⟫_ℝ := by
   rw [PiLp.inner_apply, map_sum, Fintype.sum_prod_type]
   refine Finset.sum_congr rfl fun a _ => ?_
-  rw [PiLp.inner_apply, ← Fintype.sum_equiv eq2 (fun i => ⟪rowRe2 B a (eq2 i), w a (eq2 i)⟫_ℝ) _
-    fun _ => rfl]
+  rw [PiLp.inner_apply, ← Fintype.sum_equiv (κ := formIdx 3 ((2 : ℕ) : ℤ)) eq2
+    (fun i => ⟪rowRe2 B a (eq2 i), w a (eq2 i)⟫_ℝ) _ fun _ => rfl]
   refine Finset.sum_congr rfl fun i _ => ?_
   rw [rowRe2_eq2, real_inner_smul_left]
   change RCLike.re ⟪B (a, i), (sg2 i : ℂ) • ofRealL _ (w a (eq2 i))⟫_ℂ = _
@@ -470,13 +467,13 @@ theorem inner_rowRe_dPart_zero (E : MQ)
               (Fin 3 → ℤ) → Form ℂ (Fin 3) 0) m) :=
         (coeff_d_dPart {a} 0 ψ m).symm
       rw [hg, coeff_JfJ_rowRe, PiLp.inner_apply,
-        ← Fintype.sum_equiv e1 (fun b => ⟪((1 / 2 : ℂ) • (rowF ((MirrorBGG.J₁ E :
+        ← Fintype.sum_equiv eq1 (fun b => ⟪((1 / 2 : ℂ) • (rowF ((MirrorBGG.J₁ E :
           (Fin 3 → ℤ) → Mat) m) a + cjForm (rowF ((MirrorBGG.J₁ E : (Fin 3 → ℤ) → Mat) (-m)) a)))
-          (e1 b), (Feec.Fourier.Exterior.deRham (Fin 3)).m 0 (0 + 1) (Fourier.Torus.freq m)
+          (eq1 b), (Feec.Fourier.Exterior.deRham (Fin 3)).m 0 (0 + 1) (Fourier.Torus.freq m)
             ((JfJ {a} 0 (ψ : L2F ℝ (Q (Fin 3)) (formIdx 3 ((0 : ℕ) : ℤ))) :
-              (Fin 3 → ℤ) → Form ℂ (Fin 3) 0) m) (e1 b)⟫_ℂ) _ fun _ => rfl]
-      simp only [e1_apply, deRham_zero_sub1, PiLp.smul_apply, PiLp.add_apply, rowF_apply,
-        e1_symm_sub1, cjForm_apply, RCLike.inner_apply, Fin.sum_univ_three, smul_eq_mul]
+              (Fin 3 → ℤ) → Form ℂ (Fin 3) 0) m) (eq1 b)⟫_ℂ) _ fun _ => rfl]
+      simp only [eq1_apply, deRham_zero_sub1, PiLp.smul_apply, PiLp.add_apply, rowF_apply,
+        eq1_symm_sub1, cjForm_apply, RCLike.inner_apply, Fin.sum_univ_three, smul_eq_mul]
       have h1 := hE m
       have h2 := hE (-m)
       rw [Fourier.GradCurl.mem_tsd] at h1 h2
@@ -506,7 +503,7 @@ theorem wsCoeff_swap (t : formIdx 3 ((1 : ℤ) + 1)) (a b : Fin 3) :
   obtain ⟨i, rfl⟩ := eq2.surjective t
   rw [wsCoeff_eq, wsCoeff_eq]
   fin_cases i <;> fin_cases a <;> fin_cases b <;>
-    simp (config := { decide := true }) [eq2, e2, sub2, Equiv.ofBijective, Feec.ExteriorFibre.sgn]
+    simp (config := { decide := true }) [eq2, sub2, Equiv.ofBijective, Feec.ExteriorFibre.sgn]
 
 /-- **`S¹ = 2 vskw` vanishes on symmetric rows**: `(S v)_{jk} = ±(v_j{k} − v_k{j})`. -/
 theorem wsL2_eq_zero_of_symm {Ω : Set (Fin 3 → ℝ)}
@@ -581,15 +578,15 @@ def rowReL (a : Fin 3) : MQ →L[ℝ] L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) 
       (fun _ : formIdx 3 ((1 : ℕ) : ℤ) => L2 ℝ (Q (Fin 3)))).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun s => (reL _) ∘L
       ((PiLp.proj (𝕜 := ℂ) 2 (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))
-        (a, e1.symm s)).restrictScalars ℝ)
+        (a, eq1.symm s)).restrictScalars ℝ)
 
 /-- `B ↦ ⋆ Re B_a` as a bounded real-linear map. -/
 def rowRe2L (a : Fin 3) : MQ →L[ℝ] L2F ℝ (Q (Fin 3)) (formIdx 3 ((2 : ℕ) : ℤ)) :=
   (PiLp.continuousLinearEquiv 2 ℝ
       (fun _ : formIdx 3 ((2 : ℕ) : ℤ) => L2 ℝ (Q (Fin 3)))).symm.toContinuousLinearMap ∘L
-    ContinuousLinearMap.pi fun s => sg2 (e2.symm s) • ((reL _) ∘L
+    ContinuousLinearMap.pi fun s => sg2 (eq2.symm s) • ((reL _) ∘L
       ((PiLp.proj (𝕜 := ℂ) 2 (fun _ : Fin 3 × Fin 3 => L2 ℂ (Q (Fin 3)))
-        (a, e2.symm s)).restrictScalars ℝ))
+        (a, eq2.symm s)).restrictScalars ℝ))
 
 /-- **The matrix proxy of the bottom `1`-forms**: the real rows of `E` as `(L²Λ¹(Q))³`. -/
 def rowsW1L : MQ →L[ℝ] Wv W1 :=

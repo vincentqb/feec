@@ -341,9 +341,11 @@ fidelity:
     Theorems 2 and 3 are exercised only by palomar/fem. The witness states that the harmonic
     forms are finite-dimensional, of dimension (n choose k) in degree k (the constant forms), the
     hypothesis of the eventual cohomology isomorphism of the static verdict, so every clause of
-    Theorems 1-3 but the rates is exercised. The finite element families of palomar/fem
-    (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube) meet the hypotheses too and are compared
-    there, with the definitions of this entry (item (10)).
+    Theorems 1-3 but the rates applies to the witness (the harmonic gap ||q - pi_N q|| < ||q|| of
+    SubcomplexFamily.StaticVerdict.cohomology_of_lt holds since pi_N fixes the constant forms,
+    Feec.Models.Torus.DeRham.bandProj_harmonic; the witness does not state it). The finite
+    element families of palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube) meet the
+    hypotheses too and are compared there, with the definitions of this entry (item (10)).
     (8) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
     time, and nothing relating it to the K-structure: a real normed-space structure on a normed
     K-space is the restricted one (t x and (t : K) x are continuous in t and agree on Q), which the
@@ -431,7 +433,9 @@ review:
     Witness (2026-11-18): the harmonic forms of the torus are stated finite-dimensional, of
     dimension (n choose k) in degree k (was: nonzero in the degrees 0 <= k <= n, which this
     implies), so that the cohomology clause of the static verdict is exercised (fidelity (7)); the
-    solution uses Feec's de Rham model of the torus, now graded by Z, directly.
+    solution uses Feec's de Rham model of the torus, now graded by Z, directly. Independent review
+    (2026-11-19): fidelity (7) names the clause hypothesis the witness meets without stating it
+    (the harmonic gap of SubcomplexFamily.StaticVerdict.cohomology_of_lt).
 
 alignment:
   namespace: "FEEC"

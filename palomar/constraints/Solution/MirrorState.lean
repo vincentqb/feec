@@ -45,9 +45,6 @@ def realL : PiLp 2 SpaceQ →L[ℝ] MState :=
 theorem realL_apply (x : PiLp 2 SpaceQ) :
     realL x = (0, rowsW1L (stEL x), 0, rowsW2L (stBL x)) := rfl
 
-theorem eq1_eq (b : Fin 3) : eq1 b = ix1 b := rfl
-theorem eq2_eq (i : Fin 3) : eq2 i = ix2 i := rfl
-
 /-! ### TSD real parts -/
 
 theorem fieldE_castL2 {Ω Ω' : Set (Fin 3 → ℝ)} (h : Ω = Ω')

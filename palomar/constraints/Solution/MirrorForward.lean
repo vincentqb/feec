@@ -45,7 +45,8 @@ theorem inner_ofRealRows_ofRealRows (v w : Fin 3 → L2F ℝ (Q (Fin 3)) (formId
   rw [PiLp.inner_apply, Fintype.sum_prod_type, Complex.ofReal_sum]
   refine Finset.sum_congr rfl fun a _ => ?_
   rw [PiLp.inner_apply (v a), Complex.ofReal_sum,
-    ← Fintype.sum_equiv eq1 (fun b => ((⟪v a (eq1 b), w a (eq1 b)⟫_ℝ : ℝ) : ℂ)) _ fun _ => rfl]
+    ← Fintype.sum_equiv (κ := formIdx 3 ((1 : ℕ) : ℤ)) eq1
+      (fun b => ((⟪v a (eq1 b), w a (eq1 b)⟫_ℝ : ℝ) : ℂ)) _ fun _ => rfl]
   exact Finset.sum_congr rfl fun b _ => inner_ofRealL _ _
 
 theorem inner_ofRealRows2_ofRealRows2
@@ -54,7 +55,8 @@ theorem inner_ofRealRows2_ofRealRows2
   rw [PiLp.inner_apply, Fintype.sum_prod_type, Complex.ofReal_sum]
   refine Finset.sum_congr rfl fun a _ => ?_
   rw [PiLp.inner_apply (v a), Complex.ofReal_sum,
-    ← Fintype.sum_equiv eq2 (fun i => ((⟪v a (eq2 i), w a (eq2 i)⟫_ℝ : ℝ) : ℂ)) _ fun _ => rfl]
+    ← Fintype.sum_equiv (κ := formIdx 3 ((2 : ℕ) : ℤ)) eq2
+      (fun i => ((⟪v a (eq2 i), w a (eq2 i)⟫_ℝ : ℝ) : ℂ)) _ fun _ => rfl]
   refine Finset.sum_congr rfl fun i _ => ?_
   change ⟪(sg2 i : ℂ) • ofRealL _ (v a (eq2 i)), (sg2 i : ℂ) • ofRealL _ (w a (eq2 i))⟫_ℂ = _
   rw [inner_smul_left, inner_smul_right, inner_ofRealL, Complex.conj_ofReal, ← mul_assoc,

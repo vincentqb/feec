@@ -548,7 +548,7 @@ theorem norm_half_add_sq_le {k : ℕ} (v w : Form ℂ (Fin 3) k) :
 theorem norm_rowF_sq_le (M : Mat) (a : Fin 3) : ‖rowF M a‖ ^ 2 ≤ ‖M‖ ^ 2 := by
   rw [EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]
   simp only [rowF_apply]
-  rw [Equiv.sum_comp e1.symm (fun b => ‖M (a, b)‖ ^ 2)]
+  rw [Equiv.sum_comp eq1.symm (fun b => ‖M (a, b)‖ ^ 2)]
   exact Finset.single_le_sum (f := fun a' => ∑ b, ‖M (a', b)‖ ^ 2)
     (fun _ _ => Finset.sum_nonneg fun _ _ => sq_nonneg _) (Finset.mem_univ a)
 
@@ -556,7 +556,7 @@ theorem norm_rowF2_sq_le (M : Mat) (a : Fin 3) : ‖rowF2 M a‖ ^ 2 ≤ ‖M‖
   rw [EuclideanSpace.norm_sq_eq, EuclideanSpace.norm_sq_eq, Fintype.sum_prod_type]
   have hs : ∀ i, ‖(sg2 i : ℂ)‖ = 1 := fun i => by unfold sg2; split_ifs <;> simp
   simp only [rowF2_apply, norm_mul, hs, one_mul]
-  rw [Equiv.sum_comp e2.symm (fun b => ‖M (a, b)‖ ^ 2)]
+  rw [Equiv.sum_comp eq2.symm (fun b => ‖M (a, b)‖ ^ 2)]
   exact Finset.single_le_sum (f := fun a' => ∑ b, ‖M (a', b)‖ ^ 2)
     (fun _ _ => Finset.sum_nonneg fun _ _ => sq_nonneg _) (Finset.mem_univ a)
 

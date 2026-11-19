@@ -105,8 +105,8 @@ theorem π_apply (N : ℕ) (k : ℤ) (x : ((complexC n).d k (k + 1)).domain) (ξ
   change ((band (d := Fin n) N k).starProjection (x : TorusForm n k) : TorusForm n k) ξ = _
   rw [Feec.Models.Torus.DeRham.coeFn_starProjection_band]
   by_cases h : ∀ j, |ξ j| ≤ (N : ℤ)
-  · rw [if_pos (Feec.Fourier.Torus.mem_bandN.2 h), if_pos h]
-  · rw [if_neg (mt Feec.Fourier.Torus.mem_bandN.1 h), if_neg h]
+  · rw [ite_eq_left (Feec.Fourier.Torus.mem_bandN.2 h), ite_eq_left h]
+  · rw [ite_eq_right (mt Feec.Fourier.Torus.mem_bandN.1 h), ite_eq_right h]
 
 /-! ### Harmonic forms and the band subcomplexes -/
 

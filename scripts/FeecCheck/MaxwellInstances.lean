@@ -52,7 +52,7 @@ section Torus
 
 open Feec.Models.Torus.DeRham
 
-variable (d : Type*) [Fintype d] [LinearOrder d] (a : ℕ)
+variable (d : Type*) [Fintype d] [LinearOrder d] (a : ℤ)
 
 example : Verdict (torusFamily d) a := maxwellFEEC _ a
 

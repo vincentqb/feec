@@ -2,6 +2,7 @@ module
 
 public import Feec.FiniteElement.Assembly
 public import Feec.FiniteElement.SmoothedProjection
+public import Mathlib.LinearAlgebra.Quotient.Pi
 
 /-!
 # Vector-valued finite element spaces `Vₕ ⊗ ℝᵐ`
@@ -13,11 +14,13 @@ spaces. This file builds them on the Hilbert-complex side and on the element sid
 **Products of Hilbert complexes.** For a Hilbert complex `H` and a finite index type `α`, the
 `α`-fold product `H.pi α` (`Feec.HilbertComplex.pi`) has the spaces `L²`-sums
 `PiLp 2 (fun _ : α => W i)` and the componentwise differentials (domain: all components in the
-domain). It is again a Hilbert complex (closed graphs, dense domains). A subcomplex `S` of `H`
-gives the product subcomplex `S.pi α` (`Subcomplex.pi`), finite-dimensional when `S` is; a
-commuting map or a cochain projection of `S` gives the componentwise one of `S.pi α`
-(`Subcomplex.CommutingMap.pi`, `Subcomplex.CochainProjection.pi`); `norm_piMap_le` bounds the
-componentwise maps by the bounds of the factors.
+domain). It is again a Hilbert complex (closed graphs, dense domains), whose cohomology is the
+product of the cohomologies (`piCohomologyEquiv`; `dim Hⁱ(H^α) = #α · dim Hⁱ(H)`,
+`finrank_pi_cohomology`). A subcomplex `S` of `H` gives the product subcomplex `S.pi α`
+(`Subcomplex.pi`), finite-dimensional when `S` is; a commuting map or a cochain projection of `S`
+gives the componentwise one of `S.pi α` (`Subcomplex.CommutingMap.pi`,
+`Subcomplex.CochainProjection.pi`); `norm_piMap_le` bounds the componentwise maps by the bounds of
+the factors.
 
 **Finite element spaces `⊗ ℝᵐ`.** For an element family `E` on a conforming mesh `M` of an open
 `Ω ⊆ ℝⁿ`, `LocalElement.tensorSubcomplex E M hΩ m` (resp. `tensorSubcomplexMin`, vanishing
@@ -188,6 +191,72 @@ variable {H α}
 @[simp] theorem pi_d_apply {i j : ι} (x : ((H.pi α).d i j).domain) (a : α) :
     (H.pi α).d i j x a = H.d i j ⟨(x : PiLp 2 (fun _ : α => W i)) a, mem_piDomain.1 x.2 a⟩ :=
   rfl
+
+/-! ### The cohomology of a product -/
+
+/-- The cycles of the product are the vectors of cycles. -/
+theorem mem_pi_cycles {i : ι} {x : PiLp 2 fun _ : α => W i} :
+    x ∈ (H.pi α).cycles i ↔ ∀ a, x a ∈ H.cycles i := by
+  simp only [cycles, LinearPMap.mem_ker_iff]
+  constructor
+  · rintro ⟨y, rfl, hy⟩ a
+    refine ⟨⟨_, mem_piDomain.1 y.2 a⟩, rfl, ?_⟩
+    have := congrArg (fun z : PiLp 2 fun _ : α => W (c.next i) => z a) hy
+    simpa only [pi_d_apply, PiLp.zero_apply] using this
+  · intro h
+    choose y hy h0 using h
+    refine ⟨⟨x, mem_piDomain.2 fun a => by rw [hy a]; exact (y a).2⟩, rfl, PiLp.ext fun a => ?_⟩
+    rw [pi_d_apply, PiLp.zero_apply]
+    exact (LinearPMap.apply_eq_of_eq rfl _ (y a) (hy a)).trans (h0 a)
+
+/-- The boundaries of the product are the vectors of boundaries. -/
+theorem mem_pi_boundaries {i : ι} {x : PiLp 2 fun _ : α => W i} :
+    x ∈ (H.pi α).boundaries i ↔ ∀ a, x a ∈ H.boundaries i := by
+  constructor
+  · rintro ⟨y, rfl⟩ a
+    exact ⟨⟨_, mem_piDomain.1 y.2 a⟩, (pi_d_apply y a).symm⟩
+  · intro h
+    choose y hy using h
+    have hmem : (WithLp.toLp 2 fun a => (y a : W (c.prev i))) ∈
+        ((H.pi α).d (c.prev i) i).domain := mem_piDomain.2 fun a => (y a).2
+    exact ⟨⟨_, hmem⟩, PiLp.ext fun a => (pi_d_apply _ a).trans (hy a)⟩
+
+variable (H α) in
+/-- The cycles of the product as the vectors of cycles. -/
+def piCyclesEquiv (i : ι) : (H.pi α).cycles i ≃ₗ[𝕜] (α → H.cycles i) where
+  toFun x a := ⟨(x : PiLp 2 fun _ : α => W i) a, mem_pi_cycles.1 x.2 a⟩
+  invFun y := ⟨WithLp.toLp 2 fun a => (y a : W i), mem_pi_cycles.2 fun a => (y a).2⟩
+  map_add' _ _ := rfl
+  map_smul' _ _ := rfl
+  left_inv _ := rfl
+  right_inv _ := rfl
+
+variable (H α) in
+/-- **The cohomology of a product of Hilbert complexes is the product of the cohomologies.** -/
+def piCohomologyEquiv [DecidableEq α] (i : ι) :
+    (H.pi α).cohomology i ≃ₗ[𝕜] (α → H.cohomology i) :=
+  (Submodule.Quotient.equiv _ (Submodule.pi Set.univ fun _ : α =>
+      (H.boundaries i).comap (H.cycles i).subtype) (piCyclesEquiv H α i) (by
+    ext y
+    simp only [Submodule.mem_map, Submodule.mem_comap, Submodule.mem_pi, Set.mem_univ,
+      true_imp_iff, Submodule.coe_subtype]
+    constructor
+    · rintro ⟨x, hx, rfl⟩ a
+      exact mem_pi_boundaries.1 hx a
+    · intro hy
+      exact ⟨(piCyclesEquiv H α i).symm y, mem_pi_boundaries.2 hy,
+        (piCyclesEquiv H α i).apply_symm_apply y⟩)).trans (Submodule.quotientPi _)
+
+instance finiteDimensional_pi_cohomology [DecidableEq α] (i : ι)
+    [FiniteDimensional 𝕜 (H.cohomology i)] : FiniteDimensional 𝕜 ((H.pi α).cohomology i) :=
+  (piCohomologyEquiv H α i).symm.finiteDimensional
+
+/-- `dim Hⁱ(H^α) = #α · dim Hⁱ(H)`. -/
+theorem finrank_pi_cohomology [DecidableEq α] (i : ι) [FiniteDimensional 𝕜 (H.cohomology i)] :
+    Module.finrank 𝕜 ((H.pi α).cohomology i) =
+      Fintype.card α * Module.finrank 𝕜 (H.cohomology i) := by
+  rw [(piCohomologyEquiv H α i).finrank_eq, Module.finrank_pi_fintype, Finset.sum_const,
+    Finset.card_univ, smul_eq_mul]
 
 /-! ### Product subcomplexes -/
 

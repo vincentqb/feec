@@ -92,6 +92,8 @@ public import Feec.FiniteElement.CubeDof
 public import Feec.FiniteElement.CubeInterpolation
 public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
+public import Feec.FiniteElement.FormBGG
+public import Feec.FiniteElement.FormBGGElasticity
 public import Feec.FiniteElement.GlobalInterpolation
 public import Feec.FiniteElement.GlobalInverseEstimate
 public import Feec.FiniteElement.InterpolationError
@@ -326,6 +328,7 @@ public import Feec.Models.Cube.AbsorbingFiniteSpeed
 public import Feec.Models.Cube.AbsorbingGalerkin
 public import Feec.Models.Cube.AbsorbingTSD
 public import Feec.Models.Cube.AbsorbingTrace
+public import Feec.Models.Cube.BGGCohomology
 public import Feec.Models.Cube.BGGFEEC
 public import Feec.Models.Cube.Basic
 public import Feec.Models.Cube.CubicalFiniteElementConvergence

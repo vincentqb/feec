@@ -19,8 +19,10 @@ Theorem 6.
 
 * `Data.δ_twistShortComplex`: `δ[φ] = [-Sφ]`.
 * `Data.δ_eq_zero_iff`, `Data.injective_homologyMap_rowTopι_iff`,
-  `Data.surjective_homologyMap_rowBotπ_iff`.
-* `Data.finrank_twistComplex_homology_eq_iff`, `Data.finrank_derived_homology_eq_iff`.
+  `Data.surjective_homologyMap_rowBotπ_iff`; `Data.inducesZero_of_isZero_rowBot`,
+  `Data.inducesZero_of_isZero_rowTop`.
+* `Data.finrank_twistComplex_homology_eq_iff`, `Data.finrank_derived_homology_eq_iff`,
+  `Data.finrank_derived_homology_eq_add` (where a row has no cohomology at each connecting map).
 
 ## References
 
@@ -32,7 +34,7 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 @[expose] public noncomputable section
 
-open CategoryTheory
+open CategoryTheory CategoryTheory.Limits
 
 universe u v
 
@@ -102,6 +104,16 @@ theorem surjective_homologyMap_rowBotπ_iff {i j : ι} (hij : c.Rel i j) :
     ← LinearMap.ker_eq_top, ← he]
   exact LinearMap.range_eq_top.symm
 
+/-- `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)` when `Hⁱ(Ṽ) = 0`. -/
+theorem inducesZero_of_isZero_rowBot {i j : ι} (hij : c.Rel i j)
+    (h : IsZero (D.rowBot.homology i)) : D.InducesZero i j :=
+  (D.δ_eq_zero_iff hij).1 (h.eq_of_src _ _)
+
+/-- `S` induces the zero map `Hⁱ(Ṽ) → Hʲ(V)` when `Hʲ(V) = 0`. -/
+theorem inducesZero_of_isZero_rowTop {i j : ι} (hij : c.Rel i j)
+    (h : IsZero (D.rowTop.homology j)) : D.InducesZero i j :=
+  (D.δ_eq_zero_iff hij).1 (h.eq_of_tgt _ _)
+
 section Field
 
 variable {K : Type u} [Field K] {V Vt : ι → Type v} [∀ i, AddCommGroup (V i)]
@@ -136,6 +148,19 @@ theorem finrank_derived_homology_eq_iff :
       D.InducesZero h i ∧ D.InducesZero i j := by
   rw [(D.derivedHomologyIso hEF i).toLinearEquiv.finrank_eq]
   exact D.finrank_twistComplex_homology_eq_iff hhi hij
+
+/-- **Equality in the dimension bound where a row has no cohomology at each connecting map**: if
+`Hʰ(Ṽ) = 0` or `Hⁱ(V) = 0`, and `Hⁱ(Ṽ) = 0` or `Hʲ(V) = 0`, then `S` induces the zero maps on
+cohomology at `h → i` and `i → j`, and `dim Hⁱ = dim Hⁱ(V) + dim Hⁱ(Ṽ)`.
+[ArnoldHu2021], Theorem 6, (27) -/
+theorem finrank_derived_homology_eq_add
+    (h₁ : IsZero (D.rowBot.homology h) ∨ IsZero (D.rowTop.homology i))
+    (h₂ : IsZero (D.rowBot.homology i) ∨ IsZero (D.rowTop.homology j)) :
+    finrank K ((D.derived E F).homology i) =
+      finrank K (D.rowTop.homology i) + finrank K (D.rowBot.homology i) :=
+  (finrank_derived_homology_eq_iff hhi hij hEF).2
+    ⟨h₁.elim (D.inducesZero_of_isZero_rowBot hhi) (D.inducesZero_of_isZero_rowTop hhi),
+      h₂.elim (D.inducesZero_of_isZero_rowBot hij) (D.inducesZero_of_isZero_rowTop hij)⟩
 
 end Field
 

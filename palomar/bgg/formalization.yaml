@@ -12,7 +12,7 @@
 version: "v0.4"
 
 project:
-  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, and the output Hilbert complex with the quotient norm"
+  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, the output Hilbert complex with the quotient norm, and the L^2 Hessian, elasticity and div-div complexes on the cube"
   description: >-
     A Lean 4 formalization of the Bernstein-Gelfand-Gelfand construction of Arnold and Hu (2021),
     §3 and §5, the abstract construction from which they derive the elasticity, Hessian and
@@ -22,7 +22,7 @@ project:
     with d S = -S d~ (a morphism of cochain complexes V~ -> V[1] in Mathlib's shift convention).
     The twisted complex T has T^i = V^i x V~^i and differential (sigma, phi) -> (d sigma - S phi,
     d~ phi). The BGG complex at J is the subquotient Gamma / Delta of T that eliminates the top
-    spaces after J and the bottom spaces before J. Three compared theorems.
+    spaces after J and the bottom spaces before J. Four compared theorems.
     FEEC.bggCohomology, for every ring, every S and every J: Gamma / Delta is the output complex
     (24)-(26), by cochain maps Gamma / Delta -> V / R(S) and N(S) -> Gamma / Delta bijective
     before and after J (and at J when S^J is bijective), with the differential d~ (S^J)^(-1) d at
@@ -55,18 +55,32 @@ project:
     to the BGG complex, and the map (30), (omega, mu) -> P_(R^perp)(omega + K mu) up to J and
     P_N(d~ t omega + (I + d~ t K) mu) after J, is a quasi-isomorphism from the sum complex to it
     which carries cohomology representatives H x H~ of the rows to cohomology representatives of
-    the output complex (Corollary 1, (31)). The hypothesis "onto modulo d" replaces the
+    the output complex (Corollary 1, (31)). FEEC.bggCube, the examples of §4.1 on the cube
+    Q = (0, 1/2)^3: with HΛ(Q) the weak exterior derivative of L^2(Q; Λ) (dMax, the adjoint of
+    the closure of the codifferential on test forms) and HΛ(Q) (x) R^3 its copy on vectors of
+    forms, the Hessian diagram (HΛ(Q) over HΛ(Q) (x) R^3, S v = sum_a dx_a ∧ v_a, J = 0), the
+    elasticity diagram (HΛ(Q) (x) R^3 over itself,
+    (S mu)_b = dx_(b+2) ∧ mu_(b+1) - dx_(b+1) ∧ mu_(b+2), J = 1) and the div-div diagram
+    (HΛ(Q) (x) R^3 over HΛ(Q), (S phi)_a = dx_a ∧ phi, J = 2) have stacked diagrams of their
+    domain complexes (the graph spaces) that satisfy the hypotheses of the main clause of
+    FEEC.bggHilbert, s^i bounded below before J and onto modulo d from J on (the regular
+    decompositions of §2, Theorem 3, on Q), so their BGG complexes are bounded Hilbert complexes
+    with closed range in every degree, with finite-dimensional cohomology of dimension 4, 6 and 4
+    in degree 0 and 0 in the other degrees: the rows have the cohomology of a point, so S
+    induces zero on cohomology and the dimensions of the rows add ((27)). The hypothesis "onto
+    modulo d" replaces the
     surjectivity of (23) because (23) fails for the examples: for the Hessian, elasticity and
     div-div diagrams of the L^2 de Rham complexes on any nonempty open set of R^3, S^J is not
     onto between the L^2 domains (Feec.Domain.hessianMaximalData_not_surjective,
     Feec.Domain.elasticityMaximalData_not_surjective,
     Feec.Domain.divDivMaximalData_not_surjective), while on the cube (0, 1/2)^3 the regular
-    decompositions make S onto modulo d (Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q
-    and its siblings); the clauses with the explicit map (30) assume (23) and do not apply there.
-    The statement is self-contained over Mathlib (ModuleCat, CochainComplex, QuasiIso,
-    ShortComplex.ShortExact, Module.finrank, IsIso, ContinuousLinearMap, AntilipschitzWith,
-    IsClosed, WithLp, the quotient norm of Submodule quotients, LinearIsometryEquiv,
-    Submodule.orthogonal, Submodule.starProjection, ContinuousLinearEquiv.ofBijective);
+    decompositions make S onto modulo d (a clause of FEEC.bggCube); the clauses with the explicit
+    map (30) assume (23) and do not apply there. The statement is self-contained over Mathlib
+    (ModuleCat, CochainComplex, QuasiIso, ShortComplex.ShortExact, Module.finrank, IsIso,
+    ContinuousLinearMap, AntilipschitzWith, IsClosed, WithLp, the quotient norm of Submodule
+    quotients, LinearIsometryEquiv, Submodule.orthogonal, Submodule.starProjection,
+    ContinuousLinearEquiv.ofBijective; for the cube MeasureTheory.Lp, fderiv, ContDiff,
+    LinearPMap.adjoint and LinearPMap.graph);
     the proof is the library Feec of this repository (Feec.BGG.Data.quasiIso_Γ,
     Feec.BGG.Data.quasiIso_derived, Feec.BGG.Data.finrank_twistComplex_homology_eq_iff,
     Feec.BGG.Data.bggSumMap, Feec.BGG.Data.quasiIso_bggSumMap, Feec.BGG.Data.bgg_represents,
@@ -74,7 +88,11 @@ project:
     quotD_toQuot, cohomologyEquiv,
     Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology,
     Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth,
-    Feec.BGG.BoundedData.orth_represents).
+    Feec.BGG.BoundedData.orth_represents; for the cube the BGG data of forms
+    Feec.FiniteElement.hessianFormData, elasticityFormData and divDivFormData with S bounded
+    below and their regular decompositions, Feec.Models.Cube.FormBGG.deRham_hasRegularDecomposition_cube,
+    Feec.Models.Cube.FEM.finrank_cohomology, Feec.HilbertComplex.finrank_pi_cohomology and
+    Feec.BGG.Data.inducesZero_of_isZero_rowBot, inducesZero_of_isZero_rowTop).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -153,6 +171,38 @@ sources:
     relationship: "background"
     note: "The elasticity complex derived from two de Rham complexes, an instance of the construction."
     author_endorsement: "not-contacted"
+  - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0273-0979-10-01278-4"
+    type: "article"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), 281-354, §4 (the L^2 de Rham complex HΛ(Omega))"
+    relationship: "background"
+    note: "The rows of the diagrams of FEEC.bggCube: the weak exterior derivative dMax on L^2(Q; Λ)."
+    author_endorsement: "not-contacted"
+  - title: "Mixed finite element methods for linear elasticity with weakly imposed symmetry"
+    authors:
+      - "Douglas N. Arnold"
+      - "Richard S. Falk"
+      - "Ragnar Winther"
+    id: "doi:10.1090/S0025-5718-07-01998-9"
+    type: "article"
+    location: "Math. Comp. 76 (2007), 1699-1723"
+    relationship: "background"
+    note: "The map S v = sum_a dx_a ∧ v_a of the Hessian diagram of FEEC.bggCube."
+    author_endorsement: "not-contacted"
+  - title: "The divDiv-complex and applications to biharmonic equations"
+    authors:
+      - "Dirk Pauly"
+      - "Walter Zulehner"
+    id: "doi:10.1080/00036811.2018.1542685"
+    type: "article"
+    location: "Applicable Analysis 99 (2020), 1579-1630"
+    relationship: "background"
+    note: "The L^2 Hessian and div-div complexes and their cohomology, the examples of FEEC.bggCube."
+    author_endorsement: "not-contacted"
 
 related_formalizations: []
 
@@ -170,15 +220,25 @@ status:
     norm of Gamma / Delta, an isometry with the Hilbert space Gamma (-) Delta, bounded quotient
     differentials and closed range, with s bounded below before J and onto modulo d from J on;
     the orthogonal form of (30) with Corollary 1 for every linear null-homotopy K under (23) with
-    closed ranges of s^i for i < J). Challenge.lean, 615 lines. These are the BGG theorems of the
-    former palomar/bgg (FEEC.bggCohomology, FEEC.bggIdentification, FEEC.bggFinrank,
-    FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert, FEEC.bggOrthogonal), regrouped into three
-    theorems with no conclusion dropped (review.notes); its weak-symmetry theorem
-    FEEC.bggWeakSymmetry is compared in palomar/einsteinbianchi. Not yet stated (planned): the
-    corollary on the cube, the Hessian, elasticity and div-div complexes
-    of (0, 1/2)^3 (or every parallelepiped) as closed-range Hilbert complexes with cohomology
-    P_1, RM, RT (dimensions 4, 6, 4) in degree 0 and zero above; it needs the identification of
-    the BGG complex of the maximal L^2 data and the dimension count in Feec.
+    closed ranges of s^i for i < J); FEEC.bggCube, the Hessian, elasticity and div-div diagrams of
+    the L^2 de Rham complex of forms on the cube (0, 1/2)^3 at J = 0, 1, 2 (the hypotheses of the
+    main clause of FEEC.bggHilbert for the stacked diagrams of their domain complexes, closed
+    range of the BGG complexes in every degree, finite-dimensional cohomology of dimension 4, 6, 4
+    in degree 0 and 0 in the other degrees). Challenge.lean, CHALLENGE_LINES lines. The first three
+    are the BGG theorems of the former palomar/bgg (FEEC.bggCohomology, FEEC.bggIdentification,
+    FEEC.bggFinrank, FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert, FEEC.bggOrthogonal),
+    regrouped into three theorems with no conclusion dropped (review.notes); its weak-symmetry
+    theorem FEEC.bggWeakSymmetry is compared in palomar/einsteinbianchi. The cube corollary
+    counts dimensions: the degree-0 cohomology of the three BGG complexes is not identified with
+    the affine functions P_1, the rigid motions RM and the fields a + b x (RT), only its
+    dimension is stated, and the BGG complexes are not identified with the classical complexes
+    of vector proxies (H^2(Q) -> H(curl; Q; S) -> H(div; Q; T) -> L^2(Q; R^3) for the Hessian;
+    informal, in the docstring of FEEC.bggCube); it is stated on (0, 1/2)^3 only, not on
+    parallelepipeds. In Feec the same verdict and dimensions hold for the BGG complexes of the
+    domain complexes of the analytic BGG data of forms (Feec.Models.Cube.FormBGG.hessianBGG_Q,
+    elasticityBGG_Q, divDivBGG_Q, through Feec.BGG.HilbertData.finrank_bgg_homology_eq_add:
+    equality in (27) where in every degree the source or the target of S has no cohomology),
+    the Hessian and div-div ones on (0, 1/2)^n for every n >= 1 with dim H^0 = n + 1.
     Proved in Feec, not compared: the general elimination theorem on any complex shape with
     arbitrary eliminated index sets (Feec.BGG.Data.derivedHomologyIso) and the general
     subquotient of a complex of bounded operators as a Hilbert complex
@@ -199,19 +259,18 @@ status:
     challenge itself proves that S = 𝟙 : V[1] -> V[1] satisfies the hypotheses at every J
     (FEEC.BGG.hypotheses_id) and that s = id, d~ = -d satisfy those of the main clause of
     FEEC.bggHilbert (FEEC.BGG.hypotheses_bounded_id).
-    Proved in Feec, not compared (the challenge has no differential operators; stating the
-    L^2 de Rham rows with values in K^m, their maximal domains H^1, H(curl), H(div), the H^1
-    fields and the connecting matrices of the three diagrams over Mathlib alone is the planned
-    corollary above): the H^1-regular decompositions of [ArnoldHu2021], §2, Theorem 3, of the
-    L^2 de Rham complexes HΛ(Omega) on the cube (0, 1/2)^n
+    Proved in Feec, not compared: the H^1-regular decompositions of [ArnoldHu2021], §2,
+    Theorem 3, of the L^2 de Rham complexes HΛ(Omega) on the cube (0, 1/2)^n
     (Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q, by Gaffney's identity on the
-    torus), transported to every open parallelepiped and every open box by invertible affine
+    torus; FEEC.bggCube uses them on (0, 1/2)^3 through the diagrams of forms), transported to
+    every open parallelepiped and every open box by invertible affine
     maps (Feec.Models.Parallelepiped.deRham_hasRegularDecomposition_affine), and in three
     dimensions for the de Rham complexes with values in K^m over every RCLike K
     (deRhamVec_hasRegularDecomposition_affine, deRhamVec_hasRegularDecomposition_Q), with their
     finite-dimensional cohomology (finiteDimensional_cohomology_deRhamVec_affine); these give the
     onto-modulo-d hypothesis R(d) + R(S) = D(d) of the Hessian, elasticity and div-div diagrams
-    between the L^2 domain complexes (Feec.Domain.hessianMaximalData_regularDecomposition,
+    of vector proxies between the L^2 domain complexes
+    (Feec.Domain.hessianMaximalData_regularDecomposition,
     elasticityMaximalData_regularDecomposition, divDivMaximalData_regularDecomposition; on the
     cube Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q and its siblings), while
     (23) itself fails there: S^J is not onto between the L^2 domains on any nonempty open set
@@ -347,13 +406,27 @@ fidelity:
     FEEC.bggHilbert); Corollary 1 in both models as: if N(d^i) = R(d^(i-1)) (+) H^i and
     N(d~^i) = R(d~^(i-1)) (+) H~^i (BGG.Represents), then N(D^i) = R(D^(i-1)) (+)
     kappa(H^i x H~^i) in the output complex, kappa(H x H~) being the image under (30) as in
-    (31). Outside the submission: the applications of §4 (elasticity, Hessian and div div
-    complexes; on the cube, the planned corollary of status.scope) and the uniform representation
-    of cohomology of §2 (Costabel-McIntosh); the regular decompositions of the L^2 de Rham rows
-    on boxes and parallelepipeds (Theorem 3 of §2 there) are proved in Feec but not stated in the
-    challenge, which has no differential operators (see status.scope). (10) The name BGG follows
-    Arnold-Hu; the representation-theoretic BGG resolution [BernsteinGelfandGelfand1975] and the
-    BGG sequences of Čap-Slovák-Souček are background only.
+    (31). The applications of §4 (elasticity, Hessian and div div complexes) are compared on the
+    cube (0, 1/2)^3 only, as closed range and the dimensions of the cohomology (FEEC.bggCube,
+    (11)). Outside the submission: the applications on other domains and the uniform
+    representation of cohomology of §2 (Costabel-McIntosh); the regular decompositions of the L^2
+    de Rham rows on boxes and parallelepipeds (Theorem 3 of §2 there) are proved in Feec but not
+    stated (see status.scope). (10) The name BGG follows Arnold-Hu; the representation-theoretic
+    BGG resolution [BernsteinGelfandGelfand1975] and the BGG sequences of Čap-Slovák-Souček are
+    background only. (11) FEEC.bggCube states the diagrams of §4.1 in differential forms (the
+    vocabulary shared with palomar/constraints and palomar/einsteinbianchi): the rows are HΛ(Q),
+    the weak exterior derivative dMax (the adjoint of the closure of the codifferential on test
+    forms, [AFW2010], §4) on L^2(Q; Λ) with forms indexed by subsets of Fin 3, and HΛ(Q) (x) R^3
+    (vecOp, componentwise); the connecting maps are built from the exterior products with dx_a
+    (wedge, dxVec, crossWedge), which in vector proxies are the connecting maps of §4.1 up to the
+    sign convention of the skew matrix (recorded in their docstrings). The BGG complex is the
+    subquotient Gamma / Delta of the stacked diagram of the domain complexes with the graph norms
+    (BGG.DomainDiagram on the graphs graph2), Arnold-Hu's bounded setting of §3; this diagram is
+    stated by existence, its maps being determined by the rows and S. BGG.DomainDiagram.Verdict
+    collects the hypotheses of the main clause of FEEC.bggHilbert (s^i bounded below for i < J,
+    onto modulo d for i >= J), the bounded differentials of Gamma / Delta with the quotient norm
+    with closed range in every degree, the finite dimension of the cohomology and its dimensions;
+    Arnold-Hu's identification of the degree-0 cohomology with P_1, RM and RT is not stated.
 
 review:
   status: "self-assessed"
@@ -379,9 +452,15 @@ review:
     clause structure of the three statements, the orthogonal clause of FEEC.bggHilbert and the
     quotient norm of its main clause (at J equivalent but not equal to the norm of Arnold-Hu, see
     fidelity (3)), and the definitions FEEC.BGG.moorePenrose, FEEC.BGG.Υ, FEEC.BGG.ΓL,
-    FEEC.BGG.ΔL and FEEC.BGG.QuotL. Editorial risk (two AI editorial audits, 2026-11-17): without
-    the cube corollary of status.scope the entry is the algebraic and Hilbert-space skeleton of
-    Arnold-Hu; the corollary is planned.
+    FEEC.BGG.ΔL and FEEC.BGG.QuotL. Editorial risk (two AI editorial audits, 2026-11-17): the
+    entry was the algebraic and Hilbert-space skeleton of Arnold-Hu, with no concrete instance.
+    FEEC.bggCube (2026-11-23) adds it: the Hessian, elasticity and div-div complexes of §4.1 on
+    the cube, closed range in every degree and the dimensions 4, 6, 4 of their cohomology in
+    degree 0 (0 above), from the regular decompositions of the L^2 de Rham complex on the cube
+    and the cohomology of a point of its rows. What remains of the risk: the corollary is on one
+    domain, it counts dimensions without identifying H^0 with P_1, RM, RT, and FEEC.bggCube with
+    its definitions (graph2, dxWedge, dxVec, crossWedge, BGG.DomainDiagram,
+    BGG.DomainDiagram.Verdict) is not yet reviewed by the author.
 
 alignment:
   namespace: "FEEC"
@@ -419,5 +498,20 @@ alignment:
         Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth and
         Feec.BGG.BoundedData.orth_represents. Statement and FEEC.BGG.ΓL, FEEC.BGG.ΔL,
         FEEC.BGG.QuotL, FEEC.BGG.moorePenrose, FEEC.BGG.Υ not yet reviewed by the author.
+    - source: "[ArnoldHu2021], §4.1 (the Hessian, elasticity and div-div diagrams) and Theorem 6 with (27), on the cube; §2, Theorem 3 (regular decompositions)"
+      lean: "FEEC.bggCube"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Proved in Solution.lean (FEEC.BGG.hessianCube, FEEC.BGG.elasticityCube,
+        FEEC.BGG.divDivCube) from FEEC.bggHilbert and FEEC.bggFinrank of the challenge, applied
+        to the stacked diagrams of the graph spaces of Feec's analytic BGG data of forms
+        (Solution/Cube.lean: FEEC.toDomainDiagram, FEEC.graphHomologyEquiv,
+        FEEC.antilipschitz_graphS, FEEC.sup_range_eq_top_of_exists; FEEC.BGG.verdict_toDomainDiagram,
+        FEEC.BGG.DomainDiagram.verdict), with Feec.FiniteElement.hessianFormData,
+        elasticityFormData and divDivFormData (S bounded below up to J, the L^2 splittings from J
+        on), Feec.Models.Cube.FormBGG.deRham_hasRegularDecomposition_cube and the cohomology of
+        the rows (finrank_formRow_cohomology, finrank_vecRow_cohomology). Statement and
+        definitions not yet reviewed by the author.
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

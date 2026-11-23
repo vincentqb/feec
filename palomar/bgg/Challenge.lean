@@ -6,11 +6,18 @@ public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.Analysis.Calculus.ContDiff.Basic
+public import Mathlib.Analysis.Calculus.FDeriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.Basic
+public import Mathlib.Analysis.InnerProductSpace.LinearPMap
+public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Topology.MetricSpace.Antilipschitz
 public import Mathlib.Analysis.InnerProductSpace.Projection.Basic
 public import Mathlib.Analysis.InnerProductSpace.ProdL2
+public import Mathlib.Analysis.Normed.Lp.PiLp
 public import Mathlib.Analysis.Normed.Operator.Banach
+public import Mathlib.MeasureTheory.Function.L2Space
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 /-!
 # Bernstein–Gelfand–Gelfand complexes: complexes from complexes
@@ -29,7 +36,7 @@ against the top spaces `Vⁱ⁺¹` ((24)–(26)). It is the subquotient `Γ / Δ
 * `Δⁱ ⊆ Tⁱ` is spanned by `0 × Ṽⁱ` if `i < J` and by its image `{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` under
   the twisted differential if `i - 1 < J`, a subcomplex of `T`.
 
-Three theorems:
+Four theorems:
 
 * `FEEC.bggCohomology` (any ring): `Γ / Δ` is the output complex (24)–(26); if `Sⁱ` is injective
   for `i < J` and onto modulo `d` for `i ≥ J`, the BGG complex has the cohomology of `T` (§5.2),
@@ -44,6 +51,14 @@ Three theorems:
   remark after it); under (23) and (28), with `sⁱ` of closed range before `J`, it is isomorphic to
   the orthogonal output complex of Arnold–Hu, with the map (30) in its Moore–Penrose form
   (Theorem 7, Corollary 1).
+* `FEEC.bggCube` (the examples of §4.1 on the cube `Q = (0, ½)³`): for the `L²` Hessian,
+  elasticity and div–div diagrams (the weak exterior derivative `dMax` of `L²(Q; Λ)`, its copy
+  on vectors of forms `L²(Q; Λ ⊗ ℝ³)`, and the connecting maps `wedge`, `crossWedge`, `dxVec`
+  built from `dxₐ ∧ ·`), the domain complexes form stacked diagrams of bounded Hilbert rows
+  (`BGG.DomainDiagram`) satisfying the hypotheses of `FEEC.bggHilbert` at `J = 0, 1, 2`, so the
+  three BGG complexes are bounded Hilbert complexes with closed range in every degree; their
+  cohomology is finite-dimensional, of dimension `4`, `6`, `4` in degree `0` and `0` in the other
+  degrees (`BGG.DomainDiagram.Verdict`), the sum of the dimensions for the rows.
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
 `i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and
@@ -54,9 +69,7 @@ for the Hessian, elasticity and div–div diagrams of the `L²` de Rham complexe
 `Feec.Domain.hessianMaximalData_not_surjective`, `elasticityMaximalData_not_surjective` and
 `divDivMaximalData_not_surjective`, instances of
 `Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS`), while on the cube `(0, ½)³` they
-are onto modulo `d`, by the regular decompositions of the rows
-(`Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q`,
-`elasticityMaximalData_regularDecomposition_Q`, `divDivMaximalData_regularDecomposition_Q`). The
+are onto modulo `d`, by the regular decompositions of the rows (a clause of `FEEC.bggCube`). The
 clauses with the explicit map (30) assume (23) and right inverses of `Sⁱ`, so they do not apply
 between those `L²` domains (they do on smooth fields).
 
@@ -75,6 +88,14 @@ Complexes of any length are included (rows vanishing outside a window). Non-vacu
   (BGG sequences in differential geometry)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §11 (the elasticity complex from two de Rham complexes)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §4 (the `L²` de Rham complex `HΛ(Ω)`)
+* [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
+  (the maps `S v = Σₐ dxₐ ∧ vₐ`)
+* [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
+  (the Hessian and div–div complexes)
+* [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
+  §5.3 (the connecting maps `S⁰ = I`, `S¹ = 2 vskw` of the Hessian diagram)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -611,5 +632,224 @@ theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
           BGG.Represents (BGG.ofBounded d hd) i A → BGG.Represents (BGG.ofBounded dt hdt) i At →
             BGG.Represents Y i ((A.prod At).map (κ.f i).hom) := by
   sorry
+
+/-! ### The Hessian, elasticity and div–div complexes on the cube -/
+
+section Cube
+
+open scoped Topology
+open Filter Set LinearPMap MeasureTheory
+
+-- palomar-shared: FormField
+/-- A **form field** on `ℝⁿ`: at each point a coefficient of `dx_s` for every subset `s` of
+`Fin n` (a `k`-form when those off the `k`-subsets vanish). -/
+abbrev FormField (n : ℕ) : Type := (Fin n → ℝ) → Finset (Fin n) → ℝ
+/-- The sign `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of moving `dx_j` to its place in `dx_s`. -/
+def sgn {n : ℕ} {R : Type*} [Ring R] (j : Fin n) (s : Finset (Fin n)) : R :=
+  (-1) ^ (s.filter fun l => l < j).card
+-- palomar-shared-end: FormField
+
+-- palomar-shared: forms
+/-- The coefficients of a `k`-form on `ℝⁿ`: the `k`-subsets `s = {s₁ < ⋯ < s_k}` of `Fin n`,
+`s` indexing `dx_s = dx_{s₁} ∧ ⋯ ∧ dx_{s_k}` (none unless `0 ≤ k ≤ n`). -/
+abbrev FormIdx (n : ℕ) (k : ℤ) : Type := {s : Finset (Fin n) // (s.card : ℤ) = k}
+/-- `L²(Ω; Λᵏ)`: an `L²(Ω)` coefficient (Lebesgue measure) for each `dx_s`, an `ℓ²` sum. -/
+abbrev L2Form {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type :=
+  PiLp 2 fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω)
+/-- The partial derivative `∂_j f(x) = Df(x) e_j` (`0` where `f` is not differentiable). -/
+def partialDeriv {n : ℕ} (j : Fin n) (f : (Fin n → ℝ) → ℝ) (x : Fin n → ℝ) : ℝ :=
+  fderiv ℝ f x (Pi.single j 1)
+/-- The **exterior derivative** of a form field, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}`. -/
+def extDeriv {n : ℕ} (w : FormField n) : FormField n :=
+  fun x s => ∑ j ∈ s, sgn j s * partialDeriv j (fun y => w y (s.erase j)) x
+/-- The **codifferential** `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}`, formal adjoint of `d`. -/
+def codiff {n : ℕ} (ψ : FormField n) : FormField n :=
+  fun x s => -∑ j ∈ sᶜ, sgn j s * partialDeriv j (fun y => ψ y (insert j s)) x
+open scoped ContDiff in
+/-- `f` is a **test function** on `Ω`: smooth, with compact support contained in `Ω`. -/
+def IsTestFn {n : ℕ} (Ω : Set (Fin n → ℝ)) (f : (Fin n → ℝ) → ℝ) : Prop :=
+  ContDiff ℝ ∞ f ∧ HasCompactSupport f ∧ tsupport f ⊆ Ω
+/-- The **weak exterior derivative** `d : L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹)`: the adjoint of the closure of
+the codifferential on test forms (the span of the pairs `(ψ, dᵗψ)`), so `du = w` iff
+`⟪w, ψ⟫ = ⟪u, dᵗψ⟫` for every test form `ψ`; its domain is `HΛᵏ(Ω)` ([AFW2010], §4). -/
+def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[ℝ] L2Form Ω (k + 1) :=
+  (Submodule.span ℝ {p : L2Form Ω (k + 1) × L2Form Ω k | ∃ ψ : FormField n,
+    (∀ s, IsTestFn Ω fun x => ψ x s) ∧
+    (∀ t : FormIdx n (k + 1), ⇑(p.1 t) =ᵐ[volume.restrict Ω] fun x => ψ x t.1) ∧
+    ∀ s : FormIdx n k, ⇑(p.2 s) =ᵐ[volume.restrict Ω] fun x => codiff ψ x s.1}
+    ).topologicalClosure.toLinearPMap†
+/-- The cube `(0, ½)ⁿ`. -/
+def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
+-- palomar-shared-end: forms
+
+-- palomar-shared: L2Vec
+/-- `L²(Ω; Λᵏ ⊗ ℝⁿ)`: the vectors `v = (v₀, …, v_{n-1})` of `k`-forms of `L²(Ω; Λᵏ)`, an `ℓ²`
+sum. -/
+abbrev L2Vec {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : Type := PiLp 2 fun _ : Fin n => L2Form Ω k
+/-- The operators `Tₐ` acting componentwise on vectors, `(vₐ) ↦ (Tₐ vₐ)`, with domain
+`∏ₐ D(Tₐ)`. -/
+def vecOp {n : ℕ} {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
+    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : Fin n → E →ₗ.[ℝ] F) :
+    PiLp 2 (fun _ : Fin n => E) →ₗ.[ℝ] PiLp 2 (fun _ : Fin n => F) where
+  domain :=
+    { carrier := {v | ∀ a, v a ∈ (T a).domain}
+      add_mem' := fun hv hw a => (T a).domain.add_mem (hv a) (hw a)
+      zero_mem' := fun a => (T a).domain.zero_mem
+      smul_mem' := fun c _ hv a => (T a).domain.smul_mem c (hv a) }
+  toFun :=
+    { toFun := fun v => WithLp.toLp 2 fun a => T a ⟨(v : PiLp 2 fun _ : Fin n => E) a, v.2 a⟩
+      map_add' := fun v w => PiLp.ext fun a => (T a).map_add ⟨_, v.2 a⟩ ⟨_, w.2 a⟩
+      map_smul' := fun c v => PiLp.ext fun a => (T a).map_smul c ⟨_, v.2 a⟩ }
+-- palomar-shared-end: L2Vec
+
+-- palomar-shared: wedge
+/-- **The connecting map** `S v = Σₐ dxₐ ∧ vₐ : L²(Ω; Λᵏ ⊗ ℝⁿ) → L²(Ω; Λᵏ⁺¹)`,
+`(S v)_s = Σ_{a ∈ s} ε(a, s) (vₐ)_{s ∖ a}`. On vector proxies, `S` is the identity `S⁰ = I` on
+vector `0`-forms (`(S v)_{a} = vₐ`), and on vector `1`-forms `vₐ = Σ_b u_{ab} dx_b`,
+`(S v)_{ab} = u_{ab} - u_{ba}`, i.e. `S¹ = 2 vskw` ([QuennevilleBelair2015], §5.3; [AFW2007]). -/
+def wedge {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Form Ω (k + 1) :=
+  (PiLp.continuousLinearEquiv 2 ℝ fun _ : FormIdx n (k + 1) =>
+      Lp ℝ 2 (volume.restrict Ω)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.pi fun s => ∑ a : Fin n, if h : a ∈ s.1 then (sgn a s.1 : ℝ) •
+      ((PiLp.proj (𝕜 := ℝ) 2 (fun _ : FormIdx n k => Lp ℝ 2 (volume.restrict Ω))
+          ⟨s.1.erase a, by
+            rw [Finset.card_erase_of_mem h, Nat.cast_sub (Finset.card_pos.2 ⟨a, h⟩), s.2]
+            ring⟩) ∘L PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin n => L2Form Ω k) a) else 0
+-- palomar-shared-end: wedge
+
+/-- The graph `{(u, Tu) | u ∈ D(T)}` of an operator `T : E → F` in the `ℓ²` sum `E ⊕ F`, with the
+inner product `⟪(u, Tu), (v, Tv)⟫ = ⟪u, v⟫ + ⟪Tu, Tv⟫`: the domain `D(T)` with the graph norm (for
+`T = dMax Ω k`, the space `HΛᵏ(Ω)`; a Hilbert space when `T` is closed). -/
+def graph2 {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedAddCommGroup F]
+    [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) : Submodule ℝ (WithLp 2 (E × F)) :=
+  T.graph.comap (WithLp.linearEquiv 2 ℝ (E × F)).toLinearMap
+
+/-- **The exterior product with `dxₐ`** on `L²(Ω; Λᵏ)`: `wedge` of the vector of forms with `φ`
+in place `a` and zero elsewhere, `(dxₐ ∧ φ)_s = ε(a, s) φ_{s ∖ a}` for `a ∈ s`, else `0`. -/
+def dxWedge {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) (a : Fin n) :
+    L2Form Ω k →L[ℝ] L2Form Ω (k + 1) :=
+  wedge Ω k ∘L
+    (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin n => L2Form Ω k).symm.toContinuousLinearMap ∘L
+      ContinuousLinearMap.single ℝ (fun _ : Fin n => L2Form Ω k) a
+
+/-- **The connecting map of the div–div diagram**, `(S φ)ₐ = dxₐ ∧ φ`,
+`L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹ ⊗ ℝⁿ)`. On `ℝ³` in vector proxies (`(S φ)ₐ` the rows of a matrix field,
+a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the vector `w`), `S⁰ φ = φ I`, `(S¹ v) w = v × w` and `S² = I`: the
+connecting maps of the div–div diagram of [ArnoldHu2021], §4.1, up to the sign convention of the
+skew matrix of `v`. -/
+def dxVec {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →L[ℝ] L2Vec Ω (k + 1) :=
+  (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin n => L2Form Ω (k + 1)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.pi fun a => dxWedge Ω k a
+
+/-- **The connecting map of the elasticity diagram** on `Ω ⊆ ℝ³`,
+`(S μ)_b = dx_{b+2} ∧ μ_{b+1} - dx_{b+1} ∧ μ_{b+2}` (indices mod `3`),
+`L²(Ω; Λᵏ ⊗ ℝ³) → L²(Ω; Λᵏ⁺¹ ⊗ ℝ³)`. In vector proxies (rows, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the
+vector `w`), `(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ - tr(u) I` and `(S² u)_b = u_{b+1,b+2} - u_{b+2,b+1}`:
+the connecting maps of the elasticity diagram of [ArnoldHu2021], §4.1, up to the sign convention
+of the skew matrix of `ψ`. -/
+def crossWedge (Ω : Set (Fin 3 → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Vec Ω (k + 1) :=
+  (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin 3 => L2Form Ω (k + 1)).symm.toContinuousLinearMap ∘L
+    ContinuousLinearMap.pi fun b =>
+      dxWedge Ω k (b + 2) ∘L PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin 3 => L2Form Ω k) (b + 1) -
+        dxWedge Ω k (b + 1) ∘L PiLp.proj (𝕜 := ℝ) 2 (fun _ : Fin 3 => L2Form Ω k) (b + 2)
+
+namespace BGG
+
+variable {E Et : ℤ → Type*} [∀ k, NormedAddCommGroup (E k)] [∀ k, InnerProductSpace ℝ (E k)]
+  [∀ k, NormedAddCommGroup (Et k)] [∀ k, InnerProductSpace ℝ (Et k)]
+
+/-- **A stacked diagram of the domain complexes** of complexes of operators `Tᵏ : Eᵏ → Eᵏ⁺¹`,
+`T̃ᵏ : Ẽᵏ → Ẽᵏ⁺¹` linked by bounded maps `Sᵏ : Ẽᵏ → Eᵏ⁺¹` ([ArnoldHu2021], §3: the bounded
+Hilbert complexes of the domains with the graph norms, linked by bounded maps): bounded maps of
+the graph spaces (`graph2`), `dᵏ (u, Tᵏu) = (Tᵏu, Tᵏ⁺¹Tᵏu)`, `d̃ᵏ` likewise for `T̃`, and
+`sᵏ (φ, T̃ᵏφ) = (Sᵏφ, Tᵏ⁺¹Sᵏφ)`, with `d d = 0`, `d̃ d̃ = 0` and `d s = -s d̃`. They exist iff
+`R(Tᵏ) ⊆ D(Tᵏ⁺¹)` with `Tᵏ⁺¹Tᵏ = 0`, the same for `T̃`, and `Sᵏ D(T̃ᵏ) ⊆ D(Tᵏ⁺¹)` with
+`Tᵏ⁺¹Sᵏ = -Sᵏ⁺¹T̃ᵏ` on `D(T̃ᵏ)`, and they are then unique (a point of a graph is determined by its
+first component). -/
+structure DomainDiagram (T : ∀ k, E k →ₗ.[ℝ] E (k + 1)) (Tt : ∀ k, Et k →ₗ.[ℝ] Et (k + 1))
+    (S : ∀ k, Et k →L[ℝ] E (k + 1)) where
+  /-- `dᵏ (u, Tᵏu) = (Tᵏu, Tᵏ⁺¹Tᵏu)` -/
+  d : ∀ k, graph2 (T k) →L[ℝ] graph2 (T (k + 1))
+  /-- `d̃ᵏ (φ, T̃ᵏφ) = (T̃ᵏφ, T̃ᵏ⁺¹T̃ᵏφ)` -/
+  dt : ∀ k, graph2 (Tt k) →L[ℝ] graph2 (Tt (k + 1))
+  /-- `sᵏ (φ, T̃ᵏφ) = (Sᵏφ, Tᵏ⁺¹Sᵏφ)` -/
+  s : ∀ k, graph2 (Tt k) →L[ℝ] graph2 (T (k + 1))
+  fst_d : ∀ k x, (d k x : WithLp 2 (E (k + 1) × E (k + 1 + 1))).ofLp.1 =
+    (x : WithLp 2 (E k × E (k + 1))).ofLp.2
+  fst_dt : ∀ k x, (dt k x : WithLp 2 (Et (k + 1) × Et (k + 1 + 1))).ofLp.1 =
+    (x : WithLp 2 (Et k × Et (k + 1))).ofLp.2
+  fst_s : ∀ k x, (s k x : WithLp 2 (E (k + 1) × E (k + 1 + 1))).ofLp.1 =
+    S k (x : WithLp 2 (Et k × Et (k + 1))).ofLp.1
+  d_d : ∀ k x, d (k + 1) (d k x) = 0
+  dt_dt : ∀ k x, dt (k + 1) (dt k x) = 0
+  d_s : ∀ k x, d (k + 1) (s k x) = -s (k + 1) (dt k x)
+
+variable {T : ∀ k, E k →ₗ.[ℝ] E (k + 1)} {Tt : ∀ k, Et k →ₗ.[ℝ] Et (k + 1)}
+  {S : ∀ k, Et k →L[ℝ] E (k + 1)}
+
+/-- The stacked diagram `s : Ṽ ⟶ V⟦1⟧` of the domain complexes (`ofBoundedHom`). -/
+abbrev DomainDiagram.toHom (D : DomainDiagram T Tt S) :
+    ofBounded D.dt D.dt_dt ⟶ (ofBounded D.d D.d_d)⟦(1 : ℤ)⟧ :=
+  ofBoundedHom D.s D.d_s
+
+/-- **The conclusions on the BGG complex at `J` of a stacked diagram of domain complexes**: `sⁱ` is
+bounded below for `i < J` and onto modulo `d` for `i ≥ J` (the hypotheses of the main clause of
+`FEEC.bggHilbert`); the BGG complex `Γ / Δ` with the quotient norm (`QuotL`) has bounded
+differentials `[x] ↦ [x']`, `x'` the twisted differential of `x`, with closed range in every
+degree; and its cohomology is finite-dimensional, of dimension `m` in degree `0` and `0` in the
+other degrees. -/
+structure DomainDiagram.Verdict (D : DomainDiagram T Tt S) (J : ℤ) (m : ℕ) : Prop where
+  /-- `sⁱ` is bounded below before `J` -/
+  antilipschitz : ∀ i < J, ∃ C, AntilipschitzWith C (D.s i)
+  /-- `sⁱ` is onto modulo `d` from `J` on: `R(dⁱ) + R(sⁱ) = Vⁱ⁺¹` -/
+  sup_range_eq_top : ∀ i, J ≤ i → LinearMap.range (D.d i : graph2 (T i) →ₗ[ℝ] graph2 (T (i + 1))) ⊔
+    LinearMap.range (D.s i : graph2 (Tt i) →ₗ[ℝ] graph2 (T (i + 1))) = ⊤
+  /-- the bounded differentials of the BGG complex have closed range -/
+  closedRange : ∃ D' : ∀ i, QuotL (hd := D.d_d) (hdt := D.dt_dt) D.s D.d_s J i →L[ℝ]
+      QuotL (hd := D.d_d) (hdt := D.dt_dt) D.s D.d_s J (i + 1),
+    (∀ i (x : ΓL (hd := D.d_d) (hdt := D.dt_dt) D.s D.d_s J i)
+      (x' : ΓL (hd := D.d_d) (hdt := D.dt_dt) D.s D.d_s J (i + 1)),
+      (x' : WithLp 2 (graph2 (T (i + 1)) × graph2 (Tt (i + 1)))).ofLp =
+        twist D.toHom i (i + 1) (x : WithLp 2 (graph2 (T i) × graph2 (Tt i))).ofLp →
+          D' i (Submodule.Quotient.mk x) = Submodule.Quotient.mk x') ∧
+      ∀ i, IsClosed (Set.range (D' i))
+  /-- the cohomology is finite-dimensional -/
+  finiteDimensional : ∀ i, FiniteDimensional ℝ ((bgg D.toHom J).homology i)
+  /-- of dimension `m` in degree `0` and `0` in the other degrees -/
+  finrank : ∀ i, Module.finrank ℝ ((bgg D.toHom J).homology i) = if i = 0 then m else 0
+
+end BGG
+
+/-- **The Hessian, elasticity and div–div complexes on the cube** ([ArnoldHu2021], §4.1 and
+Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the weak exterior derivative
+`dMax` of `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of forms, the stacked diagrams
+
+* of the **Hessian** complex: `HΛ(Q)` over `HΛ(Q) ⊗ ℝ³` linked by `S v = Σₐ dxₐ ∧ vₐ` (`wedge`),
+  at `J = 0`;
+* of the **elasticity** complex: `HΛ(Q) ⊗ ℝ³` over itself linked by `crossWedge`, at `J = 1`;
+* of the **div–div** complex: `HΛ(Q) ⊗ ℝ³` over `HΛ(Q)` linked by `dxVec`, at `J = 2`,
+
+have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
+of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
+`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Q`). So their BGG
+complexes are bounded Hilbert complexes with closed range in every degree, and their cohomology is
+finite-dimensional, of dimension `4`, `6` and `4` in degree `0` and `0` in the other degrees
+(`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a point, so `S` induces zero on
+cohomology and the dimensions of the cohomology of the rows add (`FEEC.bggFinrank`). In vector
+proxies, the output complexes (24)–(26) of these diagrams (`BGG.Identification`) are the `L²`
+Hessian complex `H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²` elasticity and
+div–div complexes of [ArnoldHu2021], §4.1, whose cohomology in degree `0` is the space of affine
+functions, of rigid motions, resp. of the fields `a + b x` (this identification is not part of the
+statement). -/
+theorem bggCube :
+    (∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
+      (wedge (cube 3)), D.Verdict 0 4) ∧
+    (∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
+      (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (crossWedge (cube 3)), D.Verdict 1 6) ∧
+    ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (dMax (cube 3))
+      (dxVec (cube 3)), D.Verdict 2 4 := by
+  sorry
+
+end Cube
 
 end FEEC

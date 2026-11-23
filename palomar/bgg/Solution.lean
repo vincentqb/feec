@@ -1,6 +1,7 @@
 module
 
 public import Solution.Bridge
+public import Solution.Cube
 
 /-!
 # Bernstein–Gelfand–Gelfand complexes (solution)
@@ -15,10 +16,20 @@ bridge `Solution.Bridge`: `FEEC.BGG.identification`, `FEEC.BGG.verdict`, `FEEC.B
 `FEEC.BGG.orthogonal` (`Feec.BGG.BoundedData.quasiIso_orthSumMap`, `isIso_toOrth`,
 `orth_represents`).
 
+`FEEC.bggCube` from `FEEC.bggHilbert` and `FEEC.bggFinrank` themselves: the diagrams of the
+challenge on the cube are `Feec`'s BGG data of forms (`Solution.Cube`), whose graph spaces form
+stacked diagrams of domain complexes (`FEEC.toDomainDiagram`) with the cohomology of the rows
+(`FEEC.graphHomologyEquiv`); `S` is bounded below up to `J` and the rows split from `J` on
+(`Feec.FiniteElement.hessianFormData_antilipschitz`, `hessianFormData_exists_add_eq` and their
+siblings, from the regular decompositions of `HΛ(Q)`), and the rows have the cohomology of a point
+(`Feec.Models.Cube.FormBGG.finrank_formRow_cohomology`, `finrank_vecRow_cohomology`), so `S`
+induces zero on cohomology (`Feec.BGG.Data.inducesZero_of_isZero_rowBot`,
+`inducesZero_of_isZero_rowTop`) and the dimensions add (`FEEC.BGG.DomainDiagram.verdict`).
+
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (24)–(31), Theorems 6 and 7,
-  Proposition 1, Corollary 1 and §5
+  Proposition 1, Corollary 1, §4.1 and §5
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -161,5 +172,175 @@ theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
   intro S ΓL ΔL Q P
   exact ⟨fun hinj hsurj => BGG.hilbert s hs J hinj hsurj, fun K hK hinj hsurj hR =>
     BGG.orthogonal d hd dt hdt s hs K hK J hinj hsurj hR⟩
+
+/-! ### The Hessian, elasticity and div–div complexes on the cube -/
+
+/-- **The verdict of a stacked diagram of domain complexes** from the hypotheses of the main
+clause of `FEEC.bggHilbert` and the cohomology of the rows, concentrated in degree `0`: closed
+range by `FEEC.bggHilbert`; the dimensions by `FEEC.bggFinrank`, `S` inducing zero on cohomology
+since `H⁻¹(Ṽ) = H¹(V) = 0`. -/
+theorem BGG.DomainDiagram.verdict {E Et : ℤ → Type} [∀ k, NormedAddCommGroup (E k)]
+    [∀ k, InnerProductSpace ℝ (E k)] [∀ k, NormedAddCommGroup (Et k)]
+    [∀ k, InnerProductSpace ℝ (Et k)] {T : ∀ k, E k →ₗ.[ℝ] E (k + 1)}
+    {Tt : ∀ k, Et k →ₗ.[ℝ] Et (k + 1)} {S : ∀ k, Et k →L[ℝ] E (k + 1)}
+    (D : BGG.DomainDiagram T Tt S) [∀ k, CompleteSpace (graph2 (T k))]
+    [∀ k, CompleteSpace (graph2 (Tt k))] {J : ℤ} {m₁ m₂ : ℕ}
+    (hS : ∀ i < J, ∃ C, AntilipschitzWith C (D.s i))
+    (hsurj : ∀ i, J ≤ i → LinearMap.range (D.d i : graph2 (T i) →ₗ[ℝ] graph2 (T (i + 1))) ⊔
+      LinearMap.range (D.s i : graph2 (Tt i) →ₗ[ℝ] graph2 (T (i + 1))) = ⊤)
+    [∀ i, FiniteDimensional ℝ ((BGG.ofBounded D.d D.d_d).homology i)]
+    [∀ i, FiniteDimensional ℝ ((BGG.ofBounded D.dt D.dt_dt).homology i)]
+    (hV : ∀ i, Module.finrank ℝ ((BGG.ofBounded D.d D.d_d).homology i) = if i = 0 then m₁ else 0)
+    (hVt : ∀ i, Module.finrank ℝ ((BGG.ofBounded D.dt D.dt_dt).homology i) =
+      if i = 0 then m₂ else 0) :
+    D.Verdict J (m₁ + m₂) := by
+  obtain ⟨-, -, D', hD', hcl⟩ := (bggHilbert D.d D.d_d D.dt D.dt_dt D.s D.d_s J).1 hS hsurj
+  have hinj : ∀ i < J, Function.Injective (D.toHom.f i) := fun i hi =>
+    (hS i hi).choose_spec.injective
+  have hsurj' : ∀ i, J ≤ i → LinearMap.range ((BGG.ofBounded D.d D.d_d).d i (i + 1)).hom ⊔
+      LinearMap.range (BGG.conn D.toHom i (i + 1)) = ⊤ := fun i hi => by
+    rw [BGG.conn_ofBoundedHom, BGG.ofBounded_d_succ]
+    exact hsurj i hi
+  have hz : ∀ {M : ModuleCat ℝ} [FiniteDimensional ℝ M], Module.finrank ℝ M = 0 → IsZero M :=
+    fun h0 => @ModuleCat.isZero_of_subsingleton _ _ _ (Module.finrank_zero_iff.1 h0)
+  refine ⟨hS, hsurj, ⟨D', hD', fun i => hcl i⟩, fun i => (bggFinrank D.toHom J hinj hsurj' i).1,
+    fun i => ?_⟩
+  obtain ⟨-, hle, heq⟩ := bggFinrank D.toHom J hinj hsurj' i
+  by_cases hi : i = 0
+  · subst hi
+    rw [ite_eq_left rfl, heq.2 ⟨?_, ?_⟩, hV, hVt, ite_eq_left rfl, ite_eq_left rfl]
+    · rw [BGG.inducesZero_iff (sub_add_cancel 0 1)]
+      exact (BGG.toData D.toHom).inducesZero_of_isZero_rowBot (sub_add_cancel 0 1)
+        (hz ((hVt _).trans (ite_eq_right (by norm_num))))
+    · rw [BGG.inducesZero_iff rfl]
+      exact (BGG.toData D.toHom).inducesZero_of_isZero_rowTop rfl
+        (hz ((hV _).trans (ite_eq_right (by norm_num))))
+  · rw [hV, hVt, ite_eq_right hi, ite_eq_right hi] at hle
+    rw [ite_eq_right hi]
+    omega
+
+/-- The verdict of the diagram of the challenge from that of `Feec`'s diagram it is. -/
+theorem BGG.exists_verdict_of_eq {E Et : ℤ → Type} [∀ k, NormedAddCommGroup (E k)]
+    [∀ k, InnerProductSpace ℝ (E k)] [∀ k, CompleteSpace (E k)] [∀ k, NormedAddCommGroup (Et k)]
+    [∀ k, InnerProductSpace ℝ (Et k)] [∀ k, CompleteSpace (Et k)]
+    (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ) E Et) {T : ∀ k, E k →ₗ.[ℝ] E (k + 1)}
+    {Tt : ∀ k, Et k →ₗ.[ℝ] Et (k + 1)} {S : ∀ k, Et k →L[ℝ] E (k + 1)}
+    (hT : ∀ k, D.H.d k (k + 1) = T k) (hTt : ∀ k, D.Ht.d k (k + 1) = Tt k)
+    (hS : ∀ k, D.S k (k + 1) = S k) {J : ℤ} {m : ℕ} (h : (toDomainDiagram D).Verdict J m) :
+    ∃ D' : BGG.DomainDiagram T Tt S, D'.Verdict J m := by
+  obtain rfl : T = fun k => D.H.d k (k + 1) := funext fun k => (hT k).symm
+  obtain rfl : Tt = fun k => D.Ht.d k (k + 1) := funext fun k => (hTt k).symm
+  obtain rfl : S = fun k => D.S k (k + 1) := funext fun k => (hS k).symm
+  exact ⟨_, h⟩
+
+/-- **The verdict of the domain complexes of `Feec`'s analytic BGG data** from `S` bounded below
+up to `J`, the `L²` splittings from `J` on and rows with the cohomology of a point. -/
+theorem BGG.verdict_toDomainDiagram {E Et : ℤ → Type} [∀ k, NormedAddCommGroup (E k)]
+    [∀ k, InnerProductSpace ℝ (E k)] [∀ k, CompleteSpace (E k)] [∀ k, NormedAddCommGroup (Et k)]
+    [∀ k, InnerProductSpace ℝ (Et k)] [∀ k, CompleteSpace (Et k)]
+    (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ) E Et) {J : ℤ} {m₁ m₂ : ℕ}
+    (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1)))
+    (hsplit : ∀ i, J ≤ i → ∀ u ∈ (D.H.d (i + 1) (i + 1 + 1)).domain,
+      ∃ (p : (D.H.d i (i + 1)).domain) (φ : (D.Ht.d i (i + 1)).domain),
+        D.H.d i (i + 1) p + D.S i (i + 1) φ = u)
+    [∀ i, FiniteDimensional ℝ (D.H.cohomology i)] [∀ i, FiniteDimensional ℝ (D.Ht.cohomology i)]
+    (hV : ∀ i, Module.finrank ℝ (D.H.cohomology i) = if i = 0 then m₁ else 0)
+    (hVt : ∀ i, Module.finrank ℝ (D.Ht.cohomology i) = if i = 0 then m₂ else 0) :
+    (toDomainDiagram D).Verdict J (m₁ + m₂) := by
+  have : ∀ k, CompleteSpace (graph2 (D.H.d k (k + 1))) := fun k =>
+    (D.H.closed k (k + 1)).completeSpace_graphSpace
+  have : ∀ k, CompleteSpace (graph2 (D.Ht.d k (k + 1))) := fun k =>
+    (D.Ht.closed k (k + 1)).completeSpace_graphSpace
+  have : ∀ i, FiniteDimensional ℝ ((BGG.ofBounded (toDomainDiagram D).d
+      (toDomainDiagram D).d_d).homology i) := fun i =>
+    (graphHomologyEquiv D.H i).finiteDimensional
+  have : ∀ i, FiniteDimensional ℝ ((BGG.ofBounded (toDomainDiagram D).dt
+      (toDomainDiagram D).dt_dt).homology i) := fun i =>
+    (graphHomologyEquiv D.Ht i).finiteDimensional
+  refine (toDomainDiagram D).verdict (fun i hi => ?_) (fun i hi => sup_range_eq_top_of_exists D
+    (hsplit i hi)) (fun i => (graphHomologyEquiv D.H i).symm.finrank_eq.trans (hV i))
+    (fun i => (graphHomologyEquiv D.Ht i).symm.finrank_eq.trans (hVt i))
+  obtain ⟨K₁, h₁⟩ := hS i hi.le
+  obtain ⟨K₂, h₂⟩ := hS (i + 1) (by omega)
+  exact ⟨_, antilipschitz_graphS D h₁ h₂⟩
+
+open Feec.FiniteElement Feec.Models.Cube.FormBGG in
+/-- **The Hessian complex on the cube.** -/
+theorem BGG.hessianCube :
+    ∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
+      (wedge (cube 3)), D.Verdict 0 4 := by
+  have hΩ := Feec.Models.Cube.FEM.isOpen_cubeDomain 3
+  have : ∀ k, FiniteDimensional ℝ ((hessianFormData hΩ).H.cohomology k) :=
+    finiteDimensional_formRow_cohomology
+  have : ∀ k, FiniteDimensional ℝ ((hessianFormData hΩ).Ht.cohomology k) := fun k =>
+    (inferInstance : FiniteDimensional ℝ ((vecRow 3 hΩ).cohomology k))
+  exact BGG.exists_verdict_of_eq (hessianFormData hΩ) dMax_cube_eq vecOp_cube_eq
+    (fun k => (hessianFormData_S hΩ k).trans (wedge_eq _ k).symm)
+    (BGG.verdict_toDomainDiagram (m₁ := 1) (m₂ := 3) _ (hessianFormData_antilipschitz hΩ)
+      (fun i hi u hu => hessianFormData_exists_add_eq hΩ deRham_hasRegularDecomposition_cube hi hu)
+      finrank_formRow_cohomology finrank_vecRow_cohomology)
+
+open Feec.FiniteElement Feec.Models.Cube.FormBGG in
+/-- **The div–div complex on the cube.** -/
+theorem BGG.divDivCube :
+    ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (dMax (cube 3))
+      (dxVec (cube 3)), D.Verdict 2 4 := by
+  have hΩ := Feec.Models.Cube.FEM.isOpen_cubeDomain 3
+  have : ∀ k, FiniteDimensional ℝ ((divDivFormData hΩ).Ht.cohomology k) :=
+    finiteDimensional_formRow_cohomology
+  have : ∀ k, FiniteDimensional ℝ ((divDivFormData hΩ).H.cohomology k) := fun k =>
+    (inferInstance : FiniteDimensional ℝ ((vecRow 3 hΩ).cohomology k))
+  exact BGG.exists_verdict_of_eq (divDivFormData hΩ) vecOp_cube_eq dMax_cube_eq
+    (fun k => (divDivFormData_S hΩ k).trans (dxVec_eq _ k).symm)
+    (BGG.verdict_toDomainDiagram (J := 2) (m₁ := 3) (m₂ := 1) _ (divDivFormData_antilipschitz hΩ)
+      (fun i hi u hu => divDivFormData_exists_add_eq hΩ
+        (deRham_hasRegularDecomposition_cube.mono (by norm_num)) hi hu)
+      finrank_vecRow_cohomology finrank_formRow_cohomology)
+
+open Feec.FiniteElement Feec.Models.Cube.FormBGG in
+/-- **The elasticity complex on the cube.** -/
+theorem BGG.elasticityCube :
+    ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
+      (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (crossWedge (cube 3)), D.Verdict 1 6 := by
+  have hΩ := Feec.Models.Cube.FEM.isOpen_cubeDomain 3
+  have : ∀ k, FiniteDimensional ℝ ((elasticityFormData hΩ).H.cohomology k) := fun k =>
+    (inferInstance : FiniteDimensional ℝ ((vecRow 3 hΩ).cohomology k))
+  have : ∀ k, FiniteDimensional ℝ ((elasticityFormData hΩ).Ht.cohomology k) := fun k =>
+    (inferInstance : FiniteDimensional ℝ ((vecRow 3 hΩ).cohomology k))
+  exact BGG.exists_verdict_of_eq (elasticityFormData hΩ) vecOp_cube_eq vecOp_cube_eq
+    (fun k => (elasticityFormData_S hΩ k).trans (crossWedge_eq _ k).symm)
+    (BGG.verdict_toDomainDiagram (J := 1) (m₁ := 3) (m₂ := 3) _
+      (elasticityFormData_antilipschitz hΩ)
+      (fun i hi u hu => elasticityFormData_exists_add_eq hΩ
+        (deRham_hasRegularDecomposition_cube.mono zero_le_one) hi hu)
+      finrank_vecRow_cohomology finrank_vecRow_cohomology)
+
+/-- **The Hessian, elasticity and div–div complexes on the cube** ([ArnoldHu2021], §4.1 and
+Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the weak exterior derivative
+`dMax` of `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of forms, the stacked diagrams
+
+* of the **Hessian** complex: `HΛ(Q)` over `HΛ(Q) ⊗ ℝ³` linked by `S v = Σₐ dxₐ ∧ vₐ` (`wedge`),
+  at `J = 0`;
+* of the **elasticity** complex: `HΛ(Q) ⊗ ℝ³` over itself linked by `crossWedge`, at `J = 1`;
+* of the **div–div** complex: `HΛ(Q) ⊗ ℝ³` over `HΛ(Q)` linked by `dxVec`, at `J = 2`,
+
+have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
+of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
+`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Q`). So their BGG
+complexes, the `L²` Hessian complex `H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the
+`L²` elasticity and div–div complexes (`FEEC.bggCohomology`, `BGG.Identification`), are bounded
+Hilbert complexes with closed range in every degree, and their cohomology is finite-dimensional,
+of dimension `4`, `6` and `4` in degree `0` (the dimensions of the affine functions, of the rigid
+motions and of the fields `a + b x`) and `0` in the other degrees (`BGG.DomainDiagram.Verdict`):
+the rows have the cohomology of a point, so `S` induces zero on cohomology and the dimensions of
+the cohomology of the rows add (`FEEC.bggFinrank`). -/
+theorem bggCube :
+    (∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
+      (wedge (cube 3)), D.Verdict 0 4) ∧
+    (∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
+      (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (crossWedge (cube 3)), D.Verdict 1 6) ∧
+    ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (dMax (cube 3))
+      (dxVec (cube 3)), D.Verdict 2 4 :=
+  ⟨BGG.hessianCube, BGG.elasticityCube, BGG.divDivCube⟩
 
 end FEEC

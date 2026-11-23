@@ -40,6 +40,10 @@ domain complexes are.
   (`Data.quasiIso_bggSumMap`, `Data.bgg_represents`), also in its orthogonal form with the
   Moore–Penrose inverses into the output complex `R(Sⁱ⁻¹)ᗮ` / `N(Sⁱ)`
   (`BoundedData.quasiIso_orthSumMap`; the closed ranges up to `J` from `S` bounded below).
+* **`HilbertData.finrank_bgg_homology_eq_add`**: equality in the dimension bound of `bgg J`
+  ((27) of [ArnoldHu2021], Theorem 6) where, in every degree, the source or the target of `S` has
+  no cohomology (`Data.finrank_derived_homology_eq_add`); `HilbertData.finrank_bgg_homology_eq_ite`
+  for rows with the cohomology of a point.
 
 ## References
 
@@ -144,6 +148,16 @@ def domainRowTopCohomologyEquiv (i : ι) :
 def domainRowBotCohomologyEquiv (i : ι) :
     D.domainData.rowBotComplex.cohomology i ≃ₗ[𝕜] D.Ht.cohomology i :=
   D.Ht.domainComplexCohomologyEquiv i
+
+/-- The homology of the top row of `domainData` is the cohomology of the top complex. -/
+def domainRowTopHomologyEquiv (i : ι) :
+    D.domainData.rowTop.homology i ≃ₗ[𝕜] D.H.cohomology i :=
+  (D.domainData.rowTopCohomologyEquiv i).symm.trans (D.domainRowTopCohomologyEquiv i)
+
+/-- The homology of the bottom row of `domainData` is the cohomology of the bottom complex. -/
+def domainRowBotHomologyEquiv (i : ι) :
+    D.domainData.rowBot.homology i ≃ₗ[𝕜] D.Ht.cohomology i :=
+  (D.domainData.rowBotCohomologyEquiv i).symm.trans (D.domainRowBotCohomologyEquiv i)
 
 variable (E F : ι → Prop) in
 /-- **The analytic BGG verdict at `i`**: the derived complex of the domain complexes has closed
@@ -352,5 +366,52 @@ theorem bggVerdict {J : ℤ} (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S 
         rw [sub_add_cancel] at hK
         rw [LinearMap.coe_range]
         exact hK.isClosed_range (D.domainData.SL (k - 1) k).uniformContinuous }
+
+/-- **Equality in the dimension bound of `bgg J`**: under the hypotheses of `bggVerdict`, if in
+every degree `i` the cohomology `Hⁱ(W̃)` of the source of `Sⁱ` or the cohomology `Hⁱ⁺¹(W)` of its
+target vanishes (e.g. when the cohomology of both rows is concentrated in one degree), then `S`
+induces the zero maps on cohomology and `dim Hⁱ(bgg J) = dim Hⁱ(W) + dim Hⁱ(W̃)` in every degree.
+[ArnoldHu2021], Theorem 6, (27) -/
+theorem finrank_bgg_homology_eq_add {J : ℤ}
+    (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (htop : D.RegularDecomposition J)
+    [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)] [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)]
+    (hzero : ∀ i, Subsingleton (D.Ht.cohomology i) ∨ Subsingleton (D.H.cohomology (i + 1)))
+    (i : ℤ) :
+    Module.finrank 𝕜 ((D.domainData.bgg J).homology i) =
+      Module.finrank 𝕜 (D.H.cohomology i) + Module.finrank 𝕜 (D.Ht.cohomology i) := by
+  have : ∀ i, FiniteDimensional 𝕜 (D.domainData.rowTop.homology i) := fun i =>
+    (D.domainRowTopHomologyEquiv i).symm.finiteDimensional
+  have : ∀ i, FiniteDimensional 𝕜 (D.domainData.rowBot.homology i) := fun i =>
+    (D.domainRowBotHomologyEquiv i).symm.finiteDimensional
+  have hz : ∀ k, Limits.IsZero (D.domainData.rowBot.homology k) ∨
+      Limits.IsZero (D.domainData.rowTop.homology (k + 1)) := fun k =>
+    (hzero k).imp
+      (fun h => @ModuleCat.isZero_of_subsingleton _ _ _
+        (@Equiv.subsingleton _ _ (D.domainRowBotHomologyEquiv k).toEquiv h))
+      fun h => @ModuleCat.isZero_of_subsingleton _ _ _
+        (@Equiv.subsingleton _ _ (D.domainRowTopHomologyEquiv (k + 1)).toEquiv h)
+  have h₁ := hz (i - 1)
+  rw [sub_add_cancel] at h₁
+  rw [Data.finrank_derived_homology_eq_add (sub_add_cancel i 1) rfl
+      (D.isClosed_Δ_and_eliminates_bgg hS htop).2 h₁ (hz i),
+    (D.domainRowTopHomologyEquiv i).finrank_eq, (D.domainRowBotHomologyEquiv i).finrank_eq]
+
+/-- **The cohomology of `bgg J` for rows with the cohomology of a point**: under the hypotheses of
+`bggVerdict`, if the cohomology of the rows is concentrated in degree `0`, of dimensions `m` and
+`m̃`, then `dim H⁰(bgg J) = m + m̃` and `Hⁱ(bgg J) = 0` for `i ≠ 0`
+(`finrank_bgg_homology_eq_add`). -/
+theorem finrank_bgg_homology_eq_ite {J : ℤ}
+    (hS : ∀ i ≤ J, ∃ K, AntilipschitzWith K (D.S i (i + 1))) (htop : D.RegularDecomposition J)
+    [∀ i, FiniteDimensional 𝕜 (D.H.cohomology i)] [∀ i, FiniteDimensional 𝕜 (D.Ht.cohomology i)]
+    {m m' : ℕ} (hV : ∀ i, Module.finrank 𝕜 (D.H.cohomology i) = if i = 0 then m else 0)
+    (hVt : ∀ i, Module.finrank 𝕜 (D.Ht.cohomology i) = if i = 0 then m' else 0) (i : ℤ) :
+    Module.finrank 𝕜 ((D.domainData.bgg J).homology i) = if i = 0 then m + m' else 0 := by
+  have hzero : ∀ k, Subsingleton (D.Ht.cohomology k) ∨ Subsingleton (D.H.cohomology (k + 1)) :=
+    fun k => by
+      by_cases hk : k = 0
+      · exact Or.inr (Module.finrank_zero_iff.1 ((hV (k + 1)).trans (ite_eq_right (by omega))))
+      · exact Or.inl (Module.finrank_zero_iff.1 ((hVt k).trans (ite_eq_right hk)))
+  rw [D.finrank_bgg_homology_eq_add hS htop hzero i, hV, hVt]
+  split_ifs <;> rfl
 
 end Feec.BGG.HilbertData

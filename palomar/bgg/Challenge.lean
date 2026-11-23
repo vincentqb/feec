@@ -61,9 +61,9 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on a 
   `J = 0, 1, 2`, so the three BGG complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`),
   with closed range in every degree; their cohomology is finite-dimensional, of dimension `4`,
   `6`, `4` in degree `0` and `0` in the other degrees (`BGG.DomainDiagram.Verdict`), the sum of
-  the dimensions for the rows; and their cohomology in degree `0` is, through `[(σ, φ)] ↦ σ`, the
-  space of the affine functions, of the rigid motions, resp. of the fields `a + b x` on the cube
-  (`BGG.DomainDiagram.CohomologyIs`).
+  the dimensions for the rows; and their cohomology in degree `0` is, through `[(σ, φ)] ↦ u`
+  (`σ = (u, du)`), the space of the affine functions, of the rigid motions, resp. of the fields
+  `a + b x` on the cube (`BGG.DomainDiagram.CohomologyIs`).
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
 `i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and
@@ -98,7 +98,7 @@ Complexes of any length are included (rows vanishing outside a window). Non-vacu
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (the maps `S v = Σₐ dxₐ ∧ vₐ`)
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
-  (the Hessian and div–div complexes)
+  (the Hessian and div–div complexes, their kernels `P₁` and `RT₀`)
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
   §5.3 (the connecting maps `S⁰ = I`, `S¹ = 2 vskw` of the Hessian diagram)
 
@@ -826,9 +826,11 @@ structure DomainDiagram.Verdict (D : DomainDiagram T Tt S) (J : ℤ) (m : ℕ) :
 
 /-- **The cohomology of degree `i` of the BGG complex at `J` is `P ⊆ Eⁱ`**, through the top row:
 a linear injection `f` of `Hⁱ` into `Eⁱ` with range `P` maps the class of every cocycle
-`[(σ, φ)]` of degree `i` (`(σ, φ) ∈ Γⁱ`, `σ = (u, Tⁱu)`) to `u`; that is, `[(σ, φ)] ↦ u` is a
-linear isomorphism `Hⁱ ≅ P`. Here `cycles i` is the kernel of the differential of `Γ / Δ` in
-degree `i`, `iCycles i` its inclusion in `Γⁱ / Δⁱ` and `homologyπ i` its projection onto `Hⁱ`. -/
+`[(σ, φ)]` of degree `i` (`(σ, φ) ∈ Γⁱ`, `σ = (u, Tⁱu)`) to `u`; that is, `[(σ, φ)] ↦ u` is well
+defined on `Hⁱ` (as in the lowest degree of the rows, where `Δⁱ` and the coboundaries have
+`u = 0`) and a linear isomorphism `Hⁱ ≅ P`. Here `cycles i` is the kernel of the differential of
+`Γ / Δ` in degree `i`, `iCycles i` its inclusion in `Γⁱ / Δⁱ` and `homologyπ i` its projection
+onto `Hⁱ`. -/
 def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (E i)) : Prop :=
   ∃ f : (bgg D.toHom J).homology i →ₗ[ℝ] E i, Function.Injective f ∧ Set.range f = P ∧
     ∀ (z : (bgg D.toHom J).cycles i) (y : Γ D.toHom J i),

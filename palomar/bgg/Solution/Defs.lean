@@ -639,9 +639,11 @@ structure DomainDiagram.Verdict (D : DomainDiagram T Tt S) (J : ℤ) (m : ℕ) :
 
 /-- **The cohomology of degree `i` of the BGG complex at `J` is `P ⊆ Eⁱ`**, through the top row:
 a linear injection `f` of `Hⁱ` into `Eⁱ` with range `P` maps the class of every cocycle
-`[(σ, φ)]` of degree `i` (`(σ, φ) ∈ Γⁱ`, `σ = (u, Tⁱu)`) to `u`; that is, `[(σ, φ)] ↦ u` is a
-linear isomorphism `Hⁱ ≅ P`. Here `cycles i` is the kernel of the differential of `Γ / Δ` in
-degree `i`, `iCycles i` its inclusion in `Γⁱ / Δⁱ` and `homologyπ i` its projection onto `Hⁱ`. -/
+`[(σ, φ)]` of degree `i` (`(σ, φ) ∈ Γⁱ`, `σ = (u, Tⁱu)`) to `u`; that is, `[(σ, φ)] ↦ u` is well
+defined on `Hⁱ` (as in the lowest degree of the rows, where `Δⁱ` and the coboundaries have
+`u = 0`) and a linear isomorphism `Hⁱ ≅ P`. Here `cycles i` is the kernel of the differential of
+`Γ / Δ` in degree `i`, `iCycles i` its inclusion in `Γⁱ / Δⁱ` and `homologyπ i` its projection
+onto `Hⁱ`. -/
 def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (E i)) : Prop :=
   ∃ f : (bgg D.toHom J).homology i →ₗ[ℝ] E i, Function.Injective f ∧ Set.range f = P ∧
     ∀ (z : (bgg D.toHom J).cycles i) (y : Γ D.toHom J i),

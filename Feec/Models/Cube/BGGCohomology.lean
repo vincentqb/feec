@@ -29,9 +29,10 @@ div–div complexes (the dimension of the affine functions, resp. of the fields 
 the elasticity complex on `Q ⊆ ℝ³` (the dimension of the rigid motions), `Hⁱ = 0` for `i ≠ 0`
 (`hessianBGG_Q`, `elasticityBGG_Q`, `divDivBGG_Q`).
 
-**`H⁰` is identified**: `[(σ, φ)] ↦ σ` is a linear isomorphism of `H⁰` onto the affine functions
-`a + b ⬝ᵥ x`, the rigid motions `a + b ⨯₃ x` of `Q ⊆ ℝ³` and the fields `a + b x`
-(`hessianBGG_Q_homology_zero`, `elasticityBGG_Q_homology_zero`, `divDivBGG_Q_homology_zero`). In
+**`H⁰` is identified**: `[(σ, φ)] ↦ ι σ` (`ι` the inclusion of the domain of `d` in `L²`) is a
+linear isomorphism of `H⁰` onto the affine functions `a + b ⬝ᵥ x`, the rigid motions `a + b ⨯₃ x`
+of `Q ⊆ ℝ³` and the fields `a + b x` (`hessianBGG_Q_homology_zero`,
+`elasticityBGG_Q_homology_zero`, `divDivBGG_Q_homology_zero`). In
 the lowest degree of the rows the cohomology of the BGG complex is the space of the `u ∈ HΛ⁰` with
 `d u = S⁰ v` for a closed `v` (`Feec.BGG.HilbertData.homologyIs_lowest`); the closed fields of
 degree `0` are the constants (`ker_maximal_zero_eq_span`, from `ℌ⁰(HΛ(Q)) = ℝ · 1`), `S⁰` maps
@@ -434,7 +435,7 @@ theorem divDiv_lowest_iff (u : PiLp 2 (fun _ : Fin n => L2F ℝ (cubeDomain n) (
     exact ⟨hu, _, ⟨b, rfl⟩, (hS b).trans h.symm⟩
 
 /-- **`H⁰` of the Hessian complex of forms on `Q = (0, ½)ⁿ` is the space of affine functions**:
-`[(σ, φ)] ↦ σ` is a linear isomorphism of `H⁰(bgg 0)` onto `{a + b ⬝ᵥ x}`. -/
+`[(σ, φ)] ↦ ι σ` is a linear isomorphism of `H⁰(bgg 0)` onto `{a + b ⬝ᵥ x}`. -/
 theorem hessianBGG_Q_homology_zero :
     (hessianFormData (isOpen_cubeDomain n)).HomologyIs 0 0
       {u | ∃ (a : ℝ) (b : Fin n → ℝ),
@@ -453,7 +454,7 @@ theorem hessianBGG_Q_homology_zero :
 
 open scoped Matrix in
 /-- **`H⁰` of the elasticity complex of forms on `Q = (0, ½)³` is the space of rigid motions**:
-`[(σ, φ)] ↦ σ` is a linear isomorphism of `H⁰(bgg 1)` onto `{a + b ⨯₃ x}`. -/
+`[(σ, φ)] ↦ ι σ` is a linear isomorphism of `H⁰(bgg 1)` onto `{a + b ⨯₃ x}`. -/
 theorem elasticityBGG_Q_homology_zero :
     (elasticityFormData (isOpen_cubeDomain 3)).HomologyIs 1 0
       {u | ∃ a b : Fin 3 → ℝ,
@@ -468,7 +469,7 @@ theorem elasticityBGG_Q_homology_zero :
   rfl
 
 /-- **`H⁰` of the div–div complex of forms on `Q = (0, ½)ⁿ`, `n ≥ 1`, is the space of the fields
-`a + b x`**: `[(σ, φ)] ↦ σ` is a linear isomorphism of `H⁰(bgg (n - 1))` onto `{a + b x}`. -/
+`a + b x`**: `[(σ, φ)] ↦ ι σ` is a linear isomorphism of `H⁰(bgg (n - 1))` onto `{a + b x}`. -/
 theorem divDivBGG_Q_homology_zero [NeZero n] :
     (divDivFormData (isOpen_cubeDomain n)).HomologyIs ((n : ℤ) - 1) 0
       {u | ∃ (a : Fin n → ℝ) (b : ℝ),

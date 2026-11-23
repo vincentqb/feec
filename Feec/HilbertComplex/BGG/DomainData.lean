@@ -45,7 +45,7 @@ domain complexes are.
   no cohomology (`Data.finrank_derived_homology_eq_add`); `HilbertData.finrank_bgg_homology_eq_ite`
   for rows with the cohomology of a point.
 * `HilbertData.HomologyIs`, **`HilbertData.homologyIs_lowest`**: in the lowest degree of the rows,
-  `[(σ, φ)] ↦ σ` is an isomorphism of `Hⁱ(bgg J)` onto the `u ∈ D(dⁱ)` with `d u = S v` for some
+  `[(σ, φ)] ↦ ι σ` is an isomorphism of `Hⁱ(bgg J)` onto the `u ∈ D(dⁱ)` with `d u = S v` for some
   `v ∈ N(d̃ⁱ)` (`Data.exists_bgg_homology_lowCycles`).
 
 ## References
@@ -419,7 +419,7 @@ theorem finrank_bgg_homology_eq_ite {J : ℤ}
 
 /-! ### The cohomology in the lowest degree of the rows -/
 
-/-- A point of `D(dⁱ)` is a point of the domain space `Vⁱ`. -/
+/-- Every `u ∈ D(dⁱ)` is `ι σ` for a point `σ` of the domain space `Vⁱ`. -/
 theorem _root_.Feec.HilbertComplex.exists_domainIncl_eq_of_mem
     (H : Feec.HilbertComplex 𝕜 (ComplexShape.up ℤ) W) {i : ℤ} {u : W i}
     (hu : u ∈ (H.d i (i + 1)).domain) : ∃ σ : H.domainSpace i, H.domainIncl i σ = u :=

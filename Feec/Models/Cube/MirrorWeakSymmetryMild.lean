@@ -2,7 +2,6 @@ module
 
 public import Feec.Models.Cube.MirrorWeakSymmetryTSD
 public import Feec.Semigroup.DomainSq
-public import Mathlib.Analysis.Complex.OperatorNorm
 
 /-!
 # The mirror scheme (6.5) converges from every datum of the constraint
@@ -24,8 +23,7 @@ the wave group is unitary, and the real parts of the fields are no larger than t
 
 ## Main results
 
-* `Feec.Models.Cube.RowWise.norm_reL_le`, `sq_norm_rowsW1L_le`, `sq_norm_rowsW2L_le`,
-  `sq_norm_rowsW1L_add_sq_norm_rowsW2L_le`.
+* `sq_norm_rowsW1L_add_sq_norm_rowsW2L_le`: `‖Re E‖² + ‖Re B‖² ≤ ‖x‖²`.
 * **`mirror_waveFEM_of_mem_tsd`**.
 
 ## References
@@ -43,50 +41,13 @@ open Set MeasureTheory Filter
 
 @[expose] public noncomputable section
 
-namespace Feec.Models.Cube.RowWise
-
-/-- **The real part is a contraction of `L²`**: `‖Re f‖ ≤ ‖f‖`. -/
-theorem norm_reL_le {α : Type*} [MeasurableSpace α] {μ : Measure α} (f : Lp ℂ 2 μ) :
-    ‖reL μ f‖ ≤ ‖f‖ := by
-  have h := Complex.reCLM.norm_compLp_le f
-  rwa [Complex.reCLM_norm, one_mul] at h
-
-end Feec.Models.Cube.RowWise
-
 namespace Feec.Models.Cube.MirrorWeakSymmetry
 
 open Feec.Models.Cube.Mirror (MQ)
-open Feec.Domain (formIdx)
-open Feec.Models.Cube.RowWise (reL norm_reL_le)
 open Feec.Models.Cube.WeakSymmetry (W0 W1 W2 Wv)
 open Feec.HilbertComplex (totalSub)
 
 /-! ### The real fields of a state -/
-
-theorem abs_sg2 (i : Fin 3) : |sg2 i| = 1 := by
-  unfold sg2; split_ifs <;> norm_num
-
-/-- The real rows of a matrix field are no larger than the field: `‖Re E‖ ≤ ‖E‖`. -/
-theorem sq_norm_rowsW1L_le (E : MQ) : ‖rowsW1L E‖ ^ 2 ≤ ‖E‖ ^ 2 := by
-  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
-  refine Finset.sum_le_sum fun a _ => ?_
-  rw [rowsW1L_apply, LinearIsometryEquiv.norm_map, PiLp.norm_sq_eq_of_L2,
-    ← Fintype.sum_equiv (κ := formIdx 3 ((1 : ℕ) : ℤ)) eq1 (fun b => ‖rowRe E a (eq1 b)‖ ^ 2) _
-      fun _ => rfl]
-  refine Finset.sum_le_sum fun b _ => ?_
-  rw [rowRe_eq1]
-  exact pow_le_pow_left₀ (norm_nonneg _) (norm_reL_le _) 2
-
-/-- The real rows of a matrix field through the Hodge star are no larger than the field. -/
-theorem sq_norm_rowsW2L_le (B : MQ) : ‖rowsW2L B‖ ^ 2 ≤ ‖B‖ ^ 2 := by
-  rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
-  refine Finset.sum_le_sum fun a _ => ?_
-  rw [rowsW2L_apply, LinearIsometryEquiv.norm_map, PiLp.norm_sq_eq_of_L2,
-    ← Fintype.sum_equiv (κ := formIdx 3 ((2 : ℕ) : ℤ)) eq2 (fun i => ‖rowRe2 B a (eq2 i)‖ ^ 2) _
-      fun _ => rfl]
-  refine Finset.sum_le_sum fun i _ => ?_
-  rw [rowRe2_eq2, norm_smul, Real.norm_eq_abs, abs_sg2, one_mul]
-  exact pow_le_pow_left₀ (norm_nonneg _) (norm_reL_le _) 2
 
 /-- **The real fields of a state are no larger than the state**: for `x = (σ, E, (M, B))`,
 `‖Re E‖² + ‖Re B‖² ≤ ‖x‖²` (rows as forms, `B` through the Hodge star). -/

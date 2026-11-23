@@ -353,6 +353,13 @@ theorem coeFn_ofRealL (f : Lp ℝ 2 μ) : (ofRealL μ f : α → ℂ) =ᵐ[μ] f
 theorem coeFn_reL (f : Lp ℂ 2 μ) : (reL μ f : α → ℝ) =ᵐ[μ] fun x => (f x).re :=
   Complex.reCLM.coeFn_compLpL f
 
+/-- **The real part is a contraction of `L²`**: `‖Re f‖ ≤ ‖f‖`. -/
+theorem norm_reL_le (f : Lp ℂ 2 μ) : ‖reL μ f‖ ≤ ‖f‖ :=
+  Lp.norm_le_norm_of_ae_le (by
+    filter_upwards [coeFn_reL f] with x hx
+    rw [hx, Real.norm_eq_abs]
+    exact Complex.abs_re_le_norm _)
+
 theorem reL_ofRealL (f : Lp ℝ 2 μ) : reL μ (ofRealL μ f) = f := by
   refine Lp.ext ?_
   filter_upwards [coeFn_reL (ofRealL μ f), coeFn_ofRealL f] with x h1 h2

@@ -343,9 +343,10 @@ theorem tendsto_trajectories_of_approx {Q : ℕ → D.Discretization} {T : ℝ} 
   set A : ℕ → Set (ℝ → Feec.BGG.EnergySpace W0 Wt1 W2 Wt2) :=
     fun N => (fun Uh t => ι (Uh t)) '' (Q N).trajectories T f
   have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT⟩
-  have hA : ∀ N, ∀ v ∈ A N, ∀ w ∈ A N, ∀ t ∈ Icc 0 T, dist (v t) (w t) ≤ dist (v 0) (w 0) := by
+  have hA : ∀ N, ∀ v ∈ A N, ∀ w ∈ A N, ∀ t ∈ Icc 0 T,
+      dist (v t) (w t) ≤ 1 * dist (v 0) (w 0) := by
     rintro N _ ⟨V, hV, rfl⟩ _ ⟨W, hW, rfl⟩ t ht
-    rw [hι, hι]
+    rw [hι, hι, one_mul]
     exact (stateNorm_sub_eq_of_mem_trajectories (Q N) hV hW t ht).le
   have hu : ∀ ε > 0, ∀ᶠ N in atTop, ∃ w ∈ A N, ∀ t ∈ Icc 0 T, dist (ι (U t)) (w t) ≤ ε :=
     fun ε hε => (hU ε hε).mono fun N ⟨W, hW, hb⟩ =>

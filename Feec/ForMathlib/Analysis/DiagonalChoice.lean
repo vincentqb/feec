@@ -20,11 +20,12 @@ Lax-type convergence theorem (the initial data of the semi-discrete scheme (6.5)
 
 **Lax's principle** (`tendstoUniformlyOn_iff_tendsto_of_stable`), in the form used for
 evolution problems: let `A i` be sets of paths `α → X` in a pseudometric space, *stable* on `s`
-from `a ∈ s` (`dist (v t) (w t) ≤ dist (v a) (w a)` on `s` for `v, w ∈ A i`, the energy estimate
-of a scheme), and let `u` be uniformly approximated on `s` by paths of `A i` for `i` large (the
-convergence of the scheme for regular data, transferred to `u` by density). Then a family
-`v i ∈ A i` converges to `u` uniformly on `s` iff it converges at `a`; and when every `A N` is
-nonempty some family does (`exists_tendstoUniformlyOn_of_stable`, by the diagonal choice).
+from `a ∈ s` with a constant `C` independent of `i` (`dist (v t) (w t) ≤ C dist (v a) (w a)` on
+`s` for `v, w ∈ A i`, the energy estimate of a scheme), and let `u` be uniformly approximated on
+`s` by paths of `A i` for `i` large (the convergence of the scheme for regular data, transferred
+to `u` by density). Then a family `v i ∈ A i` converges to `u` uniformly on `s` iff it converges
+at `a`; and when every `A N` is nonempty some family does (`exists_tendstoUniformlyOn_of_stable`,
+by the diagonal choice).
 
 ## References
 
@@ -66,33 +67,40 @@ section Stable
 
 variable {α X : Type*} [PseudoMetricSpace X] {s : Set α} {a : α} {u : α → X}
 
-/-- **Lax's principle**: let the paths of `A i` be *stable* on `s` from `a ∈ s`,
-`dist (v t) (w t) ≤ dist (v a) (w a)` for `v, w ∈ A i` and `t ∈ s`, and let `u` be uniformly
-approximated by them: for every `ε > 0`, for `i` large some `w ∈ A i` is within `ε` of `u` on
-`s`. Then a family `v i ∈ A i` converges to `u` uniformly on `s` iff it converges at `a`. -/
+/-- **Lax's principle**: let the paths of `A i` be *stable* on `s` from `a ∈ s` with a constant
+`C` independent of `i`, `dist (v t) (w t) ≤ C * dist (v a) (w a)` for `v, w ∈ A i` and `t ∈ s`,
+and let `u` be uniformly approximated by them: for every `ε > 0`, for `i` large some `w ∈ A i`
+is within `ε` of `u` on `s`. Then a family `v i ∈ A i` converges to `u` uniformly on `s` iff it
+converges at `a`. -/
 theorem tendstoUniformlyOn_iff_tendsto_of_stable {ι : Type*} {l : Filter ι}
-    {A : ι → Set (α → X)} (ha : a ∈ s)
-    (hA : ∀ i, ∀ v ∈ A i, ∀ w ∈ A i, ∀ t ∈ s, dist (v t) (w t) ≤ dist (v a) (w a))
+    {A : ι → Set (α → X)} {C : ℝ} (ha : a ∈ s)
+    (hA : ∀ i, ∀ v ∈ A i, ∀ w ∈ A i, ∀ t ∈ s, dist (v t) (w t) ≤ C * dist (v a) (w a))
     (hu : ∀ ε > 0, ∀ᶠ i in l, ∃ w ∈ A i, ∀ t ∈ s, dist (u t) (w t) ≤ ε)
     {v : ι → α → X} (hv : ∀ i, v i ∈ A i) :
     TendstoUniformlyOn v u l s ↔ Tendsto (fun i => v i a) l (𝓝 (u a)) := by
   refine ⟨fun h => h.tendsto_at ha, fun h => Metric.tendstoUniformlyOn_iff.2 fun ε hε => ?_⟩
-  filter_upwards [hu (ε / 3) (by positivity), Metric.tendsto_nhds.1 h (ε / 3) (by positivity)]
-    with i ⟨w, hw, hwu⟩ hi t ht
+  set δ := ε / (2 * (1 + 2 * |C|))
+  have hδ : 0 < δ := by positivity
+  filter_upwards [hu δ hδ, Metric.tendsto_nhds.1 h δ hδ] with i ⟨w, hw, hwu⟩ hi t ht
+  have hwa : dist (w a) (v i a) ≤ δ + δ := (dist_triangle _ (u a) _).trans
+    (add_le_add (by rw [dist_comm]; exact hwu a ha) (by rw [dist_comm]; exact hi.le))
   calc dist (u t) (v i t) ≤ dist (u t) (w t) + dist (w t) (v i t) := dist_triangle _ _ _
-    _ ≤ ε / 3 + (dist (u a) (w a) + dist (v i a) (u a)) := by
-      rw [dist_comm (u a) (w a), dist_comm (v i a) (u a)]
-      exact add_le_add (hwu t ht) ((hA i w hw (v i) (hv i) t ht).trans (dist_triangle _ _ _))
-    _ < ε / 3 + (ε / 3 + ε / 3) :=
-      add_lt_add_of_le_of_lt le_rfl (add_lt_add_of_le_of_lt (hwu a ha) hi)
-    _ = ε := by ring
+    _ ≤ δ + |C| * (δ + δ) := add_le_add (hwu t ht) ((hA i w hw (v i) (hv i) t ht).trans
+        ((mul_le_mul_of_nonneg_right (le_abs_self C) dist_nonneg).trans
+          (mul_le_mul_of_nonneg_left hwa (abs_nonneg C))))
+    _ = ε / 2 := by
+      simp only [δ]
+      field_simp
+      ring
+    _ < ε := half_lt_self hε
 
 /-- **A family converging to an approximated path**: with the hypotheses of
 `tendstoUniformlyOn_iff_tendsto_of_stable` on `ℕ`, if every `A N` is nonempty, some family
 `v N ∈ A N` converges to `u` uniformly on `s` (its initial values are chosen diagonally,
 `exists_tendsto_zero_of_forall_eventually_exists_lt`). -/
-theorem exists_tendstoUniformlyOn_of_stable {A : ℕ → Set (α → X)} (hne : ∀ N, (A N).Nonempty)
-    (ha : a ∈ s) (hA : ∀ N, ∀ v ∈ A N, ∀ w ∈ A N, ∀ t ∈ s, dist (v t) (w t) ≤ dist (v a) (w a))
+theorem exists_tendstoUniformlyOn_of_stable {A : ℕ → Set (α → X)} {C : ℝ}
+    (hne : ∀ N, (A N).Nonempty) (ha : a ∈ s)
+    (hA : ∀ N, ∀ v ∈ A N, ∀ w ∈ A N, ∀ t ∈ s, dist (v t) (w t) ≤ C * dist (v a) (w a))
     (hu : ∀ ε > 0, ∀ᶠ N in atTop, ∃ w ∈ A N, ∀ t ∈ s, dist (u t) (w t) ≤ ε) :
     ∃ v : ℕ → α → X, (∀ N, v N ∈ A N) ∧ TendstoUniformlyOn v u atTop s := by
   obtain ⟨w, hw⟩ := exists_tendsto_zero_of_forall_eventually_exists_lt

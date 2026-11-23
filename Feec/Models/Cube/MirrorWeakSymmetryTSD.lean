@@ -97,6 +97,8 @@ def sg2 (i : Fin 3) : ℝ := if i = 1 then -1 else 1
 
 theorem sg2_mul_self (i : Fin 3) : sg2 i * sg2 i = 1 := by unfold sg2; split_ifs <;> norm_num
 
+theorem abs_sg2 (i : Fin 3) : |sg2 i| = 1 := by unfold sg2; split_ifs <;> norm_num
+
 def rowF (M : Mat) (a : Fin 3) : Form ℂ (Fin 3) 1 := WithLp.toLp 2 fun t => M (a, eq1.symm t)
 def rowF2 (M : Mat) (a : Fin 3) : Form ℂ (Fin 3) 2 :=
   WithLp.toLp 2 fun t => (sg2 (eq2.symm t) : ℂ) * M (a, eq2.symm t)
@@ -177,7 +179,7 @@ open Feec.Models.Cube.Mirror (MQ VQ cE_sq cB_sq conj_cE conj_cB extL2_congr)
 open Feec.Models.Cube.MirrorExt (extL2 extF extF_coeff)
 open Feec.Models.Cube.DeRhamIdent (JfJ JfJ_apply JR_apply pcJ pcJF pcJF_mul_self
   star_extL2 cjForm cjForm_apply ofRealF_apply)
-open Feec.Models.Cube.RowWise (ofRealL reL coeFn_ofRealL coeFn_reL)
+open Feec.Models.Cube.RowWise (ofRealL reL coeFn_ofRealL coeFn_reL norm_reL_le)
 open Feec.Domain (L2F L2 formIdx)
 open Feec.Models.Cube.Geometry (Q)
 
@@ -603,6 +605,34 @@ def rowsW2L : MQ →L[ℝ] Wv W2 :=
 
 @[simp] theorem rowsW1L_apply (E : MQ) (a : Fin 3) : rowsW1L E a = (cQ _).symm (rowRe E a) := rfl
 @[simp] theorem rowsW2L_apply (B : MQ) (a : Fin 3) : rowsW2L B a = (cQ _).symm (rowRe2 B a) := rfl
+
+/-- `‖rowsW1L E‖² = Σ_{ab} ‖Re E_{ab}‖²`. -/
+theorem norm_sq_rowsW1L (E : MQ) : ‖rowsW1L E‖ ^ 2 = ∑ p, ‖reL _ (E p)‖ ^ 2 := by
+  rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [rowsW1L_apply, LinearIsometryEquiv.norm_map, PiLp.norm_sq_eq_of_L2]
+  refine (Fintype.sum_equiv eq1 (fun b => ‖rowRe E a (eq1 b)‖ ^ 2) _ fun b => rfl).symm.trans ?_
+  refine Finset.sum_congr rfl fun b _ => ?_
+  rw [rowRe_eq1]
+
+/-- `‖rowsW2L B‖² = Σ_{ai} ‖Re B_{ai}‖²`. -/
+theorem norm_sq_rowsW2L (B : MQ) : ‖rowsW2L B‖ ^ 2 = ∑ p, ‖reL _ (B p)‖ ^ 2 := by
+  rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
+  refine Finset.sum_congr rfl fun a _ => ?_
+  rw [rowsW2L_apply, LinearIsometryEquiv.norm_map, PiLp.norm_sq_eq_of_L2]
+  refine (Fintype.sum_equiv eq2 (fun i => ‖rowRe2 B a (eq2 i)‖ ^ 2) _ fun i => rfl).symm.trans ?_
+  refine Finset.sum_congr rfl fun i _ => ?_
+  rw [rowRe2_eq2, norm_smul, Real.norm_eq_abs, abs_sg2, one_mul]
+
+/-- **The real rows of a matrix field are no larger than the field**: `‖Re E‖ ≤ ‖E‖`. -/
+theorem sq_norm_rowsW1L_le (E : MQ) : ‖rowsW1L E‖ ^ 2 ≤ ‖E‖ ^ 2 := by
+  rw [norm_sq_rowsW1L, PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_le_sum fun p _ => pow_le_pow_left₀ (norm_nonneg _) (norm_reL_le _) 2
+
+/-- The real rows of a matrix field through the Hodge star are no larger than the field. -/
+theorem sq_norm_rowsW2L_le (B : MQ) : ‖rowsW2L B‖ ^ 2 ≤ ‖B‖ ^ 2 := by
+  rw [norm_sq_rowsW2L, PiLp.norm_sq_eq_of_L2]
+  exact Finset.sum_le_sum fun p _ => pow_le_pow_left₀ (norm_nonneg _) (norm_reL_le _) 2
 
 open Classical in
 /-- The real rows of `E` in `∏ₐ H_{a}Λ¹(Q)` (`0` off the domain). -/

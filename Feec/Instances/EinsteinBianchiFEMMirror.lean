@@ -229,24 +229,6 @@ def emb2 : Wv W2 →L[ℝ] MQ :=
 @[simp] theorem emb2_apply (w : Wv W2) (p : Fin 3 × Fin 3) :
     emb2 w p = (sg2 p.2 : ℂ) • ofRealL _ (cQ _ (w p.1) (eq2 p.2)) := rfl
 
-theorem norm_sq_rowsW1L (E : MQ) : ‖rowsW1L E‖ ^ 2 = ∑ p, ‖reL _ (E p)‖ ^ 2 := by
-  rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl fun a _ => ?_
-  rw [rowsW1L_apply, LinearIsometryEquiv.norm_map, PiLp.norm_sq_eq_of_L2]
-  refine (Fintype.sum_equiv eq1 (fun b => ‖rowRe E a (eq1 b)‖ ^ 2) _ fun b => rfl).symm.trans ?_
-  refine Finset.sum_congr rfl fun b _ => ?_
-  rw [rowRe_eq1]
-
-theorem norm_sq_rowsW2L (B : MQ) : ‖rowsW2L B‖ ^ 2 = ∑ p, ‖reL _ (B p)‖ ^ 2 := by
-  rw [PiLp.norm_sq_eq_of_L2, Fintype.sum_prod_type]
-  refine Finset.sum_congr rfl fun a _ => ?_
-  rw [rowsW2L_apply, LinearIsometryEquiv.norm_map, PiLp.norm_sq_eq_of_L2]
-  refine (Fintype.sum_equiv eq2 (fun i => ‖rowRe2 B a (eq2 i)‖ ^ 2) _ fun i => rfl).symm.trans ?_
-  refine Finset.sum_congr rfl fun i _ => ?_
-  rw [rowRe2_eq2, norm_smul]
-  have : ‖sg2 i‖ = 1 := by unfold sg2; split_ifs <;> simp
-  rw [this, one_mul]
-
 theorem rowsW1L_emb1 (w : Wv W1) : rowsW1L (emb1 w) = w := by
   refine PiLp.ext fun a => ?_
   rw [rowsW1L_apply, LinearIsometryEquiv.symm_apply_eq]

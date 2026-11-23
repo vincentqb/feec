@@ -3,6 +3,7 @@ module
 public import Feec.Physics.EinsteinBianchi.BoundedFailure
 public import Feec.Models.Cube.WeakSymmetryConvergence
 public import Feec.Semigroup.DomainSq
+public import Feec.ForMathlib.Analysis.DiagonalChoice
 
 /-!
 # The scheme (6.5) converges for every datum in `D(L)`, and to a solution that leaves TSD
@@ -26,14 +27,17 @@ strong solutions of the forms-model Hodge wave equation (and `L² V` is continuo
 **Convergence for every datum in `D(L)`.** For `U(0) ∈ D(L²)` the Models theorem
 `Feec.Models.Cube.WeakSymmetry.cubeWave_converges` gives convergence of (6.5) from the elliptic
 projection; `D(L²)` is dense (`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`: the resolvent
-means `J_n` of Stone's theorem map into `D(L²)`), and the energy estimates of (6.1) and (6.5)
-carry convergence to every datum (`tendsto_of_isStrongSolution`, Lax). The datum of a family of solutions of (6.5) only has to
-converge at `t = 0`.
+means `J_n` of Stone's theorem map into `D(L²)`), and the energy estimate of (6.1) carries the
+approximation to every strong solution (`eventually_exists_dvec_le`). The solutions of (6.5) keep
+their distance in energy, so by Lax's principle (`tendstoUniformlyOn_iff_tendsto_of_stable`)
+every family of them whose initial states converge converges (`tendsto_of_isStrongSolution`): the
+datum of a family of solutions of (6.5) only has to converge at `t = 0`.
 
 ## Main results
 
 * `exactOfStrong`, `exactOfStrong_isMultRep`, `exactOfStrong_isMultRep'`, `exactOfStrong_vec`.
-* `isStrongSolution_group`.
+* `isStrongSolution_of_generator`, `exists_orbit_sq`: the orbits of Stone's group.
+* `eventually_exists_dvec_le`: every strong solution is the uniform limit of solutions of (6.5).
 * **`tendsto_of_isStrongSolution`**, **`tendsto_of_mem_wave_domain`**: convergence of (6.5) without
   rate for every datum in `D(L)` (no regularity hypothesis).
 * **`waveFEM_converges_to_non_tsd`**: for the TSD datum `(0, 0, (0, β))` of
@@ -472,25 +476,20 @@ variable {p : ℕ → SmoothingParam (Fin 3 → ℝ)} {C : ℝ}
   (hB : PolySmoothingEstimatesMin 3 PolySeq.lagrangeP2 p C)
 
 set_option maxHeartbeats 8000000 in
-/-- **Convergence of (6.5) without rate for every strong solution** of the forms-model Hodge
+/-- **Every strong solution is the uniform limit of solutions of (6.5)** of the forms-model Hodge
 wave equation on the cube ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, thesis' boundary
-conditions; no hypothesis): every family of solutions of (6.5) (source `0`) whose initial
-states converge to `V(0)` in the energy norm converges to the solution `solutionOfStrong hV` of
-(6.1) uniformly on `[0,T]`. Lax: approximate `V(0)` by `y ∈ D(L²)`
-(`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`);
-the orbit of `y` is a classical solution of (6.2) (`exactOfStrong`) to which (6.5) converges
-from its elliptic projection (`Feec.Models.Cube.WeakSymmetry.cubeWave_converges`); the energy
-estimates of (6.1) (`Feec.BGG.WaveData.Solution.norm_vec_sub_le`) and (6.5) (`norm_dvec_sub_le`)
-transfer the convergence. -/
-theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
-    (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V)
-    (sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0))
-    (h0 : Tendsto (fun N => ‖(solutionOfStrong hV).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖)
-      atTop (𝓝 0)) :
-    ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
-      ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε := by
-  intro ε hε
-  obtain ⟨η, hηdef⟩ : ∃ η : ℝ, η = ε / 6 := ⟨_, rfl⟩
+conditions; no hypothesis): for every `ε > 0` and all large `N`, some solution of (6.5) (source
+`0`) is within `ε` of the solution `solutionOfStrong hV` of (6.1) on `[0,T]` in the energy norm.
+Approximate `V(0)` by `y ∈ D(L²)` (`LinearPMap.IsSkewAdjoint.exists_mem_domain_sq_lt`); the orbit
+of `y` is a classical solution of (6.2) (`exactOfStrong`) to which (6.5) converges from its
+elliptic projection (`Feec.Models.Cube.WeakSymmetry.cubeWave_converges`), and it stays within
+`‖V(0) - y‖` of `V` by the energy estimate of (6.1) (`Feec.BGG.WaveData.Solution.norm_vec_sub_le`).
+-/
+theorem eventually_exists_dvec_le {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
+    (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ N in atTop, ∃ sh : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0),
+      ∀ t ∈ Icc 0 T, ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) sh t‖ ≤ ε := by
+  obtain ⟨η, hηdef⟩ : ∃ η : ℝ, η = ε / 2 := ⟨_, rfl⟩
   have hη : 0 < η := by rw [hηdef]; positivity
   have hA := formsShort.isSkewAdjoint_wave
   have hδ : 0 < η / (‖vecL‖ + 1) := by positivity
@@ -516,18 +515,17 @@ theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
     (negComp0L.continuous.comp_continuousOn hXy)
     (comp1L.continuous.comp_continuousOn hWy.continuousOn)
     hrep hrep' hη
-  filter_upwards [conv, h0.eventually (gt_mem_nhds hη)] with N hN hN0 t ht
+  filter_upwards [conv] with N hN
   obtain ⟨shy, -, hshy⟩ := hN
+  refine ⟨shy, fun t ht => ?_⟩
   have h0T : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT0.le⟩
   obtain ⟨w, hw⟩ : ∃ w, w = solutionOfStrong hV := ⟨_, rfl⟩
   obtain ⟨wy, hwy⟩ : ∃ w, w = exactWave_toSolution sy := ⟨_, rfl⟩
   rw [← hw]
-  rw [← hw] at hN0
   have hc0 : ContinuousOn ((0 : ℝ → Wv W1) - 0) (Icc 0 T) := by
     rw [sub_self]; exact continuousOn_const
   have k1 : ‖w.vec t - wy.vec t‖ ≤ ‖w.vec 0 - wy.vec 0‖ := by
-    have := w.norm_vec_sub_le wy hc0 t ht
-    simpa using this
+    simpa using w.norm_vec_sub_le wy hc0 t ht
   have k0 : ‖w.vec 0 - wy.vec 0‖ < η := by
     rw [hwy, hsy, exactOfStrong_vec hVy hWy hXy h0T, hw, solutionOfStrong_vec_eq hV h0T,
       solutionOfStrong_vec_eq hVy h0T, hVy0, ← map_sub]
@@ -538,30 +536,48 @@ theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
       rw [mul_div_assoc', div_lt_iff₀ (by positivity)]
       nlinarith [norm_nonneg vecL]
     linarith
-  have k2 : ∀ r ∈ Icc 0 T, ‖wy.vec r - dvec (cubeFEM hT hB N) shy r‖ ≤ η := fun r hr => by
-    rw [hwy, norm_vec_sub_dvec (cubeFEM hT hB N) sy shy r]; exact hshy r hr
-  have hg0 : ContinuousOn (cubeSource hT hB N 0 - cubeSource hT hB N 0) (Icc 0 T) := by
-    rw [sub_self]; exact continuousOn_const
-  have k3 : ‖dvec (cubeFEM hT hB N) shy t - dvec (cubeFEM hT hB N) (sh N) t‖ ≤
-      ‖dvec (cubeFEM hT hB N) shy 0 - dvec (cubeFEM hT hB N) (sh N) 0‖ := by
-    have := norm_dvec_sub_le (cubeFEM hT hB N) shy (sh N) hg0 ht
-    simp only [sub_self, norm_zero, intervalIntegral.integral_zero, add_zero] at this
-    exact this
-  -- triangle inequalities at `0` and at `t`
-  have n1 := norm_sub_le_norm_sub_add_norm_sub (dvec (cubeFEM hT hB N) shy 0) (wy.vec 0)
-    (dvec (cubeFEM hT hB N) (sh N) 0)
-  have n2 := norm_sub_le_norm_sub_add_norm_sub (wy.vec 0) (w.vec 0)
-    (dvec (cubeFEM hT hB N) (sh N) 0)
-  rw [norm_sub_rev (dvec (cubeFEM hT hB N) shy 0) (wy.vec 0)] at n1
-  rw [norm_sub_rev (wy.vec 0) (w.vec 0)] at n2
-  have n3 := norm_sub_le_norm_sub_add_norm_sub (w.vec t) (wy.vec t)
-    (dvec (cubeFEM hT hB N) (sh N) t)
-  have n4 := norm_sub_le_norm_sub_add_norm_sub (wy.vec t) (dvec (cubeFEM hT hB N) shy t)
-    (dvec (cubeFEM hT hB N) (sh N) t)
-  have := k2 t ht
-  have := k2 0 h0T
-  have hε6 : ε = 6 * η := by rw [hηdef]; ring
-  linarith
+  have k2 : ‖wy.vec t - dvec (cubeFEM hT hB N) shy t‖ ≤ η := by
+    rw [hwy, norm_vec_sub_dvec (cubeFEM hT hB N) sy shy t]; exact hshy t ht
+  calc ‖w.vec t - dvec (cubeFEM hT hB N) shy t‖
+      ≤ ‖w.vec t - wy.vec t‖ + ‖wy.vec t - dvec (cubeFEM hT hB N) shy t‖ :=
+        norm_sub_le_norm_sub_add_norm_sub _ _ _
+    _ ≤ η + η := add_le_add (k1.trans k0.le) k2
+    _ = ε := by rw [hηdef]; ring
+
+set_option maxHeartbeats 8000000 in
+/-- **Convergence of (6.5) without rate for every strong solution** of the forms-model Hodge
+wave equation on the cube ([QuennevilleBelair2015], §6.3, (6.5), Table 6.1, thesis' boundary
+conditions; no hypothesis): every family of solutions of (6.5) (source `0`) whose initial
+states converge to `V(0)` in the energy norm converges to the solution `solutionOfStrong hV` of
+(6.1) uniformly on `[0,T]`. Lax's principle (`tendstoUniformlyOn_iff_tendsto_of_stable`): the
+solutions of (6.5) keep their distance in energy (`norm_dvec_sub_le`) and approximate the solution
+uniformly (`eventually_exists_dvec_le`). -/
+theorem tendsto_of_isStrongSolution {T : ℝ} (hT0 : 0 < T) {V : ℝ → WS}
+    (hV : Evolution.IsStrongSolution formsShort.wave (Icc 0 T) 0 V)
+    (sh : ∀ N, Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0))
+    (h0 : Tendsto (fun N => ‖(solutionOfStrong hV).vec 0 - dvec (cubeFEM hT hB N) (sh N) 0‖)
+      atTop (𝓝 0)) :
+    ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T,
+      ‖(solutionOfStrong hV).vec t - dvec (cubeFEM hT hB N) (sh N) t‖ < ε := by
+  have h0T : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT0.le⟩
+  set A : ℕ → Set (ℝ → Feec.BGG.EnergySpace W0 (Wv W1) W2 (Wv W2)) := fun N =>
+    Set.range fun s : Feec.BGG.DiscreteSolution (cubeWave hT hB N) T (cubeSource hT hB N 0) =>
+      dvec (cubeFEM hT hB N) s
+  have hA : ∀ N, ∀ v ∈ A N, ∀ w ∈ A N, ∀ t ∈ Icc 0 T, dist (v t) (w t) ≤ 1 * dist (v 0) (w 0) := by
+    rintro N _ ⟨s₁, rfl⟩ _ ⟨s₂, rfl⟩ t ht
+    have hg : ContinuousOn (cubeSource hT hB N 0 - cubeSource hT hB N 0) (Icc 0 T) := by
+      rw [sub_self]; exact continuousOn_const
+    simpa [dist_eq_norm] using norm_dvec_sub_le (cubeFEM hT hB N) s₁ s₂ hg ht
+  have hu : ∀ ε > 0, ∀ᶠ N in atTop, ∃ w ∈ A N, ∀ t ∈ Icc 0 T,
+      dist ((solutionOfStrong hV).vec t) (w t) ≤ ε := fun ε hε =>
+    (eventually_exists_dvec_le hT hB hT0 hV hε).mono fun N ⟨s, hs⟩ =>
+      ⟨_, ⟨s, rfl⟩, fun t ht => (dist_eq_norm _ _).trans_le (hs t ht)⟩
+  have hconv := (tendstoUniformlyOn_iff_tendsto_of_stable h0T hA hu
+    (v := fun N => dvec (cubeFEM hT hB N) (sh N)) fun N => ⟨sh N, rfl⟩).2
+    (tendsto_iff_norm_sub_tendsto_zero.2 (h0.congr fun N => norm_sub_rev _ _))
+  intro ε hε
+  filter_upwards [Metric.tendstoUniformlyOn_iff.1 hconv ε hε] with N hN t ht
+  exact (dist_eq_norm _ _).symm.trans_lt (hN t ht)
 
 end Converge
 

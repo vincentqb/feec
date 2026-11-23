@@ -321,13 +321,6 @@ section Contraction
 /-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
 local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
 
-theorem norm_reL_le {α : Type*} [MeasurableSpace α] (μ : Measure α) (f : Lp ℂ 2 μ) :
-    ‖RowWise.reL μ f‖ ≤ ‖f‖ :=
-  Lp.norm_le_norm_of_ae_le (by
-    filter_upwards [RowWise.coeFn_reL f] with x hx
-    rw [hx, Real.norm_eq_abs]
-    exact Complex.abs_re_le_norm _)
-
 theorem norm_resQ_le {d : Type*} [Fintype d]
     (f : Lp ℂ 2 (volume : Measure (UnitAddTorus d))) : ‖resQ f‖ ≤ ‖f‖ := by
   change ‖(Lp.compMeasurePreservingₗᵢ ℂ Feec.Fourier.TorusWeak.proj measurePreserving_proj_Q)
@@ -348,7 +341,7 @@ theorem norm_Jinvf_le (k : ℕ) (x : Seq n k) : ‖Jinvf k x‖ ≤ ‖x‖ := b
   change ‖Jinv (Fin n) (formIdx n (k : ℤ)) x‖ ≤ ‖x‖
   rw [Jinv_apply]
   calc ‖reF (Q (Fin n)) (formIdx n (k : ℤ)) (resQF F)‖ ≤ ‖resQF (P := formIdx n (k : ℤ)) F‖ :=
-        norm_piLp_le_of_le _ _ fun p => by rw [reF_apply]; exact norm_reL_le _ _
+        norm_piLp_le_of_le _ _ fun p => by rw [reF_apply]; exact RowWise.norm_reL_le _
     _ ≤ ‖F‖ := norm_piLp_le_of_le _ _ fun p => by rw [resQF_apply]; exact norm_resQ_le _
     _ = ‖x‖ := by rw [LinearIsometryEquiv.norm_map]
 
@@ -823,7 +816,7 @@ theorem norm_toLp_re_le (g : C(UnitAddTorus (Fin n), ℂ))
         (μ := (volume : Measure (UnitAddTorus (Fin n)))) g))] with y h1 h2 h3 h4
     rw [h1, h2, h3, h4]
   rw [e]
-  exact (norm_reL_le _ _).trans (norm_resQ_le _)
+  exact (RowWise.norm_reL_le _).trans (norm_resQ_le _)
 
 /-- The equivalence `Fin n ≃ {1-forms indices}`, `j ↦ {j}`. -/
 def single1 : Fin n ≃ formIdx n (((0 : ℕ) : ℤ) + 1) :=

@@ -28,7 +28,11 @@ On the torus the bands `|k|_∞ ≤ N` are finite sets of modes: this is the Fou
 * **`norm_waveGroup_sub_waveGroup_band`**: `‖S(t) U₀ - S(t) P_A U₀‖ = ‖U₀ - P_A U₀‖` for all `t`.
 * **`tendsto_totalProj_band`**: `P_{A_N} U₀ → U₀` for an increasing exhausting sequence of bands,
   so the spectral Galerkin solutions converge uniformly in time.
-* `Torus.bandN N = {k | ∀ j, |k j| ≤ N}`: finite bands exhausting `ℤᵈ`.
+* `Torus.bandN N = {k | ∀ j, |k j| ≤ N}`: finite bands exhausting `ℤᵈ`;
+  `coeFn_starProjection_band_count` (the truncation coefficientwise, counting measure).
+* **`Torus.norm_sub_starProjection_band_le`**, `Torus.norm_d_sub_starProjection_band_le`: the
+  spectral approximation estimate `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}`, `s ≥ 0`, and its
+  form `‖d (u - P_N u)‖ ≤ (2π (N + 1))^{-s} ‖d u‖_{Hˢ}` (a Jackson estimate of order `s`).
 * `finiteDimensional_band` (finite bands are finite-dimensional) and
   **`hasCompactPropertyAt_of_coercive`**: for the counting measure, a coercive symbol
   `λ(a) ‖v‖² ≤ ‖m v‖² + ‖m'* v‖²` with finite sublevel sets gives the compactness property
@@ -213,6 +217,22 @@ theorem hasSum_norm_sq_count {i : ι} (u : Lp (E i) 2 (Measure.count : Measure �
     LinearIsometryEquiv.norm_map] at h
   exact h
 
+open scoped Classical in
+omit [∀ i, CompleteSpace (E i)] in
+/-- **The Fourier truncation, coefficientwise** (counting measure): `(P_A u)(a) = u(a)` for
+`a ∈ A`, else `0`. -/
+theorem coeFn_starProjection_band_count (S : SymbolComplex 𝕜 (Measure.count : Measure β) c E)
+    (A : Set β) (i : ι) [(S.band A i).HasOrthogonalProjection]
+    (u : Lp (E i) 2 (Measure.count : Measure β)) (a : β) :
+    ((S.band A i).starProjection u : β → E i) a = if a ∈ A then u a else 0 := by
+  rw [Measure.ae_count_iff.1 (Operator.coeFn_starProjection_fibreSub (μ := Measure.count)
+    (bandFibre (𝕜 := 𝕜) (E := E) A i) AEStronglyMeasurable.of_discrete u) a]
+  dsimp only
+  rw [starProjection_bandFibre]
+  by_cases ha : a ∈ A
+  · simp [ha, Operator.cutoff_apply_of_mem ha]
+  · simp [ha, Operator.cutoff_apply_of_notMem ha]
+
 variable [∀ i, FiniteDimensional 𝕜 (E i)]
 
 omit [MeasurableSingletonClass β] [Countable β] [∀ i, FiniteDimensional 𝕜 (E i)] in
@@ -374,6 +394,72 @@ theorem finite_bandN (N : ℕ) : (bandN (d := d) N).Finite := by
   have : bandN (d := d) N ⊆ Set.pi Set.univ fun _ => Set.Icc (-(N : ℤ)) N := fun k hk j _ =>
     abs_le.1 (hk j)
   exact (Set.Finite.pi fun _ => Set.finite_Icc _ _).subset this
+
+/-- Off the band `|k|_∞ ≤ N` the frequencies are at least `2π (N + 1)`. -/
+theorem two_pi_mul_succ_le_norm_freq {N : ℕ} {k : d → ℤ} (hk : k ∉ bandN N) :
+    2 * Real.pi * (N + 1) ≤ ‖freq k‖ := by
+  obtain ⟨j, hj⟩ := not_forall.1 (mt mem_bandN.2 hk)
+  have h1 : (N : ℝ) + 1 ≤ |(k j : ℝ)| := by
+    have : (N : ℤ) + 1 ≤ |k j| := by omega
+    exact_mod_cast this
+  have h2 := PiLp.norm_apply_le (freq k) j
+  rw [freq_apply, Real.norm_eq_abs, abs_mul, abs_of_pos Real.two_pi_pos] at h2
+  exact (mul_le_mul_of_nonneg_left h1 Real.two_pi_pos.le).trans h2
+
+variable (S : SymbolComplex 𝕜 (Measure.count : Measure (d → ℤ)) c E) {s : ℝ} (hs : 0 ≤ s)
+  (N : ℕ)
+include hs
+
+omit [∀ i, CompleteSpace (E i)] in
+/-- **The spectral approximation estimate on `𝕋ᵈ`**: for `s ≥ 0`, the Fourier truncation to
+`|k|_∞ ≤ N` of a field `u` of finite `Hˢ` norm, `‖u‖²_{Hˢ} = Σ_k (1 + |2πk|²)^s ‖u k‖²`, has the
+error `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}` (the modes off the band have
+`|2πk| ≥ 2π (N + 1)`). -/
+theorem norm_sub_starProjection_band_le {i : ι} [(S.band (bandN N) i).HasOrthogonalProjection]
+    {u : Lp (E i) 2 (Measure.count : Measure (d → ℤ))}
+    (hu : Summable fun k => (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) :
+    ‖u - (S.band (bandN N) i).starProjection u‖ ≤
+      (2 * Real.pi * (N + 1))⁻¹ ^ s * √(∑' k, (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) := by
+  have ha : 0 < 2 * Real.pi * (N + 1) := by positivity
+  have hsq : ((2 * Real.pi * (N + 1))⁻¹ ^ s) ^ 2 = (((2 * Real.pi * (N + 1)) ^ 2) ^ s)⁻¹ := by
+    rw [Real.rpow_pow_comm (inv_nonneg.2 ha.le), inv_pow, Real.inv_rpow (sq_nonneg _)]
+  have hle : ∀ k, ‖(u - (S.band (bandN N) i).starProjection u :
+      Lp (E i) 2 (Measure.count : Measure (d → ℤ))) k‖ ^ 2 ≤
+        ((2 * Real.pi * (N + 1))⁻¹ ^ s) ^ 2 * ((1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) := fun k => by
+    rw [Measure.ae_count_iff.1 (Lp.coeFn_sub u _) k, Pi.sub_apply,
+      coeFn_starProjection_band_count]
+    split_ifs with hk
+    · rw [sub_self, norm_zero, zero_pow two_ne_zero]
+      positivity
+    · have hc : 0 < ((2 * Real.pi * (N + 1)) ^ 2) ^ s := by positivity
+      rw [sub_zero, hsq, le_inv_mul_iff₀ hc]
+      refine mul_le_mul_of_nonneg_right (Real.rpow_le_rpow (sq_nonneg _) ?_ hs) (sq_nonneg _)
+      exact (pow_le_pow_left₀ ha.le (two_pi_mul_succ_le_norm_freq hk) 2).trans
+        (le_add_of_nonneg_left zero_le_one)
+  have hT : 0 ≤ ∑' k, (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2 := tsum_nonneg fun k => by positivity
+  have h := hasSum_le hle (hasSum_norm_sq_count (𝕜 := 𝕜) _) (hu.hasSum.mul_left _)
+  rw [← Real.sq_sqrt hT, ← mul_pow] at h
+  exact (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 h
+
+/-- **The spectral approximation estimate for the differentials**: the Fourier truncation
+commutes with `d`, so for `s ≥ 0` and `u ∈ D(d)` with `d u` of finite `Hˢ` norm,
+`‖d (u - P_N u)‖ ≤ (2π (N + 1))^{-s} ‖d u‖_{Hˢ}`. -/
+theorem norm_d_sub_starProjection_band_le {i j : ι}
+    [(S.band (bandN N) i).HasOrthogonalProjection] (u : (S.toHilbertComplex.d i j).domain)
+    (hv : (u : Lp (E i) 2 (Measure.count : Measure (d → ℤ))) -
+      (S.band (bandN N) i).starProjection u ∈ (S.toHilbertComplex.d i j).domain)
+    (hu : Summable fun k => (1 + ‖freq k‖ ^ 2) ^ s * ‖S.toHilbertComplex.d i j u k‖ ^ 2) :
+    ‖S.toHilbertComplex.d i j ⟨_, hv⟩‖ ≤ (2 * Real.pi * (N + 1))⁻¹ ^ s *
+      √(∑' k, (1 + ‖freq k‖ ^ 2) ^ s * ‖S.toHilbertComplex.d i j u k‖ ^ 2) := by
+  have hA := (finite_bandN (d := d) N).measurableSet
+  have := fun l => hasOrthogonalProjection_band S hA l
+  have hc := ((reducingSubcomplex_band S hA).reduces i j).comm u
+  have e : S.toHilbertComplex.d i j ⟨_, hv⟩ = S.toHilbertComplex.d i j u -
+      (S.band (bandN N) j).starProjection (S.toHilbertComplex.d i j u) := by
+    rw [← hc, ← LinearPMap.map_sub]
+    rfl
+  rw [e]
+  exact norm_sub_starProjection_band_le S hs N hu
 
 end Torus
 

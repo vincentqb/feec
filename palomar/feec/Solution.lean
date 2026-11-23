@@ -16,8 +16,8 @@ through `Feec.HilbertComplex.SubcomplexFamily.staticFEEC` and `Solution.Bridge`)
 (`HilbertComplex.SubcomplexFamily.waveVerdict`, `heatVerdict`, through
 `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
 `Solution.Dynamic`) and `Solution.Rates`. The witness `FEEC.spectral_nonvacuous` from the
-spectral Galerkin family of the torus (`Solution.Torus`), the hypotheses of Theorem 1 through
-Theorem 1 itself.
+spectral Galerkin family of the torus and its `Hˢ` Jackson estimate (`Solution.Torus`), the
+hypotheses of Theorem 1 through Theorem 1 itself.
 
 ## References
 
@@ -143,9 +143,11 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
 band subcomplexes of `Feec.Models.Torus.DeRhamGalerkin` with the Fourier truncations, through
 `Solution.Torus`; the harmonic forms are the constant forms
 (`Feec.Models.Torus.DeRham.finrank_harmonic`); the discrete Poincaré inequality and the harmonic
-bound from Theorem 1, under closed ranges, since the truncations are bounded in the graph norm. -/
+bound from Theorem 1, under closed ranges, since the truncations are bounded in the graph norm;
+the Jackson estimate of the truncations on the `Hˢ` classes (`Torus.jackson`, from
+`Feec.Fourier.Torus.norm_sub_starProjection_band_le`). -/
 theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
-    ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
+    ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson NNReal),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
         ∀ ξ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}), w ξ s = torusD u ξ s.1) ∧
       F.l = atTop ∧
@@ -161,12 +163,19 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
       (∀ k, F.IsGraphBoundedBy k 1) ∧
       (∀ N k (x : (H.d k (k + 1)).domain),
         ‖((F.π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖) ∧
-      (∀ k, F.Approximates k) ∧ ∀ a m, F.ApproximatesOn a m :=
-  ⟨Torus.complexC n, Torus.family n, Torus.mem_graph_iff, rfl, Torus.mem_V_iff, Torus.π_apply,
-    fun _ => inferInstance, Torus.finrank_harmonic, fun _ => Torus.V_ne_top,
+      (∀ k, F.Approximates k) ∧ (∀ a m, F.ApproximatesOn a m) ∧
+      (∀ N k (q : H.harmonic k), (F.π N).harmonicError q = 0) ∧
+      (∀ N, J.meshSize N = (2 * Real.pi * (N + 1))⁻¹) ∧ (∀ s, J.ord s = s) ∧
+      (∀ s k, J.B s k = 1) ∧ ∀ s k L (x : TorusForm n k), J.Reg s k L x ↔
+        IsTorusSobolev s L x ∧
+          ∀ hx : x ∈ (H.d k (k + 1)).domain, IsTorusSobolev s L (H.d k (k + 1) ⟨x, hx⟩) :=
+  ⟨Torus.complexC n, Torus.family n, Torus.jackson n, Torus.mem_graph_iff, rfl, Torus.mem_V_iff,
+    Torus.π_apply, fun _ => inferInstance, Torus.finrank_harmonic, fun _ => Torus.V_ne_top,
     Torus.isClosed_boundaries, Torus.poincareBy,
     ((projectionFEEC atTop (Torus.family n).V).2 Torus.isClosed_boundaries).1
       ⟨Torus.family n, rfl, rfl, fun k => ⟨1, Torus.isGraphBoundedBy k⟩⟩,
-    Torus.isGraphBoundedBy, Torus.norm_π_le, Torus.approximates, Torus.approximatesOn⟩
+    Torus.isGraphBoundedBy, Torus.norm_π_le, Torus.approximates, Torus.approximatesOn,
+    fun N _ q => Torus.harmonicError_eq_zero N q, fun _ => rfl, fun _ => rfl, fun _ _ => rfl,
+    fun _ _ _ _ => Iff.rfl⟩
 
 end FEEC

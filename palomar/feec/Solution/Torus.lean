@@ -17,8 +17,11 @@ Poincaré inequality (`Feec.Models.Torus.DeRham.closedRangeAt`,
 `Feec.Models.Torus.DeRham.norm_le_of_mem_orthogonal`), the harmonic forms
 (`Feec.Models.Torus.DeRham.finrank_harmonic`), the band-limited forms and the truncations
 (`Feec.Models.Torus.DeRham.mem_band_iff`, `Feec.Models.Torus.DeRham.coeFn_starProjection_band`,
-`Feec.Models.Torus.DeRham.isGraphBounded_bandProj`) and approximation
-(`Feec.Models.Torus.DeRham.tendsto_starProjection_band`).
+`Feec.Models.Torus.DeRham.isGraphBounded_bandProj`), approximation
+(`Feec.Models.Torus.DeRham.tendsto_starProjection_band`), the truncations fixing the harmonic
+forms (`Feec.Models.Torus.DeRham.bandProj_harmonic`) and the Jackson estimate on the `Hˢ` classes
+(`jackson`, from the spectral approximation estimate
+`Feec.Fourier.Torus.norm_sub_starProjection_band_le`).
 
 ## References
 
@@ -36,6 +39,8 @@ open Filter Topology Set LinearPMap MeasureTheory Finset
 namespace FEEC.Torus
 
 open Feec.Models.Torus.DeRham (complex band bandSubcomplex bandProj)
+open Feec.Fourier.Torus (symbolComplex)
+open Feec.Fourier.Exterior (deRham)
 
 variable {n : ℕ}
 
@@ -204,5 +209,59 @@ in the last one. -/
 theorem approximatesOn (a : ℤ) (m : ℕ) : (family n).ApproximatesOn a m :=
   ⟨fun _ _ => approximates _, fun i _ x =>
     (complexC n).tendsto_infDist (family n) (approximates (a + (i : ℕ))) x⟩
+
+/-- **The truncations fix the harmonic forms** (the constant forms,
+`Feec.Models.Torus.DeRham.bandProj_harmonic`): `‖q - π_N q‖ = 0`. -/
+theorem harmonicError_eq_zero (N : ℕ) {k : ℤ} (q : (complexC n).harmonic k) :
+    ((family n).π N).harmonicError q = 0 := by
+  have hq : (q : TorusForm n k) ∈ (complex (Fin n)).harmonic k :=
+    (SetLike.ext_iff.1 ((complexC n).harmonic_eq k) _).2 q.2
+  change ‖(q : TorusForm n k) - (bandProj (Fin n) N).π k q‖ = 0
+  rw [Feec.Models.Torus.DeRham.bandProj_harmonic N hq, sub_self, norm_zero]
+
+/-! ### The Jackson estimate -/
+
+/-- **`IsTorusSobolev` in the terms of `Feec`**: the weights are `(1 + |2πξ|²)^s` with
+`Feec.Fourier.Torus.freq ξ = 2πξ`, and for `L ≥ 0` the bound is `‖u‖_{Hˢ} ≤ L`. -/
+theorem isTorusSobolev_iff {s L : ℝ} (hL : 0 ≤ L) {k : ℤ} {u : TorusForm n k} :
+    IsTorusSobolev s L u ↔
+      Summable (fun ξ => (1 + ‖Feec.Fourier.Torus.freq ξ‖ ^ 2) ^ s * ‖u ξ‖ ^ 2) ∧
+        √(∑' ξ, (1 + ‖Feec.Fourier.Torus.freq ξ‖ ^ 2) ^ s * ‖u ξ‖ ^ 2) ≤ L := by
+  simp_rw [Feec.Fourier.Torus.norm_freq_sq]
+  rw [IsTorusSobolev, Real.sqrt_le_left hL]
+
+variable (n) in
+/-- **The `Hˢ` Jackson estimate of the spectral family**: mesh size `(2π (N + 1))⁻¹`, order `s`,
+constant `1`, the class of the `k`-forms `x` with `‖x‖_{Hˢ} ≤ L` and, if `x ∈ D(d)`,
+`‖d x‖_{Hˢ} ≤ L`, approximated by their truncations
+(`Feec.Fourier.Torus.norm_sub_starProjection_band_le`,
+`Feec.Fourier.Torus.norm_d_sub_starProjection_band_le`). -/
+def jackson : (family n).Jackson NNReal where
+  meshSize N := (2 * Real.pi * (N + 1))⁻¹
+  meshSize_nonneg N := inv_nonneg.2 (by positivity)
+  tendsto_meshSize := tendsto_inv_atTop_zero.comp (Tendsto.const_mul_atTop Real.two_pi_pos
+    (tendsto_atTop_add_const_right _ 1 tendsto_natCast_atTop_atTop))
+  Reg s k L x := IsTorusSobolev s L x ∧ ∀ hx : x ∈ ((complexC n).d k (k + 1)).domain,
+    IsTorusSobolev s L ((complexC n).d k (k + 1) ⟨x, hx⟩)
+  ord s := s
+  B _ _ := 1
+  jackson := fun s N k {L} x hL hx => by
+    have hh : 0 ≤ (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) := by positivity
+    refine ⟨(band (d := Fin n) N k).starProjection x,
+      Submodule.starProjection_apply_mem (band (d := Fin n) N k) x, ?_, fun j hxj => ?_⟩
+    · obtain ⟨h1, h2⟩ := (isTorusSobolev_iff hL).1 hx.1
+      refine (Feec.Fourier.Torus.norm_sub_starProjection_band_le (symbolComplex (deRham (Fin n)))
+        s.coe_nonneg N h1).trans ?_
+      calc _ ≤ (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) * L := mul_le_mul_of_nonneg_left h2 hh
+        _ = 1 * (L * (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ)) := by ring
+    · by_cases hkj : k + 1 = j
+      · subst hkj
+        obtain ⟨h1, h2⟩ := (isTorusSobolev_iff hL).1 (hx.2 hxj)
+        refine (Feec.Fourier.Torus.norm_d_sub_starProjection_band_le
+          (symbolComplex (deRham (Fin n))) s.coe_nonneg N ⟨x, hxj⟩ _ h1).trans ?_
+        calc _ ≤ (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) * L := mul_le_mul_of_nonneg_left h2 hh
+          _ = 1 * (L * (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ)) := by ring
+      · rw [LinearPMap.apply_eq_zero_of_eq_zero ((complexC n).shape k j hkj), norm_zero]
+        exact mul_nonneg zero_le_one (mul_nonneg hL hh)
 
 end FEEC.Torus

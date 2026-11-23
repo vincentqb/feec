@@ -501,5 +501,13 @@ the `(k + 1)`-subsets `s`, where every `s ∖ j` is a `k`-subset). -/
 def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Finset (Fin n)) : ℂ :=
   2 * Real.pi * Complex.I * ∑ j ∈ s, (-1) ^ (s.filter fun l => l < j).card * (ξ j : ℂ) *
     if h : ((s.erase j).card : ℤ) = k then u ξ ⟨s.erase j, h⟩ else 0
+/-- **`u` lies in `Hˢ(𝕋ⁿ; Λᵏ)` with norm at most `L`, in Fourier coefficients**: the series
+`‖u‖²_{Hˢ} = Σ_ξ (1 + |2πξ|²)^s |u ξ|²` converges and is at most `L²` (norm at most `|L|`), where
+`|2πξ|² = 4π² Σⱼ ξⱼ²` is the squared frequency of `e^{2πi ξ·x}` and `|u ξ|` the norm of the
+coefficients in `Λᵏ`: the Sobolev norm of `𝕋ⁿ = ℝⁿ/ℤⁿ` (for `s = 1` and `0`-forms,
+`‖u‖² + ‖d u‖²`, `d` the multiplier `torusD`). -/
+def IsTorusSobolev {n : ℕ} {k : ℤ} (s L : ℝ) (u : TorusForm n k) : Prop :=
+  Summable (fun ξ : Fin n → ℤ => (1 + (2 * Real.pi) ^ 2 * ∑ j, (ξ j : ℝ) ^ 2) ^ s * ‖u ξ‖ ^ 2) ∧
+    ∑' ξ : Fin n → ℤ, (1 + (2 * Real.pi) ^ 2 * ∑ j, (ξ j : ℝ) ^ 2) ^ s * ‖u ξ‖ ^ 2 ≤ L ^ 2
 
 end FEEC

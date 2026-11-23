@@ -36,9 +36,10 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
 
 The elliptic and parabolic problems need bounded cochain projections, which are uniform discrete
 stability; the hyperbolic one needs only approximation. The witness `FEEC.spectral_nonvacuous`
-shows that a nontrivial family meets the hypotheses of the three theorems: the spectral Galerkin
-spaces of band-limited forms of the de Rham complex of the torus, with the Fourier truncations as
-cochain projections. The finite element families that meet them are the subject of the Palomar
+shows that a nontrivial family meets the hypotheses of the three theorems, rates included: the
+spectral Galerkin spaces of band-limited forms of the de Rham complex of the torus, with the
+Fourier truncations as cochain projections and their Jackson estimate on the Sobolev classes
+`Hˢ`. The finite element families that meet them are the subject of the Palomar
 entry `palomar/fem`, the discrete complexes that are not subcomplexes (variational crimes) that of
 `palomar/crimes`. The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero unless
 `j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions are operator
@@ -588,6 +589,14 @@ the `(k + 1)`-subsets `s`, where every `s ∖ j` is a `k`-subset). -/
 def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Finset (Fin n)) : ℂ :=
   2 * Real.pi * Complex.I * ∑ j ∈ s, (-1) ^ (s.filter fun l => l < j).card * (ξ j : ℂ) *
     if h : ((s.erase j).card : ℤ) = k then u ξ ⟨s.erase j, h⟩ else 0
+/-- **`u` lies in `Hˢ(𝕋ⁿ; Λᵏ)` with norm at most `L`, in Fourier coefficients**: the series
+`‖u‖²_{Hˢ} = Σ_ξ (1 + |2πξ|²)^s |u ξ|²` converges and is at most `L²` (norm at most `|L|`), where
+`|2πξ|² = 4π² Σⱼ ξⱼ²` is the squared frequency of `e^{2πi ξ·x}` and `|u ξ|` the norm of the
+coefficients in `Λᵏ`: the Sobolev norm of `𝕋ⁿ = ℝⁿ/ℤⁿ` (for `s = 1` and `0`-forms,
+`‖u‖² + ‖d u‖²`, `d` the multiplier `torusD`). -/
+def IsTorusSobolev {n : ℕ} {k : ℤ} (s L : ℝ) (u : TorusForm n k) : Prop :=
+  Summable (fun ξ : Fin n → ℤ => (1 + (2 * Real.pi) ^ 2 * ∑ j, (ξ j : ℝ) ^ 2) ^ s * ‖u ξ‖ ^ 2) ∧
+    ∑' ξ : Fin n → ℤ, (1 + (2 * Real.pi) ^ 2 * ∑ j, (ξ j : ℝ) ^ 2) ^ s * ‖u ξ‖ ^ 2 ≤ L ^ 2
 
 /-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus.** On
 `𝕋ⁿ`, `n ≥ 1`, the `L²` de Rham complex in Fourier coefficients (the graph of `d` is that of the
@@ -600,9 +609,13 @@ the whole space; and the family meets the hypotheses of the three theorems: clos
 discrete Poincaré inequality and the harmonic bound uniformly in `N` (Theorem 1), projections
 bounded by `1` in the graph norm (Theorems 1–3) and in `L²` (Theorem 3), approximation in the
 graph norm in every degree (Theorem 2, with the finite-dimensional harmonic forms of its
-cohomology clause), hence on every window (`ApproximatesOn`, Theorem 3). -/
+cohomology clause), hence on every window (`ApproximatesOn`, Theorem 3), truncations fixing the
+harmonic forms (`‖q - π_N q‖ = 0`, the strict gap of the cohomology isomorphisms of Theorem 2 for
+every `N`), and a Jackson estimate (the rates of Theorems 2 and 3): mesh size `(2π (N + 1))⁻¹` and,
+for every `s ≥ 0`, the order `s`, the constant `1` and the class of the `k`-forms `x` with
+`‖x‖_{Hˢ} ≤ L` and, if `x ∈ D(d)`, `‖d x‖_{Hˢ} ≤ L` (`IsTorusSobolev`). -/
 theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
-    ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ),
+    ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson NNReal),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
         ∀ ξ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}), w ξ s = torusD u ξ s.1) ∧
       F.l = atTop ∧
@@ -618,7 +631,12 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
       (∀ k, F.IsGraphBoundedBy k 1) ∧
       (∀ N k (x : (H.d k (k + 1)).domain),
         ‖((F.π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖) ∧
-      (∀ k, F.Approximates k) ∧ ∀ a m, F.ApproximatesOn a m := by
+      (∀ k, F.Approximates k) ∧ (∀ a m, F.ApproximatesOn a m) ∧
+      (∀ N k (q : H.harmonic k), (F.π N).harmonicError q = 0) ∧
+      (∀ N, J.meshSize N = (2 * Real.pi * (N + 1))⁻¹) ∧ (∀ s, J.ord s = s) ∧
+      (∀ s k, J.B s k = 1) ∧ ∀ s k L (x : TorusForm n k), J.Reg s k L x ↔
+        IsTorusSobolev s L x ∧
+          ∀ hx : x ∈ (H.d k (k + 1)).domain, IsTorusSobolev s L (H.d k (k + 1) ⟨x, hx⟩) := by
   sorry
 
 end FEEC

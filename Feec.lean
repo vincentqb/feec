@@ -369,6 +369,7 @@ public import Feec.Models.Cube.MirrorWaveRegularity
 public import Feec.Models.Cube.MirrorWeakSymmetryComplex
 public import Feec.Models.Cube.MirrorWeakSymmetryConvergence
 public import Feec.Models.Cube.MirrorWeakSymmetryFEM
+public import Feec.Models.Cube.MirrorWeakSymmetryMild
 public import Feec.Models.Cube.MirrorWeakSymmetryTSD
 public import Feec.Models.Cube.Parity
 public import Feec.Models.Cube.ParitySmoother

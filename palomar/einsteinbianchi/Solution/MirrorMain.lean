@@ -16,8 +16,9 @@ and consistent at the order `h` (`mirrorQ_isBounded`, `mirrorQ_compatible`,
 non-stationary solution of (6.5) from `(0, u₀, 0, 0)`, `u₀ ≠ 0`, satisfies the discrete Gauss law
 at `t = 0` (`exists_gauss_solution`: `u₀` from `exists_isGauss_ne_zero` and
 `eventually_exists_π2_S1_ne`, existence from Prop 6.2 in the form proved in `Feec`, the source of
-(6.5) being `0`, `Feec.BGG.exists_discreteSolution_iff_compatible_u`), and the `O(h)` rate for
-TSD data of `D(L³)` holds (`mirrorQ_rate`).
+(6.5) being `0`, `Feec.BGG.exists_discreteSolution_iff_compatible_u`), (6.5) converges to the real
+part of every solution from the constraint (`mirrorQ_converges`), and the `O(h)` rate for TSD data
+of `D(L³)` holds (`mirrorQ_rate`).
 
 ## References
 
@@ -150,12 +151,22 @@ theorem exists_gauss_solution {T : ℝ} (hT0 : 0 < T) : ∀ᶠ N in atTop, ∃ �
 end Gauss
 
 /-- **The mirror scheme (6.5) on the cube**: the elements of Table 5.1 with the mirror
-conditions, BGG data, the discrete Gauss law for nonzero solutions and the `O(h)` rate for TSD
-data of `D(L³)`. -/
+conditions, BGG data, the discrete Gauss law for nonzero solutions, the convergence to the real
+part of every solution from the constraint (no regularity) and the `O(h)` rate for TSD data of
+`D(L³)`. -/
 theorem mirror_fem_main : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mirrorData.Discretization)
     (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧ mirrorData.IsBGG ∧
     (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ σ φ u M ρ lam, (Q N).IsDiscreteWave T 0 σ φ u M ρ lam ∧
       (Q N).IsGauss (σ 0) (u 0) ∧ (u 0 : L2Vec (cube 3) 1) ≠ 0 ∧ ∃ t ∈ Ioc 0 T, M t ≠ M 0) ∧
+    (∀ x ∈ Feec.HilbertComplex.totalSub Feec.Models.Cube.MirrorBGG.tsdQ, ∀ T, 0 < T → ∀ ε > 0,
+      ∀ᶠ N in atTop, ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T 0 σh φh uh Mh ρh lamh ∧
+        ∀ t ∈ Icc 0 T, √(‖(σh t : L2Form (cube 3) 0)‖ ^ 2 +
+          ‖(show L2Vec (cube 3) 1 from Feec.Models.Cube.MirrorWeakSymmetry.rowsW1L
+            (Feec.Models.Cube.MirrorWeakSymmetry.stEL
+              (Feec.Models.Cube.MirrorBGG.complexQ.waveGroup.S t x))) - uh t‖ ^ 2 +
+          ‖Mh t‖ ^ 2 + ‖(show L2Vec (cube 3) 2 from Feec.Models.Cube.MirrorWeakSymmetry.rowsW2L
+            (Feec.Models.Cube.MirrorWeakSymmetry.stBL
+              (Feec.Models.Cube.MirrorBGG.complexQ.waveGroup.S t x))) - ρh t‖ ^ 2) ≤ ε) ∧
     0 ≤ K ∧ ∀ N (D : Feec.Models.Cube.MirrorWeakSymmetry.TSDDatum)
       (h3 : D.LLU₀ ∈ Feec.Models.Cube.MirrorBGG.complexQ.wave.domain) (T : ℝ), 0 < T →
       ∀ U : ℝ → PiLp 2 Feec.Models.Cube.MirrorBGG.SpaceQ, U 0 = D.U₀ →
@@ -175,7 +186,8 @@ theorem mirror_fem_main : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mir
   obtain ⟨K, hK0, hK⟩ := mirrorQ_rate hT hB
   have h2C := hT.two_mul_nonneg
   refine ⟨cubeMesh, mirrorQ hT hB, 2 * C₀ + A, K, ⟨isMeshFamily_cube, points_cube, fun N => ?_⟩,
-    isBGG_𝒟m, fun T hT0 => exists_gauss_solution hT hB hT0, hK0,
+    isBGG_𝒟m, fun T hT0 => exists_gauss_solution hT hB hT0,
+    fun x hx T hT0 ε hε => mirrorQ_converges hT hB hx hT0 hε, hK0,
     fun N D h3 T hT0 U hU0 hU => ?_⟩
   · obtain ⟨s0, s1, s2, s3, s4, s5⟩ := mirrorQ_spaces hT hB N
     refine ⟨s0, s1, s2, s3, s4, s5, (mirrorQ_isBounded hT hB N).mono (by linarith),

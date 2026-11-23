@@ -3,15 +3,19 @@ module
 public import Solution.MirrorFEM
 public import Solution.CubeWave
 public import Feec.Models.Cube.MirrorWaveRegularity
+public import Feec.Models.Cube.MirrorWeakSymmetryMild
 
 /-!
-# The rate of the mirror scheme (6.5) for TSD data of `D(L³)`
+# The convergence and the rate of the mirror scheme (6.5)
 
 A solution of `Feec`'s semi-discrete system for `mirrorWave` without source is a solution of the
-challenge's (6.5) for `mirrorQ` with source `0` (`isDiscreteWave_of_mirror`), so the `O(h)` rate
+challenge's (6.5) for `mirrorQ` with source `0` (`isDiscreteWave_of_mirror`), so the convergence
+`Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_of_mem_tsd` to the real part of every
+solution from the constraint (no regularity) and the `O(h)` rate
 `Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain` for every TSD datum with
-`L²U₀ ∈ D(L)` is a rate of (6.5) (`mirrorQ_rate`): the errors are measured against the rows
-`Re E`, `Re B` of the exact solution of the Einstein–Bianchi system on the cube.
+`L²U₀ ∈ D(L)` are statements on (6.5) (`mirrorQ_converges`, `mirrorQ_rate`): the errors are
+measured against the rows `Re E`, `Re B` of the exact solution of the Einstein–Bianchi system on
+the cube.
 
 ## References
 
@@ -73,6 +77,20 @@ theorem isDiscreteWave_of_mirror {T : ℝ}
       exact this.trans hs
     · exact sub_eq_zero.1 (sh.ec t ht ⟨z, hz⟩)
     · exact sub_eq_zero.1 (sh.ed t ht ⟨z, fun a => hz a⟩)
+
+set_option maxHeartbeats 4000000 in
+/-- **Convergence of (6.5) to the real part of every solution from the constraint**, with no
+regularity (`mirror_waveFEM_of_mem_tsd`). -/
+theorem mirrorQ_converges {x : PiLp 2 Feec.Models.Cube.MirrorBGG.SpaceQ}
+    (hx : x ∈ totalSub Feec.Models.Cube.MirrorBGG.tsdQ) {T : ℝ} (hT0 : 0 < T) {ε : ℝ}
+    (hε : 0 < ε) :
+    ∀ᶠ N in Filter.atTop, ∃ σh φh uh Mh ρh lamh,
+      (mirrorQ hT hB N).IsDiscreteWave T 0 σh φh uh Mh ρh lamh ∧ ∀ t ∈ Icc 0 T,
+        √(‖(σh t : W0)‖ ^ 2 + ‖rowsW1L (stEL (Feec.Models.Cube.MirrorBGG.complexQ.waveGroup.S t x)) -
+          (uh t : Wv W1)‖ ^ 2 + ‖Mh t‖ ^ 2 +
+          ‖rowsW2L (stBL (Feec.Models.Cube.MirrorBGG.complexQ.waveGroup.S t x)) - ρh t‖ ^ 2) ≤ ε :=
+  (mirror_waveFEM_of_mem_tsd hT hB hx hT0 hε).mono fun N ⟨sh, hsh⟩ =>
+    ⟨_, _, _, _, _, _, isDiscreteWave_of_mirror hT hB N sh, hsh⟩
 
 set_option maxHeartbeats 4000000 in
 /-- **The `O(h)` rate of (6.5) for TSD data of `D(L³)`**

@@ -38,9 +38,11 @@ answer has two parts.
   solutions of class `H¹`; but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and at the
   times it is not TSD neither are, for all large `N`, the discrete fields: it computes a solution
   that is not a gravitational wave.
-* `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges at the rate
-  `(1 + t) h` from the TSD data of `D(L³)` to the exact solution, which stays TSD, and keeps the
-  discrete Gauss law along non-stationary discrete solutions: it computes the gravitational wave.
+* `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges, with no
+  regularity, from every TSD datum of `D(L)`, each the limit of discrete initial states, to the
+  exact solution, which stays TSD, and at the rate `(1 + t) h` from the TSD data of `D(L³)`; and
+  it keeps the discrete Gauss law along non-stationary discrete solutions: it computes the
+  gravitational wave.
 
 Both are cases of the abstract method, `FEEC.bggWeakSymmetry` (Prop 5.4, Thm 5.5): for BGG data
 with weak symmetry and finite-dimensional subcomplexes with bounded cochain projections `π`, its
@@ -859,10 +861,15 @@ component `a` of the bottom row), `mirrorData` satisfying `IsBGG` (so by `FEEC.b
 solutions of (6.5) are determined by their initial values and keep the discrete Gauss law), such
 that, with `L = mirrorData.IsWave`:
 
-* (*the rate, to the TSD solution*) for every TSD datum `U₀` with `U₀`, `L U₀`, `L² U₀` in
-  `D(L)` and every `T > 0`, `U' = L U` has a strong solution from `U₀` on `[0, T]`, every such
-  solution `U` stays TSD, and for every `N` some trajectory of (6.5) without source (from the
-  elliptic projection (6.4) of `U₀`) is within `K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` of `U` on
+* (*convergence from every TSD datum of `D(L)`, no regularity, to the TSD solution*) for every
+  TSD datum `U₀ ∈ D(L)` and `T > 0`, `U' = L U` has a strong solution on `[0, T]` from `U₀`, and
+  every such solution stays TSD; some family of trajectories of (6.5) without source has initial
+  states converging to `U₀` (the initial values of (6.5) are constrained as with the electric
+  conditions); and for every such solution `U`, every family of trajectories of (6.5) without
+  source whose initial states converge to `U₀` converges to `U` uniformly on `[0, T]`;
+* (*the rate*) for every TSD datum `U₀` with `U₀`, `L U₀`, `L² U₀` in `D(L)`, every `T > 0` and
+  every strong solution `U` from `U₀`, for every `N` some trajectory of (6.5) without source (from
+  the elliptic projection (6.4) of `U₀`) is within `K (Σ_{k ≤ 3} ‖Lᵏ U₀‖) (1 + t) h_N` of `U` on
   `[0, T]`;
 * (*a non-stationary solution in the discrete Gauss law*) for every `T > 0` and all large `N`,
   some trajectory of (6.5) without source has `uₕ(0) ≠ 0`, satisfies the law at `t = 0` (so at
@@ -874,12 +881,21 @@ The projections are asserted, not named (in the proof, smoothed projections comm
 reflections in the faces); the method depends on them through `Sₕ = πS`. -/
 theorem weakSymmetry_mirror : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mirrorData.Discretization)
     (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧ mirrorData.IsBGG ∧
-    (∀ T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
-      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ →
+    (∀ U₀ V T, mirrorData.IsWave U₀ V → IsTSDState U₀ → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
-        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∀ N, ∃ Uh ∈ (Q N).trajectories T 0,
-          ∀ t ∈ Icc 0 T, stateNorm (U t - Uh t) ≤
+      (∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+        ∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧
+      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
+      ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
+        IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+        (∀ N, Uh N ∈ (Q N).trajectories T 0) →
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
+        ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε) ∧
+    (∀ T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
+      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → ∀ U, U 0 = U₀ →
+        IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U → ∀ N,
+          ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh t) ≤
             K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
               meshSize (𝒯 N)) ∧
     (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0,

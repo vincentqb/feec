@@ -5,13 +5,18 @@ public import Solution.MirrorMain
 public import Feec.Models.Cube.MirrorWaveRegularity
 
 /-!
-# Mirror boundary conditions: propagation of the constraints and the rate
+# Mirror boundary conditions: propagation of the constraints, convergence and the rate
 
 The strong solutions of the challenge's system from TSD data are the real parts of the orbits of
 `Feec.Models.Cube.MirrorBGG.complexQ` from their complexifications (`isStrongSolution_realL`,
 `forward`), which stay in the constraint (`MirrorBGG.propagatesQ`); the non-stationary datum
-`cosStateQ` (or `-i cosStateQ`) gives a moving TSD solution (`eq_zero_of_realL`). The rate of
-`mirror_fem_main` is read on these solutions (`weakSymmetry_mirror`).
+`cosStateQ` (or `-i cosStateQ`) gives a moving TSD solution (`eq_zero_of_realL`). The convergence
+and the rate of `mirror_fem_main` are read on these solutions: the trajectories of (6.5)
+approximate the real part of every constrained orbit uniformly, so by Lax's principle
+(`FEEC.WeakSymmetryData.Discretization.tendsto_trajectories_of_approx`) every family of
+trajectories whose initial states converge to a TSD datum of `D(L)` converges to its solution,
+and such families exist (`mirror_converges`); and the rate holds for TSD data of `D(L³)`
+(`weakSymmetry_mirror`).
 
 ## References
 
@@ -21,8 +26,8 @@ The strong solutions of the challenge's system from TSD data are the real parts 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace RealInnerProductSpace LinearPMap
-open Set MeasureTheory
+open scoped InnerProductSpace RealInnerProductSpace LinearPMap Topology
+open Set MeasureTheory Filter
 
 @[expose] public noncomputable section
 
@@ -168,33 +173,100 @@ theorem mem_trajectories {D : FormData (cube 3)} {Q : D.Discretization} {T : ℝ
       Q.trajectories T f :=
   ⟨σ, φ, u, M, ρ, lam, h, fun _ => rfl⟩
 
-/-- **`FEEC.weakSymmetry_mirror`**: `mirror_fem_main` read on `U = Re e^{tL} cplx U₀` (`U` stays
-TSD, `mirror_tsd_propagates_of`), with the moving datum of `exists_mirror_chain`. -/
+/-- The state norm of `Re X - Uₕ`, `Re X = (0, Re E, 0, Re B)`. -/
+theorem stateNorm_realL_sub (z : PiLp 2 SpaceQ) (σh : L2Form (cube 3) 0) (uh : L2Vec (cube 3) 1)
+    (Mh : L2Form (cube 3) 2) (ρh : L2Vec (cube 3) 2) :
+    stateNorm (realL z - (σh, uh, Mh, ρh)) = √(‖σh‖ ^ 2 +
+      ‖(show L2Vec (cube 3) 1 from rowsW1L (stEL z)) - uh‖ ^ 2 + ‖Mh‖ ^ 2 +
+      ‖(show L2Vec (cube 3) 2 from rowsW2L (stBL z)) - ρh‖ ^ 2) := by
+  change √(‖(0 : L2Form (cube 3) 0) - σh‖ ^ 2 +
+    ‖(show L2Vec (cube 3) 1 from rowsW1L (stEL z)) - uh‖ ^ 2 + ‖(0 : L2Form (cube 3) 2) - Mh‖ ^ 2 +
+    ‖(show L2Vec (cube 3) 2 from rowsW2L (stBL z)) - ρh‖ ^ 2) = _
+  rw [zero_sub, norm_neg, zero_sub, norm_neg]
+
+/-- **Convergence of (6.5) from every TSD datum of `D(L)`**, for discretizations whose
+trajectories approximate the real part of every constrained orbit (`mirror_fem_main`): the strong
+solution from a TSD datum of `D(L)` exists and stays TSD (`mirror_tsd_propagates_of`), it is the
+real part of the orbit of the complexified datum, and by Lax's principle
+(`WeakSymmetryData.Discretization.tendsto_trajectories_of_approx`) every family of trajectories
+whose initial states converge to the datum converges to it uniformly on `[0, T]`, one of which
+exists. -/
+theorem mirror_converges {Q : ℕ → mirrorData.Discretization}
+    (hC : ∀ x ∈ totalSub tsdQ, ∀ T, 0 < T → ∀ ε > 0, ∀ᶠ N in atTop,
+      ∃ σh φh uh Mh ρh lamh, (Q N).IsDiscreteWave T 0 σh φh uh Mh ρh lamh ∧ ∀ t ∈ Icc 0 T,
+        √(‖(σh t : L2Form (cube 3) 0)‖ ^ 2 +
+          ‖(show L2Vec (cube 3) 1 from rowsW1L (stEL (complexQ.waveGroup.S t x))) - uh t‖ ^ 2 +
+          ‖Mh t‖ ^ 2 +
+          ‖(show L2Vec (cube 3) 2 from rowsW2L (stBL (complexQ.waveGroup.S t x))) - ρh t‖ ^ 2) ≤ ε)
+    {U₀ V : MState} {T : ℝ} (h : mirrorData.IsWave U₀ V) (hU₀ : IsTSDState U₀) (hT : 0 < T) :
+    (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
+    (∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+      ∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧
+    (∃ Uh : ℕ → ℝ → MState, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
+      Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
+    ∀ U (Uh : ℕ → ℝ → MState), U 0 = U₀ →
+      IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+      (∀ N, Uh N ∈ (Q N).trajectories T 0) →
+      Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
+      ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε := by
+  obtain ⟨-, hex, hprop, -⟩ := mirror_tsd_propagates_of
+  obtain ⟨hd, hc, -, -⟩ := forward h hU₀
+  have hX := isStrongSolution_realL hd hc T
+  have hX0 := realL_orbit_zero hU₀.1 hU₀.2.1
+  have happ : ∀ ε > 0, ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T,
+      stateNorm (realL (complexQ.waveGroup.S t (cplx U₀)) - Uh t) ≤ ε := fun ε hε =>
+    (hC _ hc T hT ε hε).mono fun N hN => by
+      obtain ⟨σh, φh, uh, Mh, ρh, lamh, hW, hb⟩ := hN
+      exact ⟨_, mem_trajectories hW, fun t ht =>
+        (stateNorm_realL_sub _ _ _ _ _).trans_le (hb t ht)⟩
+  have hL := WeakSymmetryData.Discretization.tendsto_trajectories_of_approx hT.le
+    (fun N => ⟨_, (Q N).zero_mem_trajectories T⟩) happ
+  rw [hX0] at hL
+  refine ⟨hex U₀ V h hU₀ T, ?_, hL.1, ?_⟩
+  · intro U hU0 hU
+    exact hprop T U hU (hU0 ▸ hU₀)
+  · intro U Uh hU0 hU hUh h0 ε hε
+    have e := WeakSymmetryData.isStrongSolution_unique hU hX (hU0.trans hX0.symm)
+    filter_upwards [hL.2 Uh hUh h0 ε hε] with N hN t ht
+    rw [e ht]
+    exact hN t ht
+
+/-- **`FEEC.weakSymmetry_mirror`**: `mirror_fem_main` read on `U = Re e^{tL} cplx U₀`: the
+convergence from every TSD datum of `D(L)` (`mirror_converges`), the rate for TSD data of `D(L³)`,
+and the moving datum of `exists_mirror_chain`. -/
 theorem weakSymmetry_mirror : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mirrorData.Discretization)
     (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧ mirrorData.IsBGG ∧
-    (∀ T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
-      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ →
+    (∀ U₀ V T, mirrorData.IsWave U₀ V → IsTSDState U₀ → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
-      ∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
-        (∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧ ∀ N, ∃ Uh ∈ (Q N).trajectories T 0,
-          ∀ t ∈ Icc 0 T, stateNorm (U t - Uh t) ≤
+      (∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+        ∀ t ∈ Icc 0 T, IsTSDState (U t)) ∧
+      (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0)) ∧
+      ∀ U (Uh : ℕ → ℝ → _), U 0 = U₀ →
+        IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
+        (∀ N, Uh N ∈ (Q N).trajectories T 0) →
+        Tendsto (fun N => stateNorm (U₀ - Uh N 0)) atTop (𝓝 0) →
+        ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε) ∧
+    (∀ T U₀ V₁ V₂ V₃, 0 < T → mirrorData.IsWave U₀ V₁ → mirrorData.IsWave V₁ V₂ →
+      mirrorData.IsWave V₂ V₃ → IsTSDState U₀ → ∀ U, U 0 = U₀ →
+        IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U → ∀ N,
+          ∃ Uh ∈ (Q N).trajectories T 0, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh t) ≤
             K * (stateNorm U₀ + stateNorm V₁ + stateNorm V₂ + stateNorm V₃) * (1 + t) *
               meshSize (𝒯 N)) ∧
-    (∀ T, 0 < T → ∀ᶠ N in Filter.atTop, ∃ Uh ∈ (Q N).trajectories T 0,
+    (∀ T, 0 < T → ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T 0,
       (Q N).IsGauss (Uh 0).1 (Uh 0).2.1 ∧ (Uh 0).2.1 ≠ 0 ∧
         ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
     ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
       mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
-  obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, -, hK⟩ := mirror_fem_main
-  obtain ⟨-, hex, hprop, -⟩ := mirror_tsd_propagates_of
-  refine ⟨𝒯, Q, C, K, hQ, hBGG,
-    fun T U₀ V₁ V₂ V₃ hT h1 h2 h3 hU₀ => ⟨hex U₀ V₁ h1 hU₀ T, fun U hU0 hUs => ?_⟩,
+  obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, hC, -, hK⟩ := mirror_fem_main
+  refine ⟨𝒯, Q, C, K, hQ, hBGG, fun U₀ V T h hU₀ hT => mirror_converges hC h hU₀ hT,
+    fun T U₀ V₁ V₂ V₃ hT h1 h2 h3 hU₀ U hU0 hUs N => ?_,
     fun T hT => (hG T hT).mono fun N hN => ?_, exists_mirror_chain⟩
   swap
   · obtain ⟨σ, φ, u, M, ρ, lam, hw, hg, hu, t, ht, hM⟩ := hN
     exact ⟨_, mem_trajectories hw, hg, hu, t, ht, hM⟩
+  obtain ⟨-, -, hprop, -⟩ := mirror_tsd_propagates_of
   have hTSD : ∀ t ∈ Icc 0 T, IsTSDState (U t) := fun t ht => hprop T U hUs (hU0 ▸ hU₀) t ht
-  refine ⟨hTSD, fun N => ?_⟩
   obtain ⟨hd0, hc0, hw0, hV₁⟩ := forward h1 hU₀
   obtain ⟨hd1, -, hw1, hV₂⟩ := forward h2 hV₁
   obtain ⟨hd2, -, hw2, hV₃⟩ := forward h3 hV₂

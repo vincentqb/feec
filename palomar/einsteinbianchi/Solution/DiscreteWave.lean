@@ -1,16 +1,23 @@
 module
 
 public import Solution.Abstract
+public import Feec.Models.Cube.WeakSymmetryWave
+public import Feec.ForMathlib.Analysis.DiagonalChoice
 public import Mathlib.Analysis.Calculus.MeanValue
 public import Mathlib.Analysis.InnerProductSpace.Calculus
 
 /-!
 # Energy identities for the semi-discrete problem (6.5)
 
-For any data `D` and any discretization `Q`, two solutions of (6.5) with the same source and
-the same `(σₕ, uₕ, Mₕ, ρₕ)(0)` agree on `[0, T]` (`IsDiscreteWave.eq_of_eq`): the energy
-`‖δσ‖² + ‖δu‖² + ‖δM‖² + ‖δρ‖²` of their difference is constant, the four equations of (6.5)
-tested with the difference itself cancelling pairwise.
+For any data `D` and any discretization `Q`, the energy `‖δσ‖² + ‖δu‖² + ‖δM‖² + ‖δρ‖²` of
+the difference of two solutions of (6.5) with the same source is constant on `[0, T]`
+(`IsDiscreteWave.energy_sub_eq`), the four equations of (6.5) tested with the difference itself
+cancelling pairwise. So two such solutions with the same `(σₕ, uₕ, Mₕ, ρₕ)(0)` agree
+(`IsDiscreteWave.eq_of_eq`), and trajectories keep their distance in the state norm
+(`stateNorm_sub_eq_of_mem_trajectories`): (6.5) is stable, and a path uniformly approximated by
+trajectories is the uniform limit of every family of trajectories whose initial states converge
+to its initial state, one of which exists (`tendsto_trajectories_of_approx`, Lax's principle,
+`tendstoUniformlyOn_iff_tendsto_of_stable` and `exists_tendstoUniformlyOn_of_stable`).
 
 Without source, the discrete Gauss law propagates when `D` satisfies `IsBGG`
 (`IsDiscreteWave.isGauss`): with `Z = span {d̃ψ | (τ, ψ) ∈ Vₕ⁰ × Ṽₕ⁰, dτ = π¹S⁰ψ}` and `P` the
@@ -27,8 +34,8 @@ equation at `v = d̃ψ`: `d̃d̃ψ = 0` and `π²S¹d̃ψ = -π²dS⁰ψ = -d π
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace RealInnerProductSpace
-open Set
+open scoped InnerProductSpace RealInnerProductSpace Topology
+open Set Filter
 
 @[expose] public noncomputable section
 
@@ -50,14 +57,15 @@ theorem eq_of_norm_sub_sq {E : Type*} [NormedAddCommGroup E] {x y : E} (h : ‖x
     x = y :=
   sub_eq_zero.1 (norm_eq_zero.1 (pow_eq_zero_iff two_ne_zero |>.1 h))
 
-/-- **Uniqueness for (6.5)**: two solutions with the same source and the same
-`(σₕ, uₕ, Mₕ, ρₕ)(0)` agree on `[0, T]` (their difference has constant energy). -/
-theorem IsDiscreteWave.eq_of_eq {T : ℝ} {f : ℝ → Wt1} {σ σ₂ : ℝ → D.d0.domain}
+/-- **The energy identity for (6.5)**: for two solutions with the same source, the energy
+`‖δσ‖² + ‖δu‖² + ‖δM‖² + ‖δρ‖²` of their difference is constant on `[0, T]`. -/
+theorem IsDiscreteWave.energy_sub_eq {T : ℝ} {f : ℝ → Wt1} {σ σ₂ : ℝ → D.d0.domain}
     {φ φ₂ : ℝ → D.dt0.domain} {u u₂ : ℝ → D.dt1.domain} {M M₂ : ℝ → W2} {ρ ρ₂ : ℝ → Wt2}
     {lam lam₂ : ℝ → W1} (h1 : Q.IsDiscreteWave T f σ φ u M ρ lam)
-    (h2 : Q.IsDiscreteWave T f σ₂ φ₂ u₂ M₂ ρ₂ lam₂) (e0 : σ 0 = σ₂ 0) (e1 : u 0 = u₂ 0)
-    (e2 : M 0 = M₂ 0) (e3 : ρ 0 = ρ₂ 0) :
-    ∀ t ∈ Icc 0 T, σ t = σ₂ t ∧ u t = u₂ t ∧ M t = M₂ t ∧ ρ t = ρ₂ t := by
+    (h2 : Q.IsDiscreteWave T f σ₂ φ₂ u₂ M₂ ρ₂ lam₂) : ∀ t ∈ Icc 0 T,
+    ‖(σ t : W0) - σ₂ t‖ ^ 2 + ‖(u t : Wt1) - u₂ t‖ ^ 2 + ‖M t - M₂ t‖ ^ 2 + ‖ρ t - ρ₂ t‖ ^ 2 =
+      ‖(σ 0 : W0) - σ₂ 0‖ ^ 2 + ‖(u 0 : Wt1) - u₂ 0‖ ^ 2 + ‖M 0 - M₂ 0‖ ^ 2 +
+        ‖ρ 0 - ρ₂ 0‖ ^ 2 := by
   obtain ⟨cσ, cu, cM, cρ, hm, σ', u', M', ρ', hd⟩ := h1
   obtain ⟨cσ₂, cu₂, cM₂, cρ₂, hm₂, σ₂', u₂', M₂', ρ₂', hd₂⟩ := h2
   set E : ℝ → ℝ := fun t => ‖(σ t : W0) - σ₂ t‖ ^ 2 + ‖(u t : Wt1) - u₂ t‖ ^ 2 +
@@ -99,17 +107,52 @@ theorem IsDiscreteWave.eq_of_eq {T : ℝ} {f : ℝ → Wt1} {σ σ₂ : ℝ → 
       real_inner_comm (Q.π2 (D.S1 (u t))), real_inner_comm (Q.π2 (D.S1 (u₂ t))),
       real_inner_comm (D.dt1 (u t)), real_inner_comm (D.dt1 (u₂ t))] at A1 A2 B1 B2 C1 C2 D1 D2 ⊢
     linarith
-  have h0 : E 0 = 0 := by simp [hE, e0, e1, e2, e3]
+  exact fun t ht => constant_of_has_deriv_right_zero hc hderiv t ht
+
+/-- **Uniqueness for (6.5)**: two solutions with the same source and the same
+`(σₕ, uₕ, Mₕ, ρₕ)(0)` agree on `[0, T]` (their difference has constant energy). -/
+theorem IsDiscreteWave.eq_of_eq {T : ℝ} {f : ℝ → Wt1} {σ σ₂ : ℝ → D.d0.domain}
+    {φ φ₂ : ℝ → D.dt0.domain} {u u₂ : ℝ → D.dt1.domain} {M M₂ : ℝ → W2} {ρ ρ₂ : ℝ → Wt2}
+    {lam lam₂ : ℝ → W1} (h1 : Q.IsDiscreteWave T f σ φ u M ρ lam)
+    (h2 : Q.IsDiscreteWave T f σ₂ φ₂ u₂ M₂ ρ₂ lam₂) (e0 : σ 0 = σ₂ 0) (e1 : u 0 = u₂ 0)
+    (e2 : M 0 = M₂ 0) (e3 : ρ 0 = ρ₂ 0) :
+    ∀ t ∈ Icc 0 T, σ t = σ₂ t ∧ u t = u₂ t ∧ M t = M₂ t ∧ ρ t = ρ₂ t := by
   intro t ht
-  have hEt : E t = 0 := (constant_of_has_deriv_right_zero hc hderiv t ht).trans h0
+  have hEt := IsDiscreteWave.energy_sub_eq Q h1 h2 t ht
+  rw [e0, e1, e2, e3] at hEt
+  simp only [sub_self, norm_zero, ne_eq, OfNat.ofNat_ne_zero, not_false_eq_true, zero_pow,
+    add_zero] at hEt
   have n1 := sq_nonneg ‖(σ t : W0) - σ₂ t‖
   have n2 := sq_nonneg ‖(u t : Wt1) - u₂ t‖
   have n3 := sq_nonneg ‖M t - M₂ t‖
   have n4 := sq_nonneg ‖ρ t - ρ₂ t‖
-  simp only [hE] at hEt
   exact ⟨Subtype.ext (eq_of_norm_sub_sq (by linarith)),
     Subtype.ext (eq_of_norm_sub_sq (by linarith)), eq_of_norm_sub_sq (by linarith),
     eq_of_norm_sub_sq (by linarith)⟩
+
+/-- **Trajectories of (6.5) with the same source keep their distance**:
+`‖U(t) - U'(t)‖ = ‖U(0) - U'(0)‖` on `[0, T]` in the state norm. -/
+theorem stateNorm_sub_eq_of_mem_trajectories {T : ℝ} {f : ℝ → Wt1}
+    {U U' : ℝ → W0 × Wt1 × W2 × Wt2} (hU : U ∈ Q.trajectories T f)
+    (hU' : U' ∈ Q.trajectories T f) :
+    ∀ t ∈ Icc 0 T, stateNorm (U t - U' t) = stateNorm (U 0 - U' 0) := by
+  obtain ⟨σ, φ, u, M, ρ, lam, h, e⟩ := hU
+  obtain ⟨σ₂, φ₂, u₂, M₂, ρ₂, lam₂, h₂, e₂⟩ := hU'
+  intro t ht
+  simp only [stateNorm, e, e₂, Prod.fst_sub, Prod.snd_sub]
+  rw [IsDiscreteWave.energy_sub_eq Q h h₂ t ht]
+
+/-- **The zero trajectory**: `0` solves (6.5) without source. -/
+theorem zero_mem_trajectories (T : ℝ) : (0 : ℝ → W0 × Wt1 × W2 × Wt2) ∈ Q.trajectories T 0 := by
+  refine ⟨fun _ => 0, fun _ => 0, fun _ => 0, fun _ => 0, fun _ => 0, fun _ => 0,
+    ⟨continuousOn_const, continuousOn_const, continuousOn_const, continuousOn_const,
+      fun _ _ => ⟨Q.V0.zero_mem, Q.Vt0.zero_mem, Q.Vt1.zero_mem, Q.V2.zero_mem, Q.Vt2.zero_mem,
+        Q.V1.zero_mem, by simp⟩,
+      fun _ => 0, fun _ => 0, fun _ => 0, fun _ => 0, fun t _ =>
+        ⟨hasDerivWithinAt_const _ _ _, hasDerivWithinAt_const _ _ _,
+          hasDerivWithinAt_const _ _ _, hasDerivWithinAt_const _ _ _,
+          fun _ _ _ _ => by simp, fun _ _ => by simp, fun _ _ => by simp, fun _ _ => by simp⟩⟩,
+    fun _ => rfl⟩
 
 /-- The discrete gradients `d̃ψ` of the discrete pairs `(τ, ψ)`, `dτ = π¹S⁰ψ`. -/
 def gaussGen : Set Wt1 :=
@@ -272,5 +315,56 @@ theorem IsDiscreteWave.exists_M_ne {T : ℝ} (hT : 0 < T) {f : ℝ → Wt1} {σ 
   have := hM' _ (Q.π2_mem (D.S1 (u 0)))
   rw [h0, inner_zero_left] at this
   exact hu (inner_self_eq_zero.1 this.symm)
+
+/-! ### Lax's principle for (6.5) -/
+
+/-- **Lax's principle for (6.5)**: let `U` be uniformly approximated on `[0, T]` by trajectories
+of (6.5) of `Q N` with source `f`, `T ≥ 0`: for every `ε > 0` and all large `N` some trajectory
+is within `ε` of `U` on `[0, T]` in the state norm. Since trajectories with the same source keep
+their distance (`stateNorm_sub_eq_of_mem_trajectories`), every family of trajectories whose
+initial states converge to `U 0` converges to `U` uniformly on `[0, T]`
+(`tendstoUniformlyOn_iff_tendsto_of_stable`), and if every `Q N` has trajectories, such a family
+exists (`exists_tendstoUniformlyOn_of_stable`, a diagonal choice). -/
+theorem tendsto_trajectories_of_approx {Q : ℕ → D.Discretization} {T : ℝ} (hT : 0 ≤ T)
+    {f : ℝ → Wt1} (hne : ∀ N, ((Q N).trajectories T f).Nonempty)
+    {U : ℝ → W0 × Wt1 × W2 × Wt2}
+    (hU : ∀ ε > 0, ∀ᶠ N in atTop, ∃ Uh ∈ (Q N).trajectories T f, ∀ t ∈ Icc 0 T,
+      stateNorm (U t - Uh t) ≤ ε) :
+    (∃ Uh : ℕ → ℝ → W0 × Wt1 × W2 × Wt2, (∀ N, Uh N ∈ (Q N).trajectories T f) ∧
+      Tendsto (fun N => stateNorm (U 0 - Uh N 0)) atTop (𝓝 0)) ∧
+    ∀ Uh : ℕ → ℝ → W0 × Wt1 × W2 × Wt2, (∀ N, Uh N ∈ (Q N).trajectories T f) →
+      Tendsto (fun N => stateNorm (U 0 - Uh N 0)) atTop (𝓝 0) →
+      ∀ ε > 0, ∀ᶠ N in atTop, ∀ t ∈ Icc 0 T, stateNorm (U t - Uh N t) < ε := by
+  -- the state norm is the distance of the energy vectors
+  set ι := Feec.BGG.energyEmb W0 Wt1 W2 Wt2
+  have hι : ∀ a b, dist (ι a) (ι b) = stateNorm (a - b) := fun a b => by
+    rw [dist_eq_norm]
+    exact Feec.BGG.Discrete.norm_sub_of_isEnergyEmbedding Feec.BGG.isEnergyEmbedding_energyEmb a b
+  set A : ℕ → Set (ℝ → Feec.BGG.EnergySpace W0 Wt1 W2 Wt2) :=
+    fun N => (fun Uh t => ι (Uh t)) '' (Q N).trajectories T f
+  have h0 : (0 : ℝ) ∈ Icc 0 T := ⟨le_rfl, hT⟩
+  have hA : ∀ N, ∀ v ∈ A N, ∀ w ∈ A N, ∀ t ∈ Icc 0 T, dist (v t) (w t) ≤ dist (v 0) (w 0) := by
+    rintro N _ ⟨V, hV, rfl⟩ _ ⟨W, hW, rfl⟩ t ht
+    rw [hι, hι]
+    exact (stateNorm_sub_eq_of_mem_trajectories (Q N) hV hW t ht).le
+  have hu : ∀ ε > 0, ∀ᶠ N in atTop, ∃ w ∈ A N, ∀ t ∈ Icc 0 T, dist (ι (U t)) (w t) ≤ ε :=
+    fun ε hε => (hU ε hε).mono fun N ⟨W, hW, hb⟩ =>
+      ⟨_, ⟨W, hW, rfl⟩, fun t ht => (hι _ _).trans_le (hb t ht)⟩
+  have hd : ∀ Uh : ℕ → ℝ → W0 × Wt1 × W2 × Wt2,
+      Tendsto (fun N => ι (Uh N 0)) atTop (𝓝 (ι (U 0))) ↔
+        Tendsto (fun N => stateNorm (U 0 - Uh N 0)) atTop (𝓝 0) := fun Uh => by
+    rw [tendsto_iff_dist_tendsto_zero]
+    exact tendsto_congr fun N => by rw [dist_comm, hι]
+  refine ⟨?_, fun Uh hUh h0' ε hε => ?_⟩
+  · obtain ⟨v, hv, hconv⟩ := exists_tendstoUniformlyOn_of_stable (u := fun t => ι (U t))
+      (fun N => (hne N).image _) h0 hA hu
+    have hv' : ∀ N, ∃ W ∈ (Q N).trajectories T f, (fun t => ι (W t)) = v N := hv
+    choose Uh hUh hvU using hv'
+    exact ⟨Uh, hUh, (hd Uh).1 ((hconv.tendsto_at h0).congr fun N => (congrFun (hvU N) 0).symm)⟩
+  · have hconv := (tendstoUniformlyOn_iff_tendsto_of_stable (u := fun t => ι (U t)) h0 hA hu
+      (v := fun N t => ι (Uh N t)) fun N => ⟨_, hUh N, rfl⟩).2 ((hd Uh).2 h0')
+    filter_upwards [Metric.tendstoUniformlyOn_iff.1 hconv ε hε] with N hN t ht
+    rw [← hι]
+    exact hN t ht
 
 end FEEC.WeakSymmetryData.Discretization

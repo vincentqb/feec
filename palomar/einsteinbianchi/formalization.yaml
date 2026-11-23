@@ -26,8 +26,9 @@ project:
     conditions does the method compute the constrained evolution? The answer, on the cube
     Q = (0, 1/2)^3 with the elements of Table 5.1 on Freudenthal meshes, has two parts: with the
     electric boundary conditions of the thesis the method converges, but from a TSD datum its
-    limit leaves TSD; with mirror boundary conditions it converges at the rate (1 + t) h to the
-    TSD solution and keeps the discrete Gauss law along non-stationary discrete solutions. Stated
+    limit leaves TSD; with mirror boundary conditions it converges, with no regularity, from every
+    TSD datum of D(L) to the TSD solution, at the rate (1 + t) h for TSD data of D(L^3), and keeps
+    the discrete Gauss law along non-stationary discrete solutions. Stated
     over Mathlib in the vocabulary of differential forms, with the definitions of forms, polynomial
     forms, simplicial meshes, finite element and Sobolev spaces and strong solutions shared with
     palomar/fem and palomar/feec, and the Einstein-Bianchi vocabulary shared with
@@ -87,10 +88,13 @@ project:
     mirrorData by the elements of Table 5.1 with the mirror conditions on Freudenthal meshes of Q
     (IsTable51 with no face in the top row and the faces normal to e_a in component a of the
     bottom row), the data satisfying IsBGG (so the uniqueness and Gauss clauses of
-    FEEC.bggWeakSymmetry apply), such that: for every TSD state U_0 with U_0, L U_0, L^2 U_0 in
-    D(L) strong solutions from U_0 exist on every [0, T], every one, U, stays TSD, and for every N
-    some trajectory of (6.5) is within K (sum_{k <= 3} ||L^k U_0||) (1 + t) h_N of U on [0, T];
-    for every T > 0 and all large N a trajectory of (6.5) with u_h(0) != 0 satisfies the discrete
+    FEEC.bggWeakSymmetry apply), such that: for every TSD datum U_0 of D(L) strong solutions from
+    U_0 exist on every [0, T], every one stays TSD, U_0 is the limit of the initial states of
+    trajectories of (6.5) without source, and every family of trajectories of (6.5) without source
+    whose initial states converge to U_0 converges to every strong solution uniformly on [0, T]
+    (no regularity hypothesis); if moreover L U_0, L^2 U_0 lie in D(L), for every N some
+    trajectory of (6.5) is within K (sum_{k <= 3} ||L^k U_0||) (1 + t) h_N of every strong
+    solution from U_0 on [0, T]; for every T > 0 and all large N a trajectory of (6.5) with u_h(0) != 0 satisfies the discrete
     Gauss law at t = 0 and has M_h not constant; and some such datum has L U_0 != 0: the method
     computes the TSD solution.
     FEEC.weakSymmetry_electric_nonvacuous: with the electric boundary conditions, (5.3) has a
@@ -98,8 +102,9 @@ project:
     (6.2) has a nontrivial classical solution on [0, T] meeting those of the wave rate.
     The proof is the library Feec of this repository (Feec.BGG.Discrete, Feec.Models.Cube.WeakSymmetry*,
     Feec.EinsteinBianchi.BoundedConvergence, BoundedFailure, MatrixModel, Feec.Models.Cube.MirrorBGG,
-    MirrorConstraint, MirrorWeakSymmetry*, MirrorWaveRegularity, Feec.Counterexamples.BoundedBGG,
-    Feec.HilbertComplex.*, Feec.BGG.*, Feec.Physics.EinsteinBianchi.BoundedInitialData,
+    MirrorConstraint, MirrorWeakSymmetry* (with MirrorWeakSymmetryMild), MirrorWaveRegularity,
+    Feec.Counterexamples.BoundedBGG, Feec.HilbertComplex.*, Feec.BGG.*,
+    Feec.Physics.EinsteinBianchi.BoundedInitialData, Feec.ForMathlib.Analysis.DiagonalChoice,
     Feec.Domain.H1Lipschitz, Feec.Models.Cube.TangentialH1).
   authors:
     - "Vincent Quenneville-Bélair"
@@ -127,8 +132,9 @@ sources:
       potentials (cf. Prop 5.9; the clause on best approximation by the Raviart-Thomas space shows
       why), and the rates of (5.6) and (6.5) on the cube. The convergence of (6.5) from every datum
       of D(L) without regularity, the identification of its limit from the TSD datum
-      (0, 0, 0, *beta) as a solution that leaves TSD, the mirror boundary conditions and the rate
-      of (6.5) to the TSD solution with them are new in Feec. The thesis is cited as the source of
+      (0, 0, 0, *beta) as a solution that leaves TSD, the mirror boundary conditions, and the
+      convergence of (6.5) to the TSD solution with them, from every TSD datum of D(L) and at a
+      rate for TSD data of D(L^3), are new in Feec. The thesis is cited as the source of
       the system and of the method. The formalization is by the thesis author.
     author_endorsement: "participated"
   - title: "The Initial Boundary Value Problem for Einstein's Vacuum Field Equation"
@@ -265,8 +271,9 @@ status:
     of (6.5) from every datum of D(L), each the limit of discrete initial states, the non-TSD
     limit of the datum (0, 0, 0, *beta) and of its discrete fields, the H^1 static and
     wave rates, the Raviart-Thomas best-approximation bound); FEEC.weakSymmetry_mirror (the same
-    elements with the mirror conditions: the rate (1 + t) h to the TSD solution for TSD data of
-    D(L^3), the discrete Gauss witness, a moving such datum);
+    elements with the mirror conditions: the convergence of (6.5) from every TSD datum of D(L),
+    each the limit of discrete initial states, to the TSD solution, the rate (1 + t) h for TSD
+    data of D(L^3), the discrete Gauss witness, a moving such datum);
     FEEC.weakSymmetry_electric_nonvacuous (nontrivial solutions meet the hypotheses of the
     electric rates). The C^2 rates of the thesis (states C^2 up to the boundary with vanishing
     tangential traces) are corollaries of the H^1 rates: such states are of class H^1 with a
@@ -285,10 +292,12 @@ status:
     the mirror conditions. Not compared here (proved in Feec): the lower bound for the canonical
     interpolant onto the Raviart-Thomas space (exists_interpolationError_ge, implied by the
     compared best-approximation clause); the O(h^s) rates of the mirror scheme for H^(2+s) data
-    (mirror_waveFEM_rate_sobolev_of_add_two) and its convergence without rate for D(L^2) TSD data
-    (Feec.Models.Cube.MirrorWeakSymmetryTSD.mirror_waveFEM); the rates h^(min(s,1)) for relative
-    class H^s data (cubeWave_rate_sobolev). Not claimed: convergence from every datum of D(L)
-    with the mirror conditions.
+    (mirror_waveFEM_rate_sobolev_of_add_two); the rates h^(min(s,1)) for relative class H^s data
+    (cubeWave_rate_sobolev). Not claimed: convergence with the mirror conditions from the data of
+    D(L) outside TSD. Feec's mirror model is a complex Hilbert complex of matrix fields whose real
+    parts are identified with the challenge's states on the constraint only; a datum off the
+    constraint would need a real model of the mirror forms complex and a convergence theorem for
+    multipliers that are not L^2-bounded.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -324,8 +333,8 @@ automation:
     written by an AI agent for this submission, to be reviewed by the author; the Solution
     identifies them with the definitions of the library Feec and applies its theorems:
     Solution/Abstract.lean (the abstract theorem through Feec.BGG.Discrete, from the former
-    palomar/bgg entry), DiscreteWave.lean (uniqueness and the discrete Gauss law for (6.5), by
-    energy), Cube*.lean and Instance.lean (the electric conditions: the cube data are Feec's,
+    palomar/bgg entry), DiscreteWave.lean (the energy identity of (6.5): uniqueness, the distance
+    of trajectories and Lax's principle; the discrete Gauss law), Cube*.lean and Instance.lean (the electric conditions: the cube data are Feec's,
     the hypotheses, S^0_h != S^0, the best-approximation clause from
     Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge, the H^1 rates, uniqueness for (6.5),
     CubeUnique.lean, also used by Converge.lean),
@@ -342,8 +351,14 @@ automation:
     matrix fields), MirrorData.lean, MirrorTSD.lean,
     MirrorState.lean, MirrorForward.lean, MirrorChain.lean (TSD states as the real parts of the
     constrained states of Feec's complex mirror complex on Q), MirrorFEM.lean, MirrorSpaces.lean,
-    MirrorRate.lean, MirrorMain.lean, MirrorTheorems.lean (the mirror scheme, its rate, the Gauss
-    witness from Feec.BGG.exists_discreteSolution_iff_compatible_u); Forms.lean, Poly.lean,
+    MirrorRate.lean, MirrorMain.lean, MirrorTheorems.lean (the mirror scheme, its convergence from
+    every TSD datum of D(L) and its rate, the Gauss witness from
+    Feec.BGG.exists_discreteSolution_iff_compatible_u; the convergence is
+    Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_of_mem_tsd, new in Feec: the real part of
+    every orbit from the constraint is the uniform limit of trajectories, D(L^2) being dense in
+    the constraint, which reduces L; then Lax's principle, with the energy identity of (6.5) of
+    DiscreteWave.lean and Feec.ForMathlib.Analysis.DiagonalChoice,
+    tendstoUniformlyOn_iff_tendsto_of_stable and exists_tendstoUniformlyOn_of_stable, new); Forms.lean, Poly.lean,
     Mesh.lean, Trace.lean, Spaces.lean, Sobolev.lean adapted from palomar/fem. Smooth.lean, not
     part of the comparison, checks that the C^2 rates of the thesis follow from the statement of
     FEEC.weakSymmetry_electric (c2_rates_of_h1_rates, weakSymmetry_electric_c2) and that the
@@ -371,8 +386,9 @@ fidelity:
     (2) The wave operator is the Hodge wave operator of Gamma -> V~^1 -> W^2 x W~^2 given by its
     graph in the sign convention of (6.2) (IsWave), not as a closed operator; strong solutions
     are continuous on [0, T] with derivative within [0, T] in the graph (IsStrongSolution). The
-    datum classes are D(L) (the convergence and the non-TSD limit, electric) and D(L^3) (the
-    mirror rate, with the norm sum_{k <= 3} ||L^k U_0||, stated as chains IsWave U_0 V_1,
+    datum classes are D(L) (the convergence, from every datum with the electric and from every
+    TSD datum with the mirror conditions, and the non-TSD limit, electric) and D(L^3) (the mirror
+    rate, with the norm sum_{k <= 3} ||L^k U_0||, stated as chains IsWave U_0 V_1,
     IsWave V_1 V_2, IsWave V_2 V_3). The solutions of (6.5) enter through their trajectories,
     the paths of (sigma_h, u_h, M_h, rho_h) (Discretization.trajectories); errors are the state
     norm (||sigma - sigma_h||^2 + ||u - u_h||^2 + ||M - M_h||^2 + ||rho - rho_h||^2)^(1/2).
@@ -382,8 +398,9 @@ fidelity:
     the bottom row) and IsBGG. Their clauses differ because the two limits differ (the electric
     limit leaves TSD, the mirror limit is the TSD solution), and because their hypotheses differ:
     the mirror data satisfy IsBGG but not IsStable (d_max has the constants in its kernel), so the
-    static rate and the instance of the stability theorem are electric only; the electric rates
-    are for solutions of class H^1, the mirror rate for TSD data of D(L^3).
+    static rate and the instance of the stability theorem are electric only; the electric
+    convergence is from every datum of D(L), the mirror convergence from every TSD datum of D(L);
+    the electric rates are for solutions of class H^1, the mirror rate for TSD data of D(L^3).
     (4) Electric conditions, rates: the multiplier lambda is assumed in L^2 = W^1 and
     ||lambda|| <= L; regularity H^1(Q) (the components sigma, phi_a, d~phi_a, u_a, d~u_a for (5.3);
     IsH1State for (6.2), with M and rho_a in the domain of d_min). The C^2 rates of the thesis are
@@ -426,8 +443,14 @@ fidelity:
     challenge's real states with the real parts of its constrained states. The scheme is the
     variant of (6.5) with S^0_h = pi^1 S^0, S^1_h = pi^2 S^1 for parity-smoothed cochain
     projections (one smoother for both rows), not the thesis' coupling through the canonical
-    interpolants. The rate asserts some trajectory (in Feec the one from the elliptic projection
-    (6.4) of the exact data). That strong solutions exist from these data and stay TSD is
+    interpolants. The convergence from TSD data of D(L) is Lax's principle as in (5): in Feec the
+    real part of the orbit of every point of the constraint, with no regularity, is the uniform
+    limit on [0, T] of trajectories (D(L^2) is dense in the constraint, which reduces L, and the
+    scheme converges at its points, Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_of_mem_tsd);
+    trajectories keep their distance (the energy identity of (6.5)), and the discrete initial
+    states are chosen diagonally. Data of D(L) outside TSD are not covered (status). The rate
+    asserts some trajectory (in Feec the one from the elliptic projection (6.4) of the exact
+    data). That strong solutions exist from these data and stay TSD is
     MirrorVerdict.exists_solution and MirrorVerdict.propagates of palomar/constraints, restated
     as the identification of the limit; the moving datum
     (E_0 = 2 cos(2 pi x_3) diag(1, -1, 0), or -i times it, read as a real state) is
@@ -450,8 +473,12 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (2026-11-18: one question with a
-    two-part answer, four compared theorems; FEEC.weakSymmetry_electric and
+    Not yet reviewed by the author: the Challenge statement (2026-11-23: FEEC.weakSymmetry_mirror
+    states the convergence of (6.5) from every TSD datum of D(L), each the limit of discrete
+    initial states, to the solution, which stays TSD, in the form of the electric convergence
+    clause; its rate clause no longer repeats the existence and propagation, which the new clause
+    states for all TSD data of D(L); 2026-11-18: one question with a two-part answer, four
+    compared theorems; FEEC.weakSymmetry_electric and
     FEEC.weakSymmetry_mirror are new, one per boundary condition, sharing IsTable51, and replace
     the former FEEC.weakSymmetry_cube and FEEC.mirror_weakSymmetry_cube; the electric
     convergence from every datum of D(L), the discrete initial states converging to every such
@@ -497,6 +524,10 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: >-
+        Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_of_mem_tsd (the convergence from
+        every TSD datum of D(L), with Lax's principle tendstoUniformlyOn_iff_tendsto_of_stable and
+        exists_tendstoUniformlyOn_of_stable of Feec.ForMathlib.Analysis.DiagonalChoice and the
+        energy identity of (6.5), Solution/DiscreteWave.lean) and
         Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain with
         exists_mirror_estimates, Feec.Models.Cube.MirrorBGG.propagatesQ and cosStateQ
         (Solution/Mirror*.lean); the Gauss witness from

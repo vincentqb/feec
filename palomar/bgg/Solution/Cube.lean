@@ -21,6 +21,9 @@ rows of `D` (`graphHomologyEquiv`, from `Feec.HilbertComplex.cohomologyEquivOfIs
 below where `S` is in two consecutive degrees (`antilipschitz_graphS`, as
 `Feec.BGG.HilbertData.antilipschitz_domainS`) and onto modulo `d` where the rows split
 (`sup_range_eq_top_of_exists`, as `Feec.BGG.HilbertData.regularDecomposition_of_forall_exists`).
+In the lowest degree of the rows, `[(σ, φ)] ↦ u`, `σ = (u, du)`, is an isomorphism of the
+cohomology of the BGG complex onto the `u ∈ D(dⁱ)` with `d u = S v` for some closed `v`
+(`cohomologyIs_toDomainDiagram`, from `FEEC.BGG.exists_bgg_homology_lowCycles`).
 
 ## References
 
@@ -200,6 +203,94 @@ def graphHomologyEquiv (H : Feec.HilbertComplex ℝ (ComplexShape.up ℤ) E) (i 
           exact H.apply_eq_zero_of_not_rel hij _)
         rw [h0, _root_.map_zero]
         rfl) i
+
+/-- `s` is one-to-one where `S` is. -/
+theorem injective_graphS (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ) E Et) {k : ℤ}
+    (h : Function.Injective (D.S k (k + 1))) : Function.Injective (graphS D k) := fun _ _ hvw =>
+  graph2_ext (h (congrArg (fun x : graph2 (D.H.d (k + 1) (k + 1 + 1)) =>
+    ((x : WithLp 2 (E (k + 1) × E (k + 1 + 1))).ofLp).1) hvw))
+
+/-- A graph over a zero space is zero. -/
+theorem subsingleton_graph2 {F G : Type} [NormedAddCommGroup F] [InnerProductSpace ℝ F]
+    [NormedAddCommGroup G] [InnerProductSpace ℝ G] [Subsingleton F] (A : F →ₗ.[ℝ] G) :
+    Subsingleton (graph2 A) :=
+  ⟨fun _ _ => graph2_ext (Subsingleton.elim _ _)⟩
+
+theorem graphD_toGraphSpace_eq_zero_iff (H : Feec.HilbertComplex ℝ (ComplexShape.up ℤ) E) (k : ℤ)
+    (x : (H.d k (k + 1)).domain) :
+    graphD H k ((H.d k (k + 1)).toGraphSpace x) = 0 ↔ H.d k (k + 1) x = 0 :=
+  ⟨fun h => congrArg (fun p : graph2 (H.d (k + 1) (k + 1 + 1)) =>
+    ((p : WithLp 2 (E (k + 1) × E (k + 1 + 1))).ofLp).1) h, fun h => graph2_ext h⟩
+
+theorem graphS_toGraphSpace_eq_iff (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ) E Et) (k : ℤ)
+    (w : (D.Ht.d k (k + 1)).domain) (x : (D.H.d k (k + 1)).domain) :
+    graphS D k ((D.Ht.d k (k + 1)).toGraphSpace w) =
+        graphD D.H k ((D.H.d k (k + 1)).toGraphSpace x) ↔
+      D.S k (k + 1) w = D.H.d k (k + 1) x :=
+  ⟨fun h => congrArg (fun p : graph2 (D.H.d (k + 1) (k + 1 + 1)) =>
+    ((p : WithLp 2 (E (k + 1) × E (k + 1 + 1))).ofLp).1) h, fun h => graph2_ext h⟩
+
+/-- **The lowest cocycles of the stacked diagram of the domain complexes, in `L²`**: `σ = (u, du)`
+has `dσ ∈ S N(d̃)` iff `d u = S v` for some `v ∈ N(d̃)`. -/
+theorem mem_lowCycles_toDomainDiagram (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ) E Et)
+    (i : ℤ) (σ : graph2 (D.H.d i (i + 1))) :
+    σ ∈ (BGG.toData (toDomainDiagram D).toHom).lowCycles i ↔
+      ∃ hu : (D.H.d i (i + 1)).graphFst σ ∈ (D.H.d i (i + 1)).domain,
+        ∃ v ∈ (D.Ht.d i (i + 1)).ker,
+          D.S i (i + 1) v = D.H.d i (i + 1) ⟨(D.H.d i (i + 1)).graphFst σ, hu⟩ := by
+  obtain ⟨x, rfl, -, -⟩ := (D.H.d i (i + 1)).exists_toGraphSpace_eq σ
+  have ed : (BGG.toData (toDomainDiagram D).toHom).d i (i + 1) =
+      (graphD D.H i : graph2 (D.H.d i (i + 1)) →ₗ[ℝ] graph2 (D.H.d (i + 1) (i + 1 + 1))) :=
+    BGG.ofBounded_d_succ i
+  have edt : (BGG.toData (toDomainDiagram D).toHom).dt i (i + 1) =
+      (graphD D.Ht i : graph2 (D.Ht.d i (i + 1)) →ₗ[ℝ] graph2 (D.Ht.d (i + 1) (i + 1 + 1))) :=
+    BGG.ofBounded_d_succ i
+  have eS : (BGG.toData (toDomainDiagram D).toHom).S i (i + 1) =
+      (graphS D i : graph2 (D.Ht.d i (i + 1)) →ₗ[ℝ] graph2 (D.H.d (i + 1) (i + 1 + 1))) :=
+    BGG.conn_ofBoundedHom _ _ i
+  refine (Feec.BGG.Data.mem_lowCycles _).trans ⟨?_, ?_⟩
+  · rintro ⟨φ, hφ, hSφ⟩
+    obtain ⟨w, rfl, -, -⟩ := (D.Ht.d i (i + 1)).exists_toGraphSpace_eq φ
+    refine ⟨x.2, w, LinearPMap.mem_ker_iff.2 ⟨w, rfl,
+      (graphD_toGraphSpace_eq_zero_iff D.Ht i w).1 ((LinearMap.congr_fun edt _).symm.trans hφ)⟩,
+      (graphS_toGraphSpace_eq_iff D i w x).1 ?_⟩
+    exact (LinearMap.congr_fun eS _).symm.trans (hSφ.trans (LinearMap.congr_fun ed _))
+  · rintro ⟨_hu, v, hv, hSv⟩
+    obtain ⟨w, rfl, hw⟩ := LinearPMap.mem_ker_iff.1 hv
+    refine ⟨(D.Ht.d i (i + 1)).toGraphSpace w,
+      (LinearMap.congr_fun edt _).trans ((graphD_toGraphSpace_eq_zero_iff D.Ht i w).2 hw), ?_⟩
+    exact (LinearMap.congr_fun eS _).trans (((graphS_toGraphSpace_eq_iff D i w x).2 hSv).trans
+      (LinearMap.congr_fun ed _).symm)
+
+/-- **The cohomology of the BGG complex of the domain complexes in the lowest degree**, in `L²`
+(`FEEC.BGG.exists_bgg_homology_lowCycles`): `[(σ, φ)] ↦ u`, `σ = (u, du)`, is an isomorphism of
+`Hⁱ` onto the `u ∈ D(dⁱ)` with `d u = S v` for some `v ∈ N(d̃ⁱ)`. -/
+theorem cohomologyIs_toDomainDiagram (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ) E Et)
+    {i J : ℤ} (hiJ : i ≤ J) [Subsingleton (E (i - 1))] [Subsingleton (Et (i - 1))]
+    (hS : J = i → Function.Injective (D.S i (i + 1)))
+    (hS' : i + 2 ≤ J → Function.Injective (D.S (i + 1) (i + 1 + 1))) :
+    (toDomainDiagram D).CohomologyIs J i {u | ∃ hu : u ∈ (D.H.d i (i + 1)).domain,
+      ∃ v ∈ (D.Ht.d i (i + 1)).ker, D.S i (i + 1) v = D.H.d i (i + 1) ⟨u, hu⟩} := by
+  have := subsingleton_graph2 (D.H.d (i - 1) (i - 1 + 1))
+  have := subsingleton_graph2 (D.Ht.d (i - 1) (i - 1 + 1))
+  obtain ⟨f, hf, hrange, hfz⟩ := BGG.exists_bgg_homology_lowCycles (toDomainDiagram D).toHom hiJ
+    (fun h => injective_graphS D (hS h)) (fun h => injective_graphS D (hS' h))
+  let g : (BGG.ofBounded (toDomainDiagram D).d (toDomainDiagram D).d_d).X i →ₗ[ℝ] E i :=
+    (D.H.d i (i + 1)).graphFst.toLinearMap
+  have hg : Function.Injective g := (D.H.d i (i + 1)).graphFst_injective
+  refine ⟨g ∘ₗ f, hg.comp hf, ?_, fun z y h => ?_⟩
+  swap
+  · show g (f _) = _
+    rw [hfz z y h]
+    rfl
+  ext u
+  constructor
+  · rintro ⟨h, rfl⟩
+    exact (mem_lowCycles_toDomainDiagram D i (f h)).1 (by rw [← hrange]; exact ⟨h, rfl⟩)
+  · intro hu
+    obtain ⟨h, hh⟩ : (D.H.d i (i + 1)).toGraphSpace ⟨u, hu.1⟩ ∈ LinearMap.range f := by
+      rw [hrange]; exact (mem_lowCycles_toDomainDiagram D i _).2 hu
+    exact ⟨h, congrArg g hh⟩
 
 end Domain
 

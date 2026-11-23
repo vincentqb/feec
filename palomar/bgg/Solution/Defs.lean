@@ -6,6 +6,7 @@ public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.LinearAlgebra.CrossProduct
 public import Mathlib.Analysis.Calculus.ContDiff.Basic
 public import Mathlib.Analysis.Calculus.FDeriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.Basic
@@ -454,7 +455,7 @@ end BGG
 
 section Cube
 
-open scoped Topology
+open scoped Topology Matrix
 open Filter Set LinearPMap MeasureTheory
 
 -- palomar-shared: FormField
@@ -635,6 +636,18 @@ structure DomainDiagram.Verdict (D : DomainDiagram T Tt S) (J : ℤ) (m : ℕ) :
   finiteDimensional : ∀ i, FiniteDimensional ℝ ((bgg D.toHom J).homology i)
   /-- of dimension `m` in degree `0` and `0` in the other degrees -/
   finrank : ∀ i, Module.finrank ℝ ((bgg D.toHom J).homology i) = if i = 0 then m else 0
+
+/-- **The cohomology of degree `i` of the BGG complex at `J` is `P ⊆ Eⁱ`**, through the top row:
+a linear injection `f` of `Hⁱ` into `Eⁱ` with range `P` maps the class of every cocycle
+`[(σ, φ)]` of degree `i` (`(σ, φ) ∈ Γⁱ`, `σ = (u, Tⁱu)`) to `u`; that is, `[(σ, φ)] ↦ u` is a
+linear isomorphism `Hⁱ ≅ P`. Here `cycles i` is the kernel of the differential of `Γ / Δ` in
+degree `i`, `iCycles i` its inclusion in `Γⁱ / Δⁱ` and `homologyπ i` its projection onto `Hⁱ`. -/
+def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (E i)) : Prop :=
+  ∃ f : (bgg D.toHom J).homology i →ₗ[ℝ] E i, Function.Injective f ∧ Set.range f = P ∧
+    ∀ (z : (bgg D.toHom J).cycles i) (y : Γ D.toHom J i),
+      (bgg D.toHom J).iCycles i z = Submodule.Quotient.mk y →
+        f ((bgg D.toHom J).homologyπ i z) =
+          ((y.1.1 : graph2 (T i)) : WithLp 2 (E i × E (i + 1))).ofLp.1
 
 end BGG
 

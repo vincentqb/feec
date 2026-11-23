@@ -44,6 +44,9 @@ domain complexes are.
   ((27) of [ArnoldHu2021], Theorem 6) where, in every degree, the source or the target of `S` has
   no cohomology (`Data.finrank_derived_homology_eq_add`); `HilbertData.finrank_bgg_homology_eq_ite`
   for rows with the cohomology of a point.
+* `HilbertData.HomologyIs`, **`HilbertData.homologyIs_lowest`**: in the lowest degree of the rows,
+  `[(σ, φ)] ↦ σ` is an isomorphism of `Hⁱ(bgg J)` onto the `u ∈ D(dⁱ)` with `d u = S v` for some
+  `v ∈ N(d̃ⁱ)` (`Data.exists_bgg_homology_lowCycles`).
 
 ## References
 
@@ -413,5 +416,75 @@ theorem finrank_bgg_homology_eq_ite {J : ℤ}
       · exact Or.inl (Module.finrank_zero_iff.1 ((hVt k).trans (ite_eq_right hk)))
   rw [D.finrank_bgg_homology_eq_add hS htop hzero i, hV, hVt]
   split_ifs <;> rfl
+
+/-! ### The cohomology in the lowest degree of the rows -/
+
+/-- A point of `D(dⁱ)` is a point of the domain space `Vⁱ`. -/
+theorem _root_.Feec.HilbertComplex.exists_domainIncl_eq_of_mem
+    (H : Feec.HilbertComplex 𝕜 (ComplexShape.up ℤ) W) {i : ℤ} {u : W i}
+    (hu : u ∈ (H.d i (i + 1)).domain) : ∃ σ : H.domainSpace i, H.domainIncl i σ = u :=
+  ⟨(H.d i ((ComplexShape.up ℤ).next i)).toGraphSpace ⟨u, by rwa [CochainComplex.next]⟩, rfl⟩
+
+/-- **The lowest cocycles of the domain complexes, in `L²`**: `σ ∈ D(dⁱ)` has `dσ ∈ S N(d̃ⁱ)` in
+the domain complexes iff `d (ι σ) = S v` for some `v ∈ N(d̃ⁱ)`. -/
+theorem mem_domainData_lowCycles {i : ℤ} {σ : D.H.domainSpace i} :
+    σ ∈ D.domainData.lowCycles i ↔ ∃ v ∈ (D.Ht.d i (i + 1)).ker,
+      D.S i (i + 1) v = D.H.d i (i + 1) (D.H.domainCoord i (i + 1) σ) := by
+  rw [Data.mem_lowCycles]
+  constructor
+  · rintro ⟨φ, hφ, hS⟩
+    refine ⟨D.Ht.domainIncl i φ, LinearPMap.mem_ker_iff.2 ⟨D.Ht.domainCoord i (i + 1) φ, rfl, ?_⟩,
+      ?_⟩
+    · rw [← D.Ht.domainIncl_domainD]
+      change D.Ht.domainIncl (i + 1) (D.domainData.dt i (i + 1) φ) = 0
+      rw [hφ, map_zero]
+    · rw [← domainIncl_domainS, ← D.H.domainIncl_domainD]
+      exact congrArg (D.H.domainIncl (i + 1)) hS
+  · rintro ⟨v, hv, hS⟩
+    obtain ⟨y, rfl, hy⟩ := LinearPMap.mem_ker_iff.1 hv
+    obtain ⟨φ, hφ⟩ := D.Ht.exists_domainIncl_eq_of_mem y.2
+    have hc : D.Ht.domainCoord i (i + 1) φ = y := Subtype.ext hφ
+    refine ⟨φ, D.Ht.domainIncl_injective (i + 1) ?_, D.H.domainIncl_injective (i + 1) ?_⟩
+    · change D.Ht.domainIncl (i + 1) (D.Ht.domainD i (i + 1) φ) = _
+      rw [D.Ht.domainIncl_domainD, hc, hy, map_zero]
+    · change D.H.domainIncl (i + 1) (D.domainS i (i + 1) φ) =
+        D.H.domainIncl (i + 1) (D.H.domainD i (i + 1) σ)
+      rw [domainIncl_domainS, D.H.domainIncl_domainD, hφ, hS]
+
+/-- **`Hⁱ` of the BGG complex `bgg J` of the domain complexes is `P ⊆ Wⁱ`**, through the top
+components: a linear injection `f` of `Hⁱ` into `Wⁱ` with range `P` maps the class of every
+cocycle `[(σ, φ)]` (`(σ, φ) ∈ Γⁱ`) to `ι σ`. -/
+def HomologyIs (J i : ℤ) (P : Set (W i)) : Prop :=
+  ∃ f : (D.domainData.bgg J).homology i →ₗ[𝕜] W i, Function.Injective f ∧ Set.range f = P ∧
+    ∀ (z : (D.domainData.bgg J).cycles i) (y : D.domainData.Γ (J < ·) i),
+      (D.domainData.bgg J).iCycles i z = Submodule.Quotient.mk y →
+        f ((D.domainData.bgg J).homologyπ i z) =
+          D.H.domainIncl i (y : D.H.domainSpace i × D.Ht.domainSpace i).1
+
+/-- **The cohomology of the BGG complex of the domain complexes in the lowest degree of the rows**
+(`Feec.BGG.Data.exists_bgg_homology_lowCycles`): if the rows vanish in degree `i - 1` and
+`i ≤ J`, with `Sⁱ` one-to-one if `J = i` and `Sⁱ⁺¹` one-to-one if `i + 2 ≤ J`, then
+`[(σ, φ)] ↦ ι σ` is a linear isomorphism of `Hⁱ(bgg J)` onto the `u ∈ D(dⁱ)` with `d u = S v` for
+some `v ∈ N(d̃ⁱ)`. -/
+theorem homologyIs_lowest {i J : ℤ} (hiJ : i ≤ J) [Subsingleton (W (i - 1))]
+    [Subsingleton (Wt (i - 1))] (hS : J = i → Function.Injective (D.S i (i + 1)))
+    (hS' : i + 2 ≤ J → Function.Injective (D.S (i + 1) (i + 1 + 1))) :
+    D.HomologyIs J i {u | ∃ hu : u ∈ (D.H.d i (i + 1)).domain, ∃ v ∈ (D.Ht.d i (i + 1)).ker,
+        D.S i (i + 1) v = D.H.d i (i + 1) ⟨u, hu⟩} := by
+  have : Subsingleton (D.H.domainSpace (i - 1)) := (D.H.domainIncl_injective _).subsingleton
+  have : Subsingleton (D.Ht.domainSpace (i - 1)) := (D.Ht.domainIncl_injective _).subsingleton
+  obtain ⟨f, hf, hrange, hfz⟩ := D.domainData.exists_bgg_homology_lowCycles hiJ
+    (fun h => D.injective_domainS (hS h)) (fun h => D.injective_domainS (hS' h))
+  refine ⟨(D.H.domainIncl i).toLinearMap ∘ₗ f, (D.H.domainIncl_injective i).comp hf, ?_,
+    fun z y h => by rw [LinearMap.comp_apply, hfz z y h]; rfl⟩
+  rw [LinearMap.coe_comp, Set.range_comp, ← LinearMap.coe_range, hrange]
+  ext u
+  constructor
+  · rintro ⟨σ, hσ, rfl⟩
+    obtain ⟨v, hv, hSv⟩ := (D.mem_domainData_lowCycles).1 hσ
+    exact ⟨_, v, hv, hSv⟩
+  · rintro ⟨hu, v, hv, hSv⟩
+    obtain ⟨σ, rfl⟩ := D.H.exists_domainIncl_eq_of_mem hu
+    exact ⟨σ, (D.mem_domainData_lowCycles).2 ⟨v, hv, hSv⟩, rfl⟩
 
 end Feec.BGG.HilbertData

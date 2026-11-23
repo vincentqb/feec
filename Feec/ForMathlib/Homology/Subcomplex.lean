@@ -35,7 +35,8 @@ BGG construction ([ArnoldHu2021], §5.2: the twisted complex splits off an exact
 * `HomologicalComplex.quasiIso_subι`, `HomologicalComplex.quasiIso_quoπ`.
 * `HomologicalComplex.homologyπ_eq_zero_iff_moduleCat`,
   `HomologicalComplex.exists_homologyπ_cyclesMk_moduleCat`: homology classes of complexes of
-  modules, elementwise.
+  modules, elementwise; `HomologicalComplex.exists_homology_linearMap`: after a zero space, a map
+  one-to-one on the cycles embeds the homology.
 * `CategoryTheory.ShortComplex.ShortExact.finiteDimensional_homology₂`, `…finrank_homology₂_le`:
   over a field, `dim H(X₂) ≤ dim H(X₁) + dim H(X₃)` in a short exact sequence of complexes,
   with equality iff `H(X₁) → H(X₂)` is injective and `H(X₂) → H(X₃)` surjective
@@ -227,6 +228,40 @@ theorem exists_homologyπ_cyclesMk_moduleCat {i j : ι} (hij : c.next i = j) (x 
   · rw [← ModuleCat.comp_apply, ← hij, K.iCycles_d]; rfl
   · congr 1
     exact (ModuleCat.mono_iff_injective (K.iCycles i)).1 inferInstance (K.i_cyclesMk _ j hij _)
+
+/-- **The homology after a zero space, elementwise**: if `K.X h` is zero (`h` the index before
+`i`), a linear map `g` on `K.X i` that is one-to-one on the cycles induces a linear injection of
+`Hⁱ` with range `g N(dⁱ)`, the class of a cycle `z` going to `g z`. -/
+theorem exists_homology_linearMap {h i k : ι} (hh : c.prev i = h) (hk : c.next i = k)
+    [Subsingleton (K.X h)] {F : Type*} [AddCommGroup F] [Module R F] (g : K.X i →ₗ[R] F)
+    (hg : ∀ x, K.d i k x = 0 → g x = 0 → x = 0) :
+    ∃ f : K.homology i →ₗ[R] F, Function.Injective f ∧
+      LinearMap.range f = (LinearMap.ker (K.d i k).hom).map g ∧
+      ∀ z : K.cycles i, f (K.homologyπ i z) = g (K.iCycles i z) := by
+  have hι : Function.Injective (K.iCycles i) :=
+    (ModuleCat.mono_iff_injective (K.iCycles i)).1 inferInstance
+  have hπ : Function.Bijective (K.homologyπ i) := by
+    refine ⟨fun a b hab => ?_, (ModuleCat.epi_iff_surjective _).1 inferInstance⟩
+    obtain ⟨y, hy⟩ := (K.homologyπ_eq_zero_iff_moduleCat hh (a - b)).1 (by
+      rw [map_sub, hab, sub_self])
+    rw [Subsingleton.elim y 0, map_zero, eq_comm, map_sub, sub_eq_zero] at hy
+    exact hι hy
+  have hcyc : ∀ z : K.cycles i, K.d i k (K.iCycles i z) = 0 := fun z => by
+    subst hk; rw [← ModuleCat.comp_apply, K.iCycles_d]; rfl
+  let e := LinearEquiv.ofBijective (K.homologyπ i).hom hπ
+  refine ⟨g ∘ₗ (K.iCycles i).hom ∘ₗ e.symm.toLinearMap, ?_, ?_, fun z => ?_⟩
+  · refine (injective_iff_map_eq_zero _).2 fun a ha => ?_
+    have h0 := hg _ (hcyc (e.symm a)) ha
+    exact e.symm.map_eq_zero_iff.1 (hι (h0.trans (map_zero (K.iCycles i).hom).symm))
+  · rw [LinearMap.range_comp, LinearMap.range_comp, LinearEquiv.range, Submodule.map_top]
+    congr 1
+    ext x
+    refine ⟨?_, fun hx => ?_⟩
+    · rintro ⟨z, rfl⟩; exact hcyc z
+    · subst hk
+      exact ⟨K.cyclesMk x _ rfl hx, K.i_cyclesMk x _ rfl hx⟩
+  · change g (K.iCycles i (e.symm (e z))) = _
+    rw [e.symm_apply_apply]
 
 end HomologicalComplex
 

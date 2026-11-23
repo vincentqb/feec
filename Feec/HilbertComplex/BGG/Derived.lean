@@ -66,6 +66,9 @@ of the thesis with exactness of the top row is the condition `R(d⁰) + R(S⁰) 
 * `Data.bggXEquivOfLt`, `Data.bggXEquivOfBijective`, `Data.bggΓEquivKer`: its spaces
   `Vⁱ / R(Sⁱ⁻¹)` before `J`, `Vᴶ / R(Sᴶ⁻¹)` at `J` (`Sᴶ` bijective) and `N(Sⁱ)` after `J`
   ([ArnoldHu2021], (24)–(26)).
+* `Data.lowCycles`, `Data.exists_bgg_homology_lowCycles`: in the lowest degree `i` of the rows
+  (`Vⁱ⁻¹ = Ṽⁱ⁻¹ = 0`, `i ≤ J`), `[(σ, φ)] ↦ σ` embeds `Hⁱ(bgg J)` into `Vⁱ` with range
+  `{σ | dσ ∈ Sⁱ N(d̃ⁱ)}`, the kernel of the first differential of (24)–(26).
 * `Data.Γ_eq_segment_Γ`, `Segment.sup_range_eq_top`: the complex (5.1) as an elimination.
 * `Data.injSurj_idShift`: non-vacuity, nonzero connecting maps (`Data.idShift`: `Sⁱ = id`) with
   the condition at every `J`. The de Rham instance is the Hessian diagram on smooth fields
@@ -608,6 +611,132 @@ theorem bggXEquivOfBijective_mk {J : ℤ} (hS : Function.Bijective (D.S J (J + 1
     (x : D.Γ (J < ·) J) :
     D.bggXEquivOfBijective hS (Submodule.Quotient.mk x) =
       Submodule.Quotient.mk (x : V J × Vt J).1 := rfl
+
+variable (D) in
+/-- **The `σ` whose derivative is `S` of a closed field**, `{σ ∈ Vⁱ | dσ ∈ Sⁱ N(d̃ⁱ)}`: in the
+lowest degree of the rows, the cohomology of the BGG complex (`exists_bgg_homology_lowCycles`). -/
+def lowCycles (i : ℤ) : Submodule R (V i) :=
+  ((LinearMap.ker (D.dt i (i + 1))).map (D.S i (i + 1))).comap (D.d i (i + 1))
+
+variable (D) in
+theorem mem_lowCycles {i : ℤ} {σ : V i} :
+    σ ∈ D.lowCycles i ↔ ∃ φ, D.dt i (i + 1) φ = 0 ∧ D.S i (i + 1) φ = D.d i (i + 1) σ := by
+  simp [lowCycles]
+
+variable (D) in
+/-- **The cohomology of the BGG complex in the lowest degree of the rows** ([ArnoldHu2021],
+(24)–(26)): if the rows vanish in degree `i - 1` and `i ≤ J`, with `Sⁱ` one-to-one if `J = i` and
+`Sⁱ⁺¹` one-to-one if `i + 2 ≤ J`, then `[(σ, φ)] ↦ σ` induces a linear injection of `Hⁱ(bgg J)`
+into `Vⁱ` with range `{σ | dσ ∈ Sⁱ N(d̃ⁱ)}` (`lowCycles`). -/
+theorem exists_bgg_homology_lowCycles {i J : ℤ} (hiJ : i ≤ J) [Subsingleton (V (i - 1))]
+    [Subsingleton (Vt (i - 1))] (hS : J = i → Function.Injective (D.S i (i + 1)))
+    (hS' : i + 2 ≤ J → Function.Injective (D.S (i + 1) (i + 1 + 1))) :
+    ∃ f : (D.bgg J).homology i →ₗ[R] V i, Function.Injective f ∧
+      LinearMap.range f = D.lowCycles i ∧
+      ∀ (z : (D.bgg J).cycles i) (y : D.Γ (J < ·) i),
+        (D.bgg J).iCycles i z = Submodule.Quotient.mk y →
+          f ((D.bgg J).homologyπ i z) = (y : V i × Vt i).1 := by
+  have hΔ : ∀ x ∈ D.Δ (· < J) i, (x : V i × Vt i).1 = 0 := by
+    intro x hx
+    obtain ⟨φ, ψ, -, rfl⟩ := (D.mem_bgg_Δ_of_le hiJ).1 hx
+    rw [Subsingleton.elim ψ 0, map_zero, neg_zero]
+  let g : (D.bgg J).X i →ₗ[R] V i :=
+    ((D.Δ (· < J) i).comap (D.Γ (J < ·) i).subtype).liftQ
+      (LinearMap.fst R (V i) (Vt i) ∘ₗ (D.Γ (J < ·) i).subtype) fun y hy => hΔ _ hy
+  have hd : ∀ y : D.Γ (J < ·) i, (D.bgg J).d i (i + 1) (Submodule.Quotient.mk y) = 0 ↔
+      D.twist i (i + 1) y ∈ D.Δ (· < J) (i + 1) := fun y => by
+    change Submodule.Quotient.mk _ = 0 ↔ _
+    exact Submodule.Quotient.mk_eq_zero _
+  -- the cocycles of degree `i`: `σ ∈ lowCycles` (A, B), determined by `σ` (C)
+  have key : (∀ y : D.Γ (J < ·) i, (D.bgg J).d i (i + 1) (Submodule.Quotient.mk y) = 0 →
+        (y : V i × Vt i).1 ∈ D.lowCycles i) ∧
+      (∀ σ ∈ D.lowCycles i, ∃ y : D.Γ (J < ·) i,
+        (D.bgg J).d i (i + 1) (Submodule.Quotient.mk y) = 0 ∧ (y : V i × Vt i).1 = σ) ∧
+      ∀ y : D.Γ (J < ·) i, (D.bgg J).d i (i + 1) (Submodule.Quotient.mk y) = 0 →
+        (y : V i × Vt i).1 = 0 → (Submodule.Quotient.mk y : (D.bgg J).X i) = 0 := by
+    rcases (by omega : J = i ∨ J = i + 1 ∨ i + 2 ≤ J) with rfl | rfl | hJ
+    · have hΔ' := D.bgg_Δ_of_gt (lt_add_one J)
+      refine ⟨fun y hy => ?_, fun σ hσ => ?_, fun y hy h1 => ?_⟩
+      · rw [hd, hΔ', Submodule.mem_bot, twist_apply, Prod.mk_eq_zero] at hy
+        exact (D.mem_lowCycles).2 ⟨_, hy.2, ((D.mem_bgg_Γ_self).1 y.2).symm⟩
+      · obtain ⟨φ, hφ, hSφ⟩ := (D.mem_lowCycles).1 hσ
+        refine ⟨⟨(σ, φ), (D.mem_bgg_Γ_self).2 hSφ.symm⟩, ?_, rfl⟩
+        rw [hd, hΔ', Submodule.mem_bot, twist_apply, Prod.mk_eq_zero]
+        exact ⟨show D.d J (J + 1) σ - D.S J (J + 1) φ = 0 by rw [hSφ, sub_self], hφ⟩
+      · have hy2 : (y : V J × Vt J).2 = 0 := hS rfl (by
+          rw [← (D.mem_bgg_Γ_self).1 y.2, h1, map_zero, map_zero])
+        refine (Submodule.Quotient.mk_eq_zero _).2 ?_
+        rw [show y = 0 from Subtype.ext (Prod.ext h1 hy2)]
+        exact zero_mem _
+    · have hΔ' : ∀ x : V (i + 1) × Vt (i + 1), x ∈ D.Δ (· < i + 1) (i + 1) ↔
+          ∃ ψ, x = (-D.S i (i + 1) ψ, D.dt i (i + 1) ψ) := by
+        intro x
+        have := D.mem_bgg_Δ_of_le (J := i + 1) (i := i + 1) (x := x) le_rfl
+        rw [add_sub_cancel_right] at this
+        rw [this]
+        constructor
+        · rintro ⟨φ, ψ, hφ, rfl⟩
+          obtain rfl := hφ.resolve_left (lt_irrefl _)
+          exact ⟨ψ, by rw [zero_add]⟩
+        · rintro ⟨ψ, rfl⟩
+          exact ⟨0, ψ, Or.inr rfl, by rw [zero_add]⟩
+      have hΓ := D.bgg_Γ_of_lt (lt_add_one i)
+      refine ⟨fun y hy => ?_, fun σ hσ => ?_, fun y _ h1 => ?_⟩
+      · rw [hd, hΔ'] at hy
+        obtain ⟨ψ, hψ⟩ := hy
+        rw [twist_apply, Prod.mk.injEq] at hψ
+        refine (D.mem_lowCycles).2 ⟨(y : V i × Vt i).2 - ψ, ?_, ?_⟩
+        · rw [map_sub, hψ.2, sub_self]
+        · rw [map_sub, ← neg_neg (D.S i (i + 1) ψ), ← hψ.1]; abel
+      · obtain ⟨χ, hχ, hSχ⟩ := (D.mem_lowCycles).1 hσ
+        refine ⟨⟨(σ, 0), by rw [hΓ]; trivial⟩, ?_, rfl⟩
+        rw [hd, hΔ']
+        exact ⟨-χ, by rw [twist_apply, map_neg, neg_neg, hSχ, map_neg, hχ, map_zero, map_zero,
+          sub_zero, neg_zero]⟩
+      · refine (Submodule.Quotient.mk_eq_zero _).2 ?_
+        change (y : V i × Vt i) ∈ D.Δ (· < i + 1) i
+        rw [D.mem_bgg_Δ_of_lt (lt_add_one i), h1]
+        exact zero_mem _
+    · have hΔ' : ∀ x : V (i + 1) × Vt (i + 1), x ∈ D.Δ (· < J) (i + 1) ↔
+          x.1 ∈ LinearMap.range (D.S i (i + 1)) := by
+        intro x
+        have := D.mem_bgg_Δ_of_lt (J := J) (i := i + 1) (x := x) (by omega)
+        rwa [add_sub_cancel_right] at this
+      have hΓ := D.bgg_Γ_of_lt (show i < J by omega)
+      refine ⟨fun y hy => ?_, fun σ hσ => ?_, fun y _ h1 => ?_⟩
+      · rw [hd, hΔ', twist_apply] at hy
+        obtain ⟨χ, hχ⟩ := hy
+        replace hχ : D.S i (i + 1) χ = D.d i (i + 1) (y : V i × Vt i).1 -
+            D.S i (i + 1) (y : V i × Vt i).2 := hχ
+        refine (D.mem_lowCycles).2 ⟨χ + (y : V i × Vt i).2, hS' hJ ?_, by
+          rw [map_add, hχ, sub_add_cancel]⟩
+        rw [map_zero, ← neg_eq_zero, ← D.anticomm, map_add, hχ, sub_add_cancel, D.d_comp_d]
+      · obtain ⟨χ, -, hSχ⟩ := (D.mem_lowCycles).1 hσ
+        refine ⟨⟨(σ, 0), by rw [hΓ]; trivial⟩, ?_, rfl⟩
+        rw [hd, hΔ', twist_apply, map_zero, sub_zero]
+        exact ⟨χ, hSχ⟩
+      · refine (Submodule.Quotient.mk_eq_zero _).2 ?_
+        change (y : V i × Vt i) ∈ D.Δ (· < J) i
+        rw [D.mem_bgg_Δ_of_lt (show i < J by omega), h1]
+        exact zero_mem _
+  obtain ⟨hA, hB, hC⟩ := key
+  have : Subsingleton ((D.bgg J).X (i - 1)) := ⟨fun a b => by
+    induction a using Submodule.Quotient.induction_on with | _ a
+    induction b using Submodule.Quotient.induction_on with | _ b
+    exact congrArg _ (Subtype.ext (Prod.ext (Subsingleton.elim (α := V (i - 1)) _ _)
+      (Subsingleton.elim (α := Vt (i - 1)) _ _)))⟩
+  obtain ⟨f, hf, hrange, hfz⟩ := (D.bgg J).exists_homology_linearMap (CochainComplex.prev ℤ i)
+    (CochainComplex.next ℤ i) g fun x hx hgx => by
+      induction x using Submodule.Quotient.induction_on with | _ y
+      exact hC y hx hgx
+  refine ⟨f, hf, hrange.trans ?_, fun z y hzy => by rw [hfz, hzy]; rfl⟩
+  ext σ
+  refine ⟨?_, fun hσ => ?_⟩
+  · rintro ⟨x, hx, rfl⟩
+    induction x using Submodule.Quotient.induction_on with | _ y
+    exact hA y hx
+  · obtain ⟨y, hy, rfl⟩ := hB σ hσ
+    exact ⟨_, hy, rfl⟩
 
 /-- **The BGG complex has the cohomology of the twisted complex** [ArnoldHu2021], §5.2, under
 the injectivity/surjectivity condition at `J`. -/

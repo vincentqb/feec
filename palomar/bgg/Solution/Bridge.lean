@@ -286,6 +286,37 @@ theorem identification (J : ℤ) : Identification S J where
     · change Vt.d J (J + 1) φ' = _
       rw [hy2, map_sub, ← ModuleCat.comp_apply, Vt.d_comp_d]; simp
 
+/-- **The cohomology of the BGG complex in the lowest degree of the rows**
+(`Feec.BGG.Data.exists_bgg_homology_lowCycles`): if the rows vanish in degree `i - 1` and `i ≤ J`,
+with `Sⁱ` one-to-one if `J = i` and `Sⁱ⁺¹` one-to-one if `i + 2 ≤ J`, then `[(σ, φ)] ↦ σ`
+embeds `Hⁱ(Γ / Δ)` into `Vⁱ` with range `{σ | dσ ∈ Sⁱ N(d̃ⁱ)}`. -/
+theorem exists_bgg_homology_lowCycles {i J : ℤ} (hiJ : i ≤ J) [Subsingleton (V.X (i - 1))]
+    [Subsingleton (Vt.X (i - 1))] (hS : J = i → Function.Injective (S.f i))
+    (hS' : i + 2 ≤ J → Function.Injective (S.f (i + 1))) :
+    ∃ f : (bgg S J).homology i →ₗ[R] V.X i, Function.Injective f ∧
+      LinearMap.range f = (toData S).lowCycles i ∧
+      ∀ (z : (bgg S J).cycles i) (y : Γ S J i), (bgg S J).iCycles i z = Submodule.Quotient.mk y →
+        f ((bgg S J).homologyπ i z) = y.1.1 := by
+  have hS₁ : J = i → Function.Injective ((toData S).S i (i + 1)) := fun h => by
+    change Function.Injective (conn S i (i + 1))
+    rw [conn_succ]; exact hS h
+  have hS₂ : i + 2 ≤ J → Function.Injective ((toData S).S (i + 1) (i + 1 + 1)) := fun h => by
+    change Function.Injective (conn S (i + 1) (i + 1 + 1))
+    rw [conn_succ]; exact hS' h
+  have key : ∀ (G H : ∀ i, Submodule R (V.X i × Vt.X i)) (hG : (toData S).Γ (J < ·) = G)
+      (hH : (toData S).Δ (· < J) = H) (hs : ∀ i j, ∀ x ∈ G i, (twisted S).d i j x ∈ G j)
+      (hs' : ∀ i j, ∀ x ∈ (fun i => (H i).comap (G i).subtype) i,
+        (subcomplex (twisted S) G hs).d i j x ∈ (fun i => (H i).comap (G i).subtype) j),
+      ∃ f : (quotient (subcomplex (twisted S) G hs) _ hs').homology i →ₗ[R] V.X i,
+        Function.Injective f ∧ LinearMap.range f = (toData S).lowCycles i ∧
+        ∀ (z : (quotient (subcomplex (twisted S) G hs) _ hs').cycles i) (y : G i),
+          (quotient (subcomplex (twisted S) G hs) _ hs').iCycles i z =
+              Submodule.Quotient.mk y →
+            f ((quotient (subcomplex (twisted S) G hs) _ hs').homologyπ i z) = y.1.1 := by
+    rintro G H rfl rfl hs hs'
+    exact (toData S).exists_bgg_homology_lowCycles hiJ hS₁ hS₂
+  exact key _ _ (Γ_toData S J) (Δ_toData S J) _ _
+
 end Identification
 
 /-! ### The sum complex ([ArnoldHu2021], Theorem 7) -/

@@ -6,6 +6,7 @@ public import Mathlib.Algebra.Homology.HomologySequenceLemmas
 public import Mathlib.Algebra.Homology.HomotopyCategory.Shift
 public import Mathlib.Algebra.Homology.QuasiIso
 public import Mathlib.LinearAlgebra.FiniteDimensional.Defs
+public import Mathlib.LinearAlgebra.CrossProduct
 public import Mathlib.Analysis.Calculus.ContDiff.Basic
 public import Mathlib.Analysis.Calculus.FDeriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.Basic
@@ -60,7 +61,9 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on a 
   `J = 0, 1, 2`, so the three BGG complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`),
   with closed range in every degree; their cohomology is finite-dimensional, of dimension `4`,
   `6`, `4` in degree `0` and `0` in the other degrees (`BGG.DomainDiagram.Verdict`), the sum of
-  the dimensions for the rows.
+  the dimensions for the rows; and their cohomology in degree `0` is, through `[(σ, φ)] ↦ σ`, the
+  space of the affine functions, of the rigid motions, resp. of the fields `a + b x` on the cube
+  (`BGG.DomainDiagram.CohomologyIs`).
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
 `i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and
@@ -639,7 +642,7 @@ theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
 
 section Cube
 
-open scoped Topology
+open scoped Topology Matrix
 open Filter Set LinearPMap MeasureTheory
 
 -- palomar-shared: FormField
@@ -821,6 +824,18 @@ structure DomainDiagram.Verdict (D : DomainDiagram T Tt S) (J : ℤ) (m : ℕ) :
   /-- of dimension `m` in degree `0` and `0` in the other degrees -/
   finrank : ∀ i, Module.finrank ℝ ((bgg D.toHom J).homology i) = if i = 0 then m else 0
 
+/-- **The cohomology of degree `i` of the BGG complex at `J` is `P ⊆ Eⁱ`**, through the top row:
+a linear injection `f` of `Hⁱ` into `Eⁱ` with range `P` maps the class of every cocycle
+`[(σ, φ)]` of degree `i` (`(σ, φ) ∈ Γⁱ`, `σ = (u, Tⁱu)`) to `u`; that is, `[(σ, φ)] ↦ u` is a
+linear isomorphism `Hⁱ ≅ P`. Here `cycles i` is the kernel of the differential of `Γ / Δ` in
+degree `i`, `iCycles i` its inclusion in `Γⁱ / Δⁱ` and `homologyπ i` its projection onto `Hⁱ`. -/
+def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (E i)) : Prop :=
+  ∃ f : (bgg D.toHom J).homology i →ₗ[ℝ] E i, Function.Injective f ∧ Set.range f = P ∧
+    ∀ (z : (bgg D.toHom J).cycles i) (y : Γ D.toHom J i),
+      (bgg D.toHom J).iCycles i z = Submodule.Quotient.mk y →
+        f ((bgg D.toHom J).homologyπ i z) =
+          ((y.1.1 : graph2 (T i)) : WithLp 2 (E i × E (i + 1))).ofLp.1
+
 end BGG
 
 /-- **The Hessian, elasticity and div–div complexes on the cube** ([ArnoldHu2021], §4.1 and
@@ -840,19 +855,25 @@ complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`), with closed rang
 and their cohomology is finite-dimensional, of dimension `4`, `6` and `4` in degree `0` and `0` in
 the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a point, so `S`
 induces zero on cohomology and the dimensions of the cohomology of the rows add
-(`FEEC.bggFinrank`). In vector proxies these BGG complexes are the `L²` Hessian complex
-`H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²` elasticity and div–div complexes
-of [ArnoldHu2021], §4.1 (away from `J` by `BGG.Identification`; in degree `J`, `sᴶ` being
-injective, `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Q)`), whose cohomology in degree
-`0` is the space of affine functions, of rigid motions, resp. of the fields `a + b x`; these
-identifications are not part of the statement. -/
+(`FEEC.bggFinrank`). **The cohomology in degree `0`** is the space of the affine functions
+`a + b ⬝ᵥ x`, of the rigid motions `a + b ⨯₃ x`, resp. of the fields `a + b x` on `Q` (`0`-forms,
+resp. vectors of `0`-forms, in `L²(Q)`): `[(σ, φ)] ↦ u`, `σ = (u, du)`, is a linear isomorphism of
+`H⁰` onto that space (`BGG.DomainDiagram.CohomologyIs`). In vector proxies these BGG complexes are
+the `L²` Hessian complex `H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²`
+elasticity and div–div complexes of [ArnoldHu2021], §4.1 (away from `J` by `BGG.Identification`;
+in degree `J`, `sᴶ` being injective, `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Q)`);
+this identification of the complexes is not part of the statement. -/
 theorem bggCube :
     (∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
-      (wedge (cube 3)), D.Verdict 0 4) ∧
+      (wedge (cube 3)), D.Verdict 0 4 ∧ D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (b : Fin 3 → ℝ),
+        ∀ s, ⇑(u s) =ᵐ[volume.restrict (cube 3)] fun x => a + b ⬝ᵥ x}) ∧
     (∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
-      (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (crossWedge (cube 3)), D.Verdict 1 6) ∧
+      (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (crossWedge (cube 3)),
+      D.Verdict 1 6 ∧ D.CohomologyIs 1 0 {u | ∃ a b : Fin 3 → ℝ,
+        ∀ c s, ⇑(u c s) =ᵐ[volume.restrict (cube 3)] fun x => a c + (b ⨯₃ x) c}) ∧
     ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (dMax (cube 3))
-      (dxVec (cube 3)), D.Verdict 2 4 := by
+      (dxVec (cube 3)), D.Verdict 2 4 ∧ D.CohomologyIs 2 0 {u | ∃ (a : Fin 3 → ℝ) (b : ℝ),
+        ∀ c s, ⇑(u c s) =ᵐ[volume.restrict (cube 3)] fun x => a c + b * x c} := by
   sorry
 
 end Cube

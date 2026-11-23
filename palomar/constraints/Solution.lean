@@ -2,7 +2,7 @@ module
 
 public import Solution.Verdicts
 public import Solution.MirrorProp
-public import Solution.Absorbing
+public import Solution.Interior
 public import Solution.Subcomplex
 public import Solution.Window
 
@@ -14,12 +14,14 @@ public import Solution.Window
 their reducing-subspace criteria and the uniqueness of evolutions), `window` from
 `HilbertComplex.window_of` (`Solution.Window`, the windows of `Feec`'s Hilbert complexes), and
 `shortComplex` from `subcomplex_of` (`Solution.Subcomplex`).
-`FEEC.tsd_boundary_conditions`: the electric boundary conditions on bounded domains, on domains
-star-shaped with respect to a ball, on the unit ball and on boxes (`electric_of`, `starShaped_of`,
-`ball_of`, `box_of` of `Solution.Verdicts`, through the grad–curl bridge `Solution.GradCurl`, and
+`FEEC.tsd_boundary_conditions`: the electric boundary conditions on every open set
+(`interior_of` of `Solution.Interior`), on bounded domains, on domains star-shaped with respect to
+a ball, on the unit ball and on boxes (`electric_of`, `starShaped_of`, `ball_of`, `box_of` of
+`Solution.Verdicts`, through the grad–curl bridge `Solution.GradCurl`, and
 `tsd_not_propagates_of` of `Solution.Bounded` for the system with weak symmetry), the absorbing
-boundary conditions (`absorbing_of_eq`, `Solution.Absorbing`) and the mirror boundary conditions
-(`mirror_tsd_propagates_of`, `Solution.MirrorProp`).
+boundary conditions (`absorbing_of_eq` of `Solution.Absorbing`, `absorbing_interior_of_eq` of
+`Solution.Interior`) and the mirror boundary conditions (`mirror_tsd_propagates_of`,
+`Solution.MirrorProp`).
 
 ## References
 
@@ -47,8 +49,13 @@ theorem tsd_boundary_conditions : TSDVerdict :=
   have hA := absorbing_of_eq (Feec.Models.Cube.FEM.cubeDomain_eq_Q 3)
     (Feec.Models.Cube.FEM.cubeDomain_eq_Q 2)
   have hM := mirror_tsd_propagates_of
-  ⟨fun _ hΩ hb hne => electric_of hΩ hb hne, fun _ hΩ hb hne hstar => starShaped_of hΩ hb hne hstar,
+  ⟨fun _ hΩ T U hU h0 t ht => interior_of hΩ T U hU h0 t ht,
+    fun _ hΩ hb hne => electric_of hΩ hb hne,
+    fun _ hΩ hb hne hstar => starShaped_of hΩ hb hne hstar,
     fun _ hξ v hv hE hC => ball_of _ hξ v hv hE hC, fun _ _ hℓ => box_of hℓ,
-    ⟨hA.1, hA.2.1, hA.2.2⟩, ⟨hM.1, hM.2.1, hM.2.2.1, hM.2.2.2⟩⟩
+    ⟨hA.1, hA.2.1, hA.2.2, fun S hS x hx t ht => absorbing_interior_of_eq
+      (Feec.Models.Cube.FEM.cubeDomain_eq_Q 3) (Feec.Models.Cube.FEM.cubeDomain_eq_Q 2) S hS x hx t
+      ht⟩,
+    ⟨hM.1, hM.2.1, hM.2.2.1, hM.2.2.2⟩⟩
 
 end FEEC

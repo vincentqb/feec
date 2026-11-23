@@ -42,15 +42,17 @@ system (4.14) on states `(σ, E, B)` (`gradCurlWave`, constraint `K = {0} × L²
 `Ė = -curl B`, `Ḃ = curl E` (`absorbing`, constraint `tsdPair`). The **electric** boundary
 conditions `σ = 0`, `n × E = 0` on `∂Ω` are those of the minimal complex `H̊Λ` (vanishing
 tangential traces: essential boundary conditions, imposed in the spaces), for (4.14) and in both
-rows of (6.1).
+rows of (6.1). The losses are located by the **domain of dependence** `depDomain Ω t`, the points
+at Euclidean distance `> t` from `ℝ³ \ Ω`, and its complement in `Ω`, the **boundary layer**.
 
 | boundary conditions | domain | verdict |
 |---|---|---|
-| electric | every nonempty bounded open `Ω` (`ElectricVerdict`) | lost from every `(0, E₀, β)` and `P_K D(L) ⊄ D(L)`, for every boundary condition containing `n × E = 0`; `L²(TSD) ∩ H̊(curl)` not dense; `K*` the largest reducing subcomplex in `K`, strictly smaller, its electric part of vanishing normal trace; lost for (6.1) too |
+| electric | every open `Ω`, `ℝ³` included (`TSDVerdict.interior`) | `σ = 0` and the Gauss laws kept, symmetry and trace-freeness on the domain of dependence: kept on `ℝ³`, lost at most in the boundary layer |
+| | every nonempty bounded open `Ω` (`ElectricVerdict`) | lost from every `(0, E₀, β)`, and `P_K D(L) ⊄ D(L)` in the electric and in the magnetic slot, for every boundary condition containing `n × E = 0`; `L²(TSD) ∩ H̊(curl)` not dense; `K*` the largest reducing subcomplex in `K`, strictly smaller, its electric part of vanishing normal trace; lost for (6.1) too |
 | | star-shaped with respect to a ball (`StarShapedVerdict`) | `L²(TSD) ∩ H(curl)` dense, the closure of `L²(TSD) ∩ H̊(curl)` is `L²(TSD₀)`; `K*` stationary iff no TSD eigenfield `u` has `curl u ∉ H̊(curl)` |
 | | the unit ball (`TSDVerdict.ball`) | no nonzero TSD eigenfield is `C²` up to the boundary |
 | | every box (`BoxVerdict`) | `K* = K ∩ N(L)`: only stationary data keep the constraint |
-| absorbing (Silver–Müller) | the cube (`AbsorbingVerdict`) | m-dissipative, radiating; lost |
+| absorbing (Silver–Müller) | the cube (`AbsorbingVerdict`) | m-dissipative, radiating; lost, in the boundary layer only (the Gauss laws kept) |
 | mirror (tensorial reflections) | the cube (`MirrorVerdict`) | kept for (6.1), with moving data |
 
 **Not claimed.** Whether on every bounded domain only stationary data keep the constraint
@@ -311,6 +313,26 @@ row `a` and every `C¹` function `φ` on `ℝ³` (no compact support; for `φ = 
 def IsTSD₀ {Ω : Set (Fin 3 → ℝ)} (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) : Prop :=
   IsTSD E ∧ ∀ a (φ : (Fin 3 → ℝ) → ℝ), ContDiff ℝ 1 φ →
     ∑ c, ∫ x in Ω, E a c x * partialDeriv c φ x = 0
+
+/-- A matrix field `E` on `Ω` satisfies **the Gauss law**: its rows are weakly divergence-free
+in `Ω`, `Σ_c ∫_Ω E_{ac} ∂_c ψ = 0` for every row `a` and every test function `ψ` (the last
+condition of `IsTSD`). -/
+def IsDivFree {Ω : Set (Fin 3 → ℝ)} (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) : Prop :=
+  ∀ a ψ, IsTestFn Ω ψ → ∑ c, ∫ x in Ω, E a c x * partialDeriv c ψ x = 0
+
+/-- A matrix field `E` on `Ω` is **symmetric and trace-free almost everywhere on `D`**:
+`E_{ab}(y) = E_{ba}(y)` and `Σₐ E_{aa}(y) = 0` for almost every `y ∈ D` (for `D ⊆ Ω` this does
+not depend on the representatives of the entries; for `D = Ω`, with `IsDivFree`, it is `IsTSD`). -/
+def IsSymTFOn {Ω : Set (Fin 3 → ℝ)} (D : Set (Fin 3 → ℝ))
+    (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) : Prop :=
+  ∀ᵐ y ∂volume.restrict D, (∀ a b, E a b y = E b a y) ∧ ∑ a, E a a y = 0
+
+/-- The **domain of dependence** of `Ω ⊆ ℝ³` at time `t ≥ 0`: the points `y` whose Euclidean
+distance to `ℝ³ \ Ω` exceeds `t`, the centres of the Euclidean balls of radii `r > t` contained
+in `Ω` (all of `ℝ³` if `Ω = ℝ³`). Its complement `Ω \ depDomain Ω t` in `Ω` is the **boundary
+layer** of width `t`, the points that a signal of unit speed from `∂Ω` reaches by time `t`. -/
+def depDomain (Ω : Set (Fin 3 → ℝ)) (t : ℝ) : Set (Fin 3 → ℝ) :=
+  {y | ∃ r > t, ∀ z, ∑ i, (z i - y i) ^ 2 < r ^ 2 → z ∈ Ω}
 
 /-- **The linearized Einstein–Bianchi system (4.14) with the electric boundary conditions** on
 `Ω ⊆ ℝ³` ([QuennevilleBelair2015], §4.10): the Hodge wave equation `U' = L U`
@@ -576,8 +598,8 @@ structure PropagationCriterion : Prop where
 §4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`, constraint `tsdConstraint`)
 and the system (6.1) with weak symmetry (`bggData`, constraint `IsTSDState`);
 `TSDVerdict.electric` asserts it on every nonempty bounded open `Ω`, with no regularity of
-`∂Ω`. The clauses `beta`, `projection` and `not_dense` state their conclusions also for every
-boundary condition containing `n × E = 0`. -/
+`∂Ω`. The clauses `beta`, `projection`, `projection_magnetic` and `not_dense` state their
+conclusions also for every boundary condition containing `n × E = 0`. -/
 structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex: densely
   defined closed operators with `d¹ d⁰ = 0` -/
@@ -624,12 +646,12 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
         ∀ u T (U : ℝ → W0 × L2Vec Ω 1 × L2Vec Ω 2), 0 < T → U 0 = (0, u, ρ) →
           IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
           ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)
-  /-- `K` does not reduce `L`, already because `P_K D(L) ⊄ D(L)`: the orthogonal projection onto
-  `L²(TSD)` of some field with test-function entries (so `(0, u, 0) ∈ D(L)`) leaves `H̊(curl)`;
-  and for every boundary condition containing `n × E = 0`, that is for every short Hilbert
-  complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` whose `d¹` is a restriction of the minimal curl, the
-  orthogonal projection onto `L²(TSD)` of some `u` with `(0, u, 0) ∈ D(L)` leaves
-  `H̊(curl) ⊇ D(d¹)`, so that `P_K (0, u, 0) ∉ D(L)` -/
+  /-- `K` does not reduce `L`, already because `P_K D(L) ⊄ D(L)` in the electric slot: the
+  orthogonal projection onto `L²(TSD)` of some field with test-function entries (so
+  `(0, u, 0) ∈ D(L)`) leaves `H̊(curl)`; and for every boundary condition containing `n × E = 0`,
+  that is for every short Hilbert complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` whose `d¹` is a
+  restriction of the minimal curl, the orthogonal projection onto `L²(TSD)` of some `u` with
+  `(0, u, 0) ∈ D(L)` leaves `H̊(curl) ⊇ D(d¹)`, so that `P_K (0, u, 0) ∉ D(L)` -/
   projection : (∃ u : L2Vec Ω 1,
       (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
         ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
@@ -641,6 +663,26 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       d1 ≤ vecOp (fun _ => dMin Ω 1) → ∃ u : L2Vec Ω 1, (∃ V, IsHodgeWave d0 d1 (0, u, 0) V) ∧
         ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
           v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain
+  /-- `P_K D(L) ⊄ D(L)` in the magnetic slot too, whatever the electric one: the orthogonal
+  projection onto `L²(TSD)` of some field with rows in `H(curl)` (`HΛ¹(Ω)³`) leaves `H(curl)`
+  (for the electric boundary conditions `(0, 0, ρ) ∈ D(L)` iff the rows of `B` lie in `H(curl)`,
+  the adjoint of the minimal curl being the maximal one), although on domains star-shaped with
+  respect to a ball `L²(TSD) ∩ H(curl)` is dense in `L²(TSD)` (`StarShapedVerdict.density`);
+  and for every boundary condition containing `n × E = 0`, the orthogonal projection `ρ'` onto
+  `L²(TSD)` of some `ρ` with `(0, 0, ρ) ∈ D(L)` has `(0, 0, ρ') ∉ D(L)`, where
+  `P_K (0, 0, ρ) = (0, 0, ρ')` (also for any closed electric part of `K` in place of
+  `L²(TSD)`) -/
+  projection_magnetic : (∃ u : L2Vec Ω 1,
+      u ∈ (vecOp fun _ => dMax Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain ∧
+        ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
+          v ∉ (vecOp fun _ => dMax Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
+    ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
+      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
+      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      d1 ≤ vecOp (fun _ => dMin Ω 1) → ∃ ρ : L2Vec Ω 2, (∃ V, IsHodgeWave d0 d1 (0, 0, ρ) V) ∧
+        ∀ ρ', IsTSD (mat2 ρ') → (∀ w, IsTSD (mat2 w) → ⟪ρ - ρ', w⟫_ℝ = 0) →
+          ¬∃ V, IsHodgeWave d0 d1 (0, 0, ρ') V
   /-- for every restriction `d¹` of the minimal curl (so for every boundary condition containing
   `n × E = 0`), `L²(TSD) ∩ D(d¹)` is not dense in `L²(TSD)` (for the electric boundary
   conditions, `L²(TSD) ∩ H̊(curl)`) -/
@@ -693,7 +735,7 @@ structure BoxVerdict (a ℓ : Fin 3 → ℝ) : Prop where
 
 /-- **The verdict of the absorbing (Silver–Müller) boundary conditions on the cube**
 ([QuennevilleBelair2015], §3.4), for the first-order system (`absorbing`, constraint `tsdPair`):
-energy radiates, and the constraint is lost. -/
+energy radiates, and the constraint is lost, in the boundary layer only. -/
 structure AbsorbingVerdict : Prop where
   /-- the first-order system is the graph of an m-dissipative operator (so
   `PropagationCriterion.semigroup` gives its evolution) -/
@@ -706,6 +748,15 @@ structure AbsorbingVerdict : Prop where
   /-- for every evolution some TSD datum leaves `L²(TSD) × L²(TSD)` -/
   lost (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ absorbing (Ici 0) S) :
     ∃ t ≥ 0, ∃ x ∈ tsdPair, S t x ∉ tsdPair
+  /-- for every evolution and every TSD datum `x`, the fields of `S t x`, `t ≥ 0`, keep the
+  Gauss laws and are symmetric and trace-free almost everywhere on the domain of dependence
+  `depDomain (cube 3) t`; so `S t x ∈ tsdPair` iff they are symmetric and trace-free almost
+  everywhere on the boundary layer, where the loss of `lost` occurs -/
+  interior (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ absorbing (Ici 0) S)
+    (x : WithLp 2 (L2Mat (cube 3) × L2Mat (cube 3))) (hx : x ∈ tsdPair) (t : ℝ) (ht : 0 ≤ t) :
+    IsDivFree (fun a b => (S t x).fst (a, b)) ∧ IsDivFree (fun a b => (S t x).snd (a, b)) ∧
+      IsSymTFOn (depDomain (cube 3) t) (fun a b => (S t x).fst (a, b)) ∧
+      IsSymTFOn (depDomain (cube 3) t) (fun a b => (S t x).snd (a, b))
 
 /-- **The verdict of the mirror boundary conditions on the cube** (tensorial reflections;
 [QuennevilleBelair2015], §6.1, §6.3), for the system (6.1) (`mirrorData`, constraint
@@ -735,6 +786,18 @@ domain only stationary data keep the constraint is open and not claimed: on the 
 equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)` (`StarShapedVerdict`),
 which `ball` proves only for the eigenfields `C²` up to the boundary. -/
 structure TSDVerdict : Prop where
+  /-- the electric boundary conditions on every open `Ω ⊆ ℝ³`, bounded or not (for `Ω = ℝ³`
+  there is no boundary): every strong solution of (4.14) on `[0, T]` from data in `K` keeps
+  `σ = 0` and the Gauss laws, and its fields are symmetric and trace-free almost everywhere on the
+  domain of dependence `depDomain Ω t` (finite speed of propagation). So `U t ∈ K` iff they are
+  symmetric and trace-free almost everywhere on the boundary layer `Ω \ depDomain Ω t`: on `ℝ³`
+  the constraint is kept, and on a bounded `Ω` the loss of `ElectricVerdict.beta` from
+  `(0, E₀, β)`, `E₀` TSD, occurs in the boundary layer -/
+  interior (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (T : ℝ)
+    (U : ℝ → L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) (hU : IsStrongSolution (gradCurlWave Ω) (Icc 0 T) U)
+    (h0 : U 0 ∈ tsdConstraint Ω) (t : ℝ) (ht : t ∈ Icc 0 T) :
+    (U t).1 = 0 ∧ IsDivFree (mat1 (U t).2.1) ∧ IsDivFree (mat2 (U t).2.2) ∧
+      IsSymTFOn (depDomain Ω t) (mat1 (U t).2.1) ∧ IsSymTFOn (depDomain Ω t) (mat2 (U t).2.2)
   /-- the electric boundary conditions on every nonempty bounded open `Ω ⊆ ℝ³` -/
   electric (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : ElectricVerdict Ω

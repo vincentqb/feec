@@ -62,12 +62,19 @@ project:
     solutions on every [0, T], so it agrees with the unique evolution at t >= 0, and at t < 0 by
     the group laws of both.
     FEEC.tsd_boundary_conditions : FEEC.TSDVerdict, the verdict of each boundary condition, one
-    field per boundary condition and domain class (ElectricVerdict, StarShapedVerdict, ball,
-    BoxVerdict, AbsorbingVerdict, MirrorVerdict), for the system (4.14)
+    field per boundary condition and domain class (interior, ElectricVerdict, StarShapedVerdict,
+    ball, BoxVerdict, AbsorbingVerdict, MirrorVerdict), for the system (4.14)
     on states (sigma, u, rho) (E = rows u_a, B = rows of *rho_a), the Hodge wave equation of
     H°Lambda^0 (x) R^3 -> H°Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 (gradCurlWave; vector
     proxies H°^1 -> H°(curl) -> L^2, grad and curl of the rows), constraint
     K = {0} x L^2(TSD) x L^2(TSD) (tsdConstraint):
+    (electric boundary conditions on every open Omega in R^3, bounded or not, R^3 included) every
+    strong solution on [0, T] from data in K keeps sigma = 0 and the Gauss laws (IsDivFree: the
+    rows of E and B weakly divergence-free), and its fields are symmetric and trace-free almost
+    everywhere (IsSymTFOn) on the domain of dependence depDomain Omega t, the points at Euclidean
+    distance more than t from the complement of Omega: on R^3 TSD is kept, and elsewhere U(t) is
+    in K iff its fields are symmetric and trace-free almost everywhere on the boundary layer
+    Omega minus depDomain Omega t, where the losses below occur;
     (electric boundary conditions sigma = 0, n x E = 0, those of the minimal complex: every
     nonempty bounded open Omega in R^3, no regularity of the boundary) the complex is a short
     Hilbert complex (closed, densely defined, d^1 d^0 = 0), the system has an evolution, and for
@@ -81,12 +88,16 @@ project:
     first-order system E' = -curl* B, B' = curl E with n x E = 0), the TSD datum (0, 0, beta),
     beta = x_3 (e_1 e_2^T + e_2 e_1^T), lies in D(L), and from (0, E_0, beta) every strong
     solution on [0, T], T > 0, has a non-TSD electric field at some time;
-    K does not reduce L, already because P_K D(L) is not in D(L), for every boundary condition
-    containing n x E = 0: the orthogonal projection onto L^2(TSD) of some u with (0, u, 0) in
-    D(L) leaves H°(curl), which contains D(d^1) (for the electric boundary conditions, some test
-    field u does); L^2(TSD) and D(d^1) intersect in a non-dense subspace of L^2(TSD), for every
-    restriction d^1 of the minimal curl (for the electric ones, D(d^1) = H°(curl)); and for the
-    system (6.1) of the complex with weak symmetry of
+    K does not reduce L, already because P_K D(L) is not in D(L), in the electric and in the
+    magnetic slot, for every boundary condition containing n x E = 0: the orthogonal projection
+    onto L^2(TSD) of some u with (0, u, 0) in D(L) leaves H°(curl), which contains D(d^1) (for
+    the electric boundary conditions, some test field u does), and the orthogonal projection
+    rho' onto L^2(TSD) of some rho with (0, 0, rho) in D(L) has (0, 0, rho') outside D(L), so
+    that P_K (0, 0, rho) = (0, 0, rho') leaves D(L) whatever the electric part of K (for the
+    electric boundary conditions, the projection onto L^2(TSD) of some field with rows in
+    H(curl) leaves H(curl)); L^2(TSD) and D(d^1) intersect in a non-dense subspace of L^2(TSD),
+    for every restriction d^1 of the minimal curl (for the electric ones, D(d^1) = H°(curl)); and
+    for the system (6.1) of the complex with weak symmetry of
     Ch. 5-6 (the same boundary conditions in both rows) the TSD datum (0, 0, 0, *beta) of D(L)
     has strong solutions on every [0, T], every one of which has a non-TSD E and a non-symmetric
     B at some times;
@@ -103,7 +114,9 @@ project:
     first-order system E' = -curl B, B' = curl E on states (E, B) (absorbing, with its energy
     space: the closure of the triples (Phi, curl Phi, Phi_tau) of C^1 matrix fields) is the graph
     of an m-dissipative operator, some state radiates (<A x, x> < 0), and every evolution moves
-    some TSD datum out of L^2(TSD) x L^2(TSD) (tsdPair);
+    some TSD datum out of L^2(TSD) x L^2(TSD) (tsdPair), while from every TSD datum it keeps the
+    Gauss laws and the fields symmetric and trace-free almost everywhere on the domain of
+    dependence of the cube: the loss occurs in the boundary layer;
     (mirror boundary conditions on the cube Q = (0, 1/2)^3, the conditions of fields invariant
     under the reflections in the faces) for the system (6.1), strong solutions are determined by
     their initial value, exist on every [0, T] from every TSD datum of D(L) and stay TSD, and some
@@ -116,7 +129,7 @@ project:
     Feec.Semigroup.DissipativeInvariance, Feec.HilbertComplex.Window, Dirac, HodgeHeat, Reducing,
     Feec.Counterexamples.BoundedDomainTSD,
     Feec.Counterexamples.BoundedBGG, BoxStationary, BallEigenfields,
-    Feec.Models.StarShaped.EigenDense, Feec.Models.BoundedDomain.MovingTSD,
+    Feec.Models.StarShaped.EigenDense, Feec.Models.BoundedDomain.MovingTSD, Interior,
     Feec.Models.Cube.Absorbing, AbsorbingTSD, Feec.Models.Cube.MirrorBGG, MirrorConstraint).
   authors:
     - "Vincent Quenneville-Bélair"
@@ -233,27 +246,30 @@ status:
     densely defined skew-adjoint L, every m-dissipative A, every closed subspace K; every window of
     every Hilbert complex over R or C and every reducing subcomplex; every real short Hilbert
     complex and every reducing subcomplex) and
-    FEEC.tsd_boundary_conditions (the electric boundary conditions on every nonempty bounded open
-    set of R^3, on those star-shaped with respect to a ball, on the unit ball and on every open
-    box, for the system (4.14), and on every nonempty bounded open set for the system (6.1); for
-    every boundary condition containing n x E = 0, on every nonempty bounded open set, the datum
-    (0, E_0, beta), the projection hypothesis and the density; the absorbing boundary conditions
-    on the cube; the mirror boundary conditions on the cube for the system (6.1)). The Challenge
-    is 772 lines. Open, and not claimed: that only stationary data
+    FEEC.tsd_boundary_conditions (the electric boundary conditions on every open set of R^3, R^3
+    included (the domain of dependence), on every nonempty bounded open set, on those
+    star-shaped with respect to a ball, on the unit ball and on every open box, for the system
+    (4.14), and on every nonempty bounded open set for the system (6.1); for every boundary
+    condition containing n x E = 0, on every nonempty bounded open set, the datum (0, E_0, beta),
+    the projection hypothesis in the electric and in the magnetic slot, and the density; the
+    absorbing boundary conditions on the cube, with the domain of dependence; the mirror
+    boundary conditions on the cube for the system (6.1)). The Challenge is 835 lines. Open,
+    and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
     fields C^2 up to the boundary; Feec proves it on the ball only under the boundary regularity
     of Maxwell eigenfields, absent from Mathlib,
     Feec.Counterexamples.BallEigenDense.coreSub_le_stationary_ball3_of_maxwellRegularity, not
-    compared). Not compared here (proved in Feec): the violation confined to the boundary layer
-    by finite speed of propagation (beta_violation_boundary_layer); the sym-curl
-    system (4.19) on every bounded domain and every ball (BoundedSymTSD, EveryBallSymTSD); the
-    absorbing semigroup's interior equations, the propagation of the Gauss laws and of TSD in the
-    domain of dependence (absorbingSemigroup_divFree, absorbingSemigroup_symTF_depDomain); the
-    mirror boundary conditions for the system (4.14) on every open box, where K* = K
-    (Feec.Models.Box.Mirror.invariantCore_eqBox), and on the whole space and the torus
-    (Feec.EinsteinBianchi.euclidean_tsd_propagates and siblings); the convergence of the
-    weak-symmetry method to the constrained or unconstrained solution (palomar/einsteinbianchi).
+    compared). Not compared here (proved in Feec): the sym-curl system (4.19) on every bounded
+    domain and every ball (BoundedSymTSD, EveryBallSymTSD), another system; the mirror boundary
+    conditions for the system (4.14) on every open box, where K* = K
+    (Feec.Models.Box.Mirror.invariantCore_eqBox), and on the cube
+    (Feec.Models.Cube.Mirror.existsUnique_memQ), whose comparison needs a bridge from the
+    challenge's mirror operators of (4.14) to Feec's Fourier models of the mirror complexes; the
+    torus (Feec.EinsteinBianchi.torus_tsd_propagates), no boundary condition; the unboundedness
+    of the projection onto L^2(TSD) in the H(curl) graph norm (projection_unbounded), the reason
+    for the magnetic failure; the convergence of the weak-symmetry method to the constrained or
+    unconstrained solution (palomar/einsteinbianchi).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -298,7 +314,9 @@ automation:
     core is Feec's coreSub; the adjoint of the curl, H°(curl), H(curl), L^2(TSD_0) and the
     eigenfields through the fields), Solution/Verdicts.lean (the verdicts of the electric
     boundary conditions), Solution/Absorbing.lean (the energy space and
-    the absorbing relation as Feec's impedance operator), Solution/Proxy.lean, Bounded.lean,
+    the absorbing relation as Feec's impedance operator, every evolution its semigroup),
+    Solution/Interior.lean (the domain of dependence, the Gauss law and pointwise symmetry as
+    Feec's), Solution/Proxy.lean, Bounded.lean,
     Wave.lean, Wedge.lean, Forms.lean (fields, the system (6.1) and its datum, from
     palomar/einsteinbianchi), MirrorData.lean, MirrorTSD.lean, MirrorState.lean,
     MirrorForward.lean, MirrorChain.lean, MirrorProp.lean (TSD states as the real parts of the
@@ -335,8 +353,18 @@ fidelity:
     containing n x E = 0 the same holds for some u with (0, u, 0) in D(L), a witness that depends
     on the complex (a test field need not lie in D(d^1)). There the restriction d^1 <= the minimal
     curl serves only to read v outside H°(curl) as P_K (0, u, 0) outside D(L): the proof gives v
-    outside H°(curl) for every short Hilbert complex on these spaces. The absorbing operator is
-    stated as the graph of an m-dissipative operator, a literal instance of the criterion.
+    outside H°(curl) for every short Hilbert complex on these spaces. In the magnetic slot the
+    failure is stated through the Hodge wave relation itself: for every boundary condition
+    containing n x E = 0, the orthogonal projection rho' of some rho with (0, 0, rho) in D(L)
+    (characterized as v) has (0, 0, rho') outside D(L), that is rho' outside D(d^1*); the proof
+    is by the closed graph theorem (P_{L^2(TSD)} would be bounded on the graph of d^1*, while
+    smooth curl-free fields E_t have |curl P E_t| = (t / sqrt 2) |E_t|), so the witness is not
+    explicit. For the electric boundary conditions the challenge also states the H(curl) form,
+    P_{L^2(TSD)} H(curl) not in H(curl), for matrix fields with rows in H Lambda^1; that these
+    are, through the Hodge star of the rows, the magnetic fields of the magnetic slot of D(L) of
+    (4.14) (the adjoint of the minimal curl is the maximal curl) is proved in Feec and stated
+    only in the docstring. The absorbing operator is stated as the graph of an m-dissipative
+    operator, a literal instance of the criterion.
     (4) Electric boundary conditions (named after n x E = 0): vanishing tangential traces (minimal
     exterior derivatives, the complex H°Lambda; essential boundary conditions in the sense of the
     Hodge Laplacian, imposed in the spaces, not the natural ones of H Lambda) in every row, for
@@ -378,6 +406,18 @@ fidelity:
     of D(L); in Feec the theorem is proved for a complex Hilbert complex of matrix fields defined
     by the Fourier series of the reflection-symmetric extensions, and the Solution identifies the
     challenge's real states with the real parts of its constrained states.
+    (8) The domain of dependence (depDomain) is the set of centres of the Euclidean balls of
+    radii r > t inside Omega, written out (the points of R^3 are Fin 3 -> R with the sup norm),
+    meant for t >= 0 (for t < 0 it is R^3); IsSymTFOn asks symmetry and trace-freeness at almost
+    every point of a set for the representatives of the L^2 entries (independent of them on
+    subsets of Omega), and IsDivFree is the last condition of IsTSD, the Gauss law. The clause
+    for the electric boundary conditions on every open set (TSDVerdict.interior) is stated for
+    strong solutions of (4.14) (data in D(L) and K); on R^3 it gives that strong solutions from K
+    stay in K, not that the evolution keeps K for data outside D(L). It is not stated for the
+    other boundary conditions containing n x E = 0, whose d^0 need not be a differential
+    operator. That the solutions from (0, 0, beta) leave K in the boundary layer is a corollary
+    of ElectricVerdict.beta and of this clause, not a separate statement. The absorbing clause
+    holds for every evolution and every TSD datum, in D(A) or not.
 
 review:
   status: "self-assessed"
@@ -389,7 +429,10 @@ review:
     second conjunct for every boundary condition containing n x E = 0, ElectricVerdict.not_dense
     is stated for every restriction d^1 of the minimal curl (the former statement its instance
     d^1 = the minimal curl), and ElectricVerdict.beta states (0, 0, beta) in D(L) for every such
-    boundary condition (formerly for (4.14) only, now its instance).
+    boundary condition (formerly for (4.14) only, now its instance); then the new clauses
+    ElectricVerdict.projection_magnetic (the magnetic slot), TSDVerdict.interior (every open set,
+    R^3 included) and AbsorbingVerdict.interior, with the new definitions IsDivFree, IsSymTFOn
+    and depDomain.
     FEEC.constraint_propagation states the criterion formerly in
     the verdict of palomar/feec (there for the windows of Hilbert complexes approximated by
     subcomplex families; here for every window, and for every skew-adjoint or m-dissipative
@@ -426,9 +469,12 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: >-
-        Electric boundary conditions: Feec.Counterexamples.BoundedDomainTSD (invariantCore_tsd,
-        betaL2_mem_adjoint and betaL2_not_propagates on every short complex whose d_1 restricts
-        the minimal curl, exists_projTSD_not_mem_domain_of_dense on every short complex, the
+        Electric boundary conditions: Feec.Models.BoundedDomain.tsd_cone and tsd_depDomain on
+        every open set (Solution/Interior.lean); Feec.Counterexamples.BoundedDomainTSD
+        (invariantCore_tsd, betaL2_mem_adjoint and betaL2_not_propagates on every short complex
+        whose d_1 restricts the minimal curl, not_starProjection_mem_adjoint_domain there and
+        not_starProjection_mem_curl_maximal (the magnetic slot),
+        exists_projTSD_not_mem_domain_of_dense on every short complex, the
         complexes conjugated to the fields by Feec.ShortHilbertComplex.conj, the latter on the
         dense intersection of D(d_1) and D(d_0*) (Feec.ShortHilbertComplex.dense_domain_inf_adjoint,
         Feec.Domain.topologicalClosure_inf_eq_of_mapsTo), exists_projTSD_not_mem_domain,
@@ -441,7 +487,8 @@ alignment:
         forward_iff_stationary_box), Feec.Counterexamples.BoundedBGG for (6.1)
         (Solution/GradCurl.lean, Verdicts.lean, Bounded.lean, Box.lean); absorbing:
         Feec.Models.Cube.Absorbing (isMDissipative_absorbing, exists_inner_absorbing_neg,
-        not_invariant_tsdPair) (Solution/Absorbing.lean); mirror: Feec.Models.Cube.MirrorBGG
+        not_invariant_tsdPair, absorbingSemigroup_divFree, absorbingSemigroup_symTF_depDomain)
+        (Solution/Absorbing.lean, Interior.lean); mirror: Feec.Models.Cube.MirrorBGG
         (propagatesQ, reducingSubcomplexQ) and Feec.Models.Cube.MirrorWeakSymmetry.cosDatum
         (Solution/Mirror*.lean).
 

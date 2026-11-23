@@ -16,7 +16,7 @@ spaces correspond (`mem_energySpaceOn_iff`), and the relation is the graph of `F
 operator `Feec.Models.Cube.Absorbing.absorbing` (`absorbingOn_eq`). That operator is
 m-dissipative (`isMDissipative_absorbing`), radiates (`exists_inner_absorbing_neg`), and its
 semigroup does not keep `L²(TSD) × L²(TSD)` (`not_invariant_tsdPair`); every evolution of the
-relation is its semigroup (`eq_semigroup_of_isEvolution`).
+relation is its semigroup (`absorbing_eq_semigroup`, from `eq_semigroup_of_isEvolution`).
 
 ## References
 
@@ -159,6 +159,21 @@ theorem tsdPairOn_iff (x : State) :
   rw [isTSD_iff, isTSD_iff]
   rfl
 
+/-- **Every evolution of the absorbing problem on `Q` is `Feec`'s absorbing semigroup**, at
+`t ≥ 0`. -/
+theorem absorbing_eq_semigroup {S : ℝ → State →L[ℝ] State}
+    (hS : IsEvolution ℝ (absorbingOn (Q (Fin 3)) (Q (Fin 2))) (Ici 0) S) {t : ℝ} (ht : 0 ≤ t) :
+    S t = absorbingSemigroup.S t := by
+  have hA := isMDissipative_absorbing
+  have hgen : absorbingSemigroup.generator = Feec.Models.Cube.Absorbing.absorbing :=
+    hA.generator_semigroup
+  rw [absorbingOn_eq] at hS
+  have hS' : IsEvolution ℝ absorbingSemigroup.generator.graph (Ici 0) S := by
+    rw [hgen]; exact hS
+  have hD : Dense (absorbingSemigroup.generator.domain : Set State) := by
+    rw [hgen]; exact hA.dense_domain
+  exact eq_semigroup_of_isEvolution absorbingSemigroup hD hS' ht
+
 /-- **The absorbing verdict on `Feec`'s cube.** -/
 theorem absorbing_of_eq {Ω₃ : Set (Fin 3 → ℝ)} {Ω₂ : Set (Fin 2 → ℝ)} (h₃ : Ω₃ = Q (Fin 3))
     (h₂ : Ω₂ = Q (Fin 2)) :
@@ -169,24 +184,20 @@ theorem absorbing_of_eq {Ω₃ : Set (Fin 3 → ℝ)} {Ω₂ : Set (Fin 2 → �
       ∀ S, IsEvolution ℝ (absorbingOn Ω₃ Ω₂) (Ici 0) S →
         ∃ t ≥ 0, ∃ x ∈ tsdPairOn Ω₃, S t x ∉ tsdPairOn Ω₃ := by
   subst h₃ h₂
-  rw [absorbingOn_eq]
   have hA := isMDissipative_absorbing
-  refine ⟨⟨Feec.Models.Cube.Absorbing.absorbing, rfl, fun x => by simpa using hA.dissipative x,
-    fun y => by simpa using hA.surjective one_pos y⟩, ?_, fun S hS => ?_⟩
-  · obtain ⟨u, hu⟩ := Feec.Models.Cube.Absorbing.exists_inner_absorbing_neg
+  refine ⟨?_, ?_, fun S hS => ?_⟩
+  · rw [absorbingOn_eq]
+    exact ⟨Feec.Models.Cube.Absorbing.absorbing, rfl, fun x => by simpa using hA.dissipative x,
+      fun y => by simpa using hA.surjective one_pos y⟩
+  · rw [absorbingOn_eq]
+    obtain ⟨u, hu⟩ := Feec.Models.Cube.Absorbing.exists_inner_absorbing_neg
     exact ⟨((u : State), Feec.Models.Cube.Absorbing.absorbing u),
       Feec.Models.Cube.Absorbing.absorbing.mem_graph u, hu⟩
-  · have hgen : absorbingSemigroup.generator = Feec.Models.Cube.Absorbing.absorbing :=
-      hA.generator_semigroup
-    have hS' : IsEvolution ℝ absorbingSemigroup.generator.graph (Ici 0) S := by
-      rw [hgen]; exact hS
-    have hD : Dense (absorbingSemigroup.generator.domain : Set State) := by
-      rw [hgen]; exact hA.dense_domain
-    by_contra hcon
+  · by_contra hcon
     push Not at hcon
     refine Feec.Models.Cube.Absorbing.not_invariant_tsdPair fun t ht x hx => ?_
     have h := hcon t ht x ((tsdPairOn_iff x).2 hx)
-    rw [eq_semigroup_of_isEvolution absorbingSemigroup hD hS' ht] at h
+    rw [absorbing_eq_semigroup hS ht] at h
     exact (tsdPairOn_iff _).1 h
 
 end FEEC

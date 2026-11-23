@@ -235,6 +235,13 @@ theorem isHodgeWave_iff (U V : W0 × W1 × W2) :
       rw [← L2, ← eu]
 
 include h0 h1 in
+/-- **The domain of the challenge's Hodge wave operator is `Feec`'s**, through the state map. -/
+theorem exists_isHodgeWave_iff (U : W0 × W1 × W2) :
+    (∃ V, IsHodgeWave d0 d1 U V) ↔ stateL e0 e1 e2 U ∈ S.wave.domain :=
+  ⟨fun ⟨V, hV⟩ => ((isHodgeWave_iff e0 e1 e2 S h0 h1 U V).1 hV).1, fun h =>
+    ⟨_, (isHodgeWave_iff e0 e1 e2 S h0 h1 U _).2 ⟨h, (stateL_stateInvL e0 e1 e2 _).symm⟩⟩⟩
+
+include h0 h1 in
 /-- **Strong solutions of the challenge are `Feec`'s**, through the state map. -/
 theorem isStrongSolution_toFeec {I : Set ℝ} {U : ℝ → W0 × W1 × W2}
     (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} I U) :

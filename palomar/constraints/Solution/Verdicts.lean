@@ -11,12 +11,13 @@ The verdicts `FEEC.ElectricVerdict`, `FEEC.StarShapedVerdict`, `FEEC.TSDVerdict.
 through `Solution.GradCurl`:
 
 * `electric_of`: on every nonempty bounded open `Ω`, the invariant core
-  (`Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`), the datum `(0, E₀, β)` for every
-  short complex whose `d¹` restricts the minimal curl (`betaL2_not_propagates` on the complex
-  conjugated by the fields, `beta_not_propagates`), the projection hypothesis
-  (`exists_projTSD_not_mem_domain`), the
-  density (`not_dense_tsd_inter`), and the system (6.1) (`tsd_not_propagates_of` of
-  `Solution.Bounded`);
+  (`Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`); for every short complex whose `d¹`
+  restricts the minimal curl, read through the fields (`exists_fieldComplex`), the datum
+  `(0, E₀, β)` (`betaL2_not_propagates`, `beta_not_propagates`) and the projection hypothesis
+  (`exists_projTSD_not_mem_domain_of_dense` on the dense `D(d₁) ∩ D(d₀†)`, and
+  `exists_projTSD_not_mem_domain` for a test field; `electric_proj`); the density
+  (`not_dense_tsd_inter`, monotone in `D(d¹)`); and the system (6.1) (`tsd_not_propagates_of`
+  of `Solution.Bounded`);
 * `starShaped_of`: on domains star-shaped with respect to a ball, `density_dichotomy` (both
   halves, `H(curl)` through `mem_domMax_iff`) and
   `Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with the complete set of eigenvectors
@@ -305,6 +306,34 @@ theorem conj_le_curl (hΩ : IsOpen Ω) {d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2}
     change fieldE (fieldE.symm (x : L2F ℝ Ω Ix)) = (y : L2F ℝ Ω Ix)
     rw [LinearIsometryEquiv.apply_symm_apply, hxy])
 
+/-- **A short complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` of the challenge, read through the fields**:
+a `Feec` short complex `W⁰ → L²(Ω; ℝ³ˣ³) → L²(Ω; ℝ³ˣ³)` (the conjugate by `1`, `fieldE`,
+`fieldB`) with the graphs of `d⁰` and `d¹`, whose `d₁` restricts `Feec`'s minimal curl when `d¹`
+restricts the minimal row-wise curl. -/
+theorem exists_fieldComplex (hΩ : IsOpen Ω) (W0 : Type) [NormedAddCommGroup W0]
+    [InnerProductSpace ℝ W0] [CompleteSpace W0] (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1)
+    (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2) (hd0 : Dense (d0.domain : Set W0))
+    (hd1 : Dense (d1.domain : Set (L2Vec Ω 1))) (hc0 : d0.IsClosed) (hc1 : d1.IsClosed)
+    (hcomp : ∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) :
+    ∃ S : ShortHilbertComplex ℝ W0 (L2F ℝ Ω Ix) (L2F ℝ Ω Ix),
+      (∀ x y, (x, y) ∈ d0.graph ↔ (LinearIsometryEquiv.refl ℝ W0 x, fieldE y) ∈ S.d₀.graph) ∧
+      (∀ x y, (x, y) ∈ d1.graph ↔ (fieldE x, fieldB y) ∈ S.d₁.graph) ∧
+      (d1 ≤ vecOp (fun _ => dMin Ω 1) →
+        S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) := by
+  let S₀ : ShortHilbertComplex ℝ W0 (L2Vec Ω 1) (L2Vec Ω 2) :=
+    ⟨d0, d1, hd0, hd1, hc0, hc1, fun x => (hcomp x).1, fun x => (hcomp x).2⟩
+  refine ⟨S₀.conj (LinearIsometryEquiv.refl ℝ W0).toContinuousLinearEquiv
+    (fieldE (Ω := Ω)).toContinuousLinearEquiv (fieldB (Ω := Ω)).toContinuousLinearEquiv,
+    fun x y => ?_, fun x y => ?_, fun hle => conj_le_curl hΩ hle⟩
+  · change _ ↔ _ ∈ (d0.conj _ _).graph
+    rw [LinearPMap.mem_conj_graph_iff]
+    change _ ↔ (x, fieldE.symm (fieldE y)) ∈ d0.graph
+    rw [LinearIsometryEquiv.symm_apply_apply]
+  · change _ ↔ _ ∈ (d1.conj _ _).graph
+    rw [LinearPMap.mem_conj_graph_iff]
+    change _ ↔ (fieldE.symm (fieldE x), fieldB.symm (fieldB y)) ∈ d1.graph
+    rw [LinearIsometryEquiv.symm_apply_apply, LinearIsometryEquiv.symm_apply_apply]
+
 /-- **The datum `(0, E₀, β)` leaves TSD for every boundary condition containing `n × E = 0`.** -/
 theorem beta_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
@@ -317,23 +346,9 @@ theorem beta_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne
     (hU0 : U 0 = (0, u, fieldB.symm (betaL2 hΩ hb)))
     (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U) :
     ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1) := by
-  let S₀ : ShortHilbertComplex ℝ W0 (L2Vec Ω 1) (L2Vec Ω 2) :=
-    ⟨d0, d1, hd0, hd1, hc0, hc1, fun x => (hcomp x).1, fun x => (hcomp x).2⟩
-  let S := S₀.conj (LinearIsometryEquiv.refl ℝ W0).toContinuousLinearEquiv
-    (fieldE (Ω := Ω)).toContinuousLinearEquiv (fieldB (Ω := Ω)).toContinuousLinearEquiv
-  have h0 : ∀ x y, (x, y) ∈ d0.graph ↔
-      (LinearIsometryEquiv.refl ℝ W0 x, fieldE y) ∈ S.d₀.graph := fun x y => by
-    change _ ↔ _ ∈ (d0.conj _ _).graph
-    rw [LinearPMap.mem_conj_graph_iff]
-    change _ ↔ (x, fieldE.symm (fieldE y)) ∈ d0.graph
-    rw [LinearIsometryEquiv.symm_apply_apply]
-  have h1 : ∀ x y, (x, y) ∈ d1.graph ↔ (fieldE x, fieldB y) ∈ S.d₁.graph := fun x y => by
-    change _ ↔ _ ∈ (d1.conj _ _).graph
-    rw [LinearPMap.mem_conj_graph_iff]
-    change _ ↔ (fieldE.symm (fieldE x), fieldB.symm (fieldB y)) ∈ d1.graph
-    rw [LinearIsometryEquiv.symm_apply_apply, LinearIsometryEquiv.symm_apply_apply]
+  obtain ⟨S, h0, h1, hS⟩ := exists_fieldComplex hΩ W0 d0 d1 hd0 hd1 hc0 hc1 hcomp
   have hU' := isStrongSolution_toFeec (LinearIsometryEquiv.refl ℝ W0) fieldE fieldB S h0 h1 hU
-  obtain ⟨t, ht, hnot⟩ := betaL2_not_propagates hΩ hb hne S (conj_le_curl hΩ hle) hT hU'
+  obtain ⟨t, ht, hnot⟩ := betaL2_not_propagates hΩ hb hne S (hS hle) hT hU'
     (by rw [hU0]; change -(LinearIsometryEquiv.refl ℝ W0) (0 : W0) = 0; simp)
     (by rw [hU0]; change fieldB (fieldB.symm (betaL2 hΩ hb)) = _;
         rw [LinearIsometryEquiv.apply_symm_apply])
@@ -369,29 +384,59 @@ theorem electric_beta (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
       HilbertComplex.generator_waveGroup]
     exact LinearPMap.mem_graph _ ⟨_, hd⟩
 
-/-- **The projection hypothesis fails on a nonempty bounded open `Ω`.** -/
+/-- A field whose projection onto `Feec`'s `L²(TSD)` leaves `Feec`'s `H̊(curl)` has its orthogonal
+projection onto the TSD fields of the challenge outside `H̊(curl)`. -/
+theorem proj_not_mem_of (hΩ : IsOpen Ω) {u : L2Vec Ω 1}
+    (hu : (tsd Ω).starProjection (fieldE u) ∉
+      ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) :
+    ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
+      v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain := by
+  intro v hv hvo hvd
+  have hv' : fieldE v ∈ tsd Ω := by rw [← toIx_mat1, ← isTSD_iff]; exact hv
+  have e : (tsd Ω).starProjection (fieldE u) = fieldE v :=
+    Submodule.eq_starProjection_of_mem_of_inner_eq_zero hv' fun w hw => by
+      have h := hvo (fieldE.symm w)
+        (by rw [isTSD_iff, toIx_mat1, LinearIsometryEquiv.apply_symm_apply]; exact hw)
+      rwa [← LinearIsometryEquiv.inner_map_map fieldE, map_sub,
+        LinearIsometryEquiv.apply_symm_apply] at h
+  exact hu (by rw [e]; exact (mem_dom_iff hΩ v).1 hvd)
+
+/-- **`P_K D(L) ⊄ D(L)` on a nonempty bounded open `Ω`**: for a test field, and for every boundary
+condition containing `n × E = 0` from a field of the dense `D(d₁) ∩ D(d₀†)` of the complex read
+through the fields (`Feec.Counterexamples.BoundedDomainTSD.exists_projTSD_not_mem_domain_of_dense`;
+the restriction `d¹ ≤ d̊¹` turns `P u ∉ H̊(curl)` into `P_K (0, u, 0) ∉ D(L)`). -/
 theorem electric_proj (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
-    ∃ u : L2Vec Ω 1, (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
+    (∃ u : L2Vec Ω 1, (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
       ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
-        v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain := by
-  obtain ⟨Φ, hΦ, hnot⟩ := exists_projTSD_not_mem_domain hΩ hb hne
-  refine ⟨fieldE.symm (testField hΦ), fun a b => ⟨Φ (a, b), isTestFn_of (hΦ (a, b)), ?_⟩,
-    fun v hv hvo hvd => hnot ?_⟩
-  · change ⇑(fieldE (fieldE.symm (testField hΦ)) (a, b)) =ᵐ[volume.restrict Ω] _
+        v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
+    ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
+      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
+      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      d1 ≤ vecOp (fun _ => dMin Ω 1) → ∃ u : L2Vec Ω 1, (∃ V, IsHodgeWave d0 d1 (0, u, 0) V) ∧
+        ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
+          v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain := by
+  refine ⟨?_, fun W0 _ _ _ d0 d1 hd0 hd1 hc0 hc1 hcomp _ => ?_⟩
+  · obtain ⟨Φ, hΦ, hnot⟩ := exists_projTSD_not_mem_domain hΩ hb hne
+    refine ⟨fieldE.symm (testField hΦ), fun a b => ⟨Φ (a, b), isTestFn_of (hΦ (a, b)), ?_⟩,
+      proj_not_mem_of hΩ (by rwa [LinearIsometryEquiv.apply_symm_apply])⟩
+    change ⇑(fieldE (fieldE.symm (testField hΦ)) (a, b)) =ᵐ[volume.restrict Ω] _
     rw [LinearIsometryEquiv.apply_symm_apply]
     exact coeFn_testField hΦ (a, b)
-  · have hv' : fieldE v ∈ tsd Ω := by rw [← toIx_mat1, ← isTSD_iff]; exact hv
-    have e : (tsd Ω).starProjection (testField hΦ) = fieldE v :=
-      Submodule.eq_starProjection_of_mem_of_inner_eq_zero hv' fun w hw => by
-        have h := hvo (fieldE.symm w)
-          (by rw [isTSD_iff, toIx_mat1, LinearIsometryEquiv.apply_symm_apply]; exact hw)
-        rw [← LinearIsometryEquiv.inner_map_map fieldE, map_sub,
-          LinearIsometryEquiv.apply_symm_apply, LinearIsometryEquiv.apply_symm_apply] at h
-        exact h
-    rw [e]; exact (mem_dom_iff hΩ v).1 hvd
+  · obtain ⟨S, h0, h1, -⟩ := exists_fieldComplex hΩ W0 d0 d1 hd0 hd1 hc0 hc1 hcomp
+    obtain ⟨y, ⟨hy1, hy0⟩, hnot⟩ :=
+      exists_projTSD_not_mem_domain_of_dense hΩ hb hne S.dense_domain_inf_adjoint
+    have hD : stateL (LinearIsometryEquiv.refl ℝ W0) fieldE fieldB
+        ((0 : W0), fieldE.symm y, (0 : L2Vec Ω 2)) ∈ S.wave.domain := by
+      rw [stateL_apply]
+      simp only [map_zero, neg_zero, LinearIsometryEquiv.apply_symm_apply]
+      exact S.mem_wave_domain.2 ⟨S.d₀.domain.zero_mem, hy1, hy0, (S.d₁†).domain.zero_mem⟩
+    exact ⟨fieldE.symm y, ⟨_, (isHodgeWave_iff (LinearIsometryEquiv.refl ℝ W0) fieldE fieldB S
+        h0 h1 _ _).2 ⟨hD, (stateL_stateInvL _ _ _ _).symm⟩⟩,
+      proj_not_mem_of hΩ (by rwa [LinearIsometryEquiv.apply_symm_apply])⟩
 
 /-- **`L²(TSD) ∩ H̊(curl)` is not dense in `L²(TSD)` on a nonempty bounded open `Ω`.** -/
-theorem electric_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
+theorem not_dense_min (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ (vecOp fun _ => dMin Ω 1 :
       L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} ≠ {u | IsTSD (mat1 u)} := by
   intro h
@@ -399,6 +444,19 @@ theorem electric_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω
   rw [tsd_inter_eq hΩ, tsd_eq, closure_preimage_fieldE] at h
   rw [Submodule.topologicalClosure_coe]
   exact (fieldE (Ω := Ω)).surjective.preimage_injective h
+
+/-- **`L²(TSD) ∩ D(d¹)` is not dense in `L²(TSD)` on a nonempty bounded open `Ω`**, for every
+restriction `d¹` of the minimal row-wise curl: it lies in `L²(TSD) ∩ H̊(curl)`. -/
+theorem electric_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
+    (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2) (hle : d1 ≤ vecOp (fun _ => dMin Ω 1)) :
+    closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ≠ {u | IsTSD (mat1 u)} := by
+  intro h
+  have hT : IsClosed {u : L2Vec Ω 1 | IsTSD (mat1 u)} := by
+    rw [tsd_eq]; exact isClosed_tsd.preimage fieldE.continuous
+  refine not_dense_min hΩ hb hne
+    (Set.Subset.antisymm (closure_minimal (fun u hu => hu.1) hT) ?_)
+  rw [← h]
+  exact closure_mono fun u hu => ⟨hu.1, hle.1 hu.2⟩
 
 /-- **The electric boundary conditions, on a nonempty bounded open `Ω`.** -/
 theorem electric_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :

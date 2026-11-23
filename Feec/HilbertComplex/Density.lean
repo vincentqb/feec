@@ -11,7 +11,9 @@ In every Hilbert complex, `D(d j k) ∩ N((d i j)†)` is dense in `N((d i j)†
 maps `D(d j k)` into `D(d j k)`, because `N((d i j)†)ᗮ = cl R(d i j) ⊆ N(d j k)`, and it is
 continuous with dense source. For the thesis' complex `H̊¹ → H̊(curl) → L²` this is the density of
 `H̊(curl) ∩ H(div, 0)` in `H(div, 0)` stated in the proof of Prop 4.17, which is therefore true
-on every domain (`Feec.Models.BoundedDomain.dense_curl_inter_divFree`).
+on every domain (`Feec.Models.BoundedDomain.dense_curl_inter_divFree`). In a short complex,
+`D(d₁) ∩ D(d₀†)`, the middle components of `D(L)`, is dense in `W₁`
+(`ShortHilbertComplex.dense_domain_inf_adjoint`).
 
 What fails is the inference drawn from it in the thesis: that `H̊(curl) ∩ L²(TSD)` is dense in
 `L²(TSD)` (`Feec.Counterexamples.BoundedDomainTSD.not_dense_tsd_inter`).
@@ -76,5 +78,17 @@ dense in `N(d₀†)`. [QuennevilleBelair2015], Prop 4.17 -/
 theorem mem_closure_domain_inter_ker_adjoint {v : W₁} (hv : v ∈ (S.d₀†).ker) :
     v ∈ closure ((S.d₁.domain : Set W₁) ∩ (S.d₀†).ker) :=
   S.toHilbertComplex.mem_closure_domain_inter_ker_adjoint 0 1 2 hv
+
+/-- **`D(d₁) ∩ D(d₀†)` is dense**: it contains the middle components of the dense `D(L)`
+(`Feec.HilbertComplex.dense_wave_domain`). -/
+theorem dense_domain_inf_adjoint :
+    Dense ((S.d₁.domain ⊓ S.d₀†.domain : Submodule 𝕜 W₁) : Set W₁) := by
+  have hsurj : Function.Surjective fun x : PiLp 2 (W3 W₀ W₁ W₂) => (x 1 : W₁) := fun y =>
+    ⟨WithLp.toLp 2 (Pi.single (M := W3 W₀ W₁ W₂) 1 y), rfl⟩
+  refine (hsurj.denseRange.dense_image (PiLp.continuous_apply 2 _ 1)
+    S.toHilbertComplex.dense_wave_domain).mono ?_
+  rintro _ ⟨x, hx, rfl⟩
+  obtain ⟨-, h1, h1', -⟩ := S.mem_wave_domain.1 hx
+  exact ⟨h1, h1'⟩
 
 end Feec.ShortHilbertComplex

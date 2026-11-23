@@ -14,10 +14,10 @@ on every nonempty bounded open `Ω`:
 * the constant field `diag(1, -1, 0)` lies in the obstruction of `L²(TSD)` for `H̊(curl)`
   (`obstruction_ne_bot`), so `L²(TSD) ∩ H̊(curl)` is not dense in `L²(TSD)`
   (`not_dense_tsd_inter`) — the density claimed in the proof of Prop 4.17 fails;
-* the projection hypothesis fails (`exists_projTSD_not_mem_domain`), `D(L) ∩ K` is not dense in
-  `K` (`not_mem_closure_wave_domain_inter`), and
-  `{0} × L²(TSD) × S₂` reduces the wave operator of **no** short complex with
-  `D(d₁) ⊆ H̊(curl)` containing the test fields (`not_isReducing_tsd`);
+* the projection hypothesis fails (`exists_projTSD_not_mem_domain`), on every dense set of
+  fields (`exists_projTSD_not_mem_domain_of_dense`), `D(L) ∩ K` is not dense in `K`
+  (`not_mem_closure_wave_domain_inter`), and `{0} × L²(TSD) × S₂` reduces the wave operator of
+  **no** short complex with `D(d₁) ⊆ H̊(curl)` (`not_isReducing_tsd`);
 * TSD data do **not propagate**: from `(0, 0, β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, every strong
   solution of the Hodge wave equation of every short complex with `d₁ ⊆ curl_min` leaves the
   constraint (`tsd_not_propagates`), through the `Ė(0)` obstruction
@@ -213,6 +213,17 @@ theorem exists_projTSD_not_mem_domain (hΩ : IsOpen Ω) (hb : Bornology.IsBounde
   simp [diagA] at h2
   linarith
 
+/-- **The projection hypothesis of Prop 4.17 fails on every dense set** of fields, on every
+nonempty bounded open `Ω`: some `E` in it has `P_{L²(TSD)} E ∉ H̊(curl)`, since otherwise
+`L²(TSD) ∩ H̊(curl)` would be dense in `L²(TSD)` (`Feec.Domain.topologicalClosure_inf_eq_of_mapsTo`,
+`not_dense_tsd_inter`). [QuennevilleBelair2015], Prop 4.17 -/
+theorem exists_projTSD_not_mem_domain_of_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {s : Set (L2F ℝ Ω Ix)} (hs : Dense s) :
+    ∃ E ∈ s, (tsd Ω).starProjection E ∉
+      ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain := by
+  by_contra! h
+  exact not_dense_tsd_inter hΩ hb hne (topologicalClosure_inf_eq_of_mapsTo hs h)
+
 /-! ### Failure of TSD propagation for the Einstein–Bianchi system -/
 
 -- Over `𝕜 = ℝ` the generic real structure on the window spaces (needed for time derivatives
@@ -246,21 +257,21 @@ theorem not_isReducing_of_starProjection_not_mem {W₀ W₁ W₂ : Type}
   exact hP h1
 
 /-- **`K = {0} × L²(TSD) × S₂` does not reduce the wave operator** (the projection hypothesis
-`P_K D(L) ⊆ D(L)` of Prop 4.17 fails) for every short complex with `D(d₁) ⊆ H̊(curl)` containing
-the test fields in `D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. [QuennevilleBelair2015], Prop 4.17 -/
+`P_K D(L) ⊆ D(L)` of Prop 4.17 fails) for every short complex with `D(d₁) ⊆ H̊(curl)`, on every
+nonempty bounded open `Ω`: some `E` of the dense `D(d₁) ∩ D(d₀†)`, so `(0, E, 0) ∈ D(L)`, has
+`P_{L²(TSD)} E ∉ H̊(curl)` (`exists_projTSD_not_mem_domain_of_dense`).
+[QuennevilleBelair2015], Prop 4.17 -/
 theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
     (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) W₂) (S₂ : Submodule ℝ W₂)
     [S₂.HasOrthogonalProjection]
-    (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
-    (htest : ∀ (Φ : Ix → R3 → ℝ) (hΦ : IsTestField Ω Φ),
-      testField hΦ ∈ S.d₁.domain ∧ testField hΦ ∈ S.d₀†.domain) :
+    (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain) :
     ¬ S.wave.IsReducing
       (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsd Ω) S₂)) := by
-  obtain ⟨Φ, hΦ, hnot⟩ := exists_projTSD_not_mem_domain hΩ hb hne
-  exact not_isReducing_of_starProjection_not_mem S _ S₂ (htest Φ hΦ).1 (htest Φ hΦ).2
-    fun h => hnot (hd₁ h)
+  obtain ⟨E, ⟨h1, h1'⟩, hnot⟩ :=
+    exists_projTSD_not_mem_domain_of_dense hΩ hb hne S.dense_domain_inf_adjoint
+  exact not_isReducing_of_starProjection_not_mem S _ S₂ h1 h1' fun h => hnot (hd₁ h)
 
 /-- **`D(L) ∩ K` is not dense in `K`** for `K = {0} × L²(TSD) × S₂` and every short complex with
 `D(d₁) ⊆ H̊(curl)`: the datum `(0, diag(1, -1, 0), 0) ∈ K` is orthogonal to the middle

@@ -13,7 +13,8 @@ through `Solution.GradCurl`:
 * `electric_of`: on every nonempty bounded open `Ω`, the invariant core
   (`Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`); for every short complex whose `d¹`
   restricts the minimal curl, read through the fields (`exists_fieldComplex`), the datum
-  `(0, E₀, β)` (`betaL2_not_propagates`, `beta_not_propagates`) and the projection hypothesis
+  `(0, E₀, β)` (`betaL2_mem_adjoint`, `beta_mem_domain`; `betaL2_not_propagates`,
+  `beta_not_propagates`) and the projection hypothesis
   (`exists_projTSD_not_mem_domain_of_dense` on the dense `D(d₁) ∩ D(d₀†)`, and
   `exists_projTSD_not_mem_domain` for a test field; `electric_proj`); the density
   (`not_dense_tsd_inter`, monotone in `D(d¹)`); and the system (6.1) (`tsd_not_propagates_of`

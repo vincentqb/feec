@@ -522,7 +522,8 @@ structure PropagationCriterion : Prop where
 §4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`, constraint `tsdConstraint`)
 and the system (6.1) with weak symmetry (`bggData`, constraint `IsTSDState`);
 `TSDVerdict.electric` asserts it on every nonempty bounded open `Ω`, with no regularity of
-`∂Ω`. -/
+`∂Ω`. The clauses `beta`, `projection` and `not_dense` state their conclusions also for every
+boundary condition containing `n × E = 0`. -/
 structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex: densely
   defined closed operators with `d¹ d⁰ = 0` -/
@@ -553,30 +554,44 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
       (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
       ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω
-  /-- the magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD with `(0, 0, β) ∈ D(L)`; and for
-  every boundary condition containing `n × E = 0`, that is for every short Hilbert complex
-  `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` whose `d¹` is a restriction of the minimal curl (that of (4.14)
-  among them, `W⁰` and `d⁰` arbitrary), every strong solution of its Hodge wave equation on
+  /-- the magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD; and for every boundary condition
+  containing `n × E = 0`, that is for every short Hilbert complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³`
+  whose `d¹` is a restriction of the minimal curl (that of (4.14) among them, `W⁰` and `d⁰`
+  arbitrary), `(0, 0, β) ∈ D(L)`, and every strong solution of its Hodge wave equation on
   `[0, T]`, `T > 0`, from any `(0, E₀, β)` has a non-TSD electric field at some `t ∈ [0, T]` -/
   beta : ∃ ρ : L2Vec Ω 2, (∀ a b, ⇑(mat2 ρ a b) =ᵐ[volume.restrict Ω]
       fun x => if (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) then x 2 else 0) ∧
-    (0, 0, ρ) ∈ tsdConstraint Ω ∧ (∃ V, ((0, 0, ρ), V) ∈ gradCurlWave Ω) ∧
+    (0, 0, ρ) ∈ tsdConstraint Ω ∧
     ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
       (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
       Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
       d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
-      d1 ≤ vecOp (fun _ => dMin Ω 1) → ∀ u T (U : ℝ → W0 × L2Vec Ω 1 × L2Vec Ω 2), 0 < T →
-        U 0 = (0, u, ρ) → IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
-        ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)
+      d1 ≤ vecOp (fun _ => dMin Ω 1) → (∃ V, IsHodgeWave d0 d1 (0, 0, ρ) V) ∧
+        ∀ u T (U : ℝ → W0 × L2Vec Ω 1 × L2Vec Ω 2), 0 < T → U 0 = (0, u, ρ) →
+          IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
+          ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)
   /-- `K` does not reduce `L`, already because `P_K D(L) ⊄ D(L)`: the orthogonal projection onto
-  `L²(TSD)` of some field with test-function entries (so `(0, u, 0) ∈ D(L)`) leaves `H̊(curl)` -/
-  projection : ∃ u : L2Vec Ω 1,
-    (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
-      ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
-        v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain
-  /-- `L²(TSD) ∩ H̊(curl)` is not dense in `L²(TSD)` -/
-  not_dense : closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧
-    u ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} ≠ {u | IsTSD (mat1 u)}
+  `L²(TSD)` of some field with test-function entries (so `(0, u, 0) ∈ D(L)`) leaves `H̊(curl)`;
+  and for every boundary condition containing `n × E = 0`, that is for every short Hilbert
+  complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` whose `d¹` is a restriction of the minimal curl, the
+  orthogonal projection onto `L²(TSD)` of some `u` with `(0, u, 0) ∈ D(L)` leaves
+  `H̊(curl) ⊇ D(d¹)`, so that `P_K (0, u, 0) ∉ D(L)` -/
+  projection : (∃ u : L2Vec Ω 1,
+      (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
+        ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
+          v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
+    ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
+      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
+      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      d1 ≤ vecOp (fun _ => dMin Ω 1) → ∃ u : L2Vec Ω 1, (∃ V, IsHodgeWave d0 d1 (0, u, 0) V) ∧
+        ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
+          v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain
+  /-- for every restriction `d¹` of the minimal curl (so for every boundary condition containing
+  `n × E = 0`), `L²(TSD) ∩ D(d¹)` is not dense in `L²(TSD)` (for the electric boundary
+  conditions, `L²(TSD) ∩ H̊(curl)`) -/
+  not_dense : ∀ d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2, d1 ≤ vecOp (fun _ => dMin Ω 1) →
+    closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ≠ {u | IsTSD (mat1 u)}
   /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from the TSD
   datum `(0, 0, 0, ⋆β)` of `D(L)` strong solutions exist on every `[0, T]`, and every one has at
   some times a non-TSD `E` and a non-symmetric `B` -/

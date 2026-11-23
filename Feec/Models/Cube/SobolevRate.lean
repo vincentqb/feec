@@ -160,7 +160,7 @@ theorem rpow_neg_le_meshSize_rpow {s : ℝ} (hs : 0 ≤ s) (N : ℕ) :
     have := Real.two_le_pi
     have : (0 : ℝ) ≤ N := N.cast_nonneg
     nlinarith
-  refine (rpow_le_rpow_of_nonpos (inv_pos.2 hh) hle (neg_nonpos.2 hs)).trans (le_of_eq ?_)
+  refine (Real.rpow_le_rpow_of_nonpos (inv_pos.2 hh) hle (neg_nonpos.2 hs)).trans (le_of_eq ?_)
   rw [Real.inv_rpow hh.le, Real.rpow_neg hh.le, inv_inv]
 
 /-- `h_N (1 + n (2π(N+1))²)^{(1-s)/2} ≤ (1 + n) π² h_N^s` for `0 ≤ s ≤ 1`. -/

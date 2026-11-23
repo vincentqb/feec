@@ -65,8 +65,9 @@ project:
     truncations are bounded by 1 in the graph norm (Theorems 1-3) and in L2 (Theorem 3), and the
     family approximates in the graph norm in every degree (Theorem 2, whose cohomology clause also
     assumes the finite-dimensional harmonic forms), hence on every window (Theorem 3), the
-    truncations fix the harmonic forms (||q - pi_N q|| = 0, the strict gap under which the
-    static verdict gives the cohomology isomorphisms for every N), and the family has a Jackson
+    truncations fix the harmonic forms (||q - pi_N q|| = 0, hence the strict gap
+    ||q - pi_N q|| < ||q|| on nonzero harmonic forms, under which the static verdict gives the
+    cohomology isomorphisms for every N), and the family has a Jackson
     estimate on the Sobolev classes (the rates of Theorems 2 and 3): mesh size
     h_N = (2 pi (N + 1))^-1 and, for every real s >= 0, the order s, the constant 1 and the class
     of the k-forms x with ||x||_{H^s} <= L and, if x is in D(d), ||dx||_{H^s} <= L, where
@@ -462,6 +463,14 @@ review:
     cohomology_of_lt are exercised (fidelity (7); was: the rates exercised only by palomar/fem,
     the gap holding without being stated); Feec proves the spectral approximation estimate for
     every symbol complex of the torus (Feec.Fourier.Torus.norm_sub_starProjection_band_le).
+    Independent review (2026-11-23), checked: the former conjuncts of the witness are unchanged,
+    IsTorusSobolev is the H^s norm of T^n = R^n/Z^n for the Fourier convention of TorusForm, the
+    bound h_N^s follows from |2 pi xi| >= 2 pi (N + 1) off the band; changed: the description
+    reads the strict gap as a consequence of ||q - pi_N q|| = 0, and Feec proves the estimate in
+    every weaker norm (Feec.Fourier.Torus.sobolev_sub_starProjection_band_le,
+    ||u - pi_N u||^2_{H^t} <= (1 + (2 pi (N + 1))^2)^(t - s) ||u||^2_{H^s} for t <= s), with the
+    L2 bound of the witness and the truncation bound of the cube
+    (Feec.Models.Cube.Sobolev.sobSum_sub_trunc_le, formerly a copy of the proof) from it.
 
 alignment:
   namespace: "FEEC"

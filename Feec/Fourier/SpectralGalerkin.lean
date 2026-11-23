@@ -32,7 +32,9 @@ On the torus the bands `|k|_∞ ≤ N` are finite sets of modes: this is the Fou
 * `Torus.bandN N = {k | ∀ j, |k j| ≤ N}`: finite bands exhausting `ℤᵈ`.
 * **`Torus.norm_sub_starProjection_band_le`**: the spectral approximation estimate
   `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}`, `s ≥ 0`, for every symbol complex of the torus
-  (with `d P_N = P_N d`, a Jackson estimate of order `s`).
+  (with `d P_N = P_N d`, a Jackson estimate of order `s`), from its form in every weaker norm,
+  `‖u - P_N u‖²_{Hᵗ} ≤ (1 + (2π (N + 1))²)^{t - s} ‖u‖²_{Hˢ}` for `t ≤ s`
+  (`Torus.sobolev_sub_starProjection_band_le`).
 * `finiteDimensional_band` (finite bands are finite-dimensional) and
   **`hasCompactPropertyAt_of_coercive`**: for the counting measure, a coercive symbol
   `λ(a) ‖v‖² ≤ ‖m v‖² + ‖m'* v‖²` with finite sublevel sets gives the compactness property
@@ -400,11 +402,48 @@ theorem two_pi_mul_add_one_le_norm_freq_of_notMem {N : ℕ} {k : d → ℤ} (hk 
   exact (mul_le_mul_of_nonneg_left h1 Real.two_pi_pos.le).trans h2
 
 omit [∀ i, CompleteSpace (E i)] in
+/-- **The spectral approximation estimate on `𝕋ᵈ`, in every weaker norm**: for `t ≤ s`, the
+Fourier truncation to `|k|_∞ ≤ N` of a field `u` of finite `Hˢ` norm,
+`‖u‖²_{Hˢ} = Σ_k (1 + |2πk|²)^s ‖u k‖²`, has an error of finite `Hᵗ` norm with
+`‖u - P_N u‖²_{Hᵗ} ≤ (1 + (2π (N + 1))²)^{t - s} ‖u‖²_{Hˢ}` (the modes off the band have
+`|2πk| ≥ 2π (N + 1)`). -/
+theorem sobolev_sub_starProjection_band_le
+    (S : SymbolComplex 𝕜 (Measure.count : Measure (d → ℤ)) c E) {s t : ℝ} (hts : t ≤ s) (N : ℕ)
+    {i : ι} [(S.band (bandN N) i).HasOrthogonalProjection]
+    {u : Lp (E i) 2 (Measure.count : Measure (d → ℤ))}
+    (hu : Summable fun k => (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) :
+    Summable (fun k => (1 + ‖freq k‖ ^ 2) ^ t * ‖(u - (S.band (bandN N) i).starProjection u :
+        Lp (E i) 2 (Measure.count : Measure (d → ℤ))) k‖ ^ 2) ∧
+      ∑' k, (1 + ‖freq k‖ ^ 2) ^ t * ‖(u - (S.band (bandN N) i).starProjection u :
+          Lp (E i) 2 (Measure.count : Measure (d → ℤ))) k‖ ^ 2 ≤
+        (1 + (2 * Real.pi * (N + 1)) ^ 2) ^ (t - s) *
+          ∑' k, (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2 := by
+  set B : ℝ := (1 + (2 * Real.pi * (N + 1)) ^ 2) ^ (t - s)
+  have hle : ∀ k, (1 + ‖freq k‖ ^ 2) ^ t * ‖(u - (S.band (bandN N) i).starProjection u :
+      Lp (E i) 2 (Measure.count : Measure (d → ℤ))) k‖ ^ 2 ≤
+        B * ((1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) := fun k => by
+    rw [Measure.ae_count_iff.1 (Lp.coeFn_sub u _) k, Pi.sub_apply,
+      coeFn_starProjection_band_count]
+    by_cases hk : k ∈ bandN N
+    · rw [Set.indicator_of_mem hk, sub_self, norm_zero, zero_pow two_ne_zero, mul_zero]
+      positivity
+    · have hb : 0 < 1 + ‖freq k‖ ^ 2 := by positivity
+      have hf : (2 * Real.pi * (N + 1)) ^ 2 ≤ ‖freq k‖ ^ 2 :=
+        pow_le_pow_left₀ (by positivity) (two_pi_mul_add_one_le_norm_freq_of_notMem hk) 2
+      have e : (1 + ‖freq k‖ ^ 2) ^ t = (1 + ‖freq k‖ ^ 2) ^ (t - s) * (1 + ‖freq k‖ ^ 2) ^ s := by
+        rw [← Real.rpow_add hb, sub_add_cancel]
+      rw [Set.indicator_of_notMem hk, sub_zero, e, mul_assoc]
+      exact mul_le_mul_of_nonneg_right
+        (Real.rpow_le_rpow_of_nonpos (by positivity) (by linarith) (by linarith)) (by positivity)
+  have hsum := Summable.of_nonneg_of_le (fun k => by positivity) hle (hu.mul_left B)
+  exact ⟨hsum, (Summable.tsum_le_tsum hle hsum (hu.mul_left B)).trans_eq tsum_mul_left⟩
+
+omit [∀ i, CompleteSpace (E i)] in
 /-- **The spectral approximation estimate on `𝕋ᵈ`**: for `s ≥ 0`, the Fourier truncation to
 `|k|_∞ ≤ N` of a field `u` of finite `Hˢ` norm, `‖u‖²_{Hˢ} = Σ_k (1 + |2πk|²)^s ‖u k‖²`, has the
-error `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}` (the modes off the band have
-`|2πk| ≥ 2π (N + 1)`). Applied to `d u`, with `d P_N = P_N d` (`reducingSubcomplex_band`), it
-bounds `‖d (u - P_N u)‖` by `(2π (N + 1))^{-s} ‖d u‖_{Hˢ}`: a Jackson estimate of order `s`. -/
+error `‖u - P_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}` (`sobolev_sub_starProjection_band_le` with
+`t = 0`). Applied to `d u`, with `d P_N = P_N d` (`reducingSubcomplex_band`), it bounds
+`‖d (u - P_N u)‖` by `(2π (N + 1))^{-s} ‖d u‖_{Hˢ}`: a Jackson estimate of order `s`. -/
 theorem norm_sub_starProjection_band_le (S : SymbolComplex 𝕜 (Measure.count : Measure (d → ℤ)) c E)
     {s : ℝ} (hs : 0 ≤ s) (N : ℕ) {i : ι} [(S.band (bandN N) i).HasOrthogonalProjection]
     {u : Lp (E i) 2 (Measure.count : Measure (d → ℤ))}
@@ -412,25 +451,18 @@ theorem norm_sub_starProjection_band_le (S : SymbolComplex 𝕜 (Measure.count :
     ‖u - (S.band (bandN N) i).starProjection u‖ ≤
       (2 * Real.pi * (N + 1))⁻¹ ^ s * √(∑' k, (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) := by
   have ha : 0 < 2 * Real.pi * (N + 1) := by positivity
-  have hsq : ((2 * Real.pi * (N + 1))⁻¹ ^ s) ^ 2 = (((2 * Real.pi * (N + 1)) ^ 2) ^ s)⁻¹ := by
-    rw [Real.rpow_pow_comm (inv_nonneg.2 ha.le), inv_pow, Real.inv_rpow (sq_nonneg _)]
-  have hle : ∀ k, ‖(u - (S.band (bandN N) i).starProjection u :
-      Lp (E i) 2 (Measure.count : Measure (d → ℤ))) k‖ ^ 2 ≤
-        ((2 * Real.pi * (N + 1))⁻¹ ^ s) ^ 2 * ((1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2) := fun k => by
-    rw [Measure.ae_count_iff.1 (Lp.coeFn_sub u _) k, Pi.sub_apply,
-      coeFn_starProjection_band_count]
-    by_cases hk : k ∈ bandN N
-    · rw [Set.indicator_of_mem hk, sub_self, norm_zero, zero_pow two_ne_zero]
-      positivity
-    · have hc : 0 < ((2 * Real.pi * (N + 1)) ^ 2) ^ s := by positivity
-      rw [Set.indicator_of_notMem hk, sub_zero, hsq, le_inv_mul_iff₀ hc]
-      refine mul_le_mul_of_nonneg_right (Real.rpow_le_rpow (sq_nonneg _) ?_ hs) (sq_nonneg _)
-      exact (pow_le_pow_left₀ ha.le (two_pi_mul_add_one_le_norm_freq_of_notMem hk) 2).trans
-        (le_add_of_nonneg_left zero_le_one)
   have hT : 0 ≤ ∑' k, (1 + ‖freq k‖ ^ 2) ^ s * ‖u k‖ ^ 2 := tsum_nonneg fun k => by positivity
-  have h := hasSum_le hle (hasSum_norm_sq_count (𝕜 := 𝕜) _) (hu.hasSum.mul_left _)
-  rw [← Real.sq_sqrt hT, ← mul_pow] at h
-  exact (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 h
+  have h := (sobolev_sub_starProjection_band_le S hs N hu).2
+  simp only [Real.rpow_zero, one_mul, zero_sub] at h
+  rw [(hasSum_norm_sq_count (𝕜 := 𝕜) _).tsum_eq] at h
+  have hc : (1 + (2 * Real.pi * (N + 1)) ^ 2) ^ (-s) ≤ ((2 * Real.pi * (N + 1))⁻¹ ^ s) ^ 2 := by
+    rw [Real.rpow_pow_comm (inv_nonneg.2 ha.le), inv_pow, Real.inv_rpow (sq_nonneg _),
+      ← Real.rpow_neg (sq_nonneg _)]
+    exact Real.rpow_le_rpow_of_nonpos (by positivity) (le_add_of_nonneg_left zero_le_one)
+      (neg_nonpos.2 hs)
+  refine (sq_le_sq₀ (norm_nonneg _) (by positivity)).1 ?_
+  rw [mul_pow, Real.sq_sqrt hT]
+  exact h.trans (mul_le_mul_of_nonneg_right hc hT)
 
 end Torus
 

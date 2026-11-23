@@ -247,14 +247,6 @@ section Trunc
 
 variable {k : ℕ}
 
-theorem rpow_le_rpow_of_nonpos {x y z : ℝ} (hy : 0 < y) (hyx : y ≤ x) (hz : z ≤ 0) :
-    x ^ z ≤ y ^ z := by
-  have hx : 0 < x := hy.trans_le hyx
-  have e : ∀ w : ℝ, 0 < w → w ^ z = (w⁻¹) ^ (-z) := fun w hw => by
-    rw [Real.inv_rpow hw.le, ← Real.rpow_neg hw.le, neg_neg]
-  rw [e x hx, e y hy]
-  exact Real.rpow_le_rpow (inv_nonneg.2 hx.le) (inv_anti₀ hy hyx) (neg_nonneg.2 hz)
-
 open scoped Classical in
 theorem cf_trunc (M : ℕ) (x : Seq n k) (m : Fin n → ℤ) :
     cf (trunc M k x) m = if m ∈ bandN M then cf x m else 0 :=
@@ -282,37 +274,12 @@ theorem memSob_trunc (t : ℝ) (M : ℕ) (x : Seq n k) : MemSob t (trunc M k x) 
   memSob_of_finite (bandS M) fun _ hm => trunc_eq_zero_of_notMem x hm
 
 /-- **The truncation error in every weaker norm**: for `t ≤ s`,
-`Σ ⟨ξ⟩^{2t} |x - x_M|² ≤ (1 + (2π(M+1))²)^{t-s} Σ ⟨ξ⟩^{2s} |x|²`. -/
+`Σ ⟨ξ⟩^{2t} |x - x_M|² ≤ (1 + (2π(M+1))²)^{t-s} Σ ⟨ξ⟩^{2s} |x|²`
+(`Feec.Fourier.Torus.sobolev_sub_starProjection_band_le`). -/
 theorem sobSum_sub_trunc_le {s t : ℝ} (hts : t ≤ s) {x : Seq n k} (hx : MemSob s x) (M : ℕ) :
     MemSob t (x - trunc M k x) ∧
-      sobSum t (x - trunc M k x) ≤ (1 + (2 * Real.pi * (M + 1)) ^ 2) ^ (t - s) * sobSum s x := by
-  set B : ℝ := (1 + (2 * Real.pi * (M + 1)) ^ 2) ^ (t - s)
-  have hB : 0 ≤ B := by positivity
-  have hle : ∀ m, weight t m * ‖cf (x - trunc M k x) m‖ ^ 2 ≤ B * (weight s m * ‖cf x m‖ ^ 2) := by
-    intro m
-    by_cases hm : m ∈ bandN M
-    · rw [cf_sub_trunc_of_mem x hm, norm_zero, zero_pow two_ne_zero, mul_zero]
-      exact mul_nonneg hB (mul_nonneg (weight_nonneg s m) (sq_nonneg _))
-    · rw [cf_sub_trunc_of_notMem x hm]
-      have hf : (2 * Real.pi * (M + 1)) ^ 2 ≤ ‖freq m‖ ^ 2 :=
-        pow_le_pow_left₀ (by positivity)
-          (Feec.Fourier.Torus.two_pi_mul_add_one_le_norm_freq_of_notMem hm) 2
-      have hw : weight t m ≤ B * weight s m := by
-        have e : weight t m = weight (t - s) m * weight s m := by
-          rw [← weight_add]; ring_nf
-        rw [e]
-        refine mul_le_mul_of_nonneg_right ?_ (weight_nonneg s m)
-        exact rpow_le_rpow_of_nonpos (by positivity) (by linarith) (by linarith)
-      calc weight t m * ‖cf x m‖ ^ 2 ≤ (B * weight s m) * ‖cf x m‖ ^ 2 :=
-            mul_le_mul_of_nonneg_right hw (sq_nonneg _)
-        _ = _ := by ring
-  have hsum : MemSob t (x - trunc M k x) :=
-    Summable.of_nonneg_of_le (fun m => mul_nonneg (weight_nonneg t m) (sq_nonneg _)) hle
-      (hx.mul_left B)
-  refine ⟨hsum, ?_⟩
-  calc sobSum t (x - trunc M k x) ≤ ∑' m, B * (weight s m * ‖cf x m‖ ^ 2) :=
-        Summable.tsum_le_tsum hle hsum (hx.mul_left B)
-    _ = B * sobSum s x := tsum_mul_left
+      sobSum t (x - trunc M k x) ≤ (1 + (2 * Real.pi * (M + 1)) ^ 2) ^ (t - s) * sobSum s x :=
+  Feec.Fourier.Torus.sobolev_sub_starProjection_band_le (TS n) hts M hx
 
 /-- **The inverse estimate for the truncation**: for `s ≤ t`,
 `Σ ⟨ξ⟩^{2t} |x_M|² ≤ (1 + n (2πM)²)^{t-s} Σ ⟨ξ⟩^{2s} |x|²`. -/
@@ -498,7 +465,7 @@ theorem rpow_neg_le_sq {a s : ℝ} (ha : 0 < a) (hs : 0 ≤ s) :
       ← Real.rpow_mul ha.le]
     ring_nf
   rw [e]
-  exact rpow_le_rpow_of_nonpos (pow_pos ha 2) (by linarith) (neg_nonpos.2 hs)
+  exact Real.rpow_le_rpow_of_nonpos (pow_pos ha 2) (by linarith) (neg_nonpos.2 hs)
 
 /-- **The `L²` truncation error in the parity class**:
 `‖u - u_M‖ ≤ (2π(M + 1))^{-s} ‖u‖_{s,J}` for `s ≥ 0`. -/

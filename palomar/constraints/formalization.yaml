@@ -74,7 +74,8 @@ project:
     everywhere (IsSymTFOn) on the domain of dependence depDomain Omega t, the points at Euclidean
     distance more than t from the complement of Omega: on R^3 TSD is kept, and elsewhere U(t) is
     in K iff its fields are symmetric and trace-free almost everywhere on the boundary layer
-    Omega minus depDomain Omega t, where the losses below occur;
+    Omega minus depDomain Omega t, where the losses of (4.14) below occur (those with the
+    electric boundary conditions);
     (electric boundary conditions sigma = 0, n x E = 0, those of the minimal complex: every
     nonempty bounded open Omega in R^3, no regularity of the boundary) the complex is a short
     Hilbert complex (closed, densely defined, d^1 d^0 = 0), the system has an evolution, and for
@@ -113,10 +114,11 @@ project:
     (absorbing, Silver-Muller, boundary conditions n x E_i + (B_i)_tau = 0 on the cube) the
     first-order system E' = -curl B, B' = curl E on states (E, B) (absorbing, with its energy
     space: the closure of the triples (Phi, curl Phi, Phi_tau) of C^1 matrix fields) is the graph
-    of an m-dissipative operator, some state radiates (<A x, x> < 0), and every evolution moves
-    some TSD datum out of L^2(TSD) x L^2(TSD) (tsdPair), while from every TSD datum it keeps the
-    Gauss laws and the fields symmetric and trace-free almost everywhere on the domain of
-    dependence of the cube: the loss occurs in the boundary layer;
+    of an m-dissipative operator, some state radiates (<A x, x> < 0), and every evolution moves,
+    for every T > 0, some TSD datum out of L^2(TSD) x L^2(TSD) (tsdPair) at some time in [0, T],
+    while from every TSD datum it keeps the Gauss laws and the fields symmetric and trace-free
+    almost everywhere on the domain of dependence of the cube: the losses occur in the boundary
+    layer;
     (mirror boundary conditions on the cube Q = (0, 1/2)^3, the conditions of fields invariant
     under the reflections in the faces) for the system (6.1), strong solutions are determined by
     their initial value, exist on every [0, T] from every TSD datum of D(L) and stay TSD, and some
@@ -253,7 +255,7 @@ status:
     condition containing n x E = 0, on every nonempty bounded open set, the datum (0, E_0, beta),
     the projection hypothesis in the electric and in the magnetic slot, and the density; the
     absorbing boundary conditions on the cube, with the domain of dependence; the mirror
-    boundary conditions on the cube for the system (6.1)). The Challenge is 835 lines. Open,
+    boundary conditions on the cube for the system (6.1)). The Challenge is 838 lines. Open,
     and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
@@ -396,8 +398,10 @@ fidelity:
     without the gauge sigma; the energy space is the closure of the triples (Phi, curl Phi, Phi_tau)
     of C^1 fields, with boundary values on the six faces parametrized by the square (0, 1/2)^2
     (surface measure); the operator is the impedance operator of Monk §4.6 (whether the energy
-    space consists of all Green triples is not used). The verdict asserts some TSD datum leaving
-    L^2(TSD) x L^2(TSD) at some time t >= 0; the datum need not lie in D(A) (Feec's proof: an
+    space consists of all Green triples is not used). The verdict asserts, for every T > 0, some
+    TSD datum leaving L^2(TSD) x L^2(TSD) at some time t in [0, T] (from Feec's loss at some
+    t >= 0 by the semigroup law: kept on [0, T], the constraint would be kept by
+    S(t) = S(t / n)^n for every t >= 0); the datum need not lie in D(A) (Feec's proof: an
     invariant K would make D(A) and K intersect densely in K, which a boundary functional
     excludes).
     (7) Mirror boundary conditions: on the cube Q only and for the system (6.1) (top row d_max;
@@ -415,9 +419,12 @@ fidelity:
     strong solutions of (4.14) (data in D(L) and K); on R^3 it gives that strong solutions from K
     stay in K, not that the evolution keeps K for data outside D(L). It is not stated for the
     other boundary conditions containing n x E = 0, whose d^0 need not be a differential
-    operator. That the solutions from (0, 0, beta) leave K in the boundary layer is a corollary
-    of ElectricVerdict.beta and of this clause, not a separate statement. The absorbing clause
-    holds for every evolution and every TSD datum, in D(A) or not.
+    operator. That the solutions from (0, E_0, beta), E_0 TSD, leave K in the boundary layer is a
+    corollary of ElectricVerdict.beta and of this clause, not a separate statement. The absorbing
+    clause holds for every evolution and every TSD datum, in D(A) or not. On a bounded Omega the
+    domain of dependence is empty once t reaches the inradius of Omega (1/4 on the cube), so the
+    two clauses locate the losses at the earlier times, where ElectricVerdict.beta and
+    AbsorbingVerdict.lost give losses (on every [0, T], T > 0).
 
 review:
   status: "self-assessed"
@@ -425,14 +432,16 @@ review:
     - "none"
   notes: >-
     Not yet reviewed by the author: the Challenge statement (the two compared theorems and their
-    definitions, 2026-11-18, new), and its changes of 2026-11-23: ElectricVerdict.projection has a
-    second conjunct for every boundary condition containing n x E = 0, ElectricVerdict.not_dense
+    definitions, 2026-11-18, new), and its changes of 2026-11-23: ElectricVerdict.projection,
+    renamed projection_electric, has a second conjunct for every boundary condition containing
+    n x E = 0, ElectricVerdict.not_dense
     is stated for every restriction d^1 of the minimal curl (the former statement its instance
     d^1 = the minimal curl), and ElectricVerdict.beta states (0, 0, beta) in D(L) for every such
     boundary condition (formerly for (4.14) only, now its instance); then the new clauses
     ElectricVerdict.projection_magnetic (the magnetic slot), TSDVerdict.interior (every open set,
     R^3 included) and AbsorbingVerdict.interior, with the new definitions IsDivFree, IsSymTFOn
-    and depDomain.
+    and depDomain, and AbsorbingVerdict.lost on every interval [0, T] (formerly at some t >= 0,
+    which follows).
     FEEC.constraint_propagation states the criterion formerly in
     the verdict of palomar/feec (there for the windows of Hilbert complexes approximated by
     subcomplex families; here for every window, and for every skew-adjoint or m-dissipative
@@ -487,8 +496,9 @@ alignment:
         forward_iff_stationary_box), Feec.Counterexamples.BoundedBGG for (6.1)
         (Solution/GradCurl.lean, Verdicts.lean, Bounded.lean, Box.lean); absorbing:
         Feec.Models.Cube.Absorbing (isMDissipative_absorbing, exists_inner_absorbing_neg,
-        not_invariant_tsdPair, absorbingSemigroup_divFree, absorbingSemigroup_symTF_depDomain)
-        (Solution/Absorbing.lean, Interior.lean); mirror: Feec.Models.Cube.MirrorBGG
+        not_invariant_tsdPair, on every [0, T] by the semigroup law, absorbingSemigroup_divFree,
+        absorbingSemigroup_symTF_depDomain) (Solution/Absorbing.lean, Interior.lean); mirror:
+        Feec.Models.Cube.MirrorBGG
         (propagatesQ, reducingSubcomplexQ) and Feec.Models.Cube.MirrorWeakSymmetry.cosDatum
         (Solution/Mirror*.lean).
 

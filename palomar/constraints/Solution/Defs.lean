@@ -542,8 +542,8 @@ structure PropagationCriterion : Prop where
 §4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`, constraint `tsdConstraint`)
 and the system (6.1) with weak symmetry (`bggData`, constraint `IsTSDState`);
 `TSDVerdict.electric` asserts it on every nonempty bounded open `Ω`, with no regularity of
-`∂Ω`. The clauses `beta`, `projection`, `projection_magnetic` and `not_dense` state their
-conclusions also for every boundary condition containing `n × E = 0`. -/
+`∂Ω`. The clauses `beta`, `projection_electric`, `projection_magnetic` and `not_dense` state
+their conclusions also for every boundary condition containing `n × E = 0`. -/
 structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex: densely
   defined closed operators with `d¹ d⁰ = 0` -/
@@ -596,7 +596,7 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
   that is for every short Hilbert complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³` whose `d¹` is a
   restriction of the minimal curl, the orthogonal projection onto `L²(TSD)` of some `u` with
   `(0, u, 0) ∈ D(L)` leaves `H̊(curl) ⊇ D(d¹)`, so that `P_K (0, u, 0) ∉ D(L)` -/
-  projection : (∃ u : L2Vec Ω 1,
+  projection_electric : (∃ u : L2Vec Ω 1,
       (∀ a b, ∃ φ, IsTestFn Ω φ ∧ ⇑(mat1 u a b) =ᵐ[volume.restrict Ω] φ) ∧
         ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
           v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
@@ -679,7 +679,8 @@ structure BoxVerdict (a ℓ : Fin 3 → ℝ) : Prop where
 
 /-- **The verdict of the absorbing (Silver–Müller) boundary conditions on the cube**
 ([QuennevilleBelair2015], §3.4), for the first-order system (`absorbing`, constraint `tsdPair`):
-energy radiates, and the constraint is lost, in the boundary layer only. -/
+energy radiates, and the constraint is lost on every time interval `[0, T]`, in the boundary
+layer only. -/
 structure AbsorbingVerdict : Prop where
   /-- the first-order system is the graph of an m-dissipative operator (so
   `PropagationCriterion.semigroup` gives its evolution) -/
@@ -689,13 +690,15 @@ structure AbsorbingVerdict : Prop where
       ∀ y, ∃ x : A.domain, (x : _) - A x = y
   /-- some state radiates: `⟪A x, x⟫ < 0` -/
   radiates : ∃ p ∈ absorbing, ⟪p.2, p.1⟫_ℝ < 0
-  /-- for every evolution some TSD datum leaves `L²(TSD) × L²(TSD)` -/
-  lost (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ absorbing (Ici 0) S) :
-    ∃ t ≥ 0, ∃ x ∈ tsdPair, S t x ∉ tsdPair
+  /-- for every evolution and every `T > 0`, some TSD datum leaves `L²(TSD) × L²(TSD)` at some
+  `t ∈ [0, T]` -/
+  lost (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ absorbing (Ici 0) S) (T : ℝ) (hT : 0 < T) :
+    ∃ t ∈ Icc 0 T, ∃ x ∈ tsdPair, S t x ∉ tsdPair
   /-- for every evolution and every TSD datum `x`, the fields of `S t x`, `t ≥ 0`, keep the
   Gauss laws and are symmetric and trace-free almost everywhere on the domain of dependence
   `depDomain (cube 3) t`; so `S t x ∈ tsdPair` iff they are symmetric and trace-free almost
-  everywhere on the boundary layer, where the loss of `lost` occurs -/
+  everywhere on the boundary layer of width `t`, where the losses of `lost` occur (from `t = ¼` on,
+  the boundary layer is the cube) -/
   interior (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ absorbing (Ici 0) S)
     (x : WithLp 2 (L2Mat (cube 3) × L2Mat (cube 3))) (hx : x ∈ tsdPair) (t : ℝ) (ht : 0 ≤ t) :
     IsDivFree (fun a b => (S t x).fst (a, b)) ∧ IsDivFree (fun a b => (S t x).snd (a, b)) ∧

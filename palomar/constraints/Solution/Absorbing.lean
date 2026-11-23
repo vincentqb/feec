@@ -15,8 +15,9 @@ the triples `C1Field.triple` of `Feec.Models.Cube.Absorbing` (`image_generators`
 spaces correspond (`mem_energySpaceOn_iff`), and the relation is the graph of `Feec`'s impedance
 operator `Feec.Models.Cube.Absorbing.absorbing` (`absorbingOn_eq`). That operator is
 m-dissipative (`isMDissipative_absorbing`), radiates (`exists_inner_absorbing_neg`), and its
-semigroup does not keep `L²(TSD) × L²(TSD)` (`not_invariant_tsdPair`); every evolution of the
-relation is its semigroup (`absorbing_eq_semigroup`, from `eq_semigroup_of_isEvolution`).
+semigroup does not keep `L²(TSD) × L²(TSD)` (`not_invariant_tsdPair`), hence, by the semigroup
+law, on no interval `[0, T]`, `T > 0`; every evolution of the relation is its semigroup
+(`absorbing_eq_semigroup`, from `eq_semigroup_of_isEvolution`).
 
 ## References
 
@@ -181,11 +182,11 @@ theorem absorbing_of_eq {Ω₃ : Set (Fin 3 → ℝ)} {Ω₂ : Set (Fin 2 → �
         (A.graph : SetRel _ _) = absorbingOn Ω₃ Ω₂ ∧ (∀ x : A.domain, ⟪A x, (x : _)⟫_ℝ ≤ 0) ∧
         ∀ y, ∃ x : A.domain, (x : _) - A x = y) ∧
       (∃ p ∈ absorbingOn Ω₃ Ω₂, ⟪p.2, p.1⟫_ℝ < 0) ∧
-      ∀ S, IsEvolution ℝ (absorbingOn Ω₃ Ω₂) (Ici 0) S →
-        ∃ t ≥ 0, ∃ x ∈ tsdPairOn Ω₃, S t x ∉ tsdPairOn Ω₃ := by
+      ∀ S, IsEvolution ℝ (absorbingOn Ω₃ Ω₂) (Ici 0) S → ∀ T, 0 < T →
+        ∃ t ∈ Icc 0 T, ∃ x ∈ tsdPairOn Ω₃, S t x ∉ tsdPairOn Ω₃ := by
   subst h₃ h₂
   have hA := isMDissipative_absorbing
-  refine ⟨?_, ?_, fun S hS => ?_⟩
+  refine ⟨?_, ?_, fun S hS T hT => ?_⟩
   · rw [absorbingOn_eq]
     exact ⟨Feec.Models.Cube.Absorbing.absorbing, rfl, fun x => by simpa using hA.dissipative x,
       fun y => by simpa using hA.surjective one_pos y⟩
@@ -193,11 +194,28 @@ theorem absorbing_of_eq {Ω₃ : Set (Fin 3 → ℝ)} {Ω₂ : Set (Fin 2 → �
     obtain ⟨u, hu⟩ := Feec.Models.Cube.Absorbing.exists_inner_absorbing_neg
     exact ⟨((u : State), Feec.Models.Cube.Absorbing.absorbing u),
       Feec.Models.Cube.Absorbing.absorbing.mem_graph u, hu⟩
-  · by_contra hcon
+  · -- kept on `[0, T]`, the constraint would be kept at all `t = (t / n) n ≥ 0`
+    by_contra hcon
     push Not at hcon
     refine Feec.Models.Cube.Absorbing.not_invariant_tsdPair fun t ht x hx => ?_
-    have h := hcon t ht x ((tsdPairOn_iff x).2 hx)
-    rw [absorbing_eq_semigroup hS ht] at h
-    exact (tsdPairOn_iff _).1 h
+    obtain ⟨n, hn⟩ := exists_nat_gt (t / T)
+    have hn0 : (0 : ℝ) < n := (div_nonneg ht hT.le).trans_lt hn
+    have hτ : t / n ∈ Icc 0 T := ⟨div_nonneg ht hn0.le,
+      (div_le_iff₀ hn0).2 (by rw [mul_comm]; exact ((div_lt_iff₀ hT).1 hn).le)⟩
+    have hkeep : ∀ m : ℕ, ∀ y ∈ Feec.Models.Cube.Absorbing.tsdPair,
+        absorbingSemigroup.S (t / n * m) y ∈ Feec.Models.Cube.Absorbing.tsdPair := by
+      intro m
+      induction m with
+      | zero => intro y hy; simpa [absorbingSemigroup.map_zero] using hy
+      | succ m ih =>
+        intro y hy
+        have h := hcon (t / n) hτ y ((tsdPairOn_iff y).2 hy)
+        rw [absorbing_eq_semigroup hS hτ.1] at h
+        rw [Nat.cast_succ, mul_add, mul_one,
+          absorbingSemigroup.map_add _ _ (mul_nonneg hτ.1 (Nat.cast_nonneg m)) hτ.1,
+          mul_apply_eq_comp]
+        exact ih _ ((tsdPairOn_iff _).1 h)
+    have h := hkeep n x hx
+    rwa [div_mul_cancel₀ t hn0.ne'] at h
 
 end FEEC

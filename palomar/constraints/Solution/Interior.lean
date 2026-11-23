@@ -9,8 +9,8 @@ public import Solution.Absorbing
 The domain of dependence of the challenge is `Feec.Models.BoundedDomain.depDomain`
 (`depDomain_eq`: for `r > 0` the Euclidean ball `Σᵢ (zᵢ - yᵢ)² < r²` is the ball of
 `EuclideanSpace ℝ (Fin 3)`), its Gauss law is `Feec`'s weak divergence against test fields
-(`isDivFree_iff`; `isDivFree_of_mem_ker` for `N(d₀†)`), and its pointwise symmetry and
-trace-freeness are `Feec`'s `SymTF`, by definition. So:
+(`isDivFree_iff` of `Solution.Proxy`; `isDivFree_of_mem_ker` for `N(d₀†)`), and its pointwise
+symmetry and trace-freeness are `Feec`'s `SymTF`, by definition. So:
 
 * `interior_of` (`TSDVerdict.interior`): on every open `Ω`, the strong solutions of the system
   (4.14) are `Feec`'s strong solutions of the grad–curl complex through the state map, and
@@ -58,22 +58,6 @@ theorem depDomain_eq {t : ℝ} (ht : 0 ≤ t) (Ω : Set (Fin 3 → ℝ)) :
   exact pow_lt_pow_iff_left₀ dist_nonneg (ht.trans hr.le) two_ne_zero
 
 variable {Ω : Set (Fin 3 → ℝ)}
-
-/-- **The Gauss law of the challenge is `Feec`'s weak divergence**, against test fields. -/
-theorem isDivFree_iff (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) :
-    IsDivFree E ↔ ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
-      ∑ ij : Ix, ∫ x, toIx E ij x * _root_.partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω =
-        0 := by
-  refine ⟨fun h φ hφ => ?_, fun h a ψ hψ => ?_⟩
-  · rw [Fintype.sum_prod_type]
-    exact Finset.sum_eq_zero fun a _ => h a (φ a) (isTestFn_of (hφ a))
-  · have e := h _ (isTest_single hψ a)
-    rw [Fintype.sum_prod_type, Finset.sum_eq_single a] at e
-    · simp [toIx] at e; exact e
-    · intro b _ hb
-      refine Finset.sum_eq_zero fun c _ => ?_
-      simp [hb]
-    · simp
 
 /-- The fields of `N(d₀†)`, `d₀` the minimal gradient, satisfy the Gauss law. -/
 theorem isDivFree_of_mem_ker (hΩ : IsOpen Ω) {X : L2F ℝ Ω Ix}

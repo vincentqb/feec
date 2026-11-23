@@ -14,8 +14,9 @@ magnetic field `B_{ai} = (-1)ⁱ (ρₐ)_{{i}ᶜ}` of a vector `2`-form are unit
 `Feec.Models.BoundedDomain`. Row by row they are the vector proxies of `Feec.Domain.proxy`, so
 they intertwine `d` with the row-wise curl (`curlOp_rowMat`, `Feec.Domain.curlOp_proxyMat`), and
 `ConstCoeffOp.minimal_ofMatrixCLM_of_comm` carries `H̊Λ¹(Ω)³` and `d_min` into `H̊(curl, Ω; ℝ³ˣ³)`
-and `curl_min` (`fieldE_mem_curl_minimal`). TSD in the sense of the challenge is `Feec`'s
-`L²(TSD)` (`isTSD_iff`).
+and `curl_min` (`fieldE_mem_curl_minimal`). The Gauss law of the challenge is `Feec`'s weak
+divergence against test fields (`isDivFree_iff`), and TSD in its sense is `Feec`'s `L²(TSD)`
+(`isTSD_iff`).
 
 ## References
 
@@ -119,21 +120,28 @@ theorem isTest_single {ψ : (Fin 3 → ℝ) → ℝ} (hψ : IsTestFn Ω ψ) (a :
   · simp only [h, ite_true]; exact isTest_of hψ
   · simp only [h, ite_false]; exact IsTest.zero
 
-/-- **TSD in the sense of the challenge is `Feec`'s `L²(TSD)`.** -/
-theorem isTSD_iff (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) :
-    IsTSD E ↔ toIx E ∈ tsd Ω := by
-  rw [mem_tsd]
-  refine and_congr Iff.rfl (and_congr Iff.rfl ⟨fun h φ hφ => ?_, fun h a ψ hψ => ?_⟩)
-  · rw [inner_grad_testField _ hφ, Fintype.sum_prod_type]
+/-- **The Gauss law of the challenge is `Feec`'s weak divergence**, against test fields. -/
+theorem isDivFree_iff (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) :
+    IsDivFree E ↔ ∀ φ : Fin 3 → R3 → ℝ, IsTestField Ω φ →
+      ∑ ij : Ix, ∫ x, toIx E ij x * _root_.partialDeriv ij.2 (φ ij.1) x ∂volume.restrict Ω =
+        0 := by
+  refine ⟨fun h φ hφ => ?_, fun h a ψ hψ => ?_⟩
+  · rw [Fintype.sum_prod_type]
     exact Finset.sum_eq_zero fun a _ => h a (φ a) (isTestFn_of (hφ a))
   · have e := h _ (isTest_single hψ a)
-    rw [inner_grad_testField _ (isTest_single hψ a), Fintype.sum_prod_type,
-      Finset.sum_eq_single a] at e
+    rw [Fintype.sum_prod_type, Finset.sum_eq_single a] at e
     · simp [toIx] at e; exact e
     · intro b _ hb
       refine Finset.sum_eq_zero fun c _ => ?_
       simp [hb]
     · simp
+
+/-- **TSD in the sense of the challenge is `Feec`'s `L²(TSD)`.** -/
+theorem isTSD_iff (E : Fin 3 → Fin 3 → Lp ℝ 2 (volume.restrict Ω)) :
+    IsTSD E ↔ toIx E ∈ tsd Ω := by
+  rw [mem_tsd]
+  exact and_congr Iff.rfl (and_congr Iff.rfl ((isDivFree_iff E).trans
+    (forall₂_congr fun φ hφ => by rw [inner_grad_testField _ hφ])))
 
 /-! ### The curl -/
 

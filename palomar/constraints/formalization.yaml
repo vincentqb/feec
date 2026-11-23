@@ -424,7 +424,7 @@ fidelity:
     clause holds for every evolution and every TSD datum, in D(A) or not. On a bounded Omega the
     domain of dependence is empty once t reaches the inradius of Omega (1/4 on the cube), so the
     two clauses locate the losses at the earlier times, where ElectricVerdict.beta and
-    AbsorbingVerdict.lost give losses (on every [0, T], T > 0).
+    AbsorbingVerdict.lost give losses (within every [0, T], T > 0).
 
 review:
   status: "self-assessed"
@@ -440,8 +440,8 @@ review:
     boundary condition (formerly for (4.14) only, now its instance); then the new clauses
     ElectricVerdict.projection_magnetic (the magnetic slot), TSDVerdict.interior (every open set,
     R^3 included) and AbsorbingVerdict.interior, with the new definitions IsDivFree, IsSymTFOn
-    and depDomain, and AbsorbingVerdict.lost on every interval [0, T] (formerly at some t >= 0,
-    which follows).
+    and depDomain, and AbsorbingVerdict.lost within every interval [0, T] (formerly at some
+    t >= 0, which follows).
     FEEC.constraint_propagation states the criterion formerly in
     the verdict of palomar/feec (there for the windows of Hilbert complexes approximated by
     subcomplex families; here for every window, and for every skew-adjoint or m-dissipative
@@ -496,7 +496,7 @@ alignment:
         forward_iff_stationary_box), Feec.Counterexamples.BoundedBGG for (6.1)
         (Solution/GradCurl.lean, Verdicts.lean, Bounded.lean, Box.lean); absorbing:
         Feec.Models.Cube.Absorbing (isMDissipative_absorbing, exists_inner_absorbing_neg,
-        not_invariant_tsdPair, on every [0, T] by the semigroup law, absorbingSemigroup_divFree,
+        not_invariant_tsdPair, within every [0, T] by the semigroup law, absorbingSemigroup_divFree,
         absorbingSemigroup_symTF_depDomain) (Solution/Absorbing.lean, Interior.lean); mirror:
         Feec.Models.Cube.MirrorBGG
         (propagatesQ, reducingSubcomplexQ) and Feec.Models.Cube.MirrorWeakSymmetry.cosDatum

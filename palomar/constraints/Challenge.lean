@@ -52,7 +52,7 @@ at Euclidean distance `> t` from `ℝ³ \ Ω`, and its complement in `Ω`, the *
 | | star-shaped with respect to a ball (`StarShapedVerdict`) | `L²(TSD) ∩ H(curl)` dense, the closure of `L²(TSD) ∩ H̊(curl)` is `L²(TSD₀)`; `K*` stationary iff no TSD eigenfield `u` has `curl u ∉ H̊(curl)` |
 | | the unit ball (`TSDVerdict.ball`) | no nonzero TSD eigenfield is `C²` up to the boundary |
 | | every box (`BoxVerdict`) | `K* = K ∩ N(L)`: only stationary data keep the constraint |
-| absorbing (Silver–Müller) | the cube (`AbsorbingVerdict`) | m-dissipative, radiating; lost on every `[0, T]`, in the boundary layer only (the Gauss laws kept) |
+| absorbing (Silver–Müller) | the cube (`AbsorbingVerdict`) | m-dissipative, radiating; lost within every `[0, T]`, in the boundary layer only (the Gauss laws kept) |
 | mirror (tensorial reflections) | the cube (`MirrorVerdict`) | kept for (6.1), with moving data |
 
 **Not claimed.** Whether on every bounded domain only stationary data keep the constraint
@@ -735,7 +735,7 @@ structure BoxVerdict (a ℓ : Fin 3 → ℝ) : Prop where
 
 /-- **The verdict of the absorbing (Silver–Müller) boundary conditions on the cube**
 ([QuennevilleBelair2015], §3.4), for the first-order system (`absorbing`, constraint `tsdPair`):
-energy radiates, and the constraint is lost on every time interval `[0, T]`, in the boundary
+energy radiates, and the constraint is lost within every time interval `[0, T]`, in the boundary
 layer only. -/
 structure AbsorbingVerdict : Prop where
   /-- the first-order system is the graph of an m-dissipative operator (so

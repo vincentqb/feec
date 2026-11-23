@@ -679,7 +679,7 @@ structure BoxVerdict (a ℓ : Fin 3 → ℝ) : Prop where
 
 /-- **The verdict of the absorbing (Silver–Müller) boundary conditions on the cube**
 ([QuennevilleBelair2015], §3.4), for the first-order system (`absorbing`, constraint `tsdPair`):
-energy radiates, and the constraint is lost on every time interval `[0, T]`, in the boundary
+energy radiates, and the constraint is lost within every time interval `[0, T]`, in the boundary
 layer only. -/
 structure AbsorbingVerdict : Prop where
   /-- the first-order system is the graph of an m-dissipative operator (so

@@ -38,8 +38,8 @@ The elliptic and parabolic problems need bounded cochain projections, which are 
 stability; the hyperbolic one needs only approximation. The witness `FEEC.spectral_nonvacuous`
 shows that a nontrivial family meets the hypotheses of the three theorems, rates included: the
 spectral Galerkin spaces of band-limited forms of the de Rham complex of the torus, with the
-Fourier truncations as cochain projections and their Jackson estimate on the Sobolev classes
-`Hˢ`. The finite element families that meet them are the subject of the Palomar
+Fourier truncations as cochain projections and a Jackson estimate of these spaces on the Sobolev
+classes `Hˢ`. The finite element families that meet them are the subject of the Palomar
 entry `palomar/fem`, the discrete complexes that are not subcomplexes (variational crimes) that of
 `palomar/crimes`. The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero unless
 `j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions are operator
@@ -591,7 +591,7 @@ def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Fin
     if h : ((s.erase j).card : ℤ) = k then u ξ ⟨s.erase j, h⟩ else 0
 /-- **`u` lies in `Hˢ(𝕋ⁿ; Λᵏ)` with norm at most `L`, in Fourier coefficients**: the series
 `‖u‖²_{Hˢ} = Σ_ξ (1 + |2πξ|²)^s |u ξ|²` converges and is at most `L²` (norm at most `|L|`), where
-`|2πξ|² = 4π² Σⱼ ξⱼ²` is the squared frequency of `e^{2πi ξ·x}` and `|u ξ|` the norm of the
+`|2πξ|² = 4π² Σⱼ ξⱼ²` is the eigenvalue of `-Δ` on `e^{2πi ξ·x}` and `|u ξ|` the norm of the
 coefficients in `Λᵏ`: the Sobolev norm of `𝕋ⁿ = ℝⁿ/ℤⁿ` (for `s = 1` and `0`-forms,
 `‖u‖² + ‖d u‖²`, `d` the multiplier `torusD`). -/
 def IsTorusSobolev {n : ℕ} {k : ℤ} (s L : ℝ) (u : TorusForm n k) : Prop :=
@@ -610,10 +610,11 @@ discrete Poincaré inequality and the harmonic bound uniformly in `N` (Theorem 1
 bounded by `1` in the graph norm (Theorems 1–3) and in `L²` (Theorem 3), approximation in the
 graph norm in every degree (Theorem 2, with the finite-dimensional harmonic forms of its
 cohomology clause), hence on every window (`ApproximatesOn`, Theorem 3), truncations fixing the
-harmonic forms (`‖q - π_N q‖ = 0`, the strict gap of the cohomology isomorphisms of Theorem 2 for
-every `N`), and a Jackson estimate (the rates of Theorems 2 and 3): mesh size `(2π (N + 1))⁻¹` and,
-for every `s ≥ 0`, the order `s`, the constant `1` and the class of the `k`-forms `x` with
-`‖x‖_{Hˢ} ≤ L` and, if `x ∈ D(d)`, `‖d x‖_{Hˢ} ≤ L` (`IsTorusSobolev`). -/
+harmonic forms (`‖q - π_N q‖ = 0`, hence the strict gap `‖q - π_N q‖ < ‖q‖` under which Theorem 2
+gives the cohomology isomorphisms for every `N`), and a Jackson estimate (the rates of Theorems 2
+and 3): mesh size `(2π (N + 1))⁻¹` and, for every `s ≥ 0`, the order `s`, the constant `1` and
+the class of the `k`-forms `x` with `‖x‖_{Hˢ} ≤ L` and, if `x ∈ D(d)`, `‖d x‖_{Hˢ} ≤ L`
+(`IsTorusSobolev`). -/
 theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson NNReal),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔

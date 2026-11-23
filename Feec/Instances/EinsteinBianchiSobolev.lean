@@ -61,15 +61,7 @@ theorem coe_starProjection_band (N : ℕ) (i : Fin 3) (u : Models.Torus.BGG.Spac
     (m : Fin 3 → ℤ) :
     ((band N i).starProjection u : (Fin 3 → ℤ) → W3 ℂ Mat VM i) m =
       if m ∈ Fourier.Torus.bandN N then (u : (Fin 3 → ℤ) → W3 ℂ Mat VM i) m else 0 := by
-  have h := Measure.ae_count_iff.1 (Operator.coeFn_starProjection_fibreSub (μ := Measure.count)
-    (bandFibre (𝕜 := ℂ) (E := W3 ℂ Mat VM) (Fourier.Torus.bandN N) i)
-    AEStronglyMeasurable.of_discrete u) m
-  rw [h]
-  dsimp only
-  rw [starProjection_bandFibre]
-  by_cases hm : m ∈ Fourier.Torus.bandN N
-  · rw [ite_eq_left_iff.2 fun h => absurd hm h, Operator.cutoff_apply_of_mem hm]
-  · rw [ite_eq_right_iff.2 fun h => absurd h hm, Operator.cutoff_apply_of_notMem hm]
+  rw [coeFn_starProjection_band_count, Set.indicator_apply]
 
 open Classical in
 /-- The energy of the truncation error at `m` is the energy of `X` off the band. -/
@@ -90,21 +82,9 @@ theorem fibreEnergy_sub_P (N : ℕ) (X : PiLp 2 Models.Torus.BGG.Space) (m : Fin
 /-- Off the band `|n|_∞ ≤ N`: `(2π (N + 1))^{2s} ≤ ⟨ξ_m⟩^{2s}` for `s ≥ 0`. -/
 theorem pow_le_weight {N : ℕ} {m : Fin 3 → ℤ} (hm : m ∉ Fourier.Torus.bandN N) {s : ℝ}
     (hs : 0 ≤ s) : ((2 * Real.pi * ((N : ℝ) + 1)) ^ 2) ^ s ≤ weight s m := by
-  obtain ⟨j, hj⟩ : ∃ j, ¬ |m j| ≤ N := by
-    by_contra h
-    push Not at h
-    exact hm h
-  have hj' : ((N : ℝ) + 1) ≤ |(m j : ℝ)| := by
-    have : (N : ℤ) + 1 ≤ |m j| := by omega
-    exact_mod_cast this
-  have h1 : 2 * Real.pi * ((N : ℝ) + 1) ≤ ‖Fourier.Torus.freq m‖ := by
-    have hc : |Fourier.Torus.freq m j| ≤ ‖Fourier.Torus.freq m‖ := by
-      have := PiLp.norm_apply_le (Fourier.Torus.freq m) j
-      rwa [Real.norm_eq_abs] at this
-    rw [Fourier.Torus.freq_apply, abs_mul, abs_of_pos (by positivity)] at hc
-    nlinarith [Real.pi_pos]
   have h2 : (2 * Real.pi * ((N : ℝ) + 1)) ^ 2 ≤ 1 + ‖Fourier.Torus.freq m‖ ^ 2 := by
-    have := pow_le_pow_left₀ (by positivity) h1 2
+    have := pow_le_pow_left₀ (by positivity)
+      (Fourier.Torus.two_pi_mul_add_one_le_norm_freq_of_notMem hm) 2
     linarith
   exact Real.rpow_le_rpow (sq_nonneg _) h2 hs
 

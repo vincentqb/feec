@@ -112,22 +112,6 @@ theorem weight_add (s t : ℝ) (m : Fin n → ℤ) : weight (s + t) m = weight s
 theorem weight_mono {s t : ℝ} (h : s ≤ t) (m : Fin n → ℤ) : weight s m ≤ weight t m :=
   Real.rpow_le_rpow_of_exponent_le (one_le_base m) h
 
-/-- Outside the band `|m|_∞ ≤ M` the frequencies are at least `2π (M + 1)`. -/
-theorem sq_le_norm_freq_sq_of_notMem {M : ℕ} {m : Fin n → ℤ} (hm : m ∉ bandN M) :
-    (2 * Real.pi * (M + 1)) ^ 2 ≤ ‖freq m‖ ^ 2 := by
-  simp only [bandN, Set.mem_ofPred_eq, not_forall, not_le] at hm
-  obtain ⟨j, hj⟩ := hm
-  have h1 : ((M : ℝ) + 1) ^ 2 ≤ ((m j : ℝ)) ^ 2 := by
-    have h2 : (M : ℤ) + 1 ≤ |m j| := by omega
-    have h3 : ((M : ℝ) + 1) ≤ |(m j : ℝ)| := by exact_mod_cast h2
-    rw [← sq_abs (m j : ℝ)]
-    exact pow_le_pow_left₀ (by positivity) h3 2
-  have h4 : ((m j : ℝ)) ^ 2 ≤ ∑ i, ((m i : ℝ)) ^ 2 :=
-    Finset.single_le_sum (f := fun i => ((m i : ℝ)) ^ 2) (fun _ _ => sq_nonneg _)
-      (Finset.mem_univ j)
-  rw [norm_freq_sq, mul_pow]
-  exact mul_le_mul_of_nonneg_left (h1.trans h4) (by positivity)
-
 /-- Inside the band `|m|_∞ ≤ M` the frequencies are at most `2π √n M`. -/
 theorem norm_freq_sq_le_of_mem {M : ℕ} {m : Fin n → ℤ} (hm : m ∈ bandN M) :
     ‖freq m‖ ^ 2 ≤ n * (2 * Real.pi * M) ^ 2 := by
@@ -310,13 +294,15 @@ theorem sobSum_sub_trunc_le {s t : ℝ} (hts : t ≤ s) {x : Seq n k} (hx : MemS
     · rw [cf_sub_trunc_of_mem x hm, norm_zero, zero_pow two_ne_zero, mul_zero]
       exact mul_nonneg hB (mul_nonneg (weight_nonneg s m) (sq_nonneg _))
     · rw [cf_sub_trunc_of_notMem x hm]
+      have hf : (2 * Real.pi * (M + 1)) ^ 2 ≤ ‖freq m‖ ^ 2 :=
+        pow_le_pow_left₀ (by positivity)
+          (Feec.Fourier.Torus.two_pi_mul_add_one_le_norm_freq_of_notMem hm) 2
       have hw : weight t m ≤ B * weight s m := by
         have e : weight t m = weight (t - s) m * weight s m := by
           rw [← weight_add]; ring_nf
         rw [e]
         refine mul_le_mul_of_nonneg_right ?_ (weight_nonneg s m)
-        exact rpow_le_rpow_of_nonpos (by positivity)
-          (by linarith [sq_le_norm_freq_sq_of_notMem hm]) (by linarith)
+        exact rpow_le_rpow_of_nonpos (by positivity) (by linarith) (by linarith)
       calc weight t m * ‖cf x m‖ ^ 2 ≤ (B * weight s m) * ‖cf x m‖ ^ 2 :=
             mul_le_mul_of_nonneg_right hw (sq_nonneg _)
         _ = _ := by ring

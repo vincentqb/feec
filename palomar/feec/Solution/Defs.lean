@@ -503,7 +503,7 @@ def torusD {n : ℕ} {k : ℤ} (u : TorusForm n k) (ξ : Fin n → ℤ) (s : Fin
     if h : ((s.erase j).card : ℤ) = k then u ξ ⟨s.erase j, h⟩ else 0
 /-- **`u` lies in `Hˢ(𝕋ⁿ; Λᵏ)` with norm at most `L`, in Fourier coefficients**: the series
 `‖u‖²_{Hˢ} = Σ_ξ (1 + |2πξ|²)^s |u ξ|²` converges and is at most `L²` (norm at most `|L|`), where
-`|2πξ|² = 4π² Σⱼ ξⱼ²` is the squared frequency of `e^{2πi ξ·x}` and `|u ξ|` the norm of the
+`|2πξ|² = 4π² Σⱼ ξⱼ²` is the eigenvalue of `-Δ` on `e^{2πi ξ·x}` and `|u ξ|` the norm of the
 coefficients in `Λᵏ`: the Sobolev norm of `𝕋ⁿ = ℝⁿ/ℤⁿ` (for `s = 1` and `0`-forms,
 `‖u‖² + ‖d u‖²`, `d` the multiplier `torusD`). -/
 def IsTorusSobolev {n : ℕ} {k : ℤ} (s L : ℝ) (u : TorusForm n k) : Prop :=

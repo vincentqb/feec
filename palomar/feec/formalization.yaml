@@ -56,11 +56,10 @@ project:
     of the three theorems, rates included: on the torus T^n = R^n/Z^n (n >= 1), the L2 de Rham
     complex in Fourier coefficients (k-forms l2(Z^n; Lambda^k), TorusForm; d the multiplier
     (du)(xi)_s = 2 pi i sum_{j in s} eps(j, s) xi_j u(xi)_{s - j}, torusD, on its maximal domain,
-    stated through its
-    graph), with the spectral Galerkin spaces of band-limited forms |xi|_inf <= N and the Fourier
-    truncations as cochain projections: the harmonic forms are finite-dimensional in every degree,
-    of dimension (n choose k) in degree k (the constant forms), and no band space of a degree
-    0 <= k <= n is the whole space; the ranges are closed (a hypothesis of Theorems 1 and 3), the
+    stated through its graph), with the spectral Galerkin spaces of band-limited forms
+    |xi|_inf <= N and the Fourier truncations as cochain projections: the harmonic forms are
+    finite-dimensional in every degree, of dimension (n choose k) in degree k (the constant
+    forms), and no band space of a degree 0 <= k <= n is the whole space; the ranges are closed (a hypothesis of Theorems 1 and 3), the
     Poincare inequality holds with constant sqrt(1 + (2 pi)^-2) in the graph norm (Theorem 2), the
     discrete Poincare inequality and the harmonic bound hold uniformly in N (Theorem 1), the
     truncations are bounded by 1 in the graph norm (Theorems 1-3) and in L2 (Theorem 3), and the
@@ -204,7 +203,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: the three theorems FEEC.projectionFEEC, FEEC.staticFEEC and
-    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 642 lines). The
+    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 643 lines). The
     theorems restate the former compared theorems
     FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection and FEEC.exists_subcomplexFamily_iff with no conclusion dropped,
@@ -354,9 +353,9 @@ fidelity:
     rate conjuncts of Theorems 2 and 3 give, for this family, the static error C L h_N^s when
     sigma, u, p and P_B u are in the class s with bound L, and the fully discrete wave rate. The
     solution approximates by the truncation itself, ||x - pi_N x|| <= h_N^s ||x||_{H^s} and
-    ||d(x - pi_N x)|| <= h_N^s ||dx||_{H^s}
-    (Feec.Fourier.Torus.norm_sub_starProjection_band_le,
-    Feec.Fourier.Torus.norm_d_sub_starProjection_band_le); that the projections attain the
+    ||d(x - pi_N x)|| = ||dx - pi_N dx|| <= h_N^s ||dx||_{H^s}
+    (Feec.Fourier.Torus.norm_sub_starProjection_band_le, with d pi_N = pi_N d); that the
+    projections attain the
     rate (as Jackson.ProjRate states for the families of palomar/fem) is not stated. The witness
     also states that the harmonic forms are finite-dimensional, of dimension (n choose k) in
     degree k (the constant forms), the hypothesis of the eventual cohomology isomorphism of the
@@ -462,8 +461,7 @@ review:
     so that the rate conjuncts of Theorems 2 and 3 and the strict harmonic gap of
     cohomology_of_lt are exercised (fidelity (7); was: the rates exercised only by palomar/fem,
     the gap holding without being stated); Feec proves the spectral approximation estimate for
-    every symbol complex of the torus (Feec.Fourier.Torus.norm_sub_starProjection_band_le,
-    norm_d_sub_starProjection_band_le).
+    every symbol complex of the torus (Feec.Fourier.Torus.norm_sub_starProjection_band_le).
 
 alignment:
   namespace: "FEEC"
@@ -526,8 +524,8 @@ alignment:
         finrank_harmonic), the band subcomplexes and Fourier truncations
         (Feec.Models.Torus.DeRhamGalerkin), which fix the harmonic forms (bandProj_harmonic),
         and the Jackson estimate FEEC.Torus.jackson from the spectral approximation estimate
-        (Feec.Fourier.Torus.norm_sub_starProjection_band_le,
-        norm_d_sub_starProjection_band_le); the discrete stability from FEEC.projectionFEEC
+        (Feec.Fourier.Torus.norm_sub_starProjection_band_le) and d pi_N = pi_N d; the discrete
+        stability from FEEC.projectionFEEC
         (Solution.lean).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

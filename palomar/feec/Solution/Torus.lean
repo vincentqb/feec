@@ -178,6 +178,21 @@ theorem norm_π_le (N : ℕ) (k : ℤ) (x : ((complexC n).d k (k + 1)).domain) :
     ‖(((family n).π N).π k x : TorusForm n k)‖ ≤ ‖(x : TorusForm n k)‖ :=
   Submodule.norm_starProjection_apply_le _ _
 
+/-- **The truncation commutes with `d`**: `d (x - π_N x) = d x - π_N (d x)`. -/
+theorem d_sub_starProjection_band (N : ℕ) {k : ℤ} (x : ((complexC n).d k (k + 1)).domain)
+    (hv : (x : TorusForm n k) - (band (d := Fin n) N k).starProjection x ∈
+      ((complexC n).d k (k + 1)).domain) :
+    (complexC n).d k (k + 1) ⟨_, hv⟩ = (complexC n).d k (k + 1) x -
+      (band (d := Fin n) N (k + 1)).starProjection ((complexC n).d k (k + 1) x) := by
+  have hP : (band (d := Fin n) N k).starProjection (x : TorusForm n k) ∈
+      ((complexC n).d k (k + 1)).domain :=
+    (bandSubcomplex (Fin n) N).le_domain k (k + 1) (Submodule.starProjection_apply_mem _ _)
+  have hc : (complexC n).d k (k + 1) ⟨_, hP⟩ =
+      (band (d := Fin n) N (k + 1)).starProjection ((complexC n).d k (k + 1) x) :=
+    ((Feec.Models.Torus.DeRham.reducingSubcomplex_band (d := Fin n) N).reduces k (k + 1)).comm x
+  rw [← hc, ← LinearPMap.map_sub]
+  rfl
+
 /-- **The family approximates in the graph norm**: `π_N x → x` and `d π_N x = π_N d x → d x`. -/
 theorem approximates (k : ℤ) : (family n).Approximates k := by
   refine (complexC n).approximates_of_eventually (family n) k fun x ε hε => ?_
@@ -189,19 +204,7 @@ theorem approximates (k : ℤ) : (family n).Approximates k := by
   filter_upwards [h1, h2] with N hN1 hN2
   refine ⟨_, Submodule.starProjection_apply_mem (band (d := Fin n) N k) (x : TorusForm n k),
     by rwa [norm_sub_rev], ?_⟩
-  have hv : (band (d := Fin n) N k).starProjection (x : TorusForm n k) ∈
-      ((complexC n).d k (k + 1)).domain :=
-    (bandSubcomplex (Fin n) N).le_domain k (k + 1) (Submodule.starProjection_apply_mem _ _)
-  have hc : (complexC n).d k (k + 1) ⟨_, hv⟩ =
-      (band (d := Fin n) N (k + 1)).starProjection ((complexC n).d k (k + 1) x) :=
-    ((Feec.Models.Torus.DeRham.reducingSubcomplex_band (d := Fin n) N).reduces k (k + 1)).comm x
-  have e : (complexC n).d k (k + 1) ⟨(x : TorusForm n k) -
-      (band (d := Fin n) N k).starProjection (x : TorusForm n k), Submodule.sub_mem _ x.2 hv⟩ =
-      (complexC n).d k (k + 1) x -
-        (band (d := Fin n) N (k + 1)).starProjection ((complexC n).d k (k + 1) x) := by
-    rw [← hc, ← LinearPMap.map_sub]
-    rfl
-  rw [e, norm_sub_rev]
+  rw [d_sub_starProjection_band, norm_sub_rev]
   exact hN2
 
 /-- **The family approximates on every window**: in the graph norm in every degree, and in `L²`
@@ -234,8 +237,8 @@ variable (n) in
 /-- **The `Hˢ` Jackson estimate of the spectral family**: mesh size `(2π (N + 1))⁻¹`, order `s`,
 constant `1`, the class of the `k`-forms `x` with `‖x‖_{Hˢ} ≤ L` and, if `x ∈ D(d)`,
 `‖d x‖_{Hˢ} ≤ L`, approximated by their truncations
-(`Feec.Fourier.Torus.norm_sub_starProjection_band_le`,
-`Feec.Fourier.Torus.norm_d_sub_starProjection_band_le`). -/
+(`Feec.Fourier.Torus.norm_sub_starProjection_band_le`, for `d` with
+`d_sub_starProjection_band`). -/
 def jackson : (family n).Jackson NNReal where
   meshSize N := (2 * Real.pi * (N + 1))⁻¹
   meshSize_nonneg N := inv_nonneg.2 (by positivity)
@@ -247,20 +250,21 @@ def jackson : (family n).Jackson NNReal where
   B _ _ := 1
   jackson := fun s N k {L} x hL hx => by
     have hh : 0 ≤ (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) := by positivity
+    have hfin : ∀ {T : ℝ}, √T ≤ L → (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) * √T ≤
+        1 * (L * (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ)) := fun hT => by
+      rw [one_mul, mul_comm L]
+      exact mul_le_mul_of_nonneg_left hT hh
     refine ⟨(band (d := Fin n) N k).starProjection x,
       Submodule.starProjection_apply_mem (band (d := Fin n) N k) x, ?_, fun j hxj => ?_⟩
     · obtain ⟨h1, h2⟩ := (isTorusSobolev_iff hL).1 hx.1
-      refine (Feec.Fourier.Torus.norm_sub_starProjection_band_le (symbolComplex (deRham (Fin n)))
-        s.coe_nonneg N h1).trans ?_
-      calc _ ≤ (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) * L := mul_le_mul_of_nonneg_left h2 hh
-        _ = 1 * (L * (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ)) := by ring
+      exact (Feec.Fourier.Torus.norm_sub_starProjection_band_le (symbolComplex (deRham (Fin n)))
+        s.coe_nonneg N h1).trans (hfin h2)
     · by_cases hkj : k + 1 = j
       · subst hkj
         obtain ⟨h1, h2⟩ := (isTorusSobolev_iff hL).1 (hx.2 hxj)
-        refine (Feec.Fourier.Torus.norm_d_sub_starProjection_band_le
-          (symbolComplex (deRham (Fin n))) s.coe_nonneg N ⟨x, hxj⟩ _ h1).trans ?_
-        calc _ ≤ (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ) * L := mul_le_mul_of_nonneg_left h2 hh
-          _ = 1 * (L * (2 * Real.pi * (N + 1))⁻¹ ^ (s : ℝ)) := by ring
+        rw [d_sub_starProjection_band N ⟨x, hxj⟩]
+        exact (Feec.Fourier.Torus.norm_sub_starProjection_band_le
+          (symbolComplex (deRham (Fin n))) s.coe_nonneg N h1).trans (hfin h2)
       · rw [LinearPMap.apply_eq_zero_of_eq_zero ((complexC n).shape k j hkj), norm_zero]
         exact mul_nonneg zero_le_one (mul_nonneg hL hh)
 

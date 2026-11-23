@@ -78,16 +78,7 @@ theorem coeFn_trunc (N k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : 
     (m : Fin n → ℤ) :
     (trunc N k x : (Fin n → ℤ) → Form ℂ (Fin n) k) m =
       if m ∈ bandN N then (x : (Fin n → ℤ) → Form ℂ (Fin n) k) m else 0 := by
-  have := Measure.ae_count_iff.1 (Operator.coeFn_starProjection_fibreSub
-    (μ := (Measure.count : Measure (Fin n → ℤ)))
-    (Fourier.bandFibre (𝕜 := ℂ) (E := Form ℂ (Fin n)) (bandN N) k)
-    AEStronglyMeasurable.of_discrete x) m
-  rw [this]
-  dsimp only
-  rw [Fourier.starProjection_bandFibre]
-  by_cases hm : m ∈ bandN N
-  · simp [hm, Operator.cutoff_apply_of_mem hm]
-  · simp [hm, Operator.cutoff_apply_of_notMem hm]
+  rw [Fourier.coeFn_starProjection_band_count, Set.indicator_apply]
 
 theorem tendsto_trunc (k : ℕ) (x : Lp (Form ℂ (Fin n) k) 2 (Measure.count : Measure (Fin n → ℤ))) :
     Tendsto (fun N => trunc N k x) atTop (𝓝 x) :=

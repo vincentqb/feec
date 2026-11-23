@@ -16,10 +16,10 @@ then applies with the constants `C = 1`, `c_P = (2π)⁻¹`, `μ = 0`, and the s
 solutions converge to the solution of the mixed problem as `N → ∞` (`tendsto_bandGalerkin`). This
 shows the hypotheses of the abstract theory are satisfiable by a nontrivial family of subcomplexes.
 For `s ≥ 0` and the forms of finite `Hˢ` norm, `‖u‖²_{Hˢ} = Σ_n (1 + |2πn|²)^s ‖u n‖²`, the
-truncation error is `‖u - π_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}`, and that of `d` is bounded by
-`‖d u‖_{Hˢ}` alike (`Fourier.Torus.norm_sub_starProjection_band_le`,
-`Fourier.Torus.norm_d_sub_starProjection_band_le`, for every symbol complex of the torus): a
-Jackson estimate of order `s` with mesh size `(2π (N + 1))⁻¹`.
+truncation error is `‖u - π_N u‖ ≤ (2π (N + 1))^{-s} ‖u‖_{Hˢ}`
+(`Fourier.Torus.norm_sub_starProjection_band_le`, for every symbol complex of the torus), and,
+since `d π_N = π_N d`, that of `d` is bounded by `‖d u‖_{Hˢ}` alike: a Jackson estimate of order
+`s` with mesh size `(2π (N + 1))⁻¹`.
 
 ## Main results
 
@@ -94,8 +94,8 @@ open scoped Classical in
 `0`. -/
 theorem coeFn_starProjection_band (N : ℕ) (k : ℤ) (x : L2Form d k) (n : d → ℤ) :
     ((band N k).starProjection x : L2Form d k) n =
-      if n ∈ Fourier.Torus.bandN N then x n else 0 :=
-  Fourier.coeFn_starProjection_band_count _ _ k x n
+      if n ∈ Fourier.Torus.bandN N then x n else 0 := by
+  rw [Fourier.coeFn_starProjection_band_count, Set.indicator_apply]
 
 /-- **The Fourier truncations converge**: `π_N u → u` as `N → ∞`. -/
 theorem tendsto_starProjection_band (k : ℤ) (u : L2Form d k) :

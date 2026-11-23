@@ -1736,16 +1736,7 @@ open scoped Classical in
 theorem coeFn_trunc (N : ℕ) (i : Fin 3) (x : Space i) (n : Fin 3 → ℤ) :
     (trunc N i x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n =
       if n ∈ Fourier.Torus.bandN N then (x : (Fin 3 → ℤ) → W3 Vec Mat Mat i) n else 0 := by
-  have := Measure.ae_count_iff.1 (Operator.coeFn_starProjection_fibreSub
-    (μ := (Measure.count : Measure (Fin 3 → ℤ)))
-    (Fourier.bandFibre (𝕜 := ℂ) (E := W3 Vec Mat Mat) (Fourier.Torus.bandN N) i)
-    AEStronglyMeasurable.of_discrete x) n
-  rw [this]
-  dsimp only
-  rw [Fourier.starProjection_bandFibre]
-  by_cases hn : n ∈ Fourier.Torus.bandN N
-  · simp [hn, Operator.cutoff_apply_of_mem hn]
-  · simp [hn, Operator.cutoff_apply_of_notMem hn]
+  rw [Fourier.coeFn_starProjection_band_count, Set.indicator_apply]
 
 theorem neg_mem_bandN {N : ℕ} {n : Fin 3 → ℤ} :
     -n ∈ Fourier.Torus.bandN N ↔ n ∈ Fourier.Torus.bandN N := by

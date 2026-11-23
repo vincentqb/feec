@@ -24,7 +24,7 @@ the wave group is unitary, and the real parts of the fields are no larger than t
 
 ## Main results
 
-* `norm_reL_le`, `sq_norm_rowsW1L_le`, `sq_norm_rowsW2L_le`,
+* `Feec.Models.Cube.RowWise.norm_reL_le`, `sq_norm_rowsW1L_le`, `sq_norm_rowsW2L_le`,
   `sq_norm_rowsW1L_add_sq_norm_rowsW2L_le`.
 * **`mirror_waveFEM_of_mem_tsd`**.
 
@@ -43,21 +43,25 @@ open Set MeasureTheory Filter
 
 @[expose] public noncomputable section
 
-namespace Feec.Models.Cube.MirrorWeakSymmetry
-
-open Feec.Models.Cube.Mirror (MQ)
-open Feec.Domain (formIdx)
-open Feec.Models.Cube.RowWise (reL)
-open Feec.Models.Cube.WeakSymmetry (W0 W1 W2 Wv)
-open Feec.HilbertComplex (totalSub)
-
-/-! ### The real fields of a state -/
+namespace Feec.Models.Cube.RowWise
 
 /-- **The real part is a contraction of `L²`**: `‖Re f‖ ≤ ‖f‖`. -/
 theorem norm_reL_le {α : Type*} [MeasurableSpace α] {μ : Measure α} (f : Lp ℂ 2 μ) :
     ‖reL μ f‖ ≤ ‖f‖ := by
   have h := Complex.reCLM.norm_compLp_le f
   rwa [Complex.reCLM_norm, one_mul] at h
+
+end Feec.Models.Cube.RowWise
+
+namespace Feec.Models.Cube.MirrorWeakSymmetry
+
+open Feec.Models.Cube.Mirror (MQ)
+open Feec.Domain (formIdx)
+open Feec.Models.Cube.RowWise (reL norm_reL_le)
+open Feec.Models.Cube.WeakSymmetry (W0 W1 W2 Wv)
+open Feec.HilbertComplex (totalSub)
+
+/-! ### The real fields of a state -/
 
 theorem abs_sg2 (i : Fin 3) : |sg2 i| = 1 := by
   unfold sg2; split_ifs <;> norm_num

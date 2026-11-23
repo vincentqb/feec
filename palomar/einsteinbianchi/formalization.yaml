@@ -94,7 +94,8 @@ project:
     whose initial states converge to U_0 converges to every strong solution uniformly on [0, T]
     (no regularity hypothesis); if moreover L U_0, L^2 U_0 lie in D(L), for every N some
     trajectory of (6.5) is within K (sum_{k <= 3} ||L^k U_0||) (1 + t) h_N of every strong
-    solution from U_0 on [0, T]; for every T > 0 and all large N a trajectory of (6.5) with u_h(0) != 0 satisfies the discrete
+    solution from U_0 on [0, T]; for every T > 0 and all large N a trajectory of (6.5) with
+    u_h(0) != 0 satisfies the discrete
     Gauss law at t = 0 and has M_h not constant; and some such datum has L U_0 != 0: the method
     computes the TSD solution.
     FEEC.weakSymmetry_electric_nonvacuous: with the electric boundary conditions, (5.3) has a
@@ -296,8 +297,10 @@ status:
     (cubeWave_rate_sobolev). Not claimed: convergence with the mirror conditions from the data of
     D(L) outside TSD. Feec's mirror model is a complex Hilbert complex of matrix fields whose real
     parts are identified with the challenge's states on the constraint only; a datum off the
-    constraint would need a real model of the mirror forms complex and a convergence theorem for
-    multipliers that are not L^2-bounded.
+    constraint would need a real model of the mirror forms complex (as
+    Feec.EinsteinBianchi.MatrixModel.formsShort is for the electric conditions) and the convergence
+    of the mirror scheme for multipliers that are not L^2-bounded (mirrorWave_converges assumes
+    them bounded).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -334,7 +337,8 @@ automation:
     identifies them with the definitions of the library Feec and applies its theorems:
     Solution/Abstract.lean (the abstract theorem through Feec.BGG.Discrete, from the former
     palomar/bgg entry), DiscreteWave.lean (the energy identity of (6.5): uniqueness, the distance
-    of trajectories and Lax's principle; the discrete Gauss law), Cube*.lean and Instance.lean (the electric conditions: the cube data are Feec's,
+    of trajectories and Lax's principle; the discrete Gauss law), Cube*.lean and Instance.lean
+    (the electric conditions: the cube data are Feec's,
     the hypotheses, S^0_h != S^0, the best-approximation clause from
     Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge, the H^1 rates, uniqueness for (6.5),
     CubeUnique.lean, also used by Converge.lean),
@@ -358,7 +362,8 @@ automation:
     every orbit from the constraint is the uniform limit of trajectories, D(L^2) being dense in
     the constraint, which reduces L; then Lax's principle, with the energy identity of (6.5) of
     DiscreteWave.lean and Feec.ForMathlib.Analysis.DiagonalChoice,
-    tendstoUniformlyOn_iff_tendsto_of_stable and exists_tendstoUniformlyOn_of_stable, new); Forms.lean, Poly.lean,
+    tendstoUniformlyOn_iff_tendsto_of_stable and exists_tendstoUniformlyOn_of_stable, new);
+    Forms.lean, Poly.lean,
     Mesh.lean, Trace.lean, Spaces.lean, Sobolev.lean adapted from palomar/fem. Smooth.lean, not
     part of the comparison, checks that the C^2 rates of the thesis follow from the statement of
     FEEC.weakSymmetry_electric (c2_rates_of_h1_rates, weakSymmetry_electric_c2) and that the

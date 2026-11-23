@@ -12,8 +12,10 @@ On an open `Ω ⊆ ℝ³` the thesis' complex (4.16) for Prop 4.19 is the Hessia
 with constraint spaces `L²(TSD) ∩ L²(S)` and `L²(TSD) ∩ L²(T)`
 (`Feec.Models.BoundedDomain.tsdS`, `tsdT`). Since `H̊(curl, S) ⊆ H̊(curl)` with the same curl,
 the zero-mean theorem applies, and on every nonempty bounded open `Ω` the projection hypothesis
-(`exists_projTSD_not_mem_domain`, `not_isReducing_tsd`) and the density hypothesis
-(`not_dense_tsdS_inter`) of Prop 4.19 fail, and TSD data do **not**
+(`exists_projTSD_not_mem_domain`, on every dense set of fields
+`exists_projTSD_not_mem_domain_of_dense`, and `not_isReducing_tsd` for every short complex with
+`D(d₁) ⊆ H̊(curl, S)`) and the density hypothesis (`not_dense_tsdS_inter`) of Prop 4.19 fail,
+and TSD data do **not**
 propagate for any short complex with `d₁ ⊆ curl` on `H̊(curl, S)` (`tsd_not_propagates`), from
 the same datum `(0, 0, β)` as for the grad–curl complex (`Feec.Counterexamples.BoundedDomainTSD`).
 
@@ -118,23 +120,37 @@ theorem not_dense_tsdS_inter (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hn
     rw [inner_self_eq_zero.1 h0]; rfl
   exact BoundedDomainTSD.constField_diagA_ne_zero hΩ hb hne h0'
 
+/-- **The projection hypothesis of Prop 4.19 fails on every dense set** of symmetric fields, on
+every nonempty bounded open `Ω`: some `E` in it has `P_{L²(TSD) ∩ L²(S)} E ∉ H̊(curl, S)`, since
+otherwise `L²(TSD) ∩ H̊(curl, S)` would be dense in `L²(TSD) ∩ L²(S)`
+(`Feec.Domain.topologicalClosure_inf_eq_of_mapsTo`, `not_dense_tsdS_inter`).
+[QuennevilleBelair2015], Prop 4.19 -/
+theorem exists_projTSD_not_mem_domain_of_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) {s : Set (symSub ℝ Ω)} (hs : Dense s) :
+    ∃ E ∈ s, (tsdS Ω).starProjection E ∉ (hessCurl ℝ hΩ).d₁.domain := by
+  by_contra! h
+  obtain ⟨hK, hnot⟩ := not_dense_tsdS_inter hΩ hb hne
+  refine hnot ?_
+  rw [← Submodule.coe_inf, ← Submodule.topologicalClosure_coe,
+    topologicalClosure_inf_eq_of_mapsTo hs h]
+  exact hK
+
 /-- **`K = {0} × (L²(TSD) ∩ L²(S)) × S₂` does not reduce the wave operator** (the projection
-hypothesis `P_K D(L) ⊆ D(L)` of Prop 4.19 fails) for every short complex
-`W₀ → L²(S) → W₂` with `D(d₁) ⊆ H̊(curl, S)` containing the symmetric test fields in
-`D(d₁) ∩ D(d₀†)`, on every nonempty bounded open `Ω`. [QuennevilleBelair2015], Prop 4.19 -/
+hypothesis `P_K D(L) ⊆ D(L)` of Prop 4.19 fails) for every short complex `W₀ → L²(S) → W₂` with
+`D(d₁) ⊆ H̊(curl, S)`, on every nonempty bounded open `Ω`: some `E` of the dense
+`D(d₁) ∩ D(d₀†)`, so `(0, E, 0) ∈ D(L)`, has `P_{L²(TSD) ∩ L²(S)} E ∉ H̊(curl, S)`
+(`exists_projTSD_not_mem_domain_of_dense`). [QuennevilleBelair2015], Prop 4.19 -/
 theorem not_isReducing_tsd (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
     [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
     (S : ShortHilbertComplex ℝ W₀ (symSub ℝ Ω) W₂) (S₂ : Submodule ℝ W₂)
-    [S₂.HasOrthogonalProjection] (hd₁ : S.d₁.domain ≤ (hessCurl ℝ hΩ).d₁.domain)
-    (htest : ∀ (Φ : Ix → R3 → ℝ) (hΦ : IsTestField Ω Φ) (hs : ∀ i j, Φ (i, j) = Φ (j, i)),
-      (⟨testField hΦ, testField_mem_symSub hΦ hs⟩ : symSub ℝ Ω) ∈ S.d₁.domain ∧
-        (⟨testField hΦ, testField_mem_symSub hΦ hs⟩ : symSub ℝ Ω) ∈ S.d₀†.domain) :
+    [S₂.HasOrthogonalProjection] (hd₁ : S.d₁.domain ≤ (hessCurl ℝ hΩ).d₁.domain) :
     ¬ S.wave.IsReducing
       (HilbertComplex.totalSub (ShortHilbertComplex.family3 (⊥ : Submodule ℝ W₀) (tsdS Ω) S₂)) := by
-  obtain ⟨Φ, hΦ, hs, hnot⟩ := exists_projTSD_not_mem_domain hΩ hb hne
-  exact BoundedDomainTSD.not_isReducing_of_starProjection_not_mem S _ S₂ (htest Φ hΦ hs).1
-    (htest Φ hΦ hs).2 fun h => hnot (hd₁ h)
+  obtain ⟨E, ⟨h1, h1'⟩, hnot⟩ :=
+    exists_projTSD_not_mem_domain_of_dense hΩ hb hne S.dense_domain_inf_adjoint
+  exact BoundedDomainTSD.not_isReducing_of_starProjection_not_mem S _ S₂ h1 h1'
+    fun h => hnot (hd₁ h)
 
 /-- `⟪-diag(1, -1, 0), Φ⟫ = ⟪β, curl Φ⟫` for every test field `Φ`: `curl β = -diag(1, -1, 0)`
 weakly. -/
@@ -357,12 +373,10 @@ theorem diagnosis (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.None
       ¬ (hessCurl ℝ hΩ).wave.IsReducing (HilbertComplex.totalSub
         (ShortHilbertComplex.family3 (⊥ : Submodule ℝ (L2 ℝ Ω)) (tsdS Ω) (tsdT Ω))) ∧
       ¬ ∀ B ∈ (hessCurl ℝ hΩ).d₁†.domain, (tsdT Ω).starProjection B ∈
-        (hessCurl ℝ hΩ).d₁†.domain := by
-  refine ⟨tsdS_le_ker hΩ, hessCurl_d₁_mem_tsdT hΩ, adjoint_hessCurl_d₁_mem_tsdS hΩ,
-    not_isReducing_tsd hΩ hb hne (hessCurl ℝ hΩ) (tsdT Ω) le_rfl fun Φ hΦ hs => ⟨?_, ?_⟩,
+        (hessCurl ℝ hΩ).d₁†.domain :=
+  ⟨tsdS_le_ker hΩ, hessCurl_d₁_mem_tsdT hΩ, adjoint_hessCurl_d₁_mem_tsdS hΩ,
+    not_isReducing_tsd hΩ hb hne (hessCurl ℝ hΩ) (tsdT Ω) le_rfl,
     not_starProjection_mem_adjoint_domain hΩ hb hne⟩
-  · exact testField_mem_hessCurl_d₁_domain hΩ hΦ hs
-  · exact testField_mem_adjoint_hessCurl_d₀ hΩ hΦ hs
 
 /-! ### The corrected Prop 4.19: the invariant core `K*` of (4.16) -/
 

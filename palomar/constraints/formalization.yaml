@@ -77,7 +77,8 @@ project:
     trace; zero mean), both strictly smaller than L^2(TSD), S_2* containing a nonzero stationary
     datum; for every boundary condition containing n x E = 0 (every short Hilbert complex
     W^0 -> L^2 Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 whose d^1 is a restriction of the minimal
-    curl, W^0 and d^0 arbitrary, the complex of (4.14) among them), the TSD datum (0, 0, beta),
+    curl, W^0 and d^0 arbitrary; among them the complex of (4.14) and, with W^0 = 0, the
+    first-order system E' = -curl* B, B' = curl E with n x E = 0), the TSD datum (0, 0, beta),
     beta = x_3 (e_1 e_2^T + e_2 e_1^T), lies in D(L), and from (0, E_0, beta) every strong
     solution on [0, T], T > 0, has a non-TSD electric field at some time;
     K does not reduce L, already because P_K D(L) is not in D(L), for every boundary condition
@@ -348,8 +349,13 @@ fidelity:
     almost everywhere by its formula; the boundary conditions containing n x E = 0 are the short
     Hilbert complexes W^0 -> L^2 Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 (closed, densely
     defined, d^1 d^0 = 0) with d^1 <= the row-wise minimal exterior derivative (the order of
-    LinearPMap: D(d^1) in H°(curl), d^1 = curl there), W^0 any real Hilbert space in Type; for
-    the density, every restriction d^1 of the minimal exterior derivative. The
+    LinearPMap: D(d^1) in H°(curl), d^1 = curl there), W^0 any real Hilbert space in Type.
+    Besides (4.14) they contain, with W^0 = 0 (so d^0 = 0), the first-order system
+    E' = -curl* B, B' = curl E with n x E = 0; in the natural members d^1 is the minimal curl
+    itself (the other d^1 restrict it to subspaces of H°(curl) closed in its graph norm and dense
+    in L^2), and they differ in W^0 and d^0, which change D(L). For the density the class is every
+    restriction d^1 of the minimal exterior derivative; its only natural member is the minimal
+    curl, and the general statement follows from that case, D(d^1) being in H°(curl). The
     obstruction for (6.1) is the explicit datum (0, 0, 0, *beta) (in the proof) with existence of
     solutions.
     (5) Star-shaped domains: with respect to a ball of the sup norm (equivalently of the Euclidean
@@ -379,9 +385,9 @@ review:
     - "none"
   notes: >-
     Not yet reviewed by the author: the Challenge statement (the two compared theorems and their
-    definitions, 2026-11-18, new; since 2026-11-23 ElectricVerdict.projection has a second
-    conjunct for every boundary condition containing n x E = 0, ElectricVerdict.not_dense is
-    stated for every restriction d^1 of the minimal curl (the former statement its instance
+    definitions, 2026-11-18, new), and its changes of 2026-11-23: ElectricVerdict.projection has a
+    second conjunct for every boundary condition containing n x E = 0, ElectricVerdict.not_dense
+    is stated for every restriction d^1 of the minimal curl (the former statement its instance
     d^1 = the minimal curl), and ElectricVerdict.beta states (0, 0, beta) in D(L) for every such
     boundary condition (formerly for (4.14) only, now its instance).
     FEEC.constraint_propagation states the criterion formerly in

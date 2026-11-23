@@ -18,8 +18,9 @@ behind the bounded-domain refutations of thesis Props 4.17/4.19, in general form
   (`closure_sup_obstruction`), and `K ∩ D` is dense in `K` iff the obstruction vanishes
   (`dense_iff_obstruction_eq_bot`).
 * **Projection and density hypotheses.** `topologicalClosure_inf_eq_of_mapsTo`: if `P_K` maps a
-  dense set into `D`, then `K ∩ D` is dense in `K`; so when `K ∩ D` is not dense, every dense
-  set has a point `x` with `P_K x ∉ D`.
+  dense set into `D`, then `K ∩ D` is dense in `K`
+  (`Submodule.orthogonal_le_topologicalClosure_of_dense` applied to `Kᗮ`); so when `K ∩ D` is
+  not dense, every dense set has a point `x` with `P_K x ∉ D`.
 * **Boundary form.** `ConstCoeffOp.mem_minimal_domain_iff`: `u ∈ D(A_min)` iff the boundary form
   `⟪A_max u, v⟫ - ⟪u, (Aᵗ)_max v⟫` vanishes for all `v ∈ D((Aᵗ)_max)` (no traces needed).
 * **The `Ė(0)` argument** (`ShortHilbertComplex.adjoint_mem_closure_of_propagates`): if a strong
@@ -154,21 +155,17 @@ theorem dense_iff_obstruction_eq_bot (hK : IsClosed (K : Set H)) :
 
 omit [CompleteSpace H] in
 /-- **The projection hypothesis on a dense set gives density**: if the orthogonal projection onto
-`K` maps a dense set into `D`, then `K ∩ D` is dense in `K`. -/
+`K` maps a dense set into `D`, then `K ∩ D` is dense in `K`
+(`Submodule.orthogonal_le_topologicalClosure_of_dense` applied to `Kᗮ`, whose projection is
+`1 - P_K`). -/
 theorem topologicalClosure_inf_eq_of_mapsTo [K.HasOrthogonalProjection] {s : Set H}
     (hs : Dense s) (hP : Set.MapsTo K.starProjection s D) : (K ⊓ D).topologicalClosure = K := by
-  have hK : IsClosed (K : Set H) := by
-    have e : (K : Set H) = {x | K.starProjection x = x} := by
-      ext x; exact (Submodule.starProjection_eq_self_iff (K := K)).symm
-    rw [e]
-    exact isClosed_eq K.starProjection.continuous continuous_id
-  refine le_antisymm (Submodule.topologicalClosure_minimal _ inf_le_left hK) fun x hx => ?_
-  have h := map_mem_closure (t := ((K ⊓ D : Submodule 𝕜 H) : Set H))
-    K.starProjection.continuous (hs x) fun y hy =>
-      Submodule.mem_inf.2 ⟨K.starProjection_apply_mem y, hP hy⟩
-  rw [Submodule.starProjection_eq_self_iff.2 hx] at h
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe]
-  exact h
+  have h := Kᗮ.orthogonal_le_topologicalClosure_of_dense hs (K ⊓ D) fun v hv => by
+    rw [Submodule.starProjection_orthogonal_val, sub_sub_cancel]
+    exact ⟨K.starProjection_apply_mem v, hP hv⟩
+  rw [K.orthogonal_orthogonal] at h
+  exact h.antisymm' (Submodule.topologicalClosure_minimal _ inf_le_left
+    (K.orthogonal_orthogonal ▸ Kᗮ.isClosed_orthogonal))
 
 end Abstract
 

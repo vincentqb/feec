@@ -11,11 +11,11 @@ The challenge's Hodge wave operator `IsHodgeWave d⁰ d¹` is carried by unitary
 `e₀, e₁, e₂` intertwining `d⁰, d¹` with the differentials of a `Feec` short complex `S` to the
 wave operator of `S`, `(σ, u, ρ) ↦ (-e₀σ, e₁u, e₂ρ)` (`isHodgeWave_iff`; the sign of `σ` is the
 sign convention of the challenge), and so are its domain (`exists_isHodgeWave_iff`) and the strong
-solutions (`isStrongSolution_toFeec`, `isStrongSolution_ofFeec`). On an open `Ω ⊆ ℝ³` the vector `0`-, `1`- and `2`-forms are the
-vector fields and matrix fields of `Feec.Models.BoundedDomain` (`field0`, `fieldE`, `fieldB`), and
-the componentwise minimal exterior derivatives are the minimal row-wise `grad` and `curl`
-(`mem_graph_grad_iff`, `mem_graph_curl_iff`: row by row, the matrices of the fields and their
-transposes intertwine the operators on smooth fields, and
+solutions (`isStrongSolution_toFeec`, `isStrongSolution_ofFeec`). On an open `Ω ⊆ ℝ³` the vector
+`0`-, `1`- and `2`-forms are the vector fields and matrix fields of `Feec.Models.BoundedDomain`
+(`field0`, `fieldE`, `fieldB`), and the componentwise minimal exterior derivatives are the minimal
+row-wise `grad` and `curl` (`mem_graph_grad_iff`, `mem_graph_curl_iff`: row by row, the matrices
+of the fields and their transposes intertwine the operators on smooth fields, and
 `Feec.Domain.ConstCoeffOp.minimal_ofMatrixCLM_of_comm` carries the minimal graphs both ways).
 So the challenge's grad–curl system on a box is `Feec.Models.BoundedDomain.gradCurl`, and
 the box clause of `FEEC.tsd_boundary_conditions` is

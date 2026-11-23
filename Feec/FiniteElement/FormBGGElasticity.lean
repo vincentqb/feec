@@ -7,9 +7,10 @@ public import Feec.FiniteElement.FormBGG
 
 On an open `Ω ⊆ ℝ³`, the elasticity diagram stacks `HΛ(Ω) ⊗ ℝ³` over itself (`vecRow 3 hΩ`),
 linked by **`(S μ)_b = dx_{b+2} ∧ μ_{b+1} − dx_{b+1} ∧ μ_{b+2}`** (indices mod `3`, `crossL2`): in
-vector proxies (rows, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the vector `w`), `(S⁰ ψ) w = ψ × w`,
-`S¹ u = uᵀ − tr(u) I`, `(S² u)_b = u_{b+1,b+2} − u_{b+2,b+1}`, the maps of the elasticity diagram
-of `Feec.Domain.elasticityMaximalData` ([ArnoldHu2021], §4.1). With the adjoint
+vector proxies (rows; a `1`-form `Σ_c u_c dx_c` the vector `u`, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` with
+`⋆dxᵢ = dx_{i+1} ∧ dx_{i+2}` the vector `w`, a `3`-form `f dx₀ ∧ dx₁ ∧ dx₂` the scalar `f`),
+`(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ − tr(u) I`, `(S² u)_b = u_{b+1,b+2} − u_{b+2,b+1}`, the maps of the
+elasticity diagram of `Feec.Domain.elasticityMaximalData` ([ArnoldHu2021], §4.1). With the adjoint
 `(Sᵀ w)_i = ι_{i+1} w_{i+2} − ι_{i+2} w_{i+1}` (`crossAdj`), the Cartan identity
 `ι_c (dx_{c'} ∧ ·) + dx_{c'} ∧ ι_c = δ_{cc'}` (`Feec.FiniteElement.ιL2_dxL2_add_dxL2_ιL2`) and the
 Euler identities give the two Gram identities

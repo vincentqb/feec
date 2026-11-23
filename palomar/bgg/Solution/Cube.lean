@@ -136,19 +136,15 @@ theorem antilipschitz_graphS (D : Feec.BGG.HilbertData ℝ (ComplexShape.up ℤ)
     (h₂ : AntilipschitzWith K₂ (D.S (k + 1) (k + 1 + 1))) :
     AntilipschitzWith (max K₁ K₂) (graphS D k) := by
   refine (graphS D k).antilipschitz_of_bound fun v => ?_
-  obtain ⟨φ, rfl, -, -⟩ := (D.Ht.d k (k + 1)).exists_toGraphSpace_eq v
-  have hv : ‖(D.Ht.d k (k + 1)).toGraphSpace φ‖ ^ 2 =
-      ‖(φ : Et k)‖ ^ 2 + ‖D.Ht.d k (k + 1) φ‖ ^ 2 :=
-    WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 ((φ : Et k), D.Ht.d k (k + 1) φ))
-  have hs : ‖graphS D k ((D.Ht.d k (k + 1)).toGraphSpace φ)‖ ^ 2 =
-      ‖D.S k (k + 1) φ‖ ^ 2 + ‖D.S (k + 1) (k + 1 + 1) (D.Ht.d k (k + 1) φ)‖ ^ 2 := by
-    have := WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 (D.S k (k + 1) φ,
-      -D.S (k + 1) (k + 1 + 1) (D.Ht.d k (k + 1) φ)))
-    rw [norm_neg] at this
-    exact this
-  have b₁ := ((D.S k (k + 1)).bound_of_antilipschitz h₁ φ).trans
+  set x := (v : WithLp 2 (Et k × Et (k + 1)))
+  have hv : ‖v‖ ^ 2 = ‖x.fst‖ ^ 2 + ‖x.snd‖ ^ 2 := WithLp.prod_norm_sq_eq_of_L2 x
+  have hs : ‖graphS D k v‖ ^ 2 =
+      ‖D.S k (k + 1) x.fst‖ ^ 2 + ‖D.S (k + 1) (k + 1 + 1) x.snd‖ ^ 2 := by
+    rw [← norm_neg (D.S (k + 1) (k + 1 + 1) x.snd)]
+    exact WithLp.prod_norm_sq_eq_of_L2 (graphS D k v : WithLp 2 (E (k + 1) × E (k + 1 + 1)))
+  have b₁ := ((D.S k (k + 1)).bound_of_antilipschitz h₁ x.fst).trans
     (mul_le_mul_of_nonneg_right (NNReal.coe_le_coe.2 (le_max_left K₁ K₂)) (norm_nonneg _))
-  have b₂ := ((D.S (k + 1) (k + 1 + 1)).bound_of_antilipschitz h₂ (D.Ht.d k (k + 1) φ)).trans
+  have b₂ := ((D.S (k + 1) (k + 1 + 1)).bound_of_antilipschitz h₂ x.snd).trans
     (mul_le_mul_of_nonneg_right (NNReal.coe_le_coe.2 (le_max_right K₁ K₂)) (norm_nonneg _))
   refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
   rw [hv, mul_pow, hs, mul_add, ← mul_pow, ← mul_pow]
@@ -160,19 +156,26 @@ theorem sup_range_eq_top_of_exists (D : Feec.BGG.HilbertData ℝ (ComplexShape.u
     {k : ℤ} (h : ∀ u ∈ (D.H.d (k + 1) (k + 1 + 1)).domain,
       ∃ (p : (D.H.d k (k + 1)).domain) (φ : (D.Ht.d k (k + 1)).domain),
         D.H.d k (k + 1) p + D.S k (k + 1) φ = u) :
-    LinearMap.range ((toDomainDiagram D).d k : graph2 (D.H.d k (k + 1)) →ₗ[ℝ] _) ⊔
-      LinearMap.range ((toDomainDiagram D).s k : graph2 (D.Ht.d k (k + 1)) →ₗ[ℝ] _) = ⊤ := by
+    LinearMap.range ((toDomainDiagram D).d k :
+        graph2 (D.H.d k (k + 1)) →ₗ[ℝ] graph2 (D.H.d (k + 1) (k + 1 + 1))) ⊔
+      LinearMap.range ((toDomainDiagram D).s k :
+        graph2 (D.Ht.d k (k + 1)) →ₗ[ℝ] graph2 (D.H.d (k + 1) (k + 1 + 1))) = ⊤ := by
   refine eq_top_iff.2 fun w _ => ?_
   obtain ⟨u, rfl, -, -⟩ := (D.H.d (k + 1) (k + 1 + 1)).exists_toGraphSpace_eq w
   obtain ⟨p, φ, e⟩ := h u u.2
   have hmem := Submodule.add_mem_sup
-    (LinearMap.mem_range_self ((toDomainDiagram D).d k : graph2 (D.H.d k (k + 1)) →ₗ[ℝ] _)
-      (graphEquiv _ p))
-    (LinearMap.mem_range_self ((toDomainDiagram D).s k : graph2 (D.Ht.d k (k + 1)) →ₗ[ℝ] _)
-      (graphEquiv _ φ))
-  convert hmem using 1
-  refine graph2_ext ?_
-  exact e.symm
+    (LinearMap.mem_range_self ((toDomainDiagram D).d k :
+      graph2 (D.H.d k (k + 1)) →ₗ[ℝ] graph2 (D.H.d (k + 1) (k + 1 + 1)))
+      (graphEquiv (D.H.d k (k + 1)) p))
+    (LinearMap.mem_range_self ((toDomainDiagram D).s k :
+      graph2 (D.Ht.d k (k + 1)) →ₗ[ℝ] graph2 (D.H.d (k + 1) (k + 1 + 1)))
+      (graphEquiv (D.Ht.d k (k + 1)) φ))
+  have he : (D.H.d (k + 1) (k + 1 + 1)).toGraphSpace u =
+      (toDomainDiagram D).d k (graphEquiv (D.H.d k (k + 1)) p) +
+        (toDomainDiagram D).s k (graphEquiv (D.Ht.d k (k + 1)) φ) :=
+    graph2_ext (A := D.H.d (k + 1) (k + 1 + 1)) e.symm
+  rw [he]
+  exact hmem
 
 /-- `D(d i (c.next i)) ≃ Γ(d i (i + 1))`. -/
 def graphDomainEquiv (H : Feec.HilbertComplex ℝ (ComplexShape.up ℤ) E) (i : ℤ) :
@@ -187,14 +190,15 @@ def graphHomologyEquiv (H : Feec.HilbertComplex ℝ (ComplexShape.up ℤ) E) (i 
     (Feec.HilbertComplex.toModuleCatIso H _ (graphDomainEquiv H) fun i j x => by
       by_cases hij : i + 1 = j
       · subst hij
+        rw [BGG.ofBounded_d_succ]
         refine graph2_ext ?_
         change (H.domainMap i (i + 1) x : E (i + 1)) = H.d i (i + 1) ⟨x, _⟩
         rw [Feec.HilbertComplex.coe_domainMap]
-      · rw [CochainComplex.of_d_ne _ _ hij]
+      · rw [HomologicalComplex.shape _ i j hij]
         have h0 : H.domainMap i j x = 0 := Subtype.ext (by
           rw [Feec.HilbertComplex.coe_domainMap]
           exact H.apply_eq_zero_of_not_rel hij _)
-        rw [h0, map_zero]
+        rw [h0, _root_.map_zero]
         rfl) i
 
 end Domain
@@ -212,14 +216,13 @@ theorem vecOp_eq_piD {W : ℤ → Type} [∀ k, NormedAddCommGroup (W k)]
     (hA : H.d k (k + 1) = A) :
     (vecOp fun _ : Fin n => A) = (H.pi (Fin n)).d k (k + 1) := by
   subst hA
-  refine LinearPMap.ext ?_ fun x y hxy => ?_
+  refine LinearPMap.ext ?_ fun x hx hx' => PiLp.ext fun a => ?_
   · ext v
     rw [Feec.HilbertComplex.pi_d, Feec.HilbertComplex.piD_domain,
       Feec.HilbertComplex.mem_piDomain]
     rfl
-  · refine PiLp.ext fun a => ?_
-    rw [Feec.HilbertComplex.pi_d_apply]
-    exact LinearPMap.apply_eq_of_eq rfl _ _ (by rw [hxy])
+  · rw [Feec.HilbertComplex.pi_d_apply]
+    rfl
 
 /-- The exterior product with `dxₐ` of the challenge is `Feec`'s. -/
 theorem dxWedge_eq (Ω : Set (Fin n → ℝ)) (k : ℤ) (a : Fin n) :

@@ -550,20 +550,21 @@ def dxWedge {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) (a : Fin n) :
       ContinuousLinearMap.single ℝ (fun _ : Fin n => L2Form Ω k) a
 
 /-- **The connecting map of the div–div diagram**, `(S φ)ₐ = dxₐ ∧ φ`,
-`L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹ ⊗ ℝⁿ)`. On `ℝ³` in vector proxies (`(S φ)ₐ` the rows of a matrix field,
-a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the vector `w`), `S⁰ φ = φ I`, `(S¹ v) w = v × w` and `S² = I`: the
-connecting maps of the div–div diagram of [ArnoldHu2021], §4.1, up to the sign convention of the
-skew matrix of `v`. -/
+`L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹ ⊗ ℝⁿ)`. On `ℝ³` in vector proxies (`(S φ)ₐ` the rows of a matrix field;
+a `1`-form `Σ_c v_c dx_c` the vector `v`, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` with
+`⋆dxᵢ = dx_{i+1} ∧ dx_{i+2}` (indices mod `3`) the vector `w`, a `3`-form `f dx₀ ∧ dx₁ ∧ dx₂` the
+scalar `f`), `S⁰ φ = φ I`, `(S¹ v) w = v × w` and `S² = I`: the connecting maps of the div–div
+diagram of [ArnoldHu2021], §4.1, up to the sign convention of the skew matrix of `v`. -/
 def dxVec {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →L[ℝ] L2Vec Ω (k + 1) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin n => L2Form Ω (k + 1)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun a => dxWedge Ω k a
 
 /-- **The connecting map of the elasticity diagram** on `Ω ⊆ ℝ³`,
 `(S μ)_b = dx_{b+2} ∧ μ_{b+1} - dx_{b+1} ∧ μ_{b+2}` (indices mod `3`),
-`L²(Ω; Λᵏ ⊗ ℝ³) → L²(Ω; Λᵏ⁺¹ ⊗ ℝ³)`. In vector proxies (rows, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the
-vector `w`), `(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ - tr(u) I` and `(S² u)_b = u_{b+1,b+2} - u_{b+2,b+1}`:
-the connecting maps of the elasticity diagram of [ArnoldHu2021], §4.1, up to the sign convention
-of the skew matrix of `ψ`. -/
+`L²(Ω; Λᵏ ⊗ ℝ³) → L²(Ω; Λᵏ⁺¹ ⊗ ℝ³)`. In vector proxies (the rows of matrix fields, with the
+proxies of `dxVec`), `(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ - tr(u) I` and
+`(S² u)_b = u_{b+1,b+2} - u_{b+2,b+1}`: the connecting maps of the elasticity diagram of
+[ArnoldHu2021], §4.1, up to the sign convention of the skew matrix of `ψ`. -/
 def crossWedge (Ω : Set (Fin 3 → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Vec Ω (k + 1) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin 3 => L2Form Ω (k + 1)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun b =>
@@ -572,7 +573,7 @@ def crossWedge (Ω : Set (Fin 3 → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Vec
 
 namespace BGG
 
-variable {E Et : ℤ → Type*} [∀ k, NormedAddCommGroup (E k)] [∀ k, InnerProductSpace ℝ (E k)]
+variable {E Et : ℤ → Type v} [∀ k, NormedAddCommGroup (E k)] [∀ k, InnerProductSpace ℝ (E k)]
   [∀ k, NormedAddCommGroup (Et k)] [∀ k, InnerProductSpace ℝ (Et k)]
 
 /-- **A stacked diagram of the domain complexes** of complexes of operators `Tᵏ : Eᵏ → Eᵏ⁺¹`,
@@ -609,7 +610,7 @@ abbrev DomainDiagram.toHom (D : DomainDiagram T Tt S) :
     ofBounded D.dt D.dt_dt ⟶ (ofBounded D.d D.d_d)⟦(1 : ℤ)⟧ :=
   ofBoundedHom D.s D.d_s
 
-/-- **The conclusions on the BGG complex at `J` of a stacked diagram of domain complexes**: `sⁱ` is
+/-- **The claims on the BGG complex at `J` of a stacked diagram of domain complexes**: `sⁱ` is
 bounded below for `i < J` and onto modulo `d` for `i ≥ J` (the hypotheses of the main clause of
 `FEEC.bggHilbert`); the BGG complex `Γ / Δ` with the quotient norm (`QuotL`) has bounded
 differentials `[x] ↦ [x']`, `x'` the twisted differential of `x`, with closed range in every

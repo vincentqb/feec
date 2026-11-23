@@ -224,7 +224,7 @@ status:
     the L^2 de Rham complex of forms on the cube (0, 1/2)^3 at J = 0, 1, 2 (the hypotheses of the
     main clause of FEEC.bggHilbert for the stacked diagrams of their domain complexes, closed
     range of the BGG complexes in every degree, finite-dimensional cohomology of dimension 4, 6, 4
-    in degree 0 and 0 in the other degrees). Challenge.lean, CHALLENGE_LINES lines. The first three
+    in degree 0 and 0 in the other degrees). Challenge.lean, 859 lines. The first three
     are the BGG theorems of the former palomar/bgg (FEEC.bggCohomology, FEEC.bggIdentification,
     FEEC.bggFinrank, FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert, FEEC.bggOrthogonal),
     regrouped into three theorems with no conclusion dropped (review.notes); its weak-symmetry

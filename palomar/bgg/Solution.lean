@@ -30,6 +30,7 @@ induces zero on cohomology (`Feec.BGG.Data.inducesZero_of_isZero_rowBot`,
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], (24)–(31), Theorems 6 and 7,
   Proposition 1, Corollary 1, §4.1 and §5
+* [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -201,8 +202,12 @@ theorem BGG.DomainDiagram.verdict {E Et : ℤ → Type} [∀ k, NormedAddCommGro
       LinearMap.range (BGG.conn D.toHom i (i + 1)) = ⊤ := fun i hi => by
     rw [BGG.conn_ofBoundedHom, BGG.ofBounded_d_succ]
     exact hsurj i hi
-  have hz : ∀ {M : ModuleCat ℝ} [FiniteDimensional ℝ M], Module.finrank ℝ M = 0 → IsZero M :=
-    fun h0 => @ModuleCat.isZero_of_subsingleton _ _ _ (Module.finrank_zero_iff.1 h0)
+  have hzV : ∀ i ≠ 0, Limits.IsZero ((BGG.ofBounded D.d D.d_d).homology i) := fun i hi =>
+    @ModuleCat.isZero_of_subsingleton _ _ _
+      (Module.finrank_zero_iff.1 ((hV i).trans (ite_eq_right hi)))
+  have hzVt : ∀ i ≠ 0, Limits.IsZero ((BGG.ofBounded D.dt D.dt_dt).homology i) := fun i hi =>
+    @ModuleCat.isZero_of_subsingleton _ _ _
+      (Module.finrank_zero_iff.1 ((hVt i).trans (ite_eq_right hi)))
   refine ⟨hS, hsurj, ⟨D', hD', fun i => hcl i⟩, fun i => (bggFinrank D.toHom J hinj hsurj' i).1,
     fun i => ?_⟩
   obtain ⟨-, hle, heq⟩ := bggFinrank D.toHom J hinj hsurj' i
@@ -211,10 +216,9 @@ theorem BGG.DomainDiagram.verdict {E Et : ℤ → Type} [∀ k, NormedAddCommGro
     rw [ite_eq_left rfl, heq.2 ⟨?_, ?_⟩, hV, hVt, ite_eq_left rfl, ite_eq_left rfl]
     · rw [BGG.inducesZero_iff (sub_add_cancel 0 1)]
       exact (BGG.toData D.toHom).inducesZero_of_isZero_rowBot (sub_add_cancel 0 1)
-        (hz ((hVt _).trans (ite_eq_right (by norm_num))))
+        (hzVt _ (by norm_num))
     · rw [BGG.inducesZero_iff rfl]
-      exact (BGG.toData D.toHom).inducesZero_of_isZero_rowTop rfl
-        (hz ((hV _).trans (ite_eq_right (by norm_num))))
+      exact (BGG.toData D.toHom).inducesZero_of_isZero_rowTop rfl (hzV _ (by norm_num))
   · rw [hV, hVt, ite_eq_right hi, ite_eq_right hi] at hle
     rw [ite_eq_right hi]
     omega
@@ -316,8 +320,9 @@ theorem BGG.elasticityCube :
       finrank_vecRow_cohomology finrank_vecRow_cohomology)
 
 /-- **The Hessian, elasticity and div–div complexes on the cube** ([ArnoldHu2021], §4.1 and
-Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the weak exterior derivative
-`dMax` of `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of forms, the stacked diagrams
+Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the `L²` de Rham complex of the
+weak exterior derivative `dMax` on `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of
+forms, the diagrams
 
 * of the **Hessian** complex: `HΛ(Q)` over `HΛ(Q) ⊗ ℝ³` linked by `S v = Σₐ dxₐ ∧ vₐ` (`wedge`),
   at `J = 0`;
@@ -327,13 +332,16 @@ Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the weak exte
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
 of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
 `J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Q`). So their BGG
-complexes, the `L²` Hessian complex `H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the
-`L²` elasticity and div–div complexes (`FEEC.bggCohomology`, `BGG.Identification`), are bounded
-Hilbert complexes with closed range in every degree, and their cohomology is finite-dimensional,
-of dimension `4`, `6` and `4` in degree `0` (the dimensions of the affine functions, of the rigid
-motions and of the fields `a + b x`) and `0` in the other degrees (`BGG.DomainDiagram.Verdict`):
-the rows have the cohomology of a point, so `S` induces zero on cohomology and the dimensions of
-the cohomology of the rows add (`FEEC.bggFinrank`). -/
+complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree,
+and their cohomology is finite-dimensional, of dimension `4`, `6` and `4` in degree `0` and `0` in
+the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a point, so `S`
+induces zero on cohomology and the dimensions of the cohomology of the rows add
+(`FEEC.bggFinrank`). In vector proxies these BGG complexes are the `L²` Hessian complex
+`H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²` elasticity and div–div complexes
+of [ArnoldHu2021], §4.1 (away from `J` by `BGG.Identification`; in degree `J`, `sᴶ` being
+injective, `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Q)`), whose cohomology in degree
+`0` is the space of affine functions, of rigid motions, resp. of the fields `a + b x`; these
+identifications are not part of the statement. -/
 theorem bggCube :
     (∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
       (wedge (cube 3)), D.Verdict 0 4) ∧

@@ -480,20 +480,8 @@ theorem ιL2_dxL2 (k : ℤ) (c c' : Fin n) (w : L2F ℝ Ω (formIdx n (k + 1))) 
 
 /-! ### `H¹` fields -/
 
-/-- The exterior derivative is homogeneous of order `1`. -/
-theorem isHomogeneous_extDerivOp (n : ℕ) (k : ℤ) : (extDerivOp ℝ n k).IsHomogeneous 1 := by
-  intro t r p hp
-  simp only [extDerivOp, List.mem_map] at hp
-  obtain ⟨j, -, rfl⟩ := hp
-  rfl
-
 variable (hΩ : IsOpen Ω)
 include hΩ
-
-/-- `H¹` fields lie in the maximal domain of `d`. -/
-theorem fieldH1_le_extDerivOp_maximal (k : ℤ) :
-    fieldH1 ℝ Ω (formIdx n k) ≤ ((extDerivOp ℝ n k).maximal Ω).domain :=
-  fieldH1_le_maximal_domain hΩ (isHomogeneous_extDerivOp n k)
 
 omit hΩ in
 theorem wsL2Adj_apply_eq_ofMatrixCLM (k : ℤ) (w : L2F ℝ Ω (formIdx n (k + 1))) (a : Fin n) :

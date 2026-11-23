@@ -52,13 +52,14 @@ Four theorems:
   the orthogonal output complex of Arnold–Hu, with the map (30) in its Moore–Penrose form
   (Theorem 7, Corollary 1).
 * `FEEC.bggCube` (the examples of §4.1 on the cube `Q = (0, ½)³`): for the `L²` Hessian,
-  elasticity and div–div diagrams (the weak exterior derivative `dMax` of `L²(Q; Λ)`, its copy
+  elasticity and div–div diagrams (the weak exterior derivative `dMax` on `L²(Q; Λ)`, its copy
   on vectors of forms `L²(Q; Λ ⊗ ℝ³)`, and the connecting maps `wedge`, `crossWedge`, `dxVec`
   built from `dxₐ ∧ ·`), the domain complexes form stacked diagrams of bounded Hilbert rows
-  (`BGG.DomainDiagram`) satisfying the hypotheses of `FEEC.bggHilbert` at `J = 0, 1, 2`, so the
-  three BGG complexes are bounded Hilbert complexes with closed range in every degree; their
-  cohomology is finite-dimensional, of dimension `4`, `6`, `4` in degree `0` and `0` in the other
-  degrees (`BGG.DomainDiagram.Verdict`), the sum of the dimensions for the rows.
+  (`BGG.DomainDiagram`) satisfying the hypotheses of the main clause of `FEEC.bggHilbert` at
+  `J = 0, 1, 2`, so the three BGG complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`),
+  with closed range in every degree; their cohomology is finite-dimensional, of dimension `4`,
+  `6`, `4` in degree `0` and `0` in the other degrees (`BGG.DomainDiagram.Verdict`), the sum of
+  the dimensions for the rows.
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
 `i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and
@@ -733,20 +734,21 @@ def dxWedge {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) (a : Fin n) :
       ContinuousLinearMap.single ℝ (fun _ : Fin n => L2Form Ω k) a
 
 /-- **The connecting map of the div–div diagram**, `(S φ)ₐ = dxₐ ∧ φ`,
-`L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹ ⊗ ℝⁿ)`. On `ℝ³` in vector proxies (`(S φ)ₐ` the rows of a matrix field,
-a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the vector `w`), `S⁰ φ = φ I`, `(S¹ v) w = v × w` and `S² = I`: the
-connecting maps of the div–div diagram of [ArnoldHu2021], §4.1, up to the sign convention of the
-skew matrix of `v`. -/
+`L²(Ω; Λᵏ) → L²(Ω; Λᵏ⁺¹ ⊗ ℝⁿ)`. On `ℝ³` in vector proxies (`(S φ)ₐ` the rows of a matrix field;
+a `1`-form `Σ_c v_c dx_c` the vector `v`, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` with
+`⋆dxᵢ = dx_{i+1} ∧ dx_{i+2}` (indices mod `3`) the vector `w`, a `3`-form `f dx₀ ∧ dx₁ ∧ dx₂` the
+scalar `f`), `S⁰ φ = φ I`, `(S¹ v) w = v × w` and `S² = I`: the connecting maps of the div–div
+diagram of [ArnoldHu2021], §4.1, up to the sign convention of the skew matrix of `v`. -/
 def dxVec {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →L[ℝ] L2Vec Ω (k + 1) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin n => L2Form Ω (k + 1)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun a => dxWedge Ω k a
 
 /-- **The connecting map of the elasticity diagram** on `Ω ⊆ ℝ³`,
 `(S μ)_b = dx_{b+2} ∧ μ_{b+1} - dx_{b+1} ∧ μ_{b+2}` (indices mod `3`),
-`L²(Ω; Λᵏ ⊗ ℝ³) → L²(Ω; Λᵏ⁺¹ ⊗ ℝ³)`. In vector proxies (rows, a `2`-form `Σᵢ wᵢ ⋆dxᵢ` the
-vector `w`), `(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ - tr(u) I` and `(S² u)_b = u_{b+1,b+2} - u_{b+2,b+1}`:
-the connecting maps of the elasticity diagram of [ArnoldHu2021], §4.1, up to the sign convention
-of the skew matrix of `ψ`. -/
+`L²(Ω; Λᵏ ⊗ ℝ³) → L²(Ω; Λᵏ⁺¹ ⊗ ℝ³)`. In vector proxies (the rows of matrix fields, with the
+proxies of `dxVec`), `(S⁰ ψ) w = ψ × w`, `S¹ u = uᵀ - tr(u) I` and
+`(S² u)_b = u_{b+1,b+2} - u_{b+2,b+1}`: the connecting maps of the elasticity diagram of
+[ArnoldHu2021], §4.1, up to the sign convention of the skew matrix of `ψ`. -/
 def crossWedge (Ω : Set (Fin 3 → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Vec Ω (k + 1) :=
   (PiLp.continuousLinearEquiv 2 ℝ fun _ : Fin 3 => L2Form Ω (k + 1)).symm.toContinuousLinearMap ∘L
     ContinuousLinearMap.pi fun b =>
@@ -755,7 +757,7 @@ def crossWedge (Ω : Set (Fin 3 → ℝ)) (k : ℤ) : L2Vec Ω k →L[ℝ] L2Vec
 
 namespace BGG
 
-variable {E Et : ℤ → Type*} [∀ k, NormedAddCommGroup (E k)] [∀ k, InnerProductSpace ℝ (E k)]
+variable {E Et : ℤ → Type v} [∀ k, NormedAddCommGroup (E k)] [∀ k, InnerProductSpace ℝ (E k)]
   [∀ k, NormedAddCommGroup (Et k)] [∀ k, InnerProductSpace ℝ (Et k)]
 
 /-- **A stacked diagram of the domain complexes** of complexes of operators `Tᵏ : Eᵏ → Eᵏ⁺¹`,
@@ -792,7 +794,7 @@ abbrev DomainDiagram.toHom (D : DomainDiagram T Tt S) :
     ofBounded D.dt D.dt_dt ⟶ (ofBounded D.d D.d_d)⟦(1 : ℤ)⟧ :=
   ofBoundedHom D.s D.d_s
 
-/-- **The conclusions on the BGG complex at `J` of a stacked diagram of domain complexes**: `sⁱ` is
+/-- **The claims on the BGG complex at `J` of a stacked diagram of domain complexes**: `sⁱ` is
 bounded below for `i < J` and onto modulo `d` for `i ≥ J` (the hypotheses of the main clause of
 `FEEC.bggHilbert`); the BGG complex `Γ / Δ` with the quotient norm (`QuotL`) has bounded
 differentials `[x] ↦ [x']`, `x'` the twisted differential of `x`, with closed range in every
@@ -821,8 +823,9 @@ structure DomainDiagram.Verdict (D : DomainDiagram T Tt S) (J : ℤ) (m : ℕ) :
 end BGG
 
 /-- **The Hessian, elasticity and div–div complexes on the cube** ([ArnoldHu2021], §4.1 and
-Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the weak exterior derivative
-`dMax` of `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of forms, the stacked diagrams
+Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the `L²` de Rham complex of the
+weak exterior derivative `dMax` on `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of
+forms, the diagrams
 
 * of the **Hessian** complex: `HΛ(Q)` over `HΛ(Q) ⊗ ℝ³` linked by `S v = Σₐ dxₐ ∧ vₐ` (`wedge`),
   at `J = 0`;
@@ -832,15 +835,16 @@ Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the weak exte
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
 of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
 `J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Q`). So their BGG
-complexes are bounded Hilbert complexes with closed range in every degree, and their cohomology is
-finite-dimensional, of dimension `4`, `6` and `4` in degree `0` and `0` in the other degrees
-(`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a point, so `S` induces zero on
-cohomology and the dimensions of the cohomology of the rows add (`FEEC.bggFinrank`). In vector
-proxies, the output complexes (24)–(26) of these diagrams (`BGG.Identification`) are the `L²`
-Hessian complex `H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²` elasticity and
-div–div complexes of [ArnoldHu2021], §4.1, whose cohomology in degree `0` is the space of affine
-functions, of rigid motions, resp. of the fields `a + b x` (this identification is not part of the
-statement). -/
+complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree,
+and their cohomology is finite-dimensional, of dimension `4`, `6` and `4` in degree `0` and `0` in
+the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a point, so `S`
+induces zero on cohomology and the dimensions of the cohomology of the rows add
+(`FEEC.bggFinrank`). In vector proxies these BGG complexes are the `L²` Hessian complex
+`H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²` elasticity and div–div complexes
+of [ArnoldHu2021], §4.1 (away from `J` by `BGG.Identification`; in degree `J`, `sᴶ` being
+injective, `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Q)`), whose cohomology in degree
+`0` is the space of affine functions, of rigid motions, resp. of the fields `a + b x`; these
+identifications are not part of the statement. -/
 theorem bggCube :
     (∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
       (wedge (cube 3)), D.Verdict 0 4) ∧

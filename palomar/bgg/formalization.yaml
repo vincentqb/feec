@@ -224,7 +224,7 @@ status:
     the L^2 de Rham complex of forms on the cube (0, 1/2)^3 at J = 0, 1, 2 (the hypotheses of the
     main clause of FEEC.bggHilbert for the stacked diagrams of their domain complexes, closed
     range of the BGG complexes in every degree, finite-dimensional cohomology of dimension 4, 6, 4
-    in degree 0 and 0 in the other degrees). Challenge.lean, 859 lines. The first three
+    in degree 0 and 0 in the other degrees). Challenge.lean, 860 lines. The first three
     are the BGG theorems of the former palomar/bgg (FEEC.bggCohomology, FEEC.bggIdentification,
     FEEC.bggFinrank, FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert, FEEC.bggOrthogonal),
     regrouped into three theorems with no conclusion dropped (review.notes); its weak-symmetry
@@ -460,7 +460,13 @@ review:
     and the cohomology of a point of its rows. What remains of the risk: the corollary is on one
     domain, it counts dimensions without identifying H^0 with P_1, RM, RT, and FEEC.bggCube with
     its definitions (graph2, dxWedge, dxVec, crossWedge, BGG.DomainDiagram,
-    BGG.DomainDiagram.Verdict) is not yet reviewed by the author.
+    BGG.DomainDiagram.Verdict) is not yet reviewed by the author. Independent review
+    (2026-11-23): in vector proxies wedge, crossWedge and dxVec are the connecting maps of §4.1
+    with the skew matrix (mskw v)_(ab) = eps_(abc) v_c (S^0 = I, S^1 = 2 vskw, S^2 = tr;
+    -mskw, S, 2 vskw; . I, -mskw, I), at J = 0, 1, 2; the dimensions are 1 + 3, 3 + 3 and 3 + 1
+    (S induces zero on cohomology since H^(-1)(V~) = H^1(V) = 0); FEEC.bggCube is proved from
+    FEEC.bggHilbert and FEEC.bggFinrank of the challenge; the module docstring states the
+    question the four theorems answer.
 
 alignment:
   namespace: "FEEC"

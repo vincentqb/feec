@@ -270,6 +270,19 @@ theorem IsOrderLE.formalAdj {A : ConstCoeffOp E 𝕜 ι κ} {N : ℕ} (h : A.IsO
   obtain ⟨t', ht', rfl⟩ := ht
   simpa using h j i t' ht'
 
+/-- `A` is **homogeneous of order `r`**: every term has exactly `r` derivatives. -/
+def IsHomogeneous (A : ConstCoeffOp E 𝕜 ι κ) (r : ℕ) : Prop :=
+  ∀ j i, ∀ t ∈ A.coeff j i, t.1.length = r
+
+omit [NormedAddCommGroup E] [NormedSpace ℝ E] in
+theorem IsHomogeneous.formalAdj {A : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (h : A.IsHomogeneous r) :
+    A.formalAdj.IsHomogeneous r := by
+  intro i j t ht
+  change t ∈ adjEntry (A.coeff j i) at ht
+  simp only [adjEntry, List.mem_map] at ht
+  obtain ⟨t', ht', rfl⟩ := ht
+  simpa using h j i t' ht'
+
 /-- A bound for the order of `A` (the total length of all its direction lists). -/
 def order [Fintype ι] [Fintype κ] (A : ConstCoeffOp E 𝕜 ι κ) : ℕ :=
   ∑ j, ∑ i, ((A.coeff j i).map fun t => t.1.length).sum

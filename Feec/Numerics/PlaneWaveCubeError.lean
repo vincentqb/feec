@@ -325,12 +325,6 @@ namespace Feec.Numerics.PlaneWaveCube
 
 open Feec.FiniteElement HilbertComplex
 
-theorem extDerivOp_isHomogeneous (k : ℤ) : (extDerivOp ℝ 3 k).IsHomogeneous 1 := by
-  intro t r p hp
-  simp only [extDerivOp, List.mem_map] at hp
-  obtain ⟨j, -, rfl⟩ := hp
-  rfl
-
 theorem half_ne_zero' : (1 / 2 : ℝ) ≠ 0 := by norm_num
 
 theorem preimage_unitCube : aff (1 / 2 : ℝ) (0 : Fin 3 → ℝ) ⁻¹' cubeDomain 3 = unitCube := by
@@ -364,13 +358,13 @@ abbrev complexUMin := (deRham ℝ 3).minimalComplex isOpen_unitCube
 theorem complexU_eq : complexU = (complex 3).transport dil
     (ConstCoeffComplex.chainFactor (1 / 2 : ℝ) fun _ => 1)
     (ConstCoeffComplex.chainFactor_ne_zero half_ne_zero' _) :=
-  (deRham ℝ 3).maximalComplex_pull extDerivOp_isHomogeneous half_ne_zero' 0
+  (deRham ℝ 3).maximalComplex_pull isHomogeneous_extDerivOp half_ne_zero' 0
     (isOpen_cubeDomain 3) isOpen_unitCube preimage_unitCube
 
 theorem complexUMin_eq : complexUMin = (complexMin 3).transport dil
     (ConstCoeffComplex.chainFactor (1 / 2 : ℝ) fun _ => 1)
     (ConstCoeffComplex.chainFactor_ne_zero half_ne_zero' _) :=
-  (deRham ℝ 3).minimalComplex_pull extDerivOp_isHomogeneous half_ne_zero' 0
+  (deRham ℝ 3).minimalComplex_pull isHomogeneous_extDerivOp half_ne_zero' 0
     (isOpen_cubeDomain 3) isOpen_unitCube preimage_unitCube
 
 end Feec.Numerics.PlaneWaveCube

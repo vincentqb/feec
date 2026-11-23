@@ -20,7 +20,7 @@ constant-coefficient maps built from **the exterior product with `dxₐ`** (`dxL
 * `(S φ)ₐ = dxₐ ∧ φ` (`dxVecL2`, forms to vectors of forms): **the div–div diagram**,
   `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` (`divDivFormData`); on `ℝ³` the maps `· I`, `v ↦ v × ·`, `I`.
 
-Both map the maximal domains into each other with `d S = −S d` (`wsL2_mem_maximal_int`,
+Both map the maximal domains into each other with `d S = −S d` (`wsL2_mem_maximal`,
 `dxL2_mem_maximal`), so they are analytic BGG data (`Feec.BGG.HilbertData`). The algebra of the
 fibre maps decides the hypotheses of the analytic BGG theorem (`Feec.BGG.HilbertData.bggVerdict`):
 
@@ -49,7 +49,7 @@ The adjoints are the contractions `ι_c` (`ιL2`), with the Cartan identity
 * `sum_wsCoeff_mul_wsCoeff`, `wsL2_wsL2Adj`, `wsL2Adj_wsL2_zero`, `sum_sum_wsCoeff_mul_wsCoeff`,
   `dxVecAdj_dxVecL2`, `sum_wsCoeff_mul_wsCoeff_right`, `dxVecL2_dxVecAdj`.
 * `inner_dxL2`, `sum_dxL2_ιL2`, `sum_ιL2_dxL2`, **`ιL2_dxL2_add_dxL2_ιL2`**, `ιL2_dxL2_zero`.
-* `wsL2_mem_maximal_int`, `dxL2_mem_maximal`.
+* `dxL2_mem_maximal`.
 * `hessianFormData_antilipschitz`, **`hessianFormData_regularDecomposition`**;
   `divDivFormData_antilipschitz`, **`divDivFormData_regularDecomposition`**.
 
@@ -503,42 +503,21 @@ theorem dxVecAdj_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin n => L2F ℝ Ω 
   rw [this]
   exact Submodule.sum_mem _ fun a _ => wsL2Adj_mem_fieldH1 hΩ k (hw a) a
 
+/-- `dx_c ∧ ·` maps `H¹` to `H¹` (constant coefficients). -/
+theorem dxL2_mem_fieldH1 (k : ℤ) (c : Fin n) {φ : L2F ℝ Ω (formIdx n k)}
+    (hφ : φ ∈ fieldH1 ℝ Ω (formIdx n k)) : dxL2 k c φ ∈ fieldH1 ℝ Ω (formIdx n (k + 1)) := by
+  have : dxL2 k c φ = L2F.ofMatrixCLM (Matrix.of fun t r => wsCoeff k t (c, r)) φ :=
+    PiLp.ext fun t => by rw [dxL2_apply, L2F.ofMatrixCLM_apply]; rfl
+  rw [this]
+  exact ofMatrixCLM_mem_fieldH1 hΩ _ hφ
+
+/-- `S = Σₐ dxₐ ∧ ·` maps vectors of `H¹` fields to `H¹`. -/
+theorem wsL2_mem_fieldH1 (k : ℤ) {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
+    (hv : ∀ a, v a ∈ fieldH1 ℝ Ω (formIdx n k)) : wsL2 k v ∈ fieldH1 ℝ Ω (formIdx n (k + 1)) := by
+  rw [wsL2_eq_sum]
+  exact Submodule.sum_mem _ fun c _ => dxL2_mem_fieldH1 hΩ k c (hv c)
+
 /-! ### The maps on the maximal domains -/
-
-omit hΩ in
-/-- Below degree `0` the spaces of forms are zero. -/
-theorem subsingleton_L2F_formIdx {k : ℤ} (hk : k < 0) : Subsingleton (L2F ℝ Ω (formIdx n k)) :=
-  have : IsEmpty (formIdx n k) := ⟨fun s => by have := s.2; omega⟩
-  ⟨fun _ _ => PiLp.ext fun s => isEmptyElim s⟩
-
-omit hΩ in
-theorem subsingleton_vec_formIdx {k : ℤ} (hk : k < 0) :
-    Subsingleton (PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :=
-  have := subsingleton_L2F_formIdx (Ω := Ω) hk
-  ⟨fun _ _ => PiLp.ext fun _ => Subsingleton.elim _ _⟩
-
-/-- **`S = Σₐ dxₐ ∧ ·` maps `D(d_max)ⁿ` into `D(d_max)` with `d S = −S d`**, in every degree
-(`wsL2_mem_maximal`; below degree `0` the spaces are zero). -/
-theorem wsL2_mem_maximal_int (k : ℤ) {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
-    (hv : ∀ a, v a ∈ ((extDerivOp ℝ n k).maximal Ω).domain) :
-    ∃ h : wsL2 k v ∈ ((extDerivOp ℝ n (k + 1)).maximal Ω).domain,
-      (extDerivOp ℝ n (k + 1)).maximal Ω ⟨_, h⟩ =
-        -wsL2 (k + 1) (WithLp.toLp 2 fun a => (extDerivOp ℝ n k).maximal Ω ⟨v a, hv a⟩) := by
-  rcases lt_or_ge k 0 with hk | hk
-  · have := subsingleton_vec_formIdx (Ω := Ω) (n := n) hk
-    obtain rfl : v = 0 := Subsingleton.elim _ _
-    have h0 : wsL2 k (0 : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) = 0 := map_zero _
-    have hmem : wsL2 k (0 : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) ∈
-        ((extDerivOp ℝ n (k + 1)).maximal Ω).domain := h0 ▸ Submodule.zero_mem _
-    refine ⟨hmem, ?_⟩
-    have e1 : (⟨_, hmem⟩ : ((extDerivOp ℝ n (k + 1)).maximal Ω).domain) = 0 := Subtype.ext h0
-    have e2 : (WithLp.toLp 2 fun a => (extDerivOp ℝ n k).maximal Ω
-        ⟨(0 : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) a, hv a⟩ :
-          PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1)))) = 0 :=
-      PiLp.ext fun a => (LinearPMap.apply_eq_of_eq rfl _ 0 (by simp)).trans (LinearPMap.map_zero _)
-    rw [e1, LinearPMap.map_zero, e2, map_zero, neg_zero]
-  · obtain ⟨m, rfl⟩ := Int.eq_ofNat_of_zero_le hk
-    exact wsL2_mem_maximal hΩ m hv
 
 /-- **`dxₐ ∧ ·` maps `D(d_max)` into `D(d_max)` with `d (dxₐ ∧ φ) = −dxₐ ∧ dφ`.** -/
 theorem dxL2_mem_maximal (k : ℤ) (a : Fin n) {φ : L2F ℝ Ω (formIdx n k)}
@@ -551,7 +530,7 @@ theorem dxL2_mem_maximal (k : ℤ) (a : Fin n) {φ : L2F ℝ Ω (formIdx n k)}
     by_cases hb : b = a
     · subst hb; simpa using hφ
     · simp [hb]
-  obtain ⟨h, e⟩ := wsL2_mem_maximal_int hΩ k hv
+  obtain ⟨h, e⟩ := wsL2_mem_maximal hΩ k hv
   refine ⟨h, e.trans ?_⟩
   rw [dxL2_eq]
   congr 2
@@ -603,9 +582,9 @@ def hessianFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ) (fun k => L2F �
   BGG.HilbertData.ofSucc (formRow n hΩ) (vecRow n hΩ) (fun k => wsL2 k)
     (fun k φ => by
       rw [formRow_d]
-      exact (wsL2_mem_maximal_int hΩ k ((mem_vecRow_domain hΩ).1 φ.2)).1)
+      exact (wsL2_mem_maximal hΩ k ((mem_vecRow_domain hΩ).1 φ.2)).1)
     (fun k φ => by
-      obtain ⟨h, e⟩ := wsL2_mem_maximal_int hΩ k ((mem_vecRow_domain hΩ).1 φ.2)
+      obtain ⟨h, e⟩ := wsL2_mem_maximal hΩ k ((mem_vecRow_domain hΩ).1 φ.2)
       rw [LinearPMap.apply_eq_of_eq (formRow_d hΩ (k + 1)) _ ⟨_, h⟩ rfl, e]
       congr 2
       exact PiLp.ext fun a => (vecRow_d_apply hΩ φ a).symm)
@@ -635,15 +614,6 @@ def divDivFormData : BGG.HilbertData ℝ (ComplexShape.up ℤ)
 
 /-! ### Bounded below -/
 
-omit hΩ in
-/-- A map with a bounded left inverse is bounded below. -/
-theorem antilipschitz_of_leftInverse {E F : Type*} [NormedAddCommGroup E] [NormedSpace ℝ E]
-    [NormedAddCommGroup F] [NormedSpace ℝ F] {S : E →L[ℝ] F} (N : F →L[ℝ] E)
-    (h : ∀ x, N (S x) = x) : AntilipschitzWith ‖N‖₊ S :=
-  S.antilipschitz_of_bound fun x =>
-    calc ‖x‖ = ‖N (S x)‖ := by rw [h]
-      _ ≤ ‖N‖ * ‖S x‖ := N.le_opNorm _
-
 /-- **`S` is bounded below up to `0`** in the Hessian diagram (`S⁰` is an isometry; below the
 spaces are zero). -/
 theorem hessianFormData_antilipschitz :
@@ -653,7 +623,7 @@ theorem hessianFormData_antilipschitz :
   rcases lt_or_eq_of_le hi with hi | rfl
   · have := subsingleton_vec_formIdx (Ω := Ω) (n := n) hi
     exact ⟨0, AntilipschitzWith.of_subsingleton⟩
-  · exact ⟨_, antilipschitz_of_leftInverse (wsL2Adj 0) wsL2Adj_wsL2_zero⟩
+  · exact ⟨_, (wsL2Adj 0).lipschitzWith.to_rightInverse wsL2Adj_wsL2_zero⟩
 
 /-- **`S` is bounded below up to `n − 1`** in the div–div diagram (`Sᵀ S = n − k`). -/
 theorem divDivFormData_antilipschitz :
@@ -663,7 +633,7 @@ theorem divDivFormData_antilipschitz :
   have hne : ((n : ℝ) - i) ≠ 0 := by
     have : (i : ℝ) ≤ (n : ℝ) - 1 := by exact_mod_cast hi
     linarith
-  refine ⟨_, antilipschitz_of_leftInverse (((n : ℝ) - i)⁻¹ • dxVecAdj i) fun φ => ?_⟩
+  refine ⟨_, (((n : ℝ) - i)⁻¹ • dxVecAdj i).lipschitzWith.to_rightInverse fun φ => ?_⟩
   rw [_root_.smul_apply, dxVecAdj_dxVecL2, smul_smul, inv_mul_cancel₀ hne, one_smul]
 
 /-! ### Regular decompositions -/

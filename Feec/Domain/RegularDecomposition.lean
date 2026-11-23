@@ -50,7 +50,7 @@ regular decompositions `HΛᵏ(Ω) = d HΛᵏ⁻¹(Ω) + H¹Λᵏ(Ω)` of [Arnol
 ## Main results
 
 * `ConstCoeffOp.maximal_domain_le_of_apply_eq`, **`fieldH1_le_maximal_domain`**
-  (`fieldH1_le_extDerivOp_maximal` for the exterior derivative, `isHomogeneous_extDerivOp`),
+  (`fieldH1_le_extDerivOp_maximal` for the exterior derivative),
   `ofMatrixCLM_mem_fieldH1`; `isPullIntertwining_fieldGradOp`, **`fieldPull_mem_fieldH1`**.
 * `vecOp_rowMat`, `vecOp_rowMat_transpose`, `sum_rowMat_transpose_mul`;
   `extDerivOp_rowFormMat`, `vecOp_formRowMat`, `sum_formRowMat_mul_rowFormMat`.
@@ -168,17 +168,10 @@ theorem fieldH1_le_maximal_domain (hΩ : IsOpen Ω) {A : ConstCoeffOp (Fin n →
     (hA : A.IsHomogeneous 1) : fieldH1 𝕜 Ω ι ≤ (A.maximal Ω).domain :=
   maximal_domain_le_of_apply_eq hΩ fun f _ => A.apply_eq_ofMatrix_grad hA f
 
-/-- The exterior derivative is homogeneous of order `1`. -/
-theorem isHomogeneous_extDerivOp (n : ℕ) (k : ℤ) : (extDerivOp ℝ n k).IsHomogeneous 1 := by
-  intro t r p hp
-  simp only [extDerivOp, List.mem_map] at hp
-  obtain ⟨j, -, rfl⟩ := hp
-  rfl
-
 /-- **`H¹` forms lie in the maximal domain of the exterior derivative**, `H¹Λᵏ(Ω) ⊆ HΛᵏ(Ω)`. -/
 theorem fieldH1_le_extDerivOp_maximal (hΩ : IsOpen Ω) (k : ℤ) :
-    fieldH1 ℝ Ω (formIdx n k) ≤ ((extDerivOp ℝ n k).maximal Ω).domain :=
-  fieldH1_le_maximal_domain hΩ (isHomogeneous_extDerivOp n k)
+    fieldH1 𝕜 Ω (formIdx n k) ≤ ((extDerivOp 𝕜 n k).maximal Ω).domain :=
+  fieldH1_le_maximal_domain hΩ (isHomogeneous_extDerivOp k)
 
 /-- **Constant matrices preserve `H¹` fields**: `∇ (N u) = (N ⊗ 1) ∇u`. -/
 theorem ofMatrixCLM_mem_fieldH1 (hΩ : IsOpen Ω) (N : Matrix κ ι 𝕜) {u : L2F 𝕜 Ω ι}

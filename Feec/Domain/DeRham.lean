@@ -12,7 +12,8 @@ coefficients of `dx_{s₁} ∧ ⋯ ∧ dx_{s_k}`, `s₁ < ⋯ < s_k`. With the s
 `ε(j, s) = (-1)^{#{l ∈ s | l < j}}` of `Feec.ExteriorFibre.sgn`:
 
 * the **exterior derivative** `Feec.Domain.extDerivOp n k`, a first-order constant-coefficient
-  operator, `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` (`extDerivOp_apply`);
+  operator, homogeneous of order `1` (`isHomogeneous_extDerivOp`),
+  `(dω)_s = Σ_{j ∈ s} ε(j, s) ∂_j ω_{s ∖ j}` (`extDerivOp_apply`);
 * its **formal adjoint** is minus the codifferential,
   `(dᵗψ)_s = -Σ_{j ∉ s} ε(j, s) ∂_j ψ_{s ∪ j}` (`formalAdj_extDerivOp_apply`);
 * `d ∘ d = 0` and `dᵗ ∘ dᵗ = 0` on smooth forms (Schwarz; `isComplexPair_extDerivOp`,
@@ -240,6 +241,13 @@ theorem extDerivOp_isOrderLE (k : ℤ) : (extDerivOp 𝕜 n k).IsOrderLE 1 := by
 
 theorem formalAdj_extDerivOp_isOrderLE (k : ℤ) : (extDerivOp 𝕜 n k).formalAdj.IsOrderLE 1 :=
   (extDerivOp_isOrderLE k).formalAdj
+
+/-- The exterior derivative is homogeneous of order `1`. -/
+theorem isHomogeneous_extDerivOp (k : ℤ) : (extDerivOp 𝕜 n k).IsHomogeneous 1 := by
+  intro t r p hp
+  simp only [extDerivOp, List.mem_map] at hp
+  obtain ⟨j, -, rfl⟩ := hp
+  rfl
 
 /-- `d ω` extended by zero is `extD` of the extension of `ω`, in degree `k + 1`. -/
 theorem formExt_extDerivOp_apply {k : ℤ} (w : formIdx n k → (Fin n → ℝ) → 𝕜)

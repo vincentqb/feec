@@ -480,20 +480,6 @@ namespace ConstCoeffOp
 
 variable {ι κ : Type*}
 
-/-- `A` is **homogeneous of order `r`**: every term has exactly `r` derivatives. -/
-def IsHomogeneous (A : ConstCoeffOp E 𝕜 ι κ) (r : ℕ) : Prop :=
-  ∀ j i, ∀ t ∈ A.coeff j i, t.1.length = r
-
-omit [NormedAddCommGroup E] [NormedSpace ℝ E] [MeasureSpace E] [BorelSpace E]
-  [FiniteDimensional ℝ E] [(volume : Measure E).IsAddHaarMeasure] in
-theorem IsHomogeneous.formalAdj {A : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (h : A.IsHomogeneous r) :
-    A.formalAdj.IsHomogeneous r := by
-  intro i j t ht
-  change t ∈ adjEntry (A.coeff j i) at ht
-  simp only [adjEntry, List.mem_map] at ht
-  obtain ⟨t', ht', rfl⟩ := ht
-  simpa using h j i t' ht'
-
 omit [MeasureSpace E] [BorelSpace E] [FiniteDimensional ℝ E]
   [(volume : Measure E).IsAddHaarMeasure] in
 theorem applyEntry_comp_aff {P : List (List E × 𝕜)} {r : ℕ} (hP : ∀ t ∈ P, t.1.length = r)

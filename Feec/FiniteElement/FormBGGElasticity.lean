@@ -214,7 +214,7 @@ theorem elasticityFormData_antilipschitz :
   rcases lt_trichotomy i 0 with hi0 | rfl | hi0
   · have := subsingleton_vec_formIdx (Ω := Ω) (n := 3) hi0
     exact ⟨0, AntilipschitzWith.of_subsingleton⟩
-  · refine ⟨_, antilipschitz_of_leftInverse ((2 : ℝ)⁻¹ • crossAdj 0) fun μ => ?_⟩
+  · refine ⟨_, ((2 : ℝ)⁻¹ • crossAdj 0).lipschitzWith.to_rightInverse fun μ => ?_⟩
     rw [_root_.smul_apply, crossAdj_crossL2_zero, smul_smul,
       inv_mul_cancel₀ two_ne_zero, one_smul]
   · obtain rfl : i = 0 + 1 := by omega
@@ -222,28 +222,12 @@ theorem elasticityFormData_antilipschitz :
       rw [NNReal.coe_one, one_mul]
       exact norm_le_norm_crossL2_one μ⟩
 
-/-- `dx_c ∧ ·` maps `H¹` to `H¹`. -/
-theorem dxL2_mem_fieldH1 (k : ℤ) (c : Fin 3) {φ : L2F ℝ Ω (formIdx 3 k)}
-    (hφ : φ ∈ fieldH1 ℝ Ω (formIdx 3 k)) : dxL2 k c φ ∈ fieldH1 ℝ Ω (formIdx 3 (k + 1)) := by
-  have : dxL2 k c φ = L2F.ofMatrixCLM (Matrix.of fun t r => wsCoeff k t (c, r)) φ :=
-    PiLp.ext fun t => by rw [dxL2_apply, L2F.ofMatrixCLM_apply]; rfl
-  rw [this]
-  exact ofMatrixCLM_mem_fieldH1 hΩ _ hφ
-
 /-- `Sᵀ` maps vectors of `H¹` fields to vectors of `H¹` fields. -/
 theorem crossAdj_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (k + 1)))}
     (hw : ∀ b, w b ∈ fieldH1 ℝ Ω (formIdx 3 (k + 1))) (i : Fin 3) :
     crossAdj k w i ∈ fieldH1 ℝ Ω (formIdx 3 k) := by
   rw [crossAdj_apply, ιL2_eq, ιL2_eq]
   exact Submodule.sub_mem _ (wsL2Adj_mem_fieldH1 hΩ k (hw _) _) (wsL2Adj_mem_fieldH1 hΩ k (hw _) _)
-
-/-- `Wᵀ W` maps vectors of `H¹` fields to vectors of `H¹` fields. -/
-theorem wsL2Adj_wsL2_mem_fieldH1 (k : ℤ) {w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k))}
-    (hw : ∀ b, w b ∈ fieldH1 ℝ Ω (formIdx 3 k)) (i : Fin 3) :
-    wsL2Adj k (wsL2 k w) i ∈ fieldH1 ℝ Ω (formIdx 3 k) := by
-  refine wsL2Adj_mem_fieldH1 hΩ k ?_ i
-  rw [wsL2_eq_sum]
-  exact Submodule.sum_mem _ fun c _ => dxL2_mem_fieldH1 hΩ k c (hw c)
 
 omit hΩ in
 /-- **The right inverse of `S` in degree `1`**: `S Sᵀ (1 − ¼ Wᵀ W) = 1` on vector `2`-forms. -/
@@ -292,7 +276,8 @@ theorem elasticityFormData_exists_add_eq (h : (deRham ℝ 3).HasRegularDecomposi
       exact hw a
     set v := w - (4 : ℝ)⁻¹ • wsL2Adj (1 + 1) (wsL2 (1 + 1) w)
     have hva : ∀ a, v a ∈ fieldH1 ℝ Ω (formIdx 3 (1 + 1)) := fun a =>
-      Submodule.sub_mem _ (hwa a) (Submodule.smul_mem _ _ (wsL2Adj_wsL2_mem_fieldH1 hΩ _ hwa a))
+      Submodule.sub_mem _ (hwa a)
+        (Submodule.smul_mem _ _ (wsL2Adj_mem_fieldH1 hΩ _ (wsL2_mem_fieldH1 hΩ _ hwa) a))
     have hφ : crossAdj 1 v ∈ ((vecRow 3 hΩ).d 1 (1 + 1)).domain :=
       (mem_vecRow_domain hΩ).2 fun a =>
         fieldH1_le_extDerivOp_maximal hΩ _ (crossAdj_mem_fieldH1 hΩ 1 hva a)

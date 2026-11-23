@@ -180,13 +180,6 @@ theorem _root_.LinearPMap.exists_adjoint_eq_zero_of_subsingleton {𝕜 E F : Typ
 instance (n : ℕ) : IsEmpty (formIdx n (-1)) :=
   ⟨fun s => by have h := s.2; have : (0 : ℤ) ≤ (s.1.card : ℤ) := Int.natCast_nonneg _; omega⟩
 
-/-- The exterior derivative is homogeneous of order one. -/
-theorem extDerivOp_isHomogeneous (n : ℕ) (k : ℤ) : (extDerivOp ℝ n k).IsHomogeneous 1 := by
-  intro t r p hp
-  simp only [extDerivOp, List.mem_map] at hp
-  obtain ⟨j, -, rfl⟩ := hp
-  rfl
-
 /-- **Rellich on the cube `(0, ½)ⁿ`** for `H̊¹ = H̊Λ⁰`: the compactness property of `H̊Λ(Q)` in
 degree `0` (`FEM.hasCompactProperty_min`), where `d⁻¹ = 0` comes from the zero space. -/
 theorem hasCompactBall_minimal_extDeriv_cube (n : ℕ) :
@@ -235,7 +228,7 @@ From the cube by an affine map and extension by zero
 theorem hasCompactBall_minimal_extDeriv_zero {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     (hb : Bornology.IsBounded Ω) : HasCompactBall ((extDerivOp ℝ n 0).minimal Ω) := by
   obtain ⟨a, b, ha, hsub⟩ := exists_aff_preimage_cubeDomain hb
-  exact ConstCoeffOp.hasCompactBall_minimal_of_subset_preimage (extDerivOp_isHomogeneous n 0) ha
+  exact ConstCoeffOp.hasCompactBall_minimal_of_subset_preimage (isHomogeneous_extDerivOp 0) ha
     b hΩ (Cube.FEM.isOpen_cubeDomain n) hsub (hasCompactBall_minimal_extDeriv_cube n)
 
 /-- The element of a `1`-form index `s = {j}`. -/

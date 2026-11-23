@@ -1086,13 +1086,34 @@ theorem testField_wsFieldsAdj_formalAdj (hΩ : IsOpen Ω) (k : ℕ)
   have := A.inner_testField_apply_testField hχ (isTestField_wsFieldsAdj hψ a)
   rw [real_inner_comm, this, real_inner_comm]
 
-/-- **`S` maps `D(d_max)ⁿ` into `D(d_max)`** (`HΛᵏ(Ω)ⁿ → HΛᵏ⁺¹(Ω)`), with `d S = −S d`. -/
-theorem wsL2_mem_maximal (hΩ : IsOpen Ω) (k : ℕ)
+/-- Below degree `0` the vectors of forms are zero. -/
+theorem subsingleton_vec_formIdx {k : ℤ} (hk : k < 0) :
+    Subsingleton (PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) :=
+  have := LocalElement.subsingleton_L2F_of_neg Ω (n := n) hk
+  ⟨fun _ _ => PiLp.ext fun _ => Subsingleton.elim _ _⟩
+
+/-- **`S` maps `D(d_max)ⁿ` into `D(d_max)`** (`HΛᵏ(Ω)ⁿ → HΛᵏ⁺¹(Ω)`), with `d S = −S d`, in every
+degree (below degree `0` the spaces are zero). -/
+theorem wsL2_mem_maximal (hΩ : IsOpen Ω) (k : ℤ)
     {v : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))}
     (hv : ∀ a, v a ∈ ((extDerivOp ℝ n k).maximal Ω).domain) :
-    ∃ h : wsL2 k v ∈ ((extDerivOp ℝ n ((k : ℤ) + 1)).maximal Ω).domain,
-      (extDerivOp ℝ n ((k : ℤ) + 1)).maximal Ω ⟨_, h⟩ =
-        -wsL2 ((k : ℤ) + 1) (WithLp.toLp 2 fun a => (extDerivOp ℝ n k).maximal Ω ⟨v a, hv a⟩) := by
+    ∃ h : wsL2 k v ∈ ((extDerivOp ℝ n (k + 1)).maximal Ω).domain,
+      (extDerivOp ℝ n (k + 1)).maximal Ω ⟨_, h⟩ =
+        -wsL2 (k + 1) (WithLp.toLp 2 fun a => (extDerivOp ℝ n k).maximal Ω ⟨v a, hv a⟩) := by
+  rcases lt_or_ge k 0 with hk | hk
+  · have := subsingleton_vec_formIdx (Ω := Ω) (n := n) hk
+    obtain rfl : v = 0 := Subsingleton.elim _ _
+    have h0 : wsL2 k (0 : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) = 0 := map_zero _
+    have hmem : wsL2 k (0 : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) ∈
+        ((extDerivOp ℝ n (k + 1)).maximal Ω).domain := h0 ▸ Submodule.zero_mem _
+    refine ⟨hmem, ?_⟩
+    have e1 : (⟨_, hmem⟩ : ((extDerivOp ℝ n (k + 1)).maximal Ω).domain) = 0 := Subtype.ext h0
+    have e2 : (WithLp.toLp 2 fun a => (extDerivOp ℝ n k).maximal Ω
+        ⟨(0 : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n k))) a, hv a⟩ :
+          PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n (k + 1)))) = 0 :=
+      PiLp.ext fun a => (LinearPMap.apply_eq_of_eq rfl _ 0 (by simp)).trans (LinearPMap.map_zero _)
+    rw [e1, LinearPMap.map_zero, e2, map_zero, neg_zero]
+  obtain ⟨k, rfl⟩ := Int.eq_ofNat_of_zero_le hk
   set A := extDerivOp ℝ n k
   set A' := extDerivOp ℝ n ((k : ℤ) + 1)
   set dv : PiLp 2 (fun _ : Fin n => L2F ℝ Ω (formIdx n ((k : ℤ) + 1))) :=

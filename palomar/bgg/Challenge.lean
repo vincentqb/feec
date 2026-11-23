@@ -36,7 +36,8 @@ against the top spaces `Vⁱ⁺¹` ((24)–(26)). It is the subquotient `Γ / Δ
 * `Δⁱ ⊆ Tⁱ` is spanned by `0 × Ṽⁱ` if `i < J` and by its image `{(-Sψ, d̃ψ) | ψ ∈ Ṽⁱ⁻¹}` under
   the twisted differential if `i - 1 < J`, a subcomplex of `T`.
 
-Four theorems:
+When does the BGG complex inherit the cohomology and the closed ranges of its rows? Four theorems
+answer, the last for the `L²` Hessian, elasticity and div–div complexes on a cube:
 
 * `FEEC.bggCohomology` (any ring): `Γ / Δ` is the output complex (24)–(26); if `Sⁱ` is injective
   for `i < J` and onto modulo `d` for `i ≥ J`, the BGG complex has the cohomology of `T` (§5.2),

@@ -28,7 +28,7 @@ finite-dimensional cohomology, concentrated in degree `0`**: `S` induces zero on
 div–div complexes (the dimension of the affine functions, resp. of the fields `a + b x`), `6` for
 the elasticity complex on `Q ⊆ ℝ³` (the dimension of the rigid motions), `Hⁱ = 0` for `i ≠ 0`
 (`hessianBGG_Q`, `elasticityBGG_Q`, `divDivBGG_Q`). These are the dimension counts only: the
-cohomology is not identified with the affine functions or the rigid motions.
+cohomology is not identified with the affine functions, the rigid motions or the fields `a + b x`.
 
 ## Main results
 

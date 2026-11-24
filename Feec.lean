@@ -399,6 +399,7 @@ public import Feec.Models.Cube.TangentialRate
 public import Feec.Models.Cube.TorusHelmholtz
 public import Feec.Models.Cube.WeakSymmetryComplex
 public import Feec.Models.Cube.WeakSymmetryConvergence
+public import Feec.Models.Cube.WeakSymmetryDimension
 public import Feec.Models.Cube.WeakSymmetryEstimates
 public import Feec.Models.Cube.WeakSymmetryFEM
 public import Feec.Models.Cube.WeakSymmetryH1

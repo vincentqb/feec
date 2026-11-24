@@ -52,10 +52,17 @@ project:
     data (two segments of unbounded operators between real inner product spaces, not assumed
     complete, with bounded connecting maps) and every discretization (finite-dimensional
     subcomplexes with bounded cochain projections pi; the method replaces S by S_h = pi S),
-    solutions of the semi-discrete problem
-    (6.5) are determined by (sigma_h, u_h, M_h, rho_h)(0); for BGG data (d^1 S^0 = -S^1 d~^0,
-    complexes) solutions without source keep the discrete Gauss law (sigma_h = 0, u_h orthogonal
-    to d~psi for the discrete pairs d tau = pi^1 S^0 psi); and for every C there is K such that,
+    trajectories U, U' of the semi-discrete problem (6.5) with sources f, f' satisfy
+    ||U(t) - U'(t)|| <= ||U(0) - U'(0)|| + int_0^t ||f - f'|| in the state norm, with equality for
+    f = f' (so solutions are determined by (sigma_h, u_h, M_h, rho_h)(0)); for BGG data
+    (d^1 S^0 = -S^1 d~^0, complexes) solutions without source keep the discrete Gauss law
+    (sigma_h = 0, u_h orthogonal to d~psi for the discrete pairs d tau = pi^1 S^0 psi), and if
+    moreover d~^0 is injective on V~_h^0 and pi^1 S^0 maps V~_h^0 onto V_h^1, then for T > 0 and
+    a source continuous on [0, T], (6.5) has a solution from dynamic data
+    (sigma_0, u_0, M_0, rho_0) iff u_0 is orthogonal to d~psi for every psi of V~_h^0 with
+    pi^1 S^0 psi = 0 (C2), from (sigma_0, phi_0, u_0, M_0, rho_0) iff moreover
+    d sigma_0 = pi^1 S^0 phi_0 (C1) and <d~phi_0 - f(0), d~psi> = 0 for those psi (C3), and
+    phi_h, lambda_h are determined on [0, T); and for every C there is K such that,
     under Poincare inequalities on V^0 and V~^0, exactness of the top row at V^1, the Hodge
     decomposition with bound on V~^1, the regular decomposition d^1 V^1 = d^1 S^0 V~^0 with bound
     and ||S^0||, ||S^1|| <= C, and for projections bounded by C satisfying the compatibility
@@ -68,12 +75,12 @@ project:
     bggData (cube 3) by the elements of Table 5.1 with vanishing traces on the boundary on
     Freudenthal meshes of Q = (0, 1/2)^3, with bounded projections, (5.4) and consistency at the
     order h_N (IsTable51 with all faces in both rows), such that: the data satisfy IsBGG and the
-    continuous hypotheses of FEEC.bggWeakSymmetry (an instance with S_h != S: for N >= 2,
-    pi^1 S^0 psi != S^0 psi for some psi in V~_h^0); solutions of (6.5) are determined by their
-    initial values (also phi_h, lambda_h on [0, T)); for every datum U_0 of D(L) strong
+    continuous hypotheses of FEEC.bggWeakSymmetry, and pi^1 S^0 maps V~_h^0 onto V_h^1 (so (6.5)
+    is well posed); the initial values of (6.5) are constrained: some psi in V~_h^0 has
+    pi^1 S^0 psi = 0 and d~psi != 0, so u_h(0) = d~psi starts no solution (and
+    S^0_h psi = 0 != S^0 psi: an instance with S_h != S); for every datum U_0 of D(L) strong
     solutions exist on every [0, T], U_0 is the limit of the initial states of trajectories of
-    (6.5) without source (whose initial values are constrained: u_h(0) is orthogonal to d~psi for
-    the psi of V~_h^0 with pi^1 S^0 psi = 0), and every family of trajectories of (6.5) without
+    (6.5) without source, and every family of trajectories of (6.5) without
     source whose initial states converge to U_0 converges to every strong solution uniformly on
     [0, T] (no regularity hypothesis); from the TSD datum (0, 0, 0, *beta), beta = x_3 (e_1 e_2^T
     + e_2 e_1^T), every strong solution has E(t) not TSD at some t and B(t') not symmetric at some
@@ -87,8 +94,10 @@ project:
     FEEC.weakSymmetry_mirror, the mirror boundary conditions: there are discretizations of
     mirrorData by the elements of Table 5.1 with the mirror conditions on Freudenthal meshes of Q
     (IsTable51 with no face in the top row and the faces normal to e_a in component a of the
-    bottom row), the data satisfying IsBGG (so the uniqueness and Gauss clauses of
-    FEEC.bggWeakSymmetry apply), such that: for every TSD datum U_0 of D(L) strong solutions from
+    bottom row), the data satisfying IsBGG, d~^0 injective and pi^1 S^0 mapping V~_h^0 onto
+    V_h^1 (so (6.5) is well posed and keeps the discrete Gauss law), with initial values
+    constrained as for the electric conditions (some psi in V~_h^0 has pi^1 S^0 psi = 0 and
+    d~psi != 0), such that: for every TSD datum U_0 of D(L) strong solutions from
     U_0 exist on every [0, T], every one stays TSD, U_0 is the limit of the initial states of
     trajectories of (6.5) without source, and every family of trajectories of (6.5) without source
     whose initial states converge to U_0 converges to every strong solution uniformly on [0, T]
@@ -420,7 +429,8 @@ fidelity:
     (Table 5.1 with vanishing boundary traces) and unnamed projections (smoothed projections of
     one smoother in Feec); the continuous hypotheses of the abstract theorem (IsStable: Poincare
     inequalities, exactness, Hodge and regular decompositions) are a clause, so the cube is
-    visibly an instance of FEEC.bggWeakSymmetry with S^0_h != S^0. The best-approximation clause
+    visibly an instance of FEEC.bggWeakSymmetry with S^0_h != S^0 (S^0_h psi = 0 for some
+    psi != 0 of V~_h^0, by dimension: dim V_h^1 < dim V~_h^0). The best-approximation clause
     is for N >= 2 (Feec's lower bound is proved on the level-(N + 2) meshes) and measures v in the
     graph norm; it shows that no projection onto the Raviart-Thomas space makes S^1_h consistent
     at the order h on V~_h^1 in the graph norm, which is why IsConsistent asks consistency on
@@ -430,11 +440,13 @@ fidelity:
     source whose initial states converge to U_0 converges to every strong solution from U_0
     uniformly on [0, T] (Lax: stability of (6.1) and (6.5) and convergence on the dense D(L^2));
     no regularity is assumed, and no rate is claimed. Such families exist for every datum
-    (stated), although the initial values of (6.5) are constrained (u_h(0) is orthogonal to
-    d~psi for the psi of V~_h^0 with pi^1 S^0 psi = 0, and only such data have solutions), so that
-    a projection of the datum need not start a trajectory; in Feec the trajectories start from the
-    elliptic projections of data of D(L^2) approximating the datum, at levels chosen diagonally
-    (Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec). The loss of TSD is
+    (stated), although the initial values of (6.5) are constrained (stated: only the u_h(0)
+    orthogonal to d~psi for the psi of V~_h^0 with pi^1 S^0 psi = 0 start solutions, and some
+    u_h(0) of V~_h^1 is not), so that a projection of the datum need not start a trajectory (the
+    well-posedness clause of FEEC.bggWeakSymmetry adapts Prop 6.2, existence and uniqueness for
+    (6.5), with the conditions (C1)-(C3) on the initial values); in Feec the trajectories start
+    from the elliptic projections of data of D(L^2) approximating the datum, at levels chosen
+    diagonally (Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec). The loss of TSD is
     stated as E(t) not TSD at some t and B(t') not symmetric (B(t')_ai != B(t')_ia for some a, i)
     at some t'; the discrete fields lose TSD at the same times for all large N, since TSD and
     symmetry are closed conditions. That the exact solution leaves TSD is the restriction to Q of
@@ -507,8 +519,11 @@ alignment:
       note: >-
         Feec.BGG.Discrete.existsUnique_mixed_h and error_estimate_of_weakConsistency with
         weakConsistency_of_potential_of_bound (Solution/Abstract.lean, weakSymmetry_of, from
-        the former palomar/bgg entry); uniqueness and the discrete Gauss law by energy arguments
-        (Solution/DiscreteWave.lean).
+        the former palomar/bgg entry); the stability of (6.5) and the discrete Gauss law by
+        energy arguments (Solution/DiscreteWave.lean, Solution/WellPosed.lean, with
+        Feec.Variational.norm_sub_le_of_projected_error); its well-posedness from
+        Feec.BGG.exists_discreteSolution_of_continuousOn and
+        exists_discreteSolution_iff_compatible_u (Solution/WellPosed.lean).
     - source: "[QuennevilleBelair2015] §5.3, Table 5.1, Prop 5.4, Prop 5.9, Thm 5.5, §6.1-§6.3, Prop 6.2"
       lean: "FEEC.weakSymmetry_electric"
       module: "Challenge"
@@ -516,9 +531,10 @@ alignment:
       note: >-
         The cube data are Feec's bggSegment (bggData_cube_eq); the discretizations from
         Feec.Models.Cube.WeakSymmetry.tableRows_uniform_cochainProjection and cubeFEM;
-        IsStable from bggStability_of; S^0_h != S^0 and the best-approximation clause from
-        exists_bestApproxError_ge; uniqueness for (6.5) from Feec.BGG.DiscreteSolution.unique
-        (Solution/CubeUnique.lean); the convergence from every datum of D(L) and the non-TSD
+        IsStable from bggStability_of; pi^1 S^0 onto V_h^1 from cubeWave_S0_surjective and the
+        kernel of pi^1 S^0 on V~_h^0 by dimension (Feec.Models.Cube.FEM.finrank_polyMin_lt,
+        Solution/Constrained.lean); the best-approximation clause from
+        exists_bestApproxError_ge; the convergence from every datum of D(L) and the non-TSD
         limit from Feec.EinsteinBianchi.BoundedConvergence.tendsto_of_isStrongSolution,
         Feec.EinsteinBianchi.BoundedConvergence.exists_tendsto_dvec and
         Feec.Counterexamples.BoundedBGG (Solution/Converge.lean, Bounded.lean); the H^1 rates
@@ -536,7 +552,9 @@ alignment:
         Feec.Models.Cube.MirrorWeakSymmetry.mirror_waveFEM_rate_of_mem_domain with
         exists_mirror_estimates, Feec.Models.Cube.MirrorBGG.propagatesQ and cosStateQ
         (Solution/Mirror*.lean); the Gauss witness from
-        Feec.BGG.exists_discreteSolution_iff_compatible_u.
+        Feec.BGG.exists_discreteSolution_iff_compatible_u; pi^1 S^0 onto V_h^1 from
+        mirrorWave_S0_surjective and its kernel on V~_h^0 by dimension
+        (Feec.Models.Cube.FEM.finrank_polyPartial_lt, Solution/MirrorConstrained.lean).
     - source: "[QuennevilleBelair2015] Thm 5.5, §6.3"
       lean: "FEEC.weakSymmetry_electric_nonvacuous"
       module: "Challenge"

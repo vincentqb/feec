@@ -236,6 +236,11 @@ convergence from every TSD datum of `D(L)` (`mirror_converges`), the rate for TS
 and the moving datum of `exists_mirror_chain`. -/
 theorem weakSymmetry_mirror : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ → mirrorData.Discretization)
     (C K : ℝ), IsTable51 𝒯 Q C ∅ (fun a => {a}) ∧ mirrorData.IsBGG ∧
+    (∀ ψ : mirrorData.dt0.domain, mirrorData.dt0 ψ = 0 → (ψ : L2Vec (cube 3) 0) = 0) ∧
+    (∀ N, (∀ μ ∈ (Q N).V1, ∃ ψ : mirrorData.dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
+      (Q N).π1 (mirrorData.S0 ψ) = μ) ∧ ∃ ψ : mirrorData.dt0.domain,
+        (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧ (Q N).π1 (mirrorData.S0 ψ) = 0 ∧
+          mirrorData.dt0 ψ ≠ 0) ∧
     (∀ U₀ V T, mirrorData.IsWave U₀ V → IsTSDState U₀ → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U) ∧
       (∀ U, U 0 = U₀ → IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U →
@@ -258,8 +263,8 @@ theorem weakSymmetry_mirror : ∃ (𝒯 : ℕ → SimplicialMesh 3) (Q : ℕ →
         ∃ t ∈ Ioc 0 T, (Uh t).2.2.1 ≠ (Uh 0).2.2.1) ∧
     ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
       mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0 := by
-  obtain ⟨𝒯, Q, C, K, hQ, hBGG, hG, hC, -, hK⟩ := mirror_fem_main
-  refine ⟨𝒯, Q, C, K, hQ, hBGG, fun U₀ V T h hU₀ hT => mirror_converges hC h hU₀ hT,
+  obtain ⟨𝒯, Q, C, K, hQ, hBGG, hinj, hon, hG, hC, -, hK⟩ := mirror_fem_main
+  refine ⟨𝒯, Q, C, K, hQ, hBGG, hinj, hon, fun U₀ V T h hU₀ hT => mirror_converges hC h hU₀ hT,
     fun T U₀ V₁ V₂ V₃ hT h1 h2 h3 hU₀ U hU0 hUs N => ?_,
     fun T hT => (hG T hT).mono fun N hN => ?_, exists_mirror_chain⟩
   swap

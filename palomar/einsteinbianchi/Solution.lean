@@ -1,6 +1,7 @@
 module
 
 public import Solution.CubeMain
+public import Solution.Constrained
 public import Solution.CubeSobolev
 public import Solution.CubeNonvac
 public import Solution.CubeUnique
@@ -12,11 +13,15 @@ public import Solution.Instance
 # What the weak-symmetry method computes for the linearized Einstein–Bianchi equations (solution)
 
 `FEEC.bggWeakSymmetry`: `WeakSymmetryData.weakSymmetry_of` (Prop 5.4, Thm 5.5,
-`Solution.Abstract`), `IsDiscreteWave.eq_of_eq` and `IsDiscreteWave.isGauss`
-(`Solution.DiscreteWave`).
+`Solution.Abstract`), the stability of (6.5) `stateNorm_sub_le_of_mem_trajectories`,
+`stateNorm_sub_eq_of_mem_trajectories` and the discrete Gauss law `IsDiscreteWave.isGauss`
+(`Solution.WellPosed`, `Solution.DiscreteWave`), and its well-posedness `wellPosed_of` (Prop 6.2,
+adapted, `Solution.WellPosed`).
 
 `FEEC.weakSymmetry_electric`: the cube data are `Feec`'s (`bggData_cube_eq`); `cube_hyps`,
-`cubeQ_spaces`, `femSpace_univ_eq`, `cube_S0h_ne`, `cube_bestApprox` (`Solution.Instance`), the
+`cubeQ_spaces`, `femSpace_univ_eq`, the hypotheses of well-posedness and the constrained initial
+values `cubeQ_S0_onto`, `cubeQ_exists_ker` (`Solution.Constrained`), `cube_bestApprox`
+(`Solution.Instance`), the
 convergence from every datum of `D(L)` and the limit of the TSD datum `(0, 0, 0, ⋆β)`
 (`cube_converges`, `cube_beta`, `Solution.Converge`), and the `H¹` rates `cube_static_rate_sob`,
 `cube_wave_rate_sob` (`Solution.CubeSobolev`, `Solution.CubeWave`). The `C²` rates of the thesis
@@ -24,8 +29,9 @@ follow from its statement (`weakSymmetry_electric_c2`, `Solution.Smooth`).
 
 `FEEC.weakSymmetry_mirror` (`Solution.MirrorTheorems`): the challenge's TSD states are the real
 parts of constrained states of `Feec`'s mirror complex, and the mirror scheme is `Feec`'s
-(`mirror_fem_main`); its convergence from every TSD datum of `D(L)` is Lax's principle for (6.5)
-(`mirror_converges`, `Solution.DiscreteWave`).
+(`mirror_fem_main`, with `mirror_dt0_eq_zero`, `mirrorQ_S0_onto`, `mirrorQ_exists_ker` of
+`Solution.MirrorConstrained`); its convergence from every TSD datum of `D(L)` is Lax's principle
+for (6.5) (`mirror_converges`, `Solution.DiscreteWave`).
 
 `FEEC.weakSymmetry_electric_nonvacuous`: `cube_static_nonvacuous`, `cube_wave_nonvacuous` and
 their `H¹` classes `cube_static_h1`, `cube_wave_h1` (`Solution.CubeNonvac`); the same solutions
@@ -56,11 +62,28 @@ theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Typ
     [NormedAddCommGroup Wt0] [InnerProductSpace ℝ Wt0] [NormedAddCommGroup Wt1]
     [InnerProductSpace ℝ Wt1] [NormedAddCommGroup Wt2] [InnerProductSpace ℝ Wt2]
     (D : WeakSymmetryData W0 W1 W2 Wt0 Wt1 Wt2) (Q : D.Discretization),
-    (∀ T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', Q.IsDiscreteWave T f σ φ u M ρ lam →
-      Q.IsDiscreteWave T f σ' φ' u' M' ρ' lam' → σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 →
-      ρ 0 = ρ' 0 → ∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
+    (∀ T f f', ContinuousOn (f - f') (Icc 0 T) → ∀ U ∈ Q.trajectories T f,
+      ∀ U' ∈ Q.trajectories T f', ∀ t ∈ Icc 0 T,
+        stateNorm (U t - U' t) ≤ stateNorm (U 0 - U' 0) + ∫ s in Icc 0 t, ‖f s - f' s‖ ∧
+          (f = f' → stateNorm (U t - U' t) = stateNorm (U 0 - U' 0))) ∧
     (D.IsBGG → ∀ T σ φ u M ρ lam, Q.IsDiscreteWave T 0 σ φ u M ρ lam →
       Q.IsGauss (σ 0) (u 0) → ∀ t ∈ Icc 0 T, Q.IsGauss (σ t) (u t)) ∧
+    (D.IsBGG → (∀ ψ : D.dt0.domain, (ψ : Wt0) ∈ Q.Vt0 → D.dt0 ψ = 0 → (ψ : Wt0) = 0) →
+      (∀ μ ∈ Q.V1, ∃ ψ : D.dt0.domain, (ψ : Wt0) ∈ Q.Vt0 ∧ Q.π1 (D.S0 ψ) = μ) →
+      ∀ T f, 0 < T → ContinuousOn f (Icc 0 T) →
+      (∀ (σ₀ : D.d0.domain) (u₀ : D.dt1.domain) M₀ ρ₀, (σ₀ : W0) ∈ Q.V0 → (u₀ : Wt1) ∈ Q.Vt1 →
+        M₀ ∈ Q.V2 → ρ₀ ∈ Q.Vt2 →
+        ((∃ σ φ u M ρ lam, Q.IsDiscreteWave T f σ φ u M ρ lam ∧ σ 0 = σ₀ ∧ u 0 = u₀ ∧
+          M 0 = M₀ ∧ ρ 0 = ρ₀) ↔ ∀ ψ : D.dt0.domain, (ψ : Wt0) ∈ Q.Vt0 →
+            Q.π1 (D.S0 ψ) = 0 → ⟪(u₀ : Wt1), D.dt0 ψ⟫_ℝ = 0) ∧
+        ∀ φ₀ : D.dt0.domain, (φ₀ : Wt0) ∈ Q.Vt0 →
+          ((∃ σ φ u M ρ lam, Q.IsDiscreteWave T f σ φ u M ρ lam ∧ σ 0 = σ₀ ∧ φ 0 = φ₀ ∧
+            u 0 = u₀ ∧ M 0 = M₀ ∧ ρ 0 = ρ₀) ↔ D.d0 σ₀ = Q.π1 (D.S0 φ₀) ∧
+            ∀ ψ : D.dt0.domain, (ψ : Wt0) ∈ Q.Vt0 → Q.π1 (D.S0 ψ) = 0 →
+              ⟪(u₀ : Wt1), D.dt0 ψ⟫_ℝ = 0 ∧ ⟪D.dt0 φ₀ - f 0, D.dt0 ψ⟫_ℝ = 0)) ∧
+      ∀ σ φ u M ρ lam σ' φ' u' M' ρ' lam', Q.IsDiscreteWave T f σ φ u M ρ lam →
+        Q.IsDiscreteWave T f σ' φ' u' M' ρ' lam' → σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 →
+        ρ 0 = ρ' 0 → ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
     (D.IsBGG → D.IsStable C → Q.IsBounded C → Q.Compatible →
     (∀ F, ∃! x : D.d0.domain × D.dt0.domain × D.dt1.domain × W1,
       Q.IsDiscreteSolution F x.1 x.2.1 x.2.2.1 x.2.2.2) ∧
@@ -71,9 +94,13 @@ theorem bggWeakSymmetry (C : ℝ) : ∃ K : ℝ, ∀ {W0 W1 W2 Wt0 Wt1 Wt2 : Typ
       Q.errorSq σ σh φ φh u uh ≤ K * (Q.projErrorSq σ φ u + h ^ 2 * (Λ ^ 2 + ‖D.S1 u‖ ^ 2) +
         ‖D.S1 u - Q.π2 (D.S1 u)‖ ^ 2)) := by
   obtain ⟨K, hK⟩ := WeakSymmetryData.weakSymmetry_of.{u} C
-  exact ⟨K, fun D Q => ⟨fun _ _ _ _ _ _ _ _ _ _ _ _ _ _ h1 h2 e0 e1 e2 e3 =>
-    WeakSymmetryData.Discretization.IsDiscreteWave.eq_of_eq Q h1 h2 e0 e1 e2 e3,
+  exact ⟨K, fun D Q => ⟨fun _ _ _ hf _ hU _ hU' t ht =>
+    ⟨WeakSymmetryData.Discretization.stateNorm_sub_le_of_mem_trajectories Q hf hU hU' t ht,
+      fun hff => by
+        subst hff
+        exact WeakSymmetryData.Discretization.stateNorm_sub_eq_of_mem_trajectories Q hU hU' t ht⟩,
     fun hD _ _ _ _ _ _ _ h h0 => WeakSymmetryData.Discretization.IsDiscreteWave.isGauss Q hD h h0,
+    fun hD hinj hS _ _ hT hf => WeakSymmetryData.Discretization.wellPosed_of Q hD hinj hS hT hf,
     fun hD hS hB hc => hK D Q hD hS hB hc⟩⟩
 
 set_option maxHeartbeats 4000000 in
@@ -81,13 +108,10 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
     (Q : ℕ → (bggData (cube 3)).Discretization) (C K : ℝ),
     IsTable51 𝒯 Q C Finset.univ (fun _ => Finset.univ) ∧ (bggData (cube 3)).IsBGG ∧
     (bggData (cube 3)).IsStable C ∧
-    (∀ N, 2 ≤ N → ∃ ψ : (bggData (cube 3)).dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
-      (Q N).π1 ((bggData (cube 3)).S0 ψ) ≠ (bggData (cube 3)).S0 ψ) ∧
-    (∀ N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam', 0 < T → ContinuousOn f (Icc 0 T) →
-      (Q N).IsDiscreteWave T f σ φ u M ρ lam → (Q N).IsDiscreteWave T f σ' φ' u' M' ρ' lam' →
-      σ 0 = σ' 0 → u 0 = u' 0 → M 0 = M' 0 → ρ 0 = ρ' 0 →
-      (∀ t ∈ Icc 0 T, σ t = σ' t ∧ u t = u' t ∧ M t = M' t ∧ ρ t = ρ' t) ∧
-        ∀ t ∈ Ico 0 T, φ t = φ' t ∧ lam t = lam' t) ∧
+    (∀ N, (∀ μ ∈ (Q N).V1, ∃ ψ : (bggData (cube 3)).dt0.domain,
+      (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧ (Q N).π1 ((bggData (cube 3)).S0 ψ) = μ) ∧
+      ∃ ψ : (bggData (cube 3)).dt0.domain, (ψ : L2Vec (cube 3) 0) ∈ (Q N).Vt0 ∧
+        (Q N).π1 ((bggData (cube 3)).S0 ψ) = 0 ∧ (bggData (cube 3)).dt0 ψ ≠ 0) ∧
     (∀ U₀ V T, (bggData (cube 3)).IsWave U₀ V → 0 < T →
       (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData (cube 3)).IsWave p.1 p.2} (Icc 0 T) U) ∧
       (∃ Uh : ℕ → ℝ → _, (∀ N, Uh N ∈ (Q N).trajectories T 0) ∧
@@ -134,9 +158,7 @@ theorem weakSymmetry_electric : ∃ (𝒯 : ℕ → SimplicialMesh 3)
   obtain ⟨cw, hcw, hcwH⟩ := isSobolevStateTr_of
   set K := max |Ks * cs| |Kw * cw| with hKdef
   refine ⟨cubeMesh, cubeQ hT hB, C, K, ⟨isMeshFamily_cube, points_cube, fun N => ?_⟩, isBGG_𝒟,
-    hS, cube_S0h_ne hT hB,
-    fun N T f σ φ u M ρ lam σ' φ' u' M' ρ' lam' hT0 _ h1 h2 e0' e1' e2' e3' =>
-      cube_wave_unique hT hB N hT0 h1 h2 e0' e1' e2' e3',
+    hS, fun N => ⟨cubeQ_S0_onto hT hB N, cubeQ_exists_ker hT hB N hS⟩,
     fun U₀ V T hW hT0 => cube_converges hT hB hW hT0, cube_beta hT hB,
     fun N F σ φ u lam σh φh uh lamh L hs hσ hφ hdφ hu hdu hl hd => ?_,
     fun N T f σ σ' φ φ' u u' M M' ρ ρ' lam lam' L hT0 hf hw hreg => ?_, cube_bestApprox hT hB⟩

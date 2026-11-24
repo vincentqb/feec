@@ -228,7 +228,7 @@ theorem weakSymmetry_electric_c2 : ∃ (𝒯 : ℕ → SimplicialMesh 3)
         ∀ t ∈ Icc 0 T, √(‖(σ t : L2Form (cube 3) 0) - σh t‖ ^ 2 +
           ‖(u t : L2Vec (cube 3) 1) - uh t‖ ^ 2 + ‖M t - Mh t‖ ^ 2 + ‖ρ t - ρh t‖ ^ 2) ≤
             K * L * (1 + t) * meshSize (𝒯 N) := by
-  obtain ⟨𝒯, Q, C, K, h51, -, -, -, -, -, -, hs, hw, -⟩ := weakSymmetry_electric
+  obtain ⟨𝒯, Q, C, K, h51, -, -, -, -, -, hs, hw, -⟩ := weakSymmetry_electric
   obtain ⟨c, hc⟩ := c2_rates_of_h1_rates
   exact ⟨𝒯, Q, C, c * K, h51, hc 𝒯 Q K hs hw⟩
 

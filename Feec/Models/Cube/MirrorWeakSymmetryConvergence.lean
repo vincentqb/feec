@@ -789,20 +789,6 @@ theorem graph_mem_assemble (a : Fin 3) (z : RegRow a) (s : formIdx 3 ((1 : ℕ) 
 theorem assemble_mem (a : Fin 3) (z : RegRow a) : assemble a z ∈ (BD1 a).domain :=
   (mem_dPart_of_coeff_cube {a} 1 (assemble a z) _ (graph_mem_assemble a z)).1
 
-theorem norm_graphFst_le {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
-    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (v : T.GraphSpace) :
-    ‖T.graphFst v‖ ≤ ‖v‖ := by
-  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
-  rw [WeakSymmetry.norm_sq_graphSpace T v]
-  nlinarith [sq_nonneg ‖T.graphSnd v‖]
-
-theorem norm_graphSnd_le {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E]
-    [NormedAddCommGroup F] [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F) (v : T.GraphSpace) :
-    ‖T.graphSnd v‖ ≤ ‖v‖ := by
-  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
-  rw [WeakSymmetry.norm_sq_graphSpace T v]
-  nlinarith [sq_nonneg ‖T.graphFst v‖]
-
 theorem norm_assemble_le (a : Fin 3) (z : RegRow a) : ‖assemble a z‖ ≤ ‖z‖ := by
   refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
   rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
@@ -810,7 +796,7 @@ theorem norm_assemble_le (a : Fin 3) (z : RegRow a) : ‖assemble a z‖ ≤ ‖
   have h1 := norm_zeroForm ((assemble a z : W1) s)
   rw [zeroForm_assemble] at h1
   rw [← h1]
-  exact pow_le_pow_left₀ (norm_nonneg _) (norm_graphFst_le _ _) 2
+  exact pow_le_pow_left₀ (norm_nonneg _) (LinearPMap.norm_graphFst_le _) 2
 
 /-- **The map `R : X_reg → Ṽ¹`** of the regular potentials. -/
 def regR : RegSp →ₗ[ℝ] BU1 where
@@ -845,7 +831,7 @@ theorem exists_regR (v : BU1) : ∃ y : RegSp, bD1 (regR y) = bD1 v ∧
     have hya : ‖y a‖ ^ 2 = ‖(w a : W1)‖ ^ 2 + ‖BD1 a (v a)‖ ^ 2 := by
       rw [PiLp.norm_sq_eq_of_L2, ← hsum a]
       change ∑ s, ‖(⟨WithLp.toLp 2 (zeroForm ((w a : W1) s), g a s), _⟩ : RegCoeff a s)‖ ^ 2 = _
-      simp only [WeakSymmetry.norm_sq_graphSpace]
+      simp only [LinearPMap.norm_sq_graphSpace]
       change ∑ s, (‖zeroForm ((w a : W1) s)‖ ^ 2 + ‖g a s‖ ^ 2) = _
       rw [Finset.sum_add_distrib, PiLp.norm_sq_eq_of_L2 _ (w a : W1)]
       simp only [norm_zeroForm]
@@ -874,7 +860,7 @@ theorem sum_norm_graphSnd_le (a : Fin 3) (z : RegRow a) :
       (Fintype.card (formIdx 3 1) : ℝ) * ‖z‖ := by
   calc ∑ s : formIdx 3 1, ‖(dPart (cubeDomain 3) (symmDiff {a} s.1) ((0 : ℕ) : ℤ)).graphSnd (z s)‖
       ≤ ∑ _s : formIdx 3 1, ‖z‖ :=
-        Finset.sum_le_sum fun s _ => (norm_graphSnd_le _ _).trans (PiLp.norm_apply_le z s)
+        Finset.sum_le_sum fun s _ => (LinearPMap.norm_graphSnd_le _).trans (PiLp.norm_apply_le z s)
     _ = _ := by rw [Finset.sum_const, Finset.card_univ, nsmul_eq_mul]
 
 theorem norm_sum_wsCoeff_graphSnd_le (y : RegSp) (t : formIdx 3 2) :
@@ -886,7 +872,7 @@ theorem norm_sum_wsCoeff_graphSnd_le (y : RegSp) (t : formIdx 3 2) :
         ‖y‖ := by
     intro p
     have h1 : ‖(dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)‖
-        ≤ ‖y‖ := (norm_graphSnd_le _ _).trans
+        ≤ ‖y‖ := (LinearPMap.norm_graphSnd_le _).trans
           ((PiLp.norm_apply_le (y p.1) p.2).trans (PiLp.norm_apply_le y p.1))
     refine (norm_smul_le _ _).trans ?_
     rw [Real.norm_eq_abs, ← one_mul ‖y‖]
@@ -943,9 +929,9 @@ theorem norm_S1_sub_S1h_regR_le (N : ℕ) (y : RegSp) :
   have hC := hT.two_mul_nonneg
   have hK := h1ConstPar_nonneg (n := 3) PolySeq.lowestOrder 2
   have hm := (meshSize_pos N).le
-  set z : W2 := wsL2 (Ω := cubeDomain 3) 1 (bIncl1 (regR y))
+  let z : W2 := wsL2 (Ω := cubeDomain 3) 1 (bIncl1 (regR y))
   -- the coefficients of `z` and their gradients
-  set G : formIdx 3 2 → L2F ℝ (cubeDomain 3) (formIdx 3 (((0 : ℕ) : ℤ) + 1)) := fun t =>
+  let G : formIdx 3 2 → L2F ℝ (cubeDomain 3) (formIdx 3 (((0 : ℕ) : ℤ) + 1)) := fun t =>
     ∑ p : Fin 3 × formIdx 3 1, wsCoeff 1 t p •
       (dPart (cubeDomain 3) (symmDiff {p.1} p.2.1) ((0 : ℕ) : ℤ)).graphSnd (y p.1 p.2)
   have hgraph : ∀ t : formIdx 3 ((2 : ℕ) : ℤ), (zeroForm (z t), G t) ∈

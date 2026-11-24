@@ -590,12 +590,12 @@ theorem mem_hilbΓ_of_mem_segΓ {x : U0 × Wv U0} (hx : x ∈ bggSegment.Γ) :
 
 /-- A pair of `bggHilb.Γ` gives a pair of the segment's `Γ`. -/
 theorem mem_segΓ_of_mem_hilbΓ {y : V0 × Vt0} (hy : y ∈ bggHilb.Γ) :
-    (graphDom D0 y.1, rp y.2) ∈ bggSegment.Γ := by
+    (D0.graphDom y.1, rp y.2) ∈ bggSegment.Γ := by
   rw [bggSegment.mem_Γ]
   have h : bggD0 y.1 = bggS0 y.2 := (Feec.BGG.Hilb.mem_Γ bggHilb).1 hy
   refine Subtype.ext ?_
-  change D0 (graphDom D0 y.1) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp y.2))
-  rw [apply_graphDom, ← graphFst_bggD0, h, graphFst_bggS0, incl0_rp]
+  change D0 (D0.graphDom y.1) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp y.2))
+  rw [LinearPMap.apply_graphDom, ← graphFst_bggD0, h, graphFst_bggS0, incl0_rp]
 
 /-- **`Γ̄ = L²Λ⁰(Q)`**: `π₁Γ ⊇ H̊²(Q)` (`gamma_equiv_hessMin`), which is dense in `L²(Q)`
 (`dense_hessMin_domain`). -/
@@ -631,8 +631,8 @@ theorem rowsEquiv_incl1_dt0 (φ : Wv U0) : rowsEquiv (incl1 (bggSegment.dt0 φ))
 
 theorem rowsEquiv_ιt1_bggDt0 (φ : Vt0) : rowsEquiv (ιt1 (bggDt0 φ)) = hessOf (rp φ) := by
   refine PiLp.ext fun ij => ?_
-  change D1.graphFst (bggD0 (φ ij.1)) (idx1 ij.2) = (D0 (graphDom D0 (φ ij.1))) (idxSingle ij.2)
-  rw [graphFst_bggD0, apply_graphDom]
+  change D1.graphFst (bggD0 (φ ij.1)) (idx1 ij.2) = (D0 (D0.graphDom (φ ij.1))) (idxSingle ij.2)
+  rw [graphFst_bggD0, LinearPMap.apply_graphDom]
   rfl
 
 set_option maxHeartbeats 2000000 in
@@ -671,11 +671,11 @@ theorem mem_hessMin_graph_iff {v : L2 ℝ (cubeDomain 3)} {H : L2F ℝ (cubeDoma
       congrArg Subtype.val (congrArg Prod.fst hy)
     have h2 : ιt1 (bggDt0 (y : V0 × Vt0).2) = rowsEquiv.symm H := congrArg Prod.snd hy
     have hx := mem_segΓ_of_mem_hilbΓ y.2
-    have hg : (toScalar ((graphDom D0 (y : V0 × Vt0).1 : U0) : W0),
+    have hg : (toScalar ((D0.graphDom (y : V0 × Vt0).1 : U0) : W0),
         hessOf (rp (y : V0 × Vt0).2)) ∈ (hessMin ℝ (isOpen_cubeDomain 3)).graph := by
       have hdd := hessMin_of_mem_Γ (bggSegment.mem_Γ.1 hx)
       exact (LinearPMap.mem_graph_iff _).2 ⟨⟨_, hdd.1⟩, rfl, hdd.2⟩
-    have hv : toScalar ((graphDom D0 (y : V0 × Vt0).1 : U0) : W0) = v := by
+    have hv : toScalar ((D0.graphDom (y : V0 × Vt0).1 : U0) : W0) = v := by
       change toScalar (D0.graphFst (y : V0 × Vt0).1) = v
       rw [h1]
       exact scalarEquiv.apply_symm_apply v

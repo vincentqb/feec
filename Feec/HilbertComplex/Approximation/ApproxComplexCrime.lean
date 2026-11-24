@@ -74,8 +74,9 @@ convergence is not re-proved) and adds the complex-level structure.
   defect, and `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖` is at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)` and at most
   `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_one_sub_J_add_le_opNorm`, `norm_one_sub_J_add_le`).
 * `ApproxComplexCrime.Family.graphDefect`: **the inner-product defect in the graph norm**
-  `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ` (`graphOpNorm`,
-  as for the discrete complexes of `ofComplex`, `ApproxComplex.Family.graphDefect`), so
+  `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ`
+  (`ContinuousLinearMap.graphOpNorm`, as for the discrete complexes of `ofComplex`,
+  `ApproxComplex.Family.graphDefect`), so
   `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_one_sub_J_apply_le`); at most `‖1 - Jₕ‖`
   (`graphDefect_le`), and at most `√2 δ` if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v`
   (`graphDefect_le_of_forall`). It is the defect hypothesis of the heat and wave families
@@ -406,37 +407,37 @@ theorem norm_one_sub_J_le (h : κ) : ‖1 - S.J h‖ ≤ 1 + S.boundConst ^ 2 :=
   exact mul_le_mul (S.norm_incl_le h) (S.norm_incl_le h) (norm_nonneg _) S.boundConst_nonneg
 
 /-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` from the
-graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`) to `Xₕ` (`graphOpNorm`), the least `δ` with
-`‖(1 - Jₕ) v‖ ≤ δ ‖v‖_{Vₕ}`. It is at most `‖1 - Jₕ‖` (`graphDefect_le`), and it is the defect
-that the static, heat and wave theories with crimes use: they apply `1 - Jₕ` only to discrete
-forms whose graph norm they control (`norm_one_sub_J_apply_le`,
-`norm_one_sub_J_apply_le_of_D_eq_zero`). -/
-def graphDefect (h : κ) : ℝ := graphOpNorm (S.D h) (1 - S.J h)
+graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`) to `Xₕ`
+(`ContinuousLinearMap.graphOpNorm`), the least `δ` with `‖(1 - Jₕ) v‖ ≤ δ ‖v‖_{Vₕ}`. It is at most
+`‖1 - Jₕ‖` (`graphDefect_le`), and it is the defect that the static, heat and wave theories with
+crimes use: they apply `1 - Jₕ` only to discrete forms whose graph norm they control
+(`norm_one_sub_J_apply_le`, `norm_one_sub_J_apply_le_of_D_eq_zero`). -/
+def graphDefect (h : κ) : ℝ := (S.D h).graphOpNorm (1 - S.J h)
 
-theorem graphDefect_nonneg (h : κ) : 0 ≤ S.graphDefect h := graphOpNorm_nonneg _ _
+theorem graphDefect_nonneg (h : κ) : 0 ≤ S.graphDefect h := (S.D h).graphOpNorm_nonneg _
 
 /-- `‖1 - Jₕ‖_{Vₕ} ≤ ‖1 - Jₕ‖`. -/
-theorem graphDefect_le (h : κ) : S.graphDefect h ≤ ‖1 - S.J h‖ := graphOpNorm_le _ _
+theorem graphDefect_le (h : κ) : S.graphDefect h ≤ ‖1 - S.J h‖ := (S.D h).graphOpNorm_le _
 
 /-- `‖1 - Jₕ‖_{Vₕ} = 0` iff `Jₕ = 1` (the inclusion of the graph space is onto). -/
 theorem graphDefect_eq_zero_iff (h : κ) : S.graphDefect h = 0 ↔ S.J h = 1 :=
-  (graphOpNorm_eq_zero_iff _ _).trans (sub_eq_zero.trans eq_comm)
+  ((S.D h).graphOpNorm_eq_zero_iff _).trans (sub_eq_zero.trans eq_comm)
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖_{Vₕ}` on the graph space `Vₕ` of `𝐝ₕ`. -/
 theorem norm_one_sub_J_graphFst_le (h : κ)
     (v : ((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).GraphSpace) :
     ‖(1 - S.J h) (((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).graphFst v)‖ ≤ S.graphDefect h * ‖v‖ :=
-  norm_graphFst_le_graphOpNorm _ _ v
+  (S.D h).norm_graphFst_le_graphOpNorm _ v
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)`. -/
 theorem norm_one_sub_J_apply_le (h : κ) (v : S.X h) :
     ‖(1 - S.J h) v‖ ≤ S.graphDefect h * (‖v‖ + ‖S.D h v‖) :=
-  norm_apply_le_graphOpNorm _ _ v
+  (S.D h).norm_apply_le_graphOpNorm _ v
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖` on the discrete cycles (`𝐝ₕ v = 0`). -/
 theorem norm_one_sub_J_apply_le_of_D_eq_zero (h : κ) {v : S.X h} (hv : S.D h v = 0) :
     ‖(1 - S.J h) v‖ ≤ S.graphDefect h * ‖v‖ :=
-  norm_apply_le_graphOpNorm_of_eq_zero _ _ hv
+  (S.D h).norm_apply_le_graphOpNorm_of_eq_zero _ hv
 
 /-- **The inner-product defect of a discrete form and of its differential**, the form in which the
 residual bound uses it (`norm_residual_le`):
@@ -455,7 +456,7 @@ theorem norm_one_sub_J_add_le_opNorm (h : κ) (w : S.X h) :
 `v`, then `‖1 - Jₕ‖_{Vₕ} ≤ √2 δ` (`‖v‖ + ‖𝐝ₕ v‖ ≤ √2 ‖v‖_{Vₕ}`). -/
 theorem graphDefect_le_of_forall (h : κ) {δ : ℝ} (hδ : 0 ≤ δ)
     (hb : ∀ v, ‖(1 - S.J h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) : S.graphDefect h ≤ √2 * δ :=
-  graphOpNorm_le_of_forall _ _ hδ hb
+  (S.D h).graphOpNorm_le_of_forall _ hδ hb
 
 /-- `‖1 - Jₕ‖ → 0` implies `‖1 - Jₕ‖_{Vₕ} → 0`. -/
 theorem tendsto_graphDefect_of_tendsto {l : Filter κ}
@@ -1322,8 +1323,7 @@ def toCrime : ApproxComplexCrime H κ :=
             H.totalD.graphSnd (waveLift H ⟨y, hy⟩ - F.toFamily.graphIncl h w) := by
           rw [H.totalD.graphSnd.map_sub, F.toFamily.graphSnd_graphIncl]; rfl
         have h1 := norm_graphFst_le (waveLift H ⟨y, hy⟩ - F.toFamily.graphIncl h w)
-        have h2 := ApproxComplex.Family.norm_graphSnd_le
-          (waveLift H ⟨y, hy⟩ - F.toFamily.graphIncl h w)
+        have h2 := norm_graphSnd_le (waveLift H ⟨y, hy⟩ - F.toFamily.graphIncl h w)
         change ‖y - F.toFamily.inclL h w‖ +
           ‖H.totalD ⟨y, hy.1⟩ - F.toFamily.inclL h (F.toFamily.D h w)‖ < ε
         rw [e1, e2]
@@ -1605,7 +1605,7 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
         have ha : ‖(y : PiLp 2 W) - S.inclL h u‖ ≤ Rc := by
           rw [e1]; exact (norm_graphFst_le _).trans hle
         have hb : ‖H.totalD ⟨y, y.2.1⟩ - S.inclL h (S.D h u)‖ ≤ Rc := by
-          rw [e2]; exact (ApproxComplex.Family.norm_graphSnd_le _).trans hle
+          rw [e2]; exact (norm_graphSnd_le _).trans hle
         have hJ : S.toCrimeFamily.J h = 1 := F.toFamily_J h
         have hres := fun v => (S.toCrimeFamily.norm_residual_le h y u (δ := 0) (fun v => by
           rw [S.cochainDefect_toCrimeFamily, inner_zero_left, norm_zero, zero_mul]) v).trans

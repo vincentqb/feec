@@ -244,15 +244,12 @@ theorem exists_inner_approx (f : U1 → ℝ) (hf : IsLinearMap ℝ f) {Λ : ℝ}
   have hF0 : ∀ v : V1, ‖F0 v‖ ≤ (Λ * √2) * ‖v‖ := by
     intro v
     have e1 : ((graphDom1ₗ v : U1) : W1) = D1.graphFst v := rfl
-    have e2 : segD1 (graphDom1ₗ v) = D1.graphSnd v := apply_graphDom D1 v
+    have e2 : segD1 (graphDom1ₗ v) = D1.graphSnd v := D1.apply_graphDom v
     have h := hfb (graphDom1ₗ v)
     have hn : ‖(graphDom1ₗ v : U1)‖ = ‖D1.graphFst v‖ := by rw [← e1]; rfl
     rw [hn, e2] at h
-    have hsq : ‖D1.graphFst v‖ + ‖D1.graphSnd v‖ ≤ √2 * ‖v‖ := by
-      have hv := norm_sq_graphSpace D1 v
-      refine le_of_pow_le_pow_left₀ two_ne_zero (by positivity) ?_
-      rw [mul_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2), hv]
-      nlinarith [sq_nonneg (‖D1.graphFst v‖ - ‖D1.graphSnd v‖)]
+    have hsq : ‖D1.graphFst v‖ + ‖D1.graphSnd v‖ ≤ √2 * ‖v‖ :=
+      LinearPMap.norm_graphFst_add_norm_graphSnd_le v
     rw [Real.norm_eq_abs]
     calc |F0 v| = |f (graphDom1ₗ v)| := rfl
       _ ≤ Λ * (‖D1.graphFst v‖ + ‖D1.graphSnd v‖) := h
@@ -267,7 +264,7 @@ theorem exists_inner_approx (f : U1 → ℝ) (hf : IsLinearMap ℝ f) {Λ : ℝ}
       rw [hfl]; rfl
     have h2 : F (D1.toGraphSpace μ) = ⟪r, D1.toGraphSpace μ⟫ := by
       rw [hr, InnerProductSpace.toDual_symm_apply]
-    rw [← h1, h2, inner_graphSpace, LinearPMap.graphFst_toGraphSpace,
+    rw [← h1, h2, LinearPMap.inner_graphSpace, LinearPMap.graphFst_toGraphSpace,
       LinearPMap.graphSnd_toGraphSpace]
   obtain ⟨z, hz, hzd⟩ := dense_D1_adjoint_domain.exists_dist_lt (D1.graphSnd r) hδ
   refine ⟨D1.graphFst r + D1† ⟨z, hz⟩, fun μ => ?_⟩

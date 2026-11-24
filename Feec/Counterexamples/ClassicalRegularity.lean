@@ -378,7 +378,7 @@ theorem eventually_exists_mem_graphSub (ζ : (invShort 𝕜).toHilbertComplex.to
     · exact truncSum_mem N x1
     · exact trivial
   have hTy : invDiag 𝕜 (fstDomain ⟨y, hy⟩) = truncSum 𝕜 N f := invDiag_diag _ _
-  have hsq := HodgeWave.norm_sq_graphSpace ((invShort 𝕜).toHilbertComplex.totalD.toGraphSpace x -
+  have hsq := LinearPMap.norm_sq_graphSpace ((invShort 𝕜).toHilbertComplex.totalD.toGraphSpace x -
     (invShort 𝕜).toHilbertComplex.totalD.toGraphSpace ⟨y, hy⟩)
   rw [(invShort 𝕜).toHilbertComplex.totalD.graphFst.map_sub,
     (invShort 𝕜).toHilbertComplex.totalD.graphSnd.map_sub, LinearPMap.graphFst_toGraphSpace,

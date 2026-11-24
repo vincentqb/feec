@@ -181,8 +181,8 @@ theorem _root_.Feec.HodgeWave.norm_shiftedForm_le {E : Type*} [NormedAddCommGrou
     [InnerProductSpace 𝕜 E] (T : E →ₗ.[𝕜] E) : ‖HodgeWave.shiftedForm T‖ ≤ 2 := by
   refine ContinuousLinearMap.opNorm_le_bound₂ _ zero_le_two fun ξ ψ => ?_
   rw [HodgeWave.shiftedForm_apply, HodgeWave.waveForm_apply]
-  have hξ := HodgeWave.norm_sq_graphSpace ξ
-  have hψ := HodgeWave.norm_sq_graphSpace ψ
+  have hξ := norm_sq_graphSpace ξ
+  have hψ := norm_sq_graphSpace ψ
   set x1 := ‖T.graphFst ξ‖
   set x2 := ‖T.graphSnd ξ‖
   set p1 := ‖T.graphFst ψ‖

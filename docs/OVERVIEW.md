@@ -18,7 +18,7 @@ only along the import relation of `docs/REFACTOR_PLAN.md` §1, a partial order c
 
 | Layer | Content | Thesis |
 |---|---|---|
-| `Feec.ForMathlib` | Unbounded operators over `ℝ` or `ℂ`: skew-symmetric, skew-adjoint and dissipative operators, the graph space and `T†† = T`, reducing subspaces and restriction, the closed range theorem; `ℓᵖ` and `Lᵖ` identifications; a square-root Gronwall inequality; partial derivatives, interval integrals, Hille's theorem (closed operators commute with Bochner integrals), restriction of scalars | §4.1, (4.1a–d), Thm 4.4, Lemma 4.12 |
+| `Feec.ForMathlib` | Unbounded operators over `ℝ` or `ℂ`: skew-symmetric, skew-adjoint and dissipative operators, the graph space, the graph norm and `T†† = T`, reducing subspaces and restriction, the closed range theorem; `ℓᵖ` and `Lᵖ` identifications; a square-root Gronwall inequality; partial derivatives, interval integrals, Hille's theorem (closed operators commute with Bochner integrals), restriction of scalars | §4.1, (4.1a–d), Thm 4.4, Lemma 4.12 |
 | `Feec.Operator` | Adjoints of composable pairs, multiplication operators on `L²(μ; E)`, resolvents | §4.1–4.2 |
 | `Feec.Semigroup` | Strongly continuous groups and semigroups and the calculus of their orbits; Stone's theorem; the Lumer–Phillips theorem (m-dissipative ⇔ generator of a contraction semigroup, with uniqueness); invariant cores; invariance criteria for m-dissipative generators (resolvent invariance, the part in `K`, reducing subspaces); impedance operators of energy triples; bounded perturbations (Dyson–Phillips); pure point spectrum, and eigenbases from a compact resolvent | Thm 4.3; `K*` in Props 4.17, 4.19 |
 | `Feec.Evolution` | Strong and classical solutions of `U' = AU + F` on any interval, energy estimates, forcing classes, Duhamel's formula, existence and uniqueness for generators, constraint propagation through reducing subspaces, inhomogeneous essential boundary data by a lifting (`U − G ∈ D(A)`) | Thm 4.3, Cor 4.5, Lemma 4.12, Ch. 7 |
@@ -157,7 +157,7 @@ Hilbert complexes in the sense of [HolstStern2012] (`Feec.HilbertComplex.ApproxC
 finite-dimensional complexes `Vₕ` with their own inner products, injective bounded cochain maps
 `iₕ : Vₕ → W` with left inverses `πₕ`, the inner-product defect in the graph norm of `𝐝ₕ` tending
 to `0` (`Feec.HilbertComplex.ApproxComplex.Family.graphDefect`, the norm of `1 − iₕ*iₕ` on the
-graph space of `𝐝ₕ`, `Feec.HilbertComplex.graphOpNorm`; at most `‖1 − iₕ*iₕ‖`, whose limit `0`
+graph space of `𝐝ₕ`, `ContinuousLinearMap.graphOpNorm`; at most `‖1 − iₕ*iₕ‖`, whose limit `0`
 [HolstStern2012] assume), and the
 graph-norm approximation property (from `L²` approximation and a commutation defect of `πₕ` on a
 dense set, `Feec.HilbertComplex.ApproxComplex.Family.graphApprox_of_commute`). The discrete

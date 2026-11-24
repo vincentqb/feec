@@ -434,7 +434,7 @@ theorem exists_mem_graphSub_le (N : ℕ) {y : PiLp 2 W} (hy : y ∈ H.wave.domai
       H.totalD ⟨_, (hu : _ ∈ H.wave.domain).1⟩ := by
     rw [H.totalD.graphSnd.map_sub, graphSnd_toGraphSpace, graphSnd_toGraphSpace,
       ← LinearPMap.map_sub]; rfl
-  have hsq := Feec.HodgeWave.norm_sq_graphSpace (H.totalD.toGraphSpace z - w)
+  have hsq := norm_sq_graphSpace (H.totalD.toGraphSpace z - w)
   rw [e1, e2] at hsq
   have hw := H.norm_wave_sq ⟨_, hu⟩
   rw [hLu] at hw

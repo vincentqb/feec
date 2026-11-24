@@ -57,32 +57,6 @@ Bibliography: [references.bib](../../../docs/references.bib)
 
 open Filter
 
-namespace LinearPMap
-
-variable {𝕜 E F : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
-  [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-theorem toGraphSpace_sub (T : E →ₗ.[𝕜] F) (x y : T.domain) :
-    T.toGraphSpace (x - y) = T.toGraphSpace x - T.toGraphSpace y := by
-  refine Subtype.ext ?_
-  change WithLp.toLp 2 (((x - y : T.domain) : E), T (x - y)) =
-    WithLp.toLp 2 ((x : E), T x) - WithLp.toLp 2 ((y : E), T y)
-  rw [LinearPMap.map_sub, ← WithLp.toLp_sub]
-  rfl
-
-/-- The graph norm is at most `‖x‖ + ‖T x‖`. -/
-theorem norm_toGraphSpace_le (T : E →ₗ.[𝕜] F) (x : T.domain) :
-    ‖T.toGraphSpace x‖ ≤ ‖(x : E)‖ + ‖T x‖ := by
-  have h := WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 ((x : E), T x))
-  have e : ‖T.toGraphSpace x‖ = ‖WithLp.toLp 2 ((x : E), T x)‖ := rfl
-  rw [e]
-  refine (abs_le_of_sq_le_sq' ?_ (by positivity)).2
-  rw [h]
-  simp only [WithLp.toLp_fst, WithLp.toLp_snd]
-  nlinarith [norm_nonneg (x : E), norm_nonneg (T x)]
-
-end LinearPMap
-
 namespace Feec.HilbertComplex.Subcomplex
 
 variable {𝕜 : Type*} [RCLike 𝕜] {ι : Type*} [Fintype ι] {c : ComplexShape ι} {W : ι → Type*}

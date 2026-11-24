@@ -46,26 +46,6 @@ open LinearPMap Set
 
 @[expose] public noncomputable section
 
-namespace LinearPMap
-
-variable {𝕜 E F : Type*} [RCLike 𝕜]
-  [NormedAddCommGroup E] [InnerProductSpace 𝕜 E] [NormedAddCommGroup F] [InnerProductSpace 𝕜 F]
-
-/-- Every point of the graph space is `(x, T x)` for a unique `x ∈ D(T)`. -/
-theorem exists_toGraphSpace_eq (T : E →ₗ.[𝕜] F) (v : T.GraphSpace) :
-    ∃ x : T.domain, T.toGraphSpace x = v ∧ (x : E) = T.graphFst v ∧ T x = T.graphSnd v := by
-  obtain ⟨x, hx1, hx2⟩ := (LinearPMap.mem_graph_iff _).1 (mem_graphL2.1 v.2)
-  exact ⟨x, Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext hx1 hx2)), hx1, hx2⟩
-
-theorem graphFst_injective (T : E →ₗ.[𝕜] F) : Function.Injective T.graphFst := by
-  intro u v huv
-  obtain ⟨x, rfl, -, -⟩ := T.exists_toGraphSpace_eq u
-  obtain ⟨y, rfl, -, -⟩ := T.exists_toGraphSpace_eq v
-  have : x = y := Subtype.ext huv
-  rw [this]
-
-end LinearPMap
-
 namespace Feec.HilbertComplex
 
 /-- **The Hilbert complex of a complex of bounded operators** `δ i j : Xⁱ → Xʲ` (zero off the

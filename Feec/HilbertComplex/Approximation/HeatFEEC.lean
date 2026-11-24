@@ -211,7 +211,7 @@ theorem approximates_totalFamily : F.totalFamily.Approximates () := fun σ => by
   have e : H.totalD.toGraphSpace x - H.totalD.toGraphSpace y = H.totalD.toGraphSpace (x - y) :=
     (LinearPMap.toGraphSpace_sub _ x y).symm
   rw [e] at hlt
-  have hsq := HodgeWave.norm_sq_graphSpace (H.totalD.toGraphSpace (x - y))
+  have hsq := norm_sq_graphSpace (H.totalD.toGraphSpace (x - y))
   rw [graphFst_toGraphSpace, graphSnd_toGraphSpace, LinearPMap.map_sub, Submodule.coe_sub] at hsq
   have n0 := norm_nonneg (H.totalD.toGraphSpace (x - y))
   have h1 : ‖(x : PiLp 2 W) - y‖ ≤ ‖H.totalD.toGraphSpace (x - y)‖ := by
@@ -300,7 +300,7 @@ def totalJackson {ρ : Type*} (J : F.Jackson ρ) : F.totalFamily.Jackson ρ wher
         exact ⟨v, hv, h1.trans hB, fun j hxj => (h2 j hxj).trans hB⟩
     obtain ⟨y, rfl, -, -⟩ := H.totalD.exists_toGraphSpace_eq w
     rw [← LinearPMap.toGraphSpace_sub, ← mul_assoc] at hle
-    have hsq := _root_.Feec.HodgeWave.norm_sq_graphSpace (H.totalD.toGraphSpace (⟨x, hx.1⟩ - y))
+    have hsq := norm_sq_graphSpace (H.totalD.toGraphSpace (⟨x, hx.1⟩ - y))
     rw [graphFst_toGraphSpace, graphSnd_toGraphSpace] at hsq
     have hN := norm_nonneg (H.totalD.toGraphSpace (⟨x, hx.1⟩ - y))
     refine ⟨y, hw, ?_, fun _ _ => ?_⟩

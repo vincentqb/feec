@@ -208,11 +208,11 @@ def exactWave_toSolution {T : ℝ} {f : ℝ → Wv W1}
     rw [cubeWaveData_d0, cubeWaveData_S0, ιt0_toGraphVec0, LinearPMap.graphSnd_toGraphSpace]
     exact congrArg Subtype.val (s.ee t ht)
   ea t ht τ ψ hτψ := by
-    have h := s.ea t ht (graphDom D0 τ) (rp ψ)
-    have e0 : bggSegment.d0 (graphDom D0 τ) = bggSegment.S0 (rp ψ) := by
+    have h := s.ea t ht (D0.graphDom τ) (rp ψ)
+    have e0 : bggSegment.d0 (D0.graphDom τ) = bggSegment.S0 (rp ψ) := by
       refine Subtype.ext ?_
-      change D0 (graphDom D0 τ) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp ψ))
-      rw [apply_graphDom, incl0_rp, ← cubeWaveData_S0, ← cubeWaveData_d0, hτψ]
+      change D0 (D0.graphDom τ) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp ψ))
+      rw [LinearPMap.apply_graphDom, incl0_rp, ← cubeWaveData_S0, ← cubeWaveData_d0, hτψ]
     rw [e0, sub_self, map_zero, sub_zero] at h
     change ⟪(s.σ' t : W0), D0.graphFst τ⟫ - ⟪incl1 (s.u t), ιt1 (bggDt0 ψ)⟫ = 0
     rw [ιt1_bggDt0, ← inner_wv_U1]

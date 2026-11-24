@@ -551,7 +551,7 @@ theorem exists_potential_test : ∃ C : ℝ, 0 ≤ C ∧ ∀ (φ : formIdx 3 1 �
   have hv : ∀ a, ‖Φv a‖ ^ 2 ≤ 4 * (K * Real.sqrt S) ^ 2 := by
     intro a
     have hD0 := ((LinearPMap.image_iff (hdom0 a)).2 (hmem0 a)).symm
-    rw [norm_toGraphSpace_sq, hD0, PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2,
+    rw [LinearPMap.norm_toGraphSpace_sq, hD0, PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2,
       sum_formIdx_zero]
     erw [sum_formIdx_one]
     rw [Fin.sum_univ_three]
@@ -659,7 +659,7 @@ theorem mem_closure_test (v : V1) :
     v ∈ closure ((testFieldSub ℝ (cubeDomain 3) (formIdx 3 1)).comap
       (D1.graphFst : V1 →ₗ[ℝ] W1) : Set V1) := by
   have hQ := isOpen_cubeDomain 3
-  have hmem := ConstCoeffOp.mem_closure_minimal (extDerivOp ℝ 3 1) hQ (graphDom D1 v)
+  have hmem := ConstCoeffOp.mem_closure_minimal (extDerivOp ℝ 3 1) hQ (D1.graphDom v)
   rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hmem
   obtain ⟨ps, hps, hlim⟩ := mem_closure_iff_seq_limit.1 hmem
   choose φ hφ hpφ using hps
@@ -669,23 +669,23 @@ theorem mem_closure_test (v : V1) :
       (D1.graphFst : V1 →ₗ[ℝ] W1) := fun n => testField_mem_testFieldSub (hφ n)
   refine mem_closure_of_tendsto (b := atTop) ?_ (Eventually.of_forall hzs)
   rw [tendsto_iff_norm_sub_tendsto_zero]
-  set x2 : L2F ℝ (cubeDomain 3) (formIdx 3 (1 + 1)) := D1 (graphDom D1 v)
-  have h1 : Tendsto (fun n => ‖(ps n).1 - (graphDom D1 v : W1)‖) atTop (𝓝 0) :=
+  set x2 : L2F ℝ (cubeDomain 3) (formIdx 3 (1 + 1)) := D1 (D1.graphDom v)
+  have h1 : Tendsto (fun n => ‖(ps n).1 - (D1.graphDom v : W1)‖) atTop (𝓝 0) :=
     tendsto_iff_norm_sub_tendsto_zero.1
-      ((continuous_fst.tendsto ((graphDom D1 v : W1), x2)).comp hlim)
+      ((continuous_fst.tendsto ((D1.graphDom v : W1), x2)).comp hlim)
   have h2 : Tendsto (fun n => ‖(ps n).2 - x2‖) atTop (𝓝 0) :=
     tendsto_iff_norm_sub_tendsto_zero.1
-      ((continuous_snd.tendsto ((graphDom D1 v : W1), x2)).comp hlim)
+      ((continuous_snd.tendsto ((D1.graphDom v : W1), x2)).comp hlim)
   refine squeeze_zero (fun n => norm_nonneg _) (fun n => ?_) (by simpa using h1.add h2)
-  have hfst : D1.graphFst (zs n - v) = (ps n).1 - (graphDom D1 v : W1) := by
+  have hfst : D1.graphFst (zs n - v) = (ps n).1 - (D1.graphDom v : W1) := by
     rw [map_sub, hpφ n]; rfl
   have hsnd : D1.graphSnd (zs n - v) = (ps n).2 - x2 := by
-    rw [map_sub, hpφ n, ← apply_graphDom D1 v]
+    rw [map_sub, hpφ n, ← D1.apply_graphDom v]
     simp only [zs, LinearPMap.graphSnd_toGraphSpace]
     rw [ConstCoeffOp.minimal_testField _ hQ (hφ n)]
-  have hn := norm_sq_graphSpace D1 (zs n - v)
+  have hn := LinearPMap.norm_sq_graphSpace (zs n - v)
   rw [hfst, hsnd] at hn
-  set a := ‖(ps n).1 - (graphDom D1 v : W1)‖
+  set a := ‖(ps n).1 - (D1.graphDom v : W1)‖
   set b := ‖(ps n).2 - x2‖
   have ha : 0 ≤ a := norm_nonneg _
   have hb : 0 ≤ b := norm_nonneg _
@@ -719,15 +719,15 @@ theorem curlPotential : CurlPotential := by
     intro z hz
     obtain ⟨φ, hφ, hφz⟩ := hz
     obtain ⟨Φ, h1, h2⟩ := hC φ hφ
-    have hdom : graphDom D1 z = ⟨testField hφ,
+    have hdom : D1.graphDom z = ⟨testField hφ,
         ConstCoeffOp.testField_mem_minimal_domain _ (isOpen_cubeDomain 3) hφ⟩ :=
       Subtype.ext hφz
     have hz2 : bggD1 z = testField ((extDerivOp ℝ 3 1).isTestField_apply hφ) := by
       change D1.graphSnd z = _
-      rw [← apply_graphDom D1 z, hdom, ConstCoeffOp.minimal_testField _ (isOpen_cubeDomain 3) hφ]
+      rw [← D1.apply_graphDom z, hdom, ConstCoeffOp.minimal_testField _ (isOpen_cubeDomain 3) hφ]
     have hzn : ‖z‖ = Real.sqrt (‖testField hφ‖ ^ 2 +
         ‖testField ((extDerivOp ℝ 3 1).isTestField_apply hφ)‖ ^ 2) := by
-      rw [← Real.sqrt_sq (norm_nonneg z), norm_sq_graphSpace, ← hz2, ← hφz]
+      rw [← Real.sqrt_sq (norm_nonneg z), LinearPMap.norm_sq_graphSpace, ← hz2, ← hφz]
       rfl
     exact ⟨Φ, h1.trans hz2.symm, by rwa [hzn]⟩
   rintro _ ⟨v, rfl⟩

@@ -64,16 +64,6 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpac
 
 local notation "⟪" x ", " y "⟫" => inner 𝕜 x y
 
-/-- `‖v‖² = ‖v₁‖² + ‖v₂‖²` in the graph space. -/
-theorem norm_sq_graphSpace (v : T.GraphSpace) :
-    ‖v‖ ^ 2 = ‖T.graphFst v‖ ^ 2 + ‖T.graphSnd v‖ ^ 2 := by
-  obtain ⟨x, rfl, -, -⟩ := T.exists_toGraphSpace_eq v
-  exact WithLp.prod_norm_sq_eq_of_L2 (WithLp.toLp 2 ((x : E), T x))
-
-theorem norm_graphFst_le (v : T.GraphSpace) : ‖T.graphFst v‖ ≤ ‖v‖ := by
-  have := norm_sq_graphSpace v
-  nlinarith [norm_nonneg (T.graphFst v), norm_nonneg v, sq_nonneg ‖T.graphSnd v‖]
-
 /-! ### The semi-discrete operator -/
 
 section Operator
@@ -265,8 +255,7 @@ def graphD : T.GraphSpace →L[𝕜] T.GraphSpace :=
         rw [WithLp.prod_norm_eq_of_L2]; simp
       simp only [LinearMap.coe_mk, AddHom.coe_mk]
       rw [h]
-      have := norm_sq_graphSpace v
-      nlinarith [norm_nonneg (T.graphSnd v), norm_nonneg v, sq_nonneg ‖T.graphFst v‖]
+      exact norm_graphSnd_le v
 
 @[simp] theorem graphFst_graphD (v : T.GraphSpace) :
     T.graphFst (graphD hmaps hcomp v) = T.graphSnd v := rfl

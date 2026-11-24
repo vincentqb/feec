@@ -259,7 +259,7 @@ theorem not_isClosed_range_B : ¬ IsClosed (Set.range cubeWaveData.B) := by
   rw [Feec.BGG.WaveData.B_toLp] at hx'
   refine dxZero_not_mem_D1 ?_
   rw [← hx']
-  exact D1.domain.sub_mem (graphFst_mem_domain D1 _) (graphFst_mem_domain D1 _)
+  exact D1.domain.sub_mem (D1.graphFst_mem_domain _) (D1.graphFst_mem_domain _)
 
 /-! ### Classical solutions of (6.2) with `L²` multiplier are solutions of (6.1)/(6.2) -/
 

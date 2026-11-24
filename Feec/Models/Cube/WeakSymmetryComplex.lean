@@ -157,55 +157,6 @@ theorem denseRange_piCLM {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace
   exact (dense_pi Set.univ fun a _ => hf).preimage
     (PiLp.continuousLinearEquiv 2 ℝ (fun _ : Fin 3 => W)).toHomeomorph.isOpenMap
 
-/-! ### Graph spaces -/
-
-section GraphSpace
-
-variable {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ E] [NormedAddCommGroup F]
-  [InnerProductSpace ℝ F] (T : E →ₗ.[ℝ] F)
-
-theorem graphFst_mem_domain (v : T.GraphSpace) : T.graphFst v ∈ T.domain :=
-  LinearPMap.mem_domain_of_mem_graph (x := T.graphFst v) (y := T.graphSnd v) (mem_graphL2.1 v.2)
-
-/-- The point of `D(T)` of a point of the graph space. -/
-def graphDom (v : T.GraphSpace) : T.domain := ⟨T.graphFst v, graphFst_mem_domain T v⟩
-
-@[simp] theorem coe_graphDom (v : T.GraphSpace) : (graphDom T v : E) = T.graphFst v := rfl
-
-theorem apply_graphDom (v : T.GraphSpace) : T (graphDom T v) = T.graphSnd v :=
-  ((LinearPMap.image_iff (graphFst_mem_domain T v)).2 (mem_graphL2.1 v.2)).symm
-
-theorem graphDom_add (u v : T.GraphSpace) : graphDom T (u + v) = graphDom T u + graphDom T v :=
-  Subtype.ext (map_add T.graphFst u v)
-
-theorem graphDom_smul (c : ℝ) (v : T.GraphSpace) : graphDom T (c • v) = c • graphDom T v :=
-  Subtype.ext (map_smul T.graphFst c v)
-
-theorem inner_graphSpace (u v : T.GraphSpace) :
-    ⟪u, v⟫_ℝ = ⟪T.graphFst u, T.graphFst v⟫_ℝ + ⟪T.graphSnd u, T.graphSnd v⟫_ℝ :=
-  WithLp.prod_inner_apply (u : WithLp 2 (E × F)) v
-
-theorem norm_sq_graphSpace (v : T.GraphSpace) :
-    ‖v‖ ^ 2 = ‖T.graphFst v‖ ^ 2 + ‖T.graphSnd v‖ ^ 2 :=
-  WithLp.prod_norm_sq_eq_of_L2 (v : WithLp 2 (E × F))
-
-theorem norm_toGraphSpace_sq (x : T.domain) :
-    ‖T.toGraphSpace x‖ ^ 2 = ‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2 :=
-  norm_sq_graphSpace T _
-
-theorem toGraphSpace_add (x y : T.domain) :
-    T.toGraphSpace (x + y) = T.toGraphSpace x + T.toGraphSpace y :=
-  Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext rfl (map_add T x y)))
-
-theorem toGraphSpace_smul (c : ℝ) (x : T.domain) :
-    T.toGraphSpace (c • x) = c • T.toGraphSpace x :=
-  Subtype.ext (WithLp.ofLp_injective 2 (Prod.ext rfl (LinearPMap.map_smul T c x)))
-
-theorem denseRange_graphFst (hT : Dense (T.domain : Set E)) : DenseRange T.graphFst := by
-  refine hT.mono fun x hx => ⟨T.toGraphSpace ⟨x, hx⟩, rfl⟩
-
-end GraphSpace
-
 /-! ### The complex property in degrees `0, 1` -/
 
 theorem D0_mem_D1 (x : D0.domain) : D0 x ∈ D1.domain :=
@@ -237,7 +188,7 @@ def bggD0 : V0 →L[ℝ] V1 :=
       have h1 := norm_toGraphSpace_sq D1 ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩
       have h0 : D1 ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩ = 0 := D1_D0 _
       rw [h0, norm_zero] at h1
-      have h2 := norm_sq_graphSpace D0 v
+      have h2 := norm_sq_graphSpace v
       have h3 : ‖D0 (graphDom D0 v)‖ = ‖D0.graphSnd v‖ := by rw [apply_graphDom]
       change ‖D1.toGraphSpace ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩‖ ≤ ‖v‖
       refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
@@ -297,7 +248,7 @@ def bggS0 : Vt0 →L[ℝ] V1 :=
         rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2,
           ← Finset.sum_add_distrib]
         refine Finset.sum_congr rfl fun a _ => ?_
-        rw [norm_sq_graphSpace D0 (φ a)]
+        rw [norm_sq_graphSpace (φ a)]
         simp [bggDt0, graphFst_bggD0]
       refine (pow_le_pow_iff_left₀ (norm_nonneg _) (by positivity) two_ne_zero).1 ?_
       rw [mul_pow, Real.sq_sqrt (by norm_num : (0 : ℝ) ≤ 2)]
@@ -321,14 +272,14 @@ theorem inner_Vt {V : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V] (u
 theorem bgg_graph0 (u v : V0) :
     ⟪u, v⟫_ℝ = ⟪D0.graphFst u, D0.graphFst v⟫_ℝ +
       ⟪D1.graphFst (bggD0 u), D1.graphFst (bggD0 v)⟫_ℝ := by
-  rw [inner_graphSpace D0, graphFst_bggD0, graphFst_bggD0]
+  rw [inner_graphSpace u v, graphFst_bggD0, graphFst_bggD0]
 
 theorem bgg_grapht0 (u v : Vt0) :
     ⟪u, v⟫_ℝ = ⟪ιt0 u, ιt0 v⟫_ℝ + ⟪ιt1 (bggDt0 u), ιt1 (bggDt0 v)⟫_ℝ := by
   rw [inner_Vt u v, inner_Vt (ιt0 u) (ιt0 v), inner_Vt (ιt1 (bggDt0 u)) (ιt1 (bggDt0 v)),
     ← Finset.sum_add_distrib]
   refine Finset.sum_congr rfl fun a _ => ?_
-  rw [inner_graphSpace D0 (u a) (v a)]
+  rw [inner_graphSpace (u a) (v a)]
   congr 1
   change _ = ⟪D1.graphFst (bggD0 (u a)), D1.graphFst (bggD0 (v a))⟫_ℝ
   rw [graphFst_bggD0, graphFst_bggD0]
@@ -338,7 +289,7 @@ theorem bgg_grapht1 (u v : Vt1) :
   rw [inner_Vt u v, inner_Vt (ιt1 u) (ιt1 v), inner_Vt (bggDt1 u) (bggDt1 v),
     ← Finset.sum_add_distrib]
   refine Finset.sum_congr rfl fun a _ => ?_
-  exact inner_graphSpace D1 (u a) (v a)
+  exact inner_graphSpace (u a) (v a)
 
 theorem bgg_dt1_dt0 (φ : Vt0) : bggDt1 (bggDt0 φ) = 0 :=
   PiLp.ext fun _ => graphSnd_bggD0 _
@@ -367,7 +318,7 @@ def bggHilb : Feec.BGG.Hilb ℝ W0 W1 (Wv W0) (Wv W1) W2 (Wv W2) V0 V1 Vt0 Vt1 w
   S0 := bggS0
   S1 := bggS1
   graph0 := bgg_graph0
-  graph1 := inner_graphSpace D1
+  graph1 := inner_graphSpace
   grapht0 := bgg_grapht0
   grapht1 := bgg_grapht1
   d1_d0 := graphSnd_bggD0
@@ -421,18 +372,6 @@ theorem isClosed_range_D1 : IsClosed (Set.range fun x : D1.domain => D1 x) := by
 
 /-! ### The hypotheses (H1)–(H3), (H6) -/
 
-theorem range_graphSnd_D0 : Set.range D0.graphSnd = Set.range fun x : D0.domain => D0 x := by
-  ext y
-  constructor
-  · rintro ⟨v, rfl⟩; exact ⟨graphDom D0 v, apply_graphDom D0 v⟩
-  · rintro ⟨x, rfl⟩; exact ⟨D0.toGraphSpace x, rfl⟩
-
-theorem range_graphSnd_D1 : Set.range D1.graphSnd = Set.range fun x : D1.domain => D1 x := by
-  ext y
-  constructor
-  · rintro ⟨v, rfl⟩; exact ⟨graphDom D1 v, apply_graphDom D1 v⟩
-  · rintro ⟨x, rfl⟩; exact ⟨D1.toGraphSpace x, rfl⟩
-
 theorem range_pi_eq {V W : Type*} [NormedAddCommGroup V] [InnerProductSpace ℝ V]
     [NormedAddCommGroup W] [InnerProductSpace ℝ W] (f : V →L[ℝ] W) :
     Set.range (piCLM f) =
@@ -461,7 +400,7 @@ theorem bggD0_injective : Function.Injective bggD0 := by
   exact D0_eq_zero h1
 
 theorem range_bggD0 : Set.range (D1.graphFst ∘L bggD0) = Set.range fun x : D0.domain => D0 x := by
-  rw [← range_graphSnd_D0]
+  rw [← range_graphSnd D0]
   ext y
   simp [graphFst_bggD0]
 
@@ -470,7 +409,7 @@ theorem isClosed_range_bggD0 : IsClosed (Set.range (D1.graphFst ∘L bggD0)) := 
 
 theorem isClosed_range_bggD1 : IsClosed (Set.range bggD1) := by
   change IsClosed (Set.range D1.graphSnd)
-  rw [range_graphSnd_D1]; exact isClosed_range_D1
+  rw [range_graphSnd D1]; exact isClosed_range_D1
 
 /-- **Exactness of the top row at `H̊Λ¹(Q)`.** -/
 theorem exact1 : LinearMap.ker (bggD1 : V1 →ₗ[ℝ] W2) = LinearMap.range (bggD0 : V0 →ₗ[ℝ] V1) := by
@@ -733,7 +672,7 @@ theorem seg_reg {CR : ℝ}
   refine sqrt_le_of_sq (norm_nonneg _) (norm_nonneg _) ?_
   rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
   refine Finset.sum_le_sum fun a _ => ?_
-  have h1 := norm_sq_graphSpace D0 (φ0 a)
+  have h1 := norm_sq_graphSpace (φ0 a)
   change ‖D0 (graphDom D0 (φ0 a))‖ ^ 2 ≤ _
   rw [apply_graphDom, h1]
   nlinarith [sq_nonneg ‖D0.graphFst (φ0 a)‖]

@@ -513,26 +513,22 @@ theorem wsZero_apply_mem_H1c (ψ : Vt0) (s : formIdx 3 1) :
   have hmem : wsZero (ιt0 ψ) ⟨{j}, ht⟩ ∈ H1c := by
     change coeffForm (wsZero (ιt0 ψ) ⟨{j}, ht⟩) ∈ D0.domain
     rw [e, hc]
-    exact graphFst_mem_domain D0 (ψ j)
+    exact D0.graphFst_mem_domain (ψ j)
   refine ⟨hmem, ?_⟩
   have hg : gradc ⟨_, hmem⟩ = D0.graphSnd (ψ j) := by
-    rw [gradc_apply, ← apply_graphDom]
+    rw [gradc_apply, ← LinearPMap.apply_graphDom]
     congr 1
     exact Subtype.ext (by
       change coeffForm (wsZero (ιt0 ψ) ⟨{j}, ht⟩) = D0.graphFst (ψ j)
       rw [e, hc])
   rw [hg]
-  have h1 : ‖D0.graphSnd (ψ j)‖ ≤ ‖ψ j‖ := by
-    have := norm_sq_graphSpace D0 (ψ j)
-    refine le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg _) ?_
-    nlinarith [sq_nonneg ‖D0.graphFst (ψ j)‖]
-  exact h1.trans (PiLp.norm_apply_le ψ j)
+  exact (LinearPMap.norm_graphSnd_le (ψ j)).trans (PiLp.norm_apply_le ψ j)
 
 /-- `H̊Λ⁰(Q)` with the graph norm, mapped to the domain. -/
 def graphDomₗ : V0 →ₗ[ℝ] U0 where
-  toFun := graphDom D0
-  map_add' := graphDom_add D0
-  map_smul' := graphDom_smul D0
+  toFun := D0.graphDom
+  map_add' := D0.graphDom_add
+  map_smul' := D0.graphDom_smul
 
 /-- `H̊Λ⁰(Q)³` with the graph norm, mapped to the domains. -/
 def rp : Vt0 →ₗ[ℝ] Wv U0 := piMap graphDomₗ
@@ -553,9 +549,7 @@ theorem norm_regR_le (y : Wv Vt0) : ‖regR y‖ ≤ 1 * ‖y‖ := by
     refine (norm_piMap_le graphDomₗ zero_le_one (fun v => ?_) ψ).trans_eq (one_mul _)
     rw [one_mul]
     change ‖D0.graphFst v‖ ≤ ‖v‖
-    have := norm_sq_graphSpace D0 v
-    refine le_of_pow_le_pow_left₀ two_ne_zero (norm_nonneg _) ?_
-    nlinarith [sq_nonneg ‖D0.graphSnd v‖]
+    exact LinearPMap.norm_graphFst_le v
   rw [one_mul]
   change ‖segS0 (rp ψ)‖ ≤ ‖ψ‖
   have h3 : ‖segS0 (rp ψ)‖ ≤ ‖rp ψ‖ := by
@@ -595,9 +589,9 @@ section SaddleDomain
 
 /-- `H̊Λ¹(Q)` with the graph norm, mapped to the domain. -/
 def graphDom1ₗ : V1 →ₗ[ℝ] U1 where
-  toFun := graphDom D1
-  map_add' := graphDom_add D1
-  map_smul' := graphDom_smul D1
+  toFun := D1.graphDom
+  map_add' := D1.graphDom_add
+  map_smul' := D1.graphDom_smul
 
 /-- `H̊Λ¹(Q)³` with the graph norm, mapped to the domains. -/
 def rp1 : Vt1 →ₗ[ℝ] Wv U1 := piMap (𝕜' := ℝ) (V := V1) (V' := U1) (α := Fin 3) graphDom1ₗ
@@ -617,11 +611,11 @@ theorem ιt1_toGraphVec1 (v : Wv U1) : ιt1 (toGraphVec1 v) = incl1 v := PiLp.ex
 theorem ιt1_bggDt0_toGraphVec0 (ψ : Wv U0) :
     ιt1 (bggDt0 (toGraphVec0 ψ)) = incl1 (bggSegment.dt0 ψ) := PiLp.ext fun _ => rfl
 theorem ιt1_bggDt0 (φ : Vt0) : ιt1 (bggDt0 φ) = incl1 (bggSegment.dt0 (rp φ)) :=
-  PiLp.ext fun a => (graphFst_bggD0 (φ a)).trans (apply_graphDom D0 (φ a)).symm
+  PiLp.ext fun a => (graphFst_bggD0 (φ a)).trans (D0.apply_graphDom (φ a)).symm
 theorem bggS1_eq (u : Vt1) : bggS1 u = bggSegment.S1 (rp1 u) := rfl
 theorem bggS1_toGraphVec1 (v : Wv U1) : bggS1 (toGraphVec1 v) = bggSegment.S1 v := rfl
 theorem bggDt1_eq (u : Vt1) : bggDt1 u = bggSegment.dt1 (rp1 u) :=
-  PiLp.ext fun a => (apply_graphDom D1 (u a)).symm
+  PiLp.ext fun a => (D1.apply_graphDom (u a)).symm
 theorem bggDt1_toGraphVec1 (v : Wv U1) : bggDt1 (toGraphVec1 v) = bggSegment.dt1 v := rfl
 
 /-! The fields of `bggHilb` (stated once, to rewrite with them instead of unfolding). -/
@@ -692,7 +686,7 @@ theorem isSaddle_jW_domain_eqs {f : Wv W1} {x : Feec.BGG.Xsp V0 Vt0 Vt1} {l : W1
     rw [bggHilb_d0, bggHilb_S0] at h2
     rw [graphFst_bggD0, graphFst_bggS0, ← incl0_rp] at h2
     refine Subtype.ext ?_
-    rw [← apply_graphDom] at h2
+    rw [← LinearPMap.apply_graphDom] at h2
     exact h2
 
 end SaddleDomain

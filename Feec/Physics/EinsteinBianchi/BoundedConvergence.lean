@@ -192,17 +192,17 @@ def aOf (x : WS) : W0 := -((comp0 (waveOf x) : bggHilb.Γbar) : W0)
 def bOf (x : WS) : Wv W1 := comp1 x
 
 theorem d0_graphDom_σOf_eq (x : WS) :
-    bggSegment.d0 (graphDom D0 (σOf x)) = bggSegment.S0 (rp (φOf x)) := by
+    bggSegment.d0 (D0.graphDom (σOf x)) = bggSegment.S0 (rp (φOf x)) := by
   refine Subtype.ext ?_
   have h := mem_gammaOf x
-  change D0 (graphDom D0 (σOf x)) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp (φOf x)))
-  rw [apply_graphDom, incl0_rp, ← cubeWaveData_S0, ← cubeWaveData_d0]
+  change D0 (D0.graphDom (σOf x)) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp (φOf x)))
+  rw [LinearPMap.apply_graphDom, incl0_rp, ← cubeWaveData_S0, ← cubeWaveData_d0]
   exact h
 
 variable {x : WS} (hx : x ∈ formsShort.wave.domain)
 include hx
 
-theorem coe_graphDom_σOf : ((graphDom D0 (σOf x) : U0) : W0) = -((comp0 x : bggHilb.Γbar) : W0) :=
+theorem coe_graphDom_σOf : ((D0.graphDom (σOf x) : U0) : W0) = -((comp0 x : bggHilb.Γbar) : W0) :=
   graphFst_σOf (dom0 hx)
 
 theorem incl1_dt0_φOf :
@@ -264,13 +264,13 @@ of the cube data (`Feec.BGG.ExactWave bggSegment`, source `0`): the states are t
 `V` (with `(σ, φ) ↦ (−σ, −φ)` as in `solutionOfStrong`), the time derivatives those of `L V`, and
 the multiplier `multOf σ' u` (`IsMultRep` by `inner_sub_inner_eq_zero`). -/
 def exactOfStrong : Feec.BGG.ExactWave bggSegment T (srcFun 0) where
-  σ t := graphDom D0 (σOf (V t))
+  σ t := D0.graphDom (σOf (V t))
   φ t := rp (φOf (V t))
   u t := uOf (V t)
   M t := compML (V t)
   ρ t := compρL (V t)
   ℓ t := multOf (aOf (V t)) (bOf (V t))
-  σ' t := graphDom D0 (σOf (waveOf (V t)))
+  σ' t := D0.graphDom (σOf (waveOf (V t)))
   φ' t := rp (φOf (waveOf (V t)))
   u' t := uOf (waveOf (V t))
   M' t := compML (waveOf (V t))
@@ -346,11 +346,11 @@ def exactOfStrong : Feec.BGG.ExactWave bggSegment T (srcFun 0) where
     have hrep := isMultRep_multOf (inner_sub_inner_eq_zero
       (hV.mem_domain (Ico_subset_Icc_self ht))) τ ψ
     rw [hrep]
-    have e1 : ((graphDom D0 (σOf (waveOf (V t))) : U0) : W0) = aOf (V t) :=
+    have e1 : ((D0.graphDom (σOf (waveOf (V t))) : U0) : W0) = aOf (V t) :=
       coe_graphDom_σOf (hW.mem_domain (Ico_subset_Icc_self ht))
     have e2 : ⟪uOf (V t), bggSegment.dt0 ψ⟫ = ⟪bOf (V t), incl1 (bggSegment.dt0 ψ)⟫ := by
       rw [inner_wv_U1, incl1_uOf (dom1 (hV.mem_domain (Ico_subset_Icc_self ht)))]; rfl
-    change ⟪((graphDom D0 (σOf (waveOf (V t))) : U0) : W0), (τ : W0)⟫ -
+    change ⟪((D0.graphDom (σOf (waveOf (V t))) : U0) : W0), (τ : W0)⟫ -
       ⟪uOf (V t), bggSegment.dt0 ψ⟫ - _ = 0
     rw [e1, e2]; ring
   eb t ht v := by

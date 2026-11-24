@@ -664,15 +664,15 @@ theorem norm_D1Ladj_le : ‖bggHilb.D1L† ⟨comp2 z, dom2 hz⟩‖ ≤ 2 * ‖
 
 /-- **(b) `σ ∈ H¹_univ`** with `‖σ‖_{1,univ} ≤ ‖x‖ + ‖L x‖` (`σ ∈ H̊Λ⁰(Q)`, `dσ = S⁰φ`,
 `‖φ‖ ≤ (2π)⁻¹ ‖dφ‖` and `dφ = −P (L x)₁`). -/
-theorem sobRel_σOf : SobRel 1 (‖z‖ + ‖waveOf z‖) 0 ((graphDom D0 (σOf z) : U0) : W0) := by
-  have h := sobRel_zero_of_mem (x := ((graphDom D0 (σOf z) : U0) : W0)) (graphDom D0 (σOf z)).2
+theorem sobRel_σOf : SobRel 1 (‖z‖ + ‖waveOf z‖) 0 ((D0.graphDom (σOf z) : U0) : W0) := by
+  have h := sobRel_zero_of_mem (x := ((D0.graphDom (σOf z) : U0) : W0)) (D0.graphDom (σOf z)).2
   refine h.mono ?_
-  have h1 : ‖((graphDom D0 (σOf z) : U0) : W0)‖ ≤ ‖z‖ := by
+  have h1 : ‖((D0.graphDom (σOf z) : U0) : W0)‖ ≤ ‖z‖ := by
     rw [coe_graphDom_σOf hz, norm_neg]; exact norm_comp0_le z
-  have h2 : ‖D0 ⟨_, (graphDom D0 (σOf z)).2⟩‖ ≤ ‖waveOf z‖ := by
+  have h2 : ‖D0 ⟨_, (D0.graphDom (σOf z)).2⟩‖ ≤ ‖waveOf z‖ := by
     have e := congrArg (fun y : U1 => (y : W1)) (d0_graphDom_σOf_eq z)
-    change D0 (graphDom D0 (σOf z)) = _ at e
-    change ‖D0 (graphDom D0 (σOf z))‖ ≤ _
+    change D0 (D0.graphDom (σOf z)) = _ at e
+    change ‖D0 (D0.graphDom (σOf z))‖ ≤ _
     rw [e]
     have hS := norm_segS0_le (rp (φOf z))
     have hP := seg_poinct0 (rp (φOf z))
@@ -820,7 +820,7 @@ theorem isSobolevStateTr_of_mem (hLz : waveOf z ∈ formsShort.wave.domain) {Λ 
     (hM1' : compML (waveOf z) ∈ (D1†).domain) (hM1b' : ‖D1† ⟨_, hM1'⟩‖ ≤ Λ)
     (hρ : ∀ a, ∃ h : compρL z a ∈ D2min.domain, ‖D2min ⟨_, h⟩‖ ≤ Λ) :
     IsSobolevStateTr 1 (4 * (‖z‖ + ‖waveOf z‖ + ‖waveOf (waveOf z)‖ + Λ))
-      (graphDom D0 (σOf z)) (rp (φOf z)) (uOf z) (compML z) (compρL z) := by
+      (D0.graphDom (σOf z)) (rp (φOf z)) (uOf z) (compML z) (compρL z) := by
   have h0 := norm_nonneg z
   have h1 := norm_nonneg (waveOf z)
   have h2 := norm_nonneg (waveOf (waveOf z))

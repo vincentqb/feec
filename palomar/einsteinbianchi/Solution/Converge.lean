@@ -139,19 +139,19 @@ theorem isWave_of_mem_graph {U V : St} (h : (toWS U, toWS V) ∈ formsShort.wave
   have hw : waveOf (toWS U) = toWS V := by
     rw [waveOf_eq hx, ← hz2']
     exact congrArg _ (Subtype.ext hz1'.symm)
-  have hσ : ((graphDom D0 (σOf (toWS U)) : D0.domain) : W0) = U.1 := by
+  have hσ : ((D0.graphDom (σOf (toWS U)) : D0.domain) : W0) = U.1 := by
     change D0.graphFst (σOf (toWS U)) = U.1
     rw [graphFst_σOf (dom0 hx), coe_comp0_toWS, neg_neg]
   have hu : ((ofWv1 (uOf (toWS U)) : 𝒟.dt1.domain) : Wv W1) = U.2.1 := by
     rw [coe_ofWv1, incl1_uOf (dom1 hx)]; rfl
   have hcV : ((comp0 (waveOf (toWS U)) : bggHilb.Γbar) : W0) = -V.1 := by
     rw [hw, coe_comp0_toWS]
-  refine ⟨graphDom D0 (σOf (toWS U)), e0.symm (rp (φOf (toWS U))), ofWv1 (uOf (toWS U)), hσ, hu,
+  refine ⟨D0.graphDom (σOf (toWS U)), e0.symm (rp (φOf (toWS U))), ofWv1 (uOf (toWS U)), hσ, hu,
     ?_, fun τ ψ hτψ => ?_, fun v => ?_, ?_, ?_⟩
   · have hg := mem_gammaOf (toWS U)
     rw [cubeWaveData_d0, cubeWaveData_S0] at hg
-    change D0 (graphDom D0 (σOf (toWS U))) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp (φOf (toWS U))))
-    rw [apply_graphDom]
+    change D0 (D0.graphDom (σOf (toWS U))) = wsL2 (Ω := cubeDomain 3) 0 (incl0 (rp (φOf (toWS U))))
+    rw [LinearPMap.apply_graphDom]
     exact hg
   · have hτ : cubeWaveData.d0 (D0.toGraphSpace τ) =
         cubeWaveData.S0 (toGraphVec0 (e0 ψ)) := by

@@ -367,7 +367,8 @@ automation:
     generators; new mathematics there: P(R) Q(R)^(-1) = p(tau L) q(tau L)^(-1) for bounded L,
     TimeStepping.step_eq, and the order from divisibility of p - q T_m by X^(m+1),
     TimeStepping.hasOrder_of_dvd) and Solution/Lumped.lean (meshes, the P1 gradient by the edge
-    matrix, the lumped-mass Laplacian and non-obtuse meshes are those of Feec). New in Feec for
+    matrix, the lumped-mass Laplacian, non-obtuse meshes and translation invariance are those of
+    Feec). New in Feec for
     this entry: the P1 gradient by the edge matrix and the P1 interpolant of a vertex hat function
     (Feec.FiniteElement.p1Grad_eq_vecMul, Feec.FiniteElement.p1Grad_nodalIndicator); earlier, the
     compatible-data estimate behind fdHeat
@@ -654,7 +655,7 @@ alignment:
         scheme q(tau L_h) is invertible, ||r(tau L_h)^k|| <= 1 + C sqrt(k), and the nodal error
         bound holds, C and K(m) independent of the mesh (Solution/Lumped.lean identifies the
         definitions with Feec's).
-    - source: "original (background: the lumped mass method of [Thomee2006], Ch. 15)"
+    - source: "Formulated in this entry (background: the lumped mass method of [Thomee2006], Ch. 15)"
       lean: "TimeStepping.maxNormRate"
       module: "Challenge"
       status: "proved"

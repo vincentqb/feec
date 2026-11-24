@@ -132,10 +132,10 @@ Laplacian is consistent to second order there, `|(Lₕ Iₕ u)(y) - Δu(y)| ≤ 
 `|D⁴u(d, d, d, d)| ≤ B |d|⁴` and edges of length at most `h`
 (`Feec.FiniteElement.abs_lumpedLaplacianOn_sub_laplacian_le`: opposite edges of equal weight, and
 second moments `2 m(y) I` from the energy identity of a simplex; the weights depend on the
-vertices, not on their numbering, `Feec.FiniteElement.p1Grad_congr_vertexSet`). The rates in `h` come from the
-cube's uniform stencil (Dirichlet), translation invariance (Dirichlet, any dimension) and the
-barrier (Neumann). Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`,
-and the uniform route loses `√k`.
+vertices, not on their numbering, `Feec.FiniteElement.p1Grad_congr_vertexSet`). The rates in `h`
+come from the cube's uniform stencil (Dirichlet), translation invariance (Dirichlet, any dimension)
+and the barrier (Neumann). Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded
+uniformly in `h`, and the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of
 `dissipFEEC` and `approxFEEC` (convergence on the core from the comparison initial values, the

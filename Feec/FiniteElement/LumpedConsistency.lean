@@ -143,13 +143,6 @@ def translate (c : Fin n → ℝ) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     (k : Fin (n + 1)) : (translate c T).points k = c + T.points k := by
   simp [translate]
 
-theorem translate_translate (c c' : Fin n → ℝ) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    translate c (translate c' T) = translate (c + c') T :=
-  Affine.Simplex.ext fun k => by simp [add_assoc]
-
-@[simp] theorem translate_zero (T : Affine.Simplex ℝ (Fin n → ℝ) n) : translate 0 T = T :=
-  Affine.Simplex.ext fun k => by simp
-
 theorem baryGrad_translate (c : Fin n → ℝ) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     baryGrad (translate c T).points = baryGrad T.points := by
   have : edgeMatrix (translate c T).points = edgeMatrix T.points := by
@@ -187,16 +180,9 @@ theorem baryGrad_comp_perm {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUnit (edg
 /-- Two simplices with the same vertices are renumberings of each other. -/
 theorem exists_perm_of_vertexSet_eq {S S' : Affine.Simplex ℝ (Fin n → ℝ) n}
     (h : (vertexSet S : Set (Fin n → ℝ)) = vertexSet S') :
-    ∃ π : Equiv.Perm (Fin (n + 1)), S'.points = S.points ∘ π := by
-  have hr : Set.range S.points = Set.range S'.points := by
-    rw [← coe_vertexSet, ← coe_vertexSet, h]
-  have hmem : ∀ i, ∃ j, S.points j = S'.points i := fun i => by
-    have : S'.points i ∈ Set.range S.points := by rw [hr]; exact Set.mem_range_self i
-    exact this
-  choose f hf using hmem
-  have hinj : Function.Injective f := fun i i' e =>
-    S'.independent.injective (by rw [← hf i, ← hf i', e])
-  exact ⟨Equiv.ofBijective f hinj.bijective_of_finite, funext fun i => (hf i).symm⟩
+    ∃ π : Equiv.Perm (Fin (n + 1)), S'.points = S.points ∘ π :=
+  exists_perm_comp_eq S'.independent.injective S.independent.injective
+    (by rw [← coe_vertexSet, ← coe_vertexSet, h])
 
 /-- **The `P₁` gradient depends on the vertices only**, not on their numbering. -/
 theorem p1Grad_congr_vertexSet {S S' : Affine.Simplex ℝ (Fin n → ℝ) n}
@@ -217,14 +203,10 @@ theorem p1Grad_translate (c : Fin n → ℝ) (T : Affine.Simplex ℝ (Fin n → 
 
 theorem coe_vertexSet_translate (c : Fin n → ℝ) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     (vertexSet (translate c T) : Set (Fin n → ℝ)) = (· + c) '' vertexSet T := by
-  rw [coe_vertexSet, coe_vertexSet]
-  ext z
-  simp only [Set.mem_range, Set.mem_image, translate_points]
-  constructor
-  · rintro ⟨k, rfl⟩
-    exact ⟨_, ⟨k, rfl⟩, add_comm _ _⟩
-  · rintro ⟨_, ⟨k, rfl⟩, rfl⟩
-    exact ⟨k, add_comm _ _⟩
+  rw [translate, vertexSet_mapEquiv]
+  congr 1
+  funext z
+  simp [add_comm]
 
 /-- The gradient `∇φᵥ` on the simplex `T` of the hat function of the point `v`: `∇λⱼ` if `v` is
 the vertex `pⱼ` of `T` (`hatGrad_points`), `0` if `v` is no vertex of `T`. -/
@@ -334,23 +316,23 @@ theorem sum_sum_vertexWeight_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (a b
 variable (M : SimplicialMesh n) (y : Fin n → ℝ)
 
 open Classical in
-/-- The **star** of `y`: the simplices of `M` with vertex `y`. -/
-def star : Finset (Affine.Simplex ℝ (Fin n → ℝ) n) :=
+/-- The **star** of the vertex `y`: the simplices of `M` with vertex `y`. -/
+def vertexStar : Finset (Affine.Simplex ℝ (Fin n → ℝ) n) :=
   M.simplices.filter fun T => y ∈ vertexSet T
 
 variable {M y}
 
-theorem mem_star : T ∈ star M y ↔ T ∈ M.simplices ∧ y ∈ vertexSet T := by
+theorem mem_vertexStar : T ∈ vertexStar M y ↔ T ∈ M.simplices ∧ y ∈ vertexSet T := by
   classical
-  simp [star]
+  simp [vertexStar]
 
 variable (M y)
 
 /-- The lumped mass over the star: `m(y) = Σ_{T ∋ y} |T| / (n + 1)`. -/
-theorem lumpedMass_eq_sum_star :
-    lumpedMass M y = ∑ T ∈ star M y, volume.real T.closedInterior / (n + 1) := by
+theorem lumpedMass_eq_sum_vertexStar :
+    lumpedMass M y = ∑ T ∈ vertexStar M y, volume.real T.closedInterior / (n + 1) := by
   classical
-  rw [lumpedMass, star, sum_filter]
+  rw [lumpedMass, vertexStar, sum_filter]
   refine sum_congr rfl fun T _ => ?_
   split_ifs with hy
   · obtain ⟨j, hj⟩ := mem_vertexSet.1 hy
@@ -368,7 +350,7 @@ theorem lumpedMass_eq_sum_star :
 `y`, `ω_T = vertexWeight T`; so `m(y) (Lₕ U)(y) = Σ ω (U(v) - U(y))`. -/
 theorem neg_p1Stiffness_nodalIndicator (w : (Fin n → ℝ) → ℝ) :
     -p1Stiffness M (nodalIndicator y) w =
-      ∑ T ∈ star M y, ∑ v ∈ vertexSet T, vertexWeight T y v * (w v - w y) := by
+      ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * (w v - w y) := by
   classical
   have h1 : ∀ T : Affine.Simplex ℝ (Fin n → ℝ) n,
       -(volume.real T.closedInterior *
@@ -384,7 +366,7 @@ theorem neg_p1Stiffness_nodalIndicator (w : (Fin n → ℝ) → ℝ) :
     rw [dotProduct_smul, smul_eq_mul]
     simp only [vertexWeight, hatGrad]
     ring
-  rw [p1Stiffness_eq, ← sum_neg_distrib, star, sum_filter_of_ne]
+  rw [p1Stiffness_eq, ← sum_neg_distrib, vertexStar, sum_filter_of_ne]
   · exact sum_congr rfl fun T _ => h1 T
   · intro T _ hne
     by_contra hy
@@ -453,27 +435,27 @@ theorem reroot_reroot (hT : IsTranslationInvariantAt M y) (hTM : T ∈ M.simplic
 translated by `y - v` has the edge `[y, y - (v - y)]`, with the weight of `[y, v]` in `T`; so
 `Σ ω f(v - y) = Σ ω f(y - v)` over the edges `[y, v]` of the star. -/
 theorem sum_vertexWeight_mul_neg (hT : IsTranslationInvariantAt M y) (f : (Fin n → ℝ) → ℝ) :
-    ∑ T ∈ star M y, ∑ v ∈ vertexSet T, vertexWeight T y v * f (v - y) =
-      ∑ T ∈ star M y, ∑ v ∈ vertexSet T, vertexWeight T y v * f (-(v - y)) := by
+    ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * f (v - y) =
+      ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * f (-(v - y)) := by
   classical
   rw [sum_sigma', sum_sigma']
-  have hmem : ∀ p ∈ (star M y).sigma vertexSet,
+  have hmem : ∀ p ∈ (vertexStar M y).sigma vertexSet,
       (⟨reroot M p.1 (y - p.2), y + (y - p.2)⟩ :
-        (_ : Affine.Simplex ℝ (Fin n → ℝ) n) × (Fin n → ℝ)) ∈ (star M y).sigma vertexSet := by
+        (_ : Affine.Simplex ℝ (Fin n → ℝ) n) × (Fin n → ℝ)) ∈ (vertexStar M y).sigma vertexSet := by
     rintro ⟨T, v⟩ hp
-    rw [mem_sigma, mem_star] at hp
+    rw [mem_sigma, mem_vertexStar] at hp
     obtain ⟨⟨hTM, hyT⟩, hv⟩ := hp
-    rw [mem_sigma, mem_star]
+    rw [mem_sigma, mem_vertexStar]
     refine ⟨⟨(reroot_spec (hT T hTM hyT v hv)).1, ?_⟩, ?_⟩
     · rw [mem_vertexSet_reroot hT hTM hyT hv]
       simpa using hv
     · rw [mem_vertexSet_reroot hT hTM hyT hv]
       simpa using hyT
-  have hinv : ∀ p ∈ (star M y).sigma vertexSet,
+  have hinv : ∀ p ∈ (vertexStar M y).sigma vertexSet,
       (⟨reroot M (reroot M p.1 (y - p.2)) (y - (y + (y - p.2))), y + (y - (y + (y - p.2)))⟩ :
         (_ : Affine.Simplex ℝ (Fin n → ℝ) n) × (Fin n → ℝ)) = p := by
     rintro ⟨T, v⟩ hp
-    rw [mem_sigma, mem_star] at hp
+    rw [mem_sigma, mem_vertexStar] at hp
     obtain ⟨⟨hTM, hyT⟩, hv⟩ := hp
     have e1 : y - (y + (y - v)) = -(y - v) := by abel
     have e2 : y + -(y - v) = v := by abel
@@ -481,7 +463,7 @@ theorem sum_vertexWeight_mul_neg (hT : IsTranslationInvariantAt M y) (f : (Fin n
   refine sum_nbij' (fun p => ⟨reroot M p.1 (y - p.2), y + (y - p.2)⟩)
     (fun p => ⟨reroot M p.1 (y - p.2), y + (y - p.2)⟩) hmem hmem hinv hinv ?_
   rintro ⟨T, v⟩ hp
-  rw [mem_sigma, mem_star] at hp
+  rw [mem_sigma, mem_vertexStar] at hp
   obtain ⟨⟨hTM, hyT⟩, hv⟩ := hp
   have hw := vertexWeight_of_vertexSet_eq (reroot_spec (hT T hTM hyT v hv)).2 v y
   rw [add_sub_cancel] at hw
@@ -495,17 +477,17 @@ theorem sum_vertexWeight_mul_neg (hT : IsTranslationInvariantAt M y) (f : (Fin n
 translates of `T` moving each of its `n + 1` vertices to `y` count every edge at `y` once from
 each vertex. -/
 theorem sum_vertexWeight_mul_mul (hT : IsTranslationInvariantAt M y) (a b : Fin n) :
-    ∑ T ∈ star M y, ∑ v ∈ vertexSet T, vertexWeight T y v * ((v - y) a * (v - y) b) =
+    ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T, vertexWeight T y v * ((v - y) a * (v - y) b) =
       2 * lumpedMass M y * if a = b then 1 else 0 := by
   classical
-  set Q := (star M y).sigma fun T => vertexSet T ×ˢ vertexSet T with hQ
+  set Q := (vertexStar M y).sigma fun T => vertexSet T ×ˢ vertexSet T with hQ
   have hQmem : ∀ {q : (_ : Affine.Simplex ℝ (Fin n → ℝ) n) × ((Fin n → ℝ) × (Fin n → ℝ))},
       q ∈ Q ↔ (q.1 ∈ M.simplices ∧ y ∈ vertexSet q.1) ∧ q.2.1 ∈ vertexSet q.1 ∧
         q.2.2 ∈ vertexSet q.1 := by
     intro q
-    rw [hQ, mem_sigma, mem_star, mem_product]
+    rw [hQ, mem_sigma, mem_vertexStar, mem_product]
   have h1 : ∑ q ∈ Q, vertexWeight q.1 q.2.1 q.2.2 * ((q.2.2 - q.2.1) a * (q.2.2 - q.2.1) b) =
-      ∑ T ∈ star M y, 2 * volume.real T.closedInterior * if a = b then 1 else 0 := by
+      ∑ T ∈ vertexStar M y, 2 * volume.real T.closedInterior * if a = b then 1 else 0 := by
     rw [sum_sigma]
     refine sum_congr rfl fun T _ => ?_
     rw [sum_product]
@@ -549,7 +531,7 @@ theorem sum_vertexWeight_mul_mul (hT : IsTranslationInvariantAt M y) (a b : Fin 
       have e : w + (y - v) - y = w - v := by abel
       simp only [hwt, e]
   have h3 : ∑ q ∈ Q, vertexWeight q.1 y q.2.1 * ((q.2.1 - y) a * (q.2.1 - y) b) =
-      (n + 1) * ∑ T ∈ star M y, ∑ v ∈ vertexSet T,
+      (n + 1) * ∑ T ∈ vertexStar M y, ∑ v ∈ vertexSet T,
         vertexWeight T y v * ((v - y) a * (v - y) b) := by
     rw [sum_sigma, mul_sum]
     refine sum_congr rfl fun T _ => ?_
@@ -559,7 +541,8 @@ theorem sum_vertexWeight_mul_mul (hT : IsTranslationInvariantAt M y) (a b : Fin 
     push_cast
     ring
   have hn : (0 : ℝ) < n + 1 := by positivity
-  rw [← mul_right_inj' hn.ne', ← h3, ← h2, h1, lumpedMass_eq_sum_star, mul_sum, sum_mul, mul_sum]
+  rw [← mul_right_inj' hn.ne', ← h3, ← h2, h1, lumpedMass_eq_sum_vertexStar, mul_sum, sum_mul,
+    mul_sum]
   refine sum_congr rfl fun T _ => ?_
   field_simp
 
@@ -588,17 +571,17 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
   classical
   have hm : 0 < lumpedMass M (x i) := by
     obtain ⟨T, hTM, hyT⟩ := hv
-    rw [lumpedMass_eq_sum_star]
+    rw [lumpedMass_eq_sum_vertexStar]
     exact sum_pos' (fun T _ => div_nonneg measureReal_nonneg (by positivity))
-      ⟨T, mem_star.2 ⟨hTM, hyT⟩, div_pos (measureReal_closedInterior_pos T) (by positivity)⟩
+      ⟨T, mem_vertexStar.2 ⟨hTM, hyT⟩, div_pos (measureReal_closedInterior_pos T) (by positivity)⟩
   -- the stencil: `m (Lₕ Iₕ u)(y) = Σ ω (u(y + d) - u(y))`
   have h1 : lumpedMass M (x i) * lumpedLaplacianOn M x (fun q => u (x q)) i =
-      ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T,
+      ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T,
         vertexWeight T (x i) v * (u (x i + (v - x i)) - u (x i)) := by
     rw [lumpedLaplacianOn_apply, mul_div_assoc', mul_div_cancel_left₀ _ hm.ne',
       neg_p1Stiffness_nodalIndicator, nodalFun_apply hx]
     refine sum_congr rfl fun T hT' => sum_congr rfl fun v hvT => ?_
-    obtain ⟨hTM, hyT⟩ := mem_star.1 hT'
+    obtain ⟨hTM, hyT⟩ := mem_vertexStar.1 hT'
     rw [add_sub_cancel]
     congr 2
     by_cases hr : v ∈ Set.range x
@@ -607,9 +590,9 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
     · rw [hbd T hTM hyT v hvT hr]
       exact sum_eq_zero fun q _ => ite_eq_right_iff.2 fun e => absurd ⟨q, e⟩ hr
   -- opposite edges
-  have h2 : ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T,
+  have h2 : ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T,
         vertexWeight T (x i) v * (u (x i + (v - x i)) - u (x i)) =
-      ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T,
+      ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T,
         vertexWeight T (x i) v * (u (x i - (v - x i)) - u (x i)) := by
     simpa [sub_eq_add_neg] using sum_vertexWeight_mul_neg hT fun d => u (x i + d) - u (x i)
   -- the second moments
@@ -631,10 +614,10 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
       (hu.fderiv_right (m := 3) (by norm_num)).differentiable (by norm_num) _
     rw [laplacian_apply]
     exact sum_congr rfl fun a _ => partialDeriv_partialDeriv hd a a
-  have h3 : ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+  have h3 : ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
         iteratedFDeriv ℝ 2 u (x i) (fun _ => v - x i) =
       2 * lumpedMass M (x i) * laplacian u (x i) := by
-    have e : ∀ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+    have e : ∀ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
         iteratedFDeriv ℝ 2 u (x i) (fun _ => v - x i) = ∑ a, ∑ b, H a b *
           ∑ v ∈ vertexSet T, vertexWeight T (x i) v * ((v - x i) a * (v - x i) b) := fun T _ => by
       simp only [hQ, mul_sum]
@@ -642,9 +625,9 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
       refine sum_congr rfl fun a _ => ?_
       rw [sum_comm]
       exact sum_congr rfl fun b _ => sum_congr rfl fun v _ => by ring
-    calc ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+    calc ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
           iteratedFDeriv ℝ 2 u (x i) (fun _ => v - x i)
-        = ∑ a, ∑ b, H a b * ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+        = ∑ a, ∑ b, H a b * ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
             ((v - x i) a * (v - x i) b) := by
           rw [sum_congr rfl e, sum_comm]
           refine sum_congr rfl fun a _ => ?_
@@ -658,12 +641,12 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
           simp only [mul_ite, mul_one, mul_zero, sum_ite_eq, mem_univ, ↓reduceIte]
           ring
   -- the second difference along each edge
-  have h4 : ∀ T ∈ star M (x i), ∀ v ∈ vertexSet T,
+  have h4 : ∀ T ∈ vertexStar M (x i), ∀ v ∈ vertexSet T,
       |vertexWeight T (x i) v * (u (x i + (v - x i)) - 2 * u (x i) + u (x i - (v - x i)) -
           iteratedFDeriv ℝ 2 u (x i) (fun _ => v - x i))| ≤
         B * h ^ 2 / 12 * (vertexWeight T (x i) v * ((v - x i) ⬝ᵥ (v - x i))) := by
     intro T hT' v hvT
-    obtain ⟨hTM, hyT⟩ := mem_star.1 hT'
+    obtain ⟨hTM, hyT⟩ := mem_vertexStar.1 hT'
     have hyc : x i ∈ T.closedInterior := by
       rw [← convexHull_vertexSet]
       exact subset_convexHull ℝ _ (Finset.mem_coe.2 hyT)
@@ -725,13 +708,13 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
   -- combine
   have h5 : 2 * lumpedMass M (x i) *
         (lumpedLaplacianOn M x (fun q => u (x q)) i - laplacian u (x i)) =
-      ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+      ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
         (u (x i + (v - x i)) - 2 * u (x i) + u (x i - (v - x i)) -
           iteratedFDeriv ℝ 2 u (x i) (fun _ => v - x i)) := by
     have e : 2 * (lumpedMass M (x i) * lumpedLaplacianOn M x (fun q => u (x q)) i) =
-        (∑ T ∈ star M (x i), ∑ v ∈ vertexSet T,
+        (∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T,
           vertexWeight T (x i) v * (u (x i + (v - x i)) - u (x i))) +
-        ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T,
+        ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T,
           vertexWeight T (x i) v * (u (x i - (v - x i)) - u (x i)) := by
       rw [h1, two_mul, h2]
     calc 2 * lumpedMass M (x i) *
@@ -743,9 +726,9 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
           refine sum_congr rfl fun T _ => ?_
           rw [← sum_add_distrib, ← sum_sub_distrib]
           exact sum_congr rfl fun v _ => by ring
-  have h6 : ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+  have h6 : ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
         ((v - x i) ⬝ᵥ (v - x i)) = 2 * lumpedMass M (x i) * n := by
-    have e : ∀ T ∈ star M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
+    have e : ∀ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
         ((v - x i) ⬝ᵥ (v - x i)) = ∑ a, ∑ v ∈ vertexSet T, vertexWeight T (x i) v *
           ((v - x i) a * (v - x i) a) := fun T _ => by
       simp only [dotProduct, mul_sum]
@@ -757,7 +740,7 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
   have hpos : (0 : ℝ) < 2 * lumpedMass M (x i) := by positivity
   refine le_of_mul_le_mul_left ?_ hpos
   rw [← abs_of_pos hpos, ← abs_mul, h5]
-  calc _ ≤ ∑ T ∈ star M (x i), ∑ v ∈ vertexSet T, B * h ^ 2 / 12 * (vertexWeight T (x i) v *
+  calc _ ≤ ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T, B * h ^ 2 / 12 * (vertexWeight T (x i) v *
           ((v - x i) ⬝ᵥ (v - x i))) :=
         (abs_sum_le_sum_abs _ _).trans (sum_le_sum fun T hT' =>
           (abs_sum_le_sum_abs _ _).trans (sum_le_sum fun v hv => h4 T hT' v hv))

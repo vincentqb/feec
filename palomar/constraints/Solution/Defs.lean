@@ -410,6 +410,18 @@ def mirrorData : FormData (cube 3) :=
     wedge (cube 3) 0, wedge (cube 3) 1⟩
 -- palomar-shared-end: mirrorData
 
+/-- **The linearized Einstein–Bianchi system (4.14) on the cube `Q = (0, ½)³` with the mirror
+boundary conditions**: the Hodge wave equation `U' = L U` (`IsHodgeWave`) of the bottom row of
+`mirrorData`, `H_{a}Λ⁰(Q) → H_{a}Λ¹(Q) → L²Λ²(Q)` in the component `a` (`dPart`), on states
+`U = (σ, u, ρ)` with electric field `E = mat1 u` and magnetic field `B = mat2 ρ`:
+`σ' = -div E`, `E' = -grad σ - curl* B`, `B' = curl E`, with `σ · n = 0` and `E_{nτ} = 0` on
+`∂Q` (the conditions satisfied by `σ` and `E` invariant under the reflections in the faces, `σ` a
+vector and `E` a tensor). -/
+def gradCurlMirror :
+    SetRel (L2Vec (cube 3) 0 × L2Vec (cube 3) 1 × L2Vec (cube 3) 2)
+      (L2Vec (cube 3) 0 × L2Vec (cube 3) 1 × L2Vec (cube 3) 2) :=
+  {p | IsHodgeWave (vecOp fun a => dPart {a} 0) (vecOp fun a => dPart {a} 1) p.1 p.2}
+
 /-! ### Absorbing boundary conditions on the cube -/
 
 /-- `L²(Ω; ℝ³ˣ³)`: the matrix fields `E = (E_{ij})` with entries in `L²(Ω)`, an `ℓ²` sum. -/
@@ -706,25 +718,23 @@ structure AbsorbingVerdict : Prop where
       IsSymTFOn (depDomain (cube 3) t) (fun a b => (S t x).snd (a, b))
 
 /-- **The verdict of the mirror boundary conditions on the cube** (tensorial reflections;
-[QuennevilleBelair2015], §6.1, §6.3), for the system (6.1) (`mirrorData`, constraint
-`IsTSDState`): the constraint is kept, with moving data. -/
-structure MirrorVerdict : Prop where
+[QuennevilleBelair2015], §4.10, §6.1, §6.3) for a system `U' = A U` on the cube, an operator given
+by its graph `A ⊆ X × X`, with a constraint `K ⊆ X`: the constraint is kept, with moving data.
+`TSDVerdict.mirror` asserts it for the system (4.14) (`gradCurlMirror`, constraint
+`tsdConstraint`) and for the system (6.1) (`mirrorData`, constraint `IsTSDState`). -/
+structure MirrorVerdict {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A : SetRel X X)
+    (K : Set X) : Prop where
   /-- strong solutions are determined by their initial value -/
-  unique (T : ℝ) (U U' : ℝ → L2Form (cube 3) 0 × L2Vec (cube 3) 1 × L2Form (cube 3) 2 ×
-      L2Vec (cube 3) 2) (hU : IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U)
-    (hU' : IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U') (h0 : U 0 = U' 0) :
-    EqOn U U' (Icc 0 T)
-  /-- strong solutions exist on every `[0, T]` from every TSD datum of `D(L)` -/
-  exists_solution (U₀ V : L2Form (cube 3) 0 × L2Vec (cube 3) 1 × L2Form (cube 3) 2 ×
-      L2Vec (cube 3) 2) (hV : mirrorData.IsWave U₀ V) (hU₀ : IsTSDState U₀) (T : ℝ) :
-    ∃ U, U 0 = U₀ ∧ IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U
-  /-- strong solutions from TSD data stay TSD -/
-  propagates (T : ℝ) (U : ℝ → L2Form (cube 3) 0 × L2Vec (cube 3) 1 × L2Form (cube 3) 2 ×
-      L2Vec (cube 3) 2) (hU : IsStrongSolution {p | mirrorData.IsWave p.1 p.2} (Icc 0 T) U)
-    (h0 : IsTSDState (U 0)) : ∀ t ∈ Icc 0 T, IsTSDState (U t)
-  /-- some TSD datum `U₀`, with `U₀`, `L U₀` and `L² U₀` in `D(L)`, is not stationary -/
-  moving : ∃ U₀ V₁ V₂ V₃, mirrorData.IsWave U₀ V₁ ∧ mirrorData.IsWave V₁ V₂ ∧
-    mirrorData.IsWave V₂ V₃ ∧ IsTSDState U₀ ∧ V₁ ≠ 0
+  unique (T : ℝ) (U U' : ℝ → X) (hU : IsStrongSolution A (Icc 0 T) U)
+    (hU' : IsStrongSolution A (Icc 0 T) U') (h0 : U 0 = U' 0) : EqOn U U' (Icc 0 T)
+  /-- strong solutions exist on every `[0, T]` from every datum of `D(A)` in `K` -/
+  exists_solution (U₀ V : X) (hV : (U₀, V) ∈ A) (hU₀ : U₀ ∈ K) (T : ℝ) :
+    ∃ U, U 0 = U₀ ∧ IsStrongSolution A (Icc 0 T) U
+  /-- strong solutions from data in `K` stay in `K` -/
+  propagates (T : ℝ) (U : ℝ → X) (hU : IsStrongSolution A (Icc 0 T) U) (h0 : U 0 ∈ K) :
+    ∀ t ∈ Icc 0 T, U t ∈ K
+  /-- some datum `U₀ ∈ K`, with `U₀`, `A U₀` and `A² U₀` in `D(A)`, is not stationary -/
+  moving : ∃ U₀ V₁ V₂ V₃, (U₀, V₁) ∈ A ∧ (V₁, V₂) ∈ A ∧ (V₂, V₃) ∈ A ∧ U₀ ∈ K ∧ V₁ ≠ 0
 
 /-- **The verdict of each boundary condition on the TSD constraints** ([QuennevilleBelair2015],
 §4.10 (Prop 4.17), §6.1, §6.3), one field per row of the table of the module docstring; by
@@ -765,8 +775,10 @@ structure TSDVerdict : Prop where
   box (a ℓ : Fin 3 → ℝ) (hℓ : ∀ i, 0 < ℓ i) : BoxVerdict a ℓ
   /-- the absorbing boundary conditions on the cube -/
   absorbing : AbsorbingVerdict
-  /-- the mirror boundary conditions on the cube -/
-  mirror : MirrorVerdict
+  /-- the mirror boundary conditions on the cube, for the system (4.14) and for the system (6.1)
+  with weak symmetry -/
+  mirror : MirrorVerdict gradCurlMirror (tsdConstraint (cube 3)) ∧
+    MirrorVerdict {p | mirrorData.IsWave p.1 p.2} {U | IsTSDState U}
 
 /-! ### The theorems -/
 

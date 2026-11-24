@@ -1,7 +1,7 @@
 module
 
 public import Solution.Verdicts
-public import Solution.MirrorProp
+public import Solution.MirrorGradCurl
 public import Solution.Interior
 public import Solution.Subcomplex
 public import Solution.Window
@@ -20,8 +20,9 @@ a ball, on the unit ball and on boxes (`electric_of`, `starShaped_of`, `ball_of`
 `Solution.Verdicts`, through the grad–curl bridge `Solution.GradCurl`, and
 `tsd_not_propagates_of` of `Solution.Bounded` for the system with weak symmetry), the absorbing
 boundary conditions (`absorbing_of_eq` of `Solution.Absorbing`, `absorbing_interior_of_eq` of
-`Solution.Interior`) and the mirror boundary conditions (`mirror_tsd_propagates_of`,
-`Solution.MirrorProp`).
+`Solution.Interior`) and the mirror boundary conditions (`mirror_gradCurl_of` of
+`Solution.MirrorGradCurl` for the system (4.14), `mirror_tsd_propagates_of` of
+`Solution.MirrorProp` for the system (6.1)).
 
 ## References
 
@@ -56,6 +57,6 @@ theorem tsd_boundary_conditions : TSDVerdict :=
     ⟨hA.1, hA.2.1, hA.2.2, fun S hS x hx t ht => absorbing_interior_of_eq
       (Feec.Models.Cube.FEM.cubeDomain_eq_Q 3) (Feec.Models.Cube.FEM.cubeDomain_eq_Q 2) S hS x hx t
       ht⟩,
-    ⟨hM.1, hM.2.1, hM.2.2.1, hM.2.2.2⟩⟩
+    ⟨mirror_gradCurl_of, ⟨hM.1, hM.2.1, hM.2.2.1, hM.2.2.2⟩⟩⟩
 
 end FEEC

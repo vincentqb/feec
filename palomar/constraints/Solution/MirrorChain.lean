@@ -41,19 +41,19 @@ theorem castL2_apply_eq {Ω Ω' : Set (Fin 3 → ℝ)} (h : Ω = Ω') {ι ι' : 
 theorem sgn3_eq_sg2 (i : Fin 3) : sgn3 i = sg2 i := by
   fin_cases i <;> norm_num [sgn3, sg2]
 
-theorem cplxE_eq (X : MState) : cplxE X = ofRealF (cQ Ix (fieldE X.2.1)) := by
+theorem cplxE_eq (u : L2Vec (cube 3) 1) : cplxE u = ofRealF (cQ Ix (fieldE u)) := by
   refine PiLp.ext fun p => ?_
   rw [ofRealF_apply]
   change ofRealL _ _ = ofRealL _ _
   congr 1
-  have e := castL2_apply_eq (cubeDomain_eq_Q 3) (f := fieldE X.2.1) (g := X.2.1 p.1) (i := p)
+  have e := castL2_apply_eq (cubeDomain_eq_Q 3) (f := fieldE u) (g := u p.1) (i := p)
     (j := eq1 p.2) 1 (one_smul ℝ _).symm
   rw [one_smul] at e
   exact e.symm
 
-theorem cplxB_eq (X : MState) : cplxB X = ofRealF (cQ Ix (fieldB X.2.2.2)) := by
+theorem cplxB_eq (ρ : L2Vec (cube 3) 2) : cplxB ρ = ofRealF (cQ Ix (fieldB ρ)) := by
   refine PiLp.ext fun p => ?_
-  rw [ofRealF_apply, castL2_apply_eq (cubeDomain_eq_Q 3) (sgn3 p.2) (g := X.2.2.2 p.1)
+  rw [ofRealF_apply, castL2_apply_eq (cubeDomain_eq_Q 3) (sgn3 p.2) (g := ρ p.1)
     (j := ix2 p.2) rfl, (ofRealL _).map_smul, sgn3_eq_sg2]
   change ((sg2 p.2 : ℝ) : ℂ) • ofRealL _ _ = _
   rw [← real_smul_Lp]
@@ -103,7 +103,7 @@ theorem forward {X Y : MState} (h : mirrorData.IsWave X Y) (hX : IsTSDState X) :
   have hY2 : Y.2.2.1 = 0 := by
     rw [hS]
     change wedge (cube 3) 1 (u : L2Vec (cube 3) 1) = 0
-    rw [wedge_eq, hu, ← show rowsW1L (cplxE X) = X.2.1 from
+    rw [wedge_eq, hu, ← show rowsW1L (cplxE X.2.1) = X.2.1 from
       congrArg (fun Z : MState => Z.2.1) hreal]
     exact wsL2_rowsW1L_of_symm hEs
   have hw : complexQ.wave x = cplx Y := by
@@ -117,15 +117,15 @@ theorem forward {X Y : MState} (h : mirrorData.IsWave X Y) (hX : IsTSDState X) :
       have e0 : complexQ.d 0 1 ⟨(x : PiLp 2 SpaceQ) 0, x.2.1 0 1⟩ = 0 :=
         LinearPMap.map_zero _
       rw [e0, zero_sub, show (complexQ.d 1 2)† ⟨(x : PiLp 2 SpaceQ) 2, x.2.2 2 1⟩ =
-        -cplxE Y from (LinearPMap.apply_congr' _ _ _ rfl).trans eB]
-      exact neg_neg (cplxE Y)
-    · have e : complexQ.wave x 2 = WithLp.toLp 2 (Feec.Models.Cube.MirrorBGG.axialQ (cplxE X),
+        -cplxE Y.2.1 from (LinearPMap.apply_congr' _ _ _ rfl).trans eB]
+      exact neg_neg (cplxE Y.2.1)
+    · have e : complexQ.wave x 2 = WithLp.toLp 2 (Feec.Models.Cube.MirrorBGG.axialQ (cplxE X.2.1),
           ofRealRows2 fun a => cQ _ (mirrorData.dt1 ⟨X.2.1, hum⟩ a)) :=
         (complexQ.wave_apply_fin3_two x).trans ((LinearPMap.apply_congr' _ _ _ rfl).trans eE)
-      have hax' : Feec.Models.Cube.MirrorBGG.axialQ (cplxE X) = 0 :=
+      have hax' : Feec.Models.Cube.MirrorBGG.axialQ (cplxE X.2.1) = 0 :=
         (congrArg (fun z : W2Q => (WithLp.ofLp z).1) e).symm.trans hax
       refine e.trans ?_
-      change _ = WithLp.toLp 2 (0, cplxB Y)
+      change _ = WithLp.toLp 2 (0, cplxB Y.2.2.2)
       rw [hax', cplxB, hd1, show mirrorData.dt1 ⟨X.2.1, hum⟩ = mirrorData.dt1 u from
         congrArg _ (Subtype.ext hu.symm)]
   refine ⟨hd, hc, hw, ?_⟩

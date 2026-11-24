@@ -104,15 +104,15 @@ theorem ofReal_rows_decomp (Z : MQ) :
 
 /-! ### The complexification -/
 
-/-- The electric field `E` of a state, rows `uₐ`, as a complex matrix field on `Q`. -/
-def cplxE (X : MState) : MQ := ofRealRows fun a => cQ _ (X.2.1 a)
+/-- The electric field `E` with rows `uₐ`, as a complex matrix field on `Q`. -/
+def cplxE (u : L2Vec (cube 3) 1) : MQ := ofRealRows fun a => cQ _ (u a)
 
-/-- The magnetic field `B` of a state, rows `⋆ρₐ`, as a complex matrix field on `Q`. -/
-def cplxB (X : MState) : MQ := ofRealRows2 fun a => cQ _ (X.2.2.2 a)
+/-- The magnetic field `B` with rows `⋆ρₐ`, as a complex matrix field on `Q`. -/
+def cplxB (ρ : L2Vec (cube 3) 2) : MQ := ofRealRows2 fun a => cQ _ (ρ a)
 
 /-- **The complexification** `(0, E, (0, B))` of a state. -/
 def cplx (X : MState) : PiLp 2 SpaceQ :=
-  ShortHilbertComplex.mk3 0 (cplxE X) (WithLp.toLp 2 (0, cplxB X))
+  ShortHilbertComplex.mk3 0 (cplxE X.2.1) (WithLp.toLp 2 (0, cplxB X.2.2.2))
 
 theorem realL_cplx {X : MState} (h0 : X.1 = 0) (hM : X.2.2.1 = 0) : realL (cplx X) = X := by
   obtain ⟨σ, u, M, ρ⟩ := X
@@ -138,8 +138,8 @@ theorem rowsW1L_mem' (Z : (complexQ.d 1 2).domain) :
 /-- `E` of a state of `D(d̃¹)` lies in the domain of `(S₁, curl)`, with `curl E` the rows of
 `d̃u`. -/
 theorem cplxE_mem (X : MState) (hu : X.2.1 ∈ mirrorData.dt1.domain) :
-    ∃ h : cplxE X ∈ (complexQ.d 1 2).domain, (complexQ.d 1 2 ⟨_, h⟩ : W2Q) = WithLp.toLp 2
-      (Feec.Models.Cube.MirrorBGG.axialQ (cplxE X),
+    ∃ h : cplxE X.2.1 ∈ (complexQ.d 1 2).domain, (complexQ.d 1 2 ⟨_, h⟩ : W2Q) = WithLp.toLp 2
+      (Feec.Models.Cube.MirrorBGG.axialQ (cplxE X.2.1),
         ofRealRows2 fun a => cQ _ (mirrorData.dt1 ⟨X.2.1, hu⟩ a)) := by
   have hc : ∀ a, X.2.1 a ∈ (BD1 a).domain := fun a => by
     have h := hu a
@@ -158,8 +158,8 @@ theorem cplxE_mem (X : MState) (hu : X.2.1 ∈ mirrorData.dt1.domain) :
 `σ = 0` and `M = 0`. -/
 theorem mem_adjoint_cplx {X Y : MState} (h : mirrorData.IsWave X Y) (h0 : X.1 = 0)
     (hM : X.2.2.1 = 0) :
-    ∃ hB : (WithLp.toLp 2 (0, cplxB X) : W2Q) ∈ ((complexQ.d 1 2)†).domain,
-      (complexQ.d 1 2)† ⟨_, hB⟩ = -cplxE Y := by
+    ∃ hB : (WithLp.toLp 2 (0, cplxB X.2.2.2) : W2Q) ∈ ((complexQ.d 1 2)†).domain,
+      (complexQ.d 1 2)† ⟨_, hB⟩ = -cplxE Y.2.1 := by
   obtain ⟨σ, φ, u, hσ, hu, hc, -, h2, -, -⟩ := h
   have hσ0 : σ = 0 := Subtype.ext (hσ.trans h0)
   rw [hσ0, LinearPMap.map_zero] at hc
@@ -171,12 +171,12 @@ theorem mem_adjoint_cplx {X Y : MState} (h : mirrorData.IsWave X Y) (h0 : X.1 = 
     rw [hφ, LinearPMap.map_zero, hM, inner_zero_left, inner_zero_left] at e
     linarith
   have hpair : ∀ Z : (complexQ.d 1 2).domain,
-      ⟪(WithLp.toLp 2 (0, cplxB X) : W2Q), (complexQ.d 1 2 Z : W2Q)⟫_ℂ =
-        ⟪cplxB X, (WithLp.ofLp (complexQ.d 1 2 Z : W2Q)).2⟫_ℂ := fun Z => by
+      ⟪(WithLp.toLp 2 (0, cplxB X.2.2.2) : W2Q), (complexQ.d 1 2 Z : W2Q)⟫_ℂ =
+        ⟪cplxB X.2.2.2, (WithLp.ofLp (complexQ.d 1 2 Z : W2Q)).2⟫_ℂ := fun Z => by
     erw [WithLp.prod_inner_apply]
     rw [WithLp.ofLp_toLp, inner_zero_left, zero_add]
-  have hre : ∀ Z : (complexQ.d 1 2).domain, RCLike.re ⟪-cplxE Y, (show MQ from Z.1)⟫_ℂ =
-      RCLike.re ⟪(WithLp.toLp 2 (0, cplxB X) : W2Q), (complexQ.d 1 2 Z : W2Q)⟫_ℂ := by
+  have hre : ∀ Z : (complexQ.d 1 2).domain, RCLike.re ⟪-cplxE Y.2.1, (show MQ from Z.1)⟫_ℂ =
+      RCLike.re ⟪(WithLp.toLp 2 (0, cplxB X.2.2.2) : W2Q), (complexQ.d 1 2 Z : W2Q)⟫_ℂ := by
     intro Z
     set r : mirrorData.dt1.domain := ⟨_, rowsW1L_mem' Z⟩
     have e3 : ∀ a, ⟪rowRe2 (WithLp.ofLp (complexQ.d 1 2 Z : W2Q)).2 a, cQ _ (X.2.2.2 a)⟫_ℝ =
@@ -202,8 +202,8 @@ theorem mem_adjoint_cplx {X Y : MState} (h : mirrorData.IsWave X Y) (h0 : X.1 = 
       re_inner_ofRealRows, hpair, ← inner_conj_symm, RCLike.conj_re, cplxB, re_inner_ofRealRows2]
     rw [Finset.sum_congr rfl fun a _ => e3 a, Finset.sum_congr rfl fun a _ => e4 a,
       ← PiLp.inner_apply, ← PiLp.inner_apply, real_inner_comm, key r, neg_neg, real_inner_comm]
-  have hw : ∀ Z : (complexQ.d 1 2).domain, ⟪-cplxE Y, (show MQ from Z.1)⟫_ℂ =
-      ⟪(WithLp.toLp 2 (0, cplxB X) : W2Q), (complexQ.d 1 2 Z : W2Q)⟫_ℂ := by
+  have hw : ∀ Z : (complexQ.d 1 2).domain, ⟪-cplxE Y.2.1, (show MQ from Z.1)⟫_ℂ =
+      ⟪(WithLp.toLp 2 (0, cplxB X.2.2.2) : W2Q), (complexQ.d 1 2 Z : W2Q)⟫_ℂ := by
     intro Z
     rw [hpair]
     have hr := hre Z

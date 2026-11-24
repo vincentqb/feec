@@ -25,8 +25,11 @@ row `a` of `B` through the Hodge star has the pseudo-tensor parity (`pcJ_two`). 
 extension of the forms is the complex mirror extension of the complexified field, so the
 coefficients of `Re E` are `½ (Ê(m) + conj Ê(-m))` (`coeff_JfJ_rowRe`), and `d_ξ` of a row is the
 row of the curl symbol through the Hodge star (`deRham_rowF`). Hence
-* `E ∈ D((S₁, curl))` gives rows in `D(d_{a})` with `d (Re E)_a = (Re curl E)_a` (`rowRe_mem`);
-* real rows in `D(d_{a})` give a field of `D((S₁, curl))` (`ofRealRows_mem`);
+* `E ∈ D(curl)` (the mirror curl of `Feec.Models.Cube.Mirror.complexQ`), in particular
+  `E ∈ D((S₁, curl))`, gives rows in `D(d_{a})` with `d (Re E)_a = (Re curl E)_a`
+  (`rowRe_mem_curl`, `rowRe_mem`);
+* real rows in `D(d_{a})` give a field of `D(curl)` and of `D((S₁, curl))`
+  (`ofRealRows_mem_curl`, `ofRealRows_mem`);
 * TSD coefficients (`Ê(m) ξ_m = 0`) make `Re E` orthogonal to `grad` of the bottom `0`-forms
   (`inner_rowRe_dPart_zero`), and a symmetric `E` has `S¹ (Re E) = 0` (`wsL2_rowsW1L_of_symm`).
 
@@ -44,9 +47,13 @@ the divergence condition, (6.2b) is `E' = -d₁† (0, B)` tested against comple
   scheme (6.5) from the elliptic projection (6.4) of the initial forms state has a solution with
   `‖σₕ‖, ‖Re E − uₕ‖, ‖Mₕ‖, ‖Re B − ρₕ‖ ≤ ε` and `‖Bₕ − Bₕᵀ‖ ≤ 2ε` on `[0,T]`, and the continuous
   solution keeps `σ ≡ 0`, `M ≡ 0`, `E`, `B` TSD.
-* `cosDatum`: `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, a non-stationary TSD datum in `D(L²)`.
-* `TSDDatum.exactWave`, `TSDDatum.eqOn_of_isStrongSolution`, `rowRe_mem`, `ofRealRows_mem`,
-  `coeff_JfJ_rowRe`, `deRham_rowF`, `inner_rowRe_dPart_zero`, `wsL2_rowsW1L_of_symm`.
+* `cosDatum`: `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, a non-stationary TSD datum in `D(L²)`; for the
+  mirror grad–curl complex, `mirror_cosStateQ_wave_mem`, `mirror_cosStateQ_wave_wave_mem`
+  (`L E₀, L² E₀ ∈ D(L)`), from the finitely many modes of any torus model
+  (`torus_wave_mem_of_finite`).
+* `TSDDatum.exactWave`, `TSDDatum.eqOn_of_isStrongSolution`, `rowRe_mem_curl`, `rowRe_mem`,
+  `ofRealRows_mem_curl`, `ofRealRows_mem`, `coeff_JfJ_rowRe`, `deRham_rowF`,
+  `inner_rowRe_dPart_zero`, `wsL2_rowsW1L_of_symm`.
 
 ## Remarks
 
@@ -298,7 +305,18 @@ theorem rowF2_injective {M N : Mat} {a : Fin 3} (h : rowF2 M a = rowF2 N a) (i :
 open Feec.Models.Cube.DeRhamIdent (dPart mem_dPart_of_JfJ injective_JfJ coeff_d_dPart)
 open Feec.FiniteElement (wsL2 wsL2_apply wsCoeff wsCoeff_eq)
 
-/-! ### The second operator of the BGG complex on the Fourier side -/
+/-! ### The mirror curl and the second operator of the BGG complex on the Fourier side -/
+
+/-- **The mirror curl on the Fourier side**: `(curl E)^(n) = curl_{ξ_n} Ê(n)` for the mirror
+extensions (the curl of `Feec.Models.Cube.Mirror.complexQ`). -/
+theorem coeff_curlQ (E : (Mirror.complexQ.d 1 2).domain) (n : Fin 3 → ℤ) :
+    (extF (c := Mirror.cB) cB_sq (Mirror.complexQ.d 1 2 E) : (Fin 3 → ℤ) → Mat) n =
+      curl (Fourier.Torus.freq n) ((MirrorBGG.J₁ (show MQ from E.1) : (Fin 3 → ℤ) → Mat) n) := by
+  rw [show extF (c := Mirror.cB) cB_sq (Mirror.complexQ.d 1 2 E) =
+      Models.Torus.GradCurl.complex.d 1 2 ⟨Mirror.J 1 E.1, _⟩ from
+    Mirror.J_complexQ_d (i := 1) (j := 2) E]
+  exact Operator.coeFn_mulOp_count (𝕜 := ℂ)
+    (fun n => Fourier.GradCurl.gradCurl.m 1 2 (Fourier.Torus.freq n)) _ n
 
 /-- The curl part of `d₁ E = (S₁ E, curl E)` on `Q`, on the Fourier side:
 `(curl E)^(n) = curl_{ξ_n} Ê(n)` for the mirror extensions. -/
@@ -307,16 +325,22 @@ theorem coeff_curl (E : (MirrorBGG.complexQ.d 1 2).domain) (n : Fin 3 → ℤ) :
       (Fin 3 → ℤ) → Mat) n =
       curl (Fourier.Torus.freq n) ((MirrorBGG.J₁ (show MQ from E.1) : (Fin 3 → ℤ) → Mat) n) := by
   obtain ⟨h, e⟩ := MirrorBGG.complexQ_d₁_eq E
-  have hB : (WithLp.ofLp (MirrorBGG.complexQ.d 1 2 E : MirrorBGG.W2Q)).2 =
-      Mirror.complexQ.d 1 2 ⟨E.1, h⟩ := by
-    rw [e]
-  rw [hB]
-  have h2 : extF (c := Mirror.cB) cB_sq (Mirror.complexQ.d 1 2 ⟨E.1, h⟩) =
-      Models.Torus.GradCurl.complex.d 1 2 ⟨Mirror.J 1 E.1, _⟩ :=
-    Mirror.J_complexQ_d (i := 1) (j := 2) ⟨E.1, h⟩
-  rw [h2]
-  exact Operator.coeFn_mulOp_count (𝕜 := ℂ)
-    (fun n => Fourier.GradCurl.gradCurl.m 1 2 (Fourier.Torus.freq n)) _ n
+  rw [e]
+  exact coeff_curlQ ⟨E.1, h⟩ n
+
+/-- **The rows of a field of `D(curl)` are in `HΛ_{a}¹(Q)`** (real parts), with `d` the rows of
+`curl E` through the Hodge star (the mirror curl of `Feec.Models.Cube.Mirror.complexQ`). -/
+theorem rowRe_mem_curl (E : (Mirror.complexQ.d 1 2).domain) (a : Fin 3) :
+    ∃ h : rowRe (show MQ from E.1) a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain,
+      dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨_, h⟩ = rowRe2 (Mirror.complexQ.d 1 2 E) a := by
+  set B : MQ := Mirror.complexQ.d 1 2 E
+  obtain ⟨hu, e⟩ := mem_dPart_of_JfJ (J := {a}) (k := 1) (u := rowRe (show MQ from E.1) a)
+    (y := JfJ {a} (1 + 1) (rowRe2 B a)) fun m => by
+      change (Feec.Fourier.Exterior.deRham (Fin 3)).m 1 (1 + 1) (Fourier.Torus.freq m) _ = _
+      rw [coeff_JfJ_rowRe, coeff_JfJ_rowRe2, map_smul, map_add, deRham_rowF,
+        Feec.Models.Cube.DeRhamIdent.deRham_cjForm, deRham_rowF, coeff_curlQ E m,
+        coeff_curlQ E (-m), Fourier.Torus.freq_neg, curl_neg, rowF2_neg, cjForm_neg]
+  exact ⟨hu, injective_JfJ {a} (1 + 1) e⟩
 
 /-- **The rows of a field of `D((S₁, curl))` are in `HΛ_{a}¹(Q)`** (real parts), with `d` the
 rows of `curl E` through the Hodge star. -/
@@ -324,14 +348,9 @@ theorem rowRe_mem (E : (MirrorBGG.complexQ.d 1 2).domain) (a : Fin 3) :
     ∃ h : rowRe (show MQ from E.1) a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain,
       dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨_, h⟩ =
         rowRe2 (WithLp.ofLp (MirrorBGG.complexQ.d 1 2 E : MirrorBGG.W2Q)).2 a := by
-  set B := (WithLp.ofLp (MirrorBGG.complexQ.d 1 2 E : MirrorBGG.W2Q)).2
-  obtain ⟨hu, e⟩ := mem_dPart_of_JfJ (J := {a}) (k := 1) (u := rowRe (show MQ from E.1) a)
-    (y := JfJ {a} (1 + 1) (rowRe2 B a)) fun m => by
-      change (Feec.Fourier.Exterior.deRham (Fin 3)).m 1 (1 + 1) (Fourier.Torus.freq m) _ = _
-      rw [coeff_JfJ_rowRe, coeff_JfJ_rowRe2, map_smul, map_add, deRham_rowF,
-        Feec.Models.Cube.DeRhamIdent.deRham_cjForm, deRham_rowF, coeff_curl E m, coeff_curl E (-m),
-        Fourier.Torus.freq_neg, curl_neg, rowF2_neg, cjForm_neg]
-  exact ⟨hu, injective_JfJ {a} (1 + 1) e⟩
+  obtain ⟨h, e⟩ := MirrorBGG.complexQ_d₁_eq E
+  rw [e]
+  exact rowRe_mem_curl ⟨E.1, h⟩ a
 
 /-! ### Real rows as matrix fields -/
 
@@ -372,6 +391,31 @@ theorem rowF2_extF_ofRealRows2 (w : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((2
   rw [map_smul, mFourierCoeff_smul', ← mul_assoc, ← Complex.ofReal_mul, sg2_mul_self,
     Complex.ofReal_one, one_mul]
 
+/-- The curl symbol of the mirror extension of real rows `v_a ∈ HΛ_{a}¹(Q)` is the mirror
+extension of the rows `d v_a` (Hodge star). -/
+theorem curl_J₁_ofRealRows (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)))
+    (hv : ∀ a, v a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain) (n : Fin 3 → ℤ) :
+    curl (Fourier.Torus.freq n) ((MirrorBGG.J₁ (ofRealRows v) : (Fin 3 → ℤ) → Mat) n) =
+      (extF (c := Mirror.cB) cB_sq (ofRealRows2 fun a =>
+        dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨v a, hv a⟩) : (Fin 3 → ℤ) → Mat) n := by
+  ext ⟨a, i⟩
+  refine rowF2_injective (a := a) ?_ i
+  rw [← deRham_rowF, rowF_J₁_ofRealRows, rowF2_extF_ofRealRows2]
+  exact coeff_d_dPart {a} 1 ⟨v a, hv a⟩ n
+
+/-- **Rows of `HΛ_{a}¹(Q)` give a field of `D(curl)`** (the mirror curl of
+`Feec.Models.Cube.Mirror.complexQ`), with `curl E` the rows of `d v_a` (Hodge star). -/
+theorem ofRealRows_mem_curl (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)))
+    (hv : ∀ a, v a ∈ (dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ)).domain) :
+    ∃ h : ofRealRows v ∈ (Mirror.complexQ.d 1 2).domain,
+      Mirror.complexQ.d 1 2 ⟨_, h⟩ =
+        ofRealRows2 fun a => dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨v a, hv a⟩ := by
+  obtain ⟨hJ, eJ⟩ := Feec.Models.Cube.MirrorExt.exists_mulOp_count_eq
+    (fun n => Fourier.GradCurl.gradCurl.m 1 2 (Fourier.Torus.freq n)) (curl_J₁_ofRealRows v hv)
+  have hV : ofRealRows v ∈ (Mirror.complexQ.d 1 2).domain := Mirror.mem_complexQ_domain_iff.2 hJ
+  exact ⟨hV, Mirror.embeddingQ.J_injective 2
+    ((Mirror.J_complexQ_d (i := 1) (j := 2) ⟨_, hV⟩).trans eJ)⟩
+
 /-- **Rows of `HΛ_{a}¹(Q)` give a field of `D((S₁, curl))`**, with
 `d₁ E = (S₁ E, rows of d v_a)`. -/
 theorem ofRealRows_mem (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) : ℤ)))
@@ -380,21 +424,16 @@ theorem ofRealRows_mem (v : Fin 3 → L2F ℝ (Q (Fin 3)) (formIdx 3 ((1 : ℕ) 
       (MirrorBGG.complexQ.d 1 2 ⟨_, h⟩ : MirrorBGG.W2Q) = WithLp.toLp 2
         (MirrorBGG.axialQ (ofRealRows v),
           ofRealRows2 fun a => dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨v a, hv a⟩) := by
-  set w := fun a => dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨v a, hv a⟩ with hw
   set V := ofRealRows v
   have hcoef : ∀ n, Fourier.BGG.bggFamily.m 1 2 (Fourier.Torus.freq n)
       ((MirrorBGG.J₁ V : (Fin 3 → ℤ) → Mat) n) =
-      (MirrorBGG.J₂ (WithLp.toLp 2 (MirrorBGG.axialQ V, ofRealRows2 w)) :
-        (Fin 3 → ℤ) → Fourier.BGG.VM) n := by
+      (MirrorBGG.J₂ (WithLp.toLp 2 (MirrorBGG.axialQ V, ofRealRows2 fun a =>
+        dPart (Q (Fin 3)) {a} ((1 : ℕ) : ℤ) ⟨v a, hv a⟩)) : (Fin 3 → ℤ) → Fourier.BGG.VM) n := by
     intro n
     rw [MirrorBGG.J₂, Feec.Models.Cube.MirrorExt.pairLp_coeff]
     change Fourier.BGG.bgg (Fourier.Torus.freq n) _ = _
     rw [Fourier.BGG.bgg_apply, WithLp.ofLp_toLp, MirrorBGG.extF_axialQ, MirrorBGG.axialLp_apply]
-    refine congrArg (WithLp.toLp 2) (Prod.ext rfl ?_)
-    ext ⟨a, i⟩
-    refine rowF2_injective (a := a) ?_ i
-    rw [← deRham_rowF, rowF_J₁_ofRealRows, rowF2_extF_ofRealRows2, hw]
-    exact coeff_d_dPart {a} 1 ⟨v a, hv a⟩ n
+    exact congrArg (WithLp.toLp 2) (Prod.ext rfl (curl_J₁_ofRealRows v hv n))
   obtain ⟨hJ, eJ⟩ := Feec.Models.Cube.MirrorExt.exists_mulOp_count_eq _ hcoef
   have hV : (show MirrorBGG.SpaceQ 1 from V) ∈ (MirrorBGG.complexQ.d 1 2).domain :=
     MirrorBGG.mem_complexQ_domain_iff.2 hJ
@@ -1261,40 +1300,56 @@ end Main
 
 section NonVacuity
 
-/-- Finitely supported coefficient sequences lie in the domains of the torus BGG complex. -/
-theorem torusBGG_mem_domain_of_finite {i j : Fin 3} {x : Models.Torus.BGG.Space i}
-    (S : Finset (Fin 3 → ℤ)) (hx : ∀ n ∉ S, (x : (Fin 3 → ℤ) → _) n = 0) :
-    x ∈ (Models.Torus.BGG.complex.d i j).domain :=
+section Finite
+
+/-! #### Finitely many modes on the torus
+
+For the torus model `Fourier.Torus.complex F` of any family of fibre complexes on `ℤ³` (the
+grad–curl complex of (4.14), the BGG complex (5.1)), finitely supported coefficient sequences lie
+in the domains of the differentials and of their adjoints, and the wave operator keeps them
+finitely supported. -/
+
+variable {E : Fin 3 → Type*} [∀ i, NormedAddCommGroup (E i)] [∀ i, InnerProductSpace ℂ (E i)]
+  [∀ i, FiniteDimensional ℂ (E i)] [∀ i, CompleteSpace (E i)]
+  {F : Fourier.FibreComplex ℂ (EuclideanSpace ℝ (Fin 3)) ComplexShape.fin3 E}
+
+/-- Finitely supported coefficient sequences lie in the domains of the torus complex. -/
+theorem torus_mem_domain_of_finite {i j : Fin 3}
+    {x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))} (S : Finset (Fin 3 → ℤ))
+    (hx : ∀ n ∉ S, (x : (Fin 3 → ℤ) → E i) n = 0) :
+    x ∈ ((Fourier.Torus.complex F).d i j).domain :=
   Feec.Models.Cube.MirrorExt.mem_mulDomain_of_finite _ S hx
 
-theorem torusBGG_mem_adjoint_domain_of_finite {i j : Fin 3} {x : Models.Torus.BGG.Space j}
-    (S : Finset (Fin 3 → ℤ)) (hx : ∀ n ∉ S, (x : (Fin 3 → ℤ) → _) n = 0) :
-    x ∈ ((Models.Torus.BGG.complex.d i j)†).domain := by
-  rw [show (Models.Torus.BGG.complex.d i j)† = Operator.mulOp Measure.count fun n =>
-      ContinuousLinearMap.adjoint (Fourier.BGG.bggFamily.m i j (Fourier.Torus.freq n)) from
-    (Fourier.Torus.symbolComplex Fourier.BGG.bggFamily).adjoint_d i j]
+/-- Finitely supported coefficient sequences lie in the domains of the adjoints. -/
+theorem torus_mem_adjoint_domain_of_finite {i j : Fin 3}
+    {x : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))} (S : Finset (Fin 3 → ℤ))
+    (hx : ∀ n ∉ S, (x : (Fin 3 → ℤ) → E j) n = 0) :
+    x ∈ (((Fourier.Torus.complex F).d i j)†).domain := by
+  rw [show ((Fourier.Torus.complex F).d i j)† = Operator.mulOp Measure.count fun n =>
+      ContinuousLinearMap.adjoint (F.m i j (Fourier.Torus.freq n)) from
+    (Fourier.Torus.symbolComplex F).adjoint_d i j]
   exact Feec.Models.Cube.MirrorExt.mem_mulDomain_of_finite _ S hx
 
-theorem torusBGG_d_eq_zero {i j : Fin 3} (x : (Models.Torus.BGG.complex.d i j).domain)
+theorem torus_d_eq_zero_of_finite {i j : Fin 3} (x : ((Fourier.Torus.complex F).d i j).domain)
     (S : Finset (Fin 3 → ℤ))
-    (hx : ∀ n ∉ S, ((x : Models.Torus.BGG.Space i) : (Fin 3 → ℤ) → _) n = 0)
-    (n : Fin 3 → ℤ) (hn : n ∉ S) :
-    ((Models.Torus.BGG.complex.d i j x : Models.Torus.BGG.Space j) : (Fin 3 → ℤ) → _) n = 0 := by
-  exact (Operator.coeFn_mulOp_count (𝕜 := ℂ)
-    (fun n => Fourier.BGG.bggFamily.m i j (Fourier.Torus.freq n)) x n).trans
-      (by rw [hx n hn, map_zero])
+    (hx : ∀ n ∉ S, ((x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
+      (Fin 3 → ℤ) → E i) n = 0) (n : Fin 3 → ℤ) (hn : n ∉ S) :
+    (((Fourier.Torus.complex F).d i j x : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
+      (Fin 3 → ℤ) → E j) n = 0 :=
+  (Operator.coeFn_mulOp_count (𝕜 := ℂ) (fun n => F.m i j (Fourier.Torus.freq n)) x n).trans
+    (by rw [hx n hn, map_zero])
 
-theorem torusBGG_adjoint_eq_zero {i j : Fin 3}
-    (y : ((Models.Torus.BGG.complex.d i j)†).domain)
-    (S : Finset (Fin 3 → ℤ))
-    (hy : ∀ n ∉ S, ((y : Models.Torus.BGG.Space j) : (Fin 3 → ℤ) → _) n = 0)
-    (n : Fin 3 → ℤ) (hn : n ∉ S) :
-    (((Models.Torus.BGG.complex.d i j)† y : Models.Torus.BGG.Space i) : (Fin 3 → ℤ) → _) n = 0 := by
-  have e : (Models.Torus.BGG.complex.d i j)† = Operator.mulOp Measure.count fun n =>
-      ContinuousLinearMap.adjoint (Fourier.BGG.bggFamily.m i j (Fourier.Torus.freq n)) :=
-    (Fourier.Torus.symbolComplex Fourier.BGG.bggFamily).adjoint_d i j
-  have hy' : (y : Models.Torus.BGG.Space j) ∈ (Operator.mulOp Measure.count fun n =>
-      ContinuousLinearMap.adjoint (Fourier.BGG.bggFamily.m i j (Fourier.Torus.freq n))).domain :=
+theorem torus_adjoint_eq_zero_of_finite {i j : Fin 3}
+    (y : (((Fourier.Torus.complex F).d i j)†).domain) (S : Finset (Fin 3 → ℤ))
+    (hy : ∀ n ∉ S, ((y : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
+      (Fin 3 → ℤ) → E j) n = 0) (n : Fin 3 → ℤ) (hn : n ∉ S) :
+    ((((Fourier.Torus.complex F).d i j)† y : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
+      (Fin 3 → ℤ) → E i) n = 0 := by
+  have e : ((Fourier.Torus.complex F).d i j)† = Operator.mulOp Measure.count fun n =>
+      ContinuousLinearMap.adjoint (F.m i j (Fourier.Torus.freq n)) :=
+    (Fourier.Torus.symbolComplex F).adjoint_d i j
+  have hy' : (y : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))) ∈ (Operator.mulOp
+      Measure.count fun n => ContinuousLinearMap.adjoint (F.m i j (Fourier.Torus.freq n))).domain :=
     e ▸ y.2
   rw [LinearPMap.apply_eq_of_eq e y ⟨_, hy'⟩ rfl]
   exact (Operator.coeFn_mulOp_count (𝕜 := ℂ) _ ⟨_, hy'⟩ n).trans (by rw [hy n hn, map_zero])
@@ -1310,40 +1365,41 @@ theorem coeFn_sub_count {E : Type*} [NormedAddCommGroup E]
   Measure.ae_count_iff.1 (Lp.coeFn_sub f g) n
 
 /-- **On the torus, `L` preserves finitely supported states.** -/
-theorem torusBGG_wave_finite (x : Models.Torus.BGG.complex.wave.domain)
-    (S : Finset (Fin 3 → ℤ))
-    (hx : ∀ i, ∀ n ∉ S, (((x : PiLp 2 Models.Torus.BGG.Space) i : Models.Torus.BGG.Space i) :
-      (Fin 3 → ℤ) → _) n = 0) :
-    ∀ i, ∀ n ∉ S, (((Models.Torus.BGG.complex.wave x) i : Models.Torus.BGG.Space i) :
-      (Fin 3 → ℤ) → _) n = 0 := by
+theorem torus_wave_finite (x : (Fourier.Torus.complex F).wave.domain) (S : Finset (Fin 3 → ℤ))
+    (hx : ∀ i, ∀ n ∉ S, (((x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ)))
+      i : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E i) n = 0) :
+    ∀ i, ∀ n ∉ S, ((((Fourier.Torus.complex F).wave x) i :
+      Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E i) n = 0 := by
   intro i n hn
   fin_cases i
-  · have e0 := HilbertComplex.wave_apply_fin3_zero Models.Torus.BGG.complex x
-    change (((Models.Torus.BGG.complex.wave x) 0 : Models.Torus.BGG.Space 0) :
-      (Fin 3 → ℤ) → _) n = 0
-    rw [e0]
-    exact (coeFn_neg_count _ n).trans (neg_eq_zero.2 (torusBGG_adjoint_eq_zero _ S (hx 1) n hn))
-  · have e1 := HilbertComplex.wave_apply_fin3_one Models.Torus.BGG.complex x
-    change (((Models.Torus.BGG.complex.wave x) 1 : Models.Torus.BGG.Space 1) :
-      (Fin 3 → ℤ) → _) n = 0
-    rw [e1]
+  · change ((((Fourier.Torus.complex F).wave x) 0 :
+      Lp (E 0) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E 0) n = 0
+    rw [HilbertComplex.wave_apply_fin3_zero (Fourier.Torus.complex F) x]
+    exact (coeFn_neg_count _ n).trans
+      (neg_eq_zero.2 (torus_adjoint_eq_zero_of_finite _ S (hx 1) n hn))
+  · change ((((Fourier.Torus.complex F).wave x) 1 :
+      Lp (E 1) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E 1) n = 0
+    rw [HilbertComplex.wave_apply_fin3_one (Fourier.Torus.complex F) x]
     exact (coeFn_sub_count _ _ n).trans (by
-      rw [torusBGG_d_eq_zero _ S (hx 0) n hn, torusBGG_adjoint_eq_zero _ S (hx 2) n hn, sub_zero])
-  · have e2 := HilbertComplex.wave_apply_fin3_two Models.Torus.BGG.complex x
-    change (((Models.Torus.BGG.complex.wave x) 2 : Models.Torus.BGG.Space 2) :
-      (Fin 3 → ℤ) → _) n = 0
-    rw [e2]
-    exact torusBGG_d_eq_zero _ S (hx 1) n hn
+      rw [torus_d_eq_zero_of_finite _ S (hx 0) n hn,
+        torus_adjoint_eq_zero_of_finite _ S (hx 2) n hn, sub_zero])
+  · change ((((Fourier.Torus.complex F).wave x) 2 :
+      Lp (E 2) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E 2) n = 0
+    rw [HilbertComplex.wave_apply_fin3_two (Fourier.Torus.complex F) x]
+    exact torus_d_eq_zero_of_finite _ S (hx 1) n hn
 
-theorem torusBGG_wave_mem_of_finite (x : Models.Torus.BGG.complex.wave.domain)
+/-- **On the torus, `L` maps finitely supported states of `D(L)` into `D(L)`.** -/
+theorem torus_wave_mem_of_finite (x : (Fourier.Torus.complex F).wave.domain)
     (S : Finset (Fin 3 → ℤ))
-    (hx : ∀ i, ∀ n ∉ S, (((x : PiLp 2 Models.Torus.BGG.Space) i : Models.Torus.BGG.Space i) :
-      (Fin 3 → ℤ) → _) n = 0) :
-    Models.Torus.BGG.complex.wave x ∈ Models.Torus.BGG.complex.wave.domain := by
-  have h := torusBGG_wave_finite x S hx
-  exact HilbertComplex.mem_wave_domain_fin3 _ (torusBGG_mem_domain_of_finite S (h 0))
-    (torusBGG_mem_domain_of_finite S (h 1)) (torusBGG_mem_adjoint_domain_of_finite S (h 1))
-    (torusBGG_mem_adjoint_domain_of_finite S (h 2))
+    (hx : ∀ i, ∀ n ∉ S, (((x : PiLp 2 fun i => Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ)))
+      i : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) : (Fin 3 → ℤ) → E i) n = 0) :
+    (Fourier.Torus.complex F).wave x ∈ (Fourier.Torus.complex F).wave.domain := by
+  have h := torus_wave_finite x S hx
+  exact HilbertComplex.mem_wave_domain_fin3 _ (torus_mem_domain_of_finite S (h 0))
+    (torus_mem_domain_of_finite S (h 1)) (torus_mem_adjoint_domain_of_finite S (h 1))
+    (torus_mem_adjoint_domain_of_finite S (h 2))
+
+end Finite
 
 theorem cosState_finite (i : Fin 3) :
     ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)), ((MirrorBGG.cosState i : Models.Torus.BGG.Space i) :
@@ -1363,7 +1419,7 @@ theorem cosState_finite (i : Fin 3) :
 /-- `L cosState ∈ D(L)` on the torus. -/
 theorem cosState_wave_mem : Models.Torus.BGG.complex.wave ⟨_, MirrorBGG.cosState_mem_domain⟩ ∈
     Models.Torus.BGG.complex.wave.domain :=
-  torusBGG_wave_mem_of_finite _ _ cosState_finite
+  torus_wave_mem_of_finite _ _ cosState_finite
 
 theorem cosStateQ_mem : MirrorBGG.cosStateQ ∈ MirrorBGG.complexQ.wave.domain :=
   (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos MirrorBGG.inner_J
@@ -1398,6 +1454,60 @@ theorem cosDatum_not_stationary : cosDatum.U₀ ∉ MirrorBGG.complexQ.waveGroup
   exact (HilbertComplex.not_mem_stationary_compress Mirror.eight_pos MirrorBGG.inner_J
     MirrorBGG.reducingSubcomplex_range hd fun h0 => MirrorBGG.wave_cosState_ne
       ((LinearPMap.apply_congr' _ _ _ MirrorBGG.totalJ_cosStateQ.symm).trans h0)).2
+
+/-! #### The non-stationary datum of the mirror grad–curl complex -/
+
+theorem mirrorCosState_finite (i : Fin 3) :
+    ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)), ((Mirror.cosState i : Models.Torus.GradCurl.Space i) :
+      (Fin 3 → ℤ) → _) n = 0 := by
+  intro n hn
+  fin_cases i
+  · change ((Mirror.cosState 0 : Models.Torus.GradCurl.Space 0) : (Fin 3 → ℤ) → _) n = 0
+    rw [Mirror.cosState_zero]
+    exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
+  · change ((Mirror.cosState 1 : Models.Torus.GradCurl.Space 1) : (Fin 3 → ℤ) → _) n = 0
+    rw [Mirror.cosState_one]
+    exact (coe_cosE n).trans (cosCoeff_eq_zero hn)
+  · change ((Mirror.cosState 2 : Models.Torus.GradCurl.Space 2) : (Fin 3 → ℤ) → _) n = 0
+    rw [Mirror.cosState_two]
+    exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
+
+/-- The datum `(0, E₀, 0)` of the mirror grad–curl complex on `Q` lies in the constraint. -/
+theorem mirror_cosStateQ_mem_tsd : Mirror.cosStateQ ∈ totalSub Mirror.tsdQ := fun i => by
+  change Mirror.J i (Mirror.cosStateQ i) ∈ Models.Torus.GradCurl.constraint i
+  rw [← HilbertComplex.totalJ_apply, Mirror.totalJ_cosStateQ]
+  exact Mirror.cosState_mem_constraint i
+
+/-- **`L E₀ ∈ D(L)` for the mirror grad–curl complex on `Q`**, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`
+(`Feec.Models.Cube.Mirror.cosStateQ`): its mirror extension has finitely many Fourier modes, which
+`L` preserves on the torus. -/
+theorem mirror_cosStateQ_wave_mem :
+    Mirror.complexQ.wave ⟨_, Mirror.cosStateQ_mem_domain⟩ ∈ Mirror.complexQ.wave.domain := by
+  refine (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos Mirror.inner_J
+    Mirror.reducingSubcomplex_range).2 ?_
+  rw [← (HilbertComplex.wave_compress Mirror.eight_pos Mirror.inner_J
+    Mirror.reducingSubcomplex_range).comm ⟨_, Mirror.cosStateQ_mem_domain⟩,
+    LinearPMap.apply_congr' _ _ Mirror.cosState_mem_domain Mirror.totalJ_cosStateQ]
+  exact torus_wave_mem_of_finite _ _ mirrorCosState_finite
+
+/-- **`L² E₀ ∈ D(L)` for the mirror grad–curl complex on `Q`.** -/
+theorem mirror_cosStateQ_wave_wave_mem :
+    Mirror.complexQ.wave ⟨_, mirror_cosStateQ_wave_mem⟩ ∈ Mirror.complexQ.wave.domain := by
+  have hc := (HilbertComplex.wave_compress Mirror.eight_pos Mirror.inner_J
+    Mirror.reducingSubcomplex_range).comm
+  have e : HilbertComplex.totalJ Mirror.J (Mirror.complexQ.wave ⟨_, Mirror.cosStateQ_mem_domain⟩) =
+      Models.Torus.GradCurl.complex.wave ⟨Mirror.cosState, Mirror.cosState_mem_domain⟩ := by
+    rw [← hc ⟨_, Mirror.cosStateQ_mem_domain⟩]
+    exact LinearPMap.apply_congr' _ _ _ Mirror.totalJ_cosStateQ
+  have hfin : ∀ i, ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)),
+      (((HilbertComplex.totalJ Mirror.J (Mirror.complexQ.wave
+        ⟨_, Mirror.cosStateQ_mem_domain⟩)) i : Models.Torus.GradCurl.Space i) :
+          (Fin 3 → ℤ) → _) n = 0 := by
+    rw [e]; exact torus_wave_finite _ _ mirrorCosState_finite
+  refine (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos Mirror.inner_J
+    Mirror.reducingSubcomplex_range).2 ?_
+  rw [← hc ⟨_, mirror_cosStateQ_wave_mem⟩]
+  exact torus_wave_mem_of_finite _ _ hfin
 
 end NonVacuity
 

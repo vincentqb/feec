@@ -30,7 +30,9 @@ project:
     Einstein-Bianchi vocabulary shared with palomar/einsteinbianchi as canonical blocks too: the
     vector forms (L2Vec, vecOp), the fields (mat1, mat2, IsTSD), the system (6.1) (wedge,
     WeakSymmetryData with IsWave, FormData, bggData), its constraint (IsTSDState) and the mirror
-    data (dPart, mirrorData). Operators are given by their graphs (relations), an evolution S of
+    data (dPart, mirrorData), whose bottom row is also the operator pair of the system (4.14) with
+    the mirror boundary conditions (gradCurlMirror). Operators are given by their graphs
+    (relations), an evolution S of
     u' = A u on I (IsEvolution: bounded linear S t over the scalars, S 0 = 1, every orbit from
     D(A) a strong solution on I; no group law assumed) and the invariant core
     K* = {x | S t x in K for all t} (invariantCore) are the common notions of the two compared
@@ -120,9 +122,15 @@ project:
     almost everywhere on the domain of dependence of the cube: the losses occur in the boundary
     layer;
     (mirror boundary conditions on the cube Q = (0, 1/2)^3, the conditions of fields invariant
-    under the reflections in the faces) for the system (6.1), strong solutions are determined by
-    their initial value, exist on every [0, T] from every TSD datum of D(L) and stay TSD, and some
-    TSD datum U_0 with U_0, L U_0, L^2 U_0 in D(L) has L U_0 != 0.
+    under the reflections in the faces, sigma a vector, E a tensor, B a pseudotensor; one
+    verdict MirrorVerdict A K for a system A with constraint K, asserted for both systems) for the
+    system (4.14) (gradCurlMirror: the Hodge wave equation of the bottom row of the mirror data,
+    the component a of H_{a}Lambda^0 -> H_{a}Lambda^1 -> L^2 Lambda^2 with vanishing tangential
+    traces on the faces normal to e_a: sigma . n = 0, E_{n tau} = 0) with constraint
+    K = {0} x L^2(TSD) x L^2(TSD), and for the system (6.1) with constraint IsTSDState, strong
+    solutions are determined by their initial value, exist on every [0, T] from every datum of
+    D(L) in the constraint and stay in it, and some datum U_0 of the constraint with
+    U_0, L U_0, L^2 U_0 in D(L) has L U_0 != 0.
     Not claimed: whether on every bounded domain only stationary data keep the constraint
     (K* in N(L)). It is open; it is proved on boxes, it is equivalent on domains star-shaped with
     respect to a ball to the absence of TSD eigenfields u with curl u outside H°(curl), and on the
@@ -132,7 +140,8 @@ project:
     Feec.Counterexamples.BoundedDomainTSD,
     Feec.Counterexamples.BoundedBGG, BoxStationary, BallEigenfields,
     Feec.Models.StarShaped.EigenDense, Feec.Models.BoundedDomain.MovingTSD, Interior,
-    Feec.Models.Cube.Absorbing, AbsorbingTSD, Feec.Models.Cube.MirrorBGG, MirrorConstraint).
+    Feec.Models.Cube.Absorbing, AbsorbingTSD, Feec.Models.Cube.Mirror, MirrorBGG,
+    MirrorConstraint, MirrorWeakSymmetryTSD).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -255,7 +264,8 @@ status:
     condition containing n x E = 0, on every nonempty bounded open set, the datum (0, E_0, beta),
     the projection hypothesis in the electric and in the magnetic slot, and the density; the
     absorbing boundary conditions on the cube, with the domain of dependence; the mirror
-    boundary conditions on the cube for the system (6.1)). The Challenge is 838 lines. Open,
+    boundary conditions on the cube for the systems (4.14) and (6.1)). The Challenge is 853
+    lines. Open,
     and not claimed: that only stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
@@ -264,10 +274,15 @@ status:
     Feec.Counterexamples.BallEigenDense.coreSub_le_stationary_ball3_of_maxwellRegularity, not
     compared). Not compared here (proved in Feec): the sym-curl system (4.19) on every bounded
     domain and every ball (BoundedSymTSD, EveryBallSymTSD), another system; the mirror boundary
-    conditions for the system (4.14) on every open box, where K* = K
-    (Feec.Models.Box.Mirror.invariantCore_eqBox), and on the cube
-    (Feec.Models.Cube.Mirror.existsUnique_memQ), whose comparison needs a bridge from the
-    challenge's mirror operators of (4.14) to Feec's Fourier models of the mirror complexes; the
+    conditions for the system (4.14) on every open box (Feec.Models.Box.Mirror.propagatesBox,
+    existsUnique_memBox, exists_nonstationaryBox), whose comparison needs mirror operators on
+    boxes in the challenge (dPart is defined on the cube) and the real forms bridge on boxes, and
+    for the system (6.1) on boxes (no BGG mirror complex on boxes in Feec); the invariant core
+    of the mirror complexes (Feec.Models.Cube.Mirror.invariantCore_eqQ,
+    Feec.Models.Box.Mirror.invariantCore_eqBox: K* = K for Feec's constraint, the fields whose
+    reflection-symmetric extensions are TSD; it consists of TSD fields, Mirror.mem_tsdQ_one and
+    mem_tsdQ_two, and contains the TSD fields of the domains of curl and curl*,
+    Mirror.mem_tsdQ_one_of_tsd and mem_tsdQ_two_of_tsd); the
     torus (Feec.EinsteinBianchi.torus_tsd_propagates), no boundary condition; the unboundedness
     of the projection onto L^2(TSD) in the H(curl) graph norm (projection_unbounded), the reason
     for the magnetic failure; the convergence of the weak-symmetry method to the constrained or
@@ -321,8 +336,10 @@ automation:
     Feec's), Solution/Proxy.lean, Bounded.lean,
     Wave.lean, Wedge.lean, Forms.lean (fields, the system (6.1) and its datum, from
     palomar/einsteinbianchi), MirrorData.lean, MirrorTSD.lean, MirrorState.lean,
-    MirrorForward.lean, MirrorChain.lean, MirrorProp.lean (TSD states as the real parts of the
-    constrained states of Feec's complex mirror complex on Q, from palomar/einsteinbianchi).
+    MirrorForward.lean, MirrorChain.lean, MirrorProp.lean (TSD states of (6.1) as the real parts
+    of the constrained states of Feec's complex BGG mirror complex on Q, from
+    palomar/einsteinbianchi), MirrorGradCurl.lean (the same for (4.14) and Feec's mirror
+    grad-curl complex on Q; uniqueness of strong solutions by energy, Wave.lean).
 
 fidelity:
   divergences: >-
@@ -404,12 +421,17 @@ fidelity:
     S(t) = S(t / n)^n for every t >= 0); the datum need not lie in D(A) (Feec's proof: an
     invariant K would make D(A) and K intersect densely in K, which a boundary functional
     excludes).
-    (7) Mirror boundary conditions: on the cube Q only and for the system (6.1) (top row d_max;
-    component a of the bottom row with vanishing tangential traces on the faces normal to e_a,
-    dPart), as in palomar/einsteinbianchi: existence of strong solutions is stated from TSD data
-    of D(L); in Feec the theorem is proved for a complex Hilbert complex of matrix fields defined
-    by the Fourier series of the reflection-symmetric extensions, and the Solution identifies the
-    challenge's real states with the real parts of its constrained states.
+    (7) Mirror boundary conditions: on the cube Q only, for the system (4.14) (the bottom row of
+    the mirror data: component a with vanishing tangential traces on the faces normal to e_a,
+    dPart) and for the system (6.1) (top row d_max, bottom row as for (4.14)), as in
+    palomar/einsteinbianchi; one verdict (MirrorVerdict) for a system given by its graph and a
+    constraint, asserted for the two. Existence of strong solutions is stated from data of D(L)
+    in the constraint, and no invariant core is stated (Feec's K* = K is for its constraint, the
+    fields whose reflection-symmetric extensions are TSD, which contains the TSD data of D(L), not
+    for the K of the challenge). In Feec the theorems are proved for complex Hilbert complexes of
+    matrix fields defined by the Fourier series of the reflection-symmetric extensions, and the
+    Solution identifies the challenge's real states with the real parts of their constrained
+    states.
     (8) The domain of dependence (depDomain) is the set of centres of the Euclidean balls of
     radii r > t inside Omega, written out (the points of R^3 are Fin 3 -> R with the sup norm),
     meant for t >= 0 (for t < 0 it is R^3); IsSymTFOn asks symmetry and trace-freeness at almost
@@ -449,7 +471,11 @@ review:
     palomar/einsteinbianchi as FEEC.tsd_not_propagates (ElectricVerdict.weakSymmetry),
     FEEC.box_stationary (BoxVerdict.forward; its existence clause through
     ElectricVerdict.evolution, an evolution on R on every bounded open set) and
-    FEEC.mirror_tsd_propagates (MirrorVerdict), the same statements over the same definitions.
+    FEEC.mirror_tsd_propagates (the (6.1) instance of MirrorVerdict), the same statements over
+    the same definitions. New (2026-11-24, not yet reviewed by the author): the mirror verdict is
+    one structure MirrorVerdict A K for a system A and a constraint K, asserted for (6.1) (the
+    former statement, unchanged up to the membership notation) and for the system (4.14) with
+    the mirror boundary conditions (the new definition gradCurlMirror).
     The identifiers of the sources other than the thesis were checked against Crossref
     (2026-11-18). Every merge of the library was gated by a full build (zero warnings), an axiom audit
     (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
@@ -498,7 +524,11 @@ alignment:
         Feec.Models.Cube.Absorbing (isMDissipative_absorbing, exists_inner_absorbing_neg,
         not_invariant_tsdPair, within every [0, T] by the semigroup law, absorbingSemigroup_divFree,
         absorbingSemigroup_symTF_depDomain) (Solution/Absorbing.lean, Interior.lean); mirror:
-        Feec.Models.Cube.MirrorBGG
+        for (4.14) Feec.Models.Cube.Mirror (propagatesQ, reducingSubcomplexQ,
+        mem_tsdQ_one_of_tsd, mem_tsdQ_two_of_tsd, mem_adjoint_d₀_of_mem_tsdQ) with
+        Feec.Models.Cube.MirrorWeakSymmetry (rowRe_mem_curl, ofRealRows_mem_curl,
+        inner_rowRe_dPart_zero, mirror_cosStateQ_wave_mem, mirror_cosStateQ_wave_wave_mem)
+        (Solution/MirrorGradCurl.lean); for (6.1) Feec.Models.Cube.MirrorBGG
         (propagatesQ, reducingSubcomplexQ) and Feec.Models.Cube.MirrorWeakSymmetry.cosDatum
         (Solution/Mirror*.lean).
 

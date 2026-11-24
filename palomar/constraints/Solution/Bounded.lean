@@ -69,17 +69,22 @@ theorem isClosed_vecOp {T : E →ₗ.[ℝ] F} (hT : T.IsClosed) : (vecOpC (n := 
   exact ((PiLp.continuous_apply 2 _ a).comp continuous_fst).prodMk
     ((PiLp.continuous_apply 2 _ a).comp continuous_snd)
 
-theorem dense_vecOp {T : E →ₗ.[ℝ] F} (hT : Dense (T.domain : Set E)) :
-    Dense ((vecOpC (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) := by
-  have e : ((vecOpC (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) =
-      WithLp.toLp 2 '' univ.pi fun _ => (T.domain : Set E) := by
+/-- The componentwise operator of densely defined operators is densely defined. -/
+theorem dense_vecOp_pi {T : Fin n → E →ₗ.[ℝ] F} (hT : ∀ a, Dense ((T a).domain : Set E)) :
+    Dense ((vecOp T).domain : Set (PiLp 2 fun _ : Fin n => E)) := by
+  have e : ((vecOp T).domain : Set (PiLp 2 fun _ : Fin n => E)) =
+      WithLp.toLp 2 '' univ.pi fun a => ((T a).domain : Set E) := by
     ext v
     refine ⟨fun hv => ⟨WithLp.ofLp v, fun a _ => hv a, rfl⟩, ?_⟩
     rintro ⟨w, hw, rfl⟩ a
     exact hw a (mem_univ a)
   rw [e]
   exact (WithLp.equiv 2 (∀ _ : Fin n, E)).symm.surjective.denseRange.dense_image
-    (PiLp.continuous_toLp 2 _) (dense_pi univ fun _ _ => hT)
+    (PiLp.continuous_toLp 2 _) (dense_pi univ fun a _ => hT a)
+
+theorem dense_vecOp {T : E →ₗ.[ℝ] F} (hT : Dense (T.domain : Set E)) :
+    Dense ((vecOpC (n := n) T).domain : Set (PiLp 2 fun _ : Fin n => E)) :=
+  dense_vecOp_pi fun _ => hT
 
 end VecOp
 

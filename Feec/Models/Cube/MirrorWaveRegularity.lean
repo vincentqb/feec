@@ -1094,7 +1094,7 @@ theorem mirror_waveFEM_rate_sobolev_of_add_two :
 
 /-- **The cos datum `E₀ = 2 cos(2π x₃) diag(1, -1, 0)` (`cosDatum`) lies in
 `D(L³)`**: its mirror extension has finitely many Fourier modes, which `L` preserves on the
-torus (`torusBGG_wave_finite`). -/
+torus (`torus_wave_finite`). -/
 theorem cosDatum_LLU₀_mem : cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain := by
   have e : extState cosDatum.LU₀ = Models.Torus.BGG.complex.wave
       ⟨MirrorBGG.cosState, MirrorBGG.cosState_mem_domain⟩ := by
@@ -1102,7 +1102,7 @@ theorem cosDatum_LLU₀_mem : cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain
     exact LinearPMap.apply_congr' _ _ MirrorBGG.cosState_mem_domain MirrorBGG.totalJ_cosStateQ
   have hfin : ∀ i, ∀ n ∉ ({Mirror.k0, -Mirror.k0} : Finset (Fin 3 → ℤ)),
       (((extState cosDatum.LU₀) i : Models.Torus.BGG.Space i) : (Fin 3 → ℤ) → _) n = 0 := by
-    rw [e]; exact torusBGG_wave_finite _ _ cosState_finite
+    rw [e]; exact torus_wave_finite _ _ cosState_finite
   refine (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos MirrorBGG.inner_J
     MirrorBGG.reducingSubcomplex_range).2 ?_
   have e2 : extState cosDatum.LLU₀ = Models.Torus.BGG.complex.wave
@@ -1110,6 +1110,6 @@ theorem cosDatum_LLU₀_mem : cosDatum.LLU₀ ∈ MirrorBGG.complexQ.wave.domain
     extState_wave ⟨cosDatum.LU₀, cosDatum.mem₂⟩
   change extState cosDatum.LLU₀ ∈ _
   rw [e2]
-  exact torusBGG_wave_mem_of_finite _ _ hfin
+  exact torus_wave_mem_of_finite _ _ hfin
 
 end Feec.Models.Cube.MirrorWeakSymmetry

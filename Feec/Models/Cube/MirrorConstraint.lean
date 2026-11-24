@@ -27,7 +27,8 @@ i.e. `M̂(k) ξ_k = 0` at every frequency.
 ## Main results
 
 * `Mirror.mem_tsdQ_one_of_tsd`, `Mirror.mem_tsdQ_two_of_tsd`: the converses of
-  `Mirror.mem_tsdQ_one`, `Mirror.mem_tsdQ_two` on `D(curl)` and `D(curl†)`.
+  `Mirror.mem_tsdQ_one`, `Mirror.mem_tsdQ_two` on `D(curl)` and `D(curl†)`, and
+  `Mirror.mem_adjoint_d₀_of_mem_tsdQ`: electric constraint states lie in `ker grad†`.
 * `MirrorBGG.mem_tsdQ_one_of_tsd`, `MirrorBGG.mem_tsdQ_two_of_tsd`: the same on the domains of
   the second BGG operator `(S₁, curl)` and of its adjoint, and
   `MirrorBGG.mem_adjoint_d₀_of_mem_tsdQ`: electric constraint states lie in `ker (grad grad)†`.
@@ -245,6 +246,17 @@ theorem mem_tsdQ_two_of_tsd {B : MQ} (hB : B ∈ ((complexQ.d 1 2)†).domain)
       (fun l => funext fun k => by fin_cases l <;> fin_cases k <;> simp [cE, cPV, sgn])
       (fun l => funext fun k => by fin_cases l <;> fin_cases k <;> simp [cE, cPV, sgn])
       ((complexQ_adjoint_d₁_iff B _).1 ⟨hB, rfl⟩) hsym htr hdiv k
+
+/-- **Electric constraint states are in `ker grad†`**: `E ∈ tsdQ 1` lies in the domain of
+`d₀† = -div` with `d₀† E = 0` (TSD fields on the torus are divergence-free). -/
+theorem mem_adjoint_d₀_of_mem_tsdQ {E : MQ} (hE : E ∈ tsdQ 1) :
+    ∃ h : E ∈ ((complexQ.d 0 1)†).domain, (complexQ.d 0 1)† ⟨E, h⟩ = 0 := by
+  obtain ⟨y, hy, hy0⟩ := LinearPMap.mem_ker_iff.1 (constraint_le_ker_adjoint hE)
+  have h : E ∈ ((complexQ.d 0 1)†).domain := mem_complexQ_adjoint_domain_iff.2 (hy ▸ y.2)
+  refine ⟨h, embeddingQ.J_injective 0 ?_⟩
+  change J 0 _ = J 0 0
+  rw [J_complexQ_adjoint (i := 0) (j := 1) ⟨(E : SpaceQ 1), h⟩, _root_.map_zero, ← hy0]
+  exact LinearPMap.apply_congr' _ _ _ hy
 
 end Feec.Models.Cube.Mirror
 

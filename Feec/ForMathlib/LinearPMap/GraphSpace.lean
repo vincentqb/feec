@@ -196,15 +196,11 @@ theorem norm_toGraphSpace_sq (T : E →ₗ.[𝕜] F) (x : T.domain) :
     ‖T.toGraphSpace x‖ ^ 2 = ‖(x : E)‖ ^ 2 + ‖T x‖ ^ 2 :=
   norm_sq_graphSpace _
 
-theorem norm_graphFst_le {T : E →ₗ.[𝕜] F} (v : T.GraphSpace) : ‖T.graphFst v‖ ≤ ‖v‖ := by
-  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
-  rw [norm_sq_graphSpace v]
-  nlinarith [sq_nonneg ‖T.graphSnd v‖]
+theorem norm_graphFst_le {T : E →ₗ.[𝕜] F} (v : T.GraphSpace) : ‖T.graphFst v‖ ≤ ‖v‖ :=
+  WithLp.norm_fst_le (x := (v : WithLp 2 (E × F)))
 
-theorem norm_graphSnd_le {T : E →ₗ.[𝕜] F} (v : T.GraphSpace) : ‖T.graphSnd v‖ ≤ ‖v‖ := by
-  refine (abs_le_of_sq_le_sq' ?_ (norm_nonneg _)).2
-  rw [norm_sq_graphSpace v]
-  nlinarith [sq_nonneg ‖T.graphFst v‖]
+theorem norm_graphSnd_le {T : E →ₗ.[𝕜] F} (v : T.GraphSpace) : ‖T.graphSnd v‖ ≤ ‖v‖ :=
+  WithLp.norm_snd_le (x := (v : WithLp 2 (E × F)))
 
 /-- The graph norm is at most `‖v₁‖ + ‖v₂‖`. -/
 theorem norm_le_norm_graphFst_add_norm_graphSnd {T : E →ₗ.[𝕜] F} (v : T.GraphSpace) :

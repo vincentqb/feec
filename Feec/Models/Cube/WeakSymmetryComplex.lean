@@ -185,17 +185,12 @@ def bggD0 : V0 →L[ℝ] V1 :=
         rw [graphDom_smul, LinearPMap.map_smul] } 1
     fun v => by
       rw [one_mul]
-      have h1 := norm_toGraphSpace_sq D1 ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩
-      have h0 : D1 ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩ = 0 := D1_D0 _
-      rw [h0, norm_zero] at h1
-      have h2 := norm_sq_graphSpace v
-      have h3 : ‖D0 (graphDom D0 v)‖ = ‖D0.graphSnd v‖ := by rw [apply_graphDom]
       change ‖D1.toGraphSpace ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩‖ ≤ ‖v‖
-      refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
-      change ‖D1.toGraphSpace ⟨D0 (graphDom D0 v), D0_mem_D1 _⟩‖ ^ 2 =
-        ‖D0 (graphDom D0 v)‖ ^ 2 + 0 ^ 2 at h1
-      rw [h1, h3]
-      nlinarith [sq_nonneg ‖D0.graphFst v‖]
+      refine (norm_toGraphSpace_le D1 _).trans ?_
+      rw [D1_D0, norm_zero, add_zero]
+      change ‖D0 (graphDom D0 v)‖ ≤ ‖v‖
+      rw [apply_graphDom]
+      exact norm_graphSnd_le v
 
 theorem graphFst_bggD0 (v : V0) : D1.graphFst (bggD0 v) = D0.graphSnd v := apply_graphDom D0 v
 
@@ -672,10 +667,9 @@ theorem seg_reg {CR : ℝ}
   refine sqrt_le_of_sq (norm_nonneg _) (norm_nonneg _) ?_
   rw [PiLp.norm_sq_eq_of_L2, PiLp.norm_sq_eq_of_L2]
   refine Finset.sum_le_sum fun a _ => ?_
-  have h1 := norm_sq_graphSpace (φ0 a)
   change ‖D0 (graphDom D0 (φ0 a))‖ ^ 2 ≤ _
-  rw [apply_graphDom, h1]
-  nlinarith [sq_nonneg ‖D0.graphFst (φ0 a)‖]
+  rw [apply_graphDom]
+  exact pow_le_pow_left₀ (norm_nonneg _) (norm_graphSnd_le (φ0 a)) 2
 
 theorem seg_boundS0 (ψ : Wv U0) :
     ‖segS0 ψ‖ ^ 2 + ‖segD1 (segS0 ψ)‖ ^ 2 ≤

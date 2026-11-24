@@ -83,9 +83,8 @@ theorem domainIncl_injective (i : ι) : Function.Injective (H.domainIncl i) :=
   graphFst_injective _
 
 theorem domainIncl_mem (i : ι) (v : H.domainSpace i) :
-    H.domainIncl i v ∈ (H.d i (c.next i)).domain := by
-  obtain ⟨x, -, hx, -⟩ := (H.d i (c.next i)).exists_toGraphSpace_eq v
-  exact hx ▸ x.2
+    H.domainIncl i v ∈ (H.d i (c.next i)).domain :=
+  (H.d i (c.next i)).graphFst_mem_domain v
 
 /-- `Vⁱ → D(d i j)`, `v ↦ ι v`. -/
 def domainCoord (i j : ι) : H.domainSpace i →ₗ[𝕜] (H.d i j).domain :=
@@ -109,7 +108,7 @@ theorem norm_d_domainCoord_le (i j : ι) (v : H.domainSpace i) :
     exact norm_nonneg _
 
 theorem norm_domainIncl_le (i : ι) (v : H.domainSpace i) : ‖H.domainIncl i v‖ ≤ ‖v‖ :=
-  WithLp.norm_fst_le (x := (v : WithLp 2 (W i × W (c.next i))))
+  norm_graphFst_le v
 
 /-- The graph-norm identity `‖v‖² = ‖ι v‖² + ‖d (ι v)‖²`. -/
 theorem norm_sq_domainSpace (i : ι) (v : H.domainSpace i) :

@@ -4280,7 +4280,7 @@ Feec.Complex3.exists_isWeakSol	Feec.HodgeWave.exists_isGraphSolution	generalize
 Feec.Complex3.gramW	Feec.HodgeWave.massForm	generalize
 Feec.Complex3.gramW_apply	Feec.HodgeWave.massForm_apply	generalize
 Feec.Complex3.gramW_bijective	Feec.HodgeWave.massFormEquiv	generalize
-Feec.Complex3.inner_mkV	-	deleted-helper
+Feec.Complex3.inner_mkV	LinearPMap.inner_graphSpace	generalize
 Feec.Complex3.inner_toW_mkV	PiLp.inner_apply	generalize
 Feec.Complex3.instAddCommGroupVSp	-	deleted-helper
 Feec.Complex3.instInnerProductSpaceRealVSp	-	deleted-helper
@@ -4289,9 +4289,9 @@ Feec.Complex3.instNormedAddCommGroupVSp	-	deleted-helper
 Feec.Complex3.isDiscreteSol_of_global	Feec.HodgeWave.IsSemidiscreteSolution.mono	generalize
 Feec.Complex3.isWeakSol_unique	Feec.HodgeWave.IsGraphSolution.eqOn	generalize
 Feec.Complex3.mkV	LinearPMap.toGraphSpace	generalize
-Feec.Complex3.mkV_add	-	deleted-helper
-Feec.Complex3.mkV_smul	-	deleted-helper
-Feec.Complex3.mkV_sub	-	deleted-helper
+Feec.Complex3.mkV_add	LinearPMap.toGraphSpace_add	generalize
+Feec.Complex3.mkV_smul	LinearPMap.toGraphSpace_smul	generalize
+Feec.Complex3.mkV_sub	LinearPMap.toGraphSpace_sub	generalize
 Feec.Complex3.mkV_vEquiv	LinearPMap.exists_toGraphSpace_eq	generalize
 Feec.Complex3.mkV_zero	-	deleted-helper
 Feec.Complex3.nV2	LinearPMap.norm_sq_graphSpace	generalize
@@ -4300,8 +4300,8 @@ Feec.Complex3.noConfusionType	-	deleted-helper
 Feec.Complex3.norm_AL_le	Feec.HodgeWave.norm_ellipticProjection_le	generalize
 Feec.Complex3.norm_ellProjFun_le	Feec.HodgeWave.norm_ellipticProjection_le	generalize
 Feec.Complex3.norm_ellProj_le	Feec.HodgeWave.norm_ellipticProjection_le	generalize
-Feec.Complex3.norm_mkV	LinearPMap.norm_sq_graphSpace	generalize
-Feec.Complex3.norm_mkV_sq	LinearPMap.norm_sq_graphSpace	generalize
+Feec.Complex3.norm_mkV	LinearPMap.norm_toGraphSpace_sq	generalize
+Feec.Complex3.norm_mkV_sq	LinearPMap.norm_toGraphSpace_sq	generalize
 Feec.Complex3.norm_projErr_le	LinearPMap.norm_graphFst_le	generalize
 Feec.Complex3.norm_toW_le	LinearPMap.norm_graphFst_le	generalize
 Feec.Complex3.one_div_sqrt12_pos	Feec.HodgeWave.infSup_shiftedForm	generalize
@@ -4318,7 +4318,7 @@ Feec.Complex3.vCore	-	deleted-helper
 Feec.Complex3.vEquiv	LinearPMap.exists_toGraphSpace_eq	generalize
 Feec.Complex3.vEquiv_mkV	LinearPMap.graphFst_toGraphSpace	generalize
 Feec.Complex3.vInner	-	deleted-helper
-Feec.Complex3.vInner_mkV	-	deleted-helper
+Feec.Complex3.vInner_mkV	LinearPMap.inner_graphSpace	generalize
 Feec.Constraints.FreqSub	-	deleted-helper
 Feec.Constraints.Freq_le_Per	-	deleted-helper
 Feec.Constraints.IsMixedWeak	Feec.HodgeWave.IsMixedWeak	generalize

@@ -447,8 +447,9 @@ fidelity:
     uniform representation of cohomology of §2 (Costabel-McIntosh). (10) The name BGG follows
     Arnold-Hu; the representation-theoretic BGG
     resolution [BernsteinGelfandGelfand1975] and the BGG sequences of Čap-Slovák-Souček are
-    background only. (11) FEEC.bggParallelepiped states the diagrams of §4.1 in differential forms
-    (the vocabulary shared with palomar/constraints and palomar/einsteinbianchi): the rows are
+    background only. (11) FEEC.bggParallelepiped states the diagrams of §4.1 and §4.2 in
+    differential forms (the vocabulary shared with palomar/constraints and
+    palomar/einsteinbianchi): the rows are
     HΛ(Omega), the weak exterior derivative dMax (the adjoint of the closure of the codifferential
     on test forms, [AFW2010], §4) on L^2(Omega; Λ) with forms indexed by subsets of Fin n, and
     HΛ(Omega) (x) R^n (vecOp, componentwise); the connecting maps are built from the exterior

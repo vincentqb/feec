@@ -8,6 +8,7 @@
     "TimeStepping.converges",
     "TimeStepping.subMarkov",
     "TimeStepping.maxNormHeat",
+    "TimeStepping.maxNormRate",
     "TimeStepping.fdHeat",
     "TimeStepping.backwardEuler_isAStable",
     "TimeStepping.crankNicolson_isAStable",

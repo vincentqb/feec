@@ -122,8 +122,19 @@ not nodes), whose maximum-norm theorem (`Feec.FiniteElement.NonobtuseMeshes.maxN
 the stability of both and the Dirichlet error estimates: its semidiscrete, backward Euler and
 rational errors are stated in terms of a bound `ε` of the nodal consistency error
 `‖Iₕ uₜ - Lₕ Iₕ u‖_∞` (`t ε` added to the initial error), which on general non-obtuse meshes need
-not tend to `0`; the rates in `h` come from the cube's uniform stencil (Dirichlet) and the barrier
-(Neumann). Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`,
+not tend to `0` (on the cross-polytope mesh `Feec.FiniteElement.crossMesh` it is `n (n - 1)/2` at
+the centre for a quadratic, `Feec.FiniteElement.abs_lumpedLaplacianOn_crossMesh_sub_laplacian`).
+Where the mesh is translation invariant at a node (`Feec.FiniteElement.IsTranslationInvariantAt`:
+the simplices at the node contain, as vertex sets, the translates of each of them moving any of its
+vertices to the node, as at the vertices of a lattice triangulation, e.g. the interior nodes of the
+Freudenthal meshes, `Feec.FiniteElement.isTranslationInvariantAt_freudenthalMesh`), the lumped-mass
+Laplacian is consistent to second order there, `|(Lₕ Iₕ u)(y) - Δu(y)| ≤ n B h² / 12` for
+`|D⁴u(d, d, d, d)| ≤ B |d|⁴` and edges of length at most `h`
+(`Feec.FiniteElement.abs_lumpedLaplacianOn_sub_laplacian_le`: opposite edges of equal weight, and
+second moments `2 m(y) I` from the energy identity of a simplex; the weights depend on the
+vertices, not on their numbering, `Feec.FiniteElement.p1Grad_congr_vertexSet`). The rates in `h` come from the
+cube's uniform stencil (Dirichlet), translation invariance (Dirichlet, any dimension) and the
+barrier (Neumann). Limitations: for rational schemes `‖Lₕ^{p+1} v‖_∞` is not bounded uniformly in `h`,
 and the uniform route loses `√k`.
 
 The regression tests of `scripts/FeecCheck/Verdicts.lean` derive the earlier conjunctions of

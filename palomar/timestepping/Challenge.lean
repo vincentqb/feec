@@ -66,10 +66,15 @@ bounded semigroups), and when is the Banach-space theory needed?
   sub-Markov generator generates positive contractions of it (`subMarkov`), so `M = 1`; the
   lumped-mass `P₁` Laplacian of every non-obtuse simplicial mesh, in every dimension, is one (the
   discrete maximum principle), and every A-stable scheme for it is `(1 + C √k)`-stable in the
-  maximum norm, with error bounds whose constants do not depend on the mesh (`maxNormHeat`). The
-  witness (`fdHeat`): finite differences on a cube are the lumped-mass method of a non-obtuse
-  mesh, and from initial data satisfying the compatibility conditions every A-stable scheme of
-  order `m` has maximum-norm error `O(h² + τᵐ)`, uniformly in `h`.
+  maximum norm, with error bounds whose constants do not depend on the mesh (`maxNormHeat`).
+  Where the mesh is translation invariant at the nodes (as a lattice triangulation), the
+  lumped-mass Laplacian is consistent to second order at the nodes, `n B h²/12` for fourth
+  derivatives bounded by `B`, so backward Euler converges at `O(τ + h²)` in the maximum norm,
+  uniformly over all such meshes; on non-obtuse meshes in general the nodal consistency error
+  need not tend to `0` (`maxNormRate`). The witness (`fdHeat`): finite differences on
+  a cube are the lumped-mass method of a non-obtuse mesh, translation invariant at the nodes, and
+  from initial data satisfying the compatibility conditions every A-stable scheme of order `m`
+  has maximum-norm error `O(h² + τᵐ)`, uniformly in `h`.
 
 Two classical inputs are stated as well: the Hille–Yosida estimates (`hilleYosida`,
 [Pazy1983], §1.5), whose resolvent `(1 - τA)⁻¹` defines `r(τA)` and is backward Euler, and von
@@ -409,6 +414,17 @@ def IsNonobtuse {n : ℕ} (M : SimplicialMesh n) : Prop :=
     p1Grad T (fun z => if z = T.points j then 1 else 0) ⬝ᵥ
       p1Grad T (fun z => if z = T.points k then 1 else 0) ≤ 0
 
+/-- The mesh `M` is **translation invariant at** `y`: for every simplex `T` of `M` with vertex
+`y` and every vertex `v` of `T`, the translate `T + (y - v)`, which moves `v` to `y`, is a simplex
+of `M`: `M` has a simplex whose vertices are those of `T` translated by `y - v` (in any
+numbering). It holds at a vertex `y` where `M` agrees with a lattice triangulation of `ℝⁿ` (a
+triangulation invariant under the translations by the differences of its vertices, such as the
+Freudenthal triangulation): the simplices of `M` with vertex `y` are those of the
+triangulation. -/
+def IsTranslationInvariantAt {n : ℕ} (M : SimplicialMesh n) (y : Fin n → ℝ) : Prop :=
+  ∀ T ∈ M.simplices, y ∈ vertexSet T → ∀ j, ∃ T' ∈ M.simplices,
+    (vertexSet T' : Set (Fin n → ℝ)) = (· + (y - T.points j)) '' (vertexSet T : Set (Fin n → ℝ))
+
 /-- **The lumped-mass heat equation in the maximum norm on non-obtuse meshes: the discrete
 maximum principle, and the stability and error bounds of every A-stable scheme with constants
 independent of the mesh** ([CiarletRaviart1973]; [Thomee2006], Ch. 15; [BrennerThomee1979]).
@@ -434,9 +450,10 @@ nodes `x : ι → ℝⁿ`, the lumped-mass Laplacian `Lₕ` on `ℝ^ι` with the
   `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ ε + K m kτ τᵐ ‖Lₕ^{m+1} v‖_∞`.
 
 The constants are independent of the mesh; the bounds are not convergence statements uniform in
-the mesh. The errors are at the nodes. The consistency error `ε` depends on the mesh (`O(h²)` on
-the Freudenthal meshes of a cube, where `Lₕ` is the finite difference Laplacian of `fdHeat`; on a
-general non-obtuse mesh it need not be small). The temporal term of the last bound is that of the
+the mesh. The errors are at the nodes. The consistency error `ε` depends on the mesh: it is
+`O(h²)` where the mesh is translation invariant at the nodes (`maxNormRate`), as on the mesh of
+the cube of `fdHeat`, whose `Lₕ` is the finite difference Laplacian, and need not tend to `0` on
+a non-obtuse mesh in general (`maxNormRate`). The temporal term of the last bound is that of the
 discrete datum `v`: it is bounded uniformly in the mesh for compatible data on a cube (`fdHeat`),
 not in general. `√k` is what the contractivity of `e^{tLₕ}` alone gives. For bounded analytic
 semigroups of Banach spaces the A-stable rational approximations, Crank–Nicolson included, are
@@ -462,6 +479,84 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
           ‖u (k * τ) ∘ x - (rationalApply p q (τ • lumpedLaplacian M x) ^ k) v‖ ≤
             ‖u 0 ∘ x - v‖ + k * τ * ε +
               K m * (k * τ) * τ ^ m * ‖(lumpedLaplacian M x ^ (m + 1)) v‖ := by
+  sorry
+
+/-- **The rate in the maximum norm where the mesh is translation invariant at the nodes:
+second-order nodal consistency, so `O(τ + h²)` for backward Euler**, for the lumped mass method
+of [Thomee2006], Ch. 15, with the bounds of `maxNormHeat` ([BrennerThomee1979]). For every
+A-stable `r = p/q` there is `K`, depending on `r` and the order only, such that for every
+non-obtuse simplicial mesh `M` of a domain of `ℝⁿ` (no shape regularity, quasi-uniformity or
+condition on the domain) and injective nodes `x : ι → ℝⁿ`, each a vertex at which `M` is
+translation invariant, and every `h` bounding the Euclidean lengths `|v - x i|` of the edges
+`[x i, v]` at the nodes (`|d|² = d ⬝ᵥ d`), with `Lₕ` the lumped-mass Laplacian, `Iₕ f = f ∘ x`
+and `Δu = Σᵢ D²u(eᵢ, eᵢ)`:
+
+* (**second-order nodal consistency**) for every `u` of class `C⁴` on `ℝⁿ` vanishing at the
+  vertices that are not nodes, with `|D⁴u(y)(d, d, d, d)| ≤ B |d|⁴` on the closed simplices,
+  `|Δu(x i) - (Lₕ Iₕ u)ᵢ| ≤ n B h²/12` at every node `i`;
+* (**backward Euler, `O(τ + h²)`**) for every `u` with `u(s)` as in the first clause for
+  `s ∈ [0, kτ]`, with `B ≥ 0`, solving `uₜ = Δu` at the nodes there (two-sided time derivative
+  `Δu(s)` of `u(s)` at the nodes, at every `s ∈ [0, kτ]`), with time derivative `u₂` of `Δu` at the
+  nodes and `‖Iₕ u₂‖_∞ ≤ B₂`, and every discrete datum `v`:
+  `‖Iₕ u(kτ) - (1 - τLₕ)⁻ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ (3/2 τ B₂ + n B h²/12)`;
+* (**every A-stable scheme**) if `r` has order `m`, for such `u` (without `u₂`) and every `v`:
+  `‖Iₕ u(kτ) - r(τLₕ)ᵏ v‖_∞ ≤ ‖Iₕ u(0) - v‖_∞ + kτ n B h²/12 + K m kτ τᵐ ‖Lₕ^{m+1} v‖_∞`.
+
+The backward Euler bound depends on the mesh through `h` only: from `v = Iₕ u(0)` it is
+`O(τ + h²)` in the maximum norm at the nodes, uniformly over all these meshes. For every A-stable
+scheme the spatial term is `O(h²)` and the temporal term is that of the datum `v`, bounded
+uniformly in `h` for compatible data on a cube (`fdHeat`). The non-obtuse mesh of the cube of
+`fdHeat` (the Freudenthal mesh, in its proof) is translation invariant at the interior nodes,
+with edges of length at most `√n` times the grid size, so these bounds apply to it with
+`h = √n s/(N + 1)`. And
+
+* (**translation invariance cannot be dropped**) in every dimension `n` and for every `h > 0`
+  the cross-polytope `{z | Σᵢ |zᵢ| < h}` has a non-obtuse mesh (in the proof, its `2ⁿ` orthant
+  simplices `conv(0, ±h e₁, …, ±h eₙ)`) with the vertex `0`, whose other vertices lie at
+  Euclidean distance `h` from `0`, on which the quadratic `u(z) = (|z|² - h²)/2` (vanishing at
+  the other vertices, `D⁴u = 0`) has nodal consistency error `n (n - 1)/2` at the single node
+  `0`: for `n ≥ 2` it does not tend to `0`, where the first clause, if it applied, would give
+  `0` (with `B = 0`). On non-obtuse meshes in general, the nodal consistency error need not tend
+  to `0`. -/
+theorem maxNormRate (p q : ℝ[X]) (hr : IsAStable p q) :
+    (∃ K : ℕ → ℝ, ∀ (n : ℕ) (M : SimplicialMesh n), IsNonobtuse M →
+      ∀ {ι : Type*} [Fintype ι] (x : ι → Fin n → ℝ), Function.Injective x →
+      (∀ i, (∃ T ∈ M.simplices, x i ∈ vertexSet T) ∧ IsTranslationInvariantAt M (x i)) →
+      ∀ h : ℝ, (∀ T ∈ M.simplices, ∀ j k, T.points j ∈ range x →
+        (T.points k - T.points j) ⬝ᵥ (T.points k - T.points j) ≤ h ^ 2) →
+      (∀ (u : (Fin n → ℝ) → ℝ) (B : ℝ), ContDiff ℝ 4 u →
+        (∀ T ∈ M.simplices, ∀ j, T.points j ∉ range x → u (T.points j) = 0) →
+        (∀ T ∈ M.simplices, ∀ y ∈ T.closedInterior, ∀ d,
+          |iteratedFDeriv ℝ 4 u y (fun _ => d)| ≤ B * (d ⬝ᵥ d) ^ 2) →
+        ∀ i, |∑ l, iteratedFDeriv ℝ 2 u (x i) (fun _ => Pi.single l 1) -
+          lumpedLaplacian M x (u ∘ x) i| ≤ n * B * h ^ 2 / 12) ∧
+      ∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u : ℝ → (Fin n → ℝ) → ℝ) (B : ℝ) (v : ι → ℝ), 0 ≤ B →
+        (∀ s ∈ Icc 0 (k * τ), ContDiff ℝ 4 (u s)) →
+        (∀ s ∈ Icc 0 (k * τ), ∀ T ∈ M.simplices, ∀ j, T.points j ∉ range x →
+          u s (T.points j) = 0) →
+        (∀ s ∈ Icc 0 (k * τ), ∀ T ∈ M.simplices, ∀ y ∈ T.closedInterior, ∀ d,
+          |iteratedFDeriv ℝ 4 (u s) y (fun _ => d)| ≤ B * (d ⬝ᵥ d) ^ 2) →
+        (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i))
+          (∑ l, iteratedFDeriv ℝ 2 (u s) (x i) (fun _ => Pi.single l 1)) s) →
+        (∀ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt
+            (fun s => ∑ l, iteratedFDeriv ℝ 2 (u s) (x i) (fun _ => Pi.single l 1))
+            (u₂ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₂ s ∘ x‖ ≤ B₂) →
+          ‖u (k * τ) ∘ x - (Ring.inverse (1 - τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * (3 / 2 * τ * B₂ + n * B * h ^ 2 / 12)) ∧
+        ∀ m : ℕ, HasOrder p q m →
+          ‖u (k * τ) ∘ x - (rationalApply p q (τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * (n * B * h ^ 2 / 12) +
+              K m * (k * τ) * τ ^ m * ‖(lumpedLaplacian M x ^ (m + 1)) v‖) ∧
+    ∀ (n : ℕ) (h : ℝ), 0 < h → ∃ M : SimplicialMesh n,
+      M.domain = {z | ∑ i, |z i| < h} ∧ IsNonobtuse M ∧
+      (∃ T ∈ M.simplices, (0 : Fin n → ℝ) ∈ vertexSet T) ∧
+      (∀ T ∈ M.simplices, ∀ j, T.points j ≠ 0 → T.points j ⬝ᵥ T.points j = h ^ 2) ∧
+      |∑ l, iteratedFDeriv ℝ 2 (fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2) 0
+          (fun _ => Pi.single l 1) -
+        lumpedLaplacian M (fun _ : Unit => (0 : Fin n → ℝ))
+          ((fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2) ∘ fun _ => 0) ()| = n * (n - 1) / 2 := by
   sorry
 
 /-- **The finite difference Laplacian** on a finite grid `G ⊆ ℤ^ι` with mesh size `h` and
@@ -500,8 +595,10 @@ and on the cube `Q = b + (0, s)ⁿ` with the grid of the `Nⁿ` interior nodes `
 the finite difference Laplacian `Δₕ`:
 
 * (**finite differences are lumped-mass `P₁` elements**) `Δₕ` is the lumped-mass Laplacian of a
-  non-obtuse mesh of `Q` on the interior nodes (in the proof, the Freudenthal mesh of the Kuhn
-  simplices `b + h (z + K_σ)`; [Freudenthal1942]), so `maxNormHeat` applies to it;
+  non-obtuse mesh of `Q` on the interior nodes, which are vertices at which the mesh is
+  translation invariant, with edges of Euclidean length at most `√n h` (in the proof, the
+  Freudenthal mesh of the Kuhn simplices `b + h (z + K_σ)`; [Freudenthal1942]), so `maxNormHeat`
+  and `maxNormRate` apply to it;
 * (**`O(h² + τᵐ)` from compatible data**) for every A-stable `r = p/q` of order `m` there is `K`,
   depending on `r` and `m` only, such that: let `u` be a classical solution of
   `uₜ = Δu = Σᵢ D²u(eᵢ, eᵢ)` on `Q` for `t ∈ [0, T]` (`u(t)` of class `C⁴` on `ℝⁿ`, with
@@ -521,6 +618,10 @@ theorem fdHeat :
       IsSubMarkovGenerator (fdLaplacian G h)) ∧
     (∀ (n N : ℕ) (b : Fin n → ℝ) (s : ℝ), 0 < s → ∃ M : SimplicialMesh n,
       M.domain = univ.pi (fun i => Ioo (b i) (b i + s)) ∧ IsNonobtuse M ∧
+      (∀ g : gridNodes n N, (∃ T ∈ M.simplices, gridPoint b (s / (N + 1 : ℕ)) g ∈ vertexSet T) ∧
+        IsTranslationInvariantAt M (gridPoint b (s / (N + 1 : ℕ)) g)) ∧
+      (∀ T ∈ M.simplices, ∀ j k,
+        (T.points k - T.points j) ⬝ᵥ (T.points k - T.points j) ≤ n * (s / (N + 1 : ℕ)) ^ 2) ∧
       lumpedLaplacian M (fun g : gridNodes n N => gridPoint b (s / (N + 1 : ℕ)) g) =
         fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ∧
     ∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →

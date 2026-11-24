@@ -31,17 +31,17 @@ public import Mathlib.Analysis.CStarAlgebra.Classes
 /-!
 # The definitions of the challenge
 
-A verbatim copy of the definitions of `Challenge.lean` (everything but its twelve theorems),
+A verbatim copy of the definitions of `Challenge.lean` (everything but its thirteen theorems),
 compiled against Mathlib alone so that their elaborated values are those of the challenge: its
 imports, opens and definitions, the rational schemes of semigroups (`TimeStepping.IsC0Semigroup`,
 `TimeStepping.generatorGraph`, `TimeStepping.rationalOfResolvent`, `TimeStepping.IsAStable`,
 `TimeStepping.HasOrder` and their companions), sub-Markov generators
 (`TimeStepping.IsSubMarkovGenerator`), the lumped-mass `P₁` method on simplicial meshes
 (`TimeStepping.SimplicialMesh`, `TimeStepping.p1Grad`, `TimeStepping.p1Stiffness`,
-`TimeStepping.lumpedMass`, `TimeStepping.lumpedLaplacian`, `TimeStepping.IsNonobtuse`) and finite
-differences (`TimeStepping.fdLaplacian`, `TimeStepping.gridNodes`, `TimeStepping.gridPoint`,
-`TimeStepping.gridInterp`). The solution imports this module and the bridges to `Feec`, and
-proves the theorems (`Solution.lean`).
+`TimeStepping.lumpedMass`, `TimeStepping.lumpedLaplacian`, `TimeStepping.IsNonobtuse`,
+`TimeStepping.IsTranslationInvariantAt`) and finite differences (`TimeStepping.fdLaplacian`,
+`TimeStepping.gridNodes`, `TimeStepping.gridPoint`, `TimeStepping.gridInterp`). The solution
+imports this module and the bridges to `Feec`, and proves the theorems (`Solution.lean`).
 
 ## References
 
@@ -193,6 +193,17 @@ def IsNonobtuse {n : ℕ} (M : SimplicialMesh n) : Prop :=
   ∀ T ∈ M.simplices, ∀ j k, j ≠ k →
     p1Grad T (fun z => if z = T.points j then 1 else 0) ⬝ᵥ
       p1Grad T (fun z => if z = T.points k then 1 else 0) ≤ 0
+
+/-- The mesh `M` is **translation invariant at** `y`: for every simplex `T` of `M` with vertex
+`y` and every vertex `v` of `T`, the translate `T + (y - v)`, which moves `v` to `y`, is a simplex
+of `M`: `M` has a simplex whose vertices are those of `T` translated by `y - v` (in any
+numbering). It holds at a vertex `y` where `M` agrees with a lattice triangulation of `ℝⁿ` (a
+triangulation invariant under the translations by the differences of its vertices, such as the
+Freudenthal triangulation): the simplices of `M` with vertex `y` are those of the
+triangulation. -/
+def IsTranslationInvariantAt {n : ℕ} (M : SimplicialMesh n) (y : Fin n → ℝ) : Prop :=
+  ∀ T ∈ M.simplices, y ∈ vertexSet T → ∀ j, ∃ T' ∈ M.simplices,
+    (vertexSet T' : Set (Fin n → ℝ)) = (· + (y - T.points j)) '' (vertexSet T : Set (Fin n → ℝ))
 
 /-- **The finite difference Laplacian** on a finite grid `G ⊆ ℤ^ι` with mesh size `h` and
 homogeneous Dirichlet data: `(Δₕ U)(p) = Σᵢ (U(p + eᵢ) - 2 U(p) + U(p - eᵢ)) / h²`, the values

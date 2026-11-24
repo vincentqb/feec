@@ -28,11 +28,16 @@ rational schemes, semigroups, bounded generators and sub-Markov generators) and 
   contractions is dissipative (`Feec.TimeStepping.re_inner_le_zero_of_norm_exp_le_one`), so that
   `Feec.TimeStepping.RationalScheme.norm_apply_le_one` bounds the scheme.
 * The maximum norm: `IsSubMarkovGenerator.norm_exp_smul_le_one` and the other sub-Markov facts of
-  `Feec.ForMathlib.Analysis.SubMarkov`; the discrete maximum principle
+  `Feec.ForMathlib.Analysis.SubMarkov`; the second-order nodal consistency of the lumped-mass
+  Laplacian where the mesh is translation invariant,
+  `Feec.FiniteElement.abs_lumpedLaplacianOn_sub_laplacian_le`, and its failure on the
+  cross-polytope mesh `Feec.FiniteElement.crossMesh`; the discrete maximum principle
   `Feec.FiniteElement.isSubMarkovGenerator_lumpedLaplacianOn` and
   `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mesh
-  `Feec.Mesh.freudenthalMesh`, non-obtuse by `Feec.FiniteElement.isNonobtuse_freudenthalMesh`,
-  whose lumped-mass Laplacian is the finite difference Laplacian
+  `Feec.Mesh.freudenthalMesh`, non-obtuse by `Feec.FiniteElement.isNonobtuse_freudenthalMesh`
+  and translation invariant at the interior nodes by
+  `Feec.FiniteElement.isTranslationInvariantAt_freudenthalMesh`, whose lumped-mass Laplacian is
+  the finite difference Laplacian
   (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`); the derivatives of the challenge as
   partial derivatives (`iteratedFDeriv_apply_single_eq_iterate`,
   `FiniteDifference.iteratedFDeriv_apply_pairs`); and the compatible-data estimate
@@ -332,6 +337,111 @@ theorem maxNormHeat (p q : ℝ[X]) (hr : IsAStable p q) :
       (fun s => u₁ s ∘ x) ε (fun s hs => hasDerivAt_pi.2 (hu s hs)) hε
     simpa using h
 
+/-- **The rate where the mesh is translation invariant at the nodes**: the second-order nodal
+consistency `Feec.FiniteElement.abs_lumpedLaplacianOn_sub_laplacian_le`, then `maxNormHeat` with
+the consistency error `n B h²/12`; the cross-polytope mesh `Feec.FiniteElement.crossMesh`
+(`Feec.FiniteElement.isNonobtuse_crossMesh`), on which the error is `n (n - 1)/2`
+(`Feec.FiniteElement.abs_lumpedLaplacianOn_crossMesh_sub_laplacian`). -/
+theorem maxNormRate (p q : ℝ[X]) (hr : IsAStable p q) :
+    (∃ K : ℕ → ℝ, ∀ (n : ℕ) (M : SimplicialMesh n), IsNonobtuse M →
+      ∀ {ι : Type*} [Fintype ι] (x : ι → Fin n → ℝ), Function.Injective x →
+      (∀ i, (∃ T ∈ M.simplices, x i ∈ vertexSet T) ∧ IsTranslationInvariantAt M (x i)) →
+      ∀ h : ℝ, (∀ T ∈ M.simplices, ∀ j k, T.points j ∈ range x →
+        (T.points k - T.points j) ⬝ᵥ (T.points k - T.points j) ≤ h ^ 2) →
+      (∀ (u : (Fin n → ℝ) → ℝ) (B : ℝ), ContDiff ℝ 4 u →
+        (∀ T ∈ M.simplices, ∀ j, T.points j ∉ range x → u (T.points j) = 0) →
+        (∀ T ∈ M.simplices, ∀ y ∈ T.closedInterior, ∀ d,
+          |iteratedFDeriv ℝ 4 u y (fun _ => d)| ≤ B * (d ⬝ᵥ d) ^ 2) →
+        ∀ i, |∑ l, iteratedFDeriv ℝ 2 u (x i) (fun _ => Pi.single l 1) -
+          lumpedLaplacian M x (u ∘ x) i| ≤ n * B * h ^ 2 / 12) ∧
+      ∀ τ : ℝ, 0 < τ → ∀ (k : ℕ) (u : ℝ → (Fin n → ℝ) → ℝ) (B : ℝ) (v : ι → ℝ), 0 ≤ B →
+        (∀ s ∈ Icc 0 (k * τ), ContDiff ℝ 4 (u s)) →
+        (∀ s ∈ Icc 0 (k * τ), ∀ T ∈ M.simplices, ∀ j, T.points j ∉ range x →
+          u s (T.points j) = 0) →
+        (∀ s ∈ Icc 0 (k * τ), ∀ T ∈ M.simplices, ∀ y ∈ T.closedInterior, ∀ d,
+          |iteratedFDeriv ℝ 4 (u s) y (fun _ => d)| ≤ B * (d ⬝ᵥ d) ^ 2) →
+        (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt (fun s => u s (x i))
+          (∑ l, iteratedFDeriv ℝ 2 (u s) (x i) (fun _ => Pi.single l 1)) s) →
+        (∀ (u₂ : ℝ → (Fin n → ℝ) → ℝ) (B₂ : ℝ),
+          (∀ s ∈ Icc 0 (k * τ), ∀ i, HasDerivAt
+            (fun s => ∑ l, iteratedFDeriv ℝ 2 (u s) (x i) (fun _ => Pi.single l 1))
+            (u₂ s (x i)) s) →
+          (∀ s ∈ Icc 0 (k * τ), ‖u₂ s ∘ x‖ ≤ B₂) →
+          ‖u (k * τ) ∘ x - (Ring.inverse (1 - τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * (3 / 2 * τ * B₂ + n * B * h ^ 2 / 12)) ∧
+        ∀ m : ℕ, HasOrder p q m →
+          ‖u (k * τ) ∘ x - (rationalApply p q (τ • lumpedLaplacian M x) ^ k) v‖ ≤
+            ‖u 0 ∘ x - v‖ + k * τ * (n * B * h ^ 2 / 12) +
+              K m * (k * τ) * τ ^ m * ‖(lumpedLaplacian M x ^ (m + 1)) v‖) ∧
+    ∀ (n : ℕ) (h : ℝ), 0 < h → ∃ M : SimplicialMesh n,
+      M.domain = {z | ∑ i, |z i| < h} ∧ IsNonobtuse M ∧
+      (∃ T ∈ M.simplices, (0 : Fin n → ℝ) ∈ vertexSet T) ∧
+      (∀ T ∈ M.simplices, ∀ j, T.points j ≠ 0 → T.points j ⬝ᵥ T.points j = h ^ 2) ∧
+      |∑ l, iteratedFDeriv ℝ 2 (fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2) 0
+          (fun _ => Pi.single l 1) -
+        lumpedLaplacian M (fun _ : Unit => (0 : Fin n → ℝ))
+          ((fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2) ∘ fun _ => 0) ()| = n * (n - 1) / 2 := by
+  obtain ⟨C, K, -, hK⟩ := maxNormHeat p q hr
+  refine ⟨⟨K, fun n M hM ι _ x hx hV h hh => ?_⟩, fun n h hh => ?_⟩
+  swap
+  · refine ⟨SimplicialMesh.ofFeec (Feec.FiniteElement.crossMesh hh), rfl, ?_, ?_, ?_, ?_⟩
+    · rw [isNonobtuse_iff, SimplicialMesh.toFeec_ofFeec]
+      exact Feec.FiniteElement.isNonobtuse_crossMesh hh
+    · refine ⟨Feec.FiniteElement.orthantSimplex hh.ne' fun _ => true,
+        (Feec.FiniteElement.mem_crossMesh_simplices hh).2 ⟨_, rfl⟩, ?_⟩
+      rw [vertexSet_eq]
+      exact Feec.Mesh.mem_vertexSet.2 ⟨0, Feec.FiniteElement.orthantSimplex_points_zero _ _⟩
+    · intro T hT j hj
+      obtain ⟨s, rfl⟩ := (Feec.FiniteElement.mem_crossMesh_simplices hh).1 hT
+      induction j using Fin.cases with
+      | zero => exact absurd (Feec.FiniteElement.orthantSimplex_points_zero _ _) hj
+      | succ l =>
+        rw [Feec.FiniteElement.orthantSimplex_points_succ, dotProduct_single, Pi.single_eq_same]
+        linear_combination h ^ 2 * Feec.FiniteElement.boolSign_mul_self (s l)
+    · have hu : ContDiff ℝ 2 fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2 := by
+        simp only [dotProduct]
+        fun_prop
+      have hΔ : ∑ l, iteratedFDeriv ℝ 2 (fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2) 0
+          (fun _ => Pi.single l 1) = laplacian (fun z : Fin n → ℝ => (z ⬝ᵥ z - h ^ 2) / 2) 0 := by
+        rw [laplacian_apply]
+        exact Finset.sum_congr rfl fun l _ =>
+          iteratedFDeriv_apply_single_eq_iterate hu l (by norm_num) 0
+      rw [hΔ, lumpedLaplacian_eq, SimplicialMesh.toFeec_ofFeec, abs_sub_comm]
+      exact Feec.FiniteElement.abs_lumpedLaplacianOn_crossMesh_sub_laplacian hh
+  have hcons : ∀ (u : (Fin n → ℝ) → ℝ) (B : ℝ), ContDiff ℝ 4 u →
+      (∀ T ∈ M.simplices, ∀ j, T.points j ∉ range x → u (T.points j) = 0) →
+      (∀ T ∈ M.simplices, ∀ y ∈ T.closedInterior, ∀ d,
+        |iteratedFDeriv ℝ 4 u y (fun _ => d)| ≤ B * (d ⬝ᵥ d) ^ 2) →
+      ∀ i, |∑ l, iteratedFDeriv ℝ 2 u (x i) (fun _ => Pi.single l 1) -
+        lumpedLaplacian M x (u ∘ x) i| ≤ n * B * h ^ 2 / 12 := by
+    intro u B hu hbd hB i
+    have hΔ : ∑ l, iteratedFDeriv ℝ 2 u (x i) (fun _ => Pi.single l 1) = laplacian u (x i) := by
+      rw [laplacian_apply]
+      exact Finset.sum_congr rfl fun l _ =>
+        iteratedFDeriv_apply_single_eq_iterate hu l (by norm_num) (x i)
+    obtain ⟨T₀, hT₀, hy₀⟩ := (hV i).1
+    rw [hΔ, lumpedLaplacian_eq, abs_sub_comm]
+    refine Feec.FiniteElement.abs_lumpedLaplacianOn_sub_laplacian_le ((isNonobtuse_iff M).1 hM)
+      hx ⟨T₀, hT₀, by rwa [← vertexSet_eq]⟩ ((isTranslationInvariantAt_iff M _).1 (hV i).2) hu
+      (fun T hT _ v hv hvx => ?_) (fun T hT hy v hv => ?_)
+      (fun T hT _ z hz d => hB T hT z hz d)
+    · obtain ⟨j, rfl⟩ := Feec.Mesh.mem_vertexSet.1 hv
+      exact hbd T hT j hvx
+    · obtain ⟨j₀, hj₀⟩ := Feec.Mesh.mem_vertexSet.1 hy
+      obtain ⟨k, rfl⟩ := Feec.Mesh.mem_vertexSet.1 hv
+      have := hh T hT j₀ k ⟨i, hj₀.symm⟩
+      rwa [hj₀] at this
+  refine ⟨hcons, fun τ hτ k u B v hB0 hu hbd hB hd => ?_⟩
+  have hε0 : (0 : ℝ) ≤ n * B * h ^ 2 / 12 := by positivity
+  have hε : ∀ s ∈ Icc 0 (k * τ), ‖(fun z => ∑ l, iteratedFDeriv ℝ 2 (u s) z
+      (fun _ => Pi.single l 1)) ∘ x - lumpedLaplacian M x (u s ∘ x)‖ ≤ n * B * h ^ 2 / 12 :=
+    fun s hs => (pi_norm_le_iff_of_nonneg hε0).2 fun i => by
+      rw [Real.norm_eq_abs]
+      exact hcons (u s) B (hu s hs) (hbd s hs) (hB s hs) i
+  have H := hK n M hM x hx
+  exact ⟨fun u₂ B₂ hu₂ hB₂ => H.2.2.1 τ hτ k u _ u₂ B₂ _ v hd hu₂ hB₂ hε,
+    fun m hm => H.2.2.2 m hm τ hτ k u _ _ v hd hε⟩
+
 /-- **The heat equation in the maximum norm by finite differences**: the discrete maximum
 principle `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mesh
 `Feec.Mesh.freudenthalMesh`, whose lumped-mass Laplacian is the finite difference Laplacian
@@ -344,6 +454,10 @@ theorem fdHeat :
       IsSubMarkovGenerator (fdLaplacian G h)) ∧
     (∀ (n N : ℕ) (b : Fin n → ℝ) (s : ℝ), 0 < s → ∃ M : SimplicialMesh n,
       M.domain = univ.pi (fun i => Ioo (b i) (b i + s)) ∧ IsNonobtuse M ∧
+      (∀ g : gridNodes n N, (∃ T ∈ M.simplices, gridPoint b (s / (N + 1 : ℕ)) g ∈ vertexSet T) ∧
+        IsTranslationInvariantAt M (gridPoint b (s / (N + 1 : ℕ)) g)) ∧
+      (∀ T ∈ M.simplices, ∀ j k,
+        (T.points k - T.points j) ⬝ᵥ (T.points k - T.points j) ≤ n * (s / (N + 1 : ℕ)) ^ 2) ∧
       lumpedLaplacian M (fun g : gridNodes n N => gridPoint b (s / (N + 1 : ℕ)) g) =
         fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ∧
     ∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →
@@ -369,11 +483,18 @@ theorem fdHeat :
           k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m) := by
   refine ⟨fun G h => ?_, fun n N b s hs =>
     ⟨SimplicialMesh.ofFeec (Feec.Mesh.freudenthalMesh b s hs (N + 1)),
-    Feec.Mesh.freudenthalMesh_domain b s hs (N + 1), ?_, ?_⟩, fun p q hr m hm => ?_⟩
+    Feec.Mesh.freudenthalMesh_domain b s hs (N + 1), ?_, fun g => ⟨?_, ?_⟩,
+    fun T hT j k => Feec.FiniteElement.dotProduct_sub_le_freudenthalMesh b hs N hT j k, ?_⟩,
+    fun p q hr m hm => ?_⟩
   · rw [fdLaplacian_eq]
     exact .ofFeec (FiniteDifference.isSubMarkovGenerator_laplacian G h)
   · rw [isNonobtuse_iff, SimplicialMesh.toFeec_ofFeec]
     exact Feec.FiniteElement.isNonobtuse_freudenthalMesh b hs (N + 1)
+  · obtain ⟨T, hT, hy⟩ := Feec.FiniteElement.exists_mem_vertexSet_of_lumpedMass_pos _
+      (Feec.Models.Cube.MaxNormHeat.lumpedMass_node_pos b hs ⟨g, g.2⟩)
+    exact ⟨T, hT, by rw [vertexSet_eq]; exact hy⟩
+  · rw [isTranslationInvariantAt_iff, SimplicialMesh.toFeec_ofFeec]
+    exact Feec.FiniteElement.isTranslationInvariantAt_freudenthalMesh b hs N g.2
   · rw [lumpedLaplacian_eq, SimplicialMesh.toFeec_ofFeec, fdLaplacian_eq]
     exact (Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq b hs N).symm
   refine ⟨hr.scheme.sharpConst m, ?_⟩

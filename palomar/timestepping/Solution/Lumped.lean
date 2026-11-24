@@ -2,6 +2,7 @@ module
 
 public import Solution.Defs
 public import Feec.Models.Cube.FiniteDifferenceHeat
+public import Feec.FiniteElement.LumpedConsistency
 
 /-!
 # Meshes and the lumped-mass `P₁` Laplacian of the challenge are those of `Feec`
@@ -14,7 +15,8 @@ other). The `P₁` gradient of the challenge, by the edge matrix, is
 lumped-mass Laplacian are those of `Feec` (`TimeStepping.lumpedLaplacian_eq`), and the gradients
 of the barycentric coordinates are `Feec.FiniteElement.baryGrad`
 (`Feec.FiniteElement.p1Grad_nodalIndicator`): non-obtuse meshes are those of `Feec`
-(`TimeStepping.isNonobtuse_iff`).
+(`TimeStepping.isNonobtuse_iff`), and translation invariance is that of `Feec`
+(`TimeStepping.isTranslationInvariantAt_iff`).
 
 ## References
 
@@ -91,5 +93,14 @@ theorem isNonobtuse_iff (M : SimplicialMesh n) :
     rw [p1Grad_eq]
     exact Feec.FiniteElement.p1Grad_nodalIndicator T.independent.injective j
   rw [e, e]
+
+/-- Translation invariance of the challenge is that of `Feec`. -/
+theorem isTranslationInvariantAt_iff (M : SimplicialMesh n) (y : Fin n → ℝ) :
+    IsTranslationInvariantAt M y ↔ Feec.FiniteElement.IsTranslationInvariantAt M.toFeec y := by
+  simp only [IsTranslationInvariantAt, Feec.FiniteElement.IsTranslationInvariantAt, vertexSet_eq]
+  refine forall₂_congr fun T _ => imp_congr_right fun _ =>
+    ⟨fun h v hv => ?_, fun h j => h _ (Feec.Mesh.points_mem_vertexSet T j)⟩
+  obtain ⟨j, rfl⟩ := Feec.Mesh.mem_vertexSet.1 hv
+  exact h j
 
 end TimeStepping

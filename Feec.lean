@@ -102,6 +102,7 @@ public import Feec.FiniteElement.InvariantForm
 public import Feec.FiniteElement.InverseEstimate
 public import Feec.FiniteElement.LocalDof
 public import Feec.FiniteElement.LocalSpace
+public import Feec.FiniteElement.LumpedConsistency
 public import Feec.FiniteElement.LumpedLaplacian
 public import Feec.FiniteElement.LumpedMass
 public import Feec.FiniteElement.LumpedMassDefect
@@ -151,6 +152,7 @@ public import Feec.ForMathlib.Analysis.QuasiOptimal
 public import Feec.ForMathlib.Analysis.SubMarkov
 public import Feec.ForMathlib.Analysis.StrongConvergence
 public import Feec.ForMathlib.Calculus.DifferenceLaplacian
+public import Feec.ForMathlib.Calculus.DirectionalSecondDifference
 public import Feec.ForMathlib.Calculus.IntervalIntegral
 public import Feec.ForMathlib.Calculus.Partial
 public import Feec.ForMathlib.Calculus.SecondDifference

@@ -223,14 +223,15 @@ a nonzero consistency defect and an inexact scheme, and exhibit both branches of
 **Discrete complexes.** `ApproxFEEC.ofComplex` (in `ApproxComplex.lean`) builds such a
 discretization from finite-dimensional Hilbert complexes `Vₕ` with their own inner products and
 cochain maps `iₕ : Vₕ → W` (Holst–Stern): the generator is the Hodge wave operator of `Vₕ`, and the
-consistency is derived from the inner-product defect `‖1 − iₕ*iₕ‖ → 0` and graph-norm
-approximation. `approxFEEC_ofComplex` adds discrete constraints: reducing subcomplexes of `Vₕ`,
-such as discrete Gauss laws, are preserved exactly. `ApproxFEEC.ofComplexCrime` (in
-`ApproxComplexCrime.lean`) drops the cochain condition: a discrete differential `𝐝ₕ` with
-`𝐝ₕ𝐝ₕ = 0` and reading maps with a cochain defect, measured weakly; `ofComplex` is its case with
-zero cochain defect. `ApproxComplexCrime.rateClass` turns complex-level rates (best
-approximation, inner-product and cochain defects) into rate classes; `rateClass_of_split` does it
-at order `min(α, β, γ)` from the three orders separately.
+consistency is derived from graph-norm approximation and the inner-product defect in the graph norm
+of `𝐝ₕ` tending to `0` (`ApproxComplex.Family.graphDefect`, the norm of `1 − iₕ*iₕ` on the graph
+space of `𝐝ₕ`; implied by `‖1 − iₕ*iₕ‖ → 0`). `approxFEEC_ofComplex` adds discrete constraints:
+reducing subcomplexes of `Vₕ`, such as discrete Gauss laws, are preserved exactly.
+`ApproxFEEC.ofComplexCrime` (in `ApproxComplexCrime.lean`) drops the cochain condition: a discrete
+differential `𝐝ₕ` with `𝐝ₕ𝐝ₕ = 0` and reading maps with a cochain defect, measured weakly;
+`ofComplex` is its case with zero cochain defect. `ApproxComplexCrime.rateClass` turns complex-level
+rates (best approximation, inner-product and cochain defects) into rate classes;
+`rateClass_of_split` does it at order `min(α, β, γ)` from the three orders separately.
 
 ## Instances
 

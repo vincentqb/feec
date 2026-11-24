@@ -30,7 +30,8 @@ the thesis' boundary conditions, `0` on TSD states for mirror boundary condition
 * **Mirror boundary conditions** (`mirrorComplex`, on `complexQℝ`, constraint `tsdQℝ`): the
   discrete solutions are those of `mirrorFEMApprox` (`mirrorComplex_sol`, the scheme (6.5)); the
   closure of the core is `tsdQℝ`; the rate classes of the complex-level rate constructor
-  `Feec.HilbertComplex.galerkinRateClass` (`mirrorComplexRate`, `mirrorComplexRateSobolev`: `O(h)`
+  `Feec.HilbertComplex.galerkinRateClass_of_isOrthogonal` (the reading maps are orthogonal;
+  `mirrorComplexRate`, `mirrorComplexRateSobolev`: `O(h)`
   for TSD data of `D(L³)` and `O(hˢ)` for TSD data in `H^{2+s}`, `0 ≤ s ≤ 1`).
 * **The thesis' boundary conditions** (`standardCubeComplex`, on `matrixComplex`, constraint
   `thesisTSD`): the discrete solutions are those of `standardCubeApprox`
@@ -504,8 +505,10 @@ theorem mirrorEllCore_orbit_closure : ∀ x ∈ (mirrorEllCore hT hB).Data, ∀ 
 boundary conditions. -/
 def mirrorComplex : ApproxComplexCrime complexQℝ ℕ :=
   ApproxComplexCrime.ofGalerkinCore (mirrorFEMApprox hT hB)
-    (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorFEMApprox_isOrthogonal hT hB)
-    (mirrorD hT hB) (mirrorD_D hT hB) (mirrorFEMApprox_L_eq hT hB) (mirrorEllCore hT hB)
+    (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
+    (ApproxComplexCrime.Family.tendsto_graphDefect_ofApproxFEEC _
+      (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ (mirrorFEMApprox_isOrthogonal hT hB))
+    (mirrorFEMApprox_L_eq hT hB) (mirrorEllCore hT hB)
     (fun _ hx => hx.2) (mirrorEllCore_galerkin hT hB) (mirrorEllCore_orbit_closure hT hB)
 
 /-- The discrete solutions of `ofComplexCrime (mirrorComplex)` are those of `mirrorFEMApprox`. -/
@@ -580,13 +583,13 @@ theorem norm_sub_mirrorEllCmp_p'_le (T : ℝ) {x : PiLp 2 SpaceQ} (hx : x ∈ mi
   exact (congrArg norm hz).trans_le (key.trans_eq (congrArg₂ (· + ·) h1 h2))
 
 /-- **The `O(h)` rate class of the mirror scheme through the complex-level front end**
-(`galerkinRateClass` of `mirrorComplex`): TSD data of `D(L³)`, class norm `‖ξ₀‖_{L³}`, order `1`
-in `h_N`, with `Cₐ = 4K` (`K = mirrorEllK`) from the Strang bound of (6.4) for the state and its
-time derivative (`ellErr_le_sobolev`). -/
+(`galerkinRateClass_of_isOrthogonal` of `mirrorComplex`): TSD data of `D(L³)`, class norm
+`‖ξ₀‖_{L³}`, order `1` in `h_N`, with `Cₐ = 4K` (`K = mirrorEllK`) from the Strang bound of (6.4)
+for the state and its time derivative (`ellErr_le_sobolev`). -/
 def mirrorComplexRate (T : ℝ) :
     (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).RateClass T :=
-  galerkinRateClass (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorFEMApprox hT hB)
-    (mirrorFEMApprox_isOrthogonal hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
+  galerkinRateClass_of_isOrthogonal (hfd := mirrorFEMApprox_finiteDimensional hT hB)
+    (mirrorFEMApprox hT hB) (mirrorFEMApprox_isOrthogonal hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
     (mirrorFEMApprox_L_eq hT hB) (mirrorEllCore hT hB) (fun _ hx => hx.2)
     (mirrorEllCore_galerkin hT hB) (mirrorEllCore_orbit_closure hT hB) T mirrorL3Data
     (fun _ hx => hx.1) mirrorL3Norm meshSize 1 (4 * mirrorEllK (C := C)) fun x hx N t ht => by
@@ -607,8 +610,8 @@ def mirrorComplexRate (T : ℝ) :
 in `H^{2+s}`, `0 ≤ s ≤ 1`, class norm `‖ξ₀‖_{2+s}`, `Cₐ = 6K`. -/
 def mirrorComplexRateSobolev (T s : ℝ) (hs0 : 0 ≤ s) (hs1 : s ≤ 1) :
     (ApproxFEEC.ofComplexCrime (mirrorComplex hT hB)).RateClass T :=
-  galerkinRateClass (hfd := mirrorFEMApprox_finiteDimensional hT hB) (mirrorFEMApprox hT hB)
-    (mirrorFEMApprox_isOrthogonal hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
+  galerkinRateClass_of_isOrthogonal (hfd := mirrorFEMApprox_finiteDimensional hT hB)
+    (mirrorFEMApprox hT hB) (mirrorFEMApprox_isOrthogonal hT hB) (mirrorD hT hB) (mirrorD_D hT hB)
     (mirrorFEMApprox_L_eq hT hB) (mirrorEllCore hT hB) (fun _ hx => hx.2)
     (mirrorEllCore_galerkin hT hB) (mirrorEllCore_orbit_closure hT hB) T (mirrorSobData s)
     (fun _ hx => hx.1) (fun x => √(sobState (2 + s) x)) meshSize s (6 * mirrorEllK (C := C))
@@ -806,8 +809,11 @@ theorem standardCubeEllCore_closure :
 dense elliptic core, the TSD constraint `thesisTSD`. -/
 def standardCubeComplex : ApproxComplexCrime matrixComplex ℕ :=
   ApproxComplexCrime.ofGalerkinCore (standardCubeApprox hT hB)
-    (hfd := standardCubeApprox_finiteDimensional hT hB) (standardCubeApprox_isOrthogonal hT hB)
-    (cubeD hT hB) (cubeD_D hT hB) (standardCubeApprox_L_eq hT hB) (standardCubeEllCore hT hB)
+    (hfd := standardCubeApprox_finiteDimensional hT hB) (cubeD hT hB) (cubeD_D hT hB)
+    (ApproxComplexCrime.Family.tendsto_graphDefect_ofApproxFEEC _
+      (hfd := standardCubeApprox_finiteDimensional hT hB) _ _
+      (standardCubeApprox_isOrthogonal hT hB))
+    (standardCubeApprox_L_eq hT hB) (standardCubeEllCore hT hB)
     le_rfl (standardCubeEllCore_galerkin hT hB)
     (fun _ _ _ _ => by rw [standardCubeEllCore_closure]; trivial)
 

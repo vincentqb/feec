@@ -205,9 +205,13 @@ at `wₕ` and `𝐝ₕwₕ`, the graph-norm best-approximation error and the coc
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.norm_residual_le`,
 `Feec.HilbertComplex.ApproxComplexCrime.ofCochainDefect`, with the defect in the graph norm), or
 vanishes for a Galerkin projection
-(`Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`: orthogonal reading maps and an existing
-core whose comparison satisfies `(1 − Lₕ) pₕ(t) = iₕ* (1 − L) e^{tL} x`; a bridge that re-reads the
-core, not a new convergence proof). `ofComplex` is the special case with
+(`Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`: reading maps whose inner-product defect
+in the graph norm tends to `0`, orthogonal ones among them, and an existing core whose comparison
+satisfies `(1 − Lₕ) pₕ(t) = iₕ* (1 − L) e^{tL} x`, so that `iₕ iₕ* → 1` on the closure of the core,
+`Feec.HilbertComplex.tendsto_incl_adjoint_galerkin`; a bridge that re-reads the core, not a new
+convergence proof; its rate classes `Feec.HilbertComplex.galerkinRateClass` take the inner-product
+defect along the comparison, `0` for orthogonal reading maps,
+`Feec.HilbertComplex.galerkinRateClass_of_isOrthogonal`). `ofComplex` is the special case with
 zero cochain defect (`Feec.HilbertComplex.ApproxComplex.toCrime`,
 `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime_toCrime`, by `rfl`, with the same comparison on
 `D(L²)`). `Feec.HilbertComplex.approxFEEC_ofComplexCrime` gives the verdict, the Strang bound, the
@@ -369,8 +373,9 @@ Limits.
   (6.5), whose discrete differential uses `S₀,ₕ = π¹S⁰` (different from `S⁰` in general; its
   reading maps are not shown to be cochain maps), is formalized through `ofComplexCrime`, not as an
   instance of `ofComplex`. The discrete spaces are
-  finite-dimensional; the inner-product defect is in operator norm; the cochain defect is
-  measured in the dual discrete graph norm at admissible states (pointwise, not uniformly).
+  finite-dimensional; the inner-product defect is measured in the graph norm of `𝐝ₕ` (at most its
+  operator norm); the cochain defect is measured in the dual discrete graph norm at admissible
+  states (pointwise, not uniformly).
 - For (6.5) the consistent-approximation hypothesis is discharged with the elliptic projection
   (6.4) as approximant (`ofGalerkinCore`): its residual vanishes by the Galerkin identity, and its
   approximation is the Strang bound of (6.4) with the weak consistency constants `K₀`, `K₁`. The
@@ -386,8 +391,8 @@ Limits.
   instance of `ofComplex` is the conforming one.
 - The split rate `rateClass_of_split` (order `min(α, β, γ)`, measure `0 ≤ m ≤ 1`) is exercised
   only by the witness `mixed`. The rates of (6.5) go through
-  `Feec.HilbertComplex.galerkinRateClass`, with the elliptic projection (6.4) as approximant
-  (residual `0`), not through the split.
+  `Feec.HilbertComplex.galerkinRateClass_of_isOrthogonal`, with the elliptic projection (6.4) as
+  approximant (residual `0`, no inner-product defect), not through the split.
 - Rate classes and cores are hypotheses on the data that each instance must supply. The
   conforming rate carries `(1 + C_P)(1 + t)²`, where the model theorems have `(1 + t)`; through
   `ofComplex` (`ConstrainedFEEC.RateClass.toCrimeRate`) it is `C + C_ι C' t`.

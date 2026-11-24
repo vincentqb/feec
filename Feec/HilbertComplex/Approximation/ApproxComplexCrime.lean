@@ -58,11 +58,11 @@ graph-norm approximation error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖
 approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖_{Vₕ} → 0` give it
 (`consistent_of_cochainDefect`, `ApproxComplexCrime.ofCochainDefect`). It also holds with a
 Galerkin projection as approximant (residual `0`): `ApproxComplexCrime.ofGalerkinCore` re-reads a
-discretization with orthogonal reading maps whose generator is `𝐝ₕ - 𝐝ₕ*` and a core whose
-comparison satisfies the Galerkin identity `(1 - Lₕ) pₕ(t) = iₕ* (1 - L) e^{tL} x` as a
-complex-level family; the cochain defect is then absorbed by the Galerkin identity and not
-computed. This bridge takes the existing core (its convergence is not re-proved) and adds the
-complex-level structure.
+discretization whose generator is `𝐝ₕ - 𝐝ₕ*`, with `‖1 - Jₕ‖_{Vₕ} → 0` (orthogonal reading maps
+are the case `Jₕ = 1`), and a core whose comparison satisfies the Galerkin identity
+`(1 - Lₕ) pₕ(t) = iₕ* (1 - L) e^{tL} x` as a complex-level family; the cochain defect is then
+absorbed by the Galerkin identity and not computed. This bridge takes the existing core (its
+convergence is not re-proved) and adds the complex-level structure.
 
 ## Main results
 
@@ -98,7 +98,9 @@ complex-level structure.
   families (`ApproxComplexCrime.feec`, `Feec.HilbertComplex.Approximation.Crown`).
 * **Galerkin cores** (`ApproxComplexCrime.ofGalerkinCore`): the discrete solutions are those of
   the given discretization (`ofComplexCrime_ofGalerkinCore_sol`), the comparison is the given one
-  (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative). Complexification of a
+  (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative), and `iₕ iₕ* → 1` on the closure of the
+  core (`tendsto_incl_adjoint_galerkin`, from the defect in the graph norm and the uniform bound,
+  `tendsto_apply_self_of_mem_closure`). Complexification of a
   differential and of Galerkin identities: `ApproxFEEC.complexifyD`,
   `ApproxFEEC.complexify_L_eq_diffWave`, `ApproxFEEC.complexify_galerkin`.
 * **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`, the rate class of the
@@ -111,7 +113,9 @@ complex-level structure.
   graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` at the approximants
   (`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖`) and cochain defect `O(m^γ)` (`0 ≤ m ≤ 1`), with
   `Cₐ' = (1 + C_ι) Cₐ + C_β + C_γ` in place of `Cₐ` (through `Family.rateData_of_split` and
-  `add_rpow_le_rpow_min`), and `error_le_of_split`; `galerkinRateClass` for Galerkin cores;
+  `add_rpow_le_rpow_min`), and `error_le_of_split`; `galerkinRateClass` for Galerkin cores
+  (approximation and inner-product defect along the comparison; `galerkinRateClass_of_isOrthogonal`
+  for orthogonal reading maps);
   `ConstrainedFEEC.RateClass.toCrimeRate`: the conforming rate classes give rate classes of
   `ofComplex` (factor `C + C_ι C' t`, `ConstrainedFEEC.RateClass.norm_sub_ofComplex_le`).
 
@@ -153,7 +157,7 @@ open _root_.Feec.HodgeWave
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-! ### Uniform convergence on compact sets, from pointwise convergence on the set -/
+/-! ### Convergence on compact sets and on closures, from pointwise convergence on the set -/
 
 /-- **Pointwise convergence to `0` on a compact set is uniform there** for a family of functions
 with a uniform Lipschitz-type bound (the centres of a finite cover by small balls lie in the
@@ -183,6 +187,34 @@ theorem eventually_forall_lt_of_tendsto_on {κ F : Type*} [SeminormedAddCommGrou
     have : M' / (M' + 1) < 1 := (div_lt_one (by linarith)).2 (by linarith)
     nlinarith
   linarith [hh z hz]
+
+/-- **Strong convergence to the identity passes to the closure** for uniformly bounded operators:
+if `‖Tᵢ‖ ≤ M` and `Tᵢ x → x` for every `x ∈ s`, then `Tᵢ x → x` for every `x` in the closure of
+`s`. -/
+theorem tendsto_apply_self_of_mem_closure {V ι : Type*} [NormedAddCommGroup V] [NormedSpace 𝕜 V]
+    {l : Filter ι} {T : ι → V →L[𝕜] V} {M : ℝ} (hM : ∀ i, ‖T i‖ ≤ M) {s : Set V}
+    (hs : ∀ x ∈ s, Tendsto (fun i => T i x) l (𝓝 x)) {x : V} (hx : x ∈ closure s) :
+    Tendsto (fun i => T i x) l (𝓝 x) := by
+  rw [Metric.tendsto_nhds]
+  intro ε hε
+  set M' := max M 0
+  have hM' : 0 ≤ M' := le_max_right _ _
+  have hM1 : M' + 1 ≠ 0 := by positivity
+  set δ := ε / (2 * (M' + 1))
+  have hδ : 0 < δ := by positivity
+  obtain ⟨y, hy, hxy⟩ := Metric.mem_closure_iff.1 hx δ hδ
+  filter_upwards [Metric.tendsto_nhds.1 (hs y hy) (ε / 2) (half_pos hε)] with i hi
+  rw [dist_eq_norm] at hi hxy ⊢
+  have e : T i x - x = T i (x - y) + (T i y - y) + (y - x) := by
+    rw [_root_.map_sub]; abel
+  have h1 : ‖T i (x - y)‖ ≤ M' * δ :=
+    ((T i).le_opNorm _).trans
+      (mul_le_mul ((hM i).trans (le_max_left _ _)) hxy.le (norm_nonneg _) hM')
+  have h2 : ‖y - x‖ < δ := by rw [norm_sub_rev]; exact hxy
+  have h3 : M' * δ + δ = ε / 2 := by simp only [δ]; field_simp
+  calc ‖T i x - x‖ ≤ ‖T i (x - y)‖ + ‖T i y - y‖ + ‖y - x‖ := by rw [e]; exact norm_add₃_le
+    _ < M' * δ + ε / 2 + δ := by linarith
+    _ = ε := by linarith
 
 /-! ### Differential spaces -/
 
@@ -498,6 +530,13 @@ theorem norm_load_add_le (h : κ) (z : PiLp 2 W) :
     _ = S.boundConst * ‖z‖ * ‖v‖ := by ring
     _ ≤ S.boundConst * ‖z‖ * (‖v‖ + ‖S.D h v‖) :=
         mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (norm_nonneg _)) (by positivity)
+
+/-- **The inner-product defect at the load**: `‖(1 - Jₕ) Bₕ z‖ ≤ 8 C ‖1 - Jₕ‖_{Vₕ} ‖z‖` (`Bₕ` is
+bounded in the discrete graph norm, `norm_load_add_le`). -/
+theorem norm_one_sub_J_load_le (h : κ) (z : PiLp 2 W) :
+    ‖(1 - S.J h) (S.load h z)‖ ≤ S.graphDefect h * (8 * S.boundConst * ‖z‖) :=
+  (S.norm_one_sub_J_apply_le h _).trans
+    (mul_le_mul_of_nonneg_left (S.norm_load_add_le h z) (S.graphDefect_nonneg h))
 
 /-! #### The Strang lemma -/
 
@@ -825,10 +864,8 @@ theorem tendsto_defect {y : PiLp 2 W} (hy : y ∈ F.A) :
       S.boundConst * ‖y - S.incl h (S.load h (y - waveExt H y))‖) F.l (𝓝 0) := by
     have := (h1.mul_const (8 * S.boundConst * ‖y - waveExt H y‖)).add (h2.const_mul S.boundConst)
     simpa using this
-  refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) hb
-  refine (S.norm_load_sub_adjoint_le h y _).trans (add_le_add ?_ le_rfl)
-  exact (S.norm_one_sub_J_apply_le h _).trans
-    (mul_le_mul_of_nonneg_left (S.norm_load_add_le h _) (S.graphDefect_nonneg h))
+  exact squeeze_zero (fun _ => norm_nonneg _) (fun h => (S.norm_load_sub_adjoint_le h y _).trans
+    (add_le_add (S.norm_one_sub_J_load_le h _) le_rfl)) hb
 
 end ApproxComplexCrime
 
@@ -1689,6 +1726,16 @@ theorem ApproxComplexCrime.Family.ofApproxFEEC_J (F : ApproxFEEC.{u} H κ)
     rw [ApproxComplexCrime.Family.inner_J, one_apply_eq_self]
     exact hF.inner_incl h v w
 
+omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
+/-- Orthogonal reading maps have no inner-product defect in the graph norm either. -/
+theorem ApproxComplexCrime.Family.tendsto_graphDefect_ofApproxFEEC (F : ApproxFEEC.{u} H κ)
+    [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (D : ∀ h, F.X h →L[𝕜] F.X h)
+    (hDD : ∀ h v, D h (D h v) = 0) (hF : F.IsOrthogonal) :
+    Tendsto (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).graphDefect F.l (𝓝 0) :=
+  tendsto_const_nhds.congr fun h =>
+    (((ApproxComplexCrime.Family.ofApproxFEEC F D hDD).graphDefect_eq_zero_iff h).2
+      (ApproxComplexCrime.Family.ofApproxFEEC_J F D hDD hF h)).symm
+
 variable (H) in
 /-- The **orbit states** of a set `Z ⊆ D(L²)`: `e^{tL} x` and `e^{tL} L x`, `x ∈ Z`, `t ≥ 0`. -/
 def orbitStates (Z : Set (PiLp 2 W)) : Set (PiLp 2 W) :=
@@ -1712,6 +1759,7 @@ section Bridge
 
 variable (F : ApproxFEEC.{u} H κ) [hfd : ∀ h, FiniteDimensional 𝕜 (F.X h)] (hF : F.IsOrthogonal)
   (D : ∀ h, F.X h →L[𝕜] F.X h) (hDD : ∀ h v, D h (D h v) = 0)
+  (hJ : Tendsto (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).graphDefect F.l (𝓝 0))
   (hL : ∀ h, F.L h = diffWave (D h)) (Z0 : F.Core) (hZ : Z0.Data ≤ H.wave.domainSq)
   (hgal : ∀ T, ∀ x ∈ Z0.Data, ∀ h, ∀ t ∈ Ico 0 T,
     (Z0.cmp T).p x h t - F.L h ((Z0.cmp T).p x h t) =
@@ -1755,10 +1803,68 @@ theorem galerkin_p'_eq {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t
     (galerkin_p_eq F D hDD hL Z0 hgal hx h ht)
   exact (uniqueDiffWithinAt_Ici t).eq_deriv _ hp hq'
 
-include hF hL hgal hZ hcl in
+include hJ hL hgal in
+/-- **`iₕ iₕ* → 1` on the closure of a Galerkin core** (for orthogonal reading maps `iₕ* = πₕ`,
+`ApproxFEEC.tendsto_incl_proj`). At a point `x` of the core the comparison `pₕ(0) = Bₕ (x - L x)`
+approximates `x` and is bounded in the discrete graph norm, so with `‖1 - Jₕ‖_{Vₕ} → 0`,
+`iₕ iₕ* x - x = iₕ iₕ* (x - iₕ pₕ(0)) - iₕ (1 - Jₕ) pₕ(0) + (iₕ pₕ(0) - x) → 0`
+(`Family.norm_one_sub_J_load_le`); the uniform bound `‖iₕ iₕ*‖ ≤ C²` carries it to the closure
+(`tendsto_apply_self_of_mem_closure`). -/
+theorem tendsto_incl_adjoint_galerkin {z : PiLp 2 W} (hz : z ∈ Z0.Data.topologicalClosure) :
+    Tendsto (fun h => F.incl h ((F.incl h).adjoint z)) F.l (𝓝 z) := by
+  set S := ApproxComplexCrime.Family.ofApproxFEEC F D hDD
+  have hC := S.boundConst_nonneg
+  refine tendsto_apply_self_of_mem_closure (T := fun h => S.incl h ∘L (S.incl h).adjoint)
+    (M := S.boundConst ^ 2) (s := (Z0.Data : Set (PiLp 2 W))) (fun h => ?_) (fun x hx => ?_)
+    (by rw [← Submodule.topologicalClosure_coe]; exact hz)
+  · refine (ContinuousLinearMap.opNorm_comp_le _ _).trans ?_
+    rw [ContinuousLinearMap.adjoint.norm_map, pow_two]
+    exact mul_le_mul (S.norm_incl_le h) (S.norm_incl_le h) (norm_nonneg _) hC
+  · have hx1 : x ∈ Z0.Data := hx
+    have hv : ∀ h, (Z0.cmp 1).p x h 0 = S.load h (x - waveExt H x) := fun h => by
+      simpa only [C0Group.S_zero_apply] using
+        galerkin_p_eq F D hDD hL Z0 hgal hx1 h (T := 1) ⟨le_rfl, one_pos⟩
+    have h1 := tendsto_iff_norm_sub_tendsto_zero.1 (Z0.tendsto_incl_p zero_le_one hx1)
+    have h2 : Tendsto (fun h => (S.boundConst ^ 2 + 1) * ‖F.incl h ((Z0.cmp 1).p x h 0) - x‖ +
+        S.boundConst * (S.graphDefect h * (8 * S.boundConst * ‖x - waveExt H x‖))) F.l
+        (𝓝 0) := by
+      simpa using (h1.const_mul (S.boundConst ^ 2 + 1)).add
+        ((hJ.mul_const (8 * S.boundConst * ‖x - waveExt H x‖)).const_mul S.boundConst)
+    rw [tendsto_iff_norm_sub_tendsto_zero]
+    refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) h2
+    set v := (Z0.cmp 1).p x h 0
+    have e : F.incl h ((F.incl h).adjoint x) - x =
+        F.incl h ((F.incl h).adjoint (x - F.incl h v)) -
+          F.incl h (v - (F.incl h).adjoint (F.incl h v)) + (F.incl h v - x) := by
+      simp only [_root_.map_sub]
+      abel
+    have b1 : ‖F.incl h ((F.incl h).adjoint (x - F.incl h v))‖ ≤
+        S.boundConst ^ 2 * ‖F.incl h v - x‖ := by
+      refine (S.norm_incl_apply_le h _).trans ?_
+      rw [pow_two, mul_assoc, norm_sub_rev (F.incl h v)]
+      exact mul_le_mul_of_nonneg_left (S.norm_adjoint_incl_apply_le h _) hC
+    have b2 : ‖F.incl h (v - (F.incl h).adjoint (F.incl h v))‖ ≤
+        S.boundConst * (S.graphDefect h * (8 * S.boundConst * ‖x - waveExt H x‖)) := by
+      refine (S.norm_incl_apply_le h _).trans (mul_le_mul_of_nonneg_left ?_ hC)
+      have hv' : v = S.load h (x - waveExt H x) := hv h
+      calc _ = ‖(1 - S.J h) v‖ := rfl
+        _ ≤ _ := by rw [hv']; exact S.norm_one_sub_J_load_le h _
+    have b3 := norm_sub_le (F.incl h ((F.incl h).adjoint (x - F.incl h v)))
+      (F.incl h (v - (F.incl h).adjoint (F.incl h v)))
+    have b4 := norm_add_le (F.incl h ((F.incl h).adjoint (x - F.incl h v)) -
+      F.incl h (v - (F.incl h).adjoint (F.incl h v))) (F.incl h v - x)
+    change ‖F.incl h ((F.incl h).adjoint x) - x‖ ≤ (S.boundConst ^ 2 + 1) * ‖F.incl h v - x‖ +
+      S.boundConst * (S.graphDefect h * (8 * S.boundConst * ‖x - waveExt H x‖))
+    rw [e]
+    nlinarith
+
+include hJ hL hgal hZ hcl in
 /-- **Convergence of the exact-load elliptic projection at the orbit states of a Galerkin core**:
 `iₕ Rₕ y → y` for `y = e^{tL} x` (the approximation of the core) and for `y = e^{tL} L x` (the
-consistency of the core, the Galerkin identity and `iₕ πₕ → 1` on the closure of the core). -/
+consistency of the core, the Galerkin identity
+`iₕ* y' - pₕ' = -(pₕ' - Lₕ pₕ) + iₕ* (y - iₕ pₕ) - (1 - Jₕ) pₕ`, `y' = e^{tL} L x`, the
+inner-product defect at the comparison `pₕ = Bₕ (y - y')`, which is bounded in the discrete graph
+norm, and `iₕ iₕ* → 1` on the closure of the core, `tendsto_incl_adjoint_galerkin`). -/
 theorem tendsto_reading_galerkin {y : PiLp 2 W} (hy : y ∈ orbitStates H Z0.Data) :
     Tendsto (fun h => ‖y - (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).incl h
       ((ApproxComplexCrime.Family.ofApproxFEEC F D hDD).load h (y - waveExt H y))‖) F.l
@@ -1790,46 +1896,62 @@ theorem tendsto_reading_galerkin {y : PiLp 2 W} (hy : y ∈ orbitStates H Z0.Dat
     have hdd : Tendsto (fun h => ‖p' h - F.L h (p h)‖) F.l (𝓝 0) := by
       have := (Z0.tendsto_defect T x hx).tendsto_at (Ico_subset_Icc_self ht)
       exact this
-    have hπ := tendsto_iff_norm_sub_tendsto_zero.1 (F.tendsto_incl_proj Z0 (hcl x hx t ht0))
-    set C := F.boundConst
-    have hC := F.boundConst_nonneg
-    have key : ∀ h, ‖y' - F.incl h (p' h)‖ ≤ ‖F.incl h (F.proj h y') - y'‖ +
-        C * (‖p' h - F.L h (p h)‖ + C * ‖F.incl h (p h) - y‖) := fun h => by
+    have hii := tendsto_iff_norm_sub_tendsto_zero.1
+      (tendsto_incl_adjoint_galerkin F D hDD hJ hL Z0 hgal (hcl x hx t ht0))
+    have hC := S.boundConst_nonneg
+    have key : ∀ h, ‖y' - F.incl h (p' h)‖ ≤ ‖F.incl h ((F.incl h).adjoint y') - y'‖ +
+        S.boundConst * (‖p' h - F.L h (p h)‖ + S.boundConst * ‖F.incl h (p h) - y‖ +
+          ‖(1 - S.J h) (p h)‖) := fun h => by
       have hg := hgal T x hx h t ht
-      rw [hF.adjoint_incl] at hg
-      have e1 : F.proj h y' - p' h = -(p' h - F.L h (p h)) + F.proj h (y - F.incl h (p h)) := by
-        have : F.L h (p h) = p h - F.proj h (y - y') := by rw [← hg]; abel
-        rw [this, _root_.map_sub (F.proj h) y (F.incl h (p h)), F.proj_incl,
-          _root_.map_sub (F.proj h) y y']
+      have e1 : (F.incl h).adjoint y' - p' h = -(p' h - F.L h (p h)) +
+          ((F.incl h).adjoint (y - F.incl h (p h)) -
+            (p h - (F.incl h).adjoint (F.incl h (p h)))) := by
+        have hLp : F.L h (p h) = p h - (F.incl h).adjoint (y - y') := by rw [← hg]; abel
+        rw [hLp]
+        simp only [_root_.map_sub]
         abel
-      have e2 : y' - F.incl h (p' h) = (y' - F.incl h (F.proj h y')) +
-          F.incl h (F.proj h y' - p' h) := by rw [_root_.map_sub]; abel
+      have e2 : y' - F.incl h (p' h) = (y' - F.incl h ((F.incl h).adjoint y')) +
+          F.incl h ((F.incl h).adjoint y' - p' h) := by rw [_root_.map_sub]; abel
+      have b1 : ‖F.incl h ((F.incl h).adjoint y' - p' h)‖ ≤
+          S.boundConst * ‖(F.incl h).adjoint y' - p' h‖ :=
+        S.norm_incl_apply_le h _
+      have b2 : ‖(F.incl h).adjoint (y - F.incl h (p h))‖ ≤
+          S.boundConst * ‖F.incl h (p h) - y‖ := by
+        rw [norm_sub_rev (F.incl h (p h))]
+        exact S.norm_adjoint_incl_apply_le h _
+      have b3 : ‖(F.incl h).adjoint y' - p' h‖ ≤ ‖p' h - F.L h (p h)‖ +
+          (S.boundConst * ‖F.incl h (p h) - y‖ + ‖(1 - S.J h) (p h)‖) := by
+        rw [e1]
+        refine (norm_add_le _ _).trans (add_le_add (norm_neg _).le ?_)
+        exact (norm_sub_le _ _).trans (add_le_add b2 (le_of_eq rfl))
       rw [e2]
       refine (norm_add_le _ _).trans (add_le_add (by rw [norm_sub_rev]) ?_)
-      refine (F.norm_incl_apply_le h _).trans (mul_le_mul_of_nonneg_left ?_ hC)
-      rw [e1]
-      refine (norm_add_le _ _).trans (add_le_add (by rw [norm_neg]) ?_)
-      refine ((F.proj h).le_opNorm _).trans ?_
-      rw [norm_sub_rev]
-      exact mul_le_mul_of_nonneg_right (F.norm_proj_le h) (norm_nonneg _)
-    have hb : Tendsto (fun h => ‖F.incl h (F.proj h y') - y'‖ +
-        C * (‖p' h - F.L h (p h)‖ + C * ‖F.incl h (p h) - y‖)) F.l (𝓝 0) := by
-      have := hπ.add ((hdd.add (hda.const_mul C)).const_mul C)
+      refine b1.trans (mul_le_mul_of_nonneg_left (b3.trans_eq (by ring)) hC)
+    have hb : Tendsto (fun h => ‖F.incl h ((F.incl h).adjoint y') - y'‖ +
+        S.boundConst * (‖p' h - F.L h (p h)‖ + S.boundConst * ‖F.incl h (p h) - y‖ +
+          S.graphDefect h * (8 * S.boundConst * ‖y - y'‖))) F.l (𝓝 0) := by
+      have := hii.add (((hdd.add (hda.const_mul S.boundConst)).add
+        (hJ.mul_const (8 * S.boundConst * ‖y - y'‖))).const_mul S.boundConst)
       simpa using this
     refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) hb
     rw [waveExt_waveGroup H hLx, ← galerkin_p'_eq F D hDD hL Z0 hZ hgal hx h ht]
-    exact key h
+    refine (key h).trans (add_le_add le_rfl (mul_le_mul_of_nonneg_left
+      (add_le_add le_rfl ?_) hC))
+    rw [show p h = S.load h (y - y') from galerkin_p_eq F D hDD hL Z0 hgal hx h ht]
+    exact S.norm_one_sub_J_load_le h _
 
-include hF hL hgal hZ hcl in
+include hJ hL hgal hZ hcl in
 /-- **An approximating family of discrete differential spaces from a Galerkin core**: an
-approximating FEEC discretization `F` with orthogonal reading maps whose generator is the Hodge
-wave operator `𝐝ₕ - 𝐝ₕ*` of a differential `𝐝ₕ`, and a core `Z0 ≤ D(L²)` whose comparison
-trajectories satisfy the **Galerkin identity** `⟪(1 - Lₕ) pₕ(t), v⟫ = ⟪(1 - L) e^{tL} x, iₕ v⟫`
-(an elliptic projection of the exact orbit, with the continuous forms on the exact state), with
-`e^{tL} L x` in the closure of the core. The admissible states are the orbit states of the core;
-consistent approximation holds with the elliptic projection as approximant (residual `0`,
-approximation from the core). The cochain defect is not required to be computed: it is absorbed
-by the Galerkin identity.
+approximating FEEC discretization `F` whose generator is the Hodge wave operator `𝐝ₕ - 𝐝ₕ*` of a
+differential `𝐝ₕ`, with inner-product defect `‖1 - Jₕ‖_{Vₕ} → 0` in the graph norm of `𝐝ₕ`
+(`0` for orthogonal reading maps, `Family.tendsto_graphDefect_ofApproxFEEC`), and a core
+`Z0 ≤ D(L²)` whose comparison trajectories satisfy the **Galerkin identity**
+`⟪(1 - Lₕ) pₕ(t), v⟫ = ⟪(1 - L) e^{tL} x, iₕ v⟫` (an elliptic projection of the exact orbit, with
+the continuous forms on the exact state), with `e^{tL} L x` in the closure of the core. The
+admissible states are the orbit states of the core; consistent approximation holds with the
+elliptic projection as approximant (residual `0`, approximation from the core,
+`tendsto_reading_galerkin`). The cochain defect is not required to be computed: it is absorbed by
+the Galerkin identity.
 
 This is a **bridge, not a new convergence proof**: it takes an existing `DissipFEEC.Core` `Z0`
 of `F` (whose approximation and consistency hypotheses were established for `F` elsewhere) and
@@ -1847,12 +1969,10 @@ def ApproxComplexCrime.ofGalerkinCore : ApproxComplexCrime.{u} H κ where
   Z := Z0.Data
   Z_le := hZ
   orbit_mem x hx t ht := ⟨⟨x, hx, t, ht, Or.inl rfl⟩, ⟨x, hx, t, ht, Or.inr rfl⟩⟩
-  tendsto_graphDefect := tendsto_const_nhds.congr fun h =>
-    (((ApproxComplexCrime.Family.ofApproxFEEC F D hDD).graphDefect_eq_zero_iff h).2
-      (ApproxComplexCrime.Family.ofApproxFEEC_J F D hDD hF h)).symm
+  tendsto_graphDefect := hJ
   consistent y hy ε hε := by
     set S := ApproxComplexCrime.Family.ofApproxFEEC F D hDD
-    filter_upwards [(tendsto_order.1 (tendsto_reading_galerkin F hF D hDD hL Z0 hZ hgal hcl
+    filter_upwards [(tendsto_order.1 (tendsto_reading_galerkin F D hDD hJ hL Z0 hZ hgal hcl
       hy)).2 ε hε] with h hh
     refine ⟨S.load h (y - waveExt H y), hh.le, fun v => ?_⟩
     rw [S.inner_load_sub, sub_self, norm_zero]
@@ -1862,33 +1982,43 @@ include hL in
 /-- **The discrete solutions are those of `F`**: `ofComplexCrime` of the Galerkin family has the
 spaces, reading maps and (by `Lₕ = 𝐝ₕ - 𝐝ₕ*`) the generators of `F`. -/
 theorem ofComplexCrime_ofGalerkinCore_sol (h : κ) (v : F.X h) (t : ℝ) :
-    (ApproxFEEC.ofComplexCrime (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal
+    (ApproxFEEC.ofComplexCrime (ApproxComplexCrime.ofGalerkinCore F D hDD hJ hL Z0 hZ hgal
       hcl)).sol h v t = F.sol h v t := by
   change F.incl h ((C0Group.ofBounded (diffWave (D h))).S t v) =
     F.incl h ((C0Group.ofBounded (F.L h)).S t v)
   rw [hL]
 
-include hF hL hgal hZ hcl in
+include hJ hL hgal hZ hcl in
 /-- **Rates of a Galerkin family**: approximation estimates of the Galerkin comparison and of its
 derivative along the trajectory, `‖e^{tL} x - iₕ pₕ(t)‖`,
-`‖e^{tL} L x - iₕ pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c` on `[0, T]` (horizon `T + 1` of the core), give the
-complex-level rate data with the elliptic projection as approximant (residual `0`, `Jₕ = 1`), hence
-a rate class of `ofComplexCrime` (`ApproxComplexCrime.rateClass`). The estimates `happ` are rates of
-the given core; this transports them to the complex-level constants, it does not derive them. -/
+`‖e^{tL} L x - iₕ pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c` on `[0, T]` (horizon `T + 1` of the core), and the
+inner-product defect at them, `‖(1 - Jₕ) pₕ(t)‖, ‖(1 - Jₕ) pₕ'(t)‖ ≤ Cₐ m(h)ᵅ ‖x‖_c`, give the
+complex-level rate data with the elliptic projection as approximant (residual `0`), hence a rate
+class of `ofComplexCrime` (`ApproxComplexCrime.rateClass`). The defect along the comparison
+vanishes for orthogonal reading maps (`galerkinRateClass_of_isOrthogonal`), and it is at most
+`8 C ‖1 - Jₕ‖_{Vₕ} ‖y - L y‖` at `y = e^{tL} x` and `y = e^{tL} L x`
+(`pₕ = Bₕ (y - L y)`, `Family.norm_one_sub_J_load_le`). The estimates `happ` are rates of the given
+core; this transports them to the complex-level constants, it does not derive them. -/
 def galerkinRateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (Z0.Data : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
     (happ : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T,
       ‖H.waveGroup.S t x - F.incl h ((Z0.cmp (T + 1)).p x h t)‖ ≤ Ca * m h ^ α * cn x ∧
       ‖H.waveGroup.S t (waveExt H x) - F.incl h ((Z0.cmp (T + 1)).p' x h t)‖ ≤
+        Ca * m h ^ α * cn x)
+    (hdef : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T,
+      ‖(1 - (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).J h) ((Z0.cmp (T + 1)).p x h t)‖ ≤
+        Ca * m h ^ α * cn x ∧
+      ‖(1 - (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).J h) ((Z0.cmp (T + 1)).p' x h t)‖ ≤
         Ca * m h ^ α * cn x) :
     (ApproxFEEC.ofComplexCrime
-      (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal hcl)).RateClass T :=
-  (ApproxComplexCrime.ofGalerkinCore F hF D hDD hL Z0 hZ hgal hcl).rateClass T Dc hDc cn m α Ca
+      (ApproxComplexCrime.ofGalerkinCore F D hDD hJ hL Z0 hZ hgal hcl)).RateClass T :=
+  (ApproxComplexCrime.ofGalerkinCore F D hDD hJ hL Z0 hZ hgal hcl).rateClass T Dc hDc cn m α Ca
     fun x hx h t ht y hy => by
       set S := ApproxComplexCrime.Family.ofApproxFEEC F D hDD
       have hx2 := hZ (hDc hx)
       have hT1 : t ∈ Ico 0 (T + 1) := ⟨ht.1, by linarith [ht.2]⟩
       obtain ⟨ha, ha'⟩ := happ x hx h t ht
+      obtain ⟨hd, hd'⟩ := hdef x hx h t ht
       have hε : 0 ≤ Ca * m h ^ α * cn x := (norm_nonneg _).trans ha
       refine ⟨S.load h (y - waveExt H y), ?_, ?_, fun v => ?_⟩
       · rcases hy with rfl | hy
@@ -1900,20 +2030,52 @@ def galerkinRateClass (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (Z0.Data : S
           rw [waveExt_waveGroup H (waveExt_mem_domain H hx2),
             ← galerkin_p'_eq F D hDD hL Z0 hZ hgal (hDc hx) h hT1]
           exact ha'
-      · change ‖(1 - S.J h) _‖ ≤ _
-        refine ((1 - S.J h).le_opNorm _).trans ?_
-        rw [ApproxComplexCrime.Family.ofApproxFEEC_J F D hDD hF h, sub_self, norm_zero, zero_mul]
-        exact hε
+      · rcases hy with rfl | hy
+        · rw [waveExt_waveGroup H (domainSq_le_domain hx2),
+            ← galerkin_p_eq F D hDD hL Z0 hgal (hDc hx) h hT1]
+          exact hd
+        · rw [Set.mem_singleton_iff] at hy
+          subst hy
+          rw [waveExt_waveGroup H (waveExt_mem_domain H hx2),
+            ← galerkin_p'_eq F D hDD hL Z0 hZ hgal (hDc hx) h hT1]
+          exact hd'
       · refine (le_of_eq ?_).trans (mul_nonneg hε (add_nonneg (norm_nonneg _) (norm_nonneg _)))
         exact (congrArg norm (sub_eq_zero.2 (S.inner_load_sub h (y - waveExt H y) v))).trans
           norm_zero
 
-theorem galerkinRateClass_p (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca) (happ)
+theorem galerkinRateClass_p (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca) (happ) (hdef)
     {x : PiLp 2 W} (hx : x ∈ Dc) (h : κ) {t : ℝ} (ht : t ∈ Ico 0 (T + 1)) :
-    (galerkinRateClass F hF D hDD hL Z0 hZ hgal hcl T Dc hDc cn m α Ca happ).p x h t =
+    (galerkinRateClass F D hDD hJ hL Z0 hZ hgal hcl T Dc hDc cn m α Ca happ hdef).p x h t =
       (Z0.cmp (T + 1)).p x h t :=
   (ApproxFEEC.loadRitz_cmp_p _ T (domainSq_le_domain (hZ (hDc hx))) h ht.1).trans
     (galerkin_p_eq F D hDD hL Z0 hgal (hDc hx) h ht).symm
+
+include hF hL hgal hZ hcl in
+/-- **Rates of a Galerkin family with orthogonal reading maps**: there the inner-product defect
+vanishes (`Family.ofApproxFEEC_J`), and the approximation estimates of the comparison and of its
+derivative give the rate class (`galerkinRateClass`, with the same constants). -/
+def galerkinRateClass_of_isOrthogonal (T : ℝ) (Dc : Set (PiLp 2 W))
+    (hDc : Dc ⊆ (Z0.Data : Set (PiLp 2 W))) (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α Ca : ℝ)
+    (happ : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T,
+      ‖H.waveGroup.S t x - F.incl h ((Z0.cmp (T + 1)).p x h t)‖ ≤ Ca * m h ^ α * cn x ∧
+      ‖H.waveGroup.S t (waveExt H x) - F.incl h ((Z0.cmp (T + 1)).p' x h t)‖ ≤
+        Ca * m h ^ α * cn x) :
+    (ApproxFEEC.ofComplexCrime (ApproxComplexCrime.ofGalerkinCore F D hDD
+      (ApproxComplexCrime.Family.tendsto_graphDefect_ofApproxFEEC F D hDD hF) hL Z0 hZ hgal
+        hcl)).RateClass T :=
+  galerkinRateClass F D hDD (ApproxComplexCrime.Family.tendsto_graphDefect_ofApproxFEEC F D hDD hF)
+    hL Z0 hZ hgal hcl T Dc hDc cn m α Ca happ fun x hx h t ht => by
+    have hε : 0 ≤ Ca * m h ^ α * cn x := (norm_nonneg _).trans (happ x hx h t ht).1
+    have h0 : ‖1 - (ApproxComplexCrime.Family.ofApproxFEEC F D hDD).J h‖ = 0 := by
+      rw [ApproxComplexCrime.Family.ofApproxFEEC_J F D hDD hF h, sub_self, norm_zero]
+    exact ⟨(ContinuousLinearMap.le_opNorm _ _).trans (by rw [h0, zero_mul]; exact hε),
+      (ContinuousLinearMap.le_opNorm _ _).trans (by rw [h0, zero_mul]; exact hε)⟩
+
+theorem galerkinRateClass_of_isOrthogonal_p (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc) (cn) (m) (α Ca)
+    (happ) {x : PiLp 2 W} (hx : x ∈ Dc) (h : κ) {t : ℝ} (ht : t ∈ Ico 0 (T + 1)) :
+    (galerkinRateClass_of_isOrthogonal F hF D hDD hL Z0 hZ hgal hcl T Dc hDc cn m α Ca happ).p x h
+        t = (Z0.cmp (T + 1)).p x h t :=
+  galerkinRateClass_p F D hDD _ hL Z0 hZ hgal hcl T Dc hDc cn m α Ca happ _ hx h ht
 
 end Bridge
 

@@ -152,8 +152,8 @@ theorem einsteinBianchi_mirror_crankNicolson_rate :
         (mirrorComplexRate hT hB T).p x N 0 = mirrorEllInit hT hB x N) ∧
       mirrorL3Data ⊆ complexQℝ.wave.domain :=
   ⟨dissipFEEC_fullyDiscrete _ _, fun T hT0 x hx N =>
-    (galerkinRateClass_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ _ _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
+    (galerkinRateClass_of_isOrthogonal_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _
+      _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
       (mirrorEllCmp_p_zero_eq_init hT hB (T + 1) x N),
     fun _ hx => LinearPMap.domainSq_le_domain hx.1.2⟩
 

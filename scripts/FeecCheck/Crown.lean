@@ -3441,8 +3441,8 @@ theorem eb_old_mirrorFEM_ofComplexCrime_rate {x : PiLp 2 SpaceQ} (hx : x ∈ mir
   have h := (mirrorComplex hT hB).error_le_of_rateClass (mirrorComplexRate hT hB t) hx N
     ⟨ht, le_rfl⟩
   have hp : (mirrorComplexRate hT hB t).p x N 0 = mirrorEllInit hT hB x N :=
-    (galerkinRateClass_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ _ _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
+    (galerkinRateClass_of_isOrthogonal_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _
+      _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
       (mirrorEllCmp_p_zero_eq_init hT hB (t + 1) x N)
   rw [hp, mirrorComplex_sol] at h
   refine h.trans_eq ?_
@@ -3462,8 +3462,8 @@ theorem eb_old_mirrorFEM_ofComplexCrime_rate_sobolev {s : ℝ} (hs0 : 0 ≤ s)
   have h := (mirrorComplex hT hB).error_le_of_rateClass
     (mirrorComplexRateSobolev hT hB t s hs0 hs1) hx N ⟨ht, le_rfl⟩
   have hp : (mirrorComplexRateSobolev hT hB t s hs0 hs1).p x N 0 = mirrorEllInit hT hB x N :=
-    (galerkinRateClass_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _ _ _ _ _ _ _ _ _ _
-      _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
+    (galerkinRateClass_of_isOrthogonal_p (hfd := mirrorFEMApprox_finiteDimensional hT hB) _ _
+      _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ hx N ⟨le_rfl, by linarith⟩).trans
       (mirrorEllCmp_p_zero_eq_init hT hB (t + 1) x N)
   rw [hp, mirrorComplex_sol] at h
   exact h

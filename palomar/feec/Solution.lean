@@ -150,6 +150,10 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson NNReal),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
         ∀ ξ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}), w ξ s = torusD u ξ s.1) ∧
+      (∀ k (u : TorusForm n k) s ξ, UnitAddTorus.mFourierCoeff (torusInv u s) ξ = u ξ s) ∧
+      (∀ k, Function.Surjective fun u : TorusForm n k => torusInv u) ∧
+      (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)),
+        (u, w) ∈ (H.d k (k + 1)).graph ↔ IsWeakTorusD (torusInv u) (torusInv w)) ∧
       F.l = atTop ∧
       (∀ N k (u : TorusForm n k), u ∈ (F.V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0) ∧
       (∀ N k (x : (H.d k (k + 1)).domain) ξ, ((F.π N).π k x : TorusForm n k) ξ =
@@ -169,9 +173,10 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
       (∀ s k, J.B s k = 1) ∧ ∀ s k L (x : TorusForm n k), J.Reg s k L x ↔
         IsTorusSobolev s L x ∧
           ∀ hx : x ∈ (H.d k (k + 1)).domain, IsTorusSobolev s L (H.d k (k + 1) ⟨x, hx⟩) :=
-  ⟨Torus.complexC n, Torus.family n, Torus.jackson n, Torus.mem_graph_iff, rfl, Torus.mem_V_iff,
-    Torus.π_apply, fun _ => inferInstance, Torus.finrank_harmonic, fun _ => Torus.V_ne_top,
-    Torus.isClosed_boundaries, Torus.poincareBy,
+  ⟨Torus.complexC n, Torus.family n, Torus.jackson n, Torus.mem_graph_iff,
+    Torus.mFourierCoeff_torusInv, Torus.torusInv_surjective, Torus.mem_graph_iff_isWeakTorusD, rfl,
+    Torus.mem_V_iff, Torus.π_apply, fun _ => inferInstance, Torus.finrank_harmonic,
+    fun _ => Torus.V_ne_top, Torus.isClosed_boundaries, Torus.poincareBy,
     ((projectionFEEC atTop (Torus.family n).V).2 Torus.isClosed_boundaries).1
       ⟨Torus.family n, rfl, rfl, fun k => ⟨1, Torus.isGraphBoundedBy k⟩⟩,
     Torus.isGraphBoundedBy, Torus.norm_π_le, Torus.approximates, Torus.approximatesOn,

@@ -12,7 +12,9 @@ The challenge's de Rham complex of the torus `𝕋ⁿ` in Fourier coefficients i
 `Feec.Models.Torus.DeRham.L2Form (Fin n)`), and the challenge's family `Torus.family` is that of
 the band subcomplexes with the Fourier truncations (`Feec.Models.Torus.DeRham.bandSubcomplex`,
 `Feec.Models.Torus.DeRham.bandProj`). This file reads the clauses of the witness off `Feec`: the
-multiplier `torusD` (`Feec.Fourier.Exterior.deRham_m_succ_apply`), closed ranges and the
+multiplier `torusD` (`Feec.Fourier.Exterior.deRham_m_succ_apply`), the weak exterior derivative
+through the inverse Fourier transform `torusInv` (`Feec.Models.Torus.DeRham.mem_graph_iff_isWeak`,
+`Feec.Models.Torus.DeRham.isWeak_deRham_iff`), closed ranges and the
 Poincaré inequality (`Feec.Models.Torus.DeRham.closedRangeAt`,
 `Feec.Models.Torus.DeRham.norm_le_of_mem_orthogonal`), the harmonic forms
 (`Feec.Models.Torus.DeRham.finrank_harmonic`), the band-limited forms and the truncations
@@ -97,6 +99,49 @@ theorem mem_graph_iff (k : ℤ) (u : TorusForm n k) (w : TorusForm n (k + 1)) :
       change MemLp _ 2 _
       exact (Lp.memLp w).ae_eq (ae_of_all _ hw)
     exact (LinearPMap.mem_graph_iff _).2 ⟨⟨u, hu⟩, rfl, (hd ⟨u, hu⟩).2 fun ξ => (hw ξ).symm⟩
+
+/-! ### The weak exterior derivative -/
+
+/-- **The challenge's inverse Fourier transform is the inverse of `Feec`'s coefficient isometry**
+`Feec.Fourier.Torus.fieldFourier`: the Fourier series of an `L²` function sums to it in `L²`
+(`UnitAddTorus.hasSum_mFourier_series_L2`). -/
+theorem torusInv_eq {k : ℤ} (u : TorusForm n k) (s : {s : Finset (Fin n) // (s.card : ℤ) = k}) :
+    torusInv u s = (Feec.Fourier.Torus.fieldFourier (Fin n) _).symm u s := by
+  have hc : ∀ ξ, UnitAddTorus.mFourierCoeff
+      ((Feec.Fourier.Torus.fieldFourier (Fin n) _).symm u s) ξ = u ξ s := fun ξ => by
+    rw [← Feec.Fourier.Torus.fieldFourier_apply, LinearIsometryEquiv.apply_symm_apply]
+  have h := UnitAddTorus.hasSum_mFourier_series_L2
+    ((Feec.Fourier.Torus.fieldFourier (Fin n) _).symm u s)
+  simp_rw [hc] at h
+  exact h.tsum_eq
+
+/-- **The Fourier coefficients of `torusInv u` are `u`.** -/
+theorem mFourierCoeff_torusInv (k : ℤ) (u : TorusForm n k)
+    (s : {s : Finset (Fin n) // (s.card : ℤ) = k}) (ξ : Fin n → ℤ) :
+    UnitAddTorus.mFourierCoeff (torusInv u s) ξ = u ξ s := by
+  rw [torusInv_eq]
+  exact (Feec.Fourier.Torus.fieldFourier_apply _ ξ s).symm.trans
+    (by rw [LinearIsometryEquiv.apply_symm_apply])
+
+/-- **Every `L²` form is `torusInv` of its Fourier coefficients** (`torusInv_eq`: `torusInv` is
+the inverse of the isometry `Feec.Fourier.Torus.fieldFourier`). -/
+theorem torusInv_surjective (k : ℤ) : Function.Surjective fun u : TorusForm n k => torusInv u :=
+  fun f => ⟨Feec.Fourier.Torus.fieldFourier (Fin n) _ (WithLp.toLp 2 f), funext fun s => by
+    dsimp only; rw [torusInv_eq, LinearIsometryEquiv.symm_apply_apply]⟩
+
+/-- **The graph of `d` is the weak exterior derivative of `L²(𝕋ⁿ; Λᵏ)`**, through `torusInv`:
+`Feec.Models.Torus.DeRham.mem_graph_iff_isWeak` at the forms with coefficients `u`, `w`, read
+coefficientwise by `Feec.Models.Torus.DeRham.isWeak_deRham_iff`. -/
+theorem mem_graph_iff_isWeakTorusD (k : ℤ) (u : TorusForm n k) (w : TorusForm n (k + 1)) :
+    (u, w) ∈ ((complexC n).d k (k + 1)).graph ↔ IsWeakTorusD (torusInv u) (torusInv w) := by
+  have h := Feec.Models.Torus.DeRham.mem_graph_iff_isWeak
+    ((Feec.Fourier.Torus.fieldFourier (Fin n) _).symm u)
+    ((Feec.Fourier.Torus.fieldFourier (Fin n) _).symm w)
+  simp only [LinearIsometryEquiv.apply_symm_apply] at h
+  refine h.trans ((Feec.Models.Torus.DeRham.isWeak_deRham_iff _ _).trans ?_)
+  unfold IsWeakTorusD
+  simp only [torusInv_eq, Feec.Fourier.TorusWeak.partialT_eq_deriv]
+  exact Iff.rfl
 
 theorem mem_V_iff (N : ℕ) (k : ℤ) (u : TorusForm n k) :
     u ∈ ((family n).V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0 := by

@@ -19,8 +19,9 @@ honest definition of weak derivative: the test functions are **all** smooth func
 ## Definitions
 
 * `proj : ℝᵈ → 𝕋ᵈ`, the covering map. `IsSmooth φ`: the `ℤᵈ`-periodic lift `φ ∘ proj` is `C^∞`.
-  `partialT c φ x = d/dt φ(x + t e_c)|_{t=0}`; on smooth `φ` it is the classical partial
-  derivative of the lift (`partialT_proj`).
+  `partialT c φ x = d/dt φ(x + t e_c)|_{t=0}`, the translation `t e_c` taken in `𝕋ᵈ`
+  (`partialT_eq_deriv`); on smooth `φ` it is the classical partial derivative of the lift
+  (`partialT_proj`).
 * `IsWeakFO α f g` (`g = Σ_{c,p} α_{cp} ∂_c f_p` weakly): `∫ Σ α_{cp} f_p ∂_c φ = -∫ g φ` for every
   smooth `φ` (the bilinear pairing of distributions). `HasWeakPartial j f g` is the scalar case
   `g = ∂_j f`.
@@ -119,6 +120,20 @@ theorem single_eq_smul (c : d) (t : ℝ) :
 /-- The partial derivative `∂_c φ (x) = d/dt φ(x + t e_c)|_{t=0}` of a function on `𝕋ᵈ`. -/
 def partialT (c : d) (φ : UnitAddTorus d → ℂ) (x : UnitAddTorus d) : ℂ :=
   deriv (fun t : ℝ => φ (x + proj (Pi.single c t))) 0
+
+omit [Fintype d] in
+/-- The covering map of a coordinate vector: `proj (t e_c) = t e_c` in `𝕋ᵈ`. -/
+theorem proj_single (c : d) (t : ℝ) : proj (Pi.single c t) = Pi.single c (t : UnitAddCircle) := by
+  funext i
+  by_cases h : i = c
+  · subst h; simp [proj]
+  · simp [proj, h]
+
+omit [Fintype d] in
+/-- `∂_c φ (x) = d/dt φ(x + t e_c)|_{t=0}`, the translation `t e_c` taken in `𝕋ᵈ`. -/
+theorem partialT_eq_deriv (c : d) (φ : UnitAddTorus d → ℂ) (x : UnitAddTorus d) :
+    partialT c φ x = deriv (fun t : ℝ => φ (x + Pi.single c (t : UnitAddCircle))) 0 := by
+  simp only [partialT, proj_single]
 
 /-- Smooth functions on `𝕋ᵈ`: those whose `ℤᵈ`-periodic lift to `ℝᵈ` is `C^∞`. -/
 def IsSmooth (φ : UnitAddTorus d → ℂ) : Prop := ContDiff ℝ (⊤ : ℕ∞) (φ ∘ proj)

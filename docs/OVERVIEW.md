@@ -675,8 +675,9 @@ on the cube `(0, ½)ⁿ` these facts are proved, and on parallelepipeds by affin
 * `𝕋ᵈ` and `ℝᵈ` (`Feec.Models.Torus`, `Feec.Models.Euclidean`, built on `Feec.Fourier`): symbol
   complexes of Fourier multipliers, for de Rham in every dimension and degree, grad–curl, (4.16)
   and the BGG complex (5.1); the Fourier spaces are identified with the weak-derivative spaces
-  (`Feec.Fourier.Weak`), and real fields are the fixed points of a conjugation
-  (`Feec.Fourier.Reality`).
+  (`Feec.Fourier.Weak`, `Feec.Fourier.TorusWeak`; on `𝕋ᵈ`, the de Rham differential is the weak
+  exterior derivative, `Feec.Models.Torus.DeRham.mem_graph_iff_isWeak`), and real fields are the
+  fixed points of a conjugation (`Feec.Fourier.Reality`).
 * Bounded open sets of `ℝⁿ` (`Feec.Domain`, `Feec.Models.BoundedDomain`): `L²` fields,
   constant-coefficient operators and their minimal and maximal realizations, with the adjoint of
   one being the other. Density of `L²(TSD) ∩ H̊(curl)` in `L²(TSD₀)` is proved for domains

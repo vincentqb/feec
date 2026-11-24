@@ -56,7 +56,12 @@ project:
     of the three theorems, rates included: on the torus T^n = R^n/Z^n (n >= 1), the L2 de Rham
     complex in Fourier coefficients (k-forms l2(Z^n; Lambda^k), TorusForm; d the multiplier
     (du)(xi)_s = 2 pi i sum_{j in s} eps(j, s) xi_j u(xi)_{s - j}, torusD, on its maximal domain,
-    stated through its graph), with the spectral Galerkin spaces of band-limited forms
+    stated through its graph, and this graph is exactly the weak exterior derivative of
+    L2(T^n; Lambda^k) through the inverse Fourier transform torusInv, a bijection onto the L2 forms
+    whose inverse is the Fourier coefficients: (u, w) lies in it iff f = torusInv u and
+    g = torusInv w have int g_s phi = -sum_{j in s} eps(j, s) int f_{s - j} d_j phi for every
+    (k + 1)-subset s and every smooth phi on T^n, IsWeakTorusD), with the spectral Galerkin spaces
+    of band-limited forms
     |xi|_inf <= N and the Fourier truncations as cochain projections: the harmonic forms are
     finite-dimensional in every degree, of dimension (n choose k) in degree k (the constant
     forms), and no band space of a degree 0 <= k <= n is the whole space; the ranges are closed (a hypothesis of Theorems 1 and 3), the
@@ -204,7 +209,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: the three theorems FEEC.projectionFEEC, FEEC.staticFEEC and
-    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 643 lines). The
+    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 681 lines). The
     theorems restate the former compared theorems
     FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated, FEEC.staticFEEC_uniform,
     FEEC.exists_cochainProjection and FEEC.exists_subcomplexFamily_iff with no conclusion dropped,
@@ -229,8 +234,10 @@ status:
     palomar/constraints (FEEC.constraint_propagation); the BGG theorems of [ArnoldHu2021] in
     palomar/bgg; the weak-symmetry theorem in palomar/einsteinbianchi. Not compared, proved in
     Feec: the explicit constants, the spatial heat rates, the uniform fully discrete rates,
-    leapfrog, Runge-Kutta, bounded perturbations, and the identification of the Fourier
-    multipliers of the torus with weak derivatives (Feec.Fourier.TorusWeak.mem_graph_iff_isWeak).
+    leapfrog, Runge-Kutta, bounded perturbations, and the identification with weak derivatives of
+    the torus Fourier multipliers of the other first-order symbols
+    (Feec.Fourier.TorusWeak.mem_graph_iff_isWeak; that of the de Rham symbol is a conjunct of the
+    witness).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -336,12 +343,23 @@ fidelity:
     characterized by its graph, {(u, w) | w(xi)_s = torusD u xi s for all xi, s} (the maximal
     multiplier by the symbol 2 pi i xi wedge), and the family by its spaces (u(xi) = 0 for
     |xi|_inf > N) and projections (the truncation of the coefficients). By Parseval these are the
-    L2 de Rham complex of T^n and its trigonometric polynomials of degree <= N in each variable;
-    that the multiplier is the weak exterior derivative of L2(T^n; Lambda^k) is not part of the
-    statement (Feec proves that the torus multiplier of every first-order constant-coefficient
-    symbol, linear in the frequency as this one is, is the weak realization of its operator,
-    Feec.Fourier.TorusWeak.mem_graph_iff_isWeak; the instance for this symbol is not stated in
-    Feec, and none of it is compared). The hypotheses of Theorem 1 (the discrete Poincare
+    L2 de Rham complex of T^n and its trigonometric polynomials of degree <= N in each variable,
+    and the witness states the identification of d with the weak exterior derivative: the inverse
+    Fourier transform torusInv u (in each coefficient dx_s, the L2 sum of the Fourier series
+    sum_xi u(xi)_s e^{2 pi i xi.x}, for the Haar probability measure torusHaar of Mathlib's
+    Fourier series on UnitAddTorus) has the Fourier coefficients u (UnitAddTorus.mFourierCoeff)
+    and every L2 form is one (torusInv is onto), so torusInv is the inverse of Parseval's isometry,
+    and (u, w) is in the graph of d iff IsWeakTorusD (torusInv u) (torusInv w): with
+    f = torusInv u and g = torusInv w, for every (k + 1)-subset s and every smooth phi : T^n -> C
+    (its Z^n-periodic lift is C^infinity; all smooth functions, not only trigonometric
+    polynomials), int g_s phi = -sum_{j in s} eps(j, s) int f_{s - j} d_j phi, d_j the derivative
+    along the j-th circle: the coefficients of df in the sense of distributions,
+    equivalently int <delta phi, f> = int <phi, g> for every smooth test (k + 1)-form phi, delta the
+    codifferential (the identity at phi = conj(psi) dx_s). Feec proves it for this symbol
+    (Feec.Models.Torus.DeRham.mem_graph_iff_isWeak, coefficientwise
+    Feec.Models.Torus.DeRham.isWeak_deRham_iff) from the identification of the torus multiplier of
+    every first-order constant-coefficient symbol with the weak realization of its operator
+    (Feec.Fourier.TorusWeak.mem_graph_iff_isWeak). The hypotheses of Theorem 1 (the discrete Poincare
     inequality and the harmonic bound, uniformly in N) are obtained in the solution from the
     second clause of Theorem 1 itself (closed ranges and graph-bounded projections); the
     constants are not stated. The Jackson estimate of the witness has the mesh size
@@ -470,7 +488,14 @@ review:
     every weaker norm (Feec.Fourier.Torus.sobolev_sub_starProjection_band_le,
     ||u - pi_N u||^2_{H^t} <= (1 + (2 pi (N + 1))^2)^(t - s) ||u||^2_{H^s} for t <= s), with the
     L2 bound of the witness and the truncation bound of the cube
-    (Feec.Models.Cube.Sobolev.sobSum_sub_trunc_le, formerly a copy of the proof) from it.
+    (Feec.Models.Cube.Sobolev.sobSum_sub_trunc_le, formerly a copy of the proof) from it. Witness
+    (2026-11-24): the identification of the multiplier torusD with the weak exterior derivative
+    of L2(T^n; Lambda^k), formerly disclosed as not part of the statement, is three conjuncts of
+    the witness (torusInv u has the Fourier coefficients u; torusInv is onto the L2 forms; the
+    graph of d is the weak graph, IsWeakTorusD, tested against all smooth functions), with the new
+    definitions torusHaar, torusInv and IsWeakTorusD (fidelity (7)); the former conjuncts are
+    unchanged; Feec proves the de Rham instance (Feec.Models.Torus.DeRham.mem_graph_iff_isWeak,
+    isWeak_deRham_iff; the linearity of the symbol, Feec.Fourier.Exterior.deRham_m_succ_eq_sum).
 
 alignment:
   namespace: "FEEC"
@@ -533,7 +558,10 @@ alignment:
         finrank_harmonic), the band subcomplexes and Fourier truncations
         (Feec.Models.Torus.DeRhamGalerkin), which fix the harmonic forms (bandProj_harmonic),
         and the Jackson estimate FEEC.Torus.jackson from the spectral approximation estimate
-        (Feec.Fourier.Torus.norm_sub_starProjection_band_le) and d pi_N = pi_N d; the discrete
+        (Feec.Fourier.Torus.norm_sub_starProjection_band_le) and d pi_N = pi_N d; the weak
+        exterior derivative from Feec.Models.Torus.DeRham.mem_graph_iff_isWeak and
+        isWeak_deRham_iff, with torusInv the inverse of Feec.Fourier.Torus.fieldFourier
+        (FEEC.Torus.torusInv_eq, by UnitAddTorus.hasSum_mFourier_series_L2); the discrete
         stability from FEEC.projectionFEEC
         (Solution.lean).
 

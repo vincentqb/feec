@@ -2,6 +2,7 @@ module
 
 public import Mathlib.Analysis.CStarAlgebra.Classes
 public import Mathlib.Analysis.Calculus.Deriv.Basic
+public import Mathlib.Analysis.Fourier.AddCircleMulti
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.Normed.Algebra.Exponential
@@ -579,7 +580,7 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
 /-- **`L²` `k`-forms on the torus `𝕋ⁿ = ℝⁿ/ℤⁿ`, in Fourier coefficients**: `ℓ²(ℤⁿ; Λᵏ)`, where
 `u ξ s` is the coefficient of `e^{2πi ξ·x} dx_s` (`ξ ∈ ℤⁿ`, `s` a `k`-subset of `Fin n`; no
 coefficients unless `0 ≤ k ≤ n`; for the counting measure `u ξ` is defined at every `ξ`); by
-Parseval, `L²(𝕋ⁿ; Λᵏ)` with complex coefficients. -/
+Parseval (`torusInv`), `L²(𝕋ⁿ; Λᵏ)` with complex coefficients. -/
 abbrev TorusForm (n : ℕ) (k : ℤ) : Type :=
   Lp (EuclideanSpace ℂ {s : Finset (Fin n) // (s.card : ℤ) = k}) 2
     (Measure.count : Measure (Fin n → ℤ))
@@ -597,12 +598,45 @@ coefficients in `Λᵏ`: the Sobolev norm of `𝕋ⁿ = ℝⁿ/ℤⁿ` (for `s =
 def IsTorusSobolev {n : ℕ} {k : ℤ} (s L : ℝ) (u : TorusForm n k) : Prop :=
   Summable (fun ξ : Fin n → ℤ => (1 + (2 * Real.pi) ^ 2 * ∑ j, (ξ j : ℝ) ^ 2) ^ s * ‖u ξ‖ ^ 2) ∧
     ∑' ξ : Fin n → ℤ, (1 + (2 * Real.pi) ^ 2 * ∑ j, (ξ j : ℝ) ^ 2) ^ s * ‖u ξ‖ ^ 2 ≤ L ^ 2
+/-- The **Haar probability measure** of `𝕋ⁿ` (`UnitAddTorus (Fin n)`), the product of the
+normalized Haar measures of `ℝ/ℤ`: the measure of Mathlib's Fourier series on `𝕋ⁿ`
+(`UnitAddTorus.mFourierCoeff`, `UnitAddTorus.mFourierLp`). -/
+abbrev torusHaar (n : ℕ) : Measure (UnitAddTorus (Fin n)) :=
+  Measure.pi fun _ => AddCircle.haarAddCircle
+/-- **The inverse Fourier transform** of a `k`-form in Fourier coefficients: the `L²` form
+`Σ_s (Σ_ξ u ξ s e^{2πi ξ·x}) dx_s` on `𝕋ⁿ`, by its coefficients (`torusInv u s` that of `dx_s`),
+each the sum in `L²(𝕋ⁿ)` of a Fourier series with square-summable coefficients
+(`UnitAddTorus.mFourierLp 2 ξ` is `e^{2πi ξ·x}`). -/
+def torusInv {n : ℕ} {k : ℤ} (u : TorusForm n k) (s : {s : Finset (Fin n) // (s.card : ℤ) = k}) :
+    Lp ℂ 2 (torusHaar n) :=
+  ∑' ξ, u ξ s • UnitAddTorus.mFourierLp 2 ξ
+open scoped ContDiff in
+/-- **`w = d u` weakly on `𝕋ⁿ`**, for `L²` forms of degrees `k` and `k + 1` given by their
+coefficients (`u s` that of `dx_s`): for every `(k + 1)`-subset `s` and every smooth
+`φ : 𝕋ⁿ → ℂ` (its `ℤⁿ`-periodic lift to `ℝⁿ` is `C^∞`),
+`∫ w_s φ = -Σ_{j ∈ s} ε(j, s) ∫ u_{s ∖ j} ∂ⱼφ` (every `s ∖ j` is a `k`-subset), with
+`ε(j, s) = (-1)^{#{l ∈ s | l < j}}` and `∂ⱼ` the derivative along the `j`-th circle: `w` is
+`d u = Σ_s Σ_{j ∈ s} ε(j, s) ∂ⱼu_{s ∖ j} dx_s` in the sense of distributions. Equivalently,
+`∫ ⟪δφ, u⟫ = ∫ ⟪φ, w⟫` for every smooth `(k + 1)`-form `φ`, `δ` the codifferential (the formal
+adjoint of `d`): at `φ = ψ̄ dx_s` this is the identity above for `ψ`. -/
+def IsWeakTorusD {n : ℕ} {k : ℤ}
+    (u : {s : Finset (Fin n) // (s.card : ℤ) = k} → Lp ℂ 2 (torusHaar n))
+    (w : {s : Finset (Fin n) // (s.card : ℤ) = k + 1} → Lp ℂ 2 (torusHaar n)) : Prop :=
+  ∀ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}) (φ : UnitAddTorus (Fin n) → ℂ),
+    ContDiff ℝ ∞ (fun y : Fin n → ℝ => φ fun i => (y i : UnitAddCircle)) →
+      ∫ x, w s x * φ x ∂torusHaar n = -∑ j ∈ s.1, (-1) ^ (s.1.filter fun l => l < j).card *
+        if h : ((s.1.erase j).card : ℤ) = k then
+          ∫ x, u ⟨s.1.erase j, h⟩ x * deriv (fun t : ℝ => φ (x + Pi.single j (t : UnitAddCircle))) 0
+            ∂torusHaar n
+        else 0
 
 /-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus.** On
 `𝕋ⁿ`, `n ≥ 1`, the `L²` de Rham complex in Fourier coefficients (the graph of `d` is that of the
-multiplier `torusD`, on its maximal domain; that this multiplier is the weak exterior derivative
-of `L²(𝕋ⁿ; Λᵏ)` is not part of the statement), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier
-truncations as cochain projections: the harmonic forms are finite-dimensional in every degree,
+multiplier `torusD` on its maximal domain and, through the inverse Fourier transform `torusInv`, a
+bijection onto the `L²` forms (`torusInv u` has the Fourier coefficients `u`, and every `L²` form
+is one), exactly the weak exterior derivative of `L²(𝕋ⁿ; Λᵏ)`, tested against all smooth
+functions, `IsWeakTorusD`), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier truncations as
+cochain projections: the harmonic forms are finite-dimensional in every degree,
 of dimension `(n choose k)` in degree `k` (the constant forms), and no `V_Nᵏ`, `0 ≤ k ≤ n`, is
 the whole space; and the family meets the hypotheses of the three theorems: closed ranges
 (Theorems 1 and 3), the Poincaré inequality with constant `√(1 + (2π)⁻²)` (Theorem 2), the
@@ -619,6 +653,10 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     ∃ (H : HilbertComplex ℂ (TorusForm n)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson NNReal),
       (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)), (u, w) ∈ (H.d k (k + 1)).graph ↔
         ∀ ξ (s : {s : Finset (Fin n) // (s.card : ℤ) = k + 1}), w ξ s = torusD u ξ s.1) ∧
+      (∀ k (u : TorusForm n k) s ξ, UnitAddTorus.mFourierCoeff (torusInv u s) ξ = u ξ s) ∧
+      (∀ k, Function.Surjective fun u : TorusForm n k => torusInv u) ∧
+      (∀ k (u : TorusForm n k) (w : TorusForm n (k + 1)),
+        (u, w) ∈ (H.d k (k + 1)).graph ↔ IsWeakTorusD (torusInv u) (torusInv w)) ∧
       F.l = atTop ∧
       (∀ N k (u : TorusForm n k), u ∈ (F.V N).V k ↔ ∀ ξ, (∃ j, (N : ℤ) < |ξ j|) → u ξ = 0) ∧
       (∀ N k (x : (H.d k (k + 1)).domain) ξ, ((F.π N).π k x : TorusForm n k) ξ =

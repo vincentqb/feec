@@ -28,8 +28,8 @@ the two algebraic identities below follow.
   and the **fibre gap** `norm_koszulDeg_of_mem_orthogonal`: `‖κ_ξ v‖ = |ξ| ‖v‖` for
   `v ⊥ N(κ_ξ)` (exactness for `ξ ≠ 0` with Poincaré constant `1/|ξ|`).
 * `Exterior.deRham d`: the de Rham family `ξ ↦ (i κ_ξ)` of fibre complexes on
-  `ComplexShape.up ℤ`, with `norm_deRham_of_mem_orthogonal`, `deRham_isHomogeneous` and
-  `deRham_harmonic_fibre`.
+  `ComplexShape.up ℤ`, with `norm_deRham_of_mem_orthogonal`, `deRham_isHomogeneous`,
+  `deRham_m_succ_eq_sum` (linear in `ξ`) and `deRham_harmonic_fibre`.
 
 ## References
 
@@ -404,6 +404,22 @@ theorem deRham_m_succ_apply (k : ℤ) (ξ : EuclideanSpace ℝ d) (v : Form ℂ 
   rw [deRham_m_succ, _root_.smul_apply, PiLp.smul_apply, koszulDeg_apply, res_apply, koszul_apply,
     smul_eq_mul]
   rfl
+
+/-- **The de Rham symbol is linear in the frequency**: `d_ξ = Σ_c ξ_c d_{e_c}` (a first-order
+operator). -/
+theorem deRham_m_succ_eq_sum (k : ℤ) (ξ : EuclideanSpace ℝ d) :
+    (deRham d).m k (k + 1) ξ =
+      ∑ c, ((ξ c : ℝ) : ℂ) • (deRham d).m k (k + 1) (EuclideanSpace.single c 1) := by
+  refine ContinuousLinearMap.ext fun v => ?_
+  ext s
+  simp only [deRham_m_succ_apply, FunLike.coe_sum, Finset.sum_apply, FunLike.coe_smul,
+    Pi.smul_apply, WithLp.ofLp_sum, PiLp.smul_apply, smul_eq_mul]
+  simp only [Finset.mul_sum]
+  rw [Finset.sum_comm]
+  refine Finset.sum_congr rfl fun j _ => ?_
+  rw [Finset.sum_eq_single j (fun c _ hc => by simp [Ne.symm hc]) (by simp)]
+  simp
+  ring
 
 /-- **The fibre gap of the de Rham symbol**: `‖d_ξ v‖ = |ξ| ‖v‖` for `v ⊥ N(d_ξ)`. -/
 theorem norm_deRham_of_mem_orthogonal {k : ℤ} {ξ : EuclideanSpace ℝ d} {v : Form ℂ d k}

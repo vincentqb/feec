@@ -3,6 +3,7 @@ module
 public import Feec.Fourier.Torus
 public import Feec.Fourier.ExteriorSymbol
 public import Feec.Fourier.SpectralGalerkin
+public import Feec.Fourier.TorusWeak
 
 /-!
 # The `L²` de Rham complex of the torus `𝕋ᵈ`, in every dimension and degree
@@ -29,6 +30,11 @@ constraint propagation) applies to it.
   the Hodge wave group of the torus de Rham complex has a dense set of eigenvectors (discrete
   spectrum).
 * `windowReal`: the real structure of the window (real forms have `ω̂(-k) = conj ω̂(k)`).
+* **`mem_graph_iff_isWeak`**: the multiplier `d` is the weak exterior derivative of `L²` forms on
+  `𝕋ᵈ`, through their Fourier coefficients (`Fourier.Torus.fieldFourier`), tested against all
+  smooth functions (`Feec.Fourier.TorusWeak`); coefficientwise (`isWeak_deRham_iff`), `w = d u`
+  weakly iff `∫ w_s φ = -Σ_{j ∈ s} ε(j, s) ∫ u_{s ∖ j} ∂_j φ` for every `(k + 1)`-subset `s` and
+  every smooth `φ`.
 
 ## References
 
@@ -303,5 +309,68 @@ def windowReal : (windowSymbol d).RealStructure Reflection.count_neg where
     change (deRham d).m i j (Fourier.Torus.freq (-k)) (entryConj v) = _
     rw [Fourier.Torus.freq_neg]
     exact deRham_neg_entryConj _ _ _ v
+
+/-! ### The weak exterior derivative -/
+
+section Weak
+
+open scoped Finset
+
+/-- The normalised Haar measure on `ℝ/ℤ`, as in `Feec.Fourier.TorusWeak`. -/
+local instance : MeasureSpace UnitAddCircle := ⟨AddCircle.haarAddCircle⟩
+
+open TorusWeak Finset in
+/-- **The weak exterior derivative on `𝕋ᵈ`, coefficientwise**: `w = d u` weakly (the operator
+`-i Σ_c d_{e_c} ∂_c = Σ_c dx_c ∧ ∂_c`) iff for every `(k + 1)`-subset `s` and every smooth `φ`,
+`∫ w_s φ = -Σ_{j ∈ s} ε(j, s) ∫ u_{s ∖ j} ∂_j φ`: the coefficients of
+`d u = Σ_s Σ_{j ∈ s} ε(j, s) ∂_j u_{s ∖ j} dx_s` in the sense of distributions. -/
+theorem isWeak_deRham_iff {k : ℤ} (u : Field d {s : Finset d // (#s : ℤ) = k})
+    (w : Field d {s : Finset d // (#s : ℤ) = k + 1}) :
+    IsWeak ((deRham d).m k (k + 1)) u w ↔
+      ∀ (s : {s : Finset d // (#s : ℤ) = k + 1}) (φ : UnitAddTorus d → ℂ), IsSmooth φ →
+        ∫ x, w s x * φ x = -∑ j ∈ s.1, ExteriorFibre.sgn j s.1 *
+          if h : (#(s.1.erase j) : ℤ) = k then ∫ x, u ⟨s.1.erase j, h⟩ x * partialT j φ x
+          else 0 := by
+  -- the coefficients `-i (d_{e_c})_{s, p} = ε(c, s) [c ∈ s] [p = s ∖ c]` of the operator
+  have key : ∀ (s : {s : Finset d // (#s : ℤ) = k + 1})
+      (X : d → {s : Finset d // (#s : ℤ) = k} → ℂ),
+      ∑ c, ∑ p, -Complex.I * (deRham d).m k (k + 1) (EuclideanSpace.single c 1)
+          (EuclideanSpace.single p 1) s * X c p =
+        ∑ j ∈ s.1, ExteriorFibre.sgn j s.1 *
+          if h : (#(s.1.erase j) : ℤ) = k then X j ⟨s.1.erase j, h⟩ else 0 := fun s X => by
+    have h1 : ∀ c, ∑ p, -Complex.I * (deRham d).m k (k + 1) (EuclideanSpace.single c 1)
+        (EuclideanSpace.single p 1) s * X c p =
+          -Complex.I * (deRham d).m k (k + 1) (EuclideanSpace.single c 1) (WithLp.toLp 2 (X c)) s :=
+      fun c => by
+        rw [apply_eq_sum _ (WithLp.toLp 2 (X c)) s, Finset.mul_sum]
+        exact sum_congr rfl fun p _ => by ring
+    have hI : ∀ z : ℂ, -Complex.I * (Complex.I * z) = z := fun z => by
+      rw [← mul_assoc, neg_mul, Complex.I_mul_I, neg_neg, one_mul]
+    simp_rw [h1, deRham_m_succ_apply, hI]
+    rw [sum_comm]
+    refine sum_congr rfl fun j _ => ?_
+    rw [sum_eq_single j (fun c _ hc => by simp [Ne.symm hc]) (by simp)]
+    simp only [PiLp.single_apply, ite_true, Complex.ofReal_one, mul_one]
+    split_ifs with h
+    · rw [ext_apply _ _ h]
+    · rw [ext_apply_of_ne _ _ h]
+  refine forall_congr' fun s => forall_congr' fun φ => forall_congr' fun hφ => ?_
+  rw [integral_sum_fo _ _ hφ, key s fun c p => ∫ x, u p x * partialT c φ x]
+  exact eq_comm.trans neg_eq_iff_eq_neg
+
+/-- **The differential of the `L²` de Rham complex of `𝕋ᵈ` is the weak exterior derivative**:
+through the Fourier coefficients of `L²` forms (Parseval, `Fourier.Torus.fieldFourier`), the graph
+of `d` is the weak graph of the exterior derivative, tested against all smooth functions on `𝕋ᵈ`
+(`isWeak_deRham_iff`). -/
+theorem mem_graph_iff_isWeak {k : ℤ} (u : TorusWeak.Field d {s : Finset d // (#s : ℤ) = k})
+    (w : TorusWeak.Field d {s : Finset d // (#s : ℤ) = k + 1}) :
+    (Fourier.Torus.fieldFourier d _ u, Fourier.Torus.fieldFourier d _ w) ∈
+        ((complex d).d k (k + 1)).graph ↔
+      TorusWeak.IsWeak ((deRham d).m k (k + 1)) u w := by
+  rw [← TorusWeak.mem_graph_iff_isWeak (deRham_m_succ_eq_sum k)]
+  exact ⟨fun h => ⟨mem_domain_of_mem_graph h, ((image_iff (mem_domain_of_mem_graph h)).2 h).symm⟩,
+    fun ⟨h, e⟩ => e ▸ ((complex d).d k (k + 1)).mem_graph ⟨_, h⟩⟩
+
+end Weak
 
 end Feec.Models.Torus.DeRham

@@ -49,7 +49,6 @@ open Feec.Models.Cube.Geometry (Q)
 open Feec.Models.Cube.RowWise (ofRealL reL)
 open Feec.Models.Cube.MirrorWeakSymmetry
 open Feec.Models.Cube.Mirror (MQ VQ SpaceQ complexQ tsdQ)
-open Feec.Models.Cube.WeakSymmetry (W1 Wv)
 open Feec.HilbertComplex (totalSub)
 
 /-- A state `(σ, u, ρ)` of the system (4.14) on the cube. -/
@@ -146,14 +145,8 @@ theorem cplxE_mem_curl {u : L2Vec (cube 3) 1} (hu : u ∈ gd1.domain) :
 
 /-- `⟪Re-rows of E, u⟫` is the real part of the complex pairing with `cplxE u`. -/
 theorem inner_rowsW1L_eq (E : MQ) (u : L2Vec (cube 3) 1) :
-    ⟪rowsW1L E, u⟫ = RCLike.re ⟪E, cplxE u⟫_ℂ := by
-  have h : ∀ w : Wv W1, ⟪rowsW1L E, w⟫ = RCLike.re ⟪E, ofRealRows fun a => cQ _ (w a)⟫_ℂ := by
-    intro w
-    rw [re_inner_ofRealRows, PiLp.inner_apply]
-    refine Finset.sum_congr rfl fun a _ => ?_
-    rw [rowsW1L_apply, ← LinearIsometryEquiv.inner_map_map (cQ _),
-      LinearIsometryEquiv.apply_symm_apply]
-  exact h u
+    ⟪rowsW1L E, u⟫ = RCLike.re ⟪E, cplxE u⟫_ℂ :=
+  inner_rowsW1L E u
 
 /-- `⟪⋆Re-rows of B, ρ⟫` is the real part of the complex pairing with `cplxB ρ`. -/
 theorem inner_rowsW2L_eq (B : MQ) (ρ : L2Vec (cube 3) 2) :
@@ -401,9 +394,10 @@ theorem exists_mirrorG_chain : ∃ U₀ V₁ V₂ V₃, (U₀, V₁) ∈ gradCur
     (V₁, V₂) ∈ gradCurlMirror ∧ (V₂, V₃) ∈ gradCurlMirror ∧ U₀ ∈ tsdConstraint (cube 3) ∧
       V₁ ≠ 0 := by
   set x : complexQ.wave.domain := ⟨_, Feec.Models.Cube.Mirror.cosStateQ_mem_domain⟩
-  have hc : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ := mirror_cosStateQ_mem_tsd
-  have h1 : complexQ.wave x ∈ complexQ.wave.domain := mirror_cosStateQ_wave_mem
-  have h2 : complexQ.wave ⟨_, h1⟩ ∈ complexQ.wave.domain := mirror_cosStateQ_wave_wave_mem
+  have hc : (x : PiLp 2 SpaceQ) ∈ totalSub tsdQ := Feec.Models.Cube.Mirror.cosStateQ_mem_tsdQ
+  have h1 : complexQ.wave x ∈ complexQ.wave.domain := Feec.Models.Cube.Mirror.cosStateQ_wave_mem
+  have h2 : complexQ.wave ⟨_, h1⟩ ∈ complexQ.wave.domain :=
+    Feec.Models.Cube.Mirror.cosStateQ_wave_wave_mem
   have hne : complexQ.wave x ≠ 0 :=
     (HilbertComplex.wave_compress Feec.Models.Cube.Mirror.eight_pos
       Feec.Models.Cube.Mirror.inner_J

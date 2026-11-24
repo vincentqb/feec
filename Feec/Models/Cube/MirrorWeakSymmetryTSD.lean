@@ -48,9 +48,9 @@ the divergence condition, (6.2b) is `E' = -d₁† (0, B)` tested against comple
   `‖σₕ‖, ‖Re E − uₕ‖, ‖Mₕ‖, ‖Re B − ρₕ‖ ≤ ε` and `‖Bₕ − Bₕᵀ‖ ≤ 2ε` on `[0,T]`, and the continuous
   solution keeps `σ ≡ 0`, `M ≡ 0`, `E`, `B` TSD.
 * `cosDatum`: `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`, a non-stationary TSD datum in `D(L²)`; for the
-  mirror grad–curl complex, `mirror_cosStateQ_wave_mem`, `mirror_cosStateQ_wave_wave_mem`
-  (`L E₀, L² E₀ ∈ D(L)`), from the finitely many modes of any torus model
-  (`torus_wave_mem_of_finite`).
+  mirror grad–curl complex, `Mirror.cosStateQ_mem_tsdQ`, `Mirror.cosStateQ_wave_mem`,
+  `Mirror.cosStateQ_wave_wave_mem` (`(0, E₀, 0)` in the constraint, `L E₀, L² E₀ ∈ D(L)`), from
+  the finitely many modes of any torus model (`torus_wave_mem_of_finite`).
 * `TSDDatum.exactWave`, `TSDDatum.eqOn_of_isStrongSolution`, `rowRe_mem_curl`, `rowRe_mem`,
   `ofRealRows_mem_curl`, `ofRealRows_mem`, `coeff_JfJ_rowRe`, `deRham_rowF`,
   `inner_rowRe_dPart_zero`, `wsL2_rowsW1L_of_symm`.
@@ -712,16 +712,17 @@ theorem inner_BU1 (x y : BU1) : ⟪x, y⟫_ℝ = ⟪bIncl1 x, bIncl1 y⟫_ℝ :=
   rw [PiLp.inner_apply, PiLp.inner_apply]
   rfl
 
-/-- **The pairing of the matrix proxy with bottom `1`-forms is the real part of the complex
+/-- **The pairing of the matrix proxy with vectors of `1`-forms is the real part of the complex
 pairing with the complexified rows.** -/
-theorem inner_rowsW1L (E : MQ) (v : BU1) :
-    ⟪rowsW1L E, bIncl1 v⟫_ℝ =
-      RCLike.re ⟪E, ofRealRows fun a => cQ _ ((v a : (BD1 a).domain) : W1)⟫_ℂ := by
+theorem inner_rowsW1L (E : MQ) (w : Wv W1) :
+    ⟪rowsW1L E, w⟫_ℝ = RCLike.re ⟪E, ofRealRows fun a => cQ _ (w a)⟫_ℂ := by
   rw [re_inner_ofRealRows, PiLp.inner_apply]
   refine Finset.sum_congr rfl fun a _ => ?_
-  rw [rowsW1L_apply, bIncl1_apply, ← LinearIsometryEquiv.inner_map_map (cQ _),
+  rw [rowsW1L_apply, ← LinearIsometryEquiv.inner_map_map (cQ _),
     LinearIsometryEquiv.apply_symm_apply]
 
+/-- **The pairing of the proxy of `⋆B` with vectors of `2`-forms is the real part of the complex
+pairing with the complexified rows.** -/
 theorem inner_rowsW2L (B : MQ) (w : Wv W2) :
     ⟪rowsW2L B, w⟫_ℝ = RCLike.re ⟪B, ofRealRows2 fun a => cQ _ (w a)⟫_ℂ := by
   rw [re_inner_ofRealRows2, PiLp.inner_apply]
@@ -954,6 +955,7 @@ theorem inner_rowsBU_wave_add (hL : MirrorBGG.complexQ.wave x ∈ MirrorBGG.comp
     (v : BU1) :
     ⟪rowsBU (stEL (MirrorBGG.complexQ.wave x)), v⟫_ℝ + ⟪rowsW2L (stBL x), bD1 v⟫_ℝ = 0 := by
   rw [inner_BU1, bIncl1_rowsBU_state (x := ⟨_, hL⟩), inner_rowsW1L, inner_rowsW2L]
+  simp only [bIncl1_apply]
   obtain ⟨hX, eX⟩ := ofRealRows_BU1_mem v
   have hM : (WithLp.ofLp (stW2 x)).1 = 0 := (MirrorBGG.mem_tsdQ_iff.1 hx).2.2.1
   rw [stEL_apply, inner_waveQ_one x hx _ hX, eX, WithLp.prod_inner_apply, WithLp.ofLp_toLp, hM,
@@ -1330,6 +1332,7 @@ theorem torus_mem_adjoint_domain_of_finite {i j : Fin 3}
     (Fourier.Torus.symbolComplex F).adjoint_d i j]
   exact Feec.Models.Cube.MirrorExt.mem_mulDomain_of_finite _ S hx
 
+/-- The differentials keep finitely supported coefficient sequences supported in `S`. -/
 theorem torus_d_eq_zero_of_finite {i j : Fin 3} (x : ((Fourier.Torus.complex F).d i j).domain)
     (S : Finset (Fin 3 → ℤ))
     (hx : ∀ n ∉ S, ((x : Lp (E i) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
@@ -1339,6 +1342,7 @@ theorem torus_d_eq_zero_of_finite {i j : Fin 3} (x : ((Fourier.Torus.complex F).
   (Operator.coeFn_mulOp_count (𝕜 := ℂ) (fun n => F.m i j (Fourier.Torus.freq n)) x n).trans
     (by rw [hx n hn, map_zero])
 
+/-- The adjoints keep finitely supported coefficient sequences supported in `S`. -/
 theorem torus_adjoint_eq_zero_of_finite {i j : Fin 3}
     (y : (((Fourier.Torus.complex F).d i j)†).domain) (S : Finset (Fin 3 → ℤ))
     (hy : ∀ n ∉ S, ((y : Lp (E j) 2 (Measure.count : Measure (Fin 3 → ℤ))) :
@@ -1455,60 +1459,69 @@ theorem cosDatum_not_stationary : cosDatum.U₀ ∉ MirrorBGG.complexQ.waveGroup
     MirrorBGG.reducingSubcomplex_range hd fun h0 => MirrorBGG.wave_cosState_ne
       ((LinearPMap.apply_congr' _ _ _ MirrorBGG.totalJ_cosStateQ.symm).trans h0)).2
 
-/-! #### The non-stationary datum of the mirror grad–curl complex -/
-
-theorem mirrorCosState_finite (i : Fin 3) :
-    ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)), ((Mirror.cosState i : Models.Torus.GradCurl.Space i) :
-      (Fin 3 → ℤ) → _) n = 0 := by
-  intro n hn
-  fin_cases i
-  · change ((Mirror.cosState 0 : Models.Torus.GradCurl.Space 0) : (Fin 3 → ℤ) → _) n = 0
-    rw [Mirror.cosState_zero]
-    exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
-  · change ((Mirror.cosState 1 : Models.Torus.GradCurl.Space 1) : (Fin 3 → ℤ) → _) n = 0
-    rw [Mirror.cosState_one]
-    exact (coe_cosE n).trans (cosCoeff_eq_zero hn)
-  · change ((Mirror.cosState 2 : Models.Torus.GradCurl.Space 2) : (Fin 3 → ℤ) → _) n = 0
-    rw [Mirror.cosState_two]
-    exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
-
-/-- The datum `(0, E₀, 0)` of the mirror grad–curl complex on `Q` lies in the constraint. -/
-theorem mirror_cosStateQ_mem_tsd : Mirror.cosStateQ ∈ totalSub Mirror.tsdQ := fun i => by
-  change Mirror.J i (Mirror.cosStateQ i) ∈ Models.Torus.GradCurl.constraint i
-  rw [← HilbertComplex.totalJ_apply, Mirror.totalJ_cosStateQ]
-  exact Mirror.cosState_mem_constraint i
-
-/-- **`L E₀ ∈ D(L)` for the mirror grad–curl complex on `Q`**, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`
-(`Feec.Models.Cube.Mirror.cosStateQ`): its mirror extension has finitely many Fourier modes, which
-`L` preserves on the torus. -/
-theorem mirror_cosStateQ_wave_mem :
-    Mirror.complexQ.wave ⟨_, Mirror.cosStateQ_mem_domain⟩ ∈ Mirror.complexQ.wave.domain := by
-  refine (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos Mirror.inner_J
-    Mirror.reducingSubcomplex_range).2 ?_
-  rw [← (HilbertComplex.wave_compress Mirror.eight_pos Mirror.inner_J
-    Mirror.reducingSubcomplex_range).comm ⟨_, Mirror.cosStateQ_mem_domain⟩,
-    LinearPMap.apply_congr' _ _ Mirror.cosState_mem_domain Mirror.totalJ_cosStateQ]
-  exact torus_wave_mem_of_finite _ _ mirrorCosState_finite
-
-/-- **`L² E₀ ∈ D(L)` for the mirror grad–curl complex on `Q`.** -/
-theorem mirror_cosStateQ_wave_wave_mem :
-    Mirror.complexQ.wave ⟨_, mirror_cosStateQ_wave_mem⟩ ∈ Mirror.complexQ.wave.domain := by
-  have hc := (HilbertComplex.wave_compress Mirror.eight_pos Mirror.inner_J
-    Mirror.reducingSubcomplex_range).comm
-  have e : HilbertComplex.totalJ Mirror.J (Mirror.complexQ.wave ⟨_, Mirror.cosStateQ_mem_domain⟩) =
-      Models.Torus.GradCurl.complex.wave ⟨Mirror.cosState, Mirror.cosState_mem_domain⟩ := by
-    rw [← hc ⟨_, Mirror.cosStateQ_mem_domain⟩]
-    exact LinearPMap.apply_congr' _ _ _ Mirror.totalJ_cosStateQ
-  have hfin : ∀ i, ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)),
-      (((HilbertComplex.totalJ Mirror.J (Mirror.complexQ.wave
-        ⟨_, Mirror.cosStateQ_mem_domain⟩)) i : Models.Torus.GradCurl.Space i) :
-          (Fin 3 → ℤ) → _) n = 0 := by
-    rw [e]; exact torus_wave_finite _ _ mirrorCosState_finite
-  refine (HilbertComplex.mem_wave_domain_compress_iff Mirror.eight_pos Mirror.inner_J
-    Mirror.reducingSubcomplex_range).2 ?_
-  rw [← hc ⟨_, mirror_cosStateQ_wave_mem⟩]
-  exact torus_wave_mem_of_finite _ _ hfin
-
 end NonVacuity
 
 end Feec.Models.Cube.MirrorWeakSymmetry
+
+/-! ### The non-stationary datum of the mirror grad–curl complex
+
+The datum `(0, E₀, 0)` of `Feec.Models.Cube.Mirror.complexQ`, `E₀ = 2 cos(2π x₃) diag(1, -1, 0)`
+(`Feec.Models.Cube.Mirror.cosStateQ`), lies in the constraint, and `L E₀`, `L² E₀` lie in `D(L)`:
+its mirror extension has finitely many Fourier modes, which `L` preserves on the torus
+(`Feec.Models.Cube.MirrorWeakSymmetry.torus_wave_finite`). -/
+
+namespace Feec.Models.Cube.Mirror
+
+open Feec.HilbertComplex (totalSub)
+open Feec.Models.Cube.MirrorWeakSymmetry (torus_wave_finite torus_wave_mem_of_finite)
+
+/-- The torus datum `(0, E₀, 0)` has the Fourier modes `±k₀` only. -/
+theorem cosState_finite (i : Fin 3) :
+    ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)), ((cosState i : Models.Torus.GradCurl.Space i) :
+      (Fin 3 → ℤ) → _) n = 0 := by
+  intro n hn
+  fin_cases i
+  · change ((cosState 0 : Models.Torus.GradCurl.Space 0) : (Fin 3 → ℤ) → _) n = 0
+    rw [cosState_zero]
+    exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
+  · change ((cosState 1 : Models.Torus.GradCurl.Space 1) : (Fin 3 → ℤ) → _) n = 0
+    rw [cosState_one]
+    exact (coe_cosE n).trans (cosCoeff_eq_zero hn)
+  · change ((cosState 2 : Models.Torus.GradCurl.Space 2) : (Fin 3 → ℤ) → _) n = 0
+    rw [cosState_two]
+    exact Measure.ae_count_iff.1 (Lp.coeFn_zero _ 2 Measure.count) n
+
+/-- **The datum `(0, E₀, 0)` on `Q` lies in the constraint.** -/
+theorem cosStateQ_mem_tsdQ : cosStateQ ∈ totalSub tsdQ := fun i => by
+  change J i (cosStateQ i) ∈ Models.Torus.GradCurl.constraint i
+  rw [← HilbertComplex.totalJ_apply, totalJ_cosStateQ]
+  exact cosState_mem_constraint i
+
+/-- **`L E₀ ∈ D(L)` on `Q`**: the mirror extension of `(0, E₀, 0)` has finitely many Fourier
+modes, which `L` preserves on the torus. -/
+theorem cosStateQ_wave_mem :
+    complexQ.wave ⟨_, cosStateQ_mem_domain⟩ ∈ complexQ.wave.domain := by
+  refine (HilbertComplex.mem_wave_domain_compress_iff eight_pos inner_J
+    reducingSubcomplex_range).2 ?_
+  rw [← (HilbertComplex.wave_compress eight_pos inner_J reducingSubcomplex_range).comm
+    ⟨_, cosStateQ_mem_domain⟩, LinearPMap.apply_congr' _ _ cosState_mem_domain totalJ_cosStateQ]
+  exact torus_wave_mem_of_finite _ _ cosState_finite
+
+/-- **`L² E₀ ∈ D(L)` on `Q`.** -/
+theorem cosStateQ_wave_wave_mem :
+    complexQ.wave ⟨_, cosStateQ_wave_mem⟩ ∈ complexQ.wave.domain := by
+  have hc := (HilbertComplex.wave_compress eight_pos inner_J reducingSubcomplex_range).comm
+  have e : HilbertComplex.totalJ J (complexQ.wave ⟨_, cosStateQ_mem_domain⟩) =
+      Models.Torus.GradCurl.complex.wave ⟨cosState, cosState_mem_domain⟩ := by
+    rw [← hc ⟨_, cosStateQ_mem_domain⟩]
+    exact LinearPMap.apply_congr' _ _ _ totalJ_cosStateQ
+  have hfin : ∀ i, ∀ n ∉ ({k0, -k0} : Finset (Fin 3 → ℤ)),
+      (((HilbertComplex.totalJ J (complexQ.wave ⟨_, cosStateQ_mem_domain⟩)) i :
+        Models.Torus.GradCurl.Space i) : (Fin 3 → ℤ) → _) n = 0 := by
+    rw [e]; exact torus_wave_finite _ _ cosState_finite
+  refine (HilbertComplex.mem_wave_domain_compress_iff eight_pos inner_J
+    reducingSubcomplex_range).2 ?_
+  rw [← hc ⟨_, cosStateQ_wave_mem⟩]
+  exact torus_wave_mem_of_finite _ _ hfin
+
+end Feec.Models.Cube.Mirror

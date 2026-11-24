@@ -776,10 +776,10 @@ structure AbsorbingVerdict : Prop where
       IsSymTFOn (depDomain (cube 3) t) (fun a b => (S t x).fst (a, b)) ∧
       IsSymTFOn (depDomain (cube 3) t) (fun a b => (S t x).snd (a, b))
 
-/-- **The verdict of the mirror boundary conditions on the cube** (tensorial reflections;
-[QuennevilleBelair2015], §4.10, §6.1, §6.3) for a system `U' = A U` on the cube, an operator given
-by its graph `A ⊆ X × X`, with a constraint `K ⊆ X`: the constraint is kept, with moving data.
-`TSDVerdict.mirror` asserts it for the system (4.14) (`gradCurlMirror`, constraint
+/-- **The verdict of the mirror boundary conditions** (tensorial reflections;
+[QuennevilleBelair2015], §4.10, §6.1, §6.3) for a system `U' = A U`, an operator given by its
+graph `A ⊆ X × X`, with a constraint `K ⊆ X`: the constraint is kept, with moving data.
+`TSDVerdict.mirror` asserts it on the cube for the system (4.14) (`gradCurlMirror`, constraint
 `tsdConstraint`) and for the system (6.1) (`mirrorData`, constraint `IsTSDState`). -/
 structure MirrorVerdict {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (A : SetRel X X)
     (K : Set X) : Prop where

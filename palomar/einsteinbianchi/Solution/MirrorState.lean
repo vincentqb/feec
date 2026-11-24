@@ -155,6 +155,7 @@ theorem inner_rowsW1L_wave (v : mirrorData.dt1.domain) :
     ⟪rowsW1L (stEL (complexQ.wave x)), (v : L2Vec (cube 3) 1)⟫ +
       ⟪rowsW2L (stBL x), mirrorData.dt1 v⟫ = 0 := by
   rw [← bIncl1_toBU1 v, ← bD1_toBU1 v, inner_rowsW1L, inner_rowsW2L]
+  simp only [bIncl1_apply]
   obtain ⟨hX, eX⟩ := ofRealRows_BU1_mem (toBU1 v)
   have hM : (WithLp.ofLp (stW2 x)).1 = 0 := (Feec.Models.Cube.MirrorBGG.mem_tsdQ_iff.1 hx).2.2.1
   rw [stEL_apply, inner_waveQ_one x hx _ hX, eX, WithLp.prod_inner_apply, WithLp.ofLp_toLp, hM,

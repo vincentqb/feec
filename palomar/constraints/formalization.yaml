@@ -525,9 +525,9 @@ alignment:
         not_invariant_tsdPair, within every [0, T] by the semigroup law, absorbingSemigroup_divFree,
         absorbingSemigroup_symTF_depDomain) (Solution/Absorbing.lean, Interior.lean); mirror:
         for (4.14) Feec.Models.Cube.Mirror (propagatesQ, reducingSubcomplexQ,
-        mem_tsdQ_one_of_tsd, mem_tsdQ_two_of_tsd, mem_adjoint_d₀_of_mem_tsdQ) with
-        Feec.Models.Cube.MirrorWeakSymmetry (rowRe_mem_curl, ofRealRows_mem_curl,
-        inner_rowRe_dPart_zero, mirror_cosStateQ_wave_mem, mirror_cosStateQ_wave_wave_mem)
+        mem_tsdQ_one_of_tsd, mem_tsdQ_two_of_tsd, mem_adjoint_d₀_of_mem_tsdQ, cosStateQ_mem_tsdQ,
+        cosStateQ_wave_mem, cosStateQ_wave_wave_mem) with Feec.Models.Cube.MirrorWeakSymmetry
+        (rowRe_mem_curl, ofRealRows_mem_curl, inner_rowRe_dPart_zero, inner_rowsW1L)
         (Solution/MirrorGradCurl.lean); for (6.1) Feec.Models.Cube.MirrorBGG
         (propagatesQ, reducingSubcomplexQ) and Feec.Models.Cube.MirrorWeakSymmetry.cosDatum
         (Solution/Mirror*.lean).

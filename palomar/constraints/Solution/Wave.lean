@@ -5,20 +5,22 @@ public import Mathlib.Analysis.Calculus.MeanValue
 public import Mathlib.Analysis.InnerProductSpace.Calculus
 
 /-!
-# The Hodge wave operator of the challenge: linearity, skewness, uniqueness
+# The Hodge wave operators of the challenge: linearity, skewness, uniqueness
 
-For any data `D`, the relation `D.IsWave` is linear (`IsWave.sub`, `IsWave.zero`) and skew,
-`⟪L U, U⟫ = 0` (`IsWave.inner_eq_zero`: the terms of the four equations cancel in pairs), so the
-energy `‖U(t)‖²` of a strong solution is conserved and strong solutions are determined by their
-initial value (`isStrongSolution_unique`); so are those of the Hodge wave operator
-`IsHodgeWave d⁰ d¹` of any two operators (`IsHodgeWave.isStrongSolution_unique`).
-`isStrongSolution_setOf_iff`: the strong solutions of the graph `{(U, V) | L U V}` of a relation are
-those of the relation.
+Strong solutions of a relation `R ⊆ X × X` closed under differences and skew for an injective
+bounded `ι` from `X` to a real inner product space (`⟪ι V, ι U⟫ = 0` for `(U, V) ∈ R`) are
+determined by their initial value: the energy `‖ι (U - U')‖²` of the difference of two of them is
+conserved (`isStrongSolution_unique_of_skew`). For any data `D`, the relation `D.IsWave` is linear
+(`IsWave.sub`, `IsWave.zero`) and skew, `⟪L U, U⟫ = 0` in the `ℓ²` sum of its four slots
+(`IsWave.inner_eq_zero`: the terms of the four equations cancel in pairs), so its strong
+solutions are determined by their initial value (`isStrongSolution_unique`); so are those of the
+Hodge wave operator `IsHodgeWave d⁰ d¹` of any two operators
+(`IsHodgeWave.isStrongSolution_unique`).
 
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §6.1 ((6.1))
+  §4.10 ((4.14)), §6.1 ((6.1))
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -30,14 +32,32 @@ open Set Filter Topology
 
 namespace FEEC
 
-/-- **Strong solutions of an operator given by a relation** `L`: `IsStrongSolution` of its graph
-`{(U, V) | L U V}` is the relation form, continuity on `I` and, at every `t ∈ I`, a derivative
-`V` of `U` within `I` with `L (U t) V`. -/
-theorem isStrongSolution_setOf_iff {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
-    {L : X → X → Prop} {I : Set ℝ} {U : ℝ → X} :
-    IsStrongSolution {p | L p.1 p.2} I U ↔
-      ContinuousOn U I ∧ ∀ t ∈ I, ∃ V, L (U t) V ∧ HasDerivWithinAt U V I t :=
-  Iff.rfl
+/-- **Strong solutions of a skew linear relation are determined by their initial value**: for a
+relation `R ⊆ X × X` closed under differences and skew for an injective bounded `ι` from `X` to a
+real inner product space, `⟪ι V, ι U⟫ = 0` for `(U, V) ∈ R`, the energy `‖ι (U - U')‖²` of the
+difference of two strong solutions on `[0, T]` is constant, and it vanishes at `0`. -/
+theorem isStrongSolution_unique_of_skew {X Y : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X]
+    [NormedAddCommGroup Y] [InnerProductSpace ℝ Y] {R : SetRel X X} (ι : X →L[ℝ] Y)
+    (hι : Function.Injective ι) (hsub : ∀ p ∈ R, ∀ q ∈ R, (p.1 - q.1, p.2 - q.2) ∈ R)
+    (hskew : ∀ p ∈ R, ⟪ι p.2, ι p.1⟫_ℝ = 0) {T : ℝ} {U U' : ℝ → X}
+    (hU : IsStrongSolution R (Icc 0 T) U) (hU' : IsStrongSolution R (Icc 0 T) U')
+    (h0 : U 0 = U' 0) : EqOn U U' (Icc 0 T) := by
+  have hd : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun r => ‖ι (U r - U' r)‖ ^ 2) 0 (Icc 0 T) t := by
+    intro t ht
+    obtain ⟨V, hV, hdV⟩ := hU.2 t ht
+    obtain ⟨V', hV', hdV'⟩ := hU'.2 t ht
+    have hz : ⟪ι (V - V'), ι (U t - U' t)⟫_ℝ = 0 := hskew (U t - U' t, V - V') (hsub _ hV _ hV')
+    refine (ι.hasFDerivAt.comp_hasDerivWithinAt t (hdV.sub hdV')).norm_sq.congr_deriv ?_
+    change 2 * ⟪ι (U t - U' t), ι (V - V')⟫_ℝ = 0
+    rw [real_inner_comm, hz, mul_zero]
+  have hc : ContinuousOn (fun r => ‖ι (U r - U' r)‖ ^ 2) (Icc 0 T) := fun t ht =>
+    (hd t ht).continuousWithinAt
+  intro t ht
+  have hconst := constant_of_has_deriv_right_zero hc (fun x hx =>
+    (hd x (Ico_subset_Icc_self hx)).mono_of_mem_nhdsWithin (Icc_mem_nhdsGE_of_mem hx)) t ht
+  rw [h0, sub_self, map_zero, norm_zero, zero_pow two_ne_zero, sq_eq_zero_iff, norm_eq_zero]
+    at hconst
+  exact sub_eq_zero.1 (hι (hconst.trans (map_zero ι).symm))
 
 end FEEC
 
@@ -81,61 +101,25 @@ theorem IsWave.inner_eq_zero {U V : W0 × Wt1 × W2 × Wt2} (h : D.IsWave U V) :
     real_inner_comm (D.dt0 φ)]
   ring
 
-/-- The energy `‖σ‖² + ‖u‖² + ‖M‖² + ‖ρ‖²` as a sum of inner products. -/
-def energy (U : W0 × Wt1 × W2 × Wt2) : ℝ :=
-  ⟪U.1, U.1⟫ + ⟪U.2.1, U.2.1⟫ + ⟪U.2.2.1, U.2.2.1⟫ + ⟪U.2.2.2, U.2.2.2⟫
-
-theorem eq_zero_of_energy_eq_zero {U : W0 × Wt1 × W2 × Wt2} (h : energy U = 0) : U = 0 := by
-  have a := real_inner_self_nonneg (x := U.1)
-  have b := real_inner_self_nonneg (x := U.2.1)
-  have c := real_inner_self_nonneg (x := U.2.2.1)
-  have d := real_inner_self_nonneg (x := U.2.2.2)
-  unfold energy at h
-  refine Prod.ext ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith)) (Prod.ext
-    ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith))
-    (Prod.ext ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith))
-      ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith))))
-
-/-- The derivative of the energy along a path. -/
-theorem hasDerivWithinAt_energy {U : ℝ → W0 × Wt1 × W2 × Wt2} {V : W0 × Wt1 × W2 × Wt2}
-    {s : Set ℝ} {t : ℝ} (h : HasDerivWithinAt U V s t) :
-    HasDerivWithinAt (fun r => energy (U r))
-      (2 * (⟪V.1, (U t).1⟫ + ⟪V.2.1, (U t).2.1⟫ + ⟪V.2.2.1, (U t).2.2.1⟫ +
-        ⟪V.2.2.2, (U t).2.2.2⟫)) s t := by
-  have h1 := (ContinuousLinearMap.fst ℝ W0 (Wt1 × W2 × Wt2)).hasFDerivAt.comp_hasDerivWithinAt t h
-  have h' := (ContinuousLinearMap.snd ℝ W0 (Wt1 × W2 × Wt2)).hasFDerivAt.comp_hasDerivWithinAt t h
-  have h2 := (ContinuousLinearMap.fst ℝ Wt1 (W2 × Wt2)).hasFDerivAt.comp_hasDerivWithinAt t h'
-  have h'' := (ContinuousLinearMap.snd ℝ Wt1 (W2 × Wt2)).hasFDerivAt.comp_hasDerivWithinAt t h'
-  have h3 := (ContinuousLinearMap.fst ℝ W2 Wt2).hasFDerivAt.comp_hasDerivWithinAt t h''
-  have h4 := (ContinuousLinearMap.snd ℝ W2 Wt2).hasFDerivAt.comp_hasDerivWithinAt t h''
-  have := (((h1.inner ℝ h1).add (h2.inner ℝ h2)).add (h3.inner ℝ h3)).add (h4.inner ℝ h4)
-  refine this.congr_deriv ?_
-  simp only [Function.comp_apply, ContinuousLinearMap.coe_fst', ContinuousLinearMap.coe_snd']
-  rw [real_inner_comm (U t).1 V.1, real_inner_comm (U t).2.1 V.2.1,
-    real_inner_comm (U t).2.2.1 V.2.2.1, real_inner_comm (U t).2.2.2 V.2.2.2]
-  ring
+/-- The `ℓ²` sum `W⁰ ⊕ W̃¹ ⊕ W² ⊕ W̃²` of the four slots. -/
+def l2 : (W0 × Wt1 × W2 × Wt2) ≃L[ℝ] WithLp 2 (W0 × WithLp 2 (Wt1 × WithLp 2 (W2 × Wt2))) :=
+  ((ContinuousLinearEquiv.refl ℝ W0).prodCongr (((ContinuousLinearEquiv.refl ℝ Wt1).prodCongr
+    (WithLp.prodContinuousLinearEquiv 2 ℝ W2 Wt2).symm).trans
+      (WithLp.prodContinuousLinearEquiv 2 ℝ Wt1 _).symm)).trans
+    (WithLp.prodContinuousLinearEquiv 2 ℝ W0 _).symm
 
 /-- **Strong solutions are determined by their initial value**: the energy of the difference is
 conserved (`IsWave.inner_eq_zero`). -/
 theorem isStrongSolution_unique {T : ℝ} {U U' : ℝ → W0 × Wt1 × W2 × Wt2}
     (hU : IsStrongSolution {p | D.IsWave p.1 p.2} (Icc 0 T) U)
     (hU' : IsStrongSolution {p | D.IsWave p.1 p.2} (Icc 0 T) U') (h0 : U 0 = U' 0) :
-    EqOn U U' (Icc 0 T) := by
-  have hd : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun r => energy (U r - U' r)) 0 (Icc 0 T) t := by
-    intro t ht
-    obtain ⟨V, hV, hdV⟩ := (isStrongSolution_setOf_iff.1 hU).2 t ht
-    obtain ⟨V', hV', hdV'⟩ := (isStrongSolution_setOf_iff.1 hU').2 t ht
-    have := hasDerivWithinAt_energy (hdV.sub hdV')
-    rw [show (U - U') t = U t - U' t from rfl, (hV.sub hV').inner_eq_zero, mul_zero] at this
-    exact this
-  have hc : ContinuousOn (fun r => energy (U r - U' r)) (Icc 0 T) := fun t ht =>
-    (hd t ht).continuousWithinAt
-  intro t ht
-  have hconst := constant_of_has_deriv_right_zero hc (fun x hx =>
-    (hd x (Ico_subset_Icc_self hx)).mono_of_mem_nhdsWithin (Icc_mem_nhdsGE_of_mem hx)) t ht
-  rw [h0, sub_self] at hconst
-  have e0 : energy (0 : W0 × Wt1 × W2 × Wt2) = 0 := by simp [energy]
-  exact sub_eq_zero.1 (eq_zero_of_energy_eq_zero (hconst.trans e0))
+    EqOn U U' (Icc 0 T) :=
+  isStrongSolution_unique_of_skew l2.toContinuousLinearMap l2.injective
+    (fun _ hp _ hq => IsWave.sub hp hq) (fun p hp => by
+      change ⟪p.2.1, p.1.1⟫ + (⟪p.2.2.1, p.1.2.1⟫ +
+        (⟪p.2.2.2.1, p.1.2.2.1⟫ + ⟪p.2.2.2.2, p.1.2.2.2⟫)) = 0
+      rw [← add_assoc, ← add_assoc]
+      exact IsWave.inner_eq_zero hp) hU hU' h0
 
 end FEEC.WeakSymmetryData
 
@@ -165,55 +149,22 @@ theorem inner_eq_zero {U V : W0 × W1 × W2} (h : IsHodgeWave d0 d1 U V) :
   rw [← hσ, ← hu, h1 σ, h2 u, h3, real_inner_comm (d1 u), real_inner_comm (d0 σ)]
   ring
 
-/-- The energy `‖σ‖² + ‖u‖² + ‖ρ‖²` as a sum of inner products. -/
-def energy (U : W0 × W1 × W2) : ℝ := ⟪U.1, U.1⟫ + ⟪U.2.1, U.2.1⟫ + ⟪U.2.2, U.2.2⟫
-
-theorem eq_zero_of_energy_eq_zero {U : W0 × W1 × W2} (h : energy U = 0) : U = 0 := by
-  have a := real_inner_self_nonneg (x := U.1)
-  have b := real_inner_self_nonneg (x := U.2.1)
-  have c := real_inner_self_nonneg (x := U.2.2)
-  unfold energy at h
-  exact Prod.ext ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith))
-    (Prod.ext ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith))
-      ((inner_self_eq_zero (𝕜 := ℝ)).1 (by linarith)))
-
-/-- The derivative of the energy along a path. -/
-theorem hasDerivWithinAt_energy {U : ℝ → W0 × W1 × W2} {V : W0 × W1 × W2} {s : Set ℝ} {t : ℝ}
-    (h : HasDerivWithinAt U V s t) :
-    HasDerivWithinAt (fun r => energy (U r))
-      (2 * (⟪V.1, (U t).1⟫ + ⟪V.2.1, (U t).2.1⟫ + ⟪V.2.2, (U t).2.2⟫)) s t := by
-  have h1 := (ContinuousLinearMap.fst ℝ W0 (W1 × W2)).hasFDerivAt.comp_hasDerivWithinAt t h
-  have h' := (ContinuousLinearMap.snd ℝ W0 (W1 × W2)).hasFDerivAt.comp_hasDerivWithinAt t h
-  have h2 := (ContinuousLinearMap.fst ℝ W1 W2).hasFDerivAt.comp_hasDerivWithinAt t h'
-  have h3 := (ContinuousLinearMap.snd ℝ W1 W2).hasFDerivAt.comp_hasDerivWithinAt t h'
-  have := ((h1.inner ℝ h1).add (h2.inner ℝ h2)).add (h3.inner ℝ h3)
-  refine this.congr_deriv ?_
-  simp only [Function.comp_apply, ContinuousLinearMap.coe_fst', ContinuousLinearMap.coe_snd']
-  rw [real_inner_comm (U t).1 V.1, real_inner_comm (U t).2.1 V.2.1,
-    real_inner_comm (U t).2.2 V.2.2]
-  ring
+/-- The `ℓ²` sum `W⁰ ⊕ W¹ ⊕ W²` of the three slots. -/
+def l2 : (W0 × W1 × W2) ≃L[ℝ] WithLp 2 (W0 × WithLp 2 (W1 × W2)) :=
+  ((ContinuousLinearEquiv.refl ℝ W0).prodCongr
+    (WithLp.prodContinuousLinearEquiv 2 ℝ W1 W2).symm).trans
+    (WithLp.prodContinuousLinearEquiv 2 ℝ W0 _).symm
 
 /-- **Strong solutions of the Hodge wave equation are determined by their initial value**: the
 energy of the difference is conserved (`IsHodgeWave.inner_eq_zero`). -/
 theorem isStrongSolution_unique {T : ℝ} {U U' : ℝ → W0 × W1 × W2}
     (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U)
     (hU' : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U') (h0 : U 0 = U' 0) :
-    EqOn U U' (Icc 0 T) := by
-  have hd : ∀ t ∈ Icc 0 T, HasDerivWithinAt (fun r => energy (U r - U' r)) 0 (Icc 0 T) t := by
-    intro t ht
-    obtain ⟨V, hV, hdV⟩ := (isStrongSolution_setOf_iff.1 hU).2 t ht
-    obtain ⟨V', hV', hdV'⟩ := (isStrongSolution_setOf_iff.1 hU').2 t ht
-    have := hasDerivWithinAt_energy (hdV.sub hdV')
-    rw [show (U - U') t = U t - U' t from rfl, (sub (d0 := d0) (d1 := d1) hV hV').inner_eq_zero,
-      mul_zero] at this
-    exact this
-  have hc : ContinuousOn (fun r => energy (U r - U' r)) (Icc 0 T) := fun t ht =>
-    (hd t ht).continuousWithinAt
-  intro t ht
-  have hconst := constant_of_has_deriv_right_zero hc (fun x hx =>
-    (hd x (Ico_subset_Icc_self hx)).mono_of_mem_nhdsWithin (Icc_mem_nhdsGE_of_mem hx)) t ht
-  rw [h0, sub_self] at hconst
-  have e0 : energy (0 : W0 × W1 × W2) = 0 := by simp [energy]
-  exact sub_eq_zero.1 (eq_zero_of_energy_eq_zero (hconst.trans e0))
+    EqOn U U' (Icc 0 T) :=
+  isStrongSolution_unique_of_skew l2.toContinuousLinearMap l2.injective
+    (fun _ hp _ hq => sub hp hq) (fun p hp => by
+      change ⟪p.2.1, p.1.1⟫ + (⟪p.2.2.1, p.1.2.1⟫ + ⟪p.2.2.2, p.1.2.2⟫) = 0
+      rw [← add_assoc]
+      exact inner_eq_zero hp) hU hU' h0
 
 end FEEC.IsHodgeWave

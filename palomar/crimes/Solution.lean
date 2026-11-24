@@ -114,15 +114,17 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
 
 open scoped lp in
 /-- **Non-vacuity of the defect in the graph norm**: on the complex `ℓ²(ℕ, ℝ)` in every degree
-with `d⁰ = diag(k + 1)` and all other differentials `0` (closed ranges: `d⁰` is onto), the family
-of `Solution.HighMode` (the modes `k ≤ n` of both degrees, reading maps doubling the square norm of
-the highest mode `k = n` of degree `0`, cochain projections bounded by `1` in the graph norm, with
-`iₙ πₙ` the truncation to the modes `k ≤ n`) has `‖1 - iₙ* iₙ‖ = 1` and
-`‖(1 - iₙ* iₙ) v‖ ≤ (‖v‖ + ‖𝐝ₙ v‖) / (n + 1)` (`HighMode.norm_one_sub_J`,
-`HighMode.norm_one_sub_J_apply_le`); the cochain clause of `FEEC.crimeFEEC` then gives the discrete
-Poincaré inequality and convergence for every datum. -/
+with `d⁰ = diag(k + 1)` and all other differentials `0` (unbounded, `HighMode.not_bounded_totalD`;
+closed ranges: `d⁰` is onto), the family of `Solution.HighMode` (the modes `k ≤ n` of both
+degrees, reading maps doubling the square norm of the highest mode `k = n` of degree `0`, cochain
+projections bounded by `1` in the graph norm, with `iₙ πₙ` the truncation to the modes `k ≤ n`)
+has `‖1 - iₙ* iₙ‖ = 1` and `‖(1 - iₙ* iₙ) v‖ ≤ (‖v‖ + ‖𝐝ₙ v‖) / (n + 1)`
+(`HighMode.norm_one_sub_J`, `HighMode.norm_one_sub_J_apply_le`); the cochain clause of
+`FEEC.crimeFEEC` then gives the discrete Poincaré inequality and convergence for every datum. -/
 theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ²(ℕ, ℝ))
     (S : H.CrimeFamily.{0} 0 2 ℕ) (P : S.CochainProj 1),
+    (¬ ∃ C, ∀ x : (H.totalD 0 2).domain,
+      ‖H.totalD 0 2 x‖ ≤ C * ‖(x : Total (fun _ : ℤ => ℓ²(ℕ, ℝ)) 0 2)‖) ∧
     (∀ i : Fin 2, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℓ²(ℕ, ℝ))) ∧
     S.l = atTop ∧ S.IsCochain ∧ (∃ cP, S.IsPoincare cP) ∧
     (∀ n, ‖1 - (S.incl n).adjoint ∘L S.incl n‖ = 1) ∧ Tendsto S.defect atTop (𝓝 0) ∧
@@ -139,7 +141,7 @@ theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ
   have hπ : ∀ x : (HighMode.complex.totalD 0 2).domain, Tendsto (fun n =>
       ‖(x : HighMode.T) - HighMode.family.incl n (HighMode.proj.π n x)‖) atTop (𝓝 0) :=
     fun x => HighMode.tendsto_incl_proj (x : HighMode.T)
-  exact ⟨HighMode.complex, HighMode.family, HighMode.proj, hcr, rfl, HighMode.isCochain,
-    V.poincare, HighMode.norm_one_sub_J, hJ, hπ, V.converges hJ hπ⟩
+  exact ⟨HighMode.complex, HighMode.family, HighMode.proj, HighMode.not_bounded_totalD, hcr, rfl,
+    HighMode.isCochain, V.poincare, HighMode.norm_one_sub_J, hJ, hπ, V.converges hJ hπ⟩
 
 end FEEC

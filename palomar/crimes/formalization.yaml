@@ -40,45 +40,44 @@ project:
     measured from the discrete graph norm: delta_h is the least delta with
     ||(1 - i_h* i_h) v|| <= delta (||v|| + ||d_h v||) for every v in X_h (CrimeFamily.defect), at
     most the operator norm ||1 - i_h* i_h||; the estimates apply 1 - i_h* i_h only to discrete
-    forms whose graph norm they control. For mass lumping of P1 elements ([Thomee2006], Ch. 15)
-    ||1 - i_h* i_h|| >= n/(n+2) on every mesh of dimension n, while delta_h = O(h), h the longest
-    edge. (heat) Under a uniform discrete Poincare inequality, when delta_h -> 0 and the static
-    method converges for every datum: the Hodge heat equation u' = L^2 u = -Delta u of the window
-    is well posed (a contraction semigroup U characterized by its strong solutions), the
-    semidiscrete solutions of u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h read by i_h converge to its
-    solutions uniformly on bounded time intervals for every family of initial values with
-    i_h v_h -> x, and so do the iterates of every A-stable rational scheme r = P/Q of order
-    p >= 1 as h and tau tend to 0, with the temporal error K n tau tau^p ||Delta_h^(p+1) w||
-    (K independent of h). The clauses (static) and (heat) assume no cochain reading maps, which
-    goes beyond [HolstStern2012] and, for the heat equation, [HolstTiee2018] (cochain morphisms),
-    and the inner-product defect is measured from the discrete graph norm (theirs is the operator
-    norm ||I - J_h|| on W_h).
-    The compared witness FEEC.crime_nonvacuous
-    shows that the hypotheses admit genuine crimes: it states that a Hilbert complex with R in
-    every degree, with closed ranges and nonzero harmonic forms on the window [0, 3), carries a
-    family with cochain reading maps and cochain projections, i_n pi_n = 1, not isometric
-    (i_n* i_n != 1) but with ||1 - i_n* i_n|| -> 0, hence delta_n -> 0, which meets the
-    hypotheses of the three clauses (with the discrete Poincare inequality and convergence for
-    every datum), reads a
-    discrete harmonic form off the harmonic forms, and has a positive error at some datum at every
-    level. The solution's witness is the window R --id--> R --0--> R (harmonic forms R (0, 0, 1))
-    with the reading maps i_n = 1 + h_n N, N(a, b, c) = (0, c, 0), h_n = 1/(n+1), the cochain
-    projections pi_n = 1 - h_n N, and the datum (0, 0, 1); the statement fixes none of these. The
-    compared witness FEEC.crime_defect_nonvacuous shows that a vanishing defect is a strictly
-    weaker hypothesis than ||1 - i_h* i_h|| -> 0: it states that a Hilbert complex with l2(N, R) in
-    every degree, with closed ranges on the window [0, 2), carries a family with cochain reading
-    maps and cochain projections pi_n bounded by 1 in the graph norm, with i_n pi_n -> 1 on D(d),
-    ||1 - i_n* i_n|| = 1 at every level and delta_n -> 0, which has the discrete Poincare
-    inequality and converges for every datum: it meets the hypotheses of the convergence conjunct
-    of the cochain clause and of the heat clause, which ||1 - i_n* i_n|| -> 0 excludes. The
-    solution's witness is d^0 = diag(k + 1) on l2 (closed, onto), all other differentials 0, the
-    modes k <= n of both degrees as discrete spaces, reading maps that double the square norm of the
-    highest mode k = n of degree 0, and the truncations to the modes k <= n, rescaled on that mode,
-    as cochain projections: 1 - i_n* i_n is minus the projection on that mode, on which d_n is
-    (n + 1) sqrt 2, so ||(1 - i_n* i_n) v|| <= (||v|| + ||d_n v||) / (n + 1). The
-    conforming case (subcomplexes with cochain projections, the inclusion as reading map) is the
-    Palomar entry palomar/feec. The statement is self-contained over Mathlib; the proof is the
-    library Feec of this repository.
+    forms whose graph norm they control. The motivating example is mass lumping of P1 elements
+    ([Thomee2006], Ch. 15), an inner-product crime; its analysis is not compared. (heat) Under a
+    uniform discrete Poincare inequality, when delta_h -> 0 and the static method converges for
+    every datum: the Hodge heat equation u' = L^2 u = -Delta u of the window is well posed (a
+    contraction semigroup U characterized by its strong solutions), the semidiscrete solutions of
+    u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h read by i_h converge to its solutions uniformly on
+    bounded time intervals for every family of initial values with i_h v_h -> x, and so do the
+    iterates of every A-stable rational scheme r = P/Q of order p >= 1 as h and tau tend to 0, with
+    the temporal error K n tau tau^p ||Delta_h^(p+1) w|| (K independent of h). The clauses (static)
+    and (heat) assume no cochain reading maps, which goes beyond [HolstStern2012] and, for the heat
+    equation, [HolstTiee2018] (cochain morphisms), and the inner-product defect is measured from the
+    discrete graph norm (theirs is the operator norm ||I - J_h|| on W_h). The compared witness
+    FEEC.crime_nonvacuous shows that the hypotheses admit genuine crimes: it states that a Hilbert
+    complex with R in every degree, with closed ranges and nonzero harmonic forms on the window
+    [0, 3), carries a family with cochain reading maps and cochain projections, i_n pi_n = 1, not
+    isometric (i_n* i_n != 1) but with ||1 - i_n* i_n|| -> 0, hence delta_n -> 0, which meets the
+    hypotheses of the three clauses (with the discrete Poincare inequality and convergence for every
+    datum), reads a discrete harmonic form off the harmonic forms, and has a positive error at some
+    datum at every level. The solution's witness is the window R --id--> R --0--> R (harmonic forms
+    R (0, 0, 1)) with the reading maps i_n = 1 + h_n N, N(a, b, c) = (0, c, 0), h_n = 1/(n+1), the
+    cochain projections pi_n = 1 - h_n N, and the datum (0, 0, 1); the statement fixes none of
+    these. The compared witness FEEC.crime_defect_nonvacuous shows that a vanishing defect is a
+    strictly weaker hypothesis than ||1 - i_h* i_h|| -> 0: it states that a Hilbert complex with
+    l2(N, R) in every degree, whose differential d on the window [0, 2) is unbounded (no C with
+    ||d x|| <= C ||x|| on D(d)) and has closed ranges, carries a family with cochain reading maps
+    and cochain projections pi_n bounded by 1 in the graph norm, with i_n pi_n -> 1 on D(d),
+    ||1 - i_n* i_n|| = 1 at every level and delta_n -> 0, which has the discrete Poincare inequality
+    and converges for every datum: it meets the hypotheses of the convergence conjunct of the
+    cochain clause and of the heat clause, which ||1 - i_n* i_n|| -> 0 excludes. The solution's
+    witness is d^0 = diag(k + 1) on l2 (closed, onto), all other differentials 0, the modes k <= n
+    of both degrees as discrete spaces, reading maps that double the square norm of the highest mode
+    k = n of degree 0, and the truncations to the modes k <= n, rescaled on that mode, as cochain
+    projections: 1 - i_n* i_n is minus the projection on that mode, on which d_n is (n + 1) sqrt 2,
+    so ||(1 - i_n* i_n) v|| <= (||v|| + ||d_n v||) / (n + 1), and d is unbounded
+    (||d i_n (e_n, 0)|| >= (n + 1) sqrt 2 while ||i_n (e_n, 0)|| <= 2). The conforming case
+    (subcomplexes with cochain projections, the inclusion as reading map) is the Palomar entry
+    palomar/feec. The statement is self-contained over Mathlib; the proof is the library Feec of
+    this repository.
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -181,8 +180,10 @@ sources:
     location: "Springer, 2nd ed., 2006, Ch. 15 (the lumped mass method)"
     relationship: "background"
     note: >-
-      The lumped mass method, an inner-product crime whose defect is small only in the graph
-      norm: the reason the defect of the challenge is measured from the discrete graph norm.
+      The lumped mass method, an inner-product crime: the motivating example for measuring the
+      defect of the challenge from the discrete graph norm. Its analysis is not compared
+      (Feec.FiniteElement.LumpedMassDefect has element-level identities and bounds, not assembled
+      over a mesh).
     author_endorsement: "not-contacted"
   - title: "Solving Ordinary Differential Equations II"
     authors:
@@ -210,7 +211,7 @@ related_formalizations: []
 status:
   scope: >-
     Formalized and compared: the theorem FEEC.crimeFEEC and the witnesses FEEC.crime_nonvacuous
-    and FEEC.crime_defect_nonvacuous (Challenge.lean, 433 lines), the first two formerly Theorem 4
+    and FEEC.crime_defect_nonvacuous (Challenge.lean, 436 lines), the first two formerly Theorem 4
     and a witness of palomar/feec (the witness now also states the discrete Poincare inequality and
     convergence for every datum, so that it meets the hypotheses of the three clauses; since
     2026-11-24 the inner-product defect is measured from the discrete graph norm, a strengthening
@@ -288,10 +289,9 @@ fidelity:
     morphisms); the read error compares d sigma with i_h d_h sigma_h. A family carries left
     inverses of the reading maps bounded in W uniformly in h (so ||v|| <= C ||i_h v||), as in the
     library; [HolstStern2012] assume V-bounded projections only (uniform injectivity follows there
-    from ||1 - i_h* i_h|| < 1), so this is an extra hypothesis. It no longer follows from the
-    defect hypothesis, since the defect is measured from the discrete graph norm (a small defect
-    delta_h gives no uniform injectivity), and it holds for mass lumping (the lumped and consistent
-    masses are equivalent uniformly on every mesh). (4) The Strang lemma takes the residual in the
+    from ||1 - i_h* i_h|| < 1), so this is an extra hypothesis, of every clause: the defect
+    delta_h, measured from the discrete graph norm, bounds ||(1 - i_h* i_h) v|| only by
+    delta_h (||v|| + ||d_h v||). (4) The Strang lemma takes the residual in the
     form |B(x; y) - <i_h v, f>| <= eps (||tau|| + ||d_h tau|| + ||v|| + ||d_h v|| +
     ||q||) at every discrete test function y = (tau, v, q), B the mixed form of d_h. (5) The
     cohomology isomorphism is stated elementwise (onto: every discrete cycle is pi_h of a cycle
@@ -302,9 +302,10 @@ fidelity:
     inverses of the family. (6) The heat clause assumes convergence of the static method for every
     datum (which the cochain clause supplies for cochain reading maps) and a vanishing inner-product
     defect delta_h -> 0 in the discrete graph norm (implied by ||1 - i_h* i_h|| -> 0, the hypothesis
-    of [HolstStern2012], §3.3, whose Thm 3.10 also applies 1 - J_h only to discrete solutions and
-    their differentials; their Thm 3.12, for the loads Pi_h f, needs the operator norm, and the load
-    here is i_h* f); the discrete generator is (d_h - d_h*)^2 = -Delta_h, and the evolution verdict
+    of [HolstStern2012], §3.3; the proof of their Thm 3.10 applies I - J_h only to the solution of
+    their modified discrete problem (6), to its differentials and to its Hodge components, while
+    their Thm 3.12, for the loads Pi_h f, applies it to Pi_h f; the load here is i_h* f); the
+    discrete generator is (d_h - d_h*)^2 = -Delta_h, and the evolution verdict
     is that of the conforming heat equation of palomar/feec (the same structure, with i_h as reading
     map): density of D(L^2), existence and uniqueness of strong solutions, contractions,
     semidiscrete and fully discrete convergence, temporal error. Its proof combines the static
@@ -324,14 +325,14 @@ fidelity:
     infinite-dimensional finite element instance (the weak-symmetry scheme of
     palomar/einsteinbianchi is one in Feec, not compared here). FEEC.crime_nonvacuous has
     ||1 - i_n* i_n|| -> 0; the two defects are separated by FEEC.crime_defect_nonvacuous, stated
-    for some Hilbert complex with l2(N, R) in every degree (the statement fixes no differential;
-    for cochain reading maps with bounded left inverses, ||1 - i_n* i_n|| = 1 with delta_n -> 0
-    forces an unbounded d^0); its solution is a diagonal model, not a finite element family. Mass
-    lumping, the motivating example of the description, is neither compared nor proved in Feec
-    (Feec.FiniteElement.LumpedMassDefect has the element-level identities and bounds only). (8)
-    The heat statement assumes a real structure [NormedSpace R (W i)] for derivatives in time, and
-    nothing relating it to the K-structure: a real normed-space structure on a normed K-space is
-    the restricted one, which the solution proves. (9) Shared vocabulary: the notions this entry shares with the other Palomar entries are
+    for some Hilbert complex with l2(N, R) in every degree (the statement fixes no differential,
+    and states that the differential of the window is unbounded); its solution is a diagonal
+    model, not a finite element family. Mass lumping, the motivating example of the description,
+    is neither compared nor proved in Feec (Feec.FiniteElement.LumpedMassDefect has the
+    element-level identities and bounds only). (8) The heat statement assumes a real structure
+    [NormedSpace R (W i)] for derivatives in time, and nothing relating it to the K-structure: a
+    real normed-space structure on a normed K-space is the restricted one, which the solution
+    proves. (9) Shared vocabulary: the notions this entry shares with the other Palomar entries are
     copied from the canonical blocks of palomar/shared/vocabulary.lean.txt (HilbertComplex; window
     with Total, totalDomain, totalD and wave; the square sq of an operator; boundaries; the mixed
     problem MixedSpace, mixedForm, galerkin and IsMixedSolution; the evolution verdict semiflow
@@ -361,13 +362,28 @@ review:
     CrimeFamily.defect, a hypothesis of the convergence and rate conjuncts of the cochain clause and
     of the heat clause, is the least delta with ||(1 - i_h* i_h) v|| <= delta (||v|| + ||d_h v||)
     (was the operator norm ||1 - i_h* i_h||, which bounds it), so that inner-product crimes small
-    only in the graph norm, as mass lumping, are admitted by the hypotheses. The new statement
+    only in the discrete graph norm are admitted by the hypotheses (FEEC.crime_defect_nonvacuous).
+    The new statement
     implies the former one (proved in a scratch file, not committed: the former CochainVerdict and
     heat clause follow from the new ones with defect <= ||1 - i_h* i_h||); FEEC.crime_nonvacuous
     states both ||1 - i_n* i_n|| -> 0 and the vanishing of the defect. The Feec theorems were
     generalized at their root (Feec.HilbertComplex.ApproxComplexCrime.Family.graphDefect, the norm
-    of 1 - J_h from the graph space of d_h to X_h, in the static, cochain, heat and wave theories
-    with crimes, same constants). New entry (2026-11-18, one story per entry): FEEC.crimeFEEC and
+    of 1 - J_h from the graph space of d_h to X_h, in the static, cochain and heat theories with
+    crimes and in the wave theory of ApproxComplexCrime, same constants; the families of discrete
+    complexes Feec.HilbertComplex.ApproxComplex keep ||1 - J_h|| -> 0 and enter that theory
+    through ApproxComplex.toCrime). Independent review (2026-11-24): the former statements of
+    FEEC.crimeFEEC and FEEC.crime_nonvacuous re-proved from the new ones in a scratch file (not
+    committed); the changed Feec statements checked to imply the former ones with the constants
+    stated; the defect witness checked (1 - i_n* i_n is minus the projection on the highest mode,
+    so ||1 - i_n* i_n|| = 1, and the defect is at most 1/(n + 1)); FEEC.crime_defect_nonvacuous
+    now also states that the differential of the window is unbounded (was informal); the
+    unproved quantitative claims about mass lumping removed from the description, the module
+    docstring and the README row (mass lumping is the motivating example, not compared); the
+    remarks on [HolstStern2012] of fidelity (6) checked against arXiv:1005.4455 (§3.3, the proofs
+    of Thms 3.10 and 3.12); in Feec the permutation invariance of the integrals of the
+    barycentric coordinates is proved once (Feec.FiniteElement.integral_comp_baryCoord_perm, for
+    P1Global.integral_baryCoord and LumpedMassDefect.integral_baryCoord_mul_perm). New entry
+    (2026-11-18, one story per entry): FEEC.crimeFEEC and
     FEEC.crime_nonvacuous were Theorem 4 and a witness of palomar/feec; they move here with the
     definitions only they use (CrimeFamily and its notions, totalHarmonic, totalMixedSpace); the
     statement of FEEC.crimeFEEC was unchanged at the move (its three clauses are those of the former

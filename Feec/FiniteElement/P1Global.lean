@@ -24,7 +24,9 @@ are a linear isomorphism onto `P̊₁⁻Λ⁰(M)` (`p1GlobalEquiv₀`). Then
   (`inner_maximal_p1Global`: `d` the exterior derivative of the `L²` de Rham complex);
 * **`inner_glue_p1Global_nodalIndicator_one`**: the lumped mass is the integral of the hat
   function, `m(x) = ⟪φₓ, 1⟫_{L²(Ω)} = ∫_Ω φₓ`, the row sum of the consistent mass matrix: the vertex
-  quadrature is exact for `P₁` hat functions (`integral_baryCoord`: `∫_T λⱼ = |T| / (n + 1)`);
+  quadrature is exact for `P₁` hat functions (`integral_baryCoord`: `∫_T λⱼ = |T| / (n + 1)`, by
+  the invariance of the integrals of the barycentric coordinates under the permutations of the
+  vertices, `integral_comp_baryCoord_perm`);
 * **in the maximum norm**: a `P₁` function attains its extreme values at the vertices,
   `|Πₜu(x)| ≤ maxⱼ |u(pⱼ)|` on `T` (`abs_p1Interp_le`), and the `P₁` interpolation error of
   `f ∈ C²` with `|∂ᵢ∂ₖ f| ≤ D` on `T` is `|f(x) - Πₜf(x)| ≤ n² D δ² / 2`, `δ` the diameter of `T`
@@ -89,17 +91,20 @@ theorem baryCoord_refMap (T : Affine.Simplex ℝ (Fin n → ℝ) n) (y : Fin n �
     baryCoord T.points (T.refMap y) = refBary y := by
   rw [← simplexMap_eq_refMap, baryCoord_simplexMap (isUnit_det_edgeMatrix T)]
 
-/-- **The integral of a barycentric coordinate**: `∫_T λⱼ = |T| / (n + 1)` (the vertex
-quadrature is exact for the `P₁` hat functions). -/
-theorem integral_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (n + 1)) :
-    ∫ x in T.closedInterior, baryCoord T.points x j = volume.real T.closedInterior / (n + 1) := by
-  set T' := T.reindex (Equiv.swap 0 j)
-  have hpts : T'.points = T.points ∘ Equiv.swap 0 j := by
-    funext i; simp [T', Equiv.symm_swap]
-  have hbar : ∀ x, baryCoord T'.points x 0 = baryCoord T.points x j := fun x => by
-    have := baryCoord_comp_perm (isUnit_det_edgeMatrix T) (Equiv.swap 0 j)
-      (hpts ▸ isUnit_det_edgeMatrix T') x 0
-    rw [hpts, this, Equiv.swap_apply_left]
+/-- **Permutation invariance of the integrals of the barycentric coordinates**: for every `F`,
+`∫_T F(λ_{π 0}, …, λ_{π n}) = ∫_T F(λ₀, …, λₙ)`. The left side is the integral over `T` with its
+vertices reindexed by `π`, which has the same volume, so both are `|det B_T| ∫_{T̂} F(λ̂)`. -/
+theorem integral_comp_baryCoord_perm (T : Affine.Simplex ℝ (Fin n → ℝ) n)
+    (π : Equiv.Perm (Fin (n + 1))) (F : (Fin (n + 1) → ℝ) → ℝ) :
+    ∫ x in T.closedInterior, F (fun k => baryCoord T.points x (π k)) =
+      ∫ x in T.closedInterior, F (baryCoord T.points x) := by
+  set T' := T.reindex π.symm
+  have hpts : T'.points = T.points ∘ π := by
+    funext k; simp [T']
+  have hbar : ∀ x, baryCoord T'.points x = fun k => baryCoord T.points x (π k) := fun x =>
+    funext fun k => by
+      have := baryCoord_comp_perm (isUnit_det_edgeMatrix T) π (hpts ▸ isUnit_det_edgeMatrix T') x k
+      rw [hpts, this]
   have hT : T'.closedInterior = T.closedInterior := Affine.Simplex.closedInterior_reindex _ _
   have hdet : |LinearMap.det T'.linearPart| = |LinearMap.det T.linearPart| := by
     have h1 := volume_real_closedInterior T
@@ -108,15 +113,26 @@ theorem integral_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (
     have : (n.factorial : ℝ) ≠ 0 := by positivity
     field_simp at h2
     linarith
+  calc ∫ x in T.closedInterior, F (fun k => baryCoord T.points x (π k))
+      = ∫ x in T'.closedInterior, F (baryCoord T'.points x) := by
+        rw [hT]; exact integral_congr_ae (Filter.Eventually.of_forall fun x => by simp only [hbar])
+    _ = ∫ x in T.closedInterior, F (baryCoord T.points x) := by
+        rw [integral_closedInterior_eq, integral_closedInterior_eq T, hdet]
+        simp only [baryCoord_refMap]
+
+/-- **The integral of a barycentric coordinate**: `∫_T λⱼ = |T| / (n + 1)` (the vertex
+quadrature is exact for the `P₁` hat functions). -/
+theorem integral_baryCoord (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (n + 1)) :
+    ∫ x in T.closedInterior, baryCoord T.points x j = volume.real T.closedInterior / (n + 1) := by
+  have e := integral_comp_baryCoord_perm T (Equiv.swap 0 j) fun l => l 0
+  simp only [Equiv.swap_apply_left] at e
   calc ∫ x in T.closedInterior, baryCoord T.points x j
-      = ∫ x in T'.closedInterior, baryCoord T'.points x 0 := by
-        rw [hT]; exact integral_congr_ae (Filter.Eventually.of_forall fun x => (hbar x).symm)
-    _ = |LinearMap.det T'.linearPart| *
+      = |LinearMap.det T.linearPart| *
           ∫ y in (Mesh.refSimplex n).closedInterior, (1 - ∑ i, y i) ^ 1 := by
-        rw [integral_closedInterior_eq]
+        rw [e, integral_closedInterior_eq]
         simp [baryCoord_refMap]
     _ = volume.real T.closedInterior / (n + 1) := by
-        rw [refSimplex_closedInterior_eq, setIntegral_refSimplex_one_sub_sum_pow, hdet,
+        rw [refSimplex_closedInterior_eq, setIntegral_refSimplex_one_sub_sum_pow,
           volume_real_closedInterior, Nat.factorial_one, add_comm 1 n, Nat.factorial_succ]
         push_cast
         field_simp

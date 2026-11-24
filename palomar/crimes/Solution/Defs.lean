@@ -324,7 +324,7 @@ structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
 end CrimeFamily
 end HilbertComplex
 
-/-! ### Variational crimes: the theorem and its witness -/
+/-! ### Variational crimes: the theorem and its witnesses -/
 
 variable [∀ i, NormedSpace ℝ (W i)]
 end FEEC

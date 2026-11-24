@@ -20,7 +20,8 @@ discrete differential `𝐝ₙ (u, w) = (0, A⁻¹ (u + (√2 - 1) uₙ eₙ))` 
 highest mode of degree `0`, `⟪iₙ v, iₙ w⟫ = ⟪v, w⟫ + v⁰ₙ w⁰ₙ` (`HighMode.inner_incl`), so
 `1 - iₙ* iₙ` is minus the projection on that mode (`HighMode.one_sub_J_apply`) and
 `‖1 - iₙ* iₙ‖ = 1` (`HighMode.norm_one_sub_J`), while `𝐝ₙ` is `(n + 1) √2` on it:
-`‖(1 - iₙ* iₙ) v‖ ≤ (‖v‖ + ‖𝐝ₙ v‖) / (n + 1)` (`HighMode.norm_one_sub_J_apply_le`).
+`‖(1 - iₙ* iₙ) v‖ ≤ (‖v‖ + ‖𝐝ₙ v‖) / (n + 1)` (`HighMode.norm_one_sub_J_apply_le`). So `𝐝` is
+unbounded: `‖𝐝 iₙ (eₙ, 0)‖ ≥ (n + 1) √2` while `‖iₙ (eₙ, 0)‖ ≤ 2` (`HighMode.not_bounded_totalD`).
 
 ## References
 
@@ -433,6 +434,36 @@ theorem totalD_incl (v : X n) :
     rfl
 
 theorem isCochain : family.IsCochain := ⟨fun n v => incl_mem n v, fun n v => totalD_incl n v⟩
+
+/-- `‖v‖ ≤ ‖iₙ v‖` (`HighMode.inner_incl`). -/
+theorem norm_le_norm_incl (v : X n) : ‖v‖ ≤ ‖incl n v‖ := by
+  refine (pow_le_pow_iff_left₀ (norm_nonneg _) (norm_nonneg _) two_ne_zero).1 ?_
+  have e := inner_incl n v v
+  rw [real_inner_self_eq_norm_sq, real_inner_self_eq_norm_sq] at e
+  rw [e]
+  nlinarith [mul_self_nonneg ((v 0 : ℓ²(ℕ, ℝ)) n)]
+
+/-- **The differential of the window is unbounded**: at `x = iₙ (eₙ, 0)`, `‖x‖ ≤ 2` while
+`‖𝐝 x‖ = ‖iₙ 𝐝ₙ (eₙ, 0)‖ ≥ (n + 1) √2` (`HighMode.mul_abs_top_le`). -/
+theorem not_bounded_totalD : ¬ ∃ C, ∀ x : (complex.totalD 0 2).domain,
+    ‖complex.totalD 0 2 x‖ ≤ C * ‖(x : T)‖ := by
+  rintro ⟨C, hC⟩
+  obtain ⟨n, hn⟩ := exists_nat_gt (2 * C)
+  have h := hC ⟨incl n (topX n), incl_mem n (topX n)⟩
+  rw [totalD_incl] at h
+  change ‖incl n (D n (topX n))‖ ≤ C * ‖incl n (topX n)‖ at h
+  have h1 : (n : ℝ) + 1 ≤ ‖D n (topX n)‖ := by
+    have := mul_abs_top_le n (topX n)
+    rw [coord_topX, abs_one, mul_one] at this
+    nlinarith [Real.one_lt_sqrt_two, (Nat.cast_nonneg n : (0 : ℝ) ≤ n)]
+  have h2 := (h1.trans (norm_le_norm_incl n (D n (topX n)))).trans h
+  have h3 : ‖incl n (topX n)‖ ≤ 2 := by
+    simpa [norm_topX] using norm_incl_apply_le n (topX n)
+  have h4 := norm_nonneg (incl n (topX n))
+  have h5 : (0 : ℝ) ≤ n := Nat.cast_nonneg n
+  rcases le_or_gt 0 C with hC0 | hC0
+  · nlinarith [mul_le_mul_of_nonneg_left h3 hC0]
+  · nlinarith [mul_le_mul_of_nonneg_right hC0.le h4]
 
 /-- The truncation commutes with `A⁻¹`: `P A⁻¹ u = A⁻¹ P u` (`truncSum_invDiag`). -/
 theorem P_invDiag (u : (invDiag ℝ).domain) : P n (invDiag ℝ u) = Λ n (P n u) := by

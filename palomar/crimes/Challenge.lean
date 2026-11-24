@@ -43,19 +43,19 @@ beyond both sources:
 The defects are the price of the crimes: the inner-product defect enters the estimates. It is
 measured from the discrete graph norm, as the least `δ` with
 `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)`, since the estimates apply `1 - iₕ* iₕ` only to discrete
-forms whose graph norm they control. It is at most the operator norm `‖1 - iₕ* iₕ‖`, which
-[HolstStern2012], §3.3, require to tend to `0` for convergence, and can be much smaller: for mass
-lumping of `P₁` elements ([Thomee2006], Ch. 15) it is `O(h)`, `h` the longest edge, while
-`‖1 - iₕ* iₕ‖ ≥ n / (n + 2)` on every mesh of dimension `n`. The witness
-`FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert complex with
-nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`, hence a
-vanishing defect, meet the hypotheses of the three clauses, read a discrete harmonic form off the
-harmonic forms, and leave a positive error at every level. The witness
-`FEEC.crime_defect_nonvacuous` shows that a vanishing defect is a strictly weaker hypothesis than
-`‖1 - iₕ* iₕ‖ → 0`: on a Hilbert complex with `ℓ²(ℕ, ℝ)` in every degree, cochain reading maps with
-`‖1 - iₙ* iₙ‖ = 1` at every level and a vanishing defect meet the hypotheses of the convergence
-conjunct of the cochain clause and of the heat clause. The conforming case (subcomplexes with
-cochain projections) is the Palomar entry `palomar/feec`.
+forms whose graph norm they control; it is at most the operator norm `‖1 - iₕ* iₕ‖`, which
+[HolstStern2012], §3.3, assume to tend to `0` for convergence. The motivating example is mass
+lumping of `P₁` elements ([Thomee2006], Ch. 15), an inner-product crime; its analysis is not
+compared. The witness `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a
+Hilbert complex with nonzero harmonic forms, non-isometric cochain reading maps with
+`‖1 - iₕ* iₕ‖ → 0`, hence a vanishing defect, meet the hypotheses of the three clauses, read a
+discrete harmonic form off the harmonic forms, and leave a positive error at every level. The
+witness `FEEC.crime_defect_nonvacuous` shows that a vanishing defect is a strictly weaker
+hypothesis than `‖1 - iₕ* iₕ‖ → 0`: on a Hilbert complex with `ℓ²(ℕ, ℝ)` in every degree and an
+unbounded differential, cochain reading maps with `‖1 - iₙ* iₙ‖ = 1` at every level and a vanishing
+defect meet the hypotheses of the convergence conjunct of the cochain clause and of the heat
+clause. The conforming case (subcomplexes with cochain projections) is the Palomar entry
+`palomar/feec`.
 
 ## References
 
@@ -369,7 +369,7 @@ structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
 end CrimeFamily
 end HilbertComplex
 
-/-! ### Variational crimes: the theorem and its witness -/
+/-! ### Variational crimes: the theorem and its witnesses -/
 
 variable [∀ i, NormedSpace ℝ (W i)]
 /-- **Variational crimes** ([HolstStern2012], §3: Thms 3.3, 3.5, 3.9, 3.10,
@@ -413,7 +413,8 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
   sorry
 
 /-- **Non-vacuity of the defect in the graph norm**: a Hilbert complex with `ℓ²(ℕ, ℝ)` in every
-degree, with closed ranges on the window `[0, 2)`, carries a family of discrete differential spaces
+degree, whose differential `𝐝` on the window `[0, 2)` is unbounded (no `C` with
+`‖𝐝 x‖ ≤ C ‖x‖` on `D(𝐝)`) and has closed ranges, carries a family of discrete differential spaces
 indexed by `ℕ` (refined along `atTop`) with cochain reading maps `iₙ` and cochain projections `πₙ`
 bounded by `1` in the graph norm, with `iₙ πₙ → 1` on `D(𝐝)`, such that `‖1 - iₙ* iₙ‖ = 1` at
 every level (so `‖1 - iₙ* iₙ‖ ↛ 0`) while the inner-product defect tends to `0`; with the discrete
@@ -422,6 +423,8 @@ conjunct of the cochain clause and of the heat clause of `FEEC.crimeFEEC`, which
 `‖1 - iₙ* iₙ‖ → 0` would exclude. -/
 theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ²(ℕ, ℝ))
     (S : H.CrimeFamily.{0} 0 2 ℕ) (P : S.CochainProj 1),
+    (¬ ∃ C, ∀ x : (H.totalD 0 2).domain,
+      ‖H.totalD 0 2 x‖ ≤ C * ‖(x : Total (fun _ : ℤ => ℓ²(ℕ, ℝ)) 0 2)‖) ∧
     (∀ i : Fin 2, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℓ²(ℕ, ℝ))) ∧
     S.l = atTop ∧ S.IsCochain ∧ (∃ cP, S.IsPoincare cP) ∧
     (∀ n, ‖1 - (S.incl n).adjoint ∘L S.incl n‖ = 1) ∧ Tendsto S.defect atTop (𝓝 0) ∧

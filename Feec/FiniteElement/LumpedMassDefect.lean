@@ -10,22 +10,25 @@ On a simplex `T` of `ℝⁿ` with vertices `p₀, …, pₙ` and barycentric coo
 element mass** `∫_T Πₜu Πₜw` is computed exactly, and the **lumped element mass**
 `|T| / (n + 1) Σⱼ uⱼ wⱼ` is its vertex quadrature (summed over the simplices at a vertex, the
 weights are the lumped mass `Feec.FiniteElement.lumpedMass`, [Thomee2006], Ch. 15). Their
-difference is a sum over the edges, which the gradient controls: the inner-product crime of mass
-lumping is small in the graph norm only.
+difference is a sum over the pairs of vertices, which the gradient controls: on each element it is
+at most a constant times the edge length, the gradient of `Πₜu` and the lumped norm of `w`. These
+are element-level identities and bounds; they are not assembled over a mesh here.
 
 ## Main results
 
 * `integral_baryCoord_mul`: `∫_T λᵢ λⱼ = |T| (1 + δᵢⱼ) / ((n + 1) (n + 2))`, from the change of
   variables to the reference simplex (`integral_baryCoord_mul_eq`), its invariance under the
-  permutations of the vertices (`integral_baryCoord_mul_perm`),
+  permutations of the vertices (`integral_baryCoord_mul_perm`, from
+  `Feec.FiniteElement.integral_comp_baryCoord_perm`),
   `∫_T λⱼ² = 2 |T| / ((n + 1) (n + 2))` (`integral_baryCoord_mul_self`) and `Σₖ λₖ = 1`.
 * `integral_p1Interp_mul`: **the consistent element mass**,
   `∫_T Πₜu Πₜw = |T| (Σⱼ uⱼ wⱼ + (Σⱼ uⱼ) (Σⱼ wⱼ)) / ((n + 1) (n + 2))`.
 * `lumped_sub_integral_p1Interp_mul`: **the lumped minus the consistent element mass** is
-  `|T| / (2 (n + 1) (n + 2)) Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ)`, nonnegative for `u = w`; with
-  `abs_lumped_sub_integral_p1Interp_mul_le` (Cauchy–Schwarz over the pairs of vertices), the edge
-  differences `uᵢ - uⱼ = ∇Πₜu · (pᵢ - pⱼ)` (`sub_eq_p1Grad_dotProduct`) and their bound
-  `Σᵢ Σⱼ (uᵢ - uⱼ)² ≤ (n + 1)² δ² |∇Πₜu|²` by the edge length `δ` (`sum_sum_sq_sub_le_p1Grad`),
+  `|T| / (2 (n + 1) (n + 2)) Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ)` (`sum_sum_sub_mul_sub`), nonnegative for
+  `u = w`; with `abs_lumped_sub_integral_p1Interp_mul_le` (Cauchy–Schwarz over the pairs of
+  vertices), the edge differences `uᵢ - uⱼ = ∇Πₜu · (pᵢ - pⱼ)` (`sub_eq_p1Grad_dotProduct`) and
+  their bound `Σᵢ Σⱼ (uᵢ - uⱼ)² ≤ (n + 1)² δ² |∇Πₜu|²` by the edge length `δ`
+  (`sum_sum_sq_sub_le_p1Grad`),
   and `Σᵢ Σⱼ (wᵢ - wⱼ)² ≤ 2 (n + 1) Σⱼ wⱼ²` (`sum_sum_sq_sub_le`): **the defect of an element is
   at most a constant times `δ ‖∇Πₜu‖_{L²(T)}` times the lumped norm of `w`**
   (`abs_lumped_sub_integral_p1Interp_mul_le_p1Grad`), with no shape regularity.
@@ -57,30 +60,13 @@ theorem integral_baryCoord_mul_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) (i 
   rw [integral_closedInterior_eq, refSimplex_closedInterior_eq]
   simp only [baryCoord_refMap]
 
-/-- **Permutation invariance**: `∫_T λ_{π i} λ_{π j} = ∫_T λᵢ λⱼ`. -/
+/-- **Permutation invariance**: `∫_T λ_{π i} λ_{π j} = ∫_T λᵢ λⱼ`
+(`integral_comp_baryCoord_perm`). -/
 theorem integral_baryCoord_mul_perm (T : Affine.Simplex ℝ (Fin n → ℝ) n)
     (π : Equiv.Perm (Fin (n + 1))) (i j : Fin (n + 1)) :
     ∫ x in T.closedInterior, baryCoord T.points x (π i) * baryCoord T.points x (π j) =
-      ∫ x in T.closedInterior, baryCoord T.points x i * baryCoord T.points x j := by
-  set T' := T.reindex π.symm
-  have hpts : T'.points = T.points ∘ π := by
-    funext k; simp [T']
-  have hbar : ∀ x k, baryCoord T'.points x k = baryCoord T.points x (π k) := fun x k => by
-    have := baryCoord_comp_perm (isUnit_det_edgeMatrix T) π (hpts ▸ isUnit_det_edgeMatrix T') x k
-    rw [hpts, this]
-  have hT : T'.closedInterior = T.closedInterior := Affine.Simplex.closedInterior_reindex _ _
-  have hdet : |LinearMap.det T'.linearPart| = |LinearMap.det T.linearPart| := by
-    have h1 := volume_real_closedInterior T
-    have h2 := volume_real_closedInterior T'
-    rw [hT, h1] at h2
-    have : (n.factorial : ℝ) ≠ 0 := by positivity
-    field_simp at h2
-    linarith
-  calc ∫ x in T.closedInterior, baryCoord T.points x (π i) * baryCoord T.points x (π j)
-      = ∫ x in T'.closedInterior, baryCoord T'.points x i * baryCoord T'.points x j := by
-        rw [hT]
-        exact integral_congr_ae (Filter.Eventually.of_forall fun x => by simp only [hbar])
-    _ = _ := by rw [integral_baryCoord_mul_eq, integral_baryCoord_mul_eq, hdet]
+      ∫ x in T.closedInterior, baryCoord T.points x i * baryCoord T.points x j :=
+  integral_comp_baryCoord_perm T π fun l => l i * l j
 
 /-- `∫_T λⱼ² = 2 |T| / ((n + 1) (n + 2))`. -/
 theorem integral_baryCoord_mul_self (T : Affine.Simplex ℝ (Fin n → ℝ) n) (j : Fin (n + 1)) :
@@ -189,6 +175,16 @@ theorem integral_p1Interp_mul (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u w : 
   simp_rw [e3, ← Finset.mul_sum, Finset.sum_add_distrib, ← Finset.sum_mul]
   ring
 
+/-- **The sum over the pairs of vertices**:
+`Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ) = 2 ((n + 1) Σⱼ uⱼ wⱼ - (Σⱼ uⱼ) (Σⱼ wⱼ))` over the `n + 1` vertices. -/
+theorem sum_sum_sub_mul_sub (u w : Fin (n + 1) → ℝ) :
+    ∑ i, ∑ j, (u i - u j) * (w i - w j) =
+      2 * ((n + 1) * ∑ j, u j * w j - (∑ j, u j) * ∑ j, w j) := by
+  simp only [sub_mul, mul_sub, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ,
+    Fintype.card_fin, nsmul_eq_mul, ← Finset.sum_mul, ← Finset.mul_sum]
+  push_cast
+  ring
+
 /-- **The lumped minus the consistent element mass**:
 `|T| / (n + 1) Σⱼ uⱼ wⱼ - ∫_T Πₜu Πₜw = |T| / (2 (n + 1) (n + 2)) Σᵢ Σⱼ (uᵢ - uⱼ) (wᵢ - wⱼ)`
 (so the lumped element mass dominates the consistent one, `u = w`). -/
@@ -198,15 +194,7 @@ theorem lumped_sub_integral_p1Interp_mul (T : Affine.Simplex ℝ (Fin n → ℝ)
         ∫ x in T.closedInterior, p1Interp T.points u x * p1Interp T.points w x =
       volume.real T.closedInterior / (2 * (n + 1) * (n + 2)) *
         ∑ i, ∑ j, (u (T.points i) - u (T.points j)) * (w (T.points i) - w (T.points j)) := by
-  rw [integral_p1Interp_mul]
-  have e : ∑ i, ∑ j, (u (T.points i) - u (T.points j)) * (w (T.points i) - w (T.points j)) =
-      2 * ((n + 1) * ∑ j, u (T.points j) * w (T.points j) -
-        (∑ j, u (T.points j)) * ∑ j, w (T.points j)) := by
-    simp only [sub_mul, mul_sub, Finset.sum_sub_distrib, Finset.sum_const, Finset.card_univ,
-      Fintype.card_fin, nsmul_eq_mul, ← Finset.sum_mul, ← Finset.mul_sum]
-    push_cast
-    ring
-  rw [e]
+  rw [integral_p1Interp_mul, sum_sum_sub_mul_sub (fun j => u (T.points j)) fun j => w (T.points j)]
   field_simp
   ring
 
@@ -220,18 +208,8 @@ theorem sub_eq_p1Grad_dotProduct {p : Fin (n + 1) → Fin n → ℝ} (hp : IsUni
 /-- `Σᵢ Σⱼ (wᵢ - wⱼ)² ≤ 2 (n + 1) Σⱼ wⱼ²` over the `n + 1` vertices. -/
 theorem sum_sum_sq_sub_le (w : Fin (n + 1) → ℝ) :
     ∑ i, ∑ j, (w i - w j) ^ 2 ≤ 2 * (n + 1) * ∑ j, w j ^ 2 := by
-  have e : ∑ i, ∑ j, (w i - w j) ^ 2 = 2 * (n + 1) * ∑ j, w j ^ 2 - 2 * (∑ j, w j) ^ 2 := by
-    have h1 : ∀ i, ∑ j, (w i - w j) ^ 2 =
-        (n + 1) * w i ^ 2 - 2 * w i * ∑ j, w j + ∑ j, w j ^ 2 := by
-      intro i
-      simp only [sub_sq, Finset.sum_add_distrib, Finset.sum_sub_distrib, Finset.sum_const,
-        Finset.card_univ, Fintype.card_fin, nsmul_eq_mul, ← Finset.mul_sum]
-      push_cast
-      ring
-    simp only [h1, Finset.sum_add_distrib, Finset.sum_sub_distrib, ← Finset.mul_sum,
-      ← Finset.sum_mul, Finset.sum_const, Finset.card_univ, Fintype.card_fin, nsmul_eq_mul]
-    push_cast
-    ring
+  have e := sum_sum_sub_mul_sub w w
+  simp only [← sq] at e
   rw [e]
   nlinarith [sq_nonneg (∑ j, w j)]
 

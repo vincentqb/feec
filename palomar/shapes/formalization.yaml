@@ -3,7 +3,7 @@
 # differential forms and their degrees of freedom (`palomar/shapes/`). New on 2026-11-18, from the
 # former palomar/fem (FEEC.unisolvent, FEEC.affineInvariantForms,
 # FEEC.charZero_iff_classification, FEEC.charZero_iff_closed_eq_exact), which had taken the
-# classification theorems from the former palomar/periodic.
+# classification theorems from the former palomar/periodic. FEEC.assembly added on 2026-11-24.
 # Open items before submitting (user decisions): the root licence file and `project.license`
 # (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
 # a public GitHub repository and the 40-character commit to submit.
@@ -19,7 +19,7 @@ project:
     degree r), the Koszul differential kappa (contraction with the position vector field), the
     trimmed spaces P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1) and the
     pullback (phi^* omega)_t = sum_(#s = #t) det B_(s,t) (omega_s o phi) along phi(x) = B x + b.
-    Four compared theorems.
+    Five compared theorems.
     FEEC.affineInvariantForms (the headline; AFW2006 §3.4, over every field K of characteristic
     0): d H_r Lambda^k and kappa H_r Lambda^k are invariant under the pullback of every linear
     map, and the subspaces of H_r Lambda^k invariant under GL(n, K) are 0,
@@ -45,13 +45,33 @@ project:
     P_(r+k-m-1) Lambda^(m-k)(R^m)), k <= m < r + k, is zero, and the number of these moments,
     sum_m C(n+1, m+1) dim (test space), is dim P_r Lambda^k (resp. dim P_r^- Lambda^k): the
     moments are unisolvent, so they are degrees of freedom of the spaces.
+    FEEC.assembly (AFW2010 §5.2; AFW2006 §5.1): these degrees of freedom are local, so they
+    assemble the finite element spaces. On every simplicial mesh M (n-simplices covering the
+    closure of its domain, with disjoint interiors, meeting face to face), for every admissible
+    sequence S (P_(r_k) Lambda^k or P_(r_k)^- Lambda^k in each degree k, r_k >= 1) and every
+    degree k: (1) for forms p_T of S_k on the simplices T of M the following are equivalent:
+    their tangential traces are single-valued (they agree on the common face of any two
+    simplices, the condition of the finite element space S_k(M) = femSpace); their face moments
+    are single-valued, int_f tr_f p_T wedge eta = int_f tr_f p_T' wedge eta for any two simplices
+    T, T', every common face f of T and T' along every enumeration of its vertices and every
+    test form eta of S_k on (dim f)-faces (PolySeq.testForms: P^-_(r+k-m) Lambda^(m-k) for
+    P_r Lambda^k and P_(r+k-m-1) Lambda^(m-k) for P_r^- Lambda^k, k <= m < r + k, as in
+    FEEC.unisolvent); and the same along one enumeration of each common face. (2) The face
+    moments are free coordinates on S_k(M): for an enumeration of the vertices of every face of
+    M and a linear functional on the test forms of each face, exactly one element of S_k(M) has
+    pieces whose moments on every face of every simplex are the given functionals. (3) If the
+    domain Omega is open, the pieces of an element of S_k(M) are unique, so that (2) is a
+    bijection of S_k(M) onto these assignments, and S_k(M) is a finite-dimensional subspace of
+    L^2(Omega; Lambda^k) of dimension sum_m #{m-faces of M} dim (test forms on m-faces), the
+    number of face moments.
     Not claimed: the classification of complexes. The theorems classify the affinely invariant
     spaces of polynomial k-forms one degree at a time; that the complexes built from them, the
     "periodic table" of finite element exterior calculus (the resolutions of AFW2006 §3.5), are
     the only affinely invariant complexes of polynomial forms is neither stated nor proved.
     The proof is the library Feec of this repository (Feec.FiniteElement.LocalDof,
     Feec.FiniteElement.InvariantForm, Feec.FiniteElement.AffineInvariantForm,
-    Feec.Counterexamples.PositiveCharacteristic).
+    Feec.Counterexamples.PositiveCharacteristic, Feec.FiniteElement.Assembly,
+    Feec.FiniteElement.PolyElement, Feec.FiniteElement.PolyAssembly).
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -71,7 +91,7 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
     type: "article"
-    location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential; (3.2); §3.4: (3.10), (3.18), Theorems 3.5-3.6), §4 (Theorems 4.10, 4.14: the degrees of freedom and their unisolvence)"
+    location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential; (3.2); §3.4: (3.10), (3.18), Theorems 3.5-3.6), §4 (Theorems 4.10, 4.14: the degrees of freedom and their unisolvence), §5.1 (the finite element spaces assembled from the degrees of freedom)"
     relationship: "formalizes"
     note: >-
       The polynomial spaces are stated in coordinates (a polynomial coefficient for each dx_s),
@@ -93,7 +113,8 @@ sources:
       the decomposition (3.20) and the inequivalence of its summands, and the classification of
       the affinely invariant subcomplexes (§3.5; not proved in Feec). Locators of §3.4 checked
       against the published text for the former entry palomar/periodic; those of §4 as cited in
-      Feec, not rechecked for this entry.
+      Feec, not rechecked for this entry; §5.1 as cited by AFW2010 for its Theorem 5.7 (the
+      proof of the assembly), not rechecked against this text.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -102,9 +123,24 @@ sources:
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
     type: "article"
-    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), Thm 5.5 (the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k)"
+    location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §5.2: Thm 5.5 (the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k, the geometric decomposition of the dual spaces), the definition of the finite element spaces by single-valued moments"
     relationship: "formalizes"
-    note: "Locator as cited in Feec, not rechecked for this entry."
+    note: >-
+      FEEC.assembly states the equivalence of the definition of the finite element spaces by
+      single-valued moments with single-valued tangential traces on every mesh, the moments as
+      free coordinates (the assembly) and the dimension; the identification of these spaces with
+      the piecewise polynomial forms of H Lambda^k(Omega) (Theorem 5.7) is not claimed (see the
+      fidelity notes). Locators of §5.2 (Theorems 5.5 and 5.7, the definition by single-valued
+      moments) checked against arXiv:0906.4325 for this entry on 2026-11-24.
+    author_endorsement: "not-contacted"
+  - title: "Finite Element Exterior Calculus"
+    authors:
+      - "Douglas N. Arnold"
+    id: "doi:10.1137/1.9781611975543"
+    type: "book"
+    location: "CBMS-NSF Regional Conference Series in Applied Mathematics 93 (2018), Ch. 7 (finite element spaces of differential forms)"
+    relationship: "background"
+    note: "The shared notion of the finite element spaces (femSpace) and of the admissible sequences cites it, as in palomar/fem."
     author_endorsement: "not-contacted"
   - title: "Representation Theory: A First Course"
     authors:
@@ -123,7 +159,10 @@ status:
   scope: >-
     Formalized and compared: FEEC.affineInvariantForms over every field of characteristic 0 and
     every n, k, r, s; FEEC.charZero_iff_classification and FEEC.charZero_iff_closed_eq_exact over
-    every field; FEEC.unisolvent for every n-simplex, r >= 1 and k.
+    every field; FEEC.unisolvent for every n-simplex, r >= 1 and k; FEEC.assembly for every
+    simplicial mesh, admissible sequence and degree, the uniqueness of the pieces and the
+    dimension for meshes of open sets. Not claimed: the identification of the finite element
+    spaces with the piecewise polynomial forms of H Lambda^k(Omega) (AFW2010 Theorem 5.7).
     Not claimed: the classification of the affinely invariant complexes of polynomial forms (the
     periodic table; AFW2006 §3.5): the theorems classify spaces, not complexes.
     Not compared (proved in Feec, outside the statement): the polynomial identities, dimension
@@ -131,8 +170,12 @@ status:
     P_r^- Lambda and Q_r^- Lambda (formerly compared in palomar/periodic, exactness and
     dimensions only; Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm), the
     classification with the summands as kernels
-    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker), the assembly
-    of global finite element spaces from the degrees of freedom (used in palomar/fem).
+    (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker); for the
+    assembled spaces, the spaces with vanishing traces on the boundary (their dimension is the
+    number of moments of the faces not contained in a boundary facet,
+    Feec.FiniteElement.LocalElement.finrank_V₀), the commuting canonical interpolant
+    (Feec.FiniteElement.LocalElement.globalInterp_extDeriv) and the inclusion in H Lambda^k(Omega)
+    (Feec.FiniteElement.LocalElement.glue_mem_maximal; the subcomplexes of palomar/fem).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -167,10 +210,13 @@ automation:
     Human-directed, AI-written development. The Challenge statement and its definitions were
     written by an AI agent for this submission, to be reviewed by the author; the Solution
     identifies them with the definitions of the library Feec (Solution/Poly.lean, Affine.lean,
-    Dof.lean) and applies its theorems. The classification statements and their bridge come
-    from the former entry palomar/periodic (restated on the coordinate forms on 2026-11-17), the
-    unisolvence from the former palomar/fem (2026-11-17); the entry was split off palomar/fem on
-    2026-11-18 with unchanged statements.
+    Dof.lean, Mesh.lean, Trace.lean, Spaces.lean, Assembly.lean) and applies its theorems. The
+    classification statements and their bridge come from the former entry palomar/periodic
+    (restated on the coordinate forms on 2026-11-17), the unisolvence from the former palomar/fem
+    (2026-11-17); the entry was split off palomar/fem on 2026-11-18 with unchanged statements.
+    FEEC.assembly and Feec.FiniteElement.PolyAssembly were written by an AI agent on 2026-11-24,
+    the statement revised after an independent AI review (the bridges of the finite element
+    spaces, Solution/Mesh.lean, Trace.lean and Spaces.lean, are those of palomar/fem).
 
 fidelity:
   divergences: >-
@@ -195,24 +241,46 @@ fidelity:
     0 <= s <= r.
     (3) FEEC.unisolvent states unisolvence as injectivity of the moments together with the count
     (number of moments = dimension); bijectivity onto the dual for chosen bases of the test
-    spaces follows by linear algebra and is not stated. Faces are oriented by the increasing
-    order of their vertices (order embeddings Fin (m+1) -> Fin (n+1)); the moments are those of
-    AFW2006 §4 up to this orientation sign. The degrees of freedom are those of one simplex; the
-    global finite element spaces are those of palomar/fem, stated there through traces.
+    spaces follows by linear algebra and is not stated. A moment is taken over a simplex given by
+    the list of its vertices (faceMoment); the faces of a simplex are listed in the increasing
+    order of their vertex indices (T.points o e, e an order embedding Fin (m+1) -> Fin (n+1)); the
+    moments are those of AFW2006 §4 up to this orientation sign.
+    (3') FEEC.assembly: the finite element space S_k(M) is the shared femSpace, the L^2 forms
+    that are on every simplex a form of S_k with single-valued tangential traces on every common
+    face of two simplices, not AFW's definition by single-valued moments; the equivalence of the
+    two conditions is its first item, with the moments over a common face compared along every
+    enumeration of its vertices or along one (the reorderings act on the test spaces, which are
+    affinely invariant). The faces of the mesh are its sets of vertices of simplices, each counted
+    once; the assignments of the second item are, for every face, a linear functional on the test
+    forms, read along a chosen enumeration of its vertices. AFW2010 Theorem 5.7 identifies these
+    spaces with the piecewise polynomial forms of H Lambda^k(Omega); that identification is not
+    claimed (the inclusion in H Lambda^k(Omega) is proved in Feec and is part of the subcomplexes
+    of palomar/fem; the converse is not proved). The uniqueness of the pieces, hence the
+    bijection, and the dimension need an open domain: a mesh of a null set carries only the zero
+    form.
     (4) Shared notions: the polynomial forms (PolyForm, polyForm, homForm, koszul, polyFormMinus,
     evalForm), the form fields and the sign epsilon(j, s) that they and the moments use
-    (FormField, sgn) and the covector value covEval are the canonical blocks of
+    (FormField, sgn), the covector value covEval, the L^2 forms (FormIdx, L2Form), the admissible
+    sequences (PolySeq), the simplicial meshes (SimplicialMesh, vertexSet) and the finite element
+    spaces (TraceEq, IsFemPieces, femSpace) are the canonical blocks of
     palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate, shared with
-    palomar/fem, palomar/waves and palomar/einsteinbianchi (the form fields also with
-    palomar/constraints).
+    palomar/fem, palomar/waves and palomar/einsteinbianchi (the form fields and L^2 forms also
+    with palomar/constraints and palomar/bgg). A block is copied whole: the block of the L^2
+    forms also defines the partial derivative, the exterior derivative and codifferential of form
+    fields, test functions, the weak exterior derivative and the cube, which these theorems do
+    not use.
 
 review:
   status: "self-assessed"
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the four compared theorems and their
-    definitions); FEEC.unisolvent and faceMoment new on 2026-11-17; the classification theorems
+    Not yet reviewed by the author: the Challenge statement (the five compared theorems and their
+    definitions); FEEC.unisolvent and faceMoment new on 2026-11-17; FEEC.assembly,
+    SimplicialMesh.faces and PolySeq.testForms new on 2026-11-24 (restated the same day after an
+    independent AI review: conformity as three equivalent conditions over genuine faces, the
+    moments as free coordinates, the citation of AFW2010 Theorem 5.7 moved to the claims not made), when faceMoment was restated over a list of vertices
+    (FEEC.unisolvent over T.points o e: the same moments, definitionally); the classification theorems
     moved from palomar/periodic (2026-10-31 to 2026-11-04) and restated on the coordinate forms
     on 2026-11-17; all moved here from palomar/fem on 2026-11-18. Every merge of the library was
     gated by a full build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound
@@ -258,6 +326,17 @@ alignment:
         From Feec.FiniteElement.eq_zero_of_faceMoment_eq_zero_simplex,
         eq_zero_of_faceMoment_eq_zero_minus_simplex and
         Feec.FiniteElement.PolyKind.finrank_form_eq_sum (Solution/Dof.lean; the moment of the
-        challenge is Feec.FiniteElement.faceMoment, faceMoment_eq).
+        challenge is Feec.FiniteElement.vertexMoment, faceMoment_eq).
+    - source: "[AFW2010] §5.2 (the spaces defined by single-valued moments; Theorem 5.5); [AFW2006] §5.1"
+      lean: "FEEC.assembly"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        From Feec.FiniteElement.PolySeq.tangentialTraceEq_tfae (conformity by moments on a face of
+        a simplex), PolySeq.existsUnique_vertexMoment_eq (prescribed moments on a simplex, along
+        any enumerations), LocalElement.glue_injective, LocalElement.finrank_V and
+        PolySeq.card_globalDofIdx (Feec.FiniteElement.PolyAssembly) for the element family
+        Feec.FiniteElement.polyElement (Solution/Assembly.lean; femSpace is its glued space,
+        Solution/Spaces.lean, the bridge of palomar/fem).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

@@ -1,6 +1,7 @@
 module
 
 public import Solution.Defs
+public import Feec.FiniteElement.PolyElement
 public import Feec.FiniteElement.Whitney
 
 /-!
@@ -9,12 +10,14 @@ public import Feec.FiniteElement.Whitney
 `P_rΛᵏ`, `H_rΛᵏ`, `κ`, `P_r⁻Λᵏ` and the evaluation of the challenge are `Feec.Koszul.polyForm`,
 `Feec.Koszul.homForm`, `Feec.Koszul.koszulₗ`, `Feec.Koszul.polyFormMinus` and
 `Feec.FiniteElement.evalForm` (`polyForm_eq`, …), and the exterior derivative of polynomial forms is
-`Feec.Koszul.extDerivₗ` (`polyExtDeriv_eq`).
+`Feec.Koszul.extDerivₗ` (`polyExtDeriv_eq`). An admissible sequence of the challenge is a
+`Feec.FiniteElement.PolySeq` (`PolySeq.toFeec`) with the same spaces (`PolySeq.space_eq`) and the
+same test forms of its moments (`PolySeq.testForms_eq`).
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3
+  §3, §4, §5
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
@@ -96,5 +99,48 @@ theorem evalForm_eq : evalForm (n := n) = Feec.FiniteElement.evalForm n := by
   refine LinearMap.ext fun p => funext fun x => funext fun s => ?_
   simp [evalForm, Feec.FiniteElement.evalForm_apply]
 
+namespace PolySeq
+
+variable (S : PolySeq)
+
+/-- The family of degree `k` of `S`. -/
+def kind (k : ℕ) : Feec.FiniteElement.PolyKind :=
+  if S.full k then .full else .trimmed
+
+/-- An admissible sequence of the challenge as a `Feec.FiniteElement.PolySeq`. -/
+def toFeec : Feec.FiniteElement.PolySeq where
+  kind := S.kind
+  deg := S.deg
+  one_le_deg := S.one_le_deg
+  transition k := by
+    rcases S.transition k with ⟨h1, h2⟩ | ⟨h1, h2⟩
+    · exact Or.inl ⟨by simp [kind, h1], h2⟩
+    · exact Or.inr ⟨by simp [kind, h1], h2⟩
+
+theorem space_eq (k : ℕ) : S.space n k = S.toFeec.space n k := by
+  change _ = (S.kind k).space n (S.deg k) k
+  unfold space kind
+  cases h : S.full k
+  · simp only [Bool.false_eq_true, ↓reduceIte, Feec.FiniteElement.PolyKind.space_trimmed]
+    rw [polyFormMinus_eq, evalForm_eq]; rfl
+  · simp only [↓reduceIte, Feec.FiniteElement.PolyKind.space_full]
+    rw [polyForm_eq, evalForm_eq]; rfl
+
+/-- **The test forms of the challenge are those of `Feec`.** -/
+theorem testForms_eq (k m : ℕ) : S.testForms k m = S.toFeec.test k m := by
+  change _ = (S.kind k).test (S.deg k) k m
+  unfold testForms kind
+  by_cases hc : k ≤ m ∧ m < S.deg k + k
+  · rw [ite_eq_left hc]
+    cases h : S.full k
+    · simp only [Bool.false_eq_true, ↓reduceIte, Feec.FiniteElement.PolyKind.test_trimmed,
+        Feec.FiniteElement.testSpaceMinus_eq hc]
+      rw [polyForm_eq, evalForm_eq]; rfl
+    · simp only [↓reduceIte, Feec.FiniteElement.PolyKind.test_full,
+        Feec.FiniteElement.testSpace_eq hc]
+      rw [polyFormMinus_eq, evalForm_eq]; rfl
+  · rw [ite_eq_right hc, Feec.FiniteElement.PolyKind.test_eq_bot hc]
+
+end PolySeq
 
 end FEEC

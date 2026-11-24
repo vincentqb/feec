@@ -1,7 +1,7 @@
 module
 
 public import Solution.Affine
-public import Solution.Dof
+public import Solution.Assembly
 
 /-!
 # Affinely invariant polynomial forms and their degrees of freedom (solution)
@@ -9,12 +9,15 @@ public import Solution.Dof
 The compared theorems of `Challenge.lean`. `FEEC.affineInvariantForms` and the characteristic-`0`
 theorems are `Feec.FiniteElement.InvariantForm`, `Feec.FiniteElement.AffineInvariantForm` and
 `Feec.Counterexamples.PositiveCharacteristic` through `Solution.Affine`; `FEEC.unisolvent` is
-`Feec.FiniteElement.LocalDof` through `Solution.Dof`.
+`Feec.FiniteElement.LocalDof` through `Solution.Dof`, and `FEEC.assembly` is
+`Feec.FiniteElement.PolyAssembly` through `Solution.Assembly`.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
-  §3.4, §4
+  §3.4, §4, §5.1
+* [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
+  §5.2
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -30,10 +33,10 @@ variable {n : ℕ}
 theorem unisolvent (T : Affine.Simplex ℝ (Fin n → ℝ) n) {r : ℕ} (hr : 1 ≤ r) (k : ℕ) :
     (∀ w ∈ (polyForm ℝ n r k).map evalForm, (∀ m (e : Fin (m + 1) ↪o Fin (n + 1)), k ≤ m →
       m < r + k → ∀ η ∈ (polyFormMinus ℝ m (r + k - m) (m - k)).map evalForm,
-        faceMoment T.points e η w = 0) → w = 0) ∧
+        faceMoment (T.points ∘ e) η w = 0) → w = 0) ∧
     (∀ w ∈ (polyFormMinus ℝ n r k).map evalForm, (∀ m (e : Fin (m + 1) ↪o Fin (n + 1)), k ≤ m →
       m < r + k → ∀ η ∈ (polyForm ℝ m (r + k - m - 1) (m - k)).map evalForm,
-        faceMoment T.points e η w = 0) → w = 0) ∧
+        faceMoment (T.points ∘ e) η w = 0) → w = 0) ∧
     Module.finrank ℝ (polyForm ℝ n r k) = ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) *
       (if k ≤ m ∧ m < r + k then Module.finrank ℝ (polyFormMinus ℝ m (r + k - m) (m - k)) else 0) ∧
     Module.finrank ℝ (polyFormMinus ℝ n r k) = ∑ m ∈ Finset.range (n + 1), (n + 1).choose (m + 1) *
@@ -56,5 +59,32 @@ theorem charZero_iff_closed_eq_exact (K : Type u) [Field K] :
     CharZero K ↔ ∀ n r k : ℕ, LinearMap.ker (polyExtDeriv K n) ⊓ homForm K n r (k + 1) =
       (homForm K n (r + 1) k).map (polyExtDeriv K n) :=
   charZero_iff_closed_eq_exact_of_feec K
+
+theorem assembly (M : SimplicialMesh n) (S : PolySeq) (k : ℕ) :
+    (∀ p : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n, (∀ T ∈ M.simplices, p T ∈ S.space n k) →
+      List.TFAE [∀ T ∈ M.simplices, ∀ T' ∈ M.simplices,
+          ∀ x ∈ convexHull ℝ ((vertexSet T ∩ vertexSet T' : Finset (Fin n → ℝ)) : Set (Fin n → ℝ)),
+            TraceEq (vertexSet T ∩ vertexSet T') k (p T x) (p T' x),
+        ∀ T ∈ M.simplices, ∀ T' ∈ M.simplices, ∀ m,
+          ∀ g ∈ (vertexSet T ∩ vertexSet T').powersetCard (m + 1),
+            ∀ v : Fin (m + 1) → Fin n → ℝ, Set.range v = g → ∀ η ∈ S.testForms k m,
+              faceMoment v η (p T) = faceMoment v η (p T'),
+        ∀ T ∈ M.simplices, ∀ T' ∈ M.simplices, ∀ m,
+          ∀ g ∈ (vertexSet T ∩ vertexSet T').powersetCard (m + 1),
+            ∃ v : Fin (m + 1) → Fin n → ℝ, Set.range v = g ∧ ∀ η ∈ S.testForms k m,
+              faceMoment v η (p T) = faceMoment v η (p T')]) ∧
+    (∀ v : ∀ m, Finset (Fin n → ℝ) → Fin (m + 1) → Fin n → ℝ,
+      (∀ m, ∀ g ∈ M.faces m, Set.range (v m g) = g) →
+      ∀ c : ∀ m, Finset (Fin n → ℝ) → Module.Dual ℝ (S.testForms k m),
+        ∃! u : L2Form M.domain k, ∃ p, IsFemPieces M.domain M S k u p ∧
+          ∀ T ∈ M.simplices, ∀ m, ∀ g ∈ (vertexSet T).powersetCard (m + 1),
+            ∀ η : S.testForms k m, faceMoment (v m g) η (p T) = c m g η) ∧
+    (IsOpen M.domain → (∀ (u : L2Form M.domain k) p p', IsFemPieces M.domain M S k u p →
+        IsFemPieces M.domain M S k u p' → ∀ T ∈ M.simplices, p T = p' T) ∧
+      ∃ V : Submodule ℝ (L2Form M.domain k), FiniteDimensional ℝ V ∧
+        (V : Set (L2Form M.domain k)) = femSpace M.domain M S ∅ k ∧
+        Module.finrank ℝ V =
+          ∑ m ∈ Finset.range (n + 1), (M.faces m).card * Module.finrank ℝ (S.testForms k m)) :=
+  assembly_of_feec M S k
 
 end FEEC

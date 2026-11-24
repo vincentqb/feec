@@ -107,6 +107,7 @@ public import Feec.FiniteElement.LumpedMassDefect
 public import Feec.FiniteElement.MeshDivergence
 public import Feec.FiniteElement.NonobtuseHeat
 public import Feec.FiniteElement.P1Global
+public import Feec.FiniteElement.PolyAssembly
 public import Feec.FiniteElement.PolyComplex
 public import Feec.FiniteElement.PolyElement
 public import Feec.FiniteElement.PolyElementMixed

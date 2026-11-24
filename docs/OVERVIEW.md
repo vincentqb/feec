@@ -155,15 +155,18 @@ identity, nonzero commutator defect, graded branch with the half bound);
 (`Feec.HilbertComplex.Approximation.ApproxComplex`) takes an approximating family of discrete
 Hilbert complexes in the sense of [HolstStern2012] (`Feec.HilbertComplex.ApproxComplex`):
 finite-dimensional complexes `Vₕ` with their own inner products, injective bounded cochain maps
-`iₕ : Vₕ → W` with left inverses `πₕ`, the inner-product defect `‖1 − iₕ*iₕ‖ → 0`, and the
+`iₕ : Vₕ → W` with left inverses `πₕ`, the inner-product defect in the graph norm of `𝐝ₕ` tending
+to `0` (`Feec.HilbertComplex.ApproxComplex.Family.graphDefect`, the norm of `1 − iₕ*iₕ` on the
+graph space of `𝐝ₕ`, `Feec.HilbertComplex.graphOpNorm`; at most `‖1 − iₕ*iₕ‖`), and the
 graph-norm approximation property (from `L²` approximation and a commutation defect of `πₕ` on a
 dense set, `Feec.HilbertComplex.ApproxComplex.Family.graphApprox_of_commute`). The discrete
 generator is the Hodge wave operator of `Vₕ` in its own inner product. The comparison is the
 modified elliptic projection `Rₕ = (1 − Lₕ)⁻¹ Gₕ` (on `D(L)`, `Gₕ = iₕ*(1 − L)`), and every hypothesis of
 `ApproxFEEC.Core.ofOperator` is derived: a Strang lemma
 (`Feec.HilbertComplex.ApproxComplex.Family.norm_graphFst_sub_inclL_ellProj_le`, best
-approximation plus inner-product defect) and the defect bound
-`Feec.HilbertComplex.ApproxComplex.Family.norm_defectOp_apply_le`. No adjoint-consistency
+approximation plus the inner-product defect at the approximant and its differential) and the
+defect bound `Feec.HilbertComplex.ApproxComplex.Family.norm_defectOp_apply_le` (the inner-product
+defect at the projection, at most `16 C ‖1 − iₕ*iₕ‖_{Vₕ} ‖ζ‖`). No adjoint-consistency
 hypothesis is needed: `iₕ*` intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*`. Since `iₕ` is
 an injective cochain map, `iₕVₕ` is a subcomplex and `𝐝ₕ = iₕ⁻¹𝐝iₕ`: the crimes covered are the
 inner product of `Vₕ` and a non-cochain left inverse `πₕ`. `Feec.HilbertComplex.approxFEEC_ofComplex` adds the
@@ -208,7 +211,8 @@ core, not a new convergence proof). `ofComplex` is the special case with
 zero cochain defect (`Feec.HilbertComplex.ApproxComplex.toCrime`,
 `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime_toCrime`, by `rfl`, with the same comparison on
 `D(L²)`). `Feec.HilbertComplex.approxFEEC_ofComplexCrime` gives the verdict, the Strang bound, the
-residual splitting, the defect bound, and exact preservation of `Lₕ`-invariant subspaces of `Xₕ`.
+residual splitting, the defect bound (the inner-product defect applied at the approximant, its
+differential and the projection only), and exact preservation of `Lₕ`-invariant subspaces of `Xₕ`.
 **Rates**: `Feec.HilbertComplex.ApproxComplexCrime.rateClass` builds a `DissipFEEC.RateClass` from
 approximants along the trajectory with approximation, `‖(1 − Jₕ)wₕ‖` and residual `O(m(h)ᵅ)`, so
 `‖e^{tL}x − iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c`

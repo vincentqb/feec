@@ -560,7 +560,8 @@ theorems of the crime front `ofComplexCrime F` on its core, the discrete generat
 constraints, and the
 complex-level estimates of the exact-load projection `Rₕ y = (1 - Lₕ)⁻¹ iₕ* (1 - L) y` (Strang
 lemma, residual splitting into the inner-product defect, the graph-norm approximation error and
-the cochain defect, defect bound, and their limits), the fully discrete FEEC theorem on
+the cochain defect, defect bound, and their limits; the inner-product defect enters applied to the
+approximant, its differential and `Rₕ y` only), the fully discrete FEEC theorem on
 Banach spaces for the crime front (`banach`), and, under closed range and a uniform discrete
 Poincaré inequality, the static FEEC theorem with crimes (`static`) and the heat FEEC theorem
 with crimes and its rate (`heat`, `heat_rate`). The wave rates are the fields `wave.rate` and
@@ -602,20 +603,20 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
       ε * (‖v‖ + ‖F.toFamily.D h v‖)) :
     ‖y - F.toFamily.incl h (F.toFamily.load h z)‖ ≤
       ‖y - F.toFamily.incl h w‖ + 8 * F.toFamily.boundConst * ε
-  /-- the residual splits into the inner-product defect, the graph-norm approximation error and
-  the cochain defect -/
+  /-- the residual splits into the inner-product defect at `w` and `𝐝ₕ w`, the graph-norm
+  approximation error and the cochain defect -/
   residual_le (h : κ) (y : H.wave.domain) (w : F.toFamily.X h) {δ : ℝ}
     (hδ : ∀ v, ‖⟪F.toFamily.cochainDefect h y, v⟫_𝕜‖ ≤ δ * (‖v‖ + ‖F.toFamily.D h v‖))
     (v : F.toFamily.X h) :
     ‖⟪w - F.toFamily.L h w, v⟫_𝕜 - ⟪(y : PiLp 2 W) - H.wave y, F.toFamily.incl h v⟫_𝕜‖ ≤
-      (‖1 - F.toFamily.J h‖ * (‖w‖ + ‖F.toFamily.D h w‖) +
+      (‖(1 - F.toFamily.J h) w‖ + ‖(1 - F.toFamily.J h) (F.toFamily.D h w)‖ +
         F.toFamily.boundConst * (‖(y : PiLp 2 W) - F.toFamily.incl h w‖ +
           ‖H.totalD ⟨y, y.2.1⟩ - F.toFamily.incl h (F.toFamily.D h w)‖) + δ) *
         (‖v‖ + ‖F.toFamily.D h v‖)
-  /-- the defect bound `‖Rₕ z - iₕ* y‖ ≤ ‖1 - Jₕ‖ ‖Rₕ z‖ + C ‖y - iₕ Rₕ z‖` -/
+  /-- the defect bound `‖Rₕ z - iₕ* y‖ ≤ ‖(1 - Jₕ) Rₕ z‖ + C ‖y - iₕ Rₕ z‖` -/
   defect_le (h : κ) (y z : PiLp 2 W) :
     ‖F.toFamily.load h z - (F.toFamily.incl h).adjoint y‖ ≤
-      ‖1 - F.toFamily.J h‖ * ‖F.toFamily.load h z‖ +
+      ‖(1 - F.toFamily.J h) (F.toFamily.load h z)‖ +
         F.toFamily.boundConst * ‖y - F.toFamily.incl h (F.toFamily.load h z)‖
   /-- the exact-load projection converges at every admissible state -/
   tendsto_reading {y : PiLp 2 W} (hy : y ∈ F.A) :

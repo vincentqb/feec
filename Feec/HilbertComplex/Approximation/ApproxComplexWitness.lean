@@ -232,15 +232,16 @@ theorem scaled_graphIncl_projL (n : ℕ) (ζ : (idComplex 𝕜).totalD.GraphSpac
 
 variable (𝕜) in
 /-- **The non-conforming approximating family**: `scaledFamily` with a closed constraint `K`;
-inner-product defect `‖1 - Jₙ‖ ≤ cₙ² - 1 → 0`, exact graph-norm approximation. -/
+inner-product defect `‖1 - Jₙ‖ ≤ cₙ² - 1 → 0` (so also in the graph norm, `graphOpNorm_le`), exact
+graph-norm approximation. -/
 abbrev scaled (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
     (hK : IsClosed (K : Set (PiLp 2 (W3 𝕜 𝕜 PUnit)))) : ApproxComplex (idComplex 𝕜) ℕ where
   toFamily := scaledFamily 𝕜
   K := K
   isClosed_K := hK
   l := atTop
-  tendsto_innerDefect := squeeze_zero (fun _ => norm_nonneg _) scaled_innerDefect_le
-    tendsto_perturbScale_sq_sub_one
+  tendsto_graphDefect := squeeze_zero (fun _ => graphOpNorm_nonneg _ _)
+    (fun n => (graphOpNorm_le _ _).trans (scaled_innerDefect_le n)) tendsto_perturbScale_sq_sub_one
   graphApprox ζ ε hε := Eventually.of_forall fun n =>
     ⟨(scaledFamily 𝕜).projL n ((idComplex 𝕜).totalD.graphFst ζ), by
       rw [scaled_graphIncl_projL, sub_self, norm_zero]; exact hε⟩

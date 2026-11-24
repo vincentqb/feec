@@ -182,7 +182,7 @@ theorem mirrorComplex_verdict : MirrorComplex.Verdict hT hB where
     have h := (mirrorComplex hT hB).feec.residual_le N y w (δ := 0) (fun v => by
       rw [mirrorComplex_cochainDefect_eq_zero hT hB N y hy, inner_zero_left, norm_zero, zero_mul])
       v
-    simpa only [mirrorComplex_J, sub_self, norm_zero, zero_mul, zero_add, add_zero] using h
+    simpa only [mirrorComplex_J, sub_self, _root_.zero_apply, norm_zero, zero_add, add_zero] using h
   rate T _ hx N v _ ht := by
     have h := (mirrorComplex hT hB).feec.wave.rate (mirrorComplexRate hT hB T) hx N v ht
     rwa [ApproxFEEC.S_eq_waveGroup _ ht.1] at h
@@ -486,7 +486,7 @@ theorem standardCubeComplex_verdict : StandardCubeComplex.Verdict hT hB where
     have h := (standardCubeComplex hT hB).feec.residual_le N
       ⟨_, matrix_waveGroup_mem_domain hx t⟩ w (δ := (C₀ * Λ + K * c) * meshSize N)
       (fun v => (Real.norm_eq_abs _).trans_le (hd N hx ht hΛ hc hℓ hM hMd v)) v
-    simpa only [standardCubeComplex_J, sub_self, norm_zero, zero_mul, zero_add] using h
+    simpa only [standardCubeComplex_J, sub_self, _root_.zero_apply, norm_zero, zero_add] using h
   rate_sobolev T s L hs0 hL _ hx N v _ ht := by
     have h := (standardCubeComplex hT hB).feec.wave.rate (cubeSobRate hT hB T s L hs0 hL) hx N v ht
     rw [ApproxFEEC.S_eq_waveGroup _ ht.1] at h

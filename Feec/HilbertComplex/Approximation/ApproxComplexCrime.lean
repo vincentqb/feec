@@ -74,7 +74,8 @@ complex-level structure.
   defect, and `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖` is at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)` and at most
   `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_one_sub_J_add_le_opNorm`, `norm_one_sub_J_add_le`).
 * `ApproxComplexCrime.Family.graphDefect`: **the inner-product defect in the graph norm**
-  `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ`, so
+  `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ` (`graphOpNorm`,
+  as for the discrete complexes of `ofComplex`, `ApproxComplex.Family.graphDefect`), so
   `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_one_sub_J_apply_le`); at most `‖1 - Jₕ‖`
   (`graphDefect_le`), and at most `√2 δ` if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v`
   (`graphDefect_le_of_forall`). It is the defect hypothesis of the heat and wave families
@@ -82,7 +83,7 @@ complex-level structure.
   `‖Bₕ z‖ + ‖𝐝ₕ Bₕ z‖ ≤ 8 C ‖z‖` (`norm_load_add_le`).
 * `ApproxComplexCrime.Family.load_defect`, `norm_load_sub_adjoint_le`: **the defect identity**
   `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y`, `Δₕ z = Rₕ z - iₕ* z`, and
-  `‖Δₕ z‖ ≤ ‖1 - Jₕ‖ ‖Rₕ z‖ + C ‖z - iₕ Rₕ z‖`.
+  `‖Δₕ z‖ ≤ ‖(1 - Jₕ) Rₕ z‖ + C ‖z - iₕ Rₕ z‖`.
 * `ApproxFEEC.ofComplexCrime`, `ApproxFEEC.ofComplexCrimeCore`, `approxFEEC_ofComplexCrime`: the
   approximating FEEC discretization (`Xₕ`, `Lₕ = 𝐝ₕ - 𝐝ₕ*`, `iₕ`, `πₕ`) with the core `Z`
   (comparison `Rₕ e^{tL} x`), the four conclusions of `approxFEEC`, the Strang and defect bounds,
@@ -401,48 +402,37 @@ theorem norm_one_sub_J_le (h : κ) : ‖1 - S.J h‖ ≤ 1 + S.boundConst ^ 2 :=
   exact mul_le_mul (S.norm_incl_le h) (S.norm_incl_le h) (norm_nonneg _) S.boundConst_nonneg
 
 /-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` from the
-graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`) to `Xₕ`, the least `δ` with
+graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`) to `Xₕ` (`graphOpNorm`), the least `δ` with
 `‖(1 - Jₕ) v‖ ≤ δ ‖v‖_{Vₕ}`. It is at most `‖1 - Jₕ‖` (`graphDefect_le`), and it is the defect
 that the static, heat and wave theories with crimes use: they apply `1 - Jₕ` only to discrete
 forms whose graph norm they control (`norm_one_sub_J_apply_le`,
 `norm_one_sub_J_apply_le_of_D_eq_zero`). -/
-def graphDefect (h : κ) : ℝ :=
-  ‖(1 - S.J h) ∘L ((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).graphFst‖
+def graphDefect (h : κ) : ℝ := graphOpNorm (S.D h) (1 - S.J h)
 
-theorem graphDefect_nonneg (h : κ) : 0 ≤ S.graphDefect h := norm_nonneg _
+theorem graphDefect_nonneg (h : κ) : 0 ≤ S.graphDefect h := graphOpNorm_nonneg _ _
 
 /-- `‖1 - Jₕ‖_{Vₕ} ≤ ‖1 - Jₕ‖`. -/
-theorem graphDefect_le (h : κ) : S.graphDefect h ≤ ‖1 - S.J h‖ :=
-  ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun v =>
-    ((1 - S.J h).le_opNorm _).trans (mul_le_mul_of_nonneg_left (norm_graphFst_le v) (norm_nonneg _))
+theorem graphDefect_le (h : κ) : S.graphDefect h ≤ ‖1 - S.J h‖ := graphOpNorm_le _ _
 
 /-- `‖1 - Jₕ‖_{Vₕ} = 0` iff `Jₕ = 1` (the inclusion of the graph space is onto). -/
-theorem graphDefect_eq_zero_iff (h : κ) : S.graphDefect h = 0 ↔ S.J h = 1 := by
-  refine ⟨fun h0 => ?_, fun hJ => by
-    rw [graphDefect, hJ, sub_self, ContinuousLinearMap.zero_comp, norm_zero]⟩
-  rw [graphDefect, norm_eq_zero] at h0
-  refine (sub_eq_zero.1 (ContinuousLinearMap.ext fun v => ?_)).symm
-  have := congrArg (fun A => A (((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).toGraphSpace
-    ⟨v, Submodule.mem_top⟩)) h0
-  exact this
+theorem graphDefect_eq_zero_iff (h : κ) : S.graphDefect h = 0 ↔ S.J h = 1 :=
+  (graphOpNorm_eq_zero_iff _ _).trans (sub_eq_zero.trans eq_comm)
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖_{Vₕ}` on the graph space `Vₕ` of `𝐝ₕ`. -/
 theorem norm_one_sub_J_graphFst_le (h : κ)
     (v : ((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).GraphSpace) :
     ‖(1 - S.J h) (((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).graphFst v)‖ ≤ S.graphDefect h * ‖v‖ :=
-  ((1 - S.J h) ∘L ((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).graphFst).le_opNorm v
+  norm_graphFst_le_graphOpNorm _ _ v
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)`. -/
 theorem norm_one_sub_J_apply_le (h : κ) (v : S.X h) :
     ‖(1 - S.J h) v‖ ≤ S.graphDefect h * (‖v‖ + ‖S.D h v‖) :=
-  (S.norm_one_sub_J_graphFst_le h (((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).toGraphSpace
-    ⟨v, Submodule.mem_top⟩)).trans (mul_le_mul_of_nonneg_left
-      (LinearPMap.norm_toGraphSpace_le _ _) (S.graphDefect_nonneg h))
+  norm_apply_le_graphOpNorm _ _ v
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖` on the discrete cycles (`𝐝ₕ v = 0`). -/
 theorem norm_one_sub_J_apply_le_of_D_eq_zero (h : κ) {v : S.X h} (hv : S.D h v = 0) :
-    ‖(1 - S.J h) v‖ ≤ S.graphDefect h * ‖v‖ := by
-  simpa [hv] using S.norm_one_sub_J_apply_le h v
+    ‖(1 - S.J h) v‖ ≤ S.graphDefect h * ‖v‖ :=
+  norm_apply_le_graphOpNorm_of_eq_zero _ _ hv
 
 /-- **The inner-product defect of a discrete form and of its differential**, the form in which the
 residual bound uses it (`norm_residual_le`):
@@ -460,18 +450,8 @@ theorem norm_one_sub_J_add_le_opNorm (h : κ) (w : S.X h) :
 /-- **The defect from a bound in the graph norm**: if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every
 `v`, then `‖1 - Jₕ‖_{Vₕ} ≤ √2 δ` (`‖v‖ + ‖𝐝ₕ v‖ ≤ √2 ‖v‖_{Vₕ}`). -/
 theorem graphDefect_le_of_forall (h : κ) {δ : ℝ} (hδ : 0 ≤ δ)
-    (hb : ∀ v, ‖(1 - S.J h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) : S.graphDefect h ≤ √2 * δ := by
-  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun g => ?_
-  obtain ⟨x, -, h1, h2⟩ := LinearPMap.exists_toGraphSpace_eq _ g
-  have e := norm_sq_graphSpace g
-  rw [← h1, ← h2] at e
-  change ‖g‖ ^ 2 = ‖(x : S.X h)‖ ^ 2 + ‖S.D h x‖ ^ 2 at e
-  have hs : ‖(x : S.X h)‖ + ‖S.D h x‖ ≤ √2 * ‖g‖ := by
-    refine (pow_le_pow_iff_left₀ (by positivity) (by positivity) two_ne_zero).1 ?_
-    rw [mul_pow, Real.sq_sqrt zero_le_two, e]
-    nlinarith [sq_nonneg (‖(x : S.X h)‖ - ‖S.D h x‖)]
-  rw [ContinuousLinearMap.comp_apply, ← h1]
-  exact (hb x).trans ((mul_le_mul_of_nonneg_left hs hδ).trans_eq (by ring))
+    (hb : ∀ v, ‖(1 - S.J h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) : S.graphDefect h ≤ √2 * δ :=
+  graphOpNorm_le_of_forall _ _ hδ hb
 
 /-- `‖1 - Jₕ‖ → 0` implies `‖1 - Jₕ‖_{Vₕ} → 0`. -/
 theorem tendsto_graphDefect_of_tendsto {l : Filter κ}
@@ -552,22 +532,9 @@ theorem norm_sub_incl_load_le (h : κ) (y z : PiLp 2 W) (w : S.X h) {ε : ℝ} (
 /-! #### The consistency defect -/
 
 /-- **The defect bound**: `Δₕ = Bₕ z - iₕ* y` satisfies
-`‖Δₕ‖ ≤ ‖1 - Jₕ‖ ‖Bₕ z‖ + C ‖y - iₕ Bₕ z‖`. -/
+`‖Δₕ‖ ≤ ‖(1 - Jₕ) Bₕ z‖ + C ‖y - iₕ Bₕ z‖`; the first term is at most `‖1 - Jₕ‖ ‖Bₕ z‖` and at most
+`8 C ‖1 - Jₕ‖_{Vₕ} ‖z‖` (`norm_one_sub_J_apply_le`, `norm_load_add_le`). -/
 theorem norm_load_sub_adjoint_le (h : κ) (y z : PiLp 2 W) :
-    ‖S.load h z - (S.incl h).adjoint y‖ ≤
-      ‖1 - S.J h‖ * ‖S.load h z‖ + S.boundConst * ‖y - S.incl h (S.load h z)‖ := by
-  have e : S.load h z - (S.incl h).adjoint y =
-      (1 - S.J h) (S.load h z) - (S.incl h).adjoint (y - S.incl h (S.load h z)) := by
-    simp only [J, _root_.sub_apply, one_apply_eq_self,
-      ContinuousLinearMap.comp_apply, _root_.map_sub]
-    abel
-  rw [e]
-  exact (norm_sub_le _ _).trans (add_le_add ((1 - S.J h).le_opNorm _)
-    (S.norm_adjoint_incl_apply_le h _))
-
-/-- The defect bound with the inner-product defect applied:
-`‖Bₕ z - iₕ* y‖ ≤ ‖(1 - Jₕ) Bₕ z‖ + C ‖y - iₕ Bₕ z‖`. -/
-theorem norm_load_sub_adjoint_le' (h : κ) (y z : PiLp 2 W) :
     ‖S.load h z - (S.incl h).adjoint y‖ ≤
       ‖(1 - S.J h) (S.load h z)‖ + S.boundConst * ‖y - S.incl h (S.load h z)‖ := by
   have e : S.load h z - (S.incl h).adjoint y =
@@ -859,7 +826,7 @@ theorem tendsto_defect {y : PiLp 2 W} (hy : y ∈ F.A) :
     have := (h1.mul_const (8 * S.boundConst * ‖y - waveExt H y‖)).add (h2.const_mul S.boundConst)
     simpa using this
   refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) hb
-  refine (S.norm_load_sub_adjoint_le' h y _).trans (add_le_add ?_ le_rfl)
+  refine (S.norm_load_sub_adjoint_le h y _).trans (add_le_add ?_ le_rfl)
   exact (S.norm_one_sub_J_apply_le h _).trans
     (mul_le_mul_of_nonneg_left (S.norm_load_add_le h _) (S.graphDefect_nonneg h))
 
@@ -1111,9 +1078,12 @@ elliptic projection of the exact orbit) satisfies:
    `e^{tLₕ}` for all `t`, and if `iₕ Kₕ ⊆ K` the residual `dist(ξₕ(t), K)` of the discrete
    solutions from `Kₕ` is exactly `0`;
 4. the **Strang estimate** `‖y - iₕ Rₕ y‖ ≤ ‖y - iₕ w‖ + 8 C ε` for every approximant `w` of
-   residual `≤ ε`, with the **splitting** of the residual into inner-product defect, graph-norm
-   approximation and cochain defect, and the **defect bound**
-   `‖Δₕ y‖ ≤ ‖1 - Jₕ‖ ‖Rₕ y‖ + C ‖y - iₕ Rₕ y‖`; both tend to `0` at admissible states.
+   residual `≤ ε`, with the **splitting** of the residual into the inner-product defect at `w` and
+   `𝐝ₕ w`, the graph-norm approximation error and the cochain defect, and the **defect bound**
+   `‖Δₕ y‖ ≤ ‖(1 - Jₕ) Rₕ y‖ + C ‖y - iₕ Rₕ y‖`; both tend to `0` at admissible states. The
+   inner-product defect enters applied to `w`, `𝐝ₕ w` and `Rₕ y` only: at most `‖1 - Jₕ‖` times
+   their norms, and at most `‖1 - Jₕ‖_{Vₕ}` times their discrete graph norms
+   (`Family.norm_one_sub_J_add_le`, `Family.norm_one_sub_J_apply_le`).
 
 Cf. [HolstStern2012], §3.3, Thm 3.10 (elliptic analogues) -/
 theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
@@ -1136,12 +1106,12 @@ theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
     (∀ h (y : H.wave.domain) (w : F.toFamily.X h) (δ : ℝ),
       (∀ v, ‖⟪F.toFamily.cochainDefect h y, v⟫_𝕜‖ ≤ δ * (‖v‖ + ‖F.toFamily.D h v‖)) → ∀ v,
       ‖⟪w - F.toFamily.L h w, v⟫_𝕜 - ⟪(y : PiLp 2 W) - H.wave y, F.toFamily.incl h v⟫_𝕜‖ ≤
-        (‖1 - F.toFamily.J h‖ * (‖w‖ + ‖F.toFamily.D h w‖) +
+        (‖(1 - F.toFamily.J h) w‖ + ‖(1 - F.toFamily.J h) (F.toFamily.D h w)‖ +
           F.toFamily.boundConst * (‖(y : PiLp 2 W) - F.toFamily.incl h w‖ +
             ‖H.totalD ⟨y, y.2.1⟩ - F.toFamily.incl h (F.toFamily.D h w)‖) + δ) *
           (‖v‖ + ‖F.toFamily.D h v‖)) ∧
     (∀ h (y z : PiLp 2 W), ‖F.toFamily.load h z - (F.toFamily.incl h).adjoint y‖ ≤
-      ‖1 - F.toFamily.J h‖ * ‖F.toFamily.load h z‖ +
+      ‖(1 - F.toFamily.J h) (F.toFamily.load h z)‖ +
         F.toFamily.boundConst * ‖y - F.toFamily.incl h (F.toFamily.load h z)‖) ∧
     (∀ y ∈ F.A, Tendsto (fun h => ‖y - F.toFamily.incl h
       (F.toFamily.load h (y - waveExt H y))‖) F.l (𝓝 0)) ∧
@@ -1153,9 +1123,7 @@ theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
     mem_of_invariant (S.L h) (diffWave_skew (S.D h)) Kh hK hv t
   refine ⟨approxFEEC _ _, ofComplexCrime_L F, hinv, fun h Kh hK hKK v hv t => ?_,
     fun h y z w ε hε hres => S.norm_sub_incl_load_le h y z w hε hres,
-    fun h y w δ hδ v => (S.norm_residual_le h y w hδ v).trans (mul_le_mul_of_nonneg_right
-      (add_le_add_left (add_le_add_left (S.norm_one_sub_J_add_le_opNorm h w) _) _) (by positivity)),
-    S.norm_load_sub_adjoint_le,
+    fun h y w δ hδ v => S.norm_residual_le h y w hδ v, S.norm_load_sub_adjoint_le,
     fun y hy => F.tendsto_incl_load hy, fun y hy => F.tendsto_defect hy⟩
   exact Metric.infDist_zero_of_mem (hKK ⟨_, hinv h Kh hK v hv t, rfl⟩)
 
@@ -1302,6 +1270,10 @@ def toCrimeFamily : ApproxComplexCrime.Family H κ where
   proj_incl := S.projL_inclL
   bound := ⟨S.boundConst, fun h => ⟨S.norm_inclL_le h, S.norm_projL_le h⟩⟩
 
+/-- The inner-product defect in the graph norm is that of the discrete complexes. -/
+theorem graphDefect_toCrimeFamily (h : κ) : S.toCrimeFamily.graphDefect h = S.graphDefect h :=
+  rfl
+
 /-- **The cochain defect of cochain reading maps vanishes.** -/
 theorem cochainDefect_toCrimeFamily (h : κ) (y : H.wave.domain) :
     S.toCrimeFamily.cochainDefect h y = 0 :=
@@ -1324,13 +1296,14 @@ variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 /-- **An approximating family of discrete complexes with cochain reading maps is an approximating
 family of discrete differential spaces** with zero cochain defect
 (`Family.cochainDefect_toCrimeFamily`): admissible states `D(L)`, core `D(L²)`, consistent
-approximation from the graph-norm approximation property and the inner-product defect. -/
+approximation from the graph-norm approximation property and the inner-product defect in the graph
+norm (that of the discrete complexes, `Family.graphDefect_toCrimeFamily`). -/
 def toCrime : ApproxComplexCrime H κ :=
   ApproxComplexCrime.ofCochainDefect F.toFamily.toCrimeFamily F.K F.isClosed_K F.l
     H.wave.domain (fun _ hy => hy) H.wave.domainSq le_rfl
     (fun x hx t _ => ⟨waveGroup_mem_domain H (domainSq_le_domain hx) t,
       waveGroup_mem_domain H (waveExt_mem_domain H hx) t⟩)
-    (F.toFamily.toCrimeFamily.tendsto_graphDefect_of_tendsto F.tendsto_innerDefect)
+    F.tendsto_graphDefect
     (fun y hy ε hε => (F.graphApprox (waveLift H ⟨y, hy⟩) (ε / 2) (half_pos hε)).mono
       fun h ⟨w, hw⟩ => ⟨w, by
         have e1 : y - F.toFamily.inclL h w =
@@ -1445,7 +1418,7 @@ theorem norm_load_sub_adjoint_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {
     refine (norm_sub_le _ _).trans (add_le_add hJw ?_)
     exact ((1 - S.J h).le_opNorm _).trans (mul_le_mul (S.norm_one_sub_J_le h) h2
       (norm_nonneg _) (by positivity))
-  refine (S.norm_load_sub_adjoint_le' h y z).trans ?_
+  refine (S.norm_load_sub_adjoint_le h y z).trans ?_
   have h5 := mul_le_mul_of_nonneg_left h3 hC
   unfold rateConstD
   unfold rateConstA at h5

@@ -20,7 +20,11 @@ An **approximating family of discrete complexes** (`Feec.HilbertComplex.ApproxCo
   own inner products (its differentials are bounded, `d_domain_eq_top_of_finiteDimensional`);
 * bounded **cochain maps** `iₕ : Vₕ → W` (`𝐝 iₕ = iₕ 𝐝ₕ`), not necessarily isometric, with left
   inverses `πₕ` (`πₕ iₕ = 1`), `‖iₕ‖`, `‖πₕ‖` uniformly bounded; `πₕ` need not commute with `𝐝`;
-* the **inner-product defect** `‖1 - Jₕ‖ → 0`, `Jₕ = iₕ* iₕ` (`ApproxComplex.Family.J`);
+* the **inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ} → 0`, `Jₕ = iₕ* iₕ`
+  (`ApproxComplex.Family.J`): the norm of `1 - Jₕ` from the graph space of `𝐝ₕ` to `Vₕ`
+  (`ApproxComplex.Family.graphDefect`, `graphOpNorm`), at most `‖1 - Jₕ‖`, so that
+  `‖1 - Jₕ‖ → 0` suffices (`graphOpNorm_le`). The estimates apply `1 - Jₕ` only to discrete forms
+  whose discrete graph norm they control;
 * the **graph-norm approximation property** (`ApproxComplex.Family.GraphApprox`): every `ζ ∈ Γ(𝐝)`
   is approximated by lifts `(iₕ v, 𝐝 iₕ v)`. It follows from `L²` approximation `iₕ πₕ → 1` and a
   **commutation defect** `𝐝ₕ πₕ ζ₁ - πₕ ζ₂ → 0` on a dense set of `Γ(𝐝)`
@@ -43,6 +47,11 @@ its reading maps are not shown to be cochain maps).
 * `waveL`, `totalDL`: the Hodge wave operator `Lₕ = 𝐝ₕ - 𝐝ₕ*` and the differential of a
   finite-dimensional complex as bounded operators; `waveL_apply`: `Lₕ` is its wave operator,
   `ofBounded_waveL_S`: `e^{tLₕ}` is its wave group.
+* `graphOpNorm D A`: the norm of a bounded operator `A` in the graph norm of a bounded operator
+  `D`, `‖A v‖ ≤ graphOpNorm D A (‖v‖ + ‖D v‖)` (`norm_apply_le_graphOpNorm`), at most `‖A‖`
+  (`graphOpNorm_le`) and at most `√2 δ` when `‖A v‖ ≤ δ (‖v‖ + ‖D v‖)` for every `v`
+  (`graphOpNorm_le_of_forall`); `ApproxComplex.Family.graphDefect` is its value at `D = 𝐝ₕ`,
+  `A = 1 - Jₕ`.
 * `ApproxComplex.Family.ellProj`: the **modified elliptic projection**
   `Rₕ = (1 - Lₕ)⁻¹ Gₕ : Γ(𝐝) → Vₕ`, with `Gₕ (y, 𝐝y) = iₕ* (1 - L) y` on `D(L)`
   (`ApproxComplex.Family.G_waveLift`): the elliptic projection (4.11) of
@@ -56,12 +65,14 @@ its reading maps are not shown to be cochain maps).
 * `ApproxComplex.Family.norm_ellProj_add_le`: `‖Rₕ ζ‖ + ‖𝐝ₕ Rₕ ζ‖ ≤ 16 C ‖ζ‖_Γ` (coercivity of
   `1 - Lₕ` in the discrete graph norm, `norm_add_norm_le_of_inner`, from `𝐝ₕ 𝐝ₕ = 0`).
 * **The Strang lemma** `ApproxComplex.Family.norm_graphFst_sub_inclL_ellProj_le`:
-  `‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16 C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖_Γ + 16 C² ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖_Γ` for
-  every `w`: best approximation plus the inner-product defect.
+  `‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16 C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖_Γ + 8 C (‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖)` for
+  every `w`: best approximation plus the inner-product defect at `w` and `𝐝ₕ w` (at most
+  `2 C ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖_Γ`, and at most `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`).
 * `ApproxComplex.Family.ellProj_defect`: the defect identity
   `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y`, `Δₕ = Rₕ - iₕ* graphFst`, and
   `ApproxComplex.Family.norm_defectOp_apply_le`:
-  `‖Δₕ ζ‖ ≤ 16 C ‖1 - Jₕ‖ ‖ζ‖_Γ + C ‖ζ₁ - iₕ Rₕ ζ‖`; hence (`ApproxComplex.tendsto_inclL_ellProj`,
+  `‖Δₕ ζ‖ ≤ ‖(1 - Jₕ) Rₕ ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`, the first term at most `16 C ‖1 - Jₕ‖_{Vₕ} ‖ζ‖_Γ`
+  (`Rₕ` is bounded in the discrete graph norm); hence (`ApproxComplex.tendsto_inclL_ellProj`,
   `ApproxComplex.tendsto_defectOp`) all hypotheses of `Core.ofOperator` hold.
 * `approxFEEC_ofComplex`: the four conclusions of `approxFEEC` for `ofComplex`, and, now
   expressible, **discrete constraints**: `Kₕ ⊆ Vₕ` is preserved by `e^{tLₕ}` iff it reduces the
@@ -243,6 +254,69 @@ theorem ofBounded_waveL_S (t : ℝ) (v : PiLp 2 V) :
 
 end Group
 
+/-! ### The norm of an operator in the graph norm of a bounded operator -/
+
+section GraphOpNorm
+
+variable {X Y : Type*} [NormedAddCommGroup X] [InnerProductSpace 𝕜 X] [NormedAddCommGroup Y]
+  [NormedSpace 𝕜 Y] (D : X →L[𝕜] X) (A : X →L[𝕜] Y)
+
+/-- **The norm of `A` in the graph norm of `D`**: the norm of `A` from the graph space of the
+bounded operator `D` (`‖v‖²_D = ‖v‖² + ‖D v‖²`) to `Y`, the least `δ` with `‖A v‖ ≤ δ ‖v‖_D`. It
+is at most `‖A‖` (`graphOpNorm_le`), and `‖A v‖ ≤ graphOpNorm D A (‖v‖ + ‖D v‖)`
+(`norm_apply_le_graphOpNorm`). At `A = 1 - iₕ* iₕ` and `D = 𝐝ₕ` it is the inner-product defect in
+the graph norm of a discretization (`ApproxComplex.Family.graphDefect`,
+`ApproxComplexCrime.Family.graphDefect`). -/
+def graphOpNorm : ℝ := ‖A ∘L ((D : X →ₗ[𝕜] X).toPMap ⊤).graphFst‖
+
+theorem graphOpNorm_nonneg : 0 ≤ graphOpNorm D A := norm_nonneg _
+
+/-- `graphOpNorm D A ≤ ‖A‖`. -/
+theorem graphOpNorm_le : graphOpNorm D A ≤ ‖A‖ :=
+  ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun v =>
+    (A.le_opNorm _).trans (mul_le_mul_of_nonneg_left (norm_graphFst_le v) (norm_nonneg _))
+
+/-- `graphOpNorm D A = 0` iff `A = 0` (the first projection of the graph space is onto). -/
+theorem graphOpNorm_eq_zero_iff : graphOpNorm D A = 0 ↔ A = 0 := by
+  refine ⟨fun h0 => ContinuousLinearMap.ext fun v => ?_, fun hA => by
+    rw [graphOpNorm, hA, ContinuousLinearMap.zero_comp, norm_zero]⟩
+  rw [graphOpNorm, norm_eq_zero] at h0
+  exact congrArg (fun B => B (((D : X →ₗ[𝕜] X).toPMap ⊤).toGraphSpace ⟨v, Submodule.mem_top⟩)) h0
+
+/-- `‖A v‖ ≤ graphOpNorm D A ‖v‖_D` on the graph space of `D`. -/
+theorem norm_graphFst_le_graphOpNorm (v : ((D : X →ₗ[𝕜] X).toPMap ⊤).GraphSpace) :
+    ‖A (((D : X →ₗ[𝕜] X).toPMap ⊤).graphFst v)‖ ≤ graphOpNorm D A * ‖v‖ :=
+  (A ∘L ((D : X →ₗ[𝕜] X).toPMap ⊤).graphFst).le_opNorm v
+
+/-- `‖A v‖ ≤ graphOpNorm D A (‖v‖ + ‖D v‖)`. -/
+theorem norm_apply_le_graphOpNorm (v : X) : ‖A v‖ ≤ graphOpNorm D A * (‖v‖ + ‖D v‖) :=
+  (norm_graphFst_le_graphOpNorm D A (((D : X →ₗ[𝕜] X).toPMap ⊤).toGraphSpace
+    ⟨v, Submodule.mem_top⟩)).trans (mul_le_mul_of_nonneg_left
+      (LinearPMap.norm_toGraphSpace_le _ _) (graphOpNorm_nonneg D A))
+
+/-- `‖A v‖ ≤ graphOpNorm D A ‖v‖` when `D v = 0`. -/
+theorem norm_apply_le_graphOpNorm_of_eq_zero {v : X} (hv : D v = 0) :
+    ‖A v‖ ≤ graphOpNorm D A * ‖v‖ := by
+  simpa [hv] using norm_apply_le_graphOpNorm D A v
+
+/-- **The norm in the graph norm from a bound**: if `‖A v‖ ≤ δ (‖v‖ + ‖D v‖)` for every `v`, then
+`graphOpNorm D A ≤ √2 δ` (`‖v‖ + ‖D v‖ ≤ √2 ‖v‖_D`). -/
+theorem graphOpNorm_le_of_forall {δ : ℝ} (hδ : 0 ≤ δ) (hb : ∀ v, ‖A v‖ ≤ δ * (‖v‖ + ‖D v‖)) :
+    graphOpNorm D A ≤ √2 * δ := by
+  refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun g => ?_
+  obtain ⟨x, -, h1, h2⟩ := LinearPMap.exists_toGraphSpace_eq _ g
+  have e := norm_sq_graphSpace g
+  rw [← h1, ← h2] at e
+  change ‖g‖ ^ 2 = ‖(x : X)‖ ^ 2 + ‖D x‖ ^ 2 at e
+  have hs : ‖(x : X)‖ + ‖D x‖ ≤ √2 * ‖g‖ := by
+    refine (pow_le_pow_iff_left₀ (by positivity) (by positivity) two_ne_zero).1 ?_
+    rw [mul_pow, Real.sq_sqrt zero_le_two, e]
+    nlinarith [sq_nonneg (‖(x : X)‖ - ‖D x‖)]
+  rw [ContinuousLinearMap.comp_apply, ← h1]
+  exact (hb x).trans ((mul_le_mul_of_nonneg_left hs hδ).trans_eq (by ring))
+
+end GraphOpNorm
+
 /-! ### Approximating families of discrete complexes -/
 
 section Family
@@ -397,6 +471,13 @@ theorem inner_J (h : κ) (v w : PiLp 2 (S.V h)) :
     ⟪S.J h v, w⟫_𝕜 = ⟪S.inclL h v, S.inclL h w⟫_𝕜 := by
   rw [J, ContinuousLinearMap.comp_apply, ContinuousLinearMap.adjoint_inner_left]
 
+/-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` from the
+graph space of `𝐝ₕ` (`‖v‖² + ‖𝐝ₕ v‖²`) to `Vₕ` (`graphOpNorm`), so
+`‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_apply_le_graphOpNorm`); at most `‖1 - Jₕ‖`
+(`graphOpNorm_le`). It is the defect of the family read as a family of discrete differential spaces
+(`ApproxComplexCrime.Family.graphDefect` of `toCrimeFamily`). -/
+def graphDefect (h : κ) : ℝ := graphOpNorm (S.D h) (1 - S.J h)
+
 theorem norm_graphSnd_le (ζ : H.totalD.GraphSpace) : ‖H.totalD.graphSnd ζ‖ ≤ ‖ζ‖ := by
   have := norm_sq_graphSpace ζ
   nlinarith [norm_nonneg (H.totalD.graphFst ζ), norm_nonneg ζ, norm_nonneg (H.totalD.graphSnd ζ)]
@@ -504,12 +585,14 @@ theorem norm_ellProj_le (h : κ) : ‖S.ellProj h‖ ≤ 16 * S.boundConst :=
   ContinuousLinearMap.opNorm_le_bound _ (by have := S.boundConst_nonneg; positivity)
     (S.norm_ellProj_apply_le h)
 
-/-- The discrete error `w - Rₕ ζ` in the discrete graph norm, for any `w ∈ Vₕ`: inner-product
-defect times `‖w‖ + ‖𝐝ₕ w‖`, plus the graph-norm distance of `ζ` to the lift of `w`. -/
+/-- The discrete error `w - Rₕ ζ` in the discrete graph norm, for any `w ∈ Vₕ`: the inner-product
+defect at `w` and `𝐝ₕ w`, plus the graph-norm distance of `ζ` to the lift of `w`. -/
 theorem norm_sub_ellProj_add_le (h : κ) (ζ : H.totalD.GraphSpace) (w : PiLp 2 (S.V h)) :
     ‖w - S.ellProj h ζ‖ + ‖S.D h (w - S.ellProj h ζ)‖ ≤
-      8 * (‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) + 2 * S.boundConst * ‖ζ - S.graphIncl h w‖) := by
-  set δ := ‖1 - S.J h‖
+      8 * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ +
+        2 * S.boundConst * ‖ζ - S.graphIncl h w‖) := by
+  set p := ‖(1 - S.J h) w‖
+  set q := ‖(1 - S.J h) (S.D h w)‖
   set e := w - S.ellProj h ζ
   have he : e - S.L h e = (w - S.L h w) - S.G h ζ := by
     simp only [e, _root_.map_sub]; rw [← S.ellProj_sub]; abel
@@ -522,20 +605,12 @@ theorem norm_sub_ellProj_add_le (h : κ) (ζ : H.totalD.GraphSpace) (w : PiLp 2 
     simp only [_root_.sub_apply, one_apply_eq_self, inner_sub_left]
     ring
   rw [hsplit]
-  have b1 : ‖⟪(1 - S.J h) w, v⟫_𝕜‖ ≤ δ * ‖w‖ * ‖v‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right
-      ((1 - S.J h).le_opNorm w) (norm_nonneg _))
-  have b2 : ‖⟪(1 - S.J h) (S.D h w), v⟫_𝕜‖ ≤ δ * ‖S.D h w‖ * ‖v‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right
-      ((1 - S.J h).le_opNorm _) (norm_nonneg _))
-  have b3 : ‖⟪(1 - S.J h) w, S.D h v⟫_𝕜‖ ≤ δ * ‖w‖ * ‖S.D h v‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right
-      ((1 - S.J h).le_opNorm w) (norm_nonneg _))
+  have b1 : ‖⟪(1 - S.J h) w, v⟫_𝕜‖ ≤ p * ‖v‖ := norm_inner_le_norm _ _
+  have b2 : ‖⟪(1 - S.J h) (S.D h w), v⟫_𝕜‖ ≤ q * ‖v‖ := norm_inner_le_norm _ _
+  have b3 : ‖⟪(1 - S.J h) w, S.D h v⟫_𝕜‖ ≤ p * ‖S.D h v‖ := norm_inner_le_norm _ _
   have b4 := S.norm_inner_G_le h (S.graphIncl h w - ζ) v
   rw [norm_sub_rev] at b4
-  have hδ : 0 ≤ δ := norm_nonneg _
-  have hw := norm_nonneg w
-  have hDw := norm_nonneg (S.D h w)
+  have hq : 0 ≤ q := norm_nonneg _
   have hv := norm_nonneg v
   have hDv := norm_nonneg (S.D h v)
   calc _ ≤ ‖⟪(1 - S.J h) w, v⟫_𝕜‖ + ‖⟪(1 - S.J h) (S.D h w), v⟫_𝕜‖ +
@@ -543,17 +618,19 @@ theorem norm_sub_ellProj_add_le (h : κ) (ζ : H.totalD.GraphSpace) (w : PiLp 2 
         (norm_add_le _ _).trans (by
           gcongr
           exact (norm_add_le _ _).trans (by gcongr; exact norm_sub_le _ _))
-    _ ≤ _ := by nlinarith [mul_nonneg (mul_nonneg hδ hDw) hDv]
+    _ ≤ _ := by nlinarith [mul_nonneg hq hDv]
 
 /-- **The Strang lemma for the modified elliptic projection** (cf. [HolstStern2012], Thm 3.9,
 Thm 3.10): for every `w ∈ Vₕ`,
-`‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16 C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖_Γ + 16 C² ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖_Γ`:
-best approximation in the graph norm plus the inner-product defect. -/
+`‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16 C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖_Γ + 8 C (‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖)`:
+best approximation in the graph norm plus the inner-product defect at `w` and `𝐝ₕ w`, which is at
+most `2 C ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖_Γ` (`norm_add_norm_D_le`) and at most
+`‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_apply_le_graphOpNorm`, `𝐝ₕ 𝐝ₕ = 0`). -/
 theorem norm_graphFst_sub_inclL_ellProj_le (h : κ) (ζ : H.totalD.GraphSpace)
     (w : PiLp 2 (S.V h)) :
     ‖H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ)‖ ≤
       (1 + 16 * S.boundConst ^ 2) * ‖ζ - S.graphIncl h w‖ +
-        16 * S.boundConst ^ 2 * ‖1 - S.J h‖ * ‖S.graphIncl h w‖ := by
+        8 * S.boundConst * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖) := by
   have e : H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ) =
       H.totalD.graphFst (ζ - S.graphIncl h w) + S.inclL h (w - S.ellProj h ζ) := by
     rw [H.totalD.graphFst.map_sub, (S.inclL h).map_sub, S.graphFst_graphIncl]; abel
@@ -562,17 +639,14 @@ theorem norm_graphFst_sub_inclL_ellProj_le (h : κ) (ζ : H.totalD.GraphSpace)
     norm_graphFst_le _
   have h2 := S.norm_inclL_apply_le h (w - S.ellProj h ζ)
   have h3 := S.norm_sub_ellProj_add_le h ζ w
-  have h4 := S.norm_add_norm_D_le h w
   have hC := S.boundConst_nonneg
-  have hδ : 0 ≤ ‖1 - S.J h‖ := norm_nonneg _
-  have h5 : ‖w - S.ellProj h ζ‖ ≤ 8 * (‖1 - S.J h‖ * (2 * S.boundConst * ‖S.graphIncl h w‖) +
+  have h5 : ‖w - S.ellProj h ζ‖ ≤ 8 * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ +
       2 * S.boundConst * ‖ζ - S.graphIncl h w‖) := by
-    have := mul_le_mul_of_nonneg_left h4 hδ
-    nlinarith [norm_nonneg (S.D h (w - S.ellProj h ζ))]
+    linarith [norm_nonneg (S.D h (w - S.ellProj h ζ))]
   calc _ ≤ ‖H.totalD.graphFst (ζ - S.graphIncl h w)‖ + ‖S.inclL h (w - S.ellProj h ζ)‖ :=
         norm_add_le _ _
-    _ ≤ ‖ζ - S.graphIncl h w‖ + S.boundConst * (8 * (‖1 - S.J h‖ *
-          (2 * S.boundConst * ‖S.graphIncl h w‖) + 2 * S.boundConst * ‖ζ - S.graphIncl h w‖)) :=
+    _ ≤ ‖ζ - S.graphIncl h w‖ + S.boundConst * (8 * (‖(1 - S.J h) w‖ +
+          ‖(1 - S.J h) (S.D h w)‖ + 2 * S.boundConst * ‖ζ - S.graphIncl h w‖)) :=
         add_le_add h1 (h2.trans (mul_le_mul_of_nonneg_left h5 hC))
     _ = _ := by ring
 
@@ -609,10 +683,11 @@ theorem ellProj_defect (h : κ) (y : H.wave.domain) (hLy : H.wave y ∈ H.wave.d
     ContinuousLinearMap.comp_apply, graphFst_waveLift, graphFst_waveLift, _root_.map_sub]
   abel
 
-/-- The defect is controlled by the inner-product defect and the reading error:
-`‖Δₕ ζ‖ ≤ 16 C ‖1 - Jₕ‖ ‖ζ‖_Γ + C ‖ζ₁ - iₕ Rₕ ζ‖`. -/
+/-- The defect is controlled by the inner-product defect at the projection and the reading error:
+`‖Δₕ ζ‖ ≤ ‖(1 - Jₕ) Rₕ ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`. The first term is at most `16 C ‖1 - Jₕ‖ ‖ζ‖_Γ` and
+at most `16 C ‖1 - Jₕ‖_{Vₕ} ‖ζ‖_Γ` (`norm_one_sub_J_ellProj_le`). -/
 theorem norm_defectOp_apply_le (h : κ) (ζ : H.totalD.GraphSpace) :
-    ‖S.defectOp h ζ‖ ≤ 16 * S.boundConst * ‖1 - S.J h‖ * ‖ζ‖ +
+    ‖S.defectOp h ζ‖ ≤ ‖(1 - S.J h) (S.ellProj h ζ)‖ +
       S.boundConst * ‖H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ)‖ := by
   have e : S.defectOp h ζ = (1 - S.J h) (S.ellProj h ζ) -
       (S.inclL h).adjoint (H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ)) := by
@@ -620,14 +695,17 @@ theorem norm_defectOp_apply_le (h : κ) (ζ : H.totalD.GraphSpace) :
       ContinuousLinearMap.comp_apply, _root_.map_sub]
     abel
   rw [e]
-  refine (norm_sub_le _ _).trans (add_le_add ?_ ?_)
-  · refine ((1 - S.J h).le_opNorm _).trans ?_
-    have := S.norm_ellProj_apply_le h ζ
-    have hδ : 0 ≤ ‖1 - S.J h‖ := norm_nonneg _
-    nlinarith
-  · refine ((S.inclL h).adjoint.le_opNorm _).trans ?_
-    rw [ContinuousLinearMap.adjoint.norm_map (S.inclL h)]
-    exact mul_le_mul_of_nonneg_right (S.norm_inclL_le h) (norm_nonneg _)
+  refine (norm_sub_le _ _).trans (add_le_add le_rfl ?_)
+  refine ((S.inclL h).adjoint.le_opNorm _).trans ?_
+  rw [ContinuousLinearMap.adjoint.norm_map (S.inclL h)]
+  exact mul_le_mul_of_nonneg_right (S.norm_inclL_le h) (norm_nonneg _)
+
+/-- **The inner-product defect at the projection**: `‖(1 - Jₕ) Rₕ ζ‖ ≤ 16 C ‖1 - Jₕ‖_{Vₕ} ‖ζ‖_Γ`
+(`Rₕ` is bounded in the discrete graph norm, `norm_ellProj_add_le`). -/
+theorem norm_one_sub_J_ellProj_le (h : κ) (ζ : H.totalD.GraphSpace) :
+    ‖(1 - S.J h) (S.ellProj h ζ)‖ ≤ S.graphDefect h * (16 * S.boundConst * ‖ζ‖) :=
+  (norm_apply_le_graphOpNorm (S.D h) (1 - S.J h) _).trans
+    (mul_le_mul_of_nonneg_left (S.norm_ellProj_add_le h ζ) (graphOpNorm_nonneg _ _))
 
 instance (h : κ) (K : Submodule 𝕜 (PiLp 2 (S.V h))) : K.HasOrthogonalProjection :=
   haveI := FiniteDimensional.complete 𝕜 K; .ofCompleteSpace K
@@ -701,7 +779,9 @@ end ApproxComplex.Family
 cochain maps `iₕ` and left inverses `πₕ` (`ApproxComplex.Family`), a closed constraint `K`, a
 filter `l`, and the two Holst–Stern hypotheses:
 
-* the **inner-product defect** `‖1 - iₕ* iₕ‖ → 0` (`iₕ` need not be isometric);
+* the **inner-product defect in the graph norm** `‖1 - iₕ* iₕ‖_{Vₕ} → 0` (`iₕ` need not be
+  isometric; `Family.graphDefect`, the norm of `1 - iₕ* iₕ` on the graph space of `𝐝ₕ`, at most
+  `‖1 - iₕ* iₕ‖`, so `‖1 - iₕ* iₕ‖ → 0` suffices, `graphOpNorm_le`);
 * the **approximation property in the graph norm** (`GraphApprox`; from `L²` approximation and
   a commutation defect of `πₕ` tending to `0` on a dense set by
   `ApproxComplex.Family.graphApprox_of_commute`).
@@ -716,7 +796,7 @@ structure ApproxComplex (H : HilbertComplex 𝕜 c W) (κ : Type*) where
   isClosed_K : IsClosed (K : Set (PiLp 2 W))
   /-- the filter along which the discretization is refined -/
   l : Filter κ
-  tendsto_innerDefect : Tendsto (fun h => ‖1 - toFamily.J h‖) l (𝓝 0)
+  tendsto_graphDefect : Tendsto toFamily.graphDefect l (𝓝 0)
   graphApprox : toFamily.GraphApprox l
 
 namespace ApproxComplex
@@ -725,7 +805,8 @@ variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplex.{u} H κ)
 
 /-- **Convergence of the modified elliptic projection**: `iₕ Rₕ ζ → ζ₁` for every `ζ ∈ Γ(𝐝)`
 (the Strang lemma `norm_graphFst_sub_inclL_ellProj_le`, the graph-norm approximation property
-and the inner-product defect). -/
+and the inner-product defect in the graph norm: the approximants are bounded in the discrete
+graph norm). -/
 theorem tendsto_inclL_ellProj (ζ : H.totalD.GraphSpace) :
     Tendsto (fun h => F.toFamily.inclL h (F.toFamily.ellProj h ζ)) F.l
       (𝓝 (H.totalD.graphFst ζ)) := by
@@ -733,7 +814,7 @@ theorem tendsto_inclL_ellProj (ζ : H.totalD.GraphSpace) :
   rw [Metric.tendsto_nhds]
   intro ε hε
   set A := 1 + 16 * S.boundConst ^ 2
-  set B := 16 * S.boundConst ^ 2
+  set B := 32 * S.boundConst ^ 2
   have hA : 0 < A := by positivity
   have hB : 0 ≤ B := by positivity
   set η := ε / (2 * A)
@@ -742,9 +823,10 @@ theorem tendsto_inclL_ellProj (ζ : H.totalD.GraphSpace) :
   have hM : 0 ≤ M := by positivity
   set θ := ε / (2 * (M + 1))
   have hθ : 0 < θ := by positivity
-  filter_upwards [F.graphApprox ζ η hη, Metric.tendsto_nhds.1 F.tendsto_innerDefect θ hθ]
+  filter_upwards [F.graphApprox ζ η hη, Metric.tendsto_nhds.1 F.tendsto_graphDefect θ hθ]
     with h ⟨w, hw⟩ hδ
-  rw [dist_eq_norm, sub_zero, Real.norm_of_nonneg (norm_nonneg _)] at hδ
+  rw [dist_eq_norm, sub_zero] at hδ
+  replace hδ := (Real.le_norm_self _).trans_lt hδ
   rw [dist_eq_norm, norm_sub_rev]
   refine (S.norm_graphFst_sub_inclL_ellProj_le h ζ w).trans_lt ?_
   have hgw : ‖S.graphIncl h w‖ ≤ ‖ζ‖ + η := by
@@ -755,11 +837,25 @@ theorem tendsto_inclL_ellProj (ζ : H.totalD.GraphSpace) :
     have : A * ‖ζ - S.graphIncl h w‖ < A * η := mul_lt_mul_of_pos_left hw hA
     have e : A * η = ε / 2 := by simp only [η]; field_simp
     linarith
-  have t2 : B * ‖1 - S.J h‖ * ‖S.graphIncl h w‖ < ε / 2 := by
-    have hδ0 : 0 ≤ ‖1 - S.J h‖ := norm_nonneg _
-    have : B * ‖1 - S.J h‖ * ‖S.graphIncl h w‖ ≤ M * θ := by
-      calc B * ‖1 - S.J h‖ * ‖S.graphIncl h w‖ ≤ B * θ * (‖ζ‖ + η) := by
-            gcongr
+  have t2 : 8 * S.boundConst * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖) < ε / 2 := by
+    have hC := S.boundConst_nonneg
+    have hδ0 : 0 ≤ S.graphDefect h := graphOpNorm_nonneg _ _
+    have hp : ‖(1 - S.J h) w‖ ≤ S.graphDefect h * (‖w‖ + ‖S.D h w‖) :=
+      norm_apply_le_graphOpNorm _ _ w
+    have hq : ‖(1 - S.J h) (S.D h w)‖ ≤ S.graphDefect h * ‖S.D h w‖ :=
+      norm_apply_le_graphOpNorm_of_eq_zero _ _ ((S.cpx h).totalDL_totalDL w)
+    have hpq : ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤
+        S.graphDefect h * (4 * S.boundConst * ‖S.graphIncl h w‖) := by
+      have h1 := mul_le_mul_of_nonneg_left
+        (le_add_of_nonneg_left (norm_nonneg w) : ‖S.D h w‖ ≤ ‖w‖ + ‖S.D h w‖) hδ0
+      have h2 := mul_le_mul_of_nonneg_left (S.norm_add_norm_D_le h w) hδ0
+      nlinarith
+    have : 8 * S.boundConst * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖) ≤ M * θ := by
+      calc 8 * S.boundConst * (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖)
+          ≤ 8 * S.boundConst * (S.graphDefect h * (4 * S.boundConst * ‖S.graphIncl h w‖)) :=
+            mul_le_mul_of_nonneg_left hpq (by positivity)
+        _ = B * S.graphDefect h * ‖S.graphIncl h w‖ := by ring
+        _ ≤ B * θ * (‖ζ‖ + η) := by gcongr
         _ = M * θ := by ring
     have e : M * θ = ε / 2 * (M / (M + 1)) := by simp only [θ]; field_simp
     have : M / (M + 1) < 1 := (div_lt_one (by linarith)).2 (by linarith)
@@ -771,16 +867,16 @@ pointwise on `Γ(𝐝)`. -/
 theorem tendsto_defectOp (ζ : H.totalD.GraphSpace) :
     Tendsto (fun h => ‖F.toFamily.defectOp h ζ‖) F.l (𝓝 0) := by
   set S := F.toFamily
-  have h1 := F.tendsto_innerDefect
+  have h1 := F.tendsto_graphDefect
   have h2 := tendsto_iff_norm_sub_tendsto_zero.1 (F.tendsto_inclL_ellProj ζ)
-  have hb : Tendsto (fun h => 16 * S.boundConst * ‖1 - S.J h‖ * ‖ζ‖ +
+  have hb : Tendsto (fun h => S.graphDefect h * (16 * S.boundConst * ‖ζ‖) +
       S.boundConst * ‖H.totalD.graphFst ζ - S.inclL h (S.ellProj h ζ)‖) F.l (𝓝 0) := by
-    have := ((h1.const_mul (16 * S.boundConst)).mul_const ‖ζ‖).add
-      (h2.const_mul S.boundConst)
+    have := (h1.mul_const (16 * S.boundConst * ‖ζ‖)).add (h2.const_mul S.boundConst)
     simp only [mul_zero, zero_mul, add_zero] at this
     refine this.congr fun h => ?_
     rw [norm_sub_rev (S.inclL h (S.ellProj h ζ))]
-  exact squeeze_zero (fun _ => norm_nonneg _) (fun h => S.norm_defectOp_apply_le h ζ) hb
+  exact squeeze_zero (fun _ => norm_nonneg _) (fun h => (S.norm_defectOp_apply_le h ζ).trans
+    (add_le_add (S.norm_one_sub_J_ellProj_le h ζ) le_rfl)) hb
 
 end ApproxComplex
 
@@ -856,10 +952,10 @@ end ApproxFEEC
 open ApproxFEEC in
 /-- **The approximating FEEC theorem for approximating families of discrete complexes.** For an
 approximating family `F` of finite-dimensional Hilbert complexes `Vₕ` with cochain maps
-`iₕ : Vₕ → W` (inner-product defect `‖1 - iₕ* iₕ‖ → 0`, graph-norm approximation), the
-discretization `ofComplex F` (generator the Hodge wave operator of `Vₕ` in its own inner product)
-with the core `ofComplexCore F` (comparison: the modified elliptic projection of the exact orbit)
-satisfies:
+`iₕ : Vₕ → W` (inner-product defect `‖1 - iₕ* iₕ‖_{Vₕ} → 0` in the graph norm of `𝐝ₕ`, graph-norm
+approximation), the discretization `ofComplex F` (generator the Hodge wave operator of `Vₕ` in its
+own inner product) with the core `ofComplexCore F` (comparison: the modified elliptic projection of
+the exact orbit) satisfies:
 
 1. the four conclusions of `approxFEEC` (`ApproxFEEC.Verdict`), on the dense core `D(L²)`;
 2. the discrete generator is the Hodge wave operator of `Vₕ` and `e^{tLₕ}` its wave group;
@@ -868,8 +964,8 @@ satisfies:
    preserved exactly, and its `𝐝ₕ`-closed components are read in `W` as `𝐝`-closed (`iₕ` is a
    cochain map); if `iₕ Kₕ ⊆ K`, the residual `dist(ξₕ(t), K)` is exactly `0`;
 4. the **Strang estimate** `‖ζ₁ - iₕ Rₕ ζ‖ ≤ (1 + 16C²) ‖ζ - (iₕ w, 𝐝 iₕ w)‖ +
-   16C² ‖1 - Jₕ‖ ‖(iₕ w, 𝐝 iₕ w)‖` for every `w`, and the **consistency defect bound**
-   `‖Δₕ ζ‖ ≤ 16C ‖1 - Jₕ‖ ‖ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`; both tend to `0`.
+   8C (‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖)` for every `w`, and the **consistency defect bound**
+   `‖Δₕ ζ‖ ≤ ‖(1 - Jₕ) Rₕ ζ‖ + C ‖ζ₁ - iₕ Rₕ ζ‖`; both tend to `0`.
 
 Cf. [HolstStern2012], Thm 3.9, Thm 3.10 (elliptic analogues) -/
 theorem approxFEEC_ofComplex [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
@@ -893,9 +989,9 @@ theorem approxFEEC_ofComplex [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTowe
     -- 4. the Strang estimate and the consistency defect, with their limits
     (∀ h ζ w, ‖H.totalD.graphFst ζ - (ofComplex F).incl h (F.toFamily.ellProj h ζ)‖ ≤
       (1 + 16 * F.toFamily.boundConst ^ 2) * ‖ζ - F.toFamily.graphIncl h w‖ +
-        16 * F.toFamily.boundConst ^ 2 * ‖1 - F.toFamily.J h‖ * ‖F.toFamily.graphIncl h w‖) ∧
-    (∀ h ζ, ‖F.toFamily.defectOp h ζ‖ ≤
-      16 * F.toFamily.boundConst * ‖1 - F.toFamily.J h‖ * ‖ζ‖ +
+        8 * F.toFamily.boundConst *
+          (‖(1 - F.toFamily.J h) w‖ + ‖(1 - F.toFamily.J h) (F.toFamily.D h w)‖)) ∧
+    (∀ h ζ, ‖F.toFamily.defectOp h ζ‖ ≤ ‖(1 - F.toFamily.J h) (F.toFamily.ellProj h ζ)‖ +
         F.toFamily.boundConst * ‖H.totalD.graphFst ζ -
           (ofComplex F).incl h (F.toFamily.ellProj h ζ)‖) ∧
     (∀ ζ, Tendsto (fun h => (ofComplex F).incl h (F.toFamily.ellProj h ζ)) F.l
@@ -974,8 +1070,9 @@ def toComplex : ApproxComplex H κ where
   K := F.K
   isClosed_K := F.isClosed_K
   l := F.l
-  tendsto_innerDefect := by
-    simp only [F.toFamily_J, sub_self, norm_zero]; exact tendsto_const_nhds
+  tendsto_graphDefect := tendsto_const_nhds.congr fun h => by
+    rw [ApproxComplex.Family.graphDefect, F.toFamily_J, sub_self]
+    exact ((graphOpNorm_eq_zero_iff _ _).2 rfl).symm
   graphApprox := F.toFamily_graphApprox
 
 /-- The identification of the total discrete space of `toFamily` with `Xₕ = ∏ Vₕⁱ ⊆ W`. -/

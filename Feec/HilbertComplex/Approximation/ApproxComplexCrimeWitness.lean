@@ -612,7 +612,8 @@ abbrev mixed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
   ofCochainDefect (mixedFamily 𝕜) K hK atTop (idComplex 𝕜).wave.domain (fun _ hy => hy)
     (idComplex 𝕜).wave.domainSq le_rfl
     (fun x _ t _ => ⟨mem_idComplex_wave_domain _, mem_idComplex_wave_domain _⟩)
-    ((mixedFamily 𝕜).tendsto_graphDefect_of_tendsto (scaled 𝕜 K hK).tendsto_innerDefect)
+    ((mixedFamily 𝕜).tendsto_graphDefect_of_tendsto (squeeze_zero (fun _ => norm_nonneg _)
+      mixed_innerDefect_le tendsto_perturbScale_sq_sub_one))
     (fun y _ ε hε => by
       have hev := (tendsto_perturbMesh_sq_mul ‖y‖).eventually (gt_mem_nhds hε)
       filter_upwards [hev] with n hn

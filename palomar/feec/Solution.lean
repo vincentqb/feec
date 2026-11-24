@@ -141,7 +141,9 @@ theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.Subcomplex
 
 /-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus**: the
 band subcomplexes of `Feec.Models.Torus.DeRhamGalerkin` with the Fourier truncations, through
-`Solution.Torus`; the harmonic forms are the constant forms
+`Solution.Torus`; the weak exterior derivative through `torusInv`, the inverse of
+`Feec.Fourier.Torus.fieldFourier` (`Torus.mem_graph_iff_isWeakTorusD`, from
+`Feec.Models.Torus.DeRham.mem_graph_iff_isWeak`); the harmonic forms are the constant forms
 (`Feec.Models.Torus.DeRham.finrank_harmonic`); the discrete Poincaré inequality and the harmonic
 bound from Theorem 1, under closed ranges, since the truncations are bounded in the graph norm;
 the Jackson estimate of the truncations on the `Hˢ` classes (`Torus.jackson`, from

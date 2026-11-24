@@ -632,12 +632,12 @@ def IsWeakTorusD {n : ℕ} {k : ℤ}
 
 /-- **Non-vacuity of Theorems 1–3: spectral Galerkin for the de Rham complex of the torus.** On
 `𝕋ⁿ`, `n ≥ 1`, the `L²` de Rham complex in Fourier coefficients (the graph of `d` is that of the
-multiplier `torusD` on its maximal domain and, through the inverse Fourier transform `torusInv`, a
-bijection onto the `L²` forms (`torusInv u` has the Fourier coefficients `u`, and every `L²` form
-is one), exactly the weak exterior derivative of `L²(𝕋ⁿ; Λᵏ)`, tested against all smooth
-functions, `IsWeakTorusD`), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier truncations as
-cochain projections: the harmonic forms are finite-dimensional in every degree,
-of dimension `(n choose k)` in degree `k` (the constant forms), and no `V_Nᵏ`, `0 ≤ k ≤ n`, is
+multiplier `torusD` on its maximal domain and, through the inverse Fourier transform `torusInv`,
+exactly the weak exterior derivative of `L²(𝕋ⁿ; Λᵏ)` tested against all smooth functions,
+`IsWeakTorusD`; `torusInv` is a bijection onto the `L²` forms: `torusInv u` has the Fourier
+coefficients `u`, and every `L²` form is one), the band-limited forms `|ξ|_∞ ≤ N` and the Fourier
+truncations as cochain projections: the harmonic forms are finite-dimensional in every degree, of
+dimension `(n choose k)` in degree `k` (the constant forms), and no `V_Nᵏ`, `0 ≤ k ≤ n`, is
 the whole space; and the family meets the hypotheses of the three theorems: closed ranges
 (Theorems 1 and 3), the Poincaré inequality with constant `√(1 + (2π)⁻²)` (Theorem 2), the
 discrete Poincaré inequality and the harmonic bound uniformly in `N` (Theorem 1), projections

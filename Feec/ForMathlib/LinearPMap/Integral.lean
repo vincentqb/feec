@@ -28,8 +28,9 @@ open Set MeasureTheory
 namespace LinearPMap
 
 /-- Membership in the graph, in domain form. -/
-theorem mem_graph_iff_exists {R E : Type*} [Ring R] [AddCommGroup E] [Module R E]
-    {A : E →ₗ.[R] E} {x v : E} : (x, v) ∈ A.graph ↔ ∃ h : x ∈ A.domain, A ⟨x, h⟩ = v :=
+theorem mem_graph_iff_exists {R E F : Type*} [Ring R] [AddCommGroup E] [Module R E]
+    [AddCommGroup F] [Module R F] {A : E →ₗ.[R] F} {x : E} {v : F} :
+    (x, v) ∈ A.graph ↔ ∃ h : x ∈ A.domain, A ⟨x, h⟩ = v :=
   ⟨fun h => ⟨LinearPMap.mem_domain_of_mem_graph h,
     ((LinearPMap.image_iff (LinearPMap.mem_domain_of_mem_graph h)).2 h).symm⟩,
    fun ⟨h, e⟩ => e ▸ A.mem_graph ⟨x, h⟩⟩

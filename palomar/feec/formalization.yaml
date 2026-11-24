@@ -59,18 +59,18 @@ project:
     stated through its graph, and this graph is exactly the weak exterior derivative of
     L2(T^n; Lambda^k) through the inverse Fourier transform torusInv, a bijection onto the L2 forms
     whose inverse is the Fourier coefficients: (u, w) lies in it iff f = torusInv u and
-    g = torusInv w have int g_s phi = -sum_{j in s} eps(j, s) int f_{s - j} d_j phi for every
-    (k + 1)-subset s and every smooth phi on T^n, IsWeakTorusD), with the spectral Galerkin spaces
-    of band-limited forms
-    |xi|_inf <= N and the Fourier truncations as cochain projections: the harmonic forms are
-    finite-dimensional in every degree, of dimension (n choose k) in degree k (the constant
-    forms), and no band space of a degree 0 <= k <= n is the whole space; the ranges are closed (a hypothesis of Theorems 1 and 3), the
-    Poincare inequality holds with constant sqrt(1 + (2 pi)^-2) in the graph norm (Theorem 2), the
-    discrete Poincare inequality and the harmonic bound hold uniformly in N (Theorem 1), the
-    truncations are bounded by 1 in the graph norm (Theorems 1-3) and in L2 (Theorem 3), and the
-    family approximates in the graph norm in every degree (Theorem 2, whose cohomology clause also
-    assumes the finite-dimensional harmonic forms), hence on every window (Theorem 3), the
-    truncations fix the harmonic forms (||q - pi_N q|| = 0, hence the strict gap
+    g = torusInv w have int g_s phi = -sum_{j in s} eps(j, s) int f_{s - j} d_j phi (d_j the
+    derivative along the j-th circle) for every (k + 1)-subset s and every smooth phi on T^n,
+    IsWeakTorusD), with the spectral Galerkin spaces of band-limited forms |xi|_inf <= N and the
+    Fourier truncations as cochain projections: the harmonic forms are finite-dimensional in every
+    degree, of dimension (n choose k) in degree k (the constant forms), and no band space of a
+    degree 0 <= k <= n is the whole space; the ranges are closed (a hypothesis of Theorems 1 and
+    3), the Poincare inequality holds with constant sqrt(1 + (2 pi)^-2) in the graph norm
+    (Theorem 2), the discrete Poincare inequality and the harmonic bound hold uniformly in N
+    (Theorem 1), the truncations are bounded by 1 in the graph norm (Theorems 1-3) and in L2
+    (Theorem 3), and the family approximates in the graph norm in every degree (Theorem 2, whose
+    cohomology clause also assumes the finite-dimensional harmonic forms), hence on every window
+    (Theorem 3), the truncations fix the harmonic forms (||q - pi_N q|| = 0, hence the strict gap
     ||q - pi_N q|| < ||q|| on nonzero harmonic forms, under which the static verdict gives the
     cohomology isomorphisms for every N), and the family has a Jackson
     estimate on the Sobolev classes (the rates of Theorems 2 and 3): mesh size
@@ -496,6 +496,19 @@ review:
     definitions torusHaar, torusInv and IsWeakTorusD (fidelity (7)); the former conjuncts are
     unchanged; Feec proves the de Rham instance (Feec.Models.Torus.DeRham.mem_graph_iff_isWeak,
     isWeak_deRham_iff; the linearity of the symbol, Feec.Fourier.Exterior.deRham_m_succ_eq_sum).
+    Independent review (2026-11-24), checked: the new witness implies the former one (proved in a
+    scratch file, not committed: the former statement, copied verbatim and elaborated against the
+    new challenge, has the elaborated type of the former FEEC.spectral_nonvacuous, and every
+    former declaration of the challenge keeps its elaborated type and value under the new import
+    Mathlib.Analysis.Fourier.AddCircleMulti); torusHaar is the measure of Mathlib's
+    UnitAddTorus.mFourierCoeff and mFourierLp; the conjunct on the Fourier coefficients excludes a
+    junk value of the series torusInv; IsWeakTorusD is the distributional d, coefficientwise, with
+    the signs eps(j, s) of torusD, the bilinear pairing and all smooth test functions; at
+    phi = conj(psi) dx_s the codifferential is (delta phi)_{s - j} = -eps(j, s) d_j conj(psi), so
+    the test-form identity of fidelity (7) is the defining one for psi. Changed: the docstring of
+    the witness states the bijection apart from the identification;
+    LinearPMap.mem_graph_iff_exists takes operators between two spaces (was: E -> E), and
+    Feec.Models.Torus.DeRham.mem_graph_iff_isWeak uses it (was: a copy of its proof).
 
 alignment:
   namespace: "FEEC"

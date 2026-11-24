@@ -366,10 +366,8 @@ theorem mem_graph_iff_isWeak {k : ℤ} (u : TorusWeak.Field d {s : Finset d // (
     (w : TorusWeak.Field d {s : Finset d // (#s : ℤ) = k + 1}) :
     (Fourier.Torus.fieldFourier d _ u, Fourier.Torus.fieldFourier d _ w) ∈
         ((complex d).d k (k + 1)).graph ↔
-      TorusWeak.IsWeak ((deRham d).m k (k + 1)) u w := by
-  rw [← TorusWeak.mem_graph_iff_isWeak (deRham_m_succ_eq_sum k)]
-  exact ⟨fun h => ⟨mem_domain_of_mem_graph h, ((image_iff (mem_domain_of_mem_graph h)).2 h).symm⟩,
-    fun ⟨h, e⟩ => e ▸ ((complex d).d k (k + 1)).mem_graph ⟨_, h⟩⟩
+      TorusWeak.IsWeak ((deRham d).m k (k + 1)) u w :=
+  mem_graph_iff_exists.trans (TorusWeak.mem_graph_iff_isWeak (deRham_m_succ_eq_sum k) u w)
 
 end Weak
 

@@ -172,6 +172,7 @@ public import Feec.ForMathlib.LinearPMap.RestrictScalars
 public import Feec.ForMathlib.LinearPMap.Skew
 public import Feec.ForMathlib.LinearPMap.SkewMaximal
 public import Feec.ForMathlib.Lp.CountEquiv
+public import Feec.ForMathlib.Lp.Diagonal
 public import Feec.ForMathlib.Lp.ProdEquiv
 public import Feec.Fourier.BGGSymbol
 public import Feec.Fourier.ClosedRange

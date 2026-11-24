@@ -64,6 +64,18 @@ project:
     level. The solution's witness is the window R --id--> R --0--> R (harmonic forms R (0, 0, 1))
     with the reading maps i_n = 1 + h_n N, N(a, b, c) = (0, c, 0), h_n = 1/(n+1), the cochain
     projections pi_n = 1 - h_n N, and the datum (0, 0, 1); the statement fixes none of these. The
+    compared witness FEEC.crime_defect_nonvacuous shows that a vanishing defect is a strictly
+    weaker hypothesis than ||1 - i_h* i_h|| -> 0: it states that a Hilbert complex with l2(N, R) in
+    every degree, with closed ranges on the window [0, 2), carries a family with cochain reading
+    maps and cochain projections pi_n bounded by 1 in the graph norm, with i_n pi_n -> 1 on D(d),
+    ||1 - i_n* i_n|| = 1 at every level and delta_n -> 0, which has the discrete Poincare
+    inequality and converges for every datum: it meets the hypotheses of the convergence conjunct
+    of the cochain clause and of the heat clause, which ||1 - i_n* i_n|| -> 0 excludes. The
+    solution's witness is d^0 = diag(k + 1) on l2 (closed, onto), all other differentials 0, the
+    modes k <= n of both degrees as discrete spaces, reading maps that double the square norm of the
+    highest mode k = n of degree 0, and the truncations to the modes k <= n, rescaled on that mode,
+    as cochain projections: 1 - i_n* i_n is minus the projection on that mode, on which d_n is
+    (n + 1) sqrt 2, so ||(1 - i_n* i_n) v|| <= (||v|| + ||d_n v||) / (n + 1). The
     conforming case (subcomplexes with cochain projections, the inclusion as reading map) is the
     Palomar entry palomar/feec. The statement is self-contained over Mathlib; the proof is the
     library Feec of this repository.
@@ -197,11 +209,12 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: the theorem FEEC.crimeFEEC and the witness FEEC.crime_nonvacuous
-    (Challenge.lean, 410 lines), formerly Theorem 4 and a witness of palomar/feec (the witness
-    now also states the discrete Poincare inequality and convergence for every datum, so that it
-    meets the hypotheses of the three clauses; since 2026-11-24 the inner-product defect is
-    measured from the discrete graph norm, a strengthening; see review.notes). Not
+    Formalized and compared: the theorem FEEC.crimeFEEC and the witnesses FEEC.crime_nonvacuous
+    and FEEC.crime_defect_nonvacuous (Challenge.lean, 432 lines), the first two formerly Theorem 4
+    and a witness of palomar/feec (the witness now also states the discrete Poincare inequality and
+    convergence for every datum, so that it meets the hypotheses of the three clauses; since
+    2026-11-24 the inner-product defect is measured from the discrete graph norm, a strengthening
+    that FEEC.crime_defect_nonvacuous shows to be strict; see review.notes). Not
     compared, proved in Feec: the wave equation with crimes, the rates of the heat equation with
     crimes (Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static), the splitting
     of the residual into an inner-product and a cochain defect
@@ -247,7 +260,8 @@ automation:
     Solution/Dynamic.lean for the windows and evolutions, Solution/Rational.lean for the rational
     schemes, Solution/Crime.lean for the families with crimes, Solution/Legacy.lean and
     Solution/Convert.lean for the componentwise forms of the mixed problems, Solution/Witness.lean
-    for the witness) and applies Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC, the
+    and Solution/HighMode.lean for the witnesses, the latter with the diagonal operators on l2 of
+    Feec.ForMathlib.Lp.Diagonal) and applies Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC, the
     cochain case Feec.HilbertComplex.Approximation.StaticCochain,
     Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC,
     Feec.HilbertComplex.dissipFEEC_fullyDiscrete and
@@ -308,9 +322,7 @@ fidelity:
     Feec.HilbertComplex.Approximation.StaticCrimeWitness, and not compared), and none is an
     infinite-dimensional finite element instance (the weak-symmetry scheme of
     palomar/einsteinbianchi is one in Feec, not compared here). The witness has ||1 - i_n* i_n|| ->
-    0: with finite-dimensional W and cochain reading maps, d_h is uniformly bounded and the two
-    defects are equivalent, so separating them needs an unbounded d, a finite element family such as
-    mass lumping, which is not compared. (8) The heat statement assumes a real structure
+    0; the two defects are separated by FEEC.crime_defect_nonvacuous. (8) The heat statement assumes a real structure
     [NormedSpace R (W i)] for derivatives in time, and nothing relating it to the K-structure: a
     real normed-space structure on a normed K-space is the restricted one, which the solution
     proves. (9) Shared vocabulary: the notions this entry shares with the other Palomar entries are
@@ -330,7 +342,15 @@ review:
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author. Generalization (2026-11-24): the inner-product defect
+    Not yet reviewed by the author. Strictness (2026-11-24): FEEC.crime_defect_nonvacuous, a
+    second compared witness, shows that the generalization below is strict (a family with
+    ||1 - i_n* i_n|| = 1 that meets the hypotheses of the convergence conjunct of the cochain clause
+    and of the heat clause); in Feec the constructors of the wave theory with crimes take the defect
+    in the graph norm (ApproxComplexCrime.ofCochainDefect, Family.consistent_of_cochainDefect), the
+    residual bound applies 1 - J_h only at the approximant and its differential
+    (Family.norm_residual_le), and the split rates take the inner-product defect at the approximants
+    (ApproxComplexCrime.rateClass_of_split); each new statement implies the former one with the same
+    constants. Generalization (2026-11-24): the inner-product defect
     CrimeFamily.defect, a hypothesis of the convergence and rate conjuncts of the cochain clause and
     of the heat clause, is the least delta with ||(1 - i_h* i_h) v|| <= delta (||v|| + ||d_h v||)
     (was the operator norm ||1 - i_h* i_h||, which bounds it), so that inner-product crimes small
@@ -391,5 +411,12 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "Proved in Solution/Witness.lean and Solution.lean, with the cochain clause of FEEC.crimeFEEC."
+    - source: "Non-vacuity of the defect in the graph norm (this entry)"
+      lean: "FEEC.crime_defect_nonvacuous"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        Proved in Solution/HighMode.lean and Solution.lean, with the cochain clause of
+        FEEC.crimeFEEC and the diagonal operators on l2 of Feec.ForMathlib.Lp.Diagonal.
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

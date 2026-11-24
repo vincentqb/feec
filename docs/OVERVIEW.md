@@ -197,9 +197,11 @@ on the graph space `Vₕ` of `𝐝ₕ`, at most `‖1 − Jₕ‖`). Since `Rₕ
 residual `0`, consistent approximation at `y` is equivalent to `iₕRₕy → y`
 (`Feec.HilbertComplex.ApproxComplexCrime.consistent_iff_tendsto_incl_load`): the hypothesis is the
 pointwise convergence of the projection, and the content is in the ways to check it. The residual splits exactly
-(`Feec.HilbertComplex.ApproxComplexCrime.Family.inner_residual_eq`) into the inner-product defect,
-the graph-norm best-approximation error and the cochain defect
-(`Feec.HilbertComplex.ApproxComplexCrime.ofCochainDefect`), or vanishes for a Galerkin projection
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.inner_residual_eq`) into the inner-product defect
+at `wₕ` and `𝐝ₕwₕ`, the graph-norm best-approximation error and the cochain defect
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.norm_residual_le`,
+`Feec.HilbertComplex.ApproxComplexCrime.ofCochainDefect`, with the defect in the graph norm), or
+vanishes for a Galerkin projection
 (`Feec.HilbertComplex.ApproxComplexCrime.ofGalerkinCore`: orthogonal reading maps and an existing
 core whose comparison satisfies `(1 − Lₕ) pₕ(t) = iₕ* (1 − L) e^{tL} x`; a bridge that re-reads the
 core, not a new convergence proof). `ofComplex` is the special case with
@@ -211,7 +213,8 @@ residual splitting, the defect bound, and exact preservation of `Lₕ`-invariant
 approximants along the trajectory with approximation, `‖(1 − Jₕ)wₕ‖` and residual `O(m(h)ᵅ)`, so
 `‖e^{tL}x − iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c`
 (`Feec.HilbertComplex.ApproxComplexCrime.error_le_of_rateClass`); the split rates (graph-norm best
-approximation `O(hᵅ)`, inner-product defect `O(h^β)`, cochain defect `O(h^γ)`) give a rate class
+approximation `O(hᵅ)`, inner-product defect `‖(1 − Jₕ)wₕ‖ + ‖(1 − Jₕ)𝐝ₕwₕ‖ = O(h^β)` at the
+approximants, cochain defect `O(h^γ)`) give a rate class
 of order `min(α, β, γ)` with explicit constants
 (`Feec.HilbertComplex.ApproxComplexCrime.rateClass_of_split`, `error_le_of_split`; through
 `Feec.HilbertComplex.ApproxComplexCrime.Family.rateData_of_split` and

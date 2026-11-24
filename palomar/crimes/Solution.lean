@@ -1,6 +1,7 @@
 module
 
 public import Solution.Convert
+public import Solution.HighMode
 public import Solution.Witness
 
 /-!
@@ -11,7 +12,9 @@ heat verdicts of `Solution.Crime` (through `Feec.HilbertComplex.ApproxComplexCri
 the cochain case `Feec.HilbertComplex.Approximation.StaticCochain` and
 `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`), converted by `Solution.Convert`;
 `FEEC.crime_nonvacuous` from the shear family of `Solution.Witness` and the cochain clause of
-`FEEC.crimeFEEC`.
+`FEEC.crimeFEEC`; `FEEC.crime_defect_nonvacuous` from the family of `Solution.HighMode` (an
+unbounded diagonal `d⁰` on `ℓ²`, reading maps that double the square norm of the highest mode) and
+the cochain clause.
 
 ## References
 
@@ -108,5 +111,35 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     linarith [Witness.mesh_pos n]
   unfold HilbertComplex.CrimeFamily.readError₀
   positivity
+
+open scoped lp in
+/-- **Non-vacuity of the defect in the graph norm**: on the complex `ℓ²(ℕ, ℝ)` in every degree
+with `d⁰ = diag(k + 1)` and all other differentials `0` (closed ranges: `d⁰` is onto), the family
+of `Solution.HighMode` (the modes `k ≤ n` of both degrees, reading maps doubling the square norm of
+the highest mode `k = n` of degree `0`, cochain projections bounded by `1` in the graph norm, with
+`iₙ πₙ` the truncation to the modes `k ≤ n`) has `‖1 - iₙ* iₙ‖ = 1` and
+`‖(1 - iₙ* iₙ) v‖ ≤ (‖v‖ + ‖𝐝ₙ v‖) / (n + 1)` (`HighMode.norm_one_sub_J`,
+`HighMode.norm_one_sub_J_apply_le`); the cochain clause of `FEEC.crimeFEEC` then gives the discrete
+Poincaré inequality and convergence for every datum. -/
+theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ²(ℕ, ℝ))
+    (S : H.CrimeFamily.{0} 0 2 ℕ) (P : S.CochainProj 1),
+    (∀ i : Fin 2, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℓ²(ℕ, ℝ))) ∧
+    S.l = atTop ∧ S.IsCochain ∧ (∃ cP, S.IsPoincare cP) ∧
+    (∀ n, ‖1 - (S.incl n).adjoint ∘L S.incl n‖ = 1) ∧ Tendsto S.defect atTop (𝓝 0) ∧
+    (∀ x : (H.totalD 0 2).domain, Tendsto (fun n =>
+      ‖(x : Total (fun _ : ℤ => ℓ²(ℕ, ℝ)) 0 2) - S.incl n (P.π n x)‖) atTop (𝓝 0)) ∧
+    ∀ f, S.ConvergesAt f := by
+  have hcr := HighMode.isClosed_boundaries
+  have V := (crimeFEEC HighMode.family hcr).2.1 HighMode.isCochain HighMode.proj
+  have hJ : Tendsto HighMode.family.defect atTop (𝓝 0) :=
+    squeeze_zero (fun n => HighMode.family.defect_nonneg n)
+      (fun n => HighMode.family.defect_le_of_forall n (by positivity)
+        (HighMode.norm_one_sub_J_apply_le n))
+      tendsto_one_div_add_atTop_nhds_zero_nat
+  have hπ : ∀ x : (HighMode.complex.totalD 0 2).domain, Tendsto (fun n =>
+      ‖(x : HighMode.T) - HighMode.family.incl n (HighMode.proj.π n x)‖) atTop (𝓝 0) :=
+    fun x => HighMode.tendsto_incl_proj (x : HighMode.T)
+  exact ⟨HighMode.complex, HighMode.family, HighMode.proj, hcr, rfl, HighMode.isCochain,
+    V.poincare, HighMode.norm_one_sub_J, hJ, hπ, V.converges hJ hπ⟩
 
 end FEEC

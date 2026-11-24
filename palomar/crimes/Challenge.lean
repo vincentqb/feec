@@ -3,6 +3,7 @@ module
 public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Analysis.Normed.Algebra.Exponential
 
 /-!
@@ -49,7 +50,11 @@ lumping of `P₁` elements ([Thomee2006], Ch. 15) it is `O(h)`, `h` the longest 
 `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert complex with
 nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`, hence a
 vanishing defect, meet the hypotheses of the three clauses, read a discrete harmonic form off the
-harmonic forms, and leave a positive error at every level. The conforming case (subcomplexes with
+harmonic forms, and leave a positive error at every level. The witness
+`FEEC.crime_defect_nonvacuous` shows that a vanishing defect is a strictly weaker hypothesis than
+`‖1 - iₕ* iₕ‖ → 0`: on a Hilbert complex with `ℓ²(ℕ, ℝ)` in every degree, cochain reading maps with
+`‖1 - iₙ* iₙ‖ = 1` at every level and a vanishing defect meet the hypotheses of the convergence
+conjunct of the cochain clause and of the heat clause. The conforming case (subcomplexes with
 cochain projections) is the Palomar entry `palomar/feec`.
 
 ## References
@@ -66,7 +71,7 @@ cochain projections) is the Palomar entry `palomar/feec`.
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace lp
 open Filter Topology Set LinearPMap
 
 universe u
@@ -405,6 +410,23 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     (∀ n, ∃ q ∈ S.harmonic n, S.incl n q ∉ H.totalHarmonic 0 3) ∧
     ∃ f, ∀ x, IsMixedSolution (H.totalMixedSpace 0 3) f x → ∀ n xh,
       S.IsSolution n f xh → 0 < S.readError n x xh := by
+  sorry
+
+/-- **Non-vacuity of the defect in the graph norm**: a Hilbert complex with `ℓ²(ℕ, ℝ)` in every
+degree, with closed ranges on the window `[0, 2)`, carries a family of discrete differential spaces
+with cochain reading maps `iₙ` and cochain projections `πₙ` bounded by `1` in the graph norm, with
+`iₙ πₙ → 1` on `D(𝐝)`, such that `‖1 - iₙ* iₙ‖ = 1` at every level (so `‖1 - iₙ* iₙ‖ ↛ 0`) while
+the inner-product defect tends to `0`; with the discrete Poincaré inequality and convergence for
+every datum, it meets the hypotheses of the convergence conjunct of the cochain clause and of the
+heat clause of `FEEC.crimeFEEC`, which the hypothesis `‖1 - iₙ* iₙ‖ → 0` would exclude. -/
+theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ²(ℕ, ℝ))
+    (S : H.CrimeFamily.{0} 0 2 ℕ) (P : S.CochainProj 1),
+    (∀ i : Fin 2, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℓ²(ℕ, ℝ))) ∧
+    S.l = atTop ∧ S.IsCochain ∧ (∃ cP, S.IsPoincare cP) ∧
+    (∀ n, ‖1 - (S.incl n).adjoint ∘L S.incl n‖ = 1) ∧ Tendsto S.defect atTop (𝓝 0) ∧
+    (∀ x : (H.totalD 0 2).domain, Tendsto (fun n =>
+      ‖(x : Total (fun _ : ℤ => ℓ²(ℕ, ℝ)) 0 2) - S.incl n (P.π n x)‖) atTop (𝓝 0)) ∧
+    ∀ f, S.ConvergesAt f := by
   sorry
 
 end FEEC

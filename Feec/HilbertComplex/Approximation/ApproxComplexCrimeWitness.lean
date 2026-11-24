@@ -209,7 +209,8 @@ abbrev shifted (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
   ofCochainDefect (shiftedFamily 𝕜) K hK atTop (idComplex 𝕜).wave.domain (fun _ hy => hy)
     (idComplex 𝕜).wave.domainSq le_rfl
     (fun x _ t _ => ⟨mem_idComplex_wave_domain _, mem_idComplex_wave_domain _⟩)
-    (by simp only [shifted_J, sub_self, norm_zero]; exact tendsto_const_nhds)
+    (tendsto_const_nhds.congr fun n =>
+      (((shiftedFamily 𝕜).graphDefect_eq_zero_iff n).2 (shifted_J n)).symm)
     (fun y _ ε hε => by
       have hev := (tendsto_perturbMesh.mul_const ‖y‖).eventually
         (gt_mem_nhds (show (0 : ℝ) * ‖y‖ < ε by rw [zero_mul]; exact hε))
@@ -295,11 +296,11 @@ def shiftedRate (T : ℝ) : (ofComplexCrime (shifted 𝕜 Q hQ)).RateClass T :=
       have hm := (perturbMesh_pos n).le
       have hnorm : ‖y‖ ≤ l2Norm x := by linarith [norm_nonneg (waveExt (idComplex 𝕜) y)]
       obtain ⟨h1, h2, h3⟩ := S.rateData_of_split n ⟨y, hy1⟩ y (Ea := perturbMesh n * ‖y‖)
-        (Ew := ‖y‖ + ‖S.D n y‖) (Eg := perturbMesh n * ‖y‖)
+        (Eb := ‖1 - S.J n‖ * (‖y‖ + ‖S.D n y‖)) (Eg := perturbMesh n * ‖y‖)
         (by
           change ‖y - y‖ + _ ≤ _
           rw [sub_self, norm_zero, zero_add]; exact norm_idTotalD_sub_shifted_le n y)
-        le_rfl (norm_inner_shifted_cochainDefect_le n ⟨y, hy1⟩)
+        (S.norm_one_sub_J_add_le_norm n y) (norm_inner_shifted_cochainDefect_le n ⟨y, hy1⟩)
       rw [Real.rpow_one]
       have hmy : perturbMesh n * ‖y‖ ≤ perturbMesh n * l2Norm x :=
         mul_le_mul_of_nonneg_left hnorm hm
@@ -388,9 +389,10 @@ def scaledRate (T : ℝ) : (ofComplexCrime (scaled 𝕜 Q hQ).toCrime).RateClass
           rw [waveExt_of_mem hy1]; exact norm_totalD_le_norm_wave (idComplex 𝕜) ⟨y, hy1⟩
         nlinarith [mul_le_mul_of_nonneg_left a3 hC, mul_le_mul_of_nonneg_left hyx hC]
       obtain ⟨h1, h2, h3⟩ := S.rateData_of_split n ⟨y, hy1⟩ w (Ea := 0)
-        (Ew := S.boundConst * l2Norm x) (Eg := 0)
+        (Eb := ‖1 - S.J n‖ * (S.boundConst * l2Norm x)) (Eg := 0)
         (by dsimp only; rw [hiw, hiDw, sub_self, sub_self, norm_zero, add_zero])
-        hw (fun v => by
+        ((S.norm_one_sub_J_add_le_norm n w).trans
+          (mul_le_mul_of_nonneg_left hw (norm_nonneg _))) (fun v => by
           rw [(scaledFamily 𝕜).cochainDefect_toCrimeFamily, inner_zero_left, norm_zero,
             zero_mul])
       rw [Real.rpow_one]
@@ -610,7 +612,7 @@ abbrev mixed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
   ofCochainDefect (mixedFamily 𝕜) K hK atTop (idComplex 𝕜).wave.domain (fun _ hy => hy)
     (idComplex 𝕜).wave.domainSq le_rfl
     (fun x _ t _ => ⟨mem_idComplex_wave_domain _, mem_idComplex_wave_domain _⟩)
-    (scaled 𝕜 K hK).tendsto_innerDefect
+    ((mixedFamily 𝕜).tendsto_graphDefect_of_tendsto (scaled 𝕜 K hK).tendsto_innerDefect)
     (fun y _ ε hε => by
       have hev := (tendsto_perturbMesh_sq_mul ‖y‖).eventually (gt_mem_nhds hε)
       filter_upwards [hev] with n hn
@@ -626,15 +628,14 @@ abbrev mixed (K : Submodule 𝕜 (PiLp 2 (W3 𝕜 𝕜 PUnit)))
 /-- **The rate class of `mixed` at order `min(2, 1, 2) = 1`**, through
 `ApproxComplexCrime.rateClass_of_split`: mesh size `hₙ = 1/(n+1)`, class norm
 `‖x‖ + ‖L x‖ + ‖L² x‖`, graph-norm best approximation `O(hₙ²)` (`Cₐ = 1`, approximant `πₙ y` of
-discrete graph norm `≤ 4 C_ι ‖y‖`), inner-product defect `O(hₙ)` (`C_β = 3`), cochain defect
-`O(hₙ²)` (`C_γ = 1`). -/
+discrete graph norm `≤ 4 C_ι ‖y‖`), inner-product defect `O(hₙ)` at it (`‖1 - Jₙ‖ ≤ 3 hₙ`, so
+`C_β = 12 C_ι`), cochain defect `O(hₙ²)` (`C_γ = 1`). -/
 def mixedRate (T : ℝ) : (ofComplexCrime (mixed 𝕜 Q hQ)).RateClass T :=
   (mixed 𝕜 Q hQ).rateClass_of_split T Set.univ (fun x _ => mem_idComplex_domainSq x) l2Norm
-    perturbMesh 2 1 2 1 (4 * (mixedFamily 𝕜).boundConst) 3 1
+    perturbMesh 2 1 2 1 (3 * (4 * (mixedFamily 𝕜).boundConst)) 1
     (fun n => (perturbMesh_pos n).le) perturbMesh_le_one (by norm_num) (by norm_num)
     (by norm_num) (by norm_num) (by positivity [(mixedFamily 𝕜).boundConst_nonneg])
-    (by norm_num) (by norm_num) (fun x _ => by unfold l2Norm; positivity)
-    (fun n => by rw [Real.rpow_one]; exact mixed_innerDefect_le_mesh n)
+    (by norm_num) (fun x _ => by unfold l2Norm; positivity)
     fun x _ n t _ y hy hyD => by
       set S := mixedFamily 𝕜
       have hC := S.boundConst_nonneg
@@ -652,8 +653,16 @@ def mixedRate (T : ℝ) : (ofComplexCrime (mixed 𝕜 Q hQ)).RateClass T :=
             (mul_le_mul_of_nonneg_right (S.norm_proj_le n) (norm_nonneg _))
         have h2 := norm_mixed_D_le n (S.proj n y)
         have h3 := mul_le_mul_of_nonneg_left hnorm hC
-        change ‖S.proj n y‖ + ‖S.D n (S.proj n y)‖ ≤ _
-        nlinarith [norm_nonneg (S.proj n y)]
+        have hw : ‖S.proj n y‖ + ‖S.D n (S.proj n y)‖ ≤ 4 * S.boundConst * l2Norm x := by
+          nlinarith [norm_nonneg (S.proj n y)]
+        have hJ : ‖1 - S.J n‖ ≤ 3 * perturbMesh n := mixed_innerDefect_le_mesh n
+        rw [Real.rpow_one]
+        refine (S.norm_one_sub_J_add_le_norm n _).trans ?_
+        calc ‖1 - S.J n‖ * (‖S.proj n y‖ + ‖S.D n (S.proj n y)‖)
+            ≤ 3 * perturbMesh n * (4 * S.boundConst * l2Norm x) :=
+              mul_le_mul hJ hw (add_nonneg (norm_nonneg _) (norm_nonneg _))
+                ((norm_nonneg _).trans hJ)
+          _ = 3 * (4 * S.boundConst) * perturbMesh n * l2Norm x := by ring
       · refine (norm_inner_mixed_cochainDefect_le n ⟨y, hyD⟩ v).trans ?_
         rw [one_mul]
         exact mul_le_mul_of_nonneg_right (mul_le_mul_of_nonneg_left hnorm hm)
@@ -666,7 +675,7 @@ theorem mixedRate_α (T : ℝ) : (mixedRate Q hQ T).α = 1 := by
 
 /-- **The rate of `mixed`**: from the comparison initial value `Rₙ x`,
 `‖e^{tL} x - iₙ e^{tLₙ} Rₙ x‖ ≤ (C + C_ι C' t) hₙ (‖x‖ + ‖L x‖ + ‖L² x‖)` on `[0, T]`, with
-`C = (1 + 8 C_ι) (2 + 13 C_ι)` (`rateClass_of_split_C` with `Cₐ = 1`, `C_w = 4 C_ι`, `C_β = 3`,
+`C = (1 + 8 C_ι) (2 + 13 C_ι)` (`rateClass_of_split_C` with `Cₐ = 1`, `C_β = 12 C_ι`,
 `C_γ = 1`). -/
 theorem mixed_rate (T : ℝ) (x : PiLp 2 (W3 𝕜 𝕜 PUnit)) (n : ℕ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖(idComplex 𝕜).waveGroup.S t x - (ofComplexCrime (mixed 𝕜 Q hQ)).sol n

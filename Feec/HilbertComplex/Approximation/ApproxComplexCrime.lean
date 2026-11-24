@@ -55,13 +55,14 @@ equivalent to `iₕ Rₕ y → y` (`ApproxComplexCrime.consistent_iff_tendsto_in
 is the convergence hypothesis on the projection, and the content is in the ways to check it.
 The residual splits exactly (`inner_residual_eq`) into the inner-product defect, the
 graph-norm approximation error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖` and the cochain defect, so graph-norm
-approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖ → 0` give it
-(`consistent_of_cochainDefect`, `ApproxComplexCrime.ofCochainDefect`). It also holds with a Galerkin projection as approximant
-(residual `0`): `ApproxComplexCrime.ofGalerkinCore` re-reads a discretization with
-orthogonal reading maps whose generator is `𝐝ₕ - 𝐝ₕ*` and a core whose comparison satisfies the
-Galerkin identity `(1 - Lₕ) pₕ(t) = iₕ* (1 - L) e^{tL} x` as a complex-level family; the cochain
-defect is then absorbed by the Galerkin identity and not computed. This bridge takes the existing
-core (its convergence is not re-proved) and adds the complex-level structure.
+approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖_{Vₕ} → 0` give it
+(`consistent_of_cochainDefect`, `ApproxComplexCrime.ofCochainDefect`). It also holds with a
+Galerkin projection as approximant (residual `0`): `ApproxComplexCrime.ofGalerkinCore` re-reads a
+discretization with orthogonal reading maps whose generator is `𝐝ₕ - 𝐝ₕ*` and a core whose
+comparison satisfies the Galerkin identity `(1 - Lₕ) pₕ(t) = iₕ* (1 - L) e^{tL} x` as a
+complex-level family; the cochain defect is then absorbed by the Galerkin identity and not
+computed. This bridge takes the existing core (its convergence is not re-proved) and adds the
+complex-level structure.
 
 ## Main results
 
@@ -69,7 +70,9 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   `‖w - Rₕ y‖ + ‖𝐝ₕ (w - Rₕ y)‖ ≤ 8 ε` and `‖y - iₕ Rₕ y‖ ≤ ‖y - iₕ w‖ + 8 C ε` for an approximant
   `w` of residual `≤ ε`.
 * `ApproxComplexCrime.Family.inner_residual_eq`, `norm_residual_le`: the residual is at most
-  `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖) + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ`, `δ` the cochain defect.
+  `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ`, `δ` the cochain
+  defect, and `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖` is at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)` and at most
+  `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_one_sub_J_add_le_norm`, `norm_one_sub_J_add_le`).
 * `ApproxComplexCrime.Family.graphDefect`: **the inner-product defect in the graph norm**
   `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ`, so
   `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_one_sub_J_apply_le`); at most `‖1 - Jₕ‖`
@@ -104,9 +107,9 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ`, hence
   `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c` (`error_le_of_rateClass`);
   `ApproxComplexCrime.rateClass_of_split` gives a rate class at order `min(α, β, γ)` from
-  graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` and cochain defect `O(m^γ)`
-  (`0 ≤ m ≤ 1`), with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ` in place of `Cₐ` (`C_w` bounds the
-  approximants in the discrete graph norm; through `Family.rateData_of_split` and
+  graph-norm best approximation `O(mᵅ)`, inner-product defect `O(m^β)` at the approximants
+  (`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖`) and cochain defect `O(m^γ)` (`0 ≤ m ≤ 1`), with
+  `Cₐ' = (1 + C_ι) Cₐ + C_β + C_γ` in place of `Cₐ` (through `Family.rateData_of_split` and
   `add_rpow_le_rpow_min`), and `error_le_of_split`; `galerkinRateClass` for Galerkin cores;
   `ConstrainedFEEC.RateClass.toCrimeRate`: the conforming rate classes give rate classes of
   `ofComplex` (factor `C + C_ι C' t`, `ConstrainedFEEC.RateClass.norm_sub_ofComplex_le`).
@@ -441,6 +444,19 @@ theorem norm_one_sub_J_apply_le_of_D_eq_zero (h : κ) {v : S.X h} (hv : S.D h v 
     ‖(1 - S.J h) v‖ ≤ S.graphDefect h * ‖v‖ := by
   simpa [hv] using S.norm_one_sub_J_apply_le h v
 
+/-- **The inner-product defect of a discrete form and of its differential**, the form in which the
+residual bound uses it (`norm_residual_le`):
+`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`, since `𝐝ₕ 𝐝ₕ w = 0`. -/
+theorem norm_one_sub_J_add_le (h : κ) (w : S.X h) :
+    ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ S.graphDefect h * (‖w‖ + 2 * ‖S.D h w‖) :=
+  (add_le_add (S.norm_one_sub_J_apply_le h w)
+    (S.norm_one_sub_J_apply_le_of_D_eq_zero h (S.D_D h w))).trans_eq (by ring)
+
+/-- `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ ‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)`. -/
+theorem norm_one_sub_J_add_le_norm (h : κ) (w : S.X h) :
+    ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ ‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) :=
+  (add_le_add ((1 - S.J h).le_opNorm w) ((1 - S.J h).le_opNorm _)).trans_eq (by ring)
+
 /-- **The defect from a bound in the graph norm**: if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every
 `v`, then `‖1 - Jₕ‖_{Vₕ} ≤ √2 δ` (`‖v‖ + ‖𝐝ₕ v‖ ≤ √2 ‖v‖_{Vₕ}`). -/
 theorem graphDefect_le_of_forall (h : κ) {δ : ℝ} (hδ : 0 ≤ δ)
@@ -623,31 +639,32 @@ theorem inner_residual_eq (h : κ) (y : H.wave.domain) (w v : S.X h) :
 
 /-- **The residual bound**: if the cochain defect is at most `δ` in the dual discrete graph norm,
 the residual of `w` is at most
-`(‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖) + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ) (‖v‖ + ‖𝐝ₕ v‖)`. -/
+`(‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ) (‖v‖ + ‖𝐝ₕ v‖)`. The
+inner-product defect enters only at `w` and `𝐝ₕ w`: at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)`
+(`norm_one_sub_J_add_le_norm`) and at most `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`
+(`norm_one_sub_J_add_le`). -/
 theorem norm_residual_le (h : κ) (y : H.wave.domain) (w : S.X h) {δ : ℝ}
     (hδ : ∀ v, ‖⟪S.cochainDefect h y, v⟫_𝕜‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) (v : S.X h) :
     ‖⟪w - S.L h w, v⟫_𝕜 - ⟪(y : PiLp 2 W) - H.wave y, S.incl h v⟫_𝕜‖ ≤
-      (‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) + S.boundConst * (‖(y : PiLp 2 W) - S.incl h w‖ +
-        ‖H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w)‖) + δ) * (‖v‖ + ‖S.D h v‖) := by
+      (‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ + S.boundConst *
+        (‖(y : PiLp 2 W) - S.incl h w‖ + ‖H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w)‖) + δ) *
+        (‖v‖ + ‖S.D h v‖) := by
   rw [S.inner_residual_eq]
   set C := S.boundConst
-  set j := ‖1 - S.J h‖
+  set p := ‖(1 - S.J h) w‖
+  set q := ‖(1 - S.J h) (S.D h w)‖
   set a := ‖(y : PiLp 2 W) - S.incl h w‖
   set b := ‖H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w)‖
   have hC := S.boundConst_nonneg
-  have hj : 0 ≤ j := norm_nonneg _
+  have hp : 0 ≤ p := norm_nonneg _
+  have hq : 0 ≤ q := norm_nonneg _
   have ha : 0 ≤ a := norm_nonneg _
   have hb : 0 ≤ b := norm_nonneg _
   have hv := norm_nonneg v
   have hDv := norm_nonneg (S.D h v)
-  have hw := norm_nonneg w
-  have hDw := norm_nonneg (S.D h w)
-  have b1 : ‖⟪(1 - S.J h) w, v⟫_𝕜‖ ≤ j * ‖w‖ * ‖v‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right ((1 - S.J h).le_opNorm w) hv)
-  have b2 : ‖⟪(1 - S.J h) (S.D h w), v⟫_𝕜‖ ≤ j * ‖S.D h w‖ * ‖v‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right ((1 - S.J h).le_opNorm _) hv)
-  have b3 : ‖⟪(1 - S.J h) w, S.D h v⟫_𝕜‖ ≤ j * ‖w‖ * ‖S.D h v‖ :=
-    (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_right ((1 - S.J h).le_opNorm w) hDv)
+  have b1 : ‖⟪(1 - S.J h) w, v⟫_𝕜‖ ≤ p * ‖v‖ := norm_inner_le_norm _ _
+  have b2 : ‖⟪(1 - S.J h) (S.D h w), v⟫_𝕜‖ ≤ q * ‖v‖ := norm_inner_le_norm _ _
+  have b3 : ‖⟪(1 - S.J h) w, S.D h v⟫_𝕜‖ ≤ p * ‖S.D h v‖ := norm_inner_le_norm _ _
   have b4 : ‖⟪S.incl h w - y, S.incl h v⟫_𝕜‖ ≤ a * (C * ‖v‖) := by
     refine (norm_inner_le_norm _ _).trans (mul_le_mul (le_of_eq ?_) (S.norm_incl_apply_le h v)
       (norm_nonneg _) ha)
@@ -671,7 +688,7 @@ theorem norm_residual_le (h : κ) (y : H.wave.domain) (w : S.X h) {δ : ℝ}
         refine (norm_add_le _ _).trans (add_le_add_left ?_ _)
         refine (norm_add_le _ _).trans (add_le_add_left ?_ _)
         exact norm_sub_le _ _
-    _ ≤ _ := by nlinarith [mul_nonneg (mul_nonneg hj hDw) hDv, mul_nonneg (mul_nonneg hC hb) hDv]
+    _ ≤ _ := by nlinarith [mul_nonneg hq hDv, mul_nonneg (mul_nonneg hC hb) hDv]
 
 /-- The reading error `‖a - iₕ Bₕ (a - b)‖` is Lipschitz in the pair `(a, b)`. -/
 theorem reading_le (h : κ)
@@ -758,7 +775,7 @@ of Holst–Stern type:
   residual `⟪(1 - Lₕ) wₕ, v⟫ - ⟪(1 - L) y, iₕ v⟫` tends to `0` in the dual discrete graph norm.
   By `ApproxComplexCrime.Family.inner_residual_eq` the residual is the sum of the inner-product
   defect, the graph-norm approximation error and the cochain defect, so it follows from graph-norm
-  approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖ → 0`
+  approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖_{Vₕ} → 0`
   (`ApproxComplexCrime.ofCochainDefect`); it can also be checked directly with a Galerkin
   projection as approximant (residual `0`).
 
@@ -1136,7 +1153,9 @@ theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
     mem_of_invariant (S.L h) (diffWave_skew (S.D h)) Kh hK hv t
   refine ⟨approxFEEC _ _, ofComplexCrime_L F, hinv, fun h Kh hK hKK v hv t => ?_,
     fun h y z w ε hε hres => S.norm_sub_incl_load_le h y z w hε hres,
-    fun h y w δ hδ v => S.norm_residual_le h y w hδ v, S.norm_load_sub_adjoint_le,
+    fun h y w δ hδ v => (S.norm_residual_le h y w hδ v).trans (mul_le_mul_of_nonneg_right
+      (add_le_add_left (add_le_add_left (S.norm_one_sub_J_add_le_norm h w) _) _) (by positivity)),
+    S.norm_load_sub_adjoint_le,
     fun y hy => F.tendsto_incl_load hy, fun y hy => F.tendsto_defect hy⟩
   exact Metric.infDist_zero_of_mem (hKK ⟨_, hinv h Kh hK v hv t, rfl⟩)
 
@@ -1157,10 +1176,12 @@ variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (S : ApproxComplexCrime.Fami
 omit [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)] in
 /-- **Consistent approximation from the Holst–Stern hypotheses with a cochain defect**: at
 `y ∈ D(L)`, graph-norm approximation (`‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ → 0`), the inner-product
-defect `‖1 - Jₕ‖ → 0` and the cochain defect `κₕ(y) → 0` in the dual discrete graph norm give
-approximants whose residual tends to `0` (`norm_residual_le`). -/
+defect in the graph norm `‖1 - Jₕ‖_{Vₕ} → 0` (implied by `‖1 - Jₕ‖ → 0`,
+`tendsto_graphDefect_of_tendsto`) and the cochain defect `κₕ(y) → 0` in the dual discrete graph
+norm give approximants whose residual tends to `0` (`norm_residual_le`: the approximants are
+bounded in the discrete graph norm, and `1 - Jₕ` enters only at `w` and `𝐝ₕ w`). -/
 theorem consistent_of_cochainDefect {l : Filter κ} {y : PiLp 2 W} (hy : y ∈ H.wave.domain)
-    (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0))
+    (hJ : Tendsto S.graphDefect l (𝓝 0))
     (hgraph : ∀ ε > 0, ∀ᶠ h in l, ∃ w : S.X h,
       ‖y - S.incl h w‖ + ‖H.totalD ⟨y, hy.1⟩ - S.incl h (S.D h w)‖ < ε)
     (hcd : ∀ ε > 0, ∀ᶠ h in l, ∀ v : S.X h,
@@ -1177,11 +1198,11 @@ theorem consistent_of_cochainDefect {l : Filter κ} {y : PiLp 2 W} (hy : y ∈ H
   have hη : 0 < η := lt_min one_pos (by positivity)
   have hη1 : η ≤ 1 := min_le_left _ _
   have hηε : η ≤ ε / (3 * (C + 1)) := min_le_right _ _
-  set θ := ε / (3 * (M0 + 1))
+  set θ := ε / (3 * (2 * M0 + 1))
   have hθ : 0 < θ := by positivity
   filter_upwards [hgraph η hη, Metric.tendsto_nhds.1 hJ θ hθ, hcd (ε / 3) (by positivity)]
     with h ⟨w, hw⟩ hJh hcdh
-  rw [dist_eq_norm, sub_zero, Real.norm_of_nonneg (norm_nonneg _)] at hJh
+  rw [dist_eq_norm, sub_zero, Real.norm_of_nonneg (S.graphDefect_nonneg h)] at hJh
   have ha := norm_nonneg (y - S.incl h w)
   have hb := norm_nonneg (dy - S.incl h (S.D h w))
   have hCη : C * η ≤ ε / 3 := by
@@ -1208,18 +1229,20 @@ theorem consistent_of_cochainDefect {l : Filter κ} {y : PiLp 2 W} (hy : y ∈ H
     have := norm_sub_norm_le (S.incl h (S.D h w)) dy
     rw [norm_sub_rev] at this
     linarith
-  have t1 : ‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) ≤ ε / 3 := by
-    have e1 : ‖w‖ + ‖S.D h w‖ ≤ M0 := by
-      have : C * (‖y‖ + η) + C * (‖dy‖ + η) ≤ M0 := by
+  have t1 : ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ ε / 3 := by
+    have e1 : ‖w‖ + 2 * ‖S.D h w‖ ≤ 2 * M0 := by
+      have : C * (‖y‖ + η) + 2 * (C * (‖dy‖ + η)) ≤ 2 * M0 := by
+        have h1 : C * η ≤ C * 1 := mul_le_mul_of_nonneg_left hη1 hC
+        have h2 : 0 ≤ C * ‖y‖ := mul_nonneg hC (norm_nonneg _)
         simp only [M0]; nlinarith
       linarith
-    have e2 : ‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) ≤ θ * M0 :=
+    have e2 : S.graphDefect h * (‖w‖ + 2 * ‖S.D h w‖) ≤ θ * (2 * M0) :=
       mul_le_mul hJh.le e1 (by positivity) hθ.le
-    have e3 : θ * M0 ≤ ε / 3 := by
+    have e3 : θ * (2 * M0) ≤ ε / 3 := by
       simp only [θ]
       rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) (by norm_num)]
       nlinarith
-    linarith
+    linarith [S.norm_one_sub_J_add_le h w]
   have t2 : C * (‖(⟨y, hy⟩ : H.wave.domain).1 - S.incl h w‖ +
       ‖H.totalD ⟨(⟨y, hy⟩ : H.wave.domain), (⟨y, hy⟩ : H.wave.domain).2.1⟩ -
         S.incl h (S.D h w)‖) ≤ ε / 3 := by
@@ -1232,14 +1255,15 @@ end ApproxComplexCrime.Family
 
 /-- **An approximating family from the split hypotheses** of Holst–Stern type with a cochain
 defect: graph-norm approximation and a cochain defect tending to `0` (dual discrete graph norm)
-at the admissible states, and the inner-product defect `‖1 - Jₕ‖ → 0`. -/
+at the admissible states, and the inner-product defect in the graph norm `‖1 - Jₕ‖_{Vₕ} → 0`
+(implied by `‖1 - Jₕ‖ → 0`, `Family.tendsto_graphDefect_of_tendsto`). -/
 def ApproxComplexCrime.ofCochainDefect {H : HilbertComplex 𝕜 c W} {κ : Type*}
     (S : ApproxComplexCrime.Family.{u} H κ) (K : Submodule 𝕜 (PiLp 2 W))
     (hK : IsClosed (K : Set (PiLp 2 W))) (l : Filter κ) (A : Set (PiLp 2 W))
     (hA : A ⊆ H.wave.domain) (Z : Submodule 𝕜 (PiLp 2 W)) (hZ : Z ≤ H.wave.domainSq)
     (horbit : ∀ x ∈ Z, ∀ t : ℝ, 0 ≤ t →
       H.waveGroup.S t x ∈ A ∧ H.waveGroup.S t (waveExt H x) ∈ A)
-    (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0))
+    (hJ : Tendsto S.graphDefect l (𝓝 0))
     (hgraph : ∀ y (hy : y ∈ A), ∀ ε > 0, ∀ᶠ h in l, ∃ w : S.X h,
       ‖y - S.incl h w‖ + ‖H.totalD ⟨y, (hA hy).1⟩ - S.incl h (S.D h w)‖ < ε)
     (hcd : ∀ y (hy : y ∈ A), ∀ ε > 0, ∀ᶠ h in l, ∀ v : S.X h,
@@ -1254,7 +1278,7 @@ def ApproxComplexCrime.ofCochainDefect {H : HilbertComplex 𝕜 c W} {κ : Type*
   Z := Z
   Z_le := hZ
   orbit_mem := horbit
-  tendsto_graphDefect := S.tendsto_graphDefect_of_tendsto hJ
+  tendsto_graphDefect := hJ
   consistent y hy := S.consistent_of_cochainDefect (hA hy) hJ (hgraph y hy) (hcd y hy)
 
 end Split
@@ -1306,7 +1330,7 @@ def toCrime : ApproxComplexCrime H κ :=
     H.wave.domain (fun _ hy => hy) H.wave.domainSq le_rfl
     (fun x hx t _ => ⟨waveGroup_mem_domain H (domainSq_le_domain hx) t,
       waveGroup_mem_domain H (waveExt_mem_domain H hx) t⟩)
-    F.tendsto_innerDefect
+    (F.toFamily.toCrimeFamily.tendsto_graphDefect_of_tendsto F.tendsto_innerDefect)
     (fun y hy ε hε => (F.graphApprox (waveLift H ⟨y, hy⟩) (ε / 2) (half_pos hε)).mono
       fun h ⟨w, hw⟩ => ⟨w, by
         have e1 : y - F.toFamily.inclL h w =
@@ -1428,23 +1452,22 @@ theorem norm_load_sub_adjoint_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {
   nlinarith
 
 /-- **Rate data from the split estimates**: at `y ∈ D(L)`, an approximant `w` with graph-norm
-error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Eₐ` and size `‖w‖ + ‖𝐝ₕ w‖ ≤ E_w`, and a cochain defect
-`≤ E_γ` in the dual discrete graph norm, satisfies `‖y - iₕ w‖ ≤ Eₐ`,
-`‖(1 - Jₕ) w‖ ≤ ‖1 - Jₕ‖ E_w` and has residual `≤ ‖1 - Jₕ‖ E_w + C Eₐ + E_γ`. -/
-theorem rateData_of_split (h : κ) (y : H.wave.domain) (w : S.X h) {Ea Ew Eg : ℝ}
+error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Eₐ`, inner-product defect
+`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ E_β` and a cochain defect `≤ E_γ` in the dual discrete graph
+norm satisfies `‖y - iₕ w‖ ≤ Eₐ`, `‖(1 - Jₕ) w‖ ≤ E_β` and has residual `≤ E_β + C Eₐ + E_γ`
+(`norm_residual_le`). For an approximant of size `‖w‖ + ‖𝐝ₕ w‖ ≤ E_w`, `E_β = ‖1 - Jₕ‖ E_w`
+(`norm_one_sub_J_add_le_norm`) and `E_β = 2 ‖1 - Jₕ‖_{Vₕ} E_w` (`norm_one_sub_J_add_le`). -/
+theorem rateData_of_split (h : κ) (y : H.wave.domain) (w : S.X h) {Ea Eb Eg : ℝ}
     (ha : ‖(y : PiLp 2 W) - S.incl h w‖ + ‖H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w)‖ ≤ Ea)
-    (hw : ‖w‖ + ‖S.D h w‖ ≤ Ew)
+    (hb : ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ Eb)
     (hcd : ∀ v, ‖⟪S.cochainDefect h y, v⟫_𝕜‖ ≤ Eg * (‖v‖ + ‖S.D h v‖)) :
-    ‖(y : PiLp 2 W) - S.incl h w‖ ≤ Ea ∧ ‖(1 - S.J h) w‖ ≤ ‖1 - S.J h‖ * Ew ∧
+    ‖(y : PiLp 2 W) - S.incl h w‖ ≤ Ea ∧ ‖(1 - S.J h) w‖ ≤ Eb ∧
       ∀ v, ‖⟪w - S.L h w, v⟫_𝕜 - ⟪(y : PiLp 2 W) - H.wave y, S.incl h v⟫_𝕜‖ ≤
-        (‖1 - S.J h‖ * Ew + S.boundConst * Ea + Eg) * (‖v‖ + ‖S.D h v‖) := by
-  have hb := norm_nonneg (H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w))
-  refine ⟨by linarith, ((1 - S.J h).le_opNorm w).trans (mul_le_mul_of_nonneg_left
-    (by linarith [norm_nonneg (S.D h w)]) (norm_nonneg _)), fun v => ?_⟩
+        (Eb + S.boundConst * Ea + Eg) * (‖v‖ + ‖S.D h v‖) := by
+  have hd := norm_nonneg (H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w))
+  refine ⟨by linarith, by linarith [norm_nonneg ((1 - S.J h) (S.D h w))], fun v => ?_⟩
   refine (S.norm_residual_le h y w hcd v).trans (mul_le_mul_of_nonneg_right ?_ (by positivity))
-  have := S.boundConst_nonneg
-  have e1 := mul_le_mul_of_nonneg_left hw (norm_nonneg (1 - S.J h))
-  have e2 := mul_le_mul_of_nonneg_left ha this
+  have e := mul_le_mul_of_nonneg_left ha S.boundConst_nonneg
   linarith
 
 end ApproxComplexCrime.Family
@@ -1601,8 +1624,10 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
         have hb : ‖H.totalD ⟨y, y.2.1⟩ - S.inclL h (S.D h u)‖ ≤ Rc := by
           rw [e2]; exact (ApproxComplex.Family.norm_graphSnd_le _).trans hle
         have hJ : S.toCrimeFamily.J h = 1 := F.toFamily_J h
-        have hres := S.toCrimeFamily.norm_residual_le h y u (δ := 0) (fun v => by
-          rw [S.cochainDefect_toCrimeFamily, inner_zero_left, norm_zero, zero_mul])
+        have hres := fun v => (S.toCrimeFamily.norm_residual_le h y u (δ := 0) (fun v => by
+          rw [S.cochainDefect_toCrimeFamily, inner_zero_left, norm_zero, zero_mul]) v).trans
+          (mul_le_mul_of_nonneg_right (add_le_add_left (add_le_add_left
+            (S.toCrimeFamily.norm_one_sub_J_add_le_norm h u) _) _) (by positivity))
         refine ⟨u, ?_, ?_, fun v => ?_⟩
         · change ‖(y : PiLp 2 W) - S.inclL h u‖ ≤ _
           nlinarith
@@ -2004,36 +2029,40 @@ namespace ApproxComplexCrime
 
 variable {H : HilbertComplex 𝕜 c W} {κ : Type*} (F : ApproxComplexCrime.{u} H κ)
 
-/-- The constant `(1 + C_ι) Cₐ + C_β C_w + C_γ` of `rateClass_of_split`. -/
-def splitConst (Ca Cw Cb Cg : ℝ) : ℝ := (1 + F.toFamily.boundConst) * Ca + Cb * Cw + Cg
+/-- The constant `(1 + C_ι) Cₐ + C_β + C_γ` of `rateClass_of_split`. -/
+def splitConst (Ca Cb Cg : ℝ) : ℝ := (1 + F.toFamily.boundConst) * Ca + Cb + Cg
 
 open ApproxFEEC in
 /-- **A rate class at order `min(α, β, γ)` from the split estimates** (Holst–Stern type, with a
 cochain defect). For a mesh size `0 ≤ m(h) ≤ 1`, orders `α, β, γ ≥ 0` and constants
-`Cₐ, C_w, C_β, C_γ ≥ 0`: if the inner-product defect is `‖1 - Jₕ‖ ≤ C_β m(h)^β`, and along the
-exact trajectory (`y = e^{tL} x` and `y = e^{tL} L x`, `t ∈ [0, T]`, `x ∈ Dc`) there are
-approximants `w` with graph-norm error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Cₐ m(h)ᵅ ‖x‖_c`, size
-`‖w‖ + ‖𝐝ₕ w‖ ≤ C_w ‖x‖_c`, and the cochain defect of `y` is `≤ C_γ m(h)^γ ‖x‖_c` in the dual
-discrete graph norm, then the comparison of `ofComplexCrimeCore` on `Dc` is a rate class of order
-`min(α, β, γ)` (`rateClass` with `Cₐ' = (1 + C_ι) Cₐ + C_β C_w + C_γ`, `splitConst`): its
-constants are `C = (1 + 8 C_ι) Cₐ'` and `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ'`
-(`rateClass_of_split_C`, `rateClass_of_split_C'`). The three estimates enter through
-`Family.rateData_of_split` and are combined by `add_rpow_le_rpow_min`. -/
+`Cₐ, C_β, C_γ ≥ 0`: if along the exact trajectory (`y = e^{tL} x` and `y = e^{tL} L x`,
+`t ∈ [0, T]`, `x ∈ Dc`) there are approximants `w` with graph-norm error
+`‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Cₐ m(h)ᵅ ‖x‖_c` and inner-product defect
+`‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ C_β m(h)^β ‖x‖_c`, and the cochain defect of `y` is
+`≤ C_γ m(h)^γ ‖x‖_c` in the dual discrete graph norm, then the comparison of `ofComplexCrimeCore`
+on `Dc` is a rate class of order `min(α, β, γ)` (`rateClass` with `Cₐ' = (1 + C_ι) Cₐ + C_β + C_γ`,
+`splitConst`): its constants are `C = (1 + 8 C_ι) Cₐ'` and
+`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ'` (`rateClass_of_split_C`,
+`rateClass_of_split_C'`). For approximants of size `‖w‖ + ‖𝐝ₕ w‖ ≤ C_w ‖x‖_c`, the inner-product
+defect at them is `O(m^β)` with `C_β = C C_w` when `‖1 - Jₕ‖ ≤ C m(h)^β`
+(`Family.norm_one_sub_J_add_le_norm`) and with `C_β = 2 C C_w` when only the defect in the graph
+norm is, `‖1 - Jₕ‖_{Vₕ} ≤ C m(h)^β` (`Family.norm_one_sub_J_add_le`). The three estimates enter
+through `Family.rateData_of_split` and are combined by `add_rpow_le_rpow_min`. -/
 def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
-    (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cw Cb Cg : ℝ)
+    (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cb Cg : ℝ)
     (hm0 : ∀ h, 0 ≤ m h) (hm1 : ∀ h, m h ≤ 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ)
-    (hCa : 0 ≤ Ca) (hCw : 0 ≤ Cw) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x)
-    (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ Cb * m h ^ β)
+    (hCa : 0 ≤ Ca) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x)
     (hsplit : ∀ x ∈ Dc, ∀ h, ∀ t ∈ Icc 0 T, ∀ y ∈ ({H.waveGroup.S t x,
       H.waveGroup.S t (waveExt H x)} : Set (PiLp 2 W)), ∀ hy : y ∈ H.wave.domain,
       ∃ w : F.toFamily.X h,
         ‖y - F.toFamily.incl h w‖ + ‖H.totalD ⟨y, hy.1⟩ - F.toFamily.incl h (F.toFamily.D h w)‖ ≤
           Ca * m h ^ α * cn x ∧
-        ‖w‖ + ‖F.toFamily.D h w‖ ≤ Cw * cn x ∧
+        ‖(1 - F.toFamily.J h) w‖ + ‖(1 - F.toFamily.J h) (F.toFamily.D h w)‖ ≤
+          Cb * m h ^ β * cn x ∧
         ∀ v, ‖⟪F.toFamily.cochainDefect h ⟨y, hy⟩, v⟫_𝕜‖ ≤
           Cg * m h ^ γ * cn x * (‖v‖ + ‖F.toFamily.D h v‖)) :
     (ofComplexCrime F).RateClass T :=
-  F.rateClass T Dc hDc cn m (min α (min β γ)) (F.splitConst Ca Cw Cb Cg)
+  F.rateClass T Dc hDc cn m (min α (min β γ)) (F.splitConst Ca Cb Cg)
     fun x hx h t ht y hy => by
       set S := F.toFamily
       have hx2 := F.Z_le (hDc hx)
@@ -2044,8 +2073,8 @@ def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set 
         · rw [Set.mem_singleton_iff] at hy
           subst hy
           exact waveGroup_mem_domain H (waveExt_mem_domain H hx2) t
-      obtain ⟨w, ha, hw, hcd⟩ := hsplit x hx h t ht y hy hyD
-      obtain ⟨h1, h2, h3⟩ := S.rateData_of_split h ⟨y, hyD⟩ w ha hw hcd
+      obtain ⟨w, ha, hb, hcd⟩ := hsplit x hx h t ht y hy hyD
+      obtain ⟨h1, h2, h3⟩ := S.rateData_of_split h ⟨y, hyD⟩ w ha hb hcd
       have hC := S.boundConst_nonneg
       have hc := hcn x hx
       have hmh0 := hm0 h
@@ -2058,86 +2087,83 @@ def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set 
       have hpa := Real.rpow_nonneg hmh0 α
       have hpb := Real.rpow_nonneg hmh0 β
       have hpμ := Real.rpow_nonneg hmh0 (min α (min β γ))
-      -- the combined bound `‖1 - Jₕ‖ E_w + C_ι Eₐ + E_γ ≤ Cₐ' m^μ ‖x‖_c`
-      have hJw : ‖1 - S.J h‖ * (Cw * cn x) ≤ Cb * Cw * cn x * m h ^ β := by
-        have := mul_le_mul_of_nonneg_right (hJ h) (mul_nonneg hCw hc)
-        linarith [show Cb * m h ^ β * (Cw * cn x) = Cb * Cw * cn x * m h ^ β by ring]
+      -- the combined bound `E_β + C_ι Eₐ + E_γ ≤ Cₐ' m^μ ‖x‖_c`
       have hsum := add_rpow_le_rpow_min hmh0 hmh1 hα hβ hγ
-        (mul_nonneg (mul_nonneg hC hCa) hc) (mul_nonneg (mul_nonneg hCb hCw) hc)
-        (mul_nonneg hCg hc)
-      have hres : ‖1 - S.J h‖ * (Cw * cn x) + S.boundConst * (Ca * m h ^ α * cn x) +
-          Cg * m h ^ γ * cn x ≤ F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x := by
-        have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
-            (S.boundConst * Ca * cn x + Cb * Cw * cn x + Cg * cn x) * m h ^ min α (min β γ) +
+        (mul_nonneg (mul_nonneg hC hCa) hc) (mul_nonneg hCb hc) (mul_nonneg hCg hc)
+      have hres : Cb * m h ^ β * cn x + S.boundConst * (Ca * m h ^ α * cn x) +
+          Cg * m h ^ γ * cn x ≤ F.splitConst Ca Cb Cg * m h ^ min α (min β γ) * cn x := by
+        have e : F.splitConst Ca Cb Cg * m h ^ min α (min β γ) * cn x =
+            (S.boundConst * Ca * cn x + Cb * cn x + Cg * cn x) * m h ^ min α (min β γ) +
               Ca * cn x * m h ^ min α (min β γ) := by
           unfold splitConst; ring
         rw [e]
         have : 0 ≤ Ca * cn x * m h ^ min α (min β γ) := by positivity
-        have e2 : S.boundConst * (Ca * m h ^ α * cn x) + Cg * m h ^ γ * cn x =
-            S.boundConst * Ca * cn x * m h ^ α + Cg * cn x * m h ^ γ := by ring
+        have e2 : Cb * m h ^ β * cn x + S.boundConst * (Ca * m h ^ α * cn x) +
+            Cg * m h ^ γ * cn x =
+            S.boundConst * Ca * cn x * m h ^ α + Cb * cn x * m h ^ β + Cg * cn x * m h ^ γ := by
+          ring
         linarith
       refine ⟨w, ?_, ?_, fun v => ?_⟩
       · refine h1.trans ?_
-        have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
+        have e : F.splitConst Ca Cb Cg * m h ^ min α (min β γ) * cn x =
             Ca * cn x * m h ^ min α (min β γ) +
-              (S.boundConst * Ca + Cb * Cw + Cg) * cn x * m h ^ min α (min β γ) := by
+              (S.boundConst * Ca + Cb + Cg) * cn x * m h ^ min α (min β γ) := by
           unfold splitConst; ring
         rw [e]
         have := mul_le_mul_of_nonneg_left pa (mul_nonneg hCa hc)
-        have : 0 ≤ (S.boundConst * Ca + Cb * Cw + Cg) * cn x * m h ^ min α (min β γ) := by
+        have : 0 ≤ (S.boundConst * Ca + Cb + Cg) * cn x * m h ^ min α (min β γ) := by
           positivity
         linarith [show Ca * m h ^ α * cn x = Ca * cn x * m h ^ α by ring]
-      · refine h2.trans (hJw.trans ?_)
-        have e : F.splitConst Ca Cw Cb Cg * m h ^ min α (min β γ) * cn x =
-            Cb * Cw * cn x * m h ^ min α (min β γ) +
+      · refine h2.trans ?_
+        have e : F.splitConst Ca Cb Cg * m h ^ min α (min β γ) * cn x =
+            Cb * cn x * m h ^ min α (min β γ) +
               ((1 + S.boundConst) * Ca + Cg) * cn x * m h ^ min α (min β γ) := by
           unfold splitConst; ring
         rw [e]
-        have := mul_le_mul_of_nonneg_left pb (mul_nonneg (mul_nonneg hCb hCw) hc)
+        have := mul_le_mul_of_nonneg_left pb (mul_nonneg hCb hc)
         have : 0 ≤ ((1 + S.boundConst) * Ca + Cg) * cn x * m h ^ min α (min β γ) := by
           positivity
-        linarith
+        linarith [show Cb * m h ^ β * cn x = Cb * cn x * m h ^ β by ring]
       · rw [waveExt_of_mem hyD]
         exact (h3 v).trans (mul_le_mul_of_nonneg_right hres
           (add_nonneg (norm_nonneg _) (norm_nonneg _)))
 
 variable (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
-  (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cw Cb Cg : ℝ)
+  (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cb Cg : ℝ)
   (hm0 : ∀ h, 0 ≤ m h) (hm1 : ∀ h, m h ≤ 1) (hα : 0 ≤ α) (hβ : 0 ≤ β) (hγ : 0 ≤ γ)
-  (hCa : 0 ≤ Ca) (hCw : 0 ≤ Cw) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x)
-  (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ Cb * m h ^ β) (hsplit)
+  (hCa : 0 ≤ Ca) (hCb : 0 ≤ Cb) (hCg : 0 ≤ Cg) (hcn : ∀ x ∈ Dc, 0 ≤ cn x) (hsplit)
 
 /-- The order of `rateClass_of_split` is `min(α, β, γ)`. -/
 theorem rateClass_of_split_α :
-    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg hcn hJ
+    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg hcn
       hsplit).α = min α (min β γ) := rfl
 
 /-- The approximation constant of `rateClass_of_split`:
-`C = (1 + 8 C_ι) ((1 + C_ι) Cₐ + C_β C_w + C_γ)`. -/
+`C = (1 + 8 C_ι) ((1 + C_ι) Cₐ + C_β + C_γ)`. -/
 theorem rateClass_of_split_C :
-    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg hcn hJ
+    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg hcn
       hsplit).C = (1 + 8 * F.toFamily.boundConst) *
-        ((1 + F.toFamily.boundConst) * Ca + Cb * Cw + Cg) := rfl
+        ((1 + F.toFamily.boundConst) * Ca + Cb + Cg) := rfl
 
 /-- The consistency constant of `rateClass_of_split`:
-`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) ((1 + C_ι) Cₐ + C_β C_w + C_γ)`. -/
+`C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) ((1 + C_ι) Cₐ + C_β + C_γ)`. -/
 theorem rateClass_of_split_C' :
-    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg hcn hJ
+    (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg hcn
       hsplit).C' = 2 * (1 + 8 * (1 + F.toFamily.boundConst ^ 2) +
         F.toFamily.boundConst * (1 + 8 * F.toFamily.boundConst)) *
-        ((1 + F.toFamily.boundConst) * Ca + Cb * Cw + Cg) := rfl
+        ((1 + F.toFamily.boundConst) * Ca + Cb + Cg) := rfl
 
 /-- **The error at order `min(α, β, γ)`**: under the split estimates of `rateClass_of_split`,
 from the comparison initial value `Rₕ x`,
 `‖e^{tL} x - iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)^{min(α, β, γ)} ‖x‖_c` on `[0, T]`. -/
 theorem error_le_of_split {x : PiLp 2 W} (hx : x ∈ Dc) (h : κ) {t : ℝ} (ht : t ∈ Icc 0 T) :
     ‖H.waveGroup.S t x - (ApproxFEEC.ofComplexCrime F).sol h
-        ((F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg
-          hcn hJ hsplit).p x h 0) t‖ ≤
-      ((F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg
-          hcn hJ hsplit).C + F.toFamily.boundConst *
-        (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cw Cb Cg hm0 hm1 hα hβ hγ hCa hCw hCb hCg
-          hcn hJ hsplit).C' * t) * (m h ^ min α (min β γ) * cn x) :=
+        ((F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg
+          hcn hsplit).p x h 0) t‖ ≤
+      ((F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg
+          hcn hsplit).C + F.toFamily.boundConst *
+        (F.rateClass_of_split T Dc hDc cn m α β γ Ca Cb Cg hm0 hm1 hα hβ hγ hCa hCb hCg
+          hcn hsplit).C' * t) * (m h ^ min α (min β γ) * cn x) :=
   F.error_le_of_rateClass _ hx h ht
 
 end ApproxComplexCrime

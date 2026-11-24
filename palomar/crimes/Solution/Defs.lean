@@ -3,15 +3,16 @@ module
 public import Mathlib.Analysis.Calculus.Deriv.Basic
 public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
+public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Analysis.Normed.Algebra.Exponential
 
 /-!
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.crimeFEEC` and `FEEC.crime_nonvacuous`), compiled against Mathlib alone so that their
-elaborated values are those of the challenge. The solution imports this module and the bridges to
-`Feec`, and proves the theorems (`Solution.lean`).
+`FEEC.crimeFEEC`, `FEEC.crime_nonvacuous` and `FEEC.crime_defect_nonvacuous`), compiled against
+Mathlib alone so that their elaborated values are those of the challenge. The solution imports this
+module and the bridges to `Feec`, and proves the theorems (`Solution.lean`).
 
 ## References
 
@@ -25,7 +26,7 @@ elaborated values are those of the challenge. The solution imports this module a
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace lp
 open Filter Topology Set LinearPMap
 
 universe u

@@ -388,6 +388,12 @@ theorem defect_nonneg (h : κ) : 0 ≤ S.defect h :=
 theorem defect_le (h : κ) : S.defect h ≤ ‖1 - (S.incl h).adjoint ∘L S.incl h‖ :=
   csInf_le (S.bddBelow_defectBounds h) (S.norm_mem_defectBounds h)
 
+/-- The defect is at most every `δ ≥ 0` with `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for all `v`. -/
+theorem defect_le_of_forall (h : κ) {δ : ℝ} (hδ : 0 ≤ δ)
+    (hb : ∀ v, ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) :
+    S.defect h ≤ δ :=
+  csInf_le (S.bddBelow_defectBounds h) ⟨hδ, hb⟩
+
 /-- **The infimum is attained** (the bounds form a closed set):
 `‖(1 - iₕ* iₕ) v‖ ≤ δₕ (‖v‖ + ‖𝐝ₕ v‖)`. -/
 theorem norm_apply_le_defect (h : κ) (v : S.X h) :

@@ -486,47 +486,27 @@ theorem Core.tendsto_incl_p (Z : F.Core) {T : ℝ} (hT : 0 ≤ T) {x : E} (hx : 
   have h0 := (Z.tendsto_approx T x hx).tendsto_at (show (0 : ℝ) ∈ Icc 0 T from ⟨le_rfl, hT⟩)
   rwa [S_def, C0Semigroup.S_zero_apply] at h0
 
-/-- **The approximation property, derived**: `ιₕ πₕ x → x` on the closure of a core (`πₕ ιₕ = 1`
-and the uniform bounds give `‖ιₕ πₕ y - y‖ ≤ (1 + C²) ‖y - ιₕ v‖`). -/
+/-- **The approximation property, derived**: `ιₕ πₕ x → x` on the closure of a core. At a point
+`y` of the core, `πₕ ιₕ = 1` and the uniform bounds give `‖ιₕ πₕ y - y‖ ≤ (1 + C²) ‖y - ιₕ v‖` for
+the comparison initial values `v`, which approximate `y`; the uniform bound `‖ιₕ πₕ‖ ≤ C²` carries
+the convergence to the closure (`ContinuousLinearMap.tendsto_apply_of_mem_closure`). -/
 theorem tendsto_incl_proj (Z : F.Core) {x : E} (hx : x ∈ Z.Data.topologicalClosure) :
     F.Converges (fun h => F.proj h x) x := by
-  unfold Converges
-  set B := F.boundConst ^ 2 + 1
-  have hB : 0 < B := by positivity
-  have key : ∀ (h : κ) (y : E) (v : F.X h),
-      ‖F.incl h (F.proj h y) - y‖ ≤ B * ‖y - F.incl h v‖ := fun h y v => by
-    have e : F.incl h (F.proj h y) - y =
-        F.incl h (F.proj h (y - F.incl h v)) - (y - F.incl h v) := by
-      rw [_root_.map_sub, _root_.map_sub, F.proj_incl]; abel
-    rw [e]
-    refine (norm_sub_le _ _).trans ?_
-    have := F.norm_incl_proj_le h (y - F.incl h v)
-    linarith
-  rw [Metric.tendsto_nhds]
-  intro ε hε
-  have hε' : 0 < ε / (2 * B) := by positivity
-  rw [← SetLike.mem_coe, Submodule.topologicalClosure_coe] at hx
-  obtain ⟨y, hy, hxy⟩ := Metric.mem_closure_iff.1 hx _ hε'
-  rw [dist_eq_norm] at hxy
-  have hc := (Metric.tendsto_nhds.1 (Z.tendsto_incl_p le_rfl (SetLike.mem_coe.1 hy))) _ hε'
-  filter_upwards [hc] with h hh
-  rw [dist_eq_norm] at hh ⊢
-  set v := (Z.cmp 0).p y h 0
-  have e : F.incl h (F.proj h x) - x =
-      F.incl h (F.proj h (x - y)) - (x - y) + (F.incl h (F.proj h y) - y) := by
-    rw [_root_.map_sub, _root_.map_sub]; abel
-  rw [e]
-  have h1 : ‖F.incl h (F.proj h (x - y)) - (x - y)‖ ≤ B * ‖x - y‖ := by
-    have := key h (x - y) 0
-    rwa [_root_.map_zero, sub_zero] at this
-  have h2 := key h y v
-  rw [norm_sub_rev] at hh
-  have : B * ‖x - y‖ + B * ‖y - F.incl h v‖ < ε := by
-    have a1 : B * ‖x - y‖ < B * (ε / (2 * B)) := mul_lt_mul_of_pos_left hxy hB
-    have a2 : B * ‖y - F.incl h v‖ < B * (ε / (2 * B)) := mul_lt_mul_of_pos_left hh hB
-    have : B * (ε / (2 * B)) = ε / 2 := by field_simp
-    linarith
-  exact (norm_add_le _ _).trans_lt (by linarith)
+  refine ContinuousLinearMap.tendsto_apply_of_mem_closure (T := fun h => F.incl h ∘L F.proj h)
+    (fun h => ContinuousLinearMap.opNorm_le_bound _ (by positivity) (F.norm_incl_proj_le h))
+    continuous_id' (s := Z.Data) (fun y hy => ?_) (by rwa [← Submodule.topologicalClosure_coe])
+  have hb : Tendsto (fun h => (F.boundConst ^ 2 + 1) * ‖F.incl h ((Z.cmp 0).p y h 0) - y‖) F.l
+      (𝓝 0) := by
+    simpa using (tendsto_iff_norm_sub_tendsto_zero.1 (Z.tendsto_incl_p le_rfl hy)).const_mul
+      (F.boundConst ^ 2 + 1)
+  rw [tendsto_iff_norm_sub_tendsto_zero]
+  refine squeeze_zero (fun _ => norm_nonneg _) (fun h => ?_) hb
+  set w := F.incl h ((Z.cmp 0).p y h 0)
+  have e : (F.incl h ∘L F.proj h) y - y = F.incl h (F.proj h (y - w)) - (y - w) := by
+    rw [ContinuousLinearMap.comp_apply, _root_.map_sub, _root_.map_sub, F.proj_incl]; abel
+  rw [e, ← norm_sub_rev y w]
+  have := F.norm_incl_proj_le h (y - w)
+  linarith [norm_sub_le (F.incl h (F.proj h (y - w))) (y - w)]
 
 /-! ### The Trotter–Kato bridge -/
 

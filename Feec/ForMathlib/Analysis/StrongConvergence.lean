@@ -12,8 +12,10 @@ under uniform bounds:
 
 * `ContinuousLinearMap.tendsto_apply_of_tendsto`: if `‖Pᵢ‖ ≤ M`, `Pᵢ → P` strongly and `wᵢ → w`,
   then `Pᵢ wᵢ → P w`;
-* `ContinuousLinearMap.tendsto_apply_of_dense`, `ContinuousLinearMap.cauchySeq_apply_of_dense`:
-  for contractions, `Tₙ x → x` (resp. `(Tₙ x)ₙ` Cauchy) on a dense set holds everywhere;
+* `ContinuousLinearMap.tendsto_apply_of_mem_closure`: for `‖Tᵢ‖ ≤ M` and `f` continuous,
+  `Tᵢ x → f x` on a set holds on its closure (a uniformly bounded family is equicontinuous);
+* `ContinuousLinearMap.cauchySeq_apply_of_dense`: for contractions, `(Tₙ x)ₙ` Cauchy on a dense
+  set is Cauchy everywhere;
 * `ContinuousLinearMap.tendsto_pow_apply`, `ContinuousLinearMap.tendsto_aeval_apply`: powers and
   polynomials of uniformly bounded, strongly convergent operators converge strongly;
 * `ContinuousLinearMap.tendsto_inverse_apply`: inverses with uniformly bounded inverses converge
@@ -62,25 +64,19 @@ theorem tendsto_apply_of_tendsto {P : ι → V →L[𝕜] V} {P₀ : V →L[𝕜
   rw [zero_add] at this
   exact this.congr fun i => by rw [← _root_.map_add, sub_add_cancel]
 
-/-- Strong convergence on a dense set plus `‖T n x‖ ≤ ‖x‖` gives strong convergence. -/
-theorem tendsto_apply_of_dense {T : ℕ → V →L[𝕜] V} (hT : ∀ n x, ‖T n x‖ ≤ ‖x‖)
-    {D : Set V} (hD : Dense D) (h : ∀ x ∈ D, Tendsto (fun n => T n x) atTop (𝓝 x)) (x : V) :
-    Tendsto (fun n => T n x) atTop (𝓝 x) := by
-  rw [Metric.tendsto_atTop]
-  intro ε hε
-  obtain ⟨d, hd, hdD⟩ := Metric.dense_iff.1 hD x (ε / 3) (by positivity)
-  rw [Metric.mem_ball] at hd
-  obtain ⟨N, hN⟩ := Metric.tendsto_atTop.1 (h d hdD) (ε / 3) (by positivity)
-  refine ⟨N, fun n hn => ?_⟩
-  have h1 : dist (T n x) (T n d) ≤ dist x d := by
-    rw [dist_eq_norm, dist_eq_norm, ← _root_.map_sub]; exact hT n _
-  have := hN n hn
-  calc dist (T n x) x ≤ dist (T n x) (T n d) + dist (T n d) d + dist d x :=
-        dist_triangle4 _ _ _ _
-    _ < ε / 3 + ε / 3 + ε / 3 := by
-        have hd' : dist x d < ε / 3 := by rwa [dist_comm]
-        linarith
-    _ = ε := by ring
+/-- **Strong convergence of uniformly bounded operators passes to the closure**: if `‖Tᵢ‖ ≤ M`
+and `Tᵢ x → f x` for every `x ∈ s`, `f` continuous, then `Tᵢ x → f x` for every `x` in the
+closure of `s` (a uniformly bounded family is equicontinuous, and an equicontinuous family
+converges to a continuous limit on a closed set). With `f = fun x => x` and `s` dense:
+`Tᵢ x → x` on `s` gives `Tᵢ x → x` for every `x`. -/
+theorem tendsto_apply_of_mem_closure {W : Type*} [NormedAddCommGroup W] [NormedSpace 𝕜 W]
+    {T : ι → V →L[𝕜] W} {M : ℝ} (hM : ∀ i, ‖T i‖ ≤ M) {f : V → W} (hf : Continuous f)
+    {s : Set V} (hs : ∀ x ∈ s, Tendsto (fun i => T i x) l (𝓝 (f x))) {x : V}
+    (hx : x ∈ closure s) : Tendsto (fun i => T i x) l (𝓝 (f x)) :=
+  have hT : Equicontinuous ((↑) ∘ T : ι → V → W) :=
+    ((NormedSpace.equicontinuous_TFAE T).out 6 2).1 (by exact ⟨M, hM⟩)
+  closure_minimal (t := {x | Tendsto (fun i => T i x) l (𝓝 (f x))}) hs
+    (hT.isClosed_setOfPred_tendsto hf) hx
 
 /-- Strong Cauchy-ness on a dense set plus `‖T n x‖ ≤ ‖x‖` gives strong Cauchy-ness. -/
 theorem cauchySeq_apply_of_dense {T : ℕ → V →L[𝕜] V}

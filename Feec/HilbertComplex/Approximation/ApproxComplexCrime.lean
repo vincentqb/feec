@@ -100,7 +100,7 @@ convergence is not re-proved) and adds the complex-level structure.
   the given discretization (`ofComplexCrime_ofGalerkinCore_sol`), the comparison is the given one
   (`galerkin_p_eq`, `galerkin_p'_eq` for the derivative), and `iₕ iₕ* → 1` on the closure of the
   core (`tendsto_incl_adjoint_galerkin`, from the defect in the graph norm and the uniform bound,
-  `tendsto_apply_self_of_mem_closure`). Complexification of a
+  `ContinuousLinearMap.tendsto_apply_of_mem_closure`). Complexification of a
   differential and of Galerkin identities: `ApproxFEEC.complexifyD`,
   `ApproxFEEC.complexify_L_eq_diffWave`, `ApproxFEEC.complexify_galerkin`.
 * **Rates from complex-level estimates** (`ApproxComplexCrime.rateClass`, the rate class of the
@@ -157,7 +157,7 @@ open _root_.Feec.HodgeWave
 
 variable {𝕜 : Type*} [RCLike 𝕜]
 
-/-! ### Convergence on compact sets and on closures, from pointwise convergence on the set -/
+/-! ### Uniform convergence on compact sets, from pointwise convergence on the set -/
 
 /-- **Pointwise convergence to `0` on a compact set is uniform there** for a family of functions
 with a uniform Lipschitz-type bound (the centres of a finite cover by small balls lie in the
@@ -187,34 +187,6 @@ theorem eventually_forall_lt_of_tendsto_on {κ F : Type*} [SeminormedAddCommGrou
     have : M' / (M' + 1) < 1 := (div_lt_one (by linarith)).2 (by linarith)
     nlinarith
   linarith [hh z hz]
-
-/-- **Strong convergence to the identity passes to the closure** for uniformly bounded operators:
-if `‖Tᵢ‖ ≤ M` and `Tᵢ x → x` for every `x ∈ s`, then `Tᵢ x → x` for every `x` in the closure of
-`s`. -/
-theorem tendsto_apply_self_of_mem_closure {V ι : Type*} [NormedAddCommGroup V] [NormedSpace 𝕜 V]
-    {l : Filter ι} {T : ι → V →L[𝕜] V} {M : ℝ} (hM : ∀ i, ‖T i‖ ≤ M) {s : Set V}
-    (hs : ∀ x ∈ s, Tendsto (fun i => T i x) l (𝓝 x)) {x : V} (hx : x ∈ closure s) :
-    Tendsto (fun i => T i x) l (𝓝 x) := by
-  rw [Metric.tendsto_nhds]
-  intro ε hε
-  set M' := max M 0
-  have hM' : 0 ≤ M' := le_max_right _ _
-  have hM1 : M' + 1 ≠ 0 := by positivity
-  set δ := ε / (2 * (M' + 1))
-  have hδ : 0 < δ := by positivity
-  obtain ⟨y, hy, hxy⟩ := Metric.mem_closure_iff.1 hx δ hδ
-  filter_upwards [Metric.tendsto_nhds.1 (hs y hy) (ε / 2) (half_pos hε)] with i hi
-  rw [dist_eq_norm] at hi hxy ⊢
-  have e : T i x - x = T i (x - y) + (T i y - y) + (y - x) := by
-    rw [_root_.map_sub]; abel
-  have h1 : ‖T i (x - y)‖ ≤ M' * δ :=
-    ((T i).le_opNorm _).trans
-      (mul_le_mul ((hM i).trans (le_max_left _ _)) hxy.le (norm_nonneg _) hM')
-  have h2 : ‖y - x‖ < δ := by rw [norm_sub_rev]; exact hxy
-  have h3 : M' * δ + δ = ε / 2 := by simp only [δ]; field_simp
-  calc ‖T i x - x‖ ≤ ‖T i (x - y)‖ + ‖T i y - y‖ + ‖y - x‖ := by rw [e]; exact norm_add₃_le
-    _ < M' * δ + ε / 2 + δ := by linarith
-    _ = ε := by linarith
 
 /-! ### Differential spaces -/
 
@@ -572,7 +544,7 @@ theorem norm_sub_incl_load_le (h : κ) (y z : PiLp 2 W) (w : S.X h) {ε : ℝ} (
 
 /-- **The defect bound**: `Δₕ = Bₕ z - iₕ* y` satisfies
 `‖Δₕ‖ ≤ ‖(1 - Jₕ) Bₕ z‖ + C ‖y - iₕ Bₕ z‖`; the first term is at most `‖1 - Jₕ‖ ‖Bₕ z‖` and at most
-`8 C ‖1 - Jₕ‖_{Vₕ} ‖z‖` (`norm_one_sub_J_apply_le`, `norm_load_add_le`). -/
+`8 C ‖1 - Jₕ‖_{Vₕ} ‖z‖` (`norm_one_sub_J_load_le`). -/
 theorem norm_load_sub_adjoint_le (h : κ) (y z : PiLp 2 W) :
     ‖S.load h z - (S.incl h).adjoint y‖ ≤
       ‖(1 - S.J h) (S.load h z)‖ + S.boundConst * ‖y - S.incl h (S.load h z)‖ := by
@@ -1805,18 +1777,18 @@ theorem galerkin_p'_eq {T : ℝ} {x : PiLp 2 W} (hx : x ∈ Z0.Data) (h : κ) {t
 
 include hJ hL hgal in
 /-- **`iₕ iₕ* → 1` on the closure of a Galerkin core** (for orthogonal reading maps `iₕ* = πₕ`,
-`ApproxFEEC.tendsto_incl_proj`). At a point `x` of the core the comparison `pₕ(0) = Bₕ (x - L x)`
+`DissipFEEC.tendsto_incl_proj`). At a point `x` of the core the comparison `pₕ(0) = Bₕ (x - L x)`
 approximates `x` and is bounded in the discrete graph norm, so with `‖1 - Jₕ‖_{Vₕ} → 0`,
 `iₕ iₕ* x - x = iₕ iₕ* (x - iₕ pₕ(0)) - iₕ (1 - Jₕ) pₕ(0) + (iₕ pₕ(0) - x) → 0`
 (`Family.norm_one_sub_J_load_le`); the uniform bound `‖iₕ iₕ*‖ ≤ C²` carries it to the closure
-(`tendsto_apply_self_of_mem_closure`). -/
+(`ContinuousLinearMap.tendsto_apply_of_mem_closure`). -/
 theorem tendsto_incl_adjoint_galerkin {z : PiLp 2 W} (hz : z ∈ Z0.Data.topologicalClosure) :
     Tendsto (fun h => F.incl h ((F.incl h).adjoint z)) F.l (𝓝 z) := by
   set S := ApproxComplexCrime.Family.ofApproxFEEC F D hDD
   have hC := S.boundConst_nonneg
-  refine tendsto_apply_self_of_mem_closure (T := fun h => S.incl h ∘L (S.incl h).adjoint)
-    (M := S.boundConst ^ 2) (s := (Z0.Data : Set (PiLp 2 W))) (fun h => ?_) (fun x hx => ?_)
-    (by rw [← Submodule.topologicalClosure_coe]; exact hz)
+  refine ContinuousLinearMap.tendsto_apply_of_mem_closure
+    (T := fun h => S.incl h ∘L (S.incl h).adjoint) (M := S.boundConst ^ 2) (fun h => ?_)
+    continuous_id' (s := Z0.Data) (fun x hx => ?_) (by rwa [← Submodule.topologicalClosure_coe])
   · refine (ContinuousLinearMap.opNorm_comp_le _ _).trans ?_
     rw [ContinuousLinearMap.adjoint.norm_map, pow_two]
     exact mul_le_mul (S.norm_incl_le h) (S.norm_incl_le h) (norm_nonneg _) hC

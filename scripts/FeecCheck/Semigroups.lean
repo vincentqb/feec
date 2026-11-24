@@ -14,10 +14,11 @@ The exponential lemmas `Feec.C0Group.exp_ofReal_smul_add`, `C0Group.continuous_e
 argument (`Feec.ForMathlib.Analysis.ExpLimit`: `ContinuousLinearMap.cauchySeq_exp_apply`,
 `ContinuousLinearMap.sub_eq_integral_of_tendsto_exp`, …), so
 `Feec.Stone.tendsto_approxU_of_tendsto` is `ContinuousLinearMap.tendsto_apply_of_tendsto`, and
-`Feec.Stone.tendsto_apply_of_dense`, `Feec.Stone.cauchySeq_apply_of_dense` are the
-`ContinuousLinearMap` lemmas of `Feec.ForMathlib.Analysis.StrongConvergence`; the unused
-`LinearPMap.mem_partIn_domain` and `LinearPMap.IsMDissipative.hasDerivWithinAt_semigroup_Ici_zero`
-are gone. `C0Semigroup.rescale`
+`Feec.Stone.tendsto_apply_of_dense` is the case of contractions and a dense set of
+`ContinuousLinearMap.tendsto_apply_of_mem_closure` and `Feec.Stone.cauchySeq_apply_of_dense` is
+`ContinuousLinearMap.cauchySeq_apply_of_dense` (`Feec.ForMathlib.Analysis.StrongConvergence`); the
+unused `LinearPMap.mem_partIn_domain` and
+`LinearPMap.IsMDissipative.hasDerivWithinAt_semigroup_Ici_zero` are gone. `C0Semigroup.rescale`
 now takes a scalar `w : 𝕜` (it was real, `ω : ℝ`, with the complex rescaling
 `C0Semigroup.complexRescale` on complex spaces), and `C0Semigroup.isResolvent_resolvent`,
 `C0Semigroup.norm_resolvent_pow_le` hold over `𝕜` (they were on complex spaces). Below, each is
@@ -40,7 +41,9 @@ variable {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [NormedSpace 𝕜
 theorem tendsto_apply_of_dense_old {T : ℕ → E →L[𝕜] E} (hT : ∀ n x, ‖T n x‖ ≤ ‖x‖)
     {D : Set E} (hD : Dense D) (h : ∀ x ∈ D, Tendsto (fun n => T n x) atTop (𝓝 x)) (x : E) :
     Tendsto (fun n => T n x) atTop (𝓝 x) :=
-  ContinuousLinearMap.tendsto_apply_of_dense hT hD h x
+  ContinuousLinearMap.tendsto_apply_of_mem_closure
+    (fun n => ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun y =>
+      (hT n y).trans_eq (one_mul _).symm) continuous_id' h (hD x)
 
 /-- The earlier `Stone.cauchySeq_apply_of_dense`. -/
 theorem cauchySeq_apply_of_dense_old {T : ℕ → E →L[𝕜] E}

@@ -177,7 +177,10 @@ theorem norm_approxJ_sub_le (hA : A.IsSkewAdjoint) (n : ℕ) (y : A.domain) :
 /-- `J_n y → y` for every `y`. -/
 theorem tendsto_approxJ (hA : A.IsSkewAdjoint) (y : E) :
     Tendsto (fun n => approxJ A n y) atTop (𝓝 y) := by
-  refine ContinuousLinearMap.tendsto_apply_of_dense (norm_approxJ_apply_le hA) hA.dense_domain ?_ y
+  refine ContinuousLinearMap.tendsto_apply_of_mem_closure
+    (fun n => ContinuousLinearMap.opNorm_le_bound _ zero_le_one fun x =>
+      (norm_approxJ_apply_le hA n x).trans_eq (one_mul _).symm) continuous_id' ?_
+    (hA.dense_domain y)
   rintro x hx
   rw [tendsto_iff_norm_sub_tendsto_zero]
   refine squeeze_zero (fun _ => norm_nonneg _) (fun n => norm_approxJ_sub_le hA n ⟨x, hx⟩) ?_

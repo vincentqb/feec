@@ -157,7 +157,8 @@ Hilbert complexes in the sense of [HolstStern2012] (`Feec.HilbertComplex.ApproxC
 finite-dimensional complexes `Vₕ` with their own inner products, injective bounded cochain maps
 `iₕ : Vₕ → W` with left inverses `πₕ`, the inner-product defect in the graph norm of `𝐝ₕ` tending
 to `0` (`Feec.HilbertComplex.ApproxComplex.Family.graphDefect`, the norm of `1 − iₕ*iₕ` on the
-graph space of `𝐝ₕ`, `Feec.HilbertComplex.graphOpNorm`; at most `‖1 − iₕ*iₕ‖`), and the
+graph space of `𝐝ₕ`, `Feec.HilbertComplex.graphOpNorm`; at most `‖1 − iₕ*iₕ‖`, whose limit `0`
+[HolstStern2012] assume), and the
 graph-norm approximation property (from `L²` approximation and a commutation defect of `πₕ` on a
 dense set, `Feec.HilbertComplex.ApproxComplex.Family.graphApprox_of_commute`). The discrete
 generator is the Hodge wave operator of `Vₕ` in its own inner product. The comparison is the
@@ -215,8 +216,9 @@ defect along the comparison, `0` for orthogonal reading maps,
 zero cochain defect (`Feec.HilbertComplex.ApproxComplex.toCrime`,
 `Feec.HilbertComplex.ApproxFEEC.ofComplexCrime_toCrime`, by `rfl`, with the same comparison on
 `D(L²)`). `Feec.HilbertComplex.approxFEEC_ofComplexCrime` gives the verdict, the Strang bound, the
-residual splitting, the defect bound (the inner-product defect applied at the approximant, its
-differential and the projection only), and exact preservation of `Lₕ`-invariant subspaces of `Xₕ`.
+residual splitting and the defect bound (the inner-product defect applied only at the approximant
+and its differential, and at the projection), and exact preservation of `Lₕ`-invariant subspaces
+of `Xₕ`.
 **Rates**: `Feec.HilbertComplex.ApproxComplexCrime.rateClass` builds a `DissipFEEC.RateClass` from
 approximants along the trajectory with approximation, `‖(1 − Jₕ)wₕ‖` and residual `O(m(h)ᵅ)`, so
 `‖e^{tL}x − iₕ e^{tLₕ} Rₕ x‖ ≤ (C + C_ι C' t) m(h)ᵅ ‖x‖_c`

@@ -777,11 +777,12 @@ end ApproxComplex.Family
 /-- An **approximating family of discrete Hilbert complexes** for `H` (the setting of
 [HolstStern2012], §3, for the Hodge wave equation): a family of discrete complexes `Vₕ` with
 cochain maps `iₕ` and left inverses `πₕ` (`ApproxComplex.Family`), a closed constraint `K`, a
-filter `l`, and the two Holst–Stern hypotheses:
+filter `l`, and the two hypotheses of [HolstStern2012], §3, the first in a weaker form:
 
 * the **inner-product defect in the graph norm** `‖1 - iₕ* iₕ‖_{Vₕ} → 0` (`iₕ` need not be
   isometric; `Family.graphDefect`, the norm of `1 - iₕ* iₕ` on the graph space of `𝐝ₕ`, at most
-  `‖1 - iₕ* iₕ‖`, so `‖1 - iₕ* iₕ‖ → 0` suffices, `graphOpNorm_le`);
+  `‖1 - iₕ* iₕ‖`, so the hypothesis `‖1 - iₕ* iₕ‖ → 0` of Holst–Stern implies it,
+  `graphOpNorm_le`);
 * the **approximation property in the graph norm** (`GraphApprox`; from `L²` approximation and
   a commutation defect of `πₕ` tending to `0` on a dense set by
   `ApproxComplex.Family.graphApprox_of_commute`).

@@ -52,8 +52,8 @@ measured from the discrete graph norm, as the least `δ` with
 forms whose graph norm they control; it is at most the operator norm `‖1 - iₕ* iₕ‖`, which
 [HolstStern2012], §3.3, assume to tend to `0` for convergence. The motivating example is mass
 lumping of `P₁` elements ([Thomee2006], Ch. 15), an inner-product crime: `FEEC.crime_massLumping`
-states, on every simplicial mesh, the equivalence of the lumped and the consistent mass, the
-values of both at the hat functions and a quadrature error estimate, and their reading for every
+states, on every simplicial mesh, the equivalence of the lumped and the consistent mass, their
+ratio at the hat functions and a quadrature error estimate, and their reading for every
 lumped reading of degree `0`: its operator-norm defect `‖1 - ι* ι‖` is at least `n / (n + 2)` as
 soon as the discrete space contains the hat function of a vertex, whatever the mesh size, while
 `‖(1 - ι* ι) v‖ ≤ c_n h ‖∇(ν v)_h‖` with `c_n = √(n (n + 1) / 2) / (n + 2)` and `h` the longest
@@ -517,12 +517,12 @@ the continuous piecewise affine functions with these vertex values, `‖∇u_h�
    region): `‖1 - ι* ι‖ ≥ n / (n + 2)` as soon as `X` contains the hat function of a vertex, and
    `‖(1 - ι* ι) v‖ ≤ c_n h ‖∇(ν v)_h‖`.
 
-Lumped readings with every hat function exist: by (1) and (2), `⟨·, ·⟩_L` and `⟨·, ·⟩` are inner
-products on the values at the vertices. By (1) the reading maps are uniformly bounded and
-uniformly injective, `‖ι v‖ ≤ ‖v‖ ≤ √(n + 2) ‖ι v‖`, with constants independent of the mesh; by
-(4) the operator-norm defect `‖1 - ι* ι‖` of [HolstStern2012] stays bounded below as the mesh is
-refined, while the inner-product defect of degree `0` measured from the discrete graph norm, as in
-`CrimeFamily.defect` with `‖𝐝ₕ v‖ = ‖∇(ν v)_h‖`, is at most `c_n h`. -/
+Lumped readings with every hat function exist on every mesh: on the values at the vertices,
+`⟨·, ·⟩_L` is an inner product by its definition and (2), and so is `⟨·, ·⟩` by (1). By (1) the
+reading maps are uniformly bounded and uniformly injective, `‖ι v‖ ≤ ‖v‖ ≤ √(n + 2) ‖ι v‖`, on
+every mesh; by (4) the operator-norm defect `‖1 - ι* ι‖` of [HolstStern2012] stays bounded below
+as the mesh is refined, while the inner-product defect of degree `0` measured from the discrete
+graph norm, as in `CrimeFamily.defect` with `‖𝐝ₕ v‖ = ‖∇(ν v)_h‖`, is at most `c_n h`. -/
 theorem crime_massLumping {n : ℕ} (M : SimplicialMesh n) :
     (∀ u, p1Mass M u u ≤ lumpedInner M u u ∧ lumpedInner M u u ≤ (n + 2) * p1Mass M u u) ∧
     (∀ T ∈ M.simplices, ∀ x ∈ vertexSet T,

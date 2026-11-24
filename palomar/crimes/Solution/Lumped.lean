@@ -15,6 +15,8 @@ its `P₁` interpolant `u(v₀) + ∇Π_T u · (x - v₀)` is `Feec.FiniteElemen
 the stiffness form, the consistent mass and the lumped mass of the challenge are
 `Feec.FiniteElement.p1Stiffness`, `Feec.FiniteElement.p1Mass` and
 `Feec.FiniteElement.lumpedInner` (`FEEC.p1Stiffness_eq`, `FEEC.p1Mass_eq`, `FEEC.lumpedInner_eq`).
+The lumped readings of `FEEC.crime_massLumping` exist on every mesh with every hat function
+(`FEEC.exists_lumpedReading`, from `Feec.FiniteElement.exists_isLumpedReading`; not compared).
 
 ## References
 
@@ -22,6 +24,8 @@ the stiffness form, the consistent mass and the lumped mass of the challenge are
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
+
+open scoped InnerProductSpace
 
 @[expose] public noncomputable section
 
@@ -71,5 +75,24 @@ theorem p1Mass_eq (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
 theorem lumpedInner_eq (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) :
     lumpedInner M u w = Feec.FiniteElement.lumpedInner M.toFeec u w :=
   rfl
+
+/-- **The lumped readings of `FEEC.crime_massLumping` exist with every hat function** on every
+mesh: the lumped-mass method on all the vertices, read in `L²` of the meshed region
+(`Feec.FiniteElement.exists_isLumpedReading`). -/
+theorem exists_lumpedReading (M : SimplicialMesh n) :
+    ∃ (X E : Type) (_ : NormedAddCommGroup X) (_ : InnerProductSpace ℝ X) (_ : CompleteSpace X)
+      (_ : NormedAddCommGroup E) (_ : InnerProductSpace ℝ E) (_ : CompleteSpace E)
+      (ν : X → (Fin n → ℝ) → ℝ) (ι : X →L[ℝ] E),
+      (∀ v w, ⟪v, w⟫_ℝ = lumpedInner M (ν v) (ν w)) ∧
+      (∀ v w, ⟪ι v, ι w⟫_ℝ = p1Mass M (ν v) (ν w)) ∧
+      ∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, ∃ v, ν v = fun z => if z = x then 1 else 0 := by
+  obtain ⟨κ, _, y, i, hr, hhat⟩ := Feec.FiniteElement.exists_isLumpedReading M.toFeec
+  exact ⟨EuclideanSpace ℝ κ,
+    Feec.Domain.L2F ℝ (closure M.domain) (Feec.Domain.formIdx n ((0 : ℕ) : ℤ)),
+    inferInstance, inferInstance, inferInstance, inferInstance, inferInstance, inferInstance,
+    Feec.FiniteElement.lumpedNodal M.toFeec y, i,
+    fun v w => (hr.inner_eq v w).trans (lumpedInner_eq M _ _).symm,
+    fun v w => (hr.inner_apply_eq v w).trans (p1Mass_eq M _ _).symm,
+    fun T hT x hx => hhat T hT x (by rwa [← vertexSet_eq])⟩
 
 end FEEC

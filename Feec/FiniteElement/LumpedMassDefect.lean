@@ -73,7 +73,9 @@ size, while it is `O(h)` from the discrete graph norm.
   (`opNorm_one_sub_adjoint_comp_self_lumpedReading_freudenthalMesh`: the vertices `b + h q`
   colored by `Σₗ qₗ mod (n + 1)` carry each color once on every simplex,
   `sum_freudenthalColor_points`, so a function of the color with zero sum has zero sum on every
-  simplex, `exists_sum_points_eq_zero_freudenthalMesh`).
+  simplex, `exists_sum_points_eq_zero_freudenthalMesh`). Every mesh has a lumped reading with
+  every hat function: the lumped-mass method on all its vertices, read in `L²` of the meshed
+  region (`exists_isLumpedReading`).
 
 ## References
 
@@ -355,7 +357,8 @@ theorem volume_real_closedInterior_pos (T : Affine.Simplex ℝ (Fin n → ℝ) n
 
 /-- **The consistent mass** `⟨u, w⟩ = Σ_T ∫_T Πₜu Πₜw` of the mesh `M` on nodal values `u, w`
 (only their values at the vertices enter), assembled elementwise: the `L²(Ω)` inner product
-`∫_Ω u_h w_h` of the global `P₁` functions with these vertex values (`inner_glue_p1Global`). -/
+`∫_Ω u_h w_h` of the global `P₁` functions with these vertex values when the open simplices lie in
+`Ω` (`inner_glue_p1Global`). -/
 def p1Mass (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, ∫ x in T.closedInterior, p1Interp T.points u x * p1Interp T.points w x
 
@@ -770,6 +773,31 @@ theorem norm_one_sub_adjoint_comp_self_lumpedReading_apply_le
   exact (isLumpedReading_lumpedReading hM hx hxv).norm_one_sub_adjoint_comp_self_apply_le hh hedge ξ
 
 end Nodes
+
+/-- **Every mesh has a lumped reading with every hat function**: the lumped-mass method on all
+the vertices of `M`, read in `L²` of the meshed region `closure Ω`, in which the open simplices
+lie (`isLumpedReading_lumpedReading`, `lumpedNodal_single`). -/
+theorem exists_isLumpedReading (M : SimplicialMesh n) :
+    ∃ (ι : Type) (_ : Fintype ι) (x : ι → Fin n → ℝ)
+      (i : EuclideanSpace ℝ ι →L[ℝ] L2F ℝ (closure M.domain) (formIdx n ((0 : ℕ) : ℤ))),
+      IsLumpedReading M (lumpedNodal M x) i ∧
+        ∀ T ∈ M.simplices, ∀ y ∈ vertexSet T, ∃ ξ, lumpedNodal M x ξ = nodalIndicator y := by
+  classical
+  let M' : SimplicialMesh n :=
+    { M with
+      domain := closure M.domain
+      biUnion_closedInterior := M.biUnion_closedInterior.trans closure_closure.symm }
+  let V := M.simplices.biUnion vertexSet
+  have hxv : ∀ q : V, ∃ T ∈ M'.simplices, (q : Fin n → ℝ) ∈ vertexSet T := fun q =>
+    Finset.mem_biUnion.1 q.2
+  have hr := isLumpedReading_lumpedReading (M := M') (x := ((↑) : V → Fin n → ℝ))
+    (fun T hT => interior_subset.trans (M.closedInterior_subset_closure hT))
+    Subtype.val_injective hxv
+  refine ⟨V, inferInstance, (↑), lumpedReading M' (↑), ⟨hr.inner_eq, hr.inner_apply_eq⟩,
+    fun T hT y hy => ?_⟩
+  have hyV : y ∈ V := Finset.mem_biUnion.2 ⟨T, hT, hy⟩
+  exact ⟨EuclideanSpace.single ⟨y, hyV⟩ √(lumpedMass M y),
+    lumpedNodal_single (M := M') hxv ⟨y, hyV⟩⟩
 
 /-! ### Freudenthal meshes: the exact operator-norm defect -/
 

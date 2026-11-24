@@ -116,10 +116,11 @@ read with the consistent mass), the defect `1 - ι* ι` has operator norm at lea
 soon as the discrete space contains a hat function, while `‖(1 - ι* ι) v‖ ≤ c_n h ‖∇(ν v)_h‖`,
 `c_n = √(n (n + 1) / 2) / (n + 2)`, `h` the longest edge (compared in `palomar/crimes`,
 `FEEC.crime_massLumping`); its operator norm is at most `(n + 1) / (n + 2)`, with equality,
-`n ≥ 1`, on the Freudenthal meshes with every vertex a node (proved in `Feec`, not compared). The classical `(2n + 1)`-point finite difference scheme is the same
-scheme (`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat`, field `finiteDifference` of
-the companion: its Laplacian is the lumped-mass one, so the iterates and the estimates coincide).
-With natural boundary conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum
+`n ≥ 1`, on the Freudenthal meshes with every vertex a node, and every mesh has a lumped reading
+with every hat function (proved in `Feec`, not compared). The classical `(2n + 1)`-point finite
+difference scheme is the same scheme (`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat`,
+field `finiteDifference` of the companion: its Laplacian is the lumped-mass one, so the iterates
+and the estimates coincide). With natural boundary conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum
 principle holds and the errors are `O(h)` (semidiscrete), `O(τ + h)` for backward Euler and
 `O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, in the maximum norm at the
 nodes and in `L^∞(Q)`; `O(h²)` is not proved for Neumann. Both meshes are families of non-obtuse

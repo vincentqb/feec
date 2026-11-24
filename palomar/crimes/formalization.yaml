@@ -248,7 +248,8 @@ status:
     (Feec.FiniteElement.LumpedMassDefect: the upper bound ||1 - i* i|| <= (n + 1) / (n + 2) for
     every lumped reading, IsLumpedReading.opNorm_one_sub_adjoint_comp_self_le; the reading map
     lumpedReading of the lumped-mass method on the nodes of a mesh into L2(Omega) when the open
-    simplices lie in Omega, with its gradient lumpedGrad; on the Freudenthal meshes of a box with
+    simplices lie in Omega, with its gradient lumpedGrad; a lumped reading with every hat function
+    on every mesh, exists_isLumpedReading; on the Freudenthal meshes of a box with
     every vertex a node and n >= 1, ||1 - i_h* i_h|| = (n + 1) / (n + 2) exactly at every level,
     opNorm_one_sub_adjoint_comp_self_lumpedReading_freudenthalMesh, by a nodal function of the
     vertex color sum_l q_l mod (n + 1), which has zero sum on every simplex).
@@ -363,10 +364,13 @@ fidelity:
     no CrimeFamily (the discrete spaces of the other degrees and the de Rham complex are not
     stated) and quantifies over the lumped readings (a Hilbert space X with nodal values nu and the
     lumped inner product, a map iota with the consistent mass) instead of constructing one; they
-    exist with every hat function by its conjuncts (1) and (2), which make <., .>_L and <., .>
-    inner products on the values at the vertices, and the lumped-mass method into L2(Omega) is
-    one when the open simplices lie in Omega (proved in Feec, lumpedReading,
-    isLumpedReading_lumpedReading, not compared). The graph-norm reading CrimeFamily.defect <= c_n h
+    exist on every mesh with every hat function (on the values at the vertices, <., .>_L is an
+    inner product by its definition and the conjunct (2), and so is <., .> by (1)), proved and
+    not compared: FEEC.exists_lumpedReading (Solution/Lumped.lean, for the definitions of the
+    challenge) from Feec.FiniteElement.exists_isLumpedReading, the lumped-mass method on all the
+    vertices read in L2 of the meshed region, an instance of the lumped-mass method on the nodes
+    of a mesh whose open simplices lie in Omega, read in L2(Omega) (lumpedReading,
+    isLumpedReading_lumpedReading). The graph-norm reading CrimeFamily.defect <= c_n h
     of degree 0 is the docstring's (the compared bound is ||(1 - iota* iota) v|| <=
     c_n h ||grad (nu v)_h||, with ||d_h v|| = ||grad (nu v)_h||); h is a bound of the Euclidean edge
     lengths (not the sup-norm mesh size of palomar/fem); the hat function is stated at every vertex
@@ -409,7 +413,13 @@ review:
     sharpened to the n (n + 1) ordered pairs of distinct vertices, which gives c_n), with the
     operator-norm statements for every lumped reading and the exact value on Freudenthal meshes
     (not compared); the P1 gradient and stiffness form of palomar/timestepping became the shared
-    block p1 (its text unchanged). Strictness (2026-11-24): FEEC.crime_defect_nonvacuous, a
+    block p1 (its text unchanged). A second independent review checked that the earlier compared
+    statements of palomar/crimes and palomar/timestepping are unchanged (their elaborated terms
+    are identical), and found the existence of lumped readings with every hat function, on which
+    the hat-function conjunct of (4) depends, argued in the docstring and proved in Feec only for
+    meshes whose open simplices lie in Omega; it is now proved on every mesh, in Feec
+    (Feec.FiniteElement.exists_isLumpedReading) and for the definitions of the challenge in the
+    solution (FEEC.exists_lumpedReading). Strictness (2026-11-24): FEEC.crime_defect_nonvacuous, a
     second compared witness, shows that the generalization below is strict (a family with
     ||1 - i_n* i_n|| = 1 that meets the hypotheses of the convergence conjunct of the cochain clause
     and of the heat clause); in Feec the constructors of the wave theory with crimes take the defect

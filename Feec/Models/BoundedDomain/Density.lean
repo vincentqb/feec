@@ -18,7 +18,8 @@ On a bounded open `Ω ⊆ ℝ³` let `Z = L²(TSD) ∩ H̊(curl, M)`.
   `Feec.Domain.exists_isTestField_ker_dist_lt` for the row-homogeneous TSD operator `tsdOp`.
 * Hence `cl Z = L²(TSD₀)` (`closure_eq_tsd₀`) and the obstruction of `L²(TSD)` for `H̊(curl)`
   contains `L²(TSD) ⊓ L²(TSD₀)ᗮ` (`inf_orthogonal_tsd₀_le_obstruction`).
-* **The obstruction is large**: it is infinite-dimensional (`not_finiteDimensional_obstruction`) and
+* **The obstruction is large**: it is infinite-dimensional (`not_finiteDimensional_obstruction`),
+  `L²(TSD₀)` has infinite codimension in `L²(TSD)` (`not_tsd_le_tsd₀_sup_finiteDimensional`), and
   no finite-dimensional correction restores density
   (`not_tsd_le_closure_sup_finiteDimensional`).
 * **Without the boundary condition density holds**: `cl (L²(TSD) ∩ H(curl)) = L²(TSD)` on
@@ -27,9 +28,11 @@ On a bounded open `Ω ⊆ ℝ³` let `Z = L²(TSD) ∩ H̊(curl, M)`.
 * **The `Ė(0)` argument** (`adjoint_mem_tsd₀_of_propagates`): if a strong solution from
   `(0, E₀, B₀)` keeps `E` in `L²(TSD)`, then `d₁† B₀ ∈ L²(TSD₀)`.
 * **The largest propagating constraint space** `K*` (`Feec.ShortHilbertComplex.coreSub`):
-  `S₁* ⊆ L²(TSD₀)` (`invariantCore₁_le_tsd₀`), curl-free fields of `S₂` are stationary data in
-  `S₂*` (`mem_invariantCore₂_of_curl_eq_zero`, `hessL2_mem_invariantCore₂`), and `S₂*` is
-  infinite-dimensional (`not_finiteDimensional_invariantCore₂`).
+  `S₁* ⊆ L²(TSD₀)` for every short complex `W₀ → L²(M) → W₂` with `D(d₁) ⊆ H̊(curl)`
+  (`invariantCore₁_le_tsd₀`), curl-free fields of `S₂` are stationary data in `S₂*`
+  (`mem_invariantCore₂_of_curl_eq_zero`; Hessians, `hessL2_mem_adjoint`,
+  `hessL2_mem_invariantCore₂`), and `S₂*` is infinite-dimensional
+  (`not_finiteDimensional_invariantCore₂`).
 
 ## References
 
@@ -675,15 +678,14 @@ theorem not_finiteDimensional_obstruction (hΩ : IsOpen Ω) (hb : Bornology.IsBo
   not_finiteDimensional_inf_orthogonal_tsd₀ hΩ hb hne
     (Submodule.finiteDimensional_of_le (inf_orthogonal_tsd₀_le_obstruction hΩ hb))
 
-/-- **No finite-dimensional correction restores density**: for every finite-dimensional
-subspace `F`, `L²(TSD) ⊄ cl (L²(TSD) ∩ H̊(curl)) + F`, on every nonempty bounded open `Ω`.
+/-- **`L²(TSD₀)` has infinite codimension in `L²(TSD)`**: for every finite-dimensional subspace
+`F`, `L²(TSD) ⊄ L²(TSD₀) + F`, on every nonempty bounded open `Ω` (the projection onto
+`L²(TSD₀)ᗮ` would map `F` onto the infinite-dimensional `L²(TSD) ⊓ L²(TSD₀)ᗮ`).
 [QuennevilleBelair2015], Prop 4.17 -/
-theorem not_tsd_le_closure_sup_finiteDimensional (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+theorem not_tsd_le_tsd₀_sup_finiteDimensional (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (F : Submodule ℝ (L2F ℝ Ω Ix)) [FiniteDimensional ℝ F] :
-    ¬ tsd Ω ≤
-      (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure ⊔ F := by
+    ¬ tsd Ω ≤ tsd₀ Ω hΩ hb ⊔ F := by
   intro hle
-  have hcl := closure_le_tsd₀ hΩ hb
   set P := (tsd₀ Ω hΩ hb)ᗮ.starProjection
   have hob : tsd Ω ⊓ (tsd₀ Ω hΩ hb)ᗮ ≤ F.map (P : L2F ℝ Ω Ix →ₗ[ℝ] L2F ℝ Ω Ix) := by
     intro G hG
@@ -691,11 +693,21 @@ theorem not_tsd_le_closure_sup_finiteDimensional (hΩ : IsOpen Ω) (hb : Bornolo
     refine ⟨f, hf, ?_⟩
     have hPG : P (z + f) = z + f := Submodule.starProjection_eq_self_iff.2 hG.2
     have hPz : P z = 0 := (Submodule.starProjection_apply_eq_zero_iff _).2
-      (Submodule.le_orthogonal_orthogonal _ (hcl hz))
+      (Submodule.le_orthogonal_orthogonal _ hz)
     change P f = z + f
     rw [← hPG, map_add, hPz, zero_add]
   exact not_finiteDimensional_inf_orthogonal_tsd₀ hΩ hb hne
     (Submodule.finiteDimensional_of_le hob)
+
+/-- **No finite-dimensional correction restores density**: for every finite-dimensional
+subspace `F`, `L²(TSD) ⊄ cl (L²(TSD) ∩ H̊(curl)) + F`, on every nonempty bounded open `Ω`
+(the closure lies in `L²(TSD₀)`). [QuennevilleBelair2015], Prop 4.17 -/
+theorem not_tsd_le_closure_sup_finiteDimensional (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (hne : Ω.Nonempty) (F : Submodule ℝ (L2F ℝ Ω Ix)) [FiniteDimensional ℝ F] :
+    ¬ tsd Ω ≤
+      (tsd Ω ⊓ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain).topologicalClosure ⊔ F :=
+  fun hle => not_tsd_le_tsd₀_sup_finiteDimensional hΩ hb hne F
+    (hle.trans (sup_le_sup_right (closure_le_tsd₀ hΩ hb) F))
 
 /-! ## Density of `L²(TSD) ∩ H(curl)` in `L²(TSD)` -/
 
@@ -825,21 +837,22 @@ section InvariantCore
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
 
-variable {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+variable {W₀ W₂ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+  [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
 
-/-- **The electric slot of `K*` lies in `L²(TSD₀)`** for every short complex with
-`D(d₁) ⊆ H̊(curl)`, `K = {0} × L²(TSD) × S₂`: `D(L) ∩ K*` is dense in `K*`, its electric fields
-lie in `L²(TSD) ∩ H̊(curl) ⊆ L²(TSD₀)`, and `L²(TSD₀)` is closed. -/
+/-- **The electric slot of `K*` lies in `L²(TSD₀)`** for every short complex
+`W₀ → L²(M) → W₂` with `D(d₁) ⊆ H̊(curl)`, `K = {0} × L²(TSD) × S₂`: `D(L) ∩ K*` is dense in
+`K*`, its electric fields lie in `L²(TSD) ∩ H̊(curl) ⊆ L²(TSD₀)`, and `L²(TSD₀)` is closed. -/
 theorem invariantCore₁_le_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) W₂)
     (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
-    (S₂ : Submodule ℝ (L2F ℝ Ω Ix)) [S₂.HasOrthogonalProjection] :
+    (S₂ : Submodule ℝ W₂) [S₂.HasOrthogonalProjection] :
     S.invariantCore₁ (tsd Ω) S₂ ≤ tsd₀ Ω hΩ hb := by
   intro u hu
   have hcl := ShortHilbertComplex.mem_closure_wave_domain_inter_coreSub
     (ShortHilbertComplex.mem_invariantCore₁.1 hu)
-  let π : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)) →L[ℝ] L2F ℝ Ω Ix :=
-    PiLp.proj 2 (fun i => ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) i) 1
+  let π : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) →L[ℝ] L2F ℝ Ω Ix :=
+    PiLp.proj 2 (fun i => ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂ i) 1
   have := map_mem_closure π.continuous hcl (t := (tsd₀ Ω hΩ hb : Set (L2F ℝ Ω Ix)))
     fun y ⟨hyD, hyK⟩ => by
       obtain ⟨-, h1, -⟩ := ShortHilbertComplex.mem_coreSub_iff.1 hyK
@@ -849,10 +862,10 @@ theorem invariantCore₁_le_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded �
 
 /-- `d₁†` maps the magnetic slot of `K*` into `L²(TSD₀)`. -/
 theorem adjoint_mem_tsd₀_of_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) W₂)
     (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
-    (S₂ : Submodule ℝ (L2F ℝ Ω Ix)) [S₂.HasOrthogonalProjection] (ρ : S.d₁†.domain)
-    (hρ : (ρ : L2F ℝ Ω Ix) ∈ S.invariantCore₂ (tsd Ω) S₂) : S.d₁† ρ ∈ tsd₀ Ω hΩ hb :=
+    (S₂ : Submodule ℝ W₂) [S₂.HasOrthogonalProjection] (ρ : S.d₁†.domain)
+    (hρ : (ρ : W₂) ∈ S.invariantCore₂ (tsd Ω) S₂) : S.d₁† ρ ∈ tsd₀ Ω hΩ hb :=
   invariantCore₁_le_tsd₀ hΩ hb S hd₁ S₂ (ShortHilbertComplex.adjoint_mem_invariantCore₁ ρ hρ)
 
 /-- **Curl-free magnetic fields are stationary data**: for the grad–curl complex, if `B ∈ S₂` has
@@ -870,20 +883,27 @@ theorem mem_invariantCore₂_of_curl_eq_zero (hΩ : IsOpen Ω) (S₁ S₂ : Subm
   exact ShortHilbertComplex.mem_invariantCore₂_of_eq_zero (S := gradCurl ℝ hΩ) ⟨B, hmem⟩ hB
     ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).adjoint_minimal_apply_eq hΩ _ key)
 
+/-- **Hessians are curl-free magnetic fields**: `∇²h ∈ D(d₁†)` with `d₁† ∇²h = curl ∇²h = 0`, for
+every short complex with `d₁ ⊆ curl_min`. -/
+theorem hessL2_mem_adjoint (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) {h : R3 → ℝ}
+    (hh : ContDiff ℝ ∞ h) : ∃ hm : hessL2 hΩ hb hh ∈ S.d₁†.domain, S.d₁† ⟨_, hm⟩ = 0 := by
+  obtain ⟨hmem, e⟩ := smoothField_mem_adjoint hΩ hb S hd₁
+    (fun ij => (contDiff_hessField hh ij).of_le (by simp))
+  refine ⟨hmem, e.trans (smoothField_eq_zero hΩ hb _ fun ij x _ => ?_)⟩
+  rw [hessField_eq_gradM]
+  exact curlM_gradM (fun i => (hh.partialDeriv_infty i).of_le (by simp)) ij x
+
 /-- **Hessians of harmonic functions are stationary magnetic data**: `∇²h ∈ S₂*` for
 `S₂ = L²(TSD)` (`curl ∇²h = 0`). -/
 theorem hessL2_mem_invariantCore₂ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (S₁ : Submodule ℝ (L2F ℝ Ω Ix)) {h : R3 → ℝ} (hh : ContDiff ℝ ∞ h)
     (hΔ : ∀ x ∈ Ω, laplacian h x = 0) :
     hessL2 hΩ hb hh ∈ (gradCurl ℝ hΩ).invariantCore₂ S₁ (tsd Ω) := by
-  obtain ⟨hmem, e⟩ := smoothField_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl
-    (fun ij => (contDiff_hessField hh ij).of_le (by simp))
-  refine ShortHilbertComplex.mem_invariantCore₂_of_eq_zero (S := gradCurl ℝ hΩ) ⟨_, hmem⟩
-    (hessL2_mem_tsd hΩ hb hh hΔ) ?_
-  rw [e]
-  refine smoothField_eq_zero hΩ hb _ fun ij x _ => ?_
-  rw [hessField_eq_gradM]
-  exact curlM_gradM (fun i => (hh.partialDeriv_infty i).of_le (by simp)) ij x
+  obtain ⟨hmem, e⟩ := hessL2_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl hh
+  exact ShortHilbertComplex.mem_invariantCore₂_of_eq_zero (S := gradCurl ℝ hΩ) ⟨_, hmem⟩
+    (hessL2_mem_tsd hΩ hb hh hΔ) e
 
 /-- **The stationary part of `K*` is infinite-dimensional**: for the grad–curl complex on a
 nonempty bounded open `Ω`, `S₂*` (with `S₂ = L²(TSD)`) contains the independent harmonic Hessians

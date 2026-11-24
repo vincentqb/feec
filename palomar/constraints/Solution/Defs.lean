@@ -209,6 +209,15 @@ def vecOp {n : ℕ} {E F : Type*} [NormedAddCommGroup E] [InnerProductSpace ℝ 
       map_smul' := fun c v => PiLp.ext fun a => (T a).map_smul c ⟨_, v.2 a⟩ }
 -- palomar-shared-end: L2Vec
 
+/-- `d⁰ : W⁰ → W¹` and `d¹ : W¹ → W²` form a **short complex** `W⁰ → W¹ → W²` of densely defined
+closed operators with `R(d⁰) ⊆ D(d¹)` and `d¹ d⁰ = 0` (a short Hilbert complex when the spaces are
+complete). -/
+def IsShortComplex {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+    [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
+    [InnerProductSpace ℝ W2] (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) : Prop :=
+  Dense (d0.domain : Set W0) ∧ Dense (d1.domain : Set W1) ∧ d0.IsClosed ∧ d1.IsClosed ∧
+    ∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0
+
 /-- **The Hodge wave operator `L (σ, u, ρ) = (d⁰*u, -d⁰σ - d¹*ρ, d¹u)` of `W⁰ → W¹ → W²`**
 ([QuennevilleBelair2015], (4.5)): `L U = V` iff `σ ∈ D(d⁰)`, `u ∈ D(d¹)`, `⟪V_σ, τ⟫ = ⟪u, d⁰τ⟫`
 for all `τ ∈ D(d⁰)`, `⟪V_u, v⟫ = -⟪d⁰σ, v⟫ - ⟪ρ, d¹v⟫` for all `v ∈ D(d¹)`, and `V_ρ = d¹u`. -/
@@ -532,15 +541,13 @@ structure PropagationCriterion : Prop where
         ∀ S, IsEvolution 𝕜 (H.wave a m).graph univ S → ∀ t (x : Total W a m),
           (∀ i : Fin m, x i ∈ Z (a + (i : ℕ))) → ∀ i : Fin m, S t x i ∈ Z (a + (i : ℕ))
   /-- (**short complexes, in the relation form of the systems below**) For a real short Hilbert
-  complex `W⁰ → W¹ → W²` of closed densely defined `d⁰`, `d¹` (`d¹ d⁰ = 0`) and a reducing
-  subcomplex `Z⁰ × Z¹ × Z²` (`IsReducingSubcomplex`), every strong solution of the Hodge wave
-  equation (`IsHodgeWave`) on `[0, T]` starting in `Z⁰ × Z¹ × Z²` stays in it. -/
+  complex `W⁰ → W¹ → W²` (`IsShortComplex`) and a reducing subcomplex `Z⁰ × Z¹ × Z²`
+  (`IsReducingSubcomplex`), every strong solution of the Hodge wave equation (`IsHodgeWave`) on
+  `[0, T]` starting in `Z⁰ × Z¹ × Z²` stays in it. -/
   shortComplex {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
     [CompleteSpace W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
-    (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (hd0 : Dense (d0.domain : Set W0))
-    (hd1 : Dense (d1.domain : Set W1)) (hc0 : d0.IsClosed) (hc1 : d1.IsClosed)
-    (hcomp : ∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0)
+    (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (hd : IsShortComplex d0 d1)
     (Z0 : Submodule ℝ W0) (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2)
     [Z0.HasOrthogonalProjection] [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection]
     (hZ : IsReducingSubcomplex d0 d1 Z0 Z1 Z2) (T : ℝ) (U : ℝ → W0 × W1 × W2)
@@ -554,25 +561,19 @@ structure PropagationCriterion : Prop where
 §4.10, Prop 4.17; §6.1, §6.3) for the system (4.14) (`gradCurlWave`, constraint `tsdConstraint`)
 and the system (6.1) with weak symmetry (`bggData`, constraint `IsTSDState`);
 `TSDVerdict.electric` asserts it on every nonempty bounded open `Ω`, with no regularity of
-`∂Ω`. The clauses `beta`, `projection_electric`, `projection_magnetic` and `not_dense` state
-their conclusions also for every boundary condition containing `n × E = 0`. -/
+`∂Ω`. The clauses `core_electric`, `beta`, `projection_electric`, `projection_magnetic` and
+`not_dense` state their conclusions also for every boundary condition containing `n × E = 0`. -/
 structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
-  /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex: densely
-  defined closed operators with `d¹ d⁰ = 0` -/
-  complex :
-    Dense ((vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain : Set (L2Vec Ω 0)) ∧
-      Dense ((vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain : Set (L2Vec Ω 1)) ∧
-      (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).IsClosed ∧
-      (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).IsClosed ∧
-      ∀ x : (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1).domain,
-        ∃ h : (vecOp fun _ => dMin Ω 0) x ∈ (vecOp fun _ => dMin Ω 1 :
-          L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain, (vecOp fun _ => dMin Ω 1) ⟨_, h⟩ = 0
+  /-- the complex `H̊Λ⁰(Ω)³ → H̊Λ¹(Ω)³ → L²Λ²(Ω)³` of (4.14) is a short Hilbert complex -/
+  complex : IsShortComplex (vecOp fun _ => dMin Ω 0 : L2Vec Ω 0 →ₗ.[ℝ] L2Vec Ω 1)
+    (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2)
   /-- the system (4.14) has an evolution -/
   evolution : ∃ S, IsEvolution ℝ (gradCurlWave Ω) univ S
   /-- for every evolution, `K* = {0} × S₁* × S₂*` is the largest reducing subcomplex of the
-  complex in `K` (so `PropagationCriterion.shortComplex` applies to it); its electric part lies in
-  `L²(TSD₀)` (vanishing normal trace, zero mean); both parts are strictly smaller than `L²(TSD)`;
-  and `S₂*` contains nonzero stationary data -/
+  complex in `K` (so `PropagationCriterion.shortComplex` applies to it); both parts are strictly
+  smaller than `L²(TSD)` (the electric one lies in `L²(TSD₀)`, `core_electric`); and `S₂*`
+  contains the stationary TSD magnetic data (`L (0, 0, ρ) = 0`), an infinite-dimensional space:
+  some sequence of them is linearly independent -/
   core (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) :
     ∃ (S₁ : Submodule ℝ (L2Vec Ω 1)) (S₂ : Submodule ℝ (L2Vec Ω 2))
       (_ : S₁.HasOrthogonalProjection) (_ : S₂.HasOrthogonalProjection),
@@ -583,25 +584,37 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
         (∀ u ∈ S₁', IsTSD (mat1 u)) → (∀ ρ ∈ S₂', IsTSD (mat2 ρ)) →
         IsReducingSubcomplex (vecOp fun _ => dMin Ω 0) (vecOp fun _ => dMin Ω 1) ⊥ S₁' S₂' →
         S₁' ≤ S₁ ∧ S₂' ≤ S₂) ∧
-      (∀ u ∈ S₁, IsTSD₀ (mat1 u)) ∧ (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧
-      (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧ (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
-      ∃ ρ ∈ S₂, ρ ≠ 0 ∧ ((0, 0, ρ), 0) ∈ gradCurlWave Ω
+      (∀ ρ ∈ S₂, IsTSD (mat2 ρ)) ∧ (∃ u, IsTSD (mat1 u) ∧ u ∉ S₁) ∧
+      (∃ ρ, IsTSD (mat2 ρ) ∧ ρ ∉ S₂) ∧
+      (∀ ρ, IsTSD (mat2 ρ) → ((0, 0, ρ), 0) ∈ gradCurlWave Ω → ρ ∈ S₂) ∧
+      ∃ ρ : ℕ → L2Vec Ω 2, LinearIndependent ℝ ρ ∧
+        ∀ n, IsTSD (mat2 (ρ n)) ∧ ((0, 0, ρ n), 0) ∈ gradCurlWave Ω
+  /-- for every boundary condition containing `n × E = 0`, that is for every short Hilbert
+  complex `W⁰ → L²Λ¹(Ω)³ → W²` with `D(d¹) ⊆ H̊(curl)` (`W⁰`, `W²` and `d⁰` arbitrary), and
+  every evolution of its Hodge wave equation, the data whose evolution keeps `σ = 0` and `E` TSD
+  (whatever it does to the magnetic field) have their electric field in `L²(TSD₀)` -/
+  core_electric (W0 W2 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+      [CompleteSpace W0] [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] W2) (hd : IsShortComplex d0 d1)
+      (hd1 : d1.domain ≤ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain)
+      (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ {p | IsHodgeWave d0 d1 p.1 p.2} univ S) :
+    ∀ U ∈ invariantCore S {U | U.1 = 0 ∧ IsTSD (mat1 U.2.1)}, IsTSD₀ (mat1 U.2.1)
   /-- the magnetic datum `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)` is TSD; and for every boundary condition
   containing `n × E = 0`, that is for every short Hilbert complex `W⁰ → L²Λ¹(Ω)³ → L²Λ²(Ω)³`
   whose `d¹` is a restriction of the minimal curl (that of (4.14) among them, `W⁰` and `d⁰`
   arbitrary), `(0, 0, β) ∈ D(L)`, and every strong solution of its Hodge wave equation on
-  `[0, T]`, `T > 0`, from any `(0, E₀, β)` has a non-TSD electric field at some `t ∈ [0, T]` -/
+  `[0, T]`, `T > 0`, from any `(0, E₀, β)` has a non-TSD electric field and a non-symmetric
+  magnetic field at some times `t ∈ [0, T]` -/
   beta : ∃ ρ : L2Vec Ω 2, (∀ a b, ⇑(mat2 ρ a b) =ᵐ[volume.restrict Ω]
       fun x => if (a = 0 ∧ b = 1) ∨ (a = 1 ∧ b = 0) then x 2 else 0) ∧
     (0, 0, ρ) ∈ tsdConstraint Ω ∧
     ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
-      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
-      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
-      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2), IsShortComplex d0 d1 →
       d1 ≤ vecOp (fun _ => dMin Ω 1) → (∃ V, IsHodgeWave d0 d1 (0, 0, ρ) V) ∧
         ∀ u T (U : ℝ → W0 × L2Vec Ω 1 × L2Vec Ω 2), 0 < T → U 0 = (0, u, ρ) →
           IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U →
-          ∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)
+          (∃ t ∈ Icc 0 T, ¬IsTSD (mat1 (U t).2.1)) ∧
+          ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2 a i ≠ mat2 (U t).2.2 i a
   /-- `K` does not reduce `L`, already because `P_K D(L) ⊄ D(L)` in the electric slot: the
   orthogonal projection onto `L²(TSD)` of some field with test-function entries (so
   `(0, u, 0) ∈ D(L)`) leaves `H̊(curl)`; and for every boundary condition containing `n × E = 0`,
@@ -613,9 +626,7 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
         ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
           v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
     ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
-      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
-      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
-      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2), IsShortComplex d0 d1 →
       d1 ≤ vecOp (fun _ => dMin Ω 1) → ∃ u : L2Vec Ω 1, (∃ V, IsHodgeWave d0 d1 (0, u, 0) V) ∧
         ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
           v ∉ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain
@@ -633,17 +644,19 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
         ∀ v, IsTSD (mat1 v) → (∀ w, IsTSD (mat1 w) → ⟪u - v, w⟫_ℝ = 0) →
           v ∉ (vecOp fun _ => dMax Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain) ∧
     ∀ (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
-      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2),
-      Dense (d0.domain : Set W0) → Dense (d1.domain : Set (L2Vec Ω 1)) → d0.IsClosed →
-      d1.IsClosed → (∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0) →
+      (d0 : W0 →ₗ.[ℝ] L2Vec Ω 1) (d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2), IsShortComplex d0 d1 →
       d1 ≤ vecOp (fun _ => dMin Ω 1) → ∃ ρ : L2Vec Ω 2, (∃ V, IsHodgeWave d0 d1 (0, 0, ρ) V) ∧
         ∀ ρ', IsTSD (mat2 ρ') → (∀ w, IsTSD (mat2 w) → ⟪ρ - ρ', w⟫_ℝ = 0) →
           ¬∃ V, IsHodgeWave d0 d1 (0, 0, ρ') V
   /-- for every restriction `d¹` of the minimal curl (so for every boundary condition containing
-  `n × E = 0`), `L²(TSD) ∩ D(d¹)` is not dense in `L²(TSD)` (for the electric boundary
-  conditions, `L²(TSD) ∩ H̊(curl)`) -/
-  not_dense : ∀ d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2, d1 ≤ vecOp (fun _ => dMin Ω 1) →
-    closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ≠ {u | IsTSD (mat1 u)}
+  `n × E = 0`), the closure of `L²(TSD) ∩ D(d¹)` (for the electric boundary conditions, of
+  `L²(TSD) ∩ H̊(curl)`) lies in `L²(TSD₀)`, which has infinite codimension in `L²(TSD)`: for every
+  finite-dimensional `F`, some TSD field `u` has `u - f ∉ L²(TSD₀)` for all `f ∈ F`; so
+  `L²(TSD) ∩ D(d¹)` is not dense in `L²(TSD)`, nor after adding any finite-dimensional space -/
+  not_dense : (∀ d1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2, d1 ≤ vecOp (fun _ => dMin Ω 1) →
+      closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ⊆ {u | IsTSD₀ (mat1 u)}) ∧
+    ∀ F : Submodule ℝ (L2Vec Ω 1), FiniteDimensional ℝ F →
+      ∃ u : L2Vec Ω 1, IsTSD (mat1 u) ∧ ∀ f ∈ F, ¬IsTSD₀ (mat1 (u - f))
   /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from the TSD
   datum `(0, 0, 0, ⋆β)` of `D(L)` strong solutions exist on every `[0, T]`, and every one has at
   some times a non-TSD `E` and a non-symmetric `B` -/

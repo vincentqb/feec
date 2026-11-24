@@ -43,8 +43,8 @@ namespace FEEC
 theorem constraint_propagation : PropagationCriterion :=
   ⟨fun L hL hskew => group_of L hL hskew, fun A hdiss hsurj => semigroup_of A hdiss hsurj,
     fun H a m => H.window_of a m,
-    fun d0 d1 hd0 hd1 hc0 hc1 hcomp Z0 Z1 Z2 _ _ _ hZ T U hU h0 h1 h2 =>
-      subcomplex_of d0 d1 hd0 hd1 hc0 hc1 hcomp Z0 Z1 Z2 hZ T U hU h0 h1 h2⟩
+    fun d0 d1 hd Z0 Z1 Z2 _ _ _ hZ T U hU h0 h1 h2 =>
+      subcomplex_of d0 d1 hd Z0 Z1 Z2 hZ T U hU h0 h1 h2⟩
 
 theorem tsd_boundary_conditions : TSDVerdict :=
   have hA := absorbing_of_eq (Feec.Models.Cube.FEM.cubeDomain_eq_Q 3)

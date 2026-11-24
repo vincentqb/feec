@@ -22,8 +22,9 @@ Both refutations hold for **every** short complex whose second operator is conta
 they do not depend on how the thesis' `Γ` is realized.
 
 The loss of symmetry of `B` holds also for the systems run in Ch. 7: the Hodge wave equation
-(4.14) and the reduced system (4.15) of the grad–curl complex (`thesisComplex_B_not_symm`,
-`thesisComplex_reduced_B_not_symm`), and for (4.18) (`symComplexB_B_not_symm`).
+(4.14), for every short complex with `d₁ ⊆ curl_min` (`thesisComplex_B_not_symm`), and the
+reduced system (4.15) of the grad–curl complex (`thesisComplex_reduced_B_not_symm`), and for
+(4.18) (`symComplexB_B_not_symm`).
 
 ## The mathematics
 
@@ -316,35 +317,44 @@ end Criteria
 
 /-! ## §3. Instances: the systems (4.14) and (4.15) run in Ch. 7, and (4.18) -/
 
-/-- `curl† β = curl β = -diag(1, -1, 0)` for the grad–curl complex of (4.14), and
-`⟪curl† β, diag(1, -1, 0)⟫ = -2|Ω|`. -/
-theorem thesisComplex_adjoint_betaL (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) :
-    ∃ h : betaL2 hΩ hb ∈ (gradCurl ℝ hΩ).d₁†.domain,
-      ⟪(gradCurl ℝ hΩ).d₁† ⟨_, h⟩, constField hΩ hb diagA⟫_ℝ = -(2 * volume.real Ω) := by
-  obtain ⟨h, e⟩ := smoothField_mem_adjoint hΩ hb (gradCurl ℝ hΩ) le_rfl
-    (Ψ := betaField) fun ij => (contDiff_betaField ij).of_le (by simp)
-  refine ⟨h, ?_⟩
-  have e2 := congrArg (⟪·, constField hΩ hb diagA⟫_ℝ) e
-  rw [curl_betaL2, inner_neg_left, inner_constField_diagA] at e2
-  exact e2
+section Instances
 
-/-- **(4.14) on bounded domains: `B` loses symmetry.** For the grad–curl complex
-`H̊¹ → H̊(curl, M) → L²(M)` on a nonempty bounded open `Ω`, from `(0, E₀, β)` with any `E₀`,
-every strong solution on `[0, T]`, `T > 0`, has `B(t)` non-symmetric for some `t`, although `β`
-is symmetric (TSD). [QuennevilleBelair2015], (4.14), Ch. 7 -/
+variable {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [CompleteSpace W₀]
+
+/-- `d₁† β = curl β = -diag(1, -1, 0)` for every short complex with `d₁ ⊆ curl_min` (the
+grad–curl complex of (4.14) among them), and `⟪d₁† β, diag(1, -1, 0)⟫ = -2|Ω|`. -/
+theorem thesisComplex_adjoint_betaL (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
+    ∃ h : betaL2 hΩ hb ∈ S.d₁†.domain,
+      ⟪S.d₁† ⟨_, h⟩, constField hΩ hb diagA⟫_ℝ = -(2 * volume.real Ω) := by
+  obtain ⟨h, e⟩ := betaL2_mem_adjoint hΩ hb S hd₁
+  exact ⟨h, by rw [e, inner_neg_left, inner_constField_diagA]⟩
+
+/-- **(4.14) on bounded domains: `B` loses symmetry**, for every boundary condition containing
+`n × E = 0`. For every short complex `W₀ → L²(M) → L²(M)` with `d₁ ⊆ curl_min` (the grad–curl
+complex `H̊¹ → H̊(curl, M) → L²(M)` of (4.14) among them) on a nonempty bounded open `Ω`, from
+`(0, E₀, β)` with any `E₀`, every strong solution on `[0, T]`, `T > 0`, has `B(t)` non-symmetric
+for some `t`, although `β` is symmetric (TSD). [QuennevilleBelair2015], (4.14), Ch. 7 -/
 theorem thesisComplex_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
-    (hne : Ω.Nonempty) :
-    ∀ T > 0, ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix)
-        (L2F ℝ Ω Ix)),
-      Evolution.IsStrongSolution (gradCurl ℝ hΩ).wave (Icc 0 T) 0 U →
-        (U 0 0 : L2F ℝ Ω (Fin 3)) = 0 → (U 0 2 : L2F ℝ Ω Ix) = betaL2 hΩ hb →
+    (hne : Ω.Nonempty) (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
+    (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
+    ∀ T > 0, ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)),
+      Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
+        (U 0 0 : W₀) = 0 → (U 0 2 : L2F ℝ Ω Ix) = betaL2 hΩ hb →
           ∃ t ∈ Icc 0 T, (U t 2 : L2F ℝ Ω Ix) ∉ symSub ℝ Ω := by
-  obtain ⟨h, e⟩ := thesisComplex_adjoint_betaL hΩ hb
+  obtain ⟨h, e⟩ := thesisComplex_adjoint_betaL hΩ hb S hd₁
   intro T hT U hU h0 h2
-  exact not_symm_of_adjoint hΩ hb (gradCurl ℝ hΩ) (ContinuousLinearMap.id ℝ _)
-    (ContinuousLinearMap.id ℝ _) (fun u => ((gradCurl ℝ hΩ).d₁.mem_graph u)) ⟨_, h⟩
+  refine not_symm_of_adjoint hΩ hb S (ContinuousLinearMap.id ℝ _) (ContinuousLinearMap.id ℝ _)
+    (fun u => ?_) ⟨_, h⟩
     (by rw [ContinuousLinearMap.id_apply, e]; have := volume_real_pos hΩ hb hne; linarith)
     T hT U hU h0 h2
+  have hu : S.d₁ u = (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω ⟨u, hd₁.1 u.2⟩ := hd₁.2 rfl
+  change ((u : L2F ℝ Ω Ix), S.d₁ u) ∈ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).graph
+  rw [hu]
+  exact LinearPMap.mem_graph ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) ⟨u, hd₁.1 u.2⟩
+
+end Instances
 
 /-- **(4.15) on bounded domains: `B` loses symmetry.** The reduced system `Ė = -curl† B`,
 `Ḃ = curl E` of the grad–curl complex, from `(E₀, β)`, any `E₀`: every strong solution has `B(t)`
@@ -353,7 +363,7 @@ theorem thesisComplex_reduced_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBou
     (hne : Ω.Nonempty) {T : ℝ} (hT : 0 < T) {E B : ℝ → L2F ℝ Ω Ix}
     (hR : (gradCurl ℝ hΩ).IsReducedSolution (Icc 0 T) E B) (hB : B 0 = betaL2 hΩ hb) :
     ∃ t ∈ Icc 0 T, B t ∉ symSub ℝ Ω := by
-  obtain ⟨h, e⟩ := thesisComplex_adjoint_betaL hΩ hb
+  obtain ⟨h, e⟩ := thesisComplex_adjoint_betaL hΩ hb (gradCurl ℝ hΩ) le_rfl
   have hR' := reduced_not_symm_of_adjoint hΩ hb (gradCurl ℝ hΩ) (ContinuousLinearMap.id ℝ _)
     (ContinuousLinearMap.id ℝ _) (fun u => ((gradCurl ℝ hΩ).d₁.mem_graph u)) hT hR (by
       have e' : (⟨B 0, hR.memB 0 ⟨le_rfl, hT.le⟩⟩ : (gradCurl ℝ hΩ).d₁†.domain) = ⟨_, h⟩ :=
@@ -480,26 +490,6 @@ theorem not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω
       exact hd₁.1 hu) ⟨_, h⟩ (constField_mem_orthogonal_tsd₀ hΩ hb diagA)
     (by rw [ContinuousLinearMap.id_apply, e]; have := volume_real_pos hΩ hb hne; linarith)
     T hT U hU h0 h2
-
-/-- **The electric slot of `K*` lies in `L²(TSD₀)`** for every short complex `W₀ → L²(M) → W₂`
-with `D(d₁) ⊆ H̊(curl, M)`, `K = {0} × L²(TSD) × S₂`. -/
-theorem invariantCore₁_le_tsd₀ (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) {W₂ : Type}
-    [NormedAddCommGroup W₂] [InnerProductSpace ℝ W₂] [CompleteSpace W₂]
-    (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) W₂)
-    (hd₁ : S.d₁.domain ≤ ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain)
-    (S₂ : Submodule ℝ W₂) [S₂.HasOrthogonalProjection] :
-    S.invariantCore₁ (tsd Ω) S₂ ≤ tsd₀ Ω hΩ hb := by
-  intro u hu
-  have hcl := ShortHilbertComplex.mem_closure_wave_domain_inter_coreSub
-    (ShortHilbertComplex.mem_invariantCore₁.1 hu)
-  let π : PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂) →L[ℝ] L2F ℝ Ω Ix :=
-    PiLp.proj 2 (fun i => ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) W₂ i) 1
-  have := map_mem_closure π.continuous hcl (t := (tsd₀ Ω hΩ hb : Set (L2F ℝ Ω Ix)))
-    fun y ⟨hyD, hyK⟩ => by
-      obtain ⟨-, h1, -⟩ := ShortHilbertComplex.mem_coreSub_iff.1 hyK
-      exact inf_le_tsd₀ hΩ hb ⟨ShortHilbertComplex.invariantCore₁_le h1,
-        hd₁ ((S.mem_wave_domain).1 hyD).2.1⟩
-  rwa [(isClosed_tsd₀ hΩ hb).closure_eq] at this
 
 end Generic
 

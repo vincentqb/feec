@@ -41,14 +41,14 @@ attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
 theorem subcomplex_of {W0 W1 W2 : Type u} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
     [CompleteSpace W0] [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [CompleteSpace W1]
     [NormedAddCommGroup W2] [InnerProductSpace ℝ W2] [CompleteSpace W2]
-    (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (hd0 : Dense (d0.domain : Set W0))
-    (hd1 : Dense (d1.domain : Set W1)) (hc0 : d0.IsClosed) (hc1 : d1.IsClosed)
-    (hcomp : ∀ x : d0.domain, ∃ h : d0 x ∈ d1.domain, d1 ⟨_, h⟩ = 0)
+    (d0 : W0 →ₗ.[ℝ] W1) (d1 : W1 →ₗ.[ℝ] W2) (hd : IsShortComplex d0 d1)
     (Z0 : Submodule ℝ W0) (Z1 : Submodule ℝ W1) (Z2 : Submodule ℝ W2)
     [Z0.HasOrthogonalProjection] [Z1.HasOrthogonalProjection] [Z2.HasOrthogonalProjection]
-    (hZ : IsReducingSubcomplex d0 d1 Z0 Z1 Z2) (T : ℝ) (U : ℝ → W0 × W1 × W2) (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U)
+    (hZ : IsReducingSubcomplex d0 d1 Z0 Z1 Z2) (T : ℝ) (U : ℝ → W0 × W1 × W2)
+    (hU : IsStrongSolution {p | IsHodgeWave d0 d1 p.1 p.2} (Icc 0 T) U)
     (h0 : (U 0).1 ∈ Z0) (h1 : (U 0).2.1 ∈ Z1) (h2 : (U 0).2.2 ∈ Z2) :
     ∀ t ∈ Icc 0 T, (U t).1 ∈ Z0 ∧ (U t).2.1 ∈ Z1 ∧ (U t).2.2 ∈ Z2 := by
+  obtain ⟨hd0, hd1, hc0, hc1, hcomp⟩ := hd
   let S : ShortHilbertComplex ℝ W0 W1 W2 :=
     ⟨d0, d1, hd0, hd1, hc0, hc1, fun x => (hcomp x).1, fun x => (hcomp x).2⟩
   have hred : S.toHilbertComplex.ReducingSubcomplex (family3 Z0 Z1 Z2) :=

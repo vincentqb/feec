@@ -11,7 +11,9 @@ The challenge's system (4.14) on an open `Ω` is `Feec.Models.BoundedDomain.grad
 state map `gcState` (`gcWave_iff` of `Solution.Box`), and its graph is the graph of the generator
 of the wave group (`gc_graph_iff`). So every evolution of the challenge's system is the wave
 group conjugated by the state map (`gc_eq_of_isEvolution`, from `eq_group_of_isEvolution` of
-`Solution.Engine`), and its invariant core is `Feec`'s `coreSub` (`gc_mem_invariantCore_iff`).
+`Solution.Engine`), and its invariant core is `Feec`'s `coreSub` (`gc_mem_invariantCore_iff`);
+so are those of every short complex carried to a `Feec` short complex by unitary maps
+(`hodgeWave_graph_iff`, `eq_waveGroup_of_isEvolution`, `mem_invariantCore_iff_of`).
 The electric and magnetic fields carry `L²(TSD)`, `L²(TSD₀)`, `H̊(curl)`, `H(curl)`, the adjoint of
 the curl and the eigenfields to those of `Feec` (`mem_dom_iff`, `mem_domMax_iff`, `isTSD₀_iff`,
 `isEigenfield_iff`), and the verdicts are those of `Feec.Counterexamples.BoundedDomainTSD`
@@ -41,6 +43,8 @@ open Feec.ShortHilbertComplex (W3 family3 mk3 mem_totalSub_family3 inj₁ inj₂
 
 attribute [-instance] ShortHilbertComplex.instNormedSpaceRealW3
   ShortHilbertComplex.instIsScalarTowerRealW3
+
+universe u
 
 /-! ### Conjugate evolutions -/
 
@@ -112,6 +116,67 @@ theorem mem_graph_adjoint_iff_of (e : E ≃ₗᵢ[ℝ] E') (f : F ≃ₗᵢ[ℝ]
 
 end Adjoint
 
+/-! ### Evolutions of the Hodge wave equation under unitary maps -/
+
+section Transfer
+
+variable {W0 W1 W2 : Type*} [NormedAddCommGroup W0] [InnerProductSpace ℝ W0]
+  [NormedAddCommGroup W1] [InnerProductSpace ℝ W1] [NormedAddCommGroup W2]
+  [InnerProductSpace ℝ W2] {X0 X1 X2 : Type u} [NormedAddCommGroup X0] [InnerProductSpace ℝ X0]
+  [CompleteSpace X0] [NormedAddCommGroup X1] [InnerProductSpace ℝ X1] [CompleteSpace X1]
+  [NormedAddCommGroup X2] [InnerProductSpace ℝ X2] [CompleteSpace X2]
+  (e0 : W0 ≃ₗᵢ[ℝ] X0) (e1 : W1 ≃ₗᵢ[ℝ] X1) (e2 : W2 ≃ₗᵢ[ℝ] X2)
+  (S : ShortHilbertComplex ℝ X0 X1 X2) {d0 : W0 →ₗ.[ℝ] W1} {d1 : W1 →ₗ.[ℝ] W2}
+  (h0 : ∀ x y, (x, y) ∈ d0.graph ↔ (e0 x, e1 y) ∈ S.d₀.graph)
+  (h1 : ∀ x y, (x, y) ∈ d1.graph ↔ (e1 x, e2 y) ∈ S.d₁.graph)
+
+include h0 h1 in
+/-- **The graph of the challenge's Hodge wave operator is that of the generator of `Feec`'s wave
+group**, through the state map. -/
+theorem hodgeWave_graph_iff (U V : W0 × W1 × W2) :
+    (U, V) ∈ {p : (W0 × W1 × W2) × (W0 × W1 × W2) | IsHodgeWave d0 d1 p.1 p.2} ↔
+      (stateL e0 e1 e2 U, stateL e0 e1 e2 V) ∈ S.toHilbertComplex.waveGroup.generator.graph := by
+  rw [HilbertComplex.generator_waveGroup, LinearPMap.mem_graph_iff]
+  change IsHodgeWave d0 d1 U V ↔ _
+  rw [isHodgeWave_iff e0 e1 e2 S h0 h1]
+  constructor
+  · rintro ⟨h, e⟩; exact ⟨⟨_, h⟩, rfl, e⟩
+  · rintro ⟨y, hy, e⟩
+    have hy' : (y : PiLp 2 (W3 X0 X1 X2)) = stateL e0 e1 e2 U := hy
+    refine ⟨hy' ▸ y.2, ?_⟩
+    have hyy : (⟨stateL e0 e1 e2 U, hy' ▸ y.2⟩ : S.wave.domain) = y := Subtype.ext hy'.symm
+    rw [hyy]; exact e
+
+include h0 h1 in
+/-- **Every evolution of the challenge's Hodge wave equation is `Feec`'s wave group**, through
+the state map. -/
+theorem eq_waveGroup_of_isEvolution {Sc : ℝ → (W0 × W1 × W2) →L[ℝ] (W0 × W1 × W2)}
+    (hSc : IsEvolution ℝ {p | IsHodgeWave d0 d1 p.1 p.2} univ Sc) (t : ℝ) (x : W0 × W1 × W2) :
+    Sc t x = stateInvL e0 e1 e2 (S.toHilbertComplex.waveGroup.S t (stateL e0 e1 e2 x)) := by
+  have hSc' := hSc.conj (stateL e0 e1 e2) (stateInvL e0 e1 e2) (stateL_stateInvL e0 e1 e2)
+    (fun U V h => (hodgeWave_graph_iff e0 e1 e2 S h0 h1 U V).1 h) fun y w h =>
+      (hodgeWave_graph_iff e0 e1 e2 S h0 h1 _ _).2 (by
+        rw [stateL_stateInvL, stateL_stateInvL]; exact h)
+  have e := eq_group_of_isEvolution S.toHilbertComplex.waveGroup
+    S.toHilbertComplex.waveGroup.dense_domain_generator hSc'
+  have e' := congrArg (fun S' : ℝ → _ →L[ℝ] _ => S' t (stateL e0 e1 e2 x)) e
+  simp only [ContinuousLinearMap.comp_apply, stateInvL_stateL] at e'
+  rw [← e', stateInvL_stateL]
+
+include h0 h1 in
+/-- **The invariant core of the challenge is `Feec`'s**, through the state map, for constraints
+`K` of the challenge and `K'` of `Feec` that the state map carries into each other. -/
+theorem mem_invariantCore_iff_of {Sc : ℝ → (W0 × W1 × W2) →L[ℝ] (W0 × W1 × W2)}
+    (hSc : IsEvolution ℝ {p | IsHodgeWave d0 d1 p.1 p.2} univ Sc) {K : Set (W0 × W1 × W2)}
+    {K' : Submodule ℝ (PiLp 2 (W3 X0 X1 X2))} (hK : ∀ U, stateL e0 e1 e2 U ∈ K' ↔ U ∈ K)
+    (x : W0 × W1 × W2) :
+    x ∈ invariantCore Sc K ↔ stateL e0 e1 e2 x ∈ S.toHilbertComplex.waveGroup.invariantCore K' := by
+  rw [C0Group.mem_invariantCore]
+  simp only [invariantCore, mem_ofPred_eq, eq_waveGroup_of_isEvolution e0 e1 e2 S h0 h1 hSc, ← hK,
+    stateL_stateInvL]
+
+end Transfer
+
 /-! ### The grad–curl system -/
 
 section GradCurl
@@ -138,17 +203,8 @@ abbrev gcGroup : C0Group ℝ (PiLp 2 (W3 (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L
 
 /-- **The graph of the challenge's system is that of the generator**, through the state map. -/
 theorem gc_graph_iff (U V : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
-    (U, V) ∈ gradCurlWave Ω ↔ (gcState U, gcState V) ∈ (gcGroup hΩ).generator.graph := by
-  rw [HilbertComplex.generator_waveGroup, LinearPMap.mem_graph_iff]
-  change gcWave U V ↔ _
-  rw [gcWave_iff hΩ]
-  constructor
-  · rintro ⟨h, e⟩; exact ⟨⟨_, h⟩, rfl, e⟩
-  · rintro ⟨y, hy, e⟩
-    have hy' : (y : PiLp 2 (W3 (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))) = gcState U := hy
-    refine ⟨hy' ▸ y.2, ?_⟩
-    have hyy : (⟨gcState U, hy' ▸ y.2⟩ : (gradCurl ℝ hΩ).wave.domain) = y := Subtype.ext hy'.symm
-    rw [hyy]; exact e
+    (U, V) ∈ gradCurlWave Ω ↔ (gcState U, gcState V) ∈ (gcGroup hΩ).generator.graph :=
+  hodgeWave_graph_iff field0 fieldE fieldB _ (mem_graph_grad_iff hΩ) (mem_graph_curl_iff hΩ) U V
 
 theorem gc_graph_inv (y w : PiLp 2 (W3 (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)))
     (h : (y, w) ∈ (gcGroup hΩ).generator.graph) : (gcInv y, gcInv w) ∈ gradCurlWave Ω := by
@@ -164,13 +220,9 @@ theorem gc_isEvolution :
 theorem gc_eq_of_isEvolution {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ]
     (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) (t : ℝ)
     (x : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
-    S t x = gcInv ((gcGroup hΩ).S t (gcState x)) := by
-  have hS' := hS.conj gcState gcInv gcState_gcInv (fun U V h => (gc_graph_iff hΩ U V).1 h)
-    fun y w h => gc_graph_inv hΩ y w h
-  have e := eq_group_of_isEvolution (gcGroup hΩ) (gcGroup hΩ).dense_domain_generator hS'
-  have e' := congrArg (fun S' : ℝ → _ →L[ℝ] _ => S' t (gcState x)) e
-  simp only [ContinuousLinearMap.comp_apply, gcInv_gcState] at e'
-  rw [← e', gcInv_gcState]
+    S t x = gcInv ((gcGroup hΩ).S t (gcState x)) :=
+  eq_waveGroup_of_isEvolution field0 fieldE fieldB _ (mem_graph_grad_iff hΩ)
+    (mem_graph_curl_iff hΩ) hS t x
 
 omit hΩ in
 /-- **The constraint is `Feec`'s `{0} × L²(TSD) × L²(TSD)`**, through the state map. -/
@@ -188,10 +240,9 @@ theorem gc_mem_invariantCore_iff {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec
     (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution ℝ (gradCurlWave Ω) univ S)
     (x : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :
     x ∈ invariantCore S (tsdConstraint Ω) ↔
-      gcState x ∈ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) := by
-  rw [ShortHilbertComplex.coreSub, C0Group.mem_invariantCore]
-  simp only [invariantCore, mem_ofPred_eq, gc_eq_of_isEvolution hΩ hS, ← gc_mem_tsd_iff,
-    gcState_gcInv]
+      gcState x ∈ (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) :=
+  mem_invariantCore_iff_of field0 fieldE fieldB _ (mem_graph_grad_iff hΩ) (mem_graph_curl_iff hΩ)
+    hS gc_mem_tsd_iff x
 
 /-- The stationary data of the system: `L U = 0`. -/
 theorem gc_mem_stationary_iff (U : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) :

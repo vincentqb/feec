@@ -4162,7 +4162,7 @@ Feec.Ch6.Bounded.betaL	Feec.Counterexamples.BoundedDomainTSD.betaL2	dedup
 Feec.Ch6.Bounded.betaPair	Feec.Counterexamples.BoundedBGG.betaPair	rename
 Feec.Ch6.Bounded.bggComplex	Feec.Models.BoundedDomain.bggComplex	rename
 Feec.Ch6.Bounded.bggComplex_B_not_symm	Feec.Counterexamples.BoundedBGG.bggComplex_B_not_symm	rename
-Feec.Ch6.Bounded.bggComplex_S1max_le_TSD0	Feec.Counterexamples.BoundedBGG.invariantCore₁_le_tsd₀	generalize
+Feec.Ch6.Bounded.bggComplex_S1max_le_TSD0	Feec.Models.BoundedDomain.invariantCore₁_le_tsd₀	generalize
 Feec.Ch6.Bounded.bggComplex_adjoint_betaPair	Feec.Counterexamples.BoundedBGG.adjoint_betaPair	generalize
 Feec.Ch6.Bounded.bggComplex_betaPair_not_mem_S2max	-	deleted-helper
 Feec.Ch6.Bounded.bggComplex_d0	Feec.Models.BoundedDomain.bggComplex_d₀	rename

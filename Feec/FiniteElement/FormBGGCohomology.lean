@@ -53,7 +53,7 @@ and the parallelepipeds `A · (0, ½)ⁿ + b`
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (Theorem 3), §4.1,
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (Theorem 3), §4.1–4.2,
   Theorem 6
 * [D. Pauly, W. Zulehner, *The divDiv-complex and applications to biharmonic equations*][PaulyZulehner2020]
   (the kernels `P₁` and `RT₀` of the Hessian and div–div complexes)
@@ -79,7 +79,7 @@ theorem finrank_vecRow_cohomology_of [∀ k, FiniteDimensional ℝ ((formRow n h
   rw [finrank_pi_cohomology, hH, Fintype.card_fin]
   split_ifs <;> simp
 
-/-- **The Hessian complex of forms** ([ArnoldHu2021], §4.1, Theorem 6): if `HΛ(Ω)` has the
+/-- **The Hessian complex of forms** ([ArnoldHu2021], §4.2, Theorem 6): if `HΛ(Ω)` has the
 `H¹`-regular decompositions from `0` on and the cohomology of a point, the BGG complex `bgg 0` of
 the domain complexes of `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ` has closed range and finite-dimensional
 cohomology (`Feec.BGG.HilbertData.BGGVerdict`), of dimension `n + 1` in degree `0` and `0` in the
@@ -121,7 +121,7 @@ theorem elasticityFormData_bggVerdict {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen �
   exact ⟨D.bggVerdict hS htop i, D.finrank_bgg_homology_eq_ite hS htop
     (finrank_vecRow_cohomology_of hΩ hH) (finrank_vecRow_cohomology_of hΩ hH) i⟩
 
-/-- **The div–div complex of forms**, `n ≥ 1` ([ArnoldHu2021], §4.1, Theorem 6): if `HΛ(Ω)` has
+/-- **The div–div complex of forms**, `n ≥ 1` ([ArnoldHu2021], §4.2, Theorem 6): if `HΛ(Ω)` has
 the `H¹`-regular decompositions from `n - 1` on and the cohomology of a point, the BGG complex
 `bgg (n - 1)` of `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` has closed range and finite-dimensional cohomology, of
 dimension `n + 1` in degree `0` and `0` in the other degrees. -/
@@ -313,8 +313,8 @@ theorem exists_maximal_eq_sum_dxL2_iff
     rw [this, A.map_add, A.map_smul, hy₁0, smul_zero]
     exact (zero_add _).trans hdℓ
 
-/-- **The closed `0`-forms of `HΛ(Ω)` are the constants** when they are in `L²`: membership in
-the kernel of `d⁰` from `hker`. -/
+/-- **The closed `0`-forms of `HΛ(Ω)` are the constants** under `hker`, stated for the
+differential `d⁰` of `formRow`. -/
 theorem mem_formRow_ker_zero_iff (hker : ((extDerivOp ℝ n 0).maximal Ω).ker = ℝ ∙ constOne hΩ hb)
     {f : L2F ℝ Ω (formIdx n 0)} :
     f ∈ ((formRow n hΩ).d 0 (0 + 1)).ker ↔ ∃ c : ℝ, c • constOne hΩ hb = f := by

@@ -55,9 +55,9 @@ project:
     to the BGG complex, and the map (30), (omega, mu) -> P_(R^perp)(omega + K mu) up to J and
     P_N(d~ t omega + (I + d~ t K) mu) after J, is a quasi-isomorphism from the sum complex to it
     which carries cohomology representatives H x H~ of the rows to cohomology representatives of
-    the output complex (Corollary 1, (31)). FEEC.bggParallelepiped, the examples of §4.1 on every
-    parallelepiped Omega = A (0, 1)^n + b with A invertible (the cube (0, 1/2)^3 is the one of
-    n = 3, A = I/2, b = 0, cube_eq_parallelepiped): with HΛ(Omega) the weak exterior derivative of
+    the output complex (Corollary 1, (31)). FEEC.bggParallelepiped, the examples of §4.1 and §4.2
+    on every parallelepiped Omega = A (0, 1)^n + b with A invertible (the cube (0, 1/2)^3 is the one
+    of n = 3, A = I/2, b = 0, cube_eq_parallelepiped): with HΛ(Omega) the weak exterior derivative of
     L^2(Omega; Λ) (dMax, the adjoint of the closure of the codifferential on test forms) and
     HΛ(Omega) (x) R^n its copy on vectors of forms, the Hessian diagram (every n; HΛ(Omega) over
     HΛ(Omega) (x) R^n, S v = sum_a dx_a ∧ v_a, J = 0), the elasticity diagram (n = 3;
@@ -128,7 +128,7 @@ sources:
       - "Kaibo Hu"
     id: "doi:10.1007/s10208-021-09498-9"
     type: "article"
-    location: "Found. Comput. Math. 21 (2021), §3 ((19)-(31), Theorems 6 and 7, Proposition 1, Corollary 1) and §5 ((58)-(59) the twisted complex, §5.1 the sum complex, §5.2 splitting off an exact subcomplex); locators checked against the arXiv preprint (arXiv:2005.12437), not against the published version"
+    location: "Found. Comput. Math. 21 (2021), §3 ((19)-(31), Theorems 6 and 7, Proposition 1, Corollary 1), §4.1-4.2 (the examples: the diagram (32) in three dimensions, (36) in n dimensions) and §5 ((58)-(59) the twisted complex, §5.1 the sum complex, §5.2 splitting off an exact subcomplex); locators checked against the arXiv preprint (arXiv:2005.12437), not against the published version"
     relationship: "formalizes"
     note: >-
       §5 proves Theorem 6 in two steps: the twisted complex compared with the sum complex (§5.1)
@@ -246,7 +246,7 @@ status:
     degree 0 and 0 in the other degrees, and the degree-0 cohomology identified with the affine
     functions, the rigid motions and the fields a + c x); the cube (0, 1/2)^3 of the former
     FEEC.bggCube is the case n = 3, A = I/2, b = 0 (FEEC.cube_eq_parallelepiped, proved in the
-    challenge), every open box the case of a diagonal A. Challenge.lean, 922 lines. The
+    challenge), every open box the case of a diagonal A. Challenge.lean, 919 lines. The
     first three are the BGG theorems of the former palomar/bgg (FEEC.bggCohomology,
     FEEC.bggIdentification, FEEC.bggFinrank, FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert,
     FEEC.bggOrthogonal), regrouped into three theorems with no conclusion dropped (review.notes);
@@ -454,17 +454,18 @@ fidelity:
     HΛ(Omega) (x) R^n (vecOp, componentwise); the connecting maps are built from the exterior
     products with dx_a (wedge, dxVec, crossWedge), which for n = 3 in vector proxies are the
     connecting maps of §4.1 up to the sign convention of the skew matrix (recorded in their
-    docstrings). For n ≠ 3 the Hessian and div-div diagrams are the same constructions in R^n
-    (S v = sum_a dx_a ∧ v_a, (S phi)_a = dx_a ∧ phi; the locators of [ArnoldHu2021] for n ≠ 3 are
-    not checked). The parallelepiped (FEEC.parallelepiped, the definition of palomar/fem) is the
-    image A (0, 1)^n + b of the open unit cube under x -> A x + b, stated for A with invertible
-    determinant. The diagram on a parallelepiped is its own, with the same maps S as on every open
-    set, not a diagram transported from the cube; it is conjugate to the diagram of the cube by the
-    pullback T^* along the affine map T of (0, 1/2)^n onto Omega (linear part L = 2A) composed on
-    the vector index with L^T (Hessian, bottom row), L^(-1) (div-div, top row), resp.
-    (det L)^(-1) L^T (top row) and L^(-1) (bottom row) for elasticity (by
-    L^T [v]_x L = det L [L^(-1) v]_x), a remark of the docstring that is not stated or used. The
-    BGG complex is the subquotient
+    docstrings). In every dimension the Hessian and div-div diagrams are those of [ArnoldHu2021],
+    §4.2, the consecutive rows J, J + 1 of the diagram (36) of Alt^J-valued forms at J = 0, resp.
+    J = n - 1 (Arnold-Hu: one complex for each J with 0 <= J < n, the Hessian, elasticity and
+    div-div complexes when n = 3): with Alt^1 = R^n (dx_a <-> e_a), resp. Alt^(n-1) = R^n
+    (the contraction of the volume form with e_a <-> e_a) and Alt^n = R (the volume form <-> 1),
+    the linking map s^(i,1) of (36) is S v = sum_a dx_a ∧ v_a and s^(i,n) is
+    (S phi)_a = dx_a ∧ phi (checked by hand against the definition of s^(i,J) in §4.2 of the
+    arXiv preprint; this identification is not stated). The parallelepiped (FEEC.parallelepiped,
+    the definition of palomar/fem) is the image A (0, 1)^n + b of the open unit cube under
+    x -> A x + b, stated for A with invertible determinant. The diagram on a parallelepiped is
+    its own, with the same maps S as on every open set, not a diagram transported from the cube.
+    The BGG complex is the subquotient
     Gamma / Delta of the stacked diagram of the domain complexes with the graph norms
     (BGG.DomainDiagram on the graphs graph2), Arnold-Hu's bounded setting of §3; this diagram is
     stated by existence, its maps being determined by the rows and S. BGG.DomainDiagram.Verdict
@@ -472,12 +473,13 @@ fidelity:
     modulo d for i >= J), the bounded differentials of Gamma / Delta with the quotient norm with
     closed range in every degree, the finite dimension of the cohomology and its dimensions.
     BGG.DomainDiagram.CohomologyIs states the identification of the degree-0 cohomology with P_1,
-    RM and RT: a linear injection f of H^0 into L^2(Q) (L^2(Q; R^3) for elasticity and div-div,
-    vectors of 0-forms) with range the L^2 classes a.e. equal to a + b·x, a + b × x, resp. a + b x
-    (b scalar), and f([(sigma, phi)]) = u for every cocycle (sigma, phi) in Gamma^0,
+    RM and RT: a linear injection f of H^0 into L^2(Omega) (L^2(Omega; R^3) for elasticity,
+    L^2(Omega; R^n) for div-div, vectors of 0-forms) with range the L^2 classes a.e. equal to
+    a + c·x, a + c × x, resp. a + c x (c scalar), and f([(sigma, phi)]) = u for every cocycle
+    (sigma, phi) in Gamma^0,
     sigma = (u, du); every class is that of such a cocycle, so f is the map [(sigma, phi)] -> u,
     which is thus well defined, one-to-one and onto P_1, RM, RT. Arnold-Hu do not state this
-    identification: §4.1 gives the diagrams, Theorem 6 the dimension of the cohomology and
+    identification: §4.1-4.2 give the diagrams, Theorem 6 the dimension of the cohomology and
     Corollary 1 representatives, and §1 calls the elasticity complex a resolution of the rigid
     motions; P_1 and RT are the kernels of the Hessian and div-div complexes of Pauly-Zulehner.
 
@@ -538,7 +540,19 @@ review:
     What remains of the risk: the corollary is on the parallelepipeds only (not on general
     Lipschitz domains), and FEEC.bggParallelepiped with its definitions (parallelepiped, graph2,
     dxWedge, dxVec, crossWedge, BGG.DomainDiagram, BGG.DomainDiagram.Verdict,
-    BGG.DomainDiagram.CohomologyIs) is not yet reviewed by the author.
+    BGG.DomainDiagram.CohomologyIs) is not yet reviewed by the author. Independent review of
+    FEEC.bggParallelepiped (2026-11-24): the former FEEC.bggCube follows from it (proved in a
+    scratch file, not committed, against the former statement of main ff4a488 copied verbatim:
+    n = 3, A = I/2, b = 0 with FEEC.cube_eq_parallelepiped and (3 : Z) - 1 = 2; also from the
+    Solution, with the standard axioms only); the other three compared statements and the other
+    definitions are unchanged; the dimensions n + 1, 6, n + 1 and the degree-0 cohomology agree
+    with a computation by hand of Gamma^0 / Delta^0, also in the degenerate case n = 0 (the
+    parallelepiped is the point R^0, dim H^0 = 1). Fixes: the n-dimensional diagrams are located
+    in §4.2 of Arnold-Hu (fidelity (11); they were attributed to §4.1 with the locators for
+    n ≠ 3 unchecked), and the remark that the diagram on Omega is conjugate to that of the cube
+    by the pullback composed with constant matrices on the vector index, which is not proved, is
+    removed from the docstring of FEEC.bggParallelepiped, from fidelity (11) and from the module
+    docstring of Feec.Models.Parallelepiped.BGGCohomology.
 
 alignment:
   namespace: "FEEC"
@@ -576,7 +590,7 @@ alignment:
         Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth and
         Feec.BGG.BoundedData.orth_represents. Statement and FEEC.BGG.ΓL, FEEC.BGG.ΔL,
         FEEC.BGG.QuotL, FEEC.BGG.moorePenrose, FEEC.BGG.Υ not yet reviewed by the author.
-    - source: "[ArnoldHu2021], §4.1 (the Hessian, elasticity and div-div diagrams) and Theorem 6 with (27), on parallelepipeds; §2, Theorem 3 (regular decompositions); their degree-0 cohomology P_1, RM, RT: [PaulyZulehner2020] and [ArnoldHu2021], §1 (RM)"
+    - source: "[ArnoldHu2021], §4.1 (the Hessian, elasticity and div-div diagrams for n = 3) and §4.2 (the Hessian and div-div diagrams in n dimensions, J = 0 and J = n - 1 in (36)) with Theorem 6 and (27), on parallelepipeds; §2, Theorem 3 (regular decompositions); their degree-0 cohomology P_1, RM, RT: [PaulyZulehner2020] and [ArnoldHu2021], §1 (RM)"
       lean: "FEEC.bggParallelepiped"
       module: "Challenge"
       status: "proved"

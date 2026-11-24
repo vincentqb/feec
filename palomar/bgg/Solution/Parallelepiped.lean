@@ -28,7 +28,7 @@ cohomology of the BGG complex onto the `u ∈ D(dⁱ)` with `d u = S v` for some
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, §4.1, Theorem 6
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, §4.1–4.2, Theorem 6
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/

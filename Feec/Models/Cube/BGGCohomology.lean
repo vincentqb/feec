@@ -14,8 +14,7 @@ On the cube `Q = (0, ½)ⁿ` (`Feec.Models.Cube.FEM.cubeDomain n`) the two hypot
   (`deRham_hasRegularDecomposition_cube`, from
   `Feec.Models.Cube.Sobolev.deRham_hasRegularDecomposition_Q`, Gaffney's identity on the torus);
 * **the cohomology of a point**: `dim Hᵏ(HΛ(Q)) = [k = 0]`
-  (`Feec.Models.Cube.FEM.finrank_cohomology`), so `dim Hᵏ(HΛ(Q) ⊗ ℝⁿ) = n [k = 0]`
-  (`finrank_vecRow_cohomology`).
+  (`finrank_formRow_cohomology`, from `Feec.Models.Cube.FEM.finrank_cohomology`).
 
 So **the Hessian, elasticity and div–div complexes of `Q` have closed range in every degree and
 finite-dimensional cohomology, concentrated in degree `0`**: `dim H⁰ = n + 1` for the Hessian and
@@ -29,15 +28,15 @@ onto the affine functions `a + b ⬝ᵥ x`, the rigid motions `a + b ⨯₃ x` o
 
 ## Main results
 
-* `deRham_hasRegularDecomposition_cube`, `finrank_formRow_cohomology`,
-  `finrank_vecRow_cohomology`.
+* `deRham_hasRegularDecomposition_cube`, `finrank_formRow_cohomology`.
 * **`hessianBGG_Q`**, **`elasticityBGG_Q`**, **`divDivBGG_Q`**.
 * **`hessianBGG_Q_homology_zero`**, **`elasticityBGG_Q_homology_zero`**,
   **`divDivBGG_Q_homology_zero`**.
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (Theorem 3), §4.1, Theorem 6
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (Theorem 3), §4.1–4.2,
+  Theorem 6
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
   §3.1 (closed range, harmonic forms and cohomology)
 
@@ -68,12 +67,7 @@ theorem finrank_formRow_cohomology (k : ℤ) :
     Module.finrank ℝ ((formRow n (isOpen_cubeDomain n)).cohomology k) = if k = 0 then 1 else 0 :=
   FEM.finrank_cohomology k
 
-/-- `dim Hᵏ(HΛ(Q) ⊗ ℝⁿ) = n [k = 0]`. -/
-theorem finrank_vecRow_cohomology (k : ℤ) :
-    Module.finrank ℝ ((vecRow n (isOpen_cubeDomain n)).cohomology k) = if k = 0 then n else 0 :=
-  finrank_vecRow_cohomology_of _ finrank_formRow_cohomology k
-
-/-- **The Hessian complex of forms on the cube** `Q = (0, ½)ⁿ` ([ArnoldHu2021], §4.1,
+/-- **The Hessian complex of forms on the cube** `Q = (0, ½)ⁿ` ([ArnoldHu2021], §4.2,
 Theorem 6): the BGG complex `bgg 0` of the domain complexes of `HΛ(Q)` over `HΛ(Q) ⊗ ℝⁿ` has
 closed range and finite-dimensional cohomology (`Feec.BGG.HilbertData.BGGVerdict`), of dimension
 `n + 1` in degree `0` and `0` in the other degrees. -/
@@ -93,7 +87,7 @@ theorem elasticityBGG_Q (i : ℤ) :
   elasticityFormData_bggVerdict _ (deRham_hasRegularDecomposition_cube.mono zero_le_one)
     finrank_formRow_cohomology i
 
-/-- **The div–div complex of forms on the cube** `Q = (0, ½)ⁿ`, `n ≥ 1` ([ArnoldHu2021], §4.1,
+/-- **The div–div complex of forms on the cube** `Q = (0, ½)ⁿ`, `n ≥ 1` ([ArnoldHu2021], §4.2,
 Theorem 6): the BGG complex `bgg (n - 1)` of `HΛ(Q) ⊗ ℝⁿ` over `HΛ(Q)` has closed range and
 finite-dimensional cohomology, of dimension `n + 1` in degree `0` and `0` in the other degrees. -/
 theorem divDivBGG_Q [NeZero n] (i : ℤ) :

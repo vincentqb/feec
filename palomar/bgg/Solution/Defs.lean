@@ -30,7 +30,7 @@ theorems (`Solution.lean`).
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, §4.1 and §5
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3, §4.1, §4.2 and §5
 * [I. N. Bernstein, I. M. Gelfand, S. I. Gelfand, *Differential operators on the base affine space and a study of g-modules*][BernsteinGelfandGelfand1975]
 * [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006]

@@ -24,12 +24,7 @@ functions, the rigid motions, resp. the fields `a + b x` of `Ω` (`hessianBGG_do
 
 The diagrams themselves are not transported: on every `Ω` they are the diagrams of
 `Feec.FiniteElement.FormBGG` and `Feec.FiniteElement.FormBGGElasticity`, linked by the same maps
-built from `dxₐ ∧ ·`, and only the hypotheses on the rows are carried from `Q`. (The diagrams are
-nonetheless conjugate to those of `Q` with the same `S`: `T^* (dxₐ ∧ ω) = Σ_c A_{ac} dx_c ∧ T^* ω`,
-so `T^* S = S (Aᵀ ⊗ T^*)` in the Hessian diagram, `(A⁻¹ ⊗ T^*) S = S T^*` in the div–div diagram
-and `((det A)⁻¹ Aᵀ ⊗ T^*) S = S (A⁻¹ ⊗ T^*)` in the elasticity diagram, by
-`Aᵀ [v]_× A = det A [A⁻¹ v]_×`, the constant matrices acting on the vector index, where they
-commute with `d`; this is not used.)
+built from `dxₐ ∧ ·`, and only the hypotheses on the rows are carried from `Q`.
 
 ## Main results
 
@@ -40,7 +35,8 @@ commute with `d`; this is not used.)
 
 ## References
 
-* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (Theorem 3), §4.1, Theorem 6
+* [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §2 (Theorem 3), §4.1–4.2,
+  Theorem 6
 * [P. G. Ciarlet, *The Finite Element Method for Elliptic Problems*][Ciarlet2002], §3.1
   (affine-equivalent domains, change of variables)
 
@@ -73,7 +69,7 @@ theorem finiteDimensional_formRow_cohomology_domain (k : ℤ) :
     FiniteDimensional ℝ ((formRow n (isOpen_domain A b)).cohomology k) :=
   finiteDimensional_cohomology_deRham_affine (isUnit_det_inv hA) _ _ (preimage_Q_domain A b) k
 
-/-- **The Hessian complex of forms on the parallelepiped** `Ω = A · Q + b` ([ArnoldHu2021], §4.1,
+/-- **The Hessian complex of forms on the parallelepiped** `Ω = A · Q + b` ([ArnoldHu2021], §4.2,
 Theorem 6): the BGG complex `bgg 0` of the domain complexes of `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ` has
 closed range and finite-dimensional cohomology, of dimension `n + 1` in degree `0` and `0` in the
 other degrees. -/
@@ -86,7 +82,7 @@ theorem hessianBGG_domain (i : ℤ) :
     (finrank_cohomology A hA b) i
 
 /-- **The div–div complex of forms on the parallelepiped** `Ω = A · Q + b ⊆ ℝⁿ`, `n ≥ 1`
-([ArnoldHu2021], §4.1, Theorem 6): the BGG complex `bgg (n - 1)` of `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)`
+([ArnoldHu2021], §4.2, Theorem 6): the BGG complex `bgg (n - 1)` of `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)`
 has closed range and finite-dimensional cohomology, of dimension `n + 1` in degree `0` and `0` in
 the other degrees. -/
 theorem divDivBGG_domain [NeZero n] (i : ℤ) :

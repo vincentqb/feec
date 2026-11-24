@@ -53,18 +53,18 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on pa
   remark after it); under (23) and (28), with `sⁱ` of closed range before `J`, it is isomorphic to
   the orthogonal output complex of Arnold–Hu, with the map (30) in its Moore–Penrose form
   (Theorem 7, Corollary 1).
-* `FEEC.bggParallelepiped` (the examples of §4.1 on every parallelepiped `Ω = A (0, 1)ⁿ + b`,
-  `A` invertible, the cube `(0, ½)³` among them, `cube_eq_parallelepiped`): for the `L²` Hessian
-  (every `n`), elasticity (`n = 3`) and div–div (`n ≥ 1`) diagrams (the weak exterior derivative
-  `dMax` on `L²(Ω; Λ)`, its copy on vectors of forms `L²(Ω; Λ ⊗ ℝⁿ)`, and the connecting maps
-  `wedge`, `crossWedge`, `dxVec` built from `dxₐ ∧ ·`), the domain complexes form stacked
-  diagrams of bounded Hilbert rows (`BGG.DomainDiagram`) satisfying the hypotheses of the main
-  clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1`, so the three BGG complexes are bounded
+* `FEEC.bggParallelepiped` (the examples of §4.1 and §4.2 on every parallelepiped
+  `Ω = A (0, 1)ⁿ + b`, `A` invertible, the cube `(0, ½)³` among them, `cube_eq_parallelepiped`):
+  for the `L²` Hessian (every `n`), elasticity (`n = 3`) and div–div (`n ≥ 1`) diagrams (the weak
+  exterior derivative `dMax` on `L²(Ω; Λ)`, its copy on vectors of forms `L²(Ω; Λ ⊗ ℝⁿ)`, and the
+  connecting maps `wedge`, `crossWedge`, `dxVec` built from `dxₐ ∧ ·`), the domain complexes form
+  stacked diagrams of bounded Hilbert rows (`BGG.DomainDiagram`) satisfying the hypotheses of the
+  main clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1`, so the three BGG complexes are bounded
   Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree; their cohomology
   is finite-dimensional, of dimension `n + 1`, `6`, `n + 1` in degree `0` and `0` in the other
   degrees (`BGG.DomainDiagram.Verdict`), the sum of the dimensions for the rows; and their
   cohomology in degree `0` is, through `[(σ, φ)] ↦ u` (`σ = (u, du)`), the space of the affine
-  functions, of the rigid motions, resp. of the fields `a + b x` on `Ω`
+  functions, of the rigid motions, resp. of the fields `a + c x` on `Ω`
   (`BGG.DomainDiagram.CohomologyIs`).
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
@@ -87,8 +87,9 @@ Complexes of any length are included (rows vanishing outside a window). Non-vacu
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §3 ((19)–(31), Theorems 6
-  and 7, Proposition 1, Corollary 1: the input diagram, the output complex and its cohomology)
-  and §5 ((58)–(59): the twisted complex; §5.2: splitting off an exact subcomplex)
+  and 7, Proposition 1, Corollary 1: the input diagram, the output complex and its cohomology),
+  §4.1–4.2 (the examples: the diagram (32) in three dimensions, (36) in `n` dimensions) and §5
+  ((58)–(59): the twisted complex; §5.2: splitting off an exact subcomplex)
 * [I. N. Bernstein, I. M. Gelfand, S. I. Gelfand, *Differential operators on the base affine space and a study of g-modules*][BernsteinGelfandGelfand1975]
   (the BGG resolution)
 * [A. Čap, J. Slovák, V. Souček, *Bernstein–Gelfand–Gelfand sequences*][CapSlovakSoucek2001]
@@ -863,17 +864,17 @@ def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (
 
 end BGG
 
-/-- **The Hessian, elasticity and div–div complexes on parallelepipeds** ([ArnoldHu2021], §4.1
-and Theorem 6; [PaulyZulehner2020]). On every parallelepiped `Ω = A (0, 1)ⁿ + b`, `A` invertible
-(`parallelepiped`; the cube `(0, ½)³` is the one of `n = 3`, `A = ½ I`, `b = 0`,
+/-- **The Hessian, elasticity and div–div complexes on parallelepipeds** ([ArnoldHu2021], §4.1,
+§4.2 and Theorem 6; [PaulyZulehner2020]). On every parallelepiped `Ω = A (0, 1)ⁿ + b`, `A`
+invertible (`parallelepiped`; the cube `(0, ½)³` is the one of `n = 3`, `A = ½ I`, `b = 0`,
 `cube_eq_parallelepiped`), with `HΛ(Ω)` the `L²` de Rham complex of the weak exterior derivative
 `dMax` on `L²(Ω; Λ)` and `HΛ(Ω) ⊗ ℝⁿ` its copy `vecOp` on vectors of forms, the diagrams
 
-* of the **Hessian** complex, every `n`: `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ` linked by
+* of the **Hessian** complex, every `n` (§4.2): `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ` linked by
   `S v = Σₐ dxₐ ∧ vₐ` (`wedge`), at `J = 0`;
 * of the **elasticity** complex, `n = 3`: `HΛ(Ω) ⊗ ℝ³` over itself linked by `crossWedge`, at
   `J = 1`;
-* of the **div–div** complex, `n ≥ 1`: `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` linked by `dxVec`, at
+* of the **div–div** complex, `n ≥ 1` (§4.2): `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` linked by `dxVec`, at
   `J = n - 1`,
 
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
@@ -886,17 +887,13 @@ point, so `S` induces zero on cohomology and the dimensions of the cohomology of
 (`FEEC.bggFinrank`). **The cohomology in degree `0`** is the space of the affine functions
 `a + c ⬝ᵥ x`, of the rigid motions `a + c ⨯₃ x`, resp. of the fields `a + c x` on `Ω` (`0`-forms,
 resp. vectors of `0`-forms, in `L²(Ω)`): `[(σ, φ)] ↦ u`, `σ = (u, du)`, is a linear isomorphism of
-`H⁰` onto that space (`BGG.DomainDiagram.CohomologyIs`). The maps `S` are the same on every `Ω`:
-the diagram of `Ω` is its own, not one transported from the cube, although the pullback `T^*`
-along the affine map `T` of `(0, ½)ⁿ` onto `Ω` (linear part `L = 2A`), composed on the vector
-index with `Lᵀ` (Hessian, bottom row), `L⁻¹` (div–div, top row), resp. `(det L)⁻¹ Lᵀ` (top row)
-and `L⁻¹` (bottom row) for elasticity, conjugates it to the diagram of the cube; this is not part
-of the statement. For `n = 3`, in vector proxies, these BGG
-complexes are the `L²` Hessian complex `H²(Ω) → H(curl; Ω; 𝕊) → H(div; Ω; 𝕋) → L²(Ω; ℝ³)` and the
-`L²` elasticity and div–div complexes of [ArnoldHu2021], §4.1 (away from `J` by
+`H⁰` onto that space (`BGG.DomainDiagram.CohomologyIs`). The maps `S` are the same constructions
+from `dxₐ ∧ ·` on every `Ω`, not transported from the cube. For `n = 3`, in vector proxies, these
+BGG complexes are the `L²` Hessian complex `H²(Ω) → H(curl; Ω; 𝕊) → H(div; Ω; 𝕋) → L²(Ω; ℝ³)`
+and the `L²` elasticity and div–div complexes of [ArnoldHu2021], §4.1 (away from `J` by
 `BGG.Identification`; in degree `J`, `sᴶ` being injective,
 `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Ω)`); this identification of the complexes is
-not part of the statement either. -/
+not part of the statement. -/
 theorem bggParallelepiped :
     (∀ (n : ℕ) (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (dMax (parallelepiped A b))

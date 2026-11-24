@@ -38,7 +38,7 @@ against the top spaces `Vⁱ⁺¹` ((24)–(26)). It is the subquotient `Γ / Δ
   the twisted differential if `i - 1 < J`, a subcomplex of `T`.
 
 When does the BGG complex inherit the cohomology and the closed ranges of its rows? Four theorems
-answer, the last for the `L²` Hessian, elasticity and div–div complexes on a cube:
+answer, the last for the `L²` Hessian, elasticity and div–div complexes on parallelepipeds:
 
 * `FEEC.bggCohomology` (any ring): `Γ / Δ` is the output complex (24)–(26); if `Sⁱ` is injective
   for `i < J` and onto modulo `d` for `i ≥ J`, the BGG complex has the cohomology of `T` (§5.2),
@@ -53,17 +53,19 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on a 
   remark after it); under (23) and (28), with `sⁱ` of closed range before `J`, it is isomorphic to
   the orthogonal output complex of Arnold–Hu, with the map (30) in its Moore–Penrose form
   (Theorem 7, Corollary 1).
-* `FEEC.bggCube` (the examples of §4.1 on the cube `Q = (0, ½)³`): for the `L²` Hessian,
-  elasticity and div–div diagrams (the weak exterior derivative `dMax` on `L²(Q; Λ)`, its copy
-  on vectors of forms `L²(Q; Λ ⊗ ℝ³)`, and the connecting maps `wedge`, `crossWedge`, `dxVec`
-  built from `dxₐ ∧ ·`), the domain complexes form stacked diagrams of bounded Hilbert rows
-  (`BGG.DomainDiagram`) satisfying the hypotheses of the main clause of `FEEC.bggHilbert` at
-  `J = 0, 1, 2`, so the three BGG complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`),
-  with closed range in every degree; their cohomology is finite-dimensional, of dimension `4`,
-  `6`, `4` in degree `0` and `0` in the other degrees (`BGG.DomainDiagram.Verdict`), the sum of
-  the dimensions for the rows; and their cohomology in degree `0` is, through `[(σ, φ)] ↦ u`
-  (`σ = (u, du)`), the space of the affine functions, of the rigid motions, resp. of the fields
-  `a + b x` on the cube (`BGG.DomainDiagram.CohomologyIs`).
+* `FEEC.bggParallelepiped` (the examples of §4.1 on every parallelepiped `Ω = A (0, 1)ⁿ + b`,
+  `A` invertible, the cube `(0, ½)³` among them, `cube_eq_parallelepiped`): for the `L²` Hessian
+  (every `n`), elasticity (`n = 3`) and div–div (`n ≥ 1`) diagrams (the weak exterior derivative
+  `dMax` on `L²(Ω; Λ)`, its copy on vectors of forms `L²(Ω; Λ ⊗ ℝⁿ)`, and the connecting maps
+  `wedge`, `crossWedge`, `dxVec` built from `dxₐ ∧ ·`), the domain complexes form stacked
+  diagrams of bounded Hilbert rows (`BGG.DomainDiagram`) satisfying the hypotheses of the main
+  clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1`, so the three BGG complexes are bounded
+  Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree; their cohomology
+  is finite-dimensional, of dimension `n + 1`, `6`, `n + 1` in degree `0` and `0` in the other
+  degrees (`BGG.DomainDiagram.Verdict`), the sum of the dimensions for the rows; and their
+  cohomology in degree `0` is, through `[(σ, φ)] ↦ u` (`σ = (u, du)`), the space of the affine
+  functions, of the rigid motions, resp. of the fields `a + b x` on `Ω`
+  (`BGG.DomainDiagram.CohomologyIs`).
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
 `i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and
@@ -73,10 +75,10 @@ for the Hessian, elasticity and div–div diagrams of the `L²` de Rham complexe
 `S¹ = T - tr : H(curl; Ω; 𝕄) → H(div; Ω; 𝕄)`, `S² = I : H(div; Ω) → L²(Ω; 𝕜³)`; in Feec
 `Feec.Domain.hessianMaximalData_not_surjective`, `elasticityMaximalData_not_surjective` and
 `divDivMaximalData_not_surjective`, instances of
-`Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS`), while on the cube `(0, ½)³` they
-are onto modulo `d`, by the regular decompositions of the rows (a clause of `FEEC.bggCube`). The
-clauses with the explicit map (30) assume (23) and right inverses of `Sⁱ`, so they do not apply
-between those `L²` domains (they do on smooth fields).
+`Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS`), while on every parallelepiped
+they are onto modulo `d`, by the regular decompositions of the rows (a clause of
+`FEEC.bggParallelepiped`). The clauses with the explicit map (30) assume (23) and right inverses
+of `Sⁱ`, so they do not apply between those `L²` domains (they do on smooth fields).
 
 Complexes of any length are included (rows vanishing outside a window). Non-vacuity:
 `BGG.hypotheses_id` (`S = 𝟙 : V⟦1⟧ ⟶ V⟦1⟧`) and `BGG.hypotheses_bounded_id` (`sⁱ = id`,
@@ -638,9 +640,9 @@ theorem bggHilbert {𝕜 : Type u} [RCLike 𝕜] {H Ht : ℤ → Type v}
             BGG.Represents Y i ((A.prod At).map (κ.f i).hom) := by
   sorry
 
-/-! ### The Hessian, elasticity and div–div complexes on the cube -/
+/-! ### The Hessian, elasticity and div–div complexes on parallelepipeds -/
 
-section Cube
+section Parallelepiped
 
 open scoped Topology Matrix
 open Filter Set LinearPMap MeasureTheory
@@ -686,6 +688,27 @@ def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[�
 /-- The cube `(0, ½)ⁿ`. -/
 def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
 -- palomar-shared-end: forms
+
+/-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal and invertible). -/
+def parallelepiped {n : ℕ} (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) : Set (Fin n → ℝ) :=
+  (fun x => A.mulVec x + b) '' Set.univ.pi fun _ => Set.Ioo 0 1
+
+/-- The cube `(0, ½)ⁿ` is the parallelepiped `A = ½ I`, `b = 0`. -/
+theorem cube_eq_parallelepiped (n : ℕ) :
+    cube n = parallelepiped ((1 / 2 : ℝ) • (1 : Matrix (Fin n) (Fin n) ℝ)) 0 := by
+  ext x
+  simp only [cube, parallelepiped, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo,
+    Set.mem_image, Matrix.smul_mulVec, Matrix.one_mulVec, add_zero]
+  constructor
+  · intro hx
+    refine ⟨(2 : ℝ) • x, fun i => ?_, ?_⟩
+    · simp only [Pi.smul_apply, smul_eq_mul]
+      constructor <;> linarith [(hx i).1, (hx i).2]
+    · rw [smul_smul]
+      norm_num
+  · rintro ⟨t, ht, rfl⟩ i
+    simp only [Pi.smul_apply, smul_eq_mul]
+    constructor <;> linarith [(ht i).1, (ht i).2]
 
 -- palomar-shared: L2Vec
 /-- `L²(Ω; Λᵏ ⊗ ℝⁿ)`: the vectors `v = (v₀, …, v_{n-1})` of `k`-forms of `L²(Ω; Λᵏ)`, an `ℓ²`
@@ -840,44 +863,60 @@ def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (
 
 end BGG
 
-/-- **The Hessian, elasticity and div–div complexes on the cube** ([ArnoldHu2021], §4.1 and
-Theorem 6; [PaulyZulehner2020]). On `Q = (0, ½)³`, with `HΛ(Q)` the `L²` de Rham complex of the
-weak exterior derivative `dMax` on `L²(Q; Λ)` and `HΛ(Q) ⊗ ℝ³` its copy `vecOp` on vectors of
-forms, the diagrams
+/-- **The Hessian, elasticity and div–div complexes on parallelepipeds** ([ArnoldHu2021], §4.1
+and Theorem 6; [PaulyZulehner2020]). On every parallelepiped `Ω = A (0, 1)ⁿ + b`, `A` invertible
+(`parallelepiped`; the cube `(0, ½)³` is the one of `n = 3`, `A = ½ I`, `b = 0`,
+`cube_eq_parallelepiped`), with `HΛ(Ω)` the `L²` de Rham complex of the weak exterior derivative
+`dMax` on `L²(Ω; Λ)` and `HΛ(Ω) ⊗ ℝⁿ` its copy `vecOp` on vectors of forms, the diagrams
 
-* of the **Hessian** complex: `HΛ(Q)` over `HΛ(Q) ⊗ ℝ³` linked by `S v = Σₐ dxₐ ∧ vₐ` (`wedge`),
-  at `J = 0`;
-* of the **elasticity** complex: `HΛ(Q) ⊗ ℝ³` over itself linked by `crossWedge`, at `J = 1`;
-* of the **div–div** complex: `HΛ(Q) ⊗ ℝ³` over `HΛ(Q)` linked by `dxVec`, at `J = 2`,
+* of the **Hessian** complex, every `n`: `HΛ(Ω)` over `HΛ(Ω) ⊗ ℝⁿ` linked by
+  `S v = Σₐ dxₐ ∧ vₐ` (`wedge`), at `J = 0`;
+* of the **elasticity** complex, `n = 3`: `HΛ(Ω) ⊗ ℝ³` over itself linked by `crossWedge`, at
+  `J = 1`;
+* of the **div–div** complex, `n ≥ 1`: `HΛ(Ω) ⊗ ℝⁿ` over `HΛ(Ω)` linked by `dxVec`, at
+  `J = n - 1`,
 
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
 of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
-`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Q`). So their BGG
+`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Ω`). So their BGG
 complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree,
-and their cohomology is finite-dimensional, of dimension `4`, `6` and `4` in degree `0` and `0` in
-the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a point, so `S`
-induces zero on cohomology and the dimensions of the cohomology of the rows add
+and their cohomology is finite-dimensional, of dimension `n + 1`, `6` and `n + 1` in degree `0`
+and `0` in the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a
+point, so `S` induces zero on cohomology and the dimensions of the cohomology of the rows add
 (`FEEC.bggFinrank`). **The cohomology in degree `0`** is the space of the affine functions
-`a + b ⬝ᵥ x`, of the rigid motions `a + b ⨯₃ x`, resp. of the fields `a + b x` on `Q` (`0`-forms,
-resp. vectors of `0`-forms, in `L²(Q)`): `[(σ, φ)] ↦ u`, `σ = (u, du)`, is a linear isomorphism of
-`H⁰` onto that space (`BGG.DomainDiagram.CohomologyIs`). In vector proxies these BGG complexes are
-the `L²` Hessian complex `H²(Q) → H(curl; Q; 𝕊) → H(div; Q; 𝕋) → L²(Q; ℝ³)` and the `L²`
-elasticity and div–div complexes of [ArnoldHu2021], §4.1 (away from `J` by `BGG.Identification`;
-in degree `J`, `sᴶ` being injective, `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Q)`);
-this identification of the complexes is not part of the statement. -/
-theorem bggCube :
-    (∃ D : BGG.DomainDiagram (dMax (cube 3)) (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
-      (wedge (cube 3)), D.Verdict 0 4 ∧ D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (b : Fin 3 → ℝ),
-        ∀ s, ⇑(u s) =ᵐ[volume.restrict (cube 3)] fun x => a + b ⬝ᵥ x}) ∧
-    (∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k)
-      (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (crossWedge (cube 3)),
-      D.Verdict 1 6 ∧ D.CohomologyIs 1 0 {u | ∃ a b : Fin 3 → ℝ,
-        ∀ c s, ⇑(u c s) =ᵐ[volume.restrict (cube 3)] fun x => a c + (b ⨯₃ x) c}) ∧
-    ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (cube 3) k) (dMax (cube 3))
-      (dxVec (cube 3)), D.Verdict 2 4 ∧ D.CohomologyIs 2 0 {u | ∃ (a : Fin 3 → ℝ) (b : ℝ),
-        ∀ c s, ⇑(u c s) =ᵐ[volume.restrict (cube 3)] fun x => a c + b * x c} := by
+`a + c ⬝ᵥ x`, of the rigid motions `a + c ⨯₃ x`, resp. of the fields `a + c x` on `Ω` (`0`-forms,
+resp. vectors of `0`-forms, in `L²(Ω)`): `[(σ, φ)] ↦ u`, `σ = (u, du)`, is a linear isomorphism of
+`H⁰` onto that space (`BGG.DomainDiagram.CohomologyIs`). The maps `S` are the same on every `Ω`:
+the diagram of `Ω` is its own, not one transported from the cube, although the pullback `T^*`
+along the affine map `T` of `(0, ½)ⁿ` onto `Ω` (linear part `L = 2A`), composed on the vector
+index with `Lᵀ` (Hessian, bottom row), `L⁻¹` (div–div, top row), resp. `(det L)⁻¹ Lᵀ` (top row)
+and `L⁻¹` (bottom row) for elasticity, conjugates it to the diagram of the cube; this is not part
+of the statement. For `n = 3`, in vector proxies, these BGG
+complexes are the `L²` Hessian complex `H²(Ω) → H(curl; Ω; 𝕊) → H(div; Ω; 𝕋) → L²(Ω; ℝ³)` and the
+`L²` elasticity and div–div complexes of [ArnoldHu2021], §4.1 (away from `J` by
+`BGG.Identification`; in degree `J`, `sᴶ` being injective,
+`Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Ω)`); this identification of the complexes is
+not part of the statement either. -/
+theorem bggParallelepiped :
+    (∀ (n : ℕ) (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
+      ∃ D : BGG.DomainDiagram (dMax (parallelepiped A b))
+        (fun k => vecOp fun _ : Fin n => dMax (parallelepiped A b) k) (wedge (parallelepiped A b)),
+        D.Verdict 0 (n + 1) ∧ D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (c : Fin n → ℝ),
+          ∀ s, ⇑(u s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a + c ⬝ᵥ x}) ∧
+    (∀ (A : Matrix (Fin 3) (Fin 3) ℝ) (b : Fin 3 → ℝ), IsUnit A.det →
+      ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (parallelepiped A b) k)
+        (fun k => vecOp fun _ : Fin 3 => dMax (parallelepiped A b) k)
+        (crossWedge (parallelepiped A b)),
+        D.Verdict 1 6 ∧ D.CohomologyIs 1 0 {u | ∃ a c : Fin 3 → ℝ,
+          ∀ i s, ⇑(u i s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a i + (c ⨯₃ x) i}) ∧
+    ∀ n : ℕ, 0 < n → ∀ (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
+      ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin n => dMax (parallelepiped A b) k)
+        (dMax (parallelepiped A b)) (dxVec (parallelepiped A b)),
+        D.Verdict ((n : ℤ) - 1) (n + 1) ∧ D.CohomologyIs ((n : ℤ) - 1) 0
+          {u | ∃ (a : Fin n → ℝ) (c : ℝ),
+            ∀ i s, ⇑(u i s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a i + c * x i} := by
   sorry
 
-end Cube
+end Parallelepiped
 
 end FEEC

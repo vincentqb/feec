@@ -451,9 +451,9 @@ end BGG
 
 /-! ### The theorems -/
 
-/-! ### The Hessian, elasticity and div–div complexes on the cube -/
+/-! ### The Hessian, elasticity and div–div complexes on parallelepipeds -/
 
-section Cube
+section Parallelepiped
 
 open scoped Topology Matrix
 open Filter Set LinearPMap MeasureTheory
@@ -499,6 +499,27 @@ def dMax {n : ℕ} (Ω : Set (Fin n → ℝ)) (k : ℤ) : L2Form Ω k →ₗ.[�
 /-- The cube `(0, ½)ⁿ`. -/
 def cube (n : ℕ) : Set (Fin n → ℝ) := univ.pi fun _ => Ioo 0 (1 / 2)
 -- palomar-shared-end: forms
+
+/-- The **parallelepiped** `A (0, 1)ⁿ + b` (an open box when `A` is diagonal and invertible). -/
+def parallelepiped {n : ℕ} (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) : Set (Fin n → ℝ) :=
+  (fun x => A.mulVec x + b) '' Set.univ.pi fun _ => Set.Ioo 0 1
+
+/-- The cube `(0, ½)ⁿ` is the parallelepiped `A = ½ I`, `b = 0`. -/
+theorem cube_eq_parallelepiped (n : ℕ) :
+    cube n = parallelepiped ((1 / 2 : ℝ) • (1 : Matrix (Fin n) (Fin n) ℝ)) 0 := by
+  ext x
+  simp only [cube, parallelepiped, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo,
+    Set.mem_image, Matrix.smul_mulVec, Matrix.one_mulVec, add_zero]
+  constructor
+  · intro hx
+    refine ⟨(2 : ℝ) • x, fun i => ?_, ?_⟩
+    · simp only [Pi.smul_apply, smul_eq_mul]
+      constructor <;> linarith [(hx i).1, (hx i).2]
+    · rw [smul_smul]
+      norm_num
+  · rintro ⟨t, ht, rfl⟩ i
+    simp only [Pi.smul_apply, smul_eq_mul]
+    constructor <;> linarith [(ht i).1, (ht i).2]
 
 -- palomar-shared: L2Vec
 /-- `L²(Ω; Λᵏ ⊗ ℝⁿ)`: the vectors `v = (v₀, …, v_{n-1})` of `k`-forms of `L²(Ω; Λᵏ)`, an `ℓ²`
@@ -653,6 +674,6 @@ def DomainDiagram.CohomologyIs (D : DomainDiagram T Tt S) (J i : ℤ) (P : Set (
 
 end BGG
 
-end Cube
+end Parallelepiped
 
 end FEEC

@@ -2,17 +2,18 @@ module
 
 public import Solution.Bridge
 public import Solution.Wedge
-public import Feec.Models.Cube.BGGCohomology
+public import Feec.Models.Parallelepiped.BGGCohomology
 
 /-!
-# The Hessian, elasticity and div–div diagrams of the challenge on the cube
+# The Hessian, elasticity and div–div diagrams of the challenge on parallelepipeds
 
-The stacked diagrams of the challenge on the cube are `Feec`'s BGG diagrams of forms
-(`Feec.FiniteElement.hessianFormData`, `divDivFormData` and `elasticityFormData` on
-`Feec.Models.Cube.FEM.cubeDomain 3`): `dMax` is `Feec`'s maximal exterior derivative (`dMax_eq`),
-`vecOp` of it is the product complex `Feec.HilbertComplex.pi` (`vecOp_eq_piD`), and `wedge`,
-`dxVec`, `crossWedge` are `Feec.FiniteElement.wsL2`, `dxVecL2`, `crossL2` (`wedge_eq`,
-`dxWedge_eq`, `dxVec_eq`, `crossWedge_eq`).
+The stacked diagrams of the challenge on an open `Ω` are `Feec`'s BGG diagrams of forms
+(`Feec.FiniteElement.hessianFormData`, `divDivFormData` and `elasticityFormData`): `dMax` is
+`Feec`'s maximal exterior derivative (`dMax_eq`, `dMax_formRow_eq`), `vecOp` of it is the product
+complex `Feec.HilbertComplex.pi` (`vecOp_eq_piD`, `vecOp_vecRow_eq`), and `wedge`, `dxVec`,
+`crossWedge` are `Feec.FiniteElement.wsL2`, `dxVecL2`, `crossL2` (`wedge_eq`, `dxWedge_eq`,
+`dxVec_eq`, `crossWedge_eq`). The parallelepiped `A (0, 1)ⁿ + b` of the challenge is `Feec`'s
+`Feec.Models.Parallelepiped.domain (2 A) b` (`parallelepiped_eq`).
 
 For analytic BGG data `D` of `Feec` on `ℤ`, the graph spaces of the rows carry the bounded maps
 `graphD` (`(u, du) ↦ (du, 0)`) and `graphS` (`(φ, d̃φ) ↦ (Sφ, -S d̃φ)`), a stacked diagram of
@@ -331,16 +332,37 @@ theorem crossWedge_eq (Ω : Set (Fin 3 → ℝ)) (k : ℤ) : crossWedge Ω k = c
   unfold crossWedge crossL2
   simp only [dxWedge_eq]
 
-/-- `dMax` on the cube is `Feec`'s `HΛ(Q)`. -/
-theorem dMax_cube_eq (k : ℤ) :
-    (formRow 3 (Feec.Models.Cube.FEM.isOpen_cubeDomain 3)).d k (k + 1) = dMax (cube 3) k :=
-  (formRow_d _ k).trans (dMax_eq (cube 3) k).symm
+/-- `dMax` on an open `Ω` is `Feec`'s `HΛ(Ω)`. -/
+theorem dMax_formRow_eq {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (k : ℤ) :
+    (formRow n hΩ).d k (k + 1) = dMax Ω k :=
+  (formRow_d _ k).trans (dMax_eq Ω k).symm
 
-/-- `vecOp` of `dMax` on the cube is `Feec`'s `HΛ(Q) ⊗ ℝ³`. -/
-theorem vecOp_cube_eq (k : ℤ) :
-    (vecRow 3 (Feec.Models.Cube.FEM.isOpen_cubeDomain 3)).d k (k + 1) =
-      vecOp fun _ : Fin 3 => dMax (cube 3) k :=
-  (vecOp_eq_piD _ (dMax_cube_eq k)).symm
+/-- `vecOp` of `dMax` on an open `Ω` is `Feec`'s `HΛ(Ω) ⊗ ℝⁿ`. -/
+theorem vecOp_vecRow_eq {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω) (k : ℤ) :
+    (vecRow n hΩ).d k (k + 1) = vecOp fun _ : Fin n => dMax Ω k :=
+  (vecOp_eq_piD _ (dMax_formRow_eq hΩ k)).symm
+
+/-- **The parallelepiped `A (0, 1)ⁿ + b` of the challenge is `Feec`'s `A' (0, ½)ⁿ + b`**,
+`A' = 2 A`. -/
+theorem parallelepiped_eq (A : Matrix (Fin n) (Fin n) ℝ) (hA2 : IsUnit ((2 : ℝ) • A).det)
+    (b : Fin n → ℝ) :
+    parallelepiped A b = Feec.Models.Parallelepiped.domain ((2 : ℝ) • A) b := by
+  rw [Feec.Models.Parallelepiped.domain_eq_image _ hA2]
+  ext z
+  simp only [parallelepiped, Set.mem_image, Set.mem_pi, Set.mem_univ, true_implies, Set.mem_Ioo,
+    Feec.Models.Cube.FEM.cubeDomain, Feec.Domain.affMap]
+  constructor
+  · rintro ⟨x, hx, rfl⟩
+    refine ⟨(1 / 2 : ℝ) • x, fun i => ?_, ?_⟩
+    · simp only [Pi.smul_apply, smul_eq_mul]
+      constructor <;> linarith [(hx i).1, (hx i).2]
+    · rw [Matrix.smul_mulVec, Matrix.mulVec_smul, smul_smul]
+      norm_num
+  · rintro ⟨y, hy, rfl⟩
+    refine ⟨(2 : ℝ) • y, fun i => ?_, ?_⟩
+    · simp only [Pi.smul_apply, smul_eq_mul]
+      constructor <;> linarith [(hy i).1, (hy i).2]
+    · rw [Matrix.smul_mulVec, Matrix.mulVec_smul]
 
 end Identify
 

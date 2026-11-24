@@ -94,6 +94,7 @@ public import Feec.FiniteElement.CubeMesh
 public import Feec.FiniteElement.Dof
 public import Feec.FiniteElement.FormBGG
 public import Feec.FiniteElement.FormBGGElasticity
+public import Feec.FiniteElement.FormBGGCohomology
 public import Feec.FiniteElement.GlobalInterpolation
 public import Feec.FiniteElement.GlobalInverseEstimate
 public import Feec.FiniteElement.InterpolationError
@@ -407,6 +408,7 @@ public import Feec.Models.Euclidean.BGG
 public import Feec.Models.Euclidean.DeRham
 public import Feec.Models.Euclidean.GradCurl
 public import Feec.Models.Euclidean.SymCurl
+public import Feec.Models.Parallelepiped.BGGCohomology
 public import Feec.Models.Parallelepiped.BGGFEEC
 public import Feec.Models.Parallelepiped.FiniteElement
 public import Feec.Models.Parallelepiped.StarShaped

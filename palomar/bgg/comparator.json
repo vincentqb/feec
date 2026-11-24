@@ -1,7 +1,7 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.bggCohomology", "FEEC.bggFinrank", "FEEC.bggHilbert", "FEEC.bggCube"],
+  "theorem_names": ["FEEC.bggCohomology", "FEEC.bggFinrank", "FEEC.bggHilbert", "FEEC.bggParallelepiped"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

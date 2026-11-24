@@ -12,10 +12,11 @@ A **rational scheme** (`RationalScheme`) is a real rational function `r = n/d`, 
 infinity (`deg n ≤ deg d`) and without poles in the closed left half-plane; it approximates the
 exponential by the one-step scheme `u ↦ r(τ A) u` for `u' = A u`. It is **A-stable**
 (`RationalScheme.IsAStable`) if `|r(iy)| ≤ 1` on the imaginary axis (by the maximum principle this
-is the usual condition on the closed left half-plane, [HairerWanner1996], §IV.3; only the
-imaginary axis is used here, and the equivalence is not formalized), **L-stable**
-(`RationalScheme.IsLStable`) if moreover `r(∞) = 0`, i.e. `deg n < deg d` (**strongly A-stable**,
-`RationalScheme.IsStronglyAStable`, if only `|r(∞)| < 1`), and of **order `p`**
+is the usual condition on the closed left half-plane, [HairerWanner1996], §IV.3:
+`RationalScheme.isAStable_iff_forall_re_nonpos` in `Feec.TimeStepping.AStableSchemes`; only the
+imaginary axis is used here), **L-stable** (`RationalScheme.IsLStable`) if moreover `r(∞) = 0`,
+i.e. `deg n < deg d` (**strongly A-stable**, `RationalScheme.IsStronglyAStable`, if only
+`|r(∞)| < 1`), and of **order `p`**
 (`RationalScheme.HasOrder`) if `r(z) - e^z = O(z^{p+1})`, i.e. `X^{p+1}` divides `n - d Tₚ` with
 `Tₚ = ∑_{j≤p} Xʲ/j!` (`expTaylor`).
 
@@ -302,7 +303,8 @@ end CayleyPoly
 /-! ### Rational schemes -/
 
 /-- A **rational scheme**: a real rational function `r = n/d`, bounded at infinity
-(`deg n ≤ deg d`), without poles in the closed left half-plane. [HairerWanner1996], §IV.3 -/
+(`deg n ≤ deg d`), whose denominator `d` has no zero in the closed left half-plane.
+[HairerWanner1996], §IV.3 -/
 @[ext] structure RationalScheme where
   /-- the numerator -/
   num : ℝ[X]

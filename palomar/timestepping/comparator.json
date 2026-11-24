@@ -10,10 +10,11 @@
     "TimeStepping.maxNormHeat",
     "TimeStepping.maxNormRate",
     "TimeStepping.fdHeat",
-    "TimeStepping.backwardEuler_isAStable",
-    "TimeStepping.crankNicolson_isAStable",
+    "TimeStepping.schemes",
+    "TimeStepping.rungeKutta",
     "TimeStepping.hilleYosida",
-    "TimeStepping.vonNeumann"
+    "TimeStepping.vonNeumann",
+    "TimeStepping.lumerPhillips"
   ],
   "definition_names": [],
   "permitted_axioms": [

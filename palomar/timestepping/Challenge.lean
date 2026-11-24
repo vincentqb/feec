@@ -35,8 +35,13 @@ A one-step method for `u' = A u`, `A` the generator of a strongly continuous sem
 replaces the evolution `S(τ) = e^{τA}` over a time step `τ` by `r(τA)`, `r = p/q` a rational
 function with real coefficients: **A-stable** (`IsAStable`) if `q` has no zero and `|r| ≤ 1` on
 the closed left half-plane, of **order `m`** (`HasOrder`) if `r(z) - e^z = O(z^{m+1})` at `0`.
-Backward Euler `1/(1 - z)` (order `1`) and Crank–Nicolson `(2 + z)/(2 - z)` (order `2`,
-`|r(∞)| = 1`) are such schemes (`backwardEuler_isAStable`, `crankNicolson_isAStable`).
+For `q` without zeros in the closed left half-plane, A-stability is `|r(iy)| ≤ 1` on the
+imaginary axis, and for such `q` the symmetric schemes `q(-z)/q(z)` are A-stable with
+`|r(iy)| = 1`; the θ-schemes are A-stable exactly for `θ ≥ 1/2` (backward Euler `1/(1 - z)`,
+order `1`; Crank–Nicolson `(2 + z)/(2 - z)`, order `2`) (`schemes`). A Runge–Kutta method applied
+to `u' = L u`, `L` bounded with `q(τL)` invertible, is the rational scheme of its stability
+function, A-stable of order `4`, `3`, `2` for the two-stage Gauss–Legendre, Radau IIA and
+L-stable SDIRK methods (`rungeKutta`).
 
 **The question.** How do the powers `r(τA)ⁿ` of an A-stable scheme behave, with constants that
 depend on `r` alone (hence uniformly over every family of space discretizations with uniformly
@@ -76,9 +81,11 @@ bounded semigroups), and when is the Banach-space theory needed?
   from initial data satisfying the compatibility conditions every A-stable scheme of order `m`
   has maximum-norm error `O(h² + τᵐ)`, uniformly in `h`.
 
-Two classical inputs are stated as well: the Hille–Yosida estimates (`hilleYosida`,
-[Pazy1983], §1.5), whose resolvent `(1 - τA)⁻¹` defines `r(τA)` and is backward Euler, and von
-Neumann's inequality (`vonNeumann`, [VonNeumann1951]), behind `contractive`.
+Three classical inputs are stated as well: the Hille–Yosida estimates (`hilleYosida`,
+[Pazy1983], §1.5), whose resolvent `(1 - τA)⁻¹` defines `r(τA)` and is backward Euler, von
+Neumann's inequality (`vonNeumann`, [VonNeumann1951]), behind `contractive`, and the
+Lumer–Phillips theorem (`lumerPhillips`, [Pazy1983], §1.4): the m-dissipative operators of
+`contractive` are the generators of the contraction semigroups, the case `M = 1` of `stable`.
 
 Mathlib has no `C₀`-semigroups: `IsC0Semigroup` is the definition and `generatorGraph` the graph
 of the generator (right derivatives at `0`). For a bounded `L`, `r(τL) = p(τL) q(τL)⁻¹`
@@ -101,7 +108,7 @@ Palomar entry `palomar/fem`.
   §1.4, §1.5, §3.4
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3,
-  §IV.11
+  §IV.5, §IV.6, §IV.11
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 9, 15
 * [M. Crouzeix, S. Larsson, S. Piskarev, V. Thomée, *The stability of rational approximations of analytic semigroups*][CrouzeixLarssonPiskarevThomee1993]
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
@@ -264,10 +271,11 @@ theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [Nor
 §IV.11; [Pazy1983], §1.4), the Hilbert-space counterpart of `stable` for contraction semigroups
 (`M = 1`). Let `A` be a possibly unbounded operator of a real or complex Hilbert space,
 dissipative (`re ⟪A x, x⟫ ≤ 0` on its domain) with `μ - A` onto for some `μ > 0`
-(m-dissipative), `r = p/q` a real rational function with `q` free of zeros in the closed left
-half-plane, and `τ > 0`. Exactly one bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the
-resolvent `(1 - τA)⁻¹`), `Q(R)` is invertible, and `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n`
-(suprema in `[0, ∞]`; infinite when `deg p > deg q`). For A-stable `r` this is `≤ 1`: A-stable
+(m-dissipative: by `lumerPhillips`, the generator of a contraction semigroup), `r = p/q` a real
+rational function with `q` free of zeros in the closed left half-plane, and `τ > 0`. Exactly one
+bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`), `Q(R)` is
+invertible, and `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n` (suprema in `[0, ∞]`; infinite when
+`deg p > deg q`). For A-stable `r` this is `≤ 1`: A-stable
 schemes are contractive. -/
 theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [CompleteSpace E] {A : E →ₗ.[𝕜] E} (hA : ∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0)
@@ -650,12 +658,101 @@ theorem fdHeat :
 
 /-! ### The hypotheses on `r` are met -/
 
-/-- **Backward Euler** `r(z) = 1/(1 - z)` is A-stable of order `1`. -/
-theorem backwardEuler_isAStable : IsAStable 1 (1 - X) ∧ HasOrder 1 (1 - X) 1 := by
+/-- **The rational schemes that meet the hypotheses** ([HairerWanner1996], §IV.3, §IV.5):
+
+* (**A-stability on the imaginary axis**, the maximum principle) `r = p/q` is A-stable iff `q`
+  has no zero in the closed left half-plane and `|r(iy)| ≤ 1` for real `y`;
+* (**the θ-schemes**) for real `θ`, `r_θ(z) = (1 + (1 - θ) z)/(1 - θ z)`, the scheme
+  `u₁ - u₀ = τ A (θ u₁ + (1 - θ) u₀)` (`θ = 1`: backward Euler `1/(1 - z)`; `θ = 1/2`:
+  Crank–Nicolson `(1 + z/2)/(1 - z/2) = (2 + z)/(2 - z)`; `θ = 0`: forward Euler `1 + z`), is
+  A-stable iff `θ ≥ 1/2`, and has order `m` iff `m ≤ 1`, or `m = 2` and `θ = 1/2`;
+* (**the symmetric schemes**) for every real polynomial `q` without zero in the closed left
+  half-plane, `r(z) = q(-z)/q(z)` (`r(-z) = 1/r(z)`: Crank–Nicolson, the diagonal Padé
+  approximations of `e^z`, the Gauss methods) is A-stable with `|r(iy)| = 1` for real `y`, so
+  that `|r(∞)| = 1` (high frequencies are not damped), and for every bounded skew operator `L`
+  (`re ⟪L x, x⟫ = 0`) of a real or complex Hilbert space, `q(L)` is invertible and `r(L)` is an
+  isometry: the iterates conserve the energy `‖x‖`. -/
+theorem schemes :
+    (∀ p q : ℝ[X], IsAStable p q ↔ (∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) ∧
+      ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) ∧
+    (∀ θ : ℝ, (IsAStable (1 + C (1 - θ) * X) (1 - C θ * X) ↔ 1 / 2 ≤ θ) ∧
+      ∀ m : ℕ, HasOrder (1 + C (1 - θ) * X) (1 - C θ * X) m ↔ m ≤ 1 ∨ θ = 1 / 2 ∧ m = 2) ∧
+    ∀ q : ℝ[X], (∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) →
+      IsAStable (q.comp (-X)) q ∧
+      (∀ y : ℝ, ‖aeval (y * Complex.I) (q.comp (-X)) / aeval (y * Complex.I) q‖ = 1) ∧
+      ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+        [CompleteSpace E] (L : E →L[𝕜] E), (∀ x, RCLike.re ⟪L x, x⟫_𝕜 = 0) →
+        IsUnit (aeval L (q.map (algebraMap ℝ 𝕜))) ∧
+          ∀ x, ‖rationalApply (q.comp (-X)) q L x‖ = ‖x‖ := by
   sorry
 
-/-- **Crank–Nicolson** `r(z) = (2 + z)/(2 - z)` is A-stable (with `|r(∞)| = 1`) of order `2`. -/
-theorem crankNicolson_isAStable : IsAStable (2 + X) (2 - X) ∧ HasOrder (2 + X) (2 - X) 2 := by
+/-- The numerator `p(z) = det(1 - z A + z 𝟙 bᵀ)` of the **stability function** `r = p/q` of the
+`s`-stage Runge–Kutta method with Butcher tableau `(A, b)` (`A ∈ ℝ^{s×s}` the coefficients,
+`b ∈ ℝˢ` the weights, `𝟙 = (1, …, 1)`; the nodes do not enter linear autonomous problems), a
+real polynomial in `z` ([HairerWanner1996], §IV.3, Prop 3.2): applied to `u' = λ u` with time
+step `τ`, the method gives `u₁ = r(τλ) u₀` where `q(τλ) ≠ 0` (`rungeKutta`), and
+`r(z) = 1 + z bᵀ (1 - z A)⁻¹ 𝟙` where `q(z) ≠ 0` (the case `L = z` of `rungeKutta`). -/
+def stabilityNum {s : ℕ} (A : Matrix (Fin s) (Fin s) ℝ) (b : Fin s → ℝ) : ℝ[X] :=
+  ((1 : Matrix (Fin s) (Fin s) ℝ[X]) -
+    (X : ℝ[X]) • (A - Matrix.vecMulVec (fun _ => 1) b).map C).det
+
+/-- The denominator `q(z) = det(1 - z A)` of the stability function of the Runge–Kutta method
+with coefficients `A`. -/
+def stabilityDen {s : ℕ} (A : Matrix (Fin s) (Fin s) ℝ) : ℝ[X] :=
+  ((1 : Matrix (Fin s) (Fin s) ℝ[X]) - (X : ℝ[X]) • A.map C).det
+
+/-- **Runge–Kutta methods are rational schemes** ([HairerWanner1996], §IV.3, §IV.5, §IV.6). The
+`s`-stage Runge–Kutta method with Butcher tableau `(A, b)` applied to `u' = L u` with time step
+`τ` computes `u₁ = u₀ + τ ∑ᵢ bᵢ kᵢ` from the stages `kᵢ = L (u₀ + τ ∑ⱼ aᵢⱼ kⱼ)`.
+
+* (**the stability function**) For every bounded operator `L` of a real or complex normed space
+  and real `τ` with `q(τL)` invertible (for A-stable `p/q` on a Banach space, whenever `τ > 0`
+  and `‖e^{tL}‖` is bounded for `t ≥ 0`: `stable`), the stage equations have exactly one
+  solution, and `u₁ = r(τL) u₀` for the stability function `r = p/q` (`stabilityNum`,
+  `stabilityDen`): the bounded-generator statements above apply to the method with the stability
+  and the order of `p/q`;
+* (**the two-stage Gauss–Legendre method**, `A = [1/4, 1/4 - √3/6; 1/4 + √3/6, 1/4]`,
+  `b = (1/2, 1/2)`) `r(z) = (1 + z/2 + z²/12)/(1 - z/2 + z²/12)`, the `(2, 2)` Padé
+  approximation of `e^z`: symmetric (`p(z) = q(-z)`, so `|r(iy)| = 1` and conservative,
+  `schemes`), A-stable, of order exactly `4`;
+* (**the two-stage Radau IIA method**, `A = [5/12, -1/12; 3/4, 1/4]`, `b = (3/4, 1/4)`)
+  `r(z) = (1 + z/3)/(1 - 2z/3 + z²/6)`: A-stable with `deg p < deg q` (L-stable: `r(∞) = 0`),
+  of order exactly `3`;
+* (**the two-stage L-stable SDIRK method of order `2`**, `γ = 1 - √2/2`, `A = [γ, 0; 1 - γ, γ]`,
+  `b = (1 - γ, γ)`) `r(z) = (1 + (1 - 2γ) z)/(1 - γ z)²`: A-stable and L-stable, of order exactly
+  `2`. -/
+theorem rungeKutta :
+    (∀ {s : ℕ} (A : Matrix (Fin s) (Fin s) ℝ) (b : Fin s → ℝ) {𝕜 E : Type*} [RCLike 𝕜]
+        [NormedAddCommGroup E] [NormedSpace 𝕜 E] (L : E →L[𝕜] E) (τ : ℝ),
+        IsUnit (aeval ((τ : 𝕜) • L) ((stabilityDen A).map (algebraMap ℝ 𝕜))) →
+        (∀ u : E, ∃! k : Fin s → E, ∀ i, k i = L (u + (τ : 𝕜) • ∑ j, (A i j : 𝕜) • k j)) ∧
+        ∀ (u : E) (k : Fin s → E), (∀ i, k i = L (u + (τ : 𝕜) • ∑ j, (A i j : 𝕜) • k j)) →
+          u + (τ : 𝕜) • ∑ i, (b i : 𝕜) • k i =
+            rationalApply (stabilityNum A b) (stabilityDen A) ((τ : 𝕜) • L) u) ∧
+    (∀ (A : Matrix (Fin 2) (Fin 2) ℝ) (b : Fin 2 → ℝ),
+      A = !![1 / 4, 1 / 4 - √3 / 6; 1 / 4 + √3 / 6, 1 / 4] → b = ![1 / 2, 1 / 2] →
+      stabilityNum A b = 1 + C (1 / 2) * X + C (1 / 12) * X ^ 2 ∧
+      stabilityDen A = 1 - C (1 / 2) * X + C (1 / 12) * X ^ 2 ∧
+      stabilityNum A b = (stabilityDen A).comp (-X) ∧
+      IsAStable (stabilityNum A b) (stabilityDen A) ∧
+      HasOrder (stabilityNum A b) (stabilityDen A) 4 ∧
+      ¬ HasOrder (stabilityNum A b) (stabilityDen A) 5) ∧
+    (∀ (A : Matrix (Fin 2) (Fin 2) ℝ) (b : Fin 2 → ℝ),
+      A = !![5 / 12, -1 / 12; 3 / 4, 1 / 4] → b = ![3 / 4, 1 / 4] →
+      stabilityNum A b = 1 + C (1 / 3) * X ∧
+      stabilityDen A = 1 - C (2 / 3) * X + C (1 / 6) * X ^ 2 ∧
+      IsAStable (stabilityNum A b) (stabilityDen A) ∧
+      (stabilityNum A b).natDegree < (stabilityDen A).natDegree ∧
+      HasOrder (stabilityNum A b) (stabilityDen A) 3 ∧
+      ¬ HasOrder (stabilityNum A b) (stabilityDen A) 4) ∧
+    ∀ (γ : ℝ) (A : Matrix (Fin 2) (Fin 2) ℝ) (b : Fin 2 → ℝ),
+      γ = 1 - √2 / 2 → A = !![γ, 0; 1 - γ, γ] → b = ![1 - γ, γ] →
+      stabilityNum A b = 1 + C (1 - 2 * γ) * X ∧
+      stabilityDen A = (1 - C γ * X) ^ 2 ∧
+      IsAStable (stabilityNum A b) (stabilityDen A) ∧
+      (stabilityNum A b).natDegree < (stabilityDen A).natDegree ∧
+      HasOrder (stabilityNum A b) (stabilityDen A) 2 ∧
+      ¬ HasOrder (stabilityNum A b) (stabilityDen A) 3 := by
   sorry
 
 /-! ### The classical inputs -/
@@ -686,6 +783,29 @@ theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
     IsUnit (aeval T q) ∧
       ‖aeval T p * Ring.inverse (aeval T q)‖ₑ ≤
         ⨆ ζ ∈ Metric.sphere (0 : ℂ) 1, ‖p.eval ζ / q.eval ζ‖ₑ := by
+  sorry
+
+/-- **The Lumer–Phillips theorem** ([Pazy1983], §1.4, Thm 4.3; on Hilbert spaces the domain of an
+m-dissipative operator is dense, §1.4, and a semigroup is determined by its generator, §1.2), a
+classical input of the answer: the operators of `contractive` are the generators of the
+semigroups of `stable` and `error` with `M = 1` on Hilbert spaces. On a real or complex Hilbert
+space, every m-dissipative operator `A` (`re ⟪A x, x⟫ ≤ 0` on its domain and `μ - A` onto for
+some `μ > 0`) is the generator of a strongly continuous semigroup of contractions, and every
+strongly continuous semigroup with generator `A` agrees with it on `[0, ∞)`; conversely, the
+generator of every strongly continuous semigroup of contractions is an operator `A`, dissipative
+with `μ - A` onto for every `μ > 0`. -/
+theorem lumerPhillips {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (∀ A : E →ₗ.[𝕜] E, (∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0) →
+      (∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y) →
+      ∃ S : ℝ → E →L[𝕜] E, IsC0Semigroup S ∧ (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ 1) ∧
+        generatorGraph S = A.graph ∧
+        ∀ S' : ℝ → E →L[𝕜] E, IsC0Semigroup S' → generatorGraph S' = A.graph →
+          ∀ t : ℝ, 0 ≤ t → S' t = S t) ∧
+    ∀ S : ℝ → E →L[𝕜] E, IsC0Semigroup S → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ 1) →
+      ∃ A : E →ₗ.[𝕜] E, generatorGraph S = A.graph ∧
+        (∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0) ∧
+        ∀ μ : ℝ, 0 < μ → ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y := by
   sorry
 
 end TimeStepping

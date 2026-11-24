@@ -42,18 +42,28 @@ rational schemes, semigroups, bounded generators and sub-Markov generators) and 
   partial derivatives (`iteratedFDeriv_apply_single_eq_iterate`,
   `FiniteDifference.iteratedFDeriv_apply_pairs`); and the compatible-data estimate
   `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`.
+* The schemes that meet the hypotheses: the maximum principle
+  `Feec.TimeStepping.RationalScheme.isAStable_iff_forall_re_nonpos` (`TimeStepping.isAStable_iff`),
+  the θ-schemes exactly (`Feec.TimeStepping.X_pow_dvd_theta_iff`), the symmetric schemes
+  (`Feec.TimeStepping.RationalScheme.IsSymmetric.norm_apply_apply`); the Runge–Kutta methods from
+  `Feec.TimeStepping.ButcherTableau.existsUnique_isStage` and
+  `Feec.TimeStepping.ButcherTableau.IsStage.add_smul_sum_eq`, and the instances of
+  `Feec.TimeStepping.RungeKutta` with their exact orders (`Feec.TimeStepping.AStableSchemes`).
 * The inputs: the Hille–Yosida estimates from `Feec.C0Semigroup.isResolvent_resolvent` and
   `Feec.C0Semigroup.norm_resolvent_pow_le`; von Neumann's inequality from
-  `ContinuousLinearMap.norm_aeval_mul_inverse_le`.
+  `ContinuousLinearMap.norm_aeval_mul_inverse_le`; the Lumer–Phillips theorem from
+  `LinearPMap.IsMDissipative.semigroup` and
+  `Feec.C0Semigroup.IsContraction.isMDissipative_generator`.
 
 ## References
 
 * [P. Brenner, V. Thomée, *On Rational Approximations of Semigroups*][BrennerThomee1979]
 * [A. Gomilko, Y. Tomilov, *Rational Approximation of Operator Semigroups via the B-Calculus*][GomilkoTomilov2024],
   Thm 1.1
-* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.11
+* [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996], §IV.3,
+  §IV.5, §IV.6, §IV.11
 * [A. Pazy, *Semigroups of Linear Operators and Applications to Partial Differential Equations*][Pazy1983],
-  §1.5, §3.4
+  §1.4, §1.5, §3.4
 * [J. von Neumann, *Eine Spektraltheorie für allgemeine Operatoren eines unitären Raumes*][VonNeumann1951]
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 7, 15
 * [P. G. Ciarlet, P.-A. Raviart, *Maximum principle and uniform convergence for the finite element method*][CiarletRaviart1973]
@@ -178,10 +188,11 @@ theorem backwardEuler {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [Nor
 /-- **Rational schemes for m-dissipative operators: von Neumann's theorem** ([HairerWanner1996],
 §IV.11; [Pazy1983], §1.4). Let `A` be a possibly unbounded operator of a real or complex Hilbert
 space, dissipative (`re ⟪A x, x⟫ ≤ 0` on its domain) with `μ - A` onto for some `μ > 0`
-(m-dissipative), `r = p/q` a real rational function with `q` free of zeros in the closed left
-half-plane, and `τ > 0`. Exactly one bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the
-resolvent `(1 - τA)⁻¹`), `Q(R)` is invertible, and `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n`
-(suprema in `[0, ∞]`; infinite when `deg p > deg q`). For A-stable `r` this is `≤ 1`:
+(m-dissipative: by `lumerPhillips`, the generator of a contraction semigroup), `r = p/q` a real
+rational function with `q` free of zeros in the closed left half-plane, and `τ > 0`. Exactly one
+bounded `R` satisfies `R (x - τAx) = x` on `D(A)` (the resolvent `(1 - τA)⁻¹`), `Q(R)` is
+invertible, and `‖r(τA)ⁿ‖ ≤ (sup_y |r(iy)|)ⁿ` for every `n` (suprema in `[0, ∞]`; infinite when
+`deg p > deg q`). For A-stable `r` this is `≤ 1`:
 A-stable schemes are contractive. -/
 theorem contractive {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
     [CompleteSpace E] {A : E →ₗ.[𝕜] E} (hA : ∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0)
@@ -535,40 +546,106 @@ theorem fdHeat :
 
 /-! ### The hypotheses on `r` are met -/
 
-/-- **Backward Euler** `r(z) = 1/(1 - z)` is A-stable of order `1`. -/
-theorem backwardEuler_isAStable : IsAStable 1 (1 - X) ∧ HasOrder 1 (1 - X) 1 := by
-  refine ⟨fun z hz => ?_, hasOrder_of_dvd (by simp) ⟨1, by
-    simp [expTaylor, Finset.sum_range_succ]; ring⟩⟩
-  have h1 : 1 ≤ ‖1 - z‖ := by
-    have := Complex.re_le_norm (1 - z)
-    simp only [Complex.sub_re, Complex.one_re] at this
-    linarith
-  have h0 : (1 : ℂ) - z ≠ 0 := fun h => by rw [h, norm_zero] at h1; linarith
-  simp only [map_one, map_sub, aeval_X]
-  refine ⟨h0, ?_⟩
-  rw [norm_div, norm_one, div_le_one (by positivity)]
-  exact h1
+/-- **The rational schemes that meet the hypotheses**: A-stability on the imaginary axis by the
+maximum principle (`TimeStepping.isAStable_iff`), the θ-schemes exactly
+(`Feec.TimeStepping.one_half_le_of_norm_theta_le`,
+`Feec.TimeStepping.RationalScheme.isAStable_theta`, `Feec.TimeStepping.X_pow_dvd_theta_iff`), and
+the symmetric schemes (`Feec.TimeStepping.RationalScheme.IsSymmetric.norm_eval`,
+`Feec.TimeStepping.RationalScheme.IsSymmetric.norm_apply_apply`). -/
+theorem schemes :
+    (∀ p q : ℝ[X], IsAStable p q ↔ (∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) ∧
+      ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1) ∧
+    (∀ θ : ℝ, (IsAStable (1 + C (1 - θ) * X) (1 - C θ * X) ↔ 1 / 2 ≤ θ) ∧
+      ∀ m : ℕ, HasOrder (1 + C (1 - θ) * X) (1 - C θ * X) m ↔ m ≤ 1 ∨ θ = 1 / 2 ∧ m = 2) ∧
+    ∀ q : ℝ[X], (∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) →
+      IsAStable (q.comp (-X)) q ∧
+      (∀ y : ℝ, ‖aeval (y * Complex.I) (q.comp (-X)) / aeval (y * Complex.I) q‖ = 1) ∧
+      ∀ {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+        [CompleteSpace E] (L : E →L[𝕜] E), (∀ x, RCLike.re ⟪L x, x⟫_𝕜 = 0) →
+        IsUnit (aeval L (q.map (algebraMap ℝ 𝕜))) ∧
+          ∀ x, ‖rationalApply (q.comp (-X)) q L x‖ = ‖x‖ := by
+  refine ⟨isAStable_iff, fun θ => ⟨⟨fun h => one_half_le_of_norm_theta_le (h _ (by simp)).2,
+    fun hθ => (isAStable_iff _ _).2 ⟨(RationalScheme.theta θ (by linarith)).aeval_den_ne_zero,
+      RationalScheme.isAStable_theta hθ⟩⟩, fun m => ?_⟩, fun q hq => ?_⟩
+  · rw [hasOrder_iff_dvd (by simp)]
+    exact X_pow_dvd_theta_iff θ m
+  · let r : RationalScheme := ⟨q.comp (-X), q, by simp [natDegree_comp], hq⟩
+    have hs : r.IsSymmetric := rfl
+    exact ⟨(isAStable_iff _ _).2 ⟨hq, fun y => (hs.norm_eval y).le⟩, hs.norm_eval,
+      fun L hL => ⟨r.isUnit_aeval_den fun x => (hL x).le, hs.norm_apply_apply hL⟩⟩
 
-/-- **Crank–Nicolson** `r(z) = (2 + z)/(2 - z)` is A-stable (with `|r(∞)| = 1`) of order `2`. -/
-theorem crankNicolson_isAStable : IsAStable (2 + X) (2 - X) ∧ HasOrder (2 + X) (2 - X) 2 := by
-  refine ⟨fun z hz => ?_, hasOrder_of_dvd (by rw [map_sub, aeval_X, map_ofNat]; norm_num)
-    ⟨C (1 / 2), Polynomial.funext fun x => by
-      simp [expTaylor, Finset.sum_range_succ, Nat.factorial]; ring⟩⟩
-  have hsq : ‖2 + z‖ ^ 2 ≤ ‖2 - z‖ ^ 2 := by
-    rw [← Complex.normSq_eq_norm_sq, ← Complex.normSq_eq_norm_sq, Complex.normSq_apply,
-      Complex.normSq_apply]
-    simp only [Complex.add_re, Complex.sub_re, Complex.add_im, Complex.sub_im, Complex.re_ofNat,
-      Complex.im_ofNat]
-    nlinarith
-  have h2 : 2 ≤ ‖2 - z‖ := by
-    have := Complex.re_le_norm (2 - z)
-    simp only [Complex.sub_re, Complex.re_ofNat] at this
-    linarith
-  have h0 : (2 : ℂ) - z ≠ 0 := fun h => by rw [h, norm_zero] at h2; linarith
-  simp only [map_add, map_sub, map_ofNat, aeval_X]
-  refine ⟨h0, ?_⟩
-  rw [norm_div, div_le_one (by positivity)]
-  nlinarith [norm_nonneg ((2 : ℂ) + z), norm_nonneg ((2 : ℂ) - z)]
+/-- **Runge–Kutta methods are rational schemes**: the stages and the step from
+`Feec.TimeStepping.ButcherTableau.existsUnique_isStage` and
+`Feec.TimeStepping.ButcherTableau.IsStage.add_smul_sum_eq`; the instances of
+`Feec.TimeStepping.RungeKutta`, with their exact orders from `Feec.TimeStepping.AStableSchemes`. -/
+theorem rungeKutta :
+    (∀ {s : ℕ} (A : Matrix (Fin s) (Fin s) ℝ) (b : Fin s → ℝ) {𝕜 E : Type*} [RCLike 𝕜]
+        [NormedAddCommGroup E] [NormedSpace 𝕜 E] (L : E →L[𝕜] E) (τ : ℝ),
+        IsUnit (aeval ((τ : 𝕜) • L) ((stabilityDen A).map (algebraMap ℝ 𝕜))) →
+        (∀ u : E, ∃! k : Fin s → E, ∀ i, k i = L (u + (τ : 𝕜) • ∑ j, (A i j : 𝕜) • k j)) ∧
+        ∀ (u : E) (k : Fin s → E), (∀ i, k i = L (u + (τ : 𝕜) • ∑ j, (A i j : 𝕜) • k j)) →
+          u + (τ : 𝕜) • ∑ i, (b i : 𝕜) • k i =
+            rationalApply (stabilityNum A b) (stabilityDen A) ((τ : 𝕜) • L) u) ∧
+    (∀ (A : Matrix (Fin 2) (Fin 2) ℝ) (b : Fin 2 → ℝ),
+      A = !![1 / 4, 1 / 4 - √3 / 6; 1 / 4 + √3 / 6, 1 / 4] → b = ![1 / 2, 1 / 2] →
+      stabilityNum A b = 1 + C (1 / 2) * X + C (1 / 12) * X ^ 2 ∧
+      stabilityDen A = 1 - C (1 / 2) * X + C (1 / 12) * X ^ 2 ∧
+      stabilityNum A b = (stabilityDen A).comp (-X) ∧
+      IsAStable (stabilityNum A b) (stabilityDen A) ∧
+      HasOrder (stabilityNum A b) (stabilityDen A) 4 ∧
+      ¬ HasOrder (stabilityNum A b) (stabilityDen A) 5) ∧
+    (∀ (A : Matrix (Fin 2) (Fin 2) ℝ) (b : Fin 2 → ℝ),
+      A = !![5 / 12, -1 / 12; 3 / 4, 1 / 4] → b = ![3 / 4, 1 / 4] →
+      stabilityNum A b = 1 + C (1 / 3) * X ∧
+      stabilityDen A = 1 - C (2 / 3) * X + C (1 / 6) * X ^ 2 ∧
+      IsAStable (stabilityNum A b) (stabilityDen A) ∧
+      (stabilityNum A b).natDegree < (stabilityDen A).natDegree ∧
+      HasOrder (stabilityNum A b) (stabilityDen A) 3 ∧
+      ¬ HasOrder (stabilityNum A b) (stabilityDen A) 4) ∧
+    ∀ (γ : ℝ) (A : Matrix (Fin 2) (Fin 2) ℝ) (b : Fin 2 → ℝ),
+      γ = 1 - √2 / 2 → A = !![γ, 0; 1 - γ, γ] → b = ![1 - γ, γ] →
+      stabilityNum A b = 1 + C (1 - 2 * γ) * X ∧
+      stabilityDen A = (1 - C γ * X) ^ 2 ∧
+      IsAStable (stabilityNum A b) (stabilityDen A) ∧
+      (stabilityNum A b).natDegree < (stabilityDen A).natDegree ∧
+      HasOrder (stabilityNum A b) (stabilityDen A) 2 ∧
+      ¬ HasOrder (stabilityNum A b) (stabilityDen A) 3 := by
+  refine ⟨fun A b 𝕜 E _ _ _ L τ h =>
+    ⟨(ButcherTableau.mk A b).existsUnique_isStage h, fun u k hk =>
+      ButcherTableau.IsStage.add_smul_sum_eq (T := ⟨A, b⟩) hk h⟩,
+    ?_, ?_, ?_⟩
+  · rintro A b rfl rfl
+    have h0 := RationalScheme.gaussLegendre2.aeval_den_ne_zero 0 (by simp)
+    exact ⟨ButcherTableau.gaussLegendre2_stabilityNum, ButcherTableau.gaussLegendre2_stabilityDen,
+      RationalScheme.isSymmetric_gaussLegendre2,
+      (isAStable_iff _ _).2 ⟨RationalScheme.gaussLegendre2.aeval_den_ne_zero,
+        RationalScheme.isSymmetric_gaussLegendre2.isAStable⟩,
+      (hasOrder_iff_dvd h0).2 RationalScheme.hasOrder_gaussLegendre2,
+      fun h => RationalScheme.not_hasOrder_gaussLegendre2 ((hasOrder_iff_dvd h0).1 h)⟩
+  · rintro A b rfl rfl
+    have h0 := RationalScheme.radauIIA2.aeval_den_ne_zero 0 (by simp)
+    have hn : stabilityNum _ _ = _ := ButcherTableau.radauIIA2_stabilityNum
+    exact ⟨hn, ButcherTableau.radauIIA2_stabilityDen,
+      (isAStable_iff _ _).2 ⟨RationalScheme.radauIIA2.aeval_den_ne_zero,
+        RationalScheme.isAStable_radauIIA2⟩,
+      natDegree_lt_natDegree (fun h => by simpa using congrArg (eval 0) (hn.symm.trans h))
+        RationalScheme.isLStable_radauIIA2.2,
+      (hasOrder_iff_dvd h0).2 RationalScheme.hasOrder_radauIIA2,
+      fun h => RationalScheme.not_hasOrder_radauIIA2 ((hasOrder_iff_dvd h0).1 h)⟩
+  · rintro γ A b rfl rfl rfl
+    have h0 := RationalScheme.sdirk2.aeval_den_ne_zero 0 (by simp)
+    have hn : stabilityNum _ _ = _ := ButcherTableau.sdirk2_stabilityNum
+    refine ⟨hn, ?_,
+      (isAStable_iff _ _).2 ⟨RationalScheme.sdirk2.aeval_den_ne_zero,
+        RationalScheme.isAStable_sdirk2⟩,
+      natDegree_lt_natDegree (fun h => by simpa using congrArg (eval 0) (hn.symm.trans h))
+        RationalScheme.isLStable_sdirk2.2,
+      (hasOrder_iff_dvd h0).2 RationalScheme.hasOrder_sdirk2,
+      fun h => RationalScheme.not_hasOrder_sdirk2 ((hasOrder_iff_dvd h0).1 h)⟩
+    rw [show stabilityDen !![1 - √2 / 2, 0; 1 - (1 - √2 / 2), 1 - √2 / 2] =
+      ButcherTableau.sdirk2.stabilityDen from rfl, ButcherTableau.sdirk2_stabilityDen]
+    simp only [map_mul, map_pow, map_ofNat, ButcherTableau.sdirk2Coeff]
+    ring
 
 /-! ### The classical inputs -/
 
@@ -608,5 +685,35 @@ theorem vonNeumann {E : Type*} [NormedAddCommGroup E] [InnerProductSpace ℂ E]
   exact enorm_le_iSup _ _ fun C hC =>
     (ContinuousLinearMap.norm_aeval_mul_inverse_le hT hq
       fun ζ hζ _ => hC ⟨ζ, mem_sphere_zero_iff_norm.2 hζ⟩).2
+
+/-- **The Lumer–Phillips theorem**: `LinearPMap.IsMDissipative.semigroup` with
+`LinearPMap.IsMDissipative.isContraction_semigroup`, `LinearPMap.IsMDissipative.generator_semigroup`
+and `LinearPMap.IsMDissipative.eqOn_semigroup`; conversely
+`Feec.C0Semigroup.IsContraction.isMDissipative_generator` and
+`LinearPMap.IsMDissipative.surjective`. -/
+theorem lumerPhillips {𝕜 E : Type*} [RCLike 𝕜] [NormedAddCommGroup E] [InnerProductSpace 𝕜 E]
+    [CompleteSpace E] [NormedSpace ℝ E] [IsScalarTower ℝ 𝕜 E] :
+    (∀ A : E →ₗ.[𝕜] E, (∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0) →
+      (∃ μ : ℝ, 0 < μ ∧ ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y) →
+      ∃ S : ℝ → E →L[𝕜] E, IsC0Semigroup S ∧ (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ 1) ∧
+        generatorGraph S = A.graph ∧
+        ∀ S' : ℝ → E →L[𝕜] E, IsC0Semigroup S' → generatorGraph S' = A.graph →
+          ∀ t : ℝ, 0 ≤ t → S' t = S t) ∧
+    ∀ S : ℝ → E →L[𝕜] E, IsC0Semigroup S → (∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ 1) →
+      ∃ A : E →ₗ.[𝕜] E, generatorGraph S = A.graph ∧
+        (∀ x : A.domain, RCLike.re ⟪A x, (x : E)⟫_𝕜 ≤ 0) ∧
+        ∀ μ : ℝ, 0 < μ → ∀ y : E, ∃ x : A.domain, (μ : 𝕜) • (x : E) - A x = y := by
+  refine ⟨fun A hA hA' => ?_, fun S hS hS1 => ?_⟩
+  · have hAm : A.IsMDissipative := ⟨hA, hA'⟩
+    refine ⟨hAm.semigroup.S, ⟨hAm.semigroup.map_zero, hAm.semigroup.map_add,
+      hAm.semigroup.strongCont⟩, hAm.isContraction_semigroup, ?_, fun S' hS' hg t ht => ?_⟩
+    · rw [generatorGraph_eq, hAm.generator_semigroup]
+    · have hG : hS'.toC0.generator = A :=
+        LinearPMap.eq_of_eq_graph
+          (SetLike.coe_injective ((generatorGraph_eq hS'.toC0).symm.trans hg))
+      exact hAm.eqOn_semigroup hG ht
+  · have hm := (show hS.toC0.IsContraction from hS1).isMDissipative_generator
+    exact ⟨hS.toC0.generator, generatorGraph_eq hS.toC0, hm.dissipative,
+      fun μ hμ y => hm.surjective hμ y⟩
 
 end TimeStepping

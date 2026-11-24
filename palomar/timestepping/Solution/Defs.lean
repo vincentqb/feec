@@ -232,6 +232,21 @@ def gridInterp {n : ℕ} (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (f : (Fin n →
 
 /-! ### The hypotheses on `r` are met -/
 
+/-- The numerator `p(z) = det(1 - z A + z 𝟙 bᵀ)` of the **stability function** `r = p/q` of the
+`s`-stage Runge–Kutta method with Butcher tableau `(A, b)` (`A ∈ ℝ^{s×s}` the coefficients,
+`b ∈ ℝˢ` the weights, `𝟙 = (1, …, 1)`; the nodes do not enter linear autonomous problems), a
+real polynomial in `z` ([HairerWanner1996], §IV.3, Prop 3.2): applied to `u' = λ u` with time
+step `τ`, the method gives `u₁ = r(τλ) u₀` where `q(τλ) ≠ 0` (`rungeKutta`), and
+`r(z) = 1 + z bᵀ (1 - z A)⁻¹ 𝟙` where `q(z) ≠ 0` (the case `L = z` of `rungeKutta`). -/
+def stabilityNum {s : ℕ} (A : Matrix (Fin s) (Fin s) ℝ) (b : Fin s → ℝ) : ℝ[X] :=
+  ((1 : Matrix (Fin s) (Fin s) ℝ[X]) -
+    (X : ℝ[X]) • (A - Matrix.vecMulVec (fun _ => 1) b).map C).det
+
+/-- The denominator `q(z) = det(1 - z A)` of the stability function of the Runge–Kutta method
+with coefficients `A`. -/
+def stabilityDen {s : ℕ} (A : Matrix (Fin s) (Fin s) ℝ) : ℝ[X] :=
+  ((1 : Matrix (Fin s) (Fin s) ℝ[X]) - (X : ℝ[X]) • A.map C).det
+
 /-! ### The classical inputs -/
 
 end TimeStepping

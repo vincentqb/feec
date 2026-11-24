@@ -35,7 +35,7 @@ project:
     such meshes, while on non-obtuse meshes in general the nodal consistency error need not tend to
     0; the witness: on a cube the classical finite difference scheme is the lumped-mass method of
     the Freudenthal mesh, and from compatible initial data its maximum-norm error is
-    O(h^2 + tau^m), uniformly in h. In Lean 4 over Mathlib, thirteen compared theorems: (1)
+    O(h^2 + tau^m), uniformly in h. In Lean 4 over Mathlib, fourteen compared theorems: (1)
     Brenner-Thomee's stability bound for every A-stable real rational r
     (|r(infinity)| = 1 included) and every bounded strongly continuous semigroup of a real or
     complex Banach space, with the resolvent shown to exist and be unique and r(tau A) defined
@@ -79,17 +79,30 @@ project:
     d^2_(i_1) ... d^2_(i_(m+1)) of its derivatives bounded by B'), the scheme started from the nodal
     interpolant has maximum-norm error ||I_h u(k tau) - r(tau Delta_h)^k I_h u(0)|| <= k tau (n B
     h^2/12 + K n^(m+1) B' tau^m), the mesh of the cube being translation invariant at the interior
-    nodes with edges of length at most sqrt(n) h (TimeStepping.fdHeat); (10) backward Euler (order
-    1) and Crank-Nicolson (order 2, |r(infinity)| = 1) satisfy the hypotheses on r
-    (TimeStepping.backwardEuler_isAStable, TimeStepping.crankNicolson_isAStable); (11) the two
-    classical inputs, the Hille-Yosida resolvent estimates on complex Banach spaces
-    (TimeStepping.hilleYosida) and von Neumann's inequality for rational functions of contractions
-    of complex Hilbert spaces (TimeStepping.vonNeumann). The statements use Mathlib's polynomials,
+    nodes with edges of length at most sqrt(n) h (TimeStepping.fdHeat); (10) the rational schemes
+    that meet the hypotheses on r: for q without zeros in the closed left half-plane, A-stability
+    is |r(iy)| <= 1 on the imaginary axis (the maximum principle), the theta-schemes
+    (1 + (1 - theta) z)/(1 - theta z) are A-stable iff theta >= 1/2 and of order m iff m <= 1, or
+    m = 2 and theta = 1/2 (backward Euler at theta = 1, Crank-Nicolson at theta = 1/2), and every
+    symmetric scheme q(-z)/q(z), q without zeros in the closed left half-plane, is A-stable with
+    |r(iy)| = 1 and an isometry for bounded skew operators of Hilbert spaces
+    (TimeStepping.schemes); (11) a Runge-Kutta method applied to u' = L u, L bounded with q(tau L)
+    invertible, has unique stages and is the rational scheme of its stability function
+    det(1 - z A + z 1 b^T)/det(1 - z A), and the two-stage Gauss-Legendre method (symmetric, order
+    exactly 4), the two-stage Radau IIA method and the two-stage L-stable SDIRK method with gamma =
+    1 - sqrt(2)/2 (A-stable and L-stable, orders exactly 3 and 2) meet the hypotheses
+    (TimeStepping.rungeKutta); (12) the
+    three classical inputs, the Hille-Yosida resolvent estimates on complex Banach spaces
+    (TimeStepping.hilleYosida), von Neumann's inequality for rational functions of contractions of
+    complex Hilbert spaces (TimeStepping.vonNeumann), and the Lumer-Phillips theorem on real or
+    complex Hilbert spaces: the m-dissipative operators are the generators of the contraction
+    semigroups (TimeStepping.lumerPhillips). The statements use Mathlib's polynomials,
     bounded operators, LinearPMap, Ring.inverse, NormedSpace.exp, InnerProductSpaceable,
     Asymptotics.IsBigO, HasDerivWithinAt, iteratedFDeriv, matrices, affine simplices, the Lebesgue
     measure and TendstoUniformlyOn; the definition of simplicial meshes is that of palomar/fem
     (shared block). The proof is the library Feec of this repository (Feec.TimeStepping.*,
-    Feec.ForMathlib.InnerProductSpace.VonNeumann, Feec.ForMathlib.Analysis.SubMarkov,
+    Feec.Semigroup.LumerPhillips, Feec.ForMathlib.InnerProductSpace.VonNeumann,
+    Feec.ForMathlib.Analysis.SubMarkov,
     Feec.ForMathlib.Calculus.Partial, Feec.ForMathlib.Calculus.DifferenceLaplacian,
     Feec.FiniteElement.LumpedMass, Feec.FiniteElement.LumpedLaplacian,
     Feec.FiniteElement.LumpedConsistency, Feec.FiniteElement.NonobtuseHeat,
@@ -104,7 +117,7 @@ project:
 
 classification:
   arxiv: ["math.FA", "math.NA"]
-  msc2020: ["47D06", "65J08", "65M12", "65M06", "65M60", "65L20", "47A60"]
+  msc2020: ["47D06", "65J08", "65M12", "65M06", "65M60", "65L20", "65L06", "47A60"]
 
 sources:
   - title: "On Rational Approximations of Semigroups"
@@ -159,12 +172,15 @@ sources:
       - "Amnon Pazy"
     id: "doi:10.1007/978-1-4612-5561-1"
     type: "book"
-    location: "Appl. Math. Sci. 44, Springer (1983), §1.4, §1.5, §3.4"
+    location: "Appl. Math. Sci. 44, Springer (1983), §1.2, §1.4, §1.5, §3.4"
     relationship: "formalizes"
     note: >-
       The Hille-Yosida resolvent estimates ||(z - A)^(-m)|| <= M/(re z - omega)^m (§1.5;
       TimeStepping.hilleYosida, and the bound of TimeStepping.backwardEuler at z = 1/tau),
-      m-dissipative operators (§1.4; TimeStepping.contractive) and the approximation of
+      m-dissipative operators and the Lumer-Phillips theorem (§1.4, Thm 4.3;
+      TimeStepping.contractive, TimeStepping.lumerPhillips, on Hilbert spaces, where the density
+      of the domain is automatic, §1.4), the uniqueness of the semigroup of a generator (§1.2;
+      the uniqueness clause of TimeStepping.lumerPhillips) and the approximation of
       semigroups by families of discrete spaces (§3.4, background for TimeStepping.converges).
       Section numbers recalled, not checked against the printed book.
     author_endorsement: "not-contacted"
@@ -187,11 +203,15 @@ sources:
       - "Gerhard Wanner"
     id: "doi:10.1007/978-3-642-05221-7"
     type: "book"
-    location: "Springer Ser. Comput. Math. 14, 2nd ed. (1996), §IV.3 and §IV.11"
+    location: "Springer Ser. Comput. Math. 14, 2nd ed. (1996), §IV.3, §IV.5, §IV.6 and §IV.11"
     relationship: "formalizes"
     note: >-
       §IV.3: stability functions, A-stability (|r(z)| <= 1 on the closed left half-plane,
-      TimeStepping.IsAStable) and order (r(z) - e^z = O(z^(m+1)), TimeStepping.HasOrder).
+      TimeStepping.IsAStable), its criterion on the imaginary axis by the maximum principle, the
+      theta-methods and order (r(z) - e^z = O(z^(m+1)), TimeStepping.HasOrder), and the
+      stability function det(1 - z A + z 1 b^T)/det(1 - z A) of a Runge-Kutta method (Prop 3.2;
+      TimeStepping.schemes, TimeStepping.rungeKutta); §IV.5, §IV.6: the Gauss, Radau IIA and SDIRK
+      methods (the two-stage instances of TimeStepping.rungeKutta).
       §IV.11 (von Neumann's theorem): ||r(hA)|| <= sup over re z <= 0 of |r(z)| for A with
       logarithmic norm mu(A) <= 0 in an inner product norm, stated there for matrices; here
       (TimeStepping.contractive) for m-dissipative, possibly unbounded, A on real or complex
@@ -275,8 +295,8 @@ sources:
     relationship: "background"
     note: >-
       The thesis integrates its semidiscrete Hodge wave equations with Crank-Nicolson, the
-      A-stable scheme with |r(infinity)| = 1 of TimeStepping.crankNicolson_isAStable, in the
-      Hilbert case of TimeStepping.contractive. The statements of this entry are not from the
+      symmetric theta-scheme of TimeStepping.schemes (A-stable with |r(iy)| = 1), in the Hilbert
+      case of TimeStepping.contractive. The statements of this entry are not from the
       thesis. The formalization is by the thesis author.
     author_endorsement: "participated"
   - title: "Simplizialzerlegungen von beschränkter Flachheit"
@@ -311,9 +331,12 @@ status:
     translation invariant at the nodes, the substituted errors, and the cross-polytope on which
     the consistency error does not tend to 0) and its witness TimeStepping.fdHeat (whose first
     clause is the former
-    TimeStepping.isSubMarkovGenerator_fdLaplacian); the hypotheses on r,
-    TimeStepping.backwardEuler_isAStable and TimeStepping.crankNicolson_isAStable; the two
-    classical inputs TimeStepping.hilleYosida and TimeStepping.vonNeumann. The Whitney-element
+    TimeStepping.isSubMarkovGenerator_fdLaplacian); the schemes that meet the hypotheses on r,
+    TimeStepping.schemes (new 2026-11-24; it generalizes the former
+    TimeStepping.backwardEuler_isAStable and TimeStepping.crankNicolson_isAStable, the theta-schemes
+    at theta = 1 and theta = 1/2) and TimeStepping.rungeKutta (new 2026-11-24); the three classical
+    inputs TimeStepping.hilleYosida, TimeStepping.vonNeumann and TimeStepping.lumerPhillips (new
+    2026-11-24). The Whitney-element
     schemes of the Hodge wave equation on the cube that this entry compared until 2026-11-18
     (TimeStepping.inverse_estimate, TimeStepping.crankNicolson_cube, TimeStepping.leapfrog_cube,
     TimeStepping.rowSolution_nonvacuous) are finite element results: they left this entry for the
@@ -327,7 +350,13 @@ status:
     C^2 trajectories for every uniformly stable family of bounded generators
     (Feec.TimeStepping.StableFamily.norm_sub_res_pow_le_of_traj; compared for the lumped-mass
     Laplacian only, in TimeStepping.maxNormHeat); the Galerkin form of the lumped-mass Laplacian
-    on the cube; the Neumann problem in the maximum norm (Feec.Models.Cube.MaxNormNeumann).
+    on the cube; the Neumann problem in the maximum norm (Feec.Models.Cube.MaxNormNeumann); von
+    Neumann's inequality for rational functions with complex coefficients of m-dissipative
+    operators (Feec.TimeStepping.norm_resolventEval_mul_inverse_le); the contraction bound for
+    products of theta-steps of several m-dissipative operators, the operator splittings
+    (Feec.TimeStepping.norm_splitStep_le); the preservation of the closed L-invariant subspaces by
+    the rational schemes of a bounded dissipative L (discrete constraint propagation,
+    Feec.TimeStepping.RationalScheme.apply_mem_of_mapsTo).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -384,7 +413,16 @@ automation:
     Feec.FiniteElement.isTranslationInvariantAt_freudenthalMesh, the cross-polytope mesh
     Feec.FiniteElement.crossMesh and its centre stencil) and the second difference along a
     direction (abs_secondDiff_sub_iteratedFDeriv_le,
-    Feec.ForMathlib.Calculus.DirectionalSecondDifference).
+    Feec.ForMathlib.Calculus.DirectionalSecondDifference); later on 2026-11-24, for
+    TimeStepping.schemes and TimeStepping.rungeKutta, the maximum principle in the left half-plane
+    by Phragmen-Lindelof, the theta-schemes exactly and the exact orders of the Runge-Kutta
+    instances (Feec.TimeStepping.AStableSchemes), the stages and the step of a Runge-Kutta method
+    of a bounded operator (Feec.TimeStepping.RungeKuttaStages), and the matrix determinant lemma
+    det(A + u v^T) = det A + v^T adj(A) u over every commutative ring
+    (Matrix.det_add_replicateCol_mul_replicateRow_eq_det_add,
+    Feec.ForMathlib.LinearAlgebra.MatrixDeterminantLemma), with the bridges TimeStepping.isAStable_iff
+    and TimeStepping.hasOrder_iff_dvd; TimeStepping.lumerPhillips is Feec's
+    Feec.Semigroup.LumerPhillips in the vocabulary of the entry.
 
 fidelity:
   divergences: >-
@@ -515,7 +553,9 @@ fidelity:
     is a stability bound on bounded time intervals, not power-boundedness.
     (8) Scope against the sources. Real or complex Banach spaces in stable, error, backwardEuler and
     converges (real ones through the complexification); hilleYosida and vonNeumann are stated on
-    complex spaces. Contractivity for unbounded m-dissipative A with the supremum over the
+    complex spaces; lumerPhillips on real or complex Hilbert spaces (Pazy states it on Banach
+    spaces, with dissipativity through the duality map and a densely defined generator).
+    Contractivity for unbounded m-dissipative A with the supremum over the
     imaginary axis only; the discrete maximum principle and the maximum-norm bounds on every
     non-obtuse mesh in every dimension. Less smooth data (x in D(A^s), s < m + 1,
     Gomilko-Tomilov) are not covered.
@@ -555,6 +595,25 @@ fidelity:
     simplex counted over the re-rootings of the star) and the cross-polytope counterexample are
     formulated and proved here, not taken from the sources; Thomee 2006, Ch. 15, is the background
     for the lumped mass method and its relation to finite differences on uniform meshes.
+    (10) The schemes and the classical inputs. TimeStepping.schemes states the theta-schemes for
+    every real theta (theta < 1/2 includes forward Euler at theta = 0, not A-stable) with their
+    orders exactly, and the symmetric schemes as the pairs (q(-z), q) for q without zero in the
+    closed left half-plane; their isometry is stated for bounded skew operators of real or complex
+    Hilbert spaces (re <L x, x> = 0, so that the iterates conserve the norm), not for unbounded
+    skew-adjoint generators. TimeStepping.rungeKutta concerns linear autonomous problems u' = L u
+    with bounded L on a real or complex normed space (the nodes of the tableau do not enter); as in
+    (1), the stability of a method is that of the pair of determinants (stabilityNum A b,
+    stabilityDen A), not of a reduced fraction; its
+    first clause assumes q(tau L) invertible, which for an A-stable stability function holds on
+    Banach spaces for tau > 0 when ||e^(tL)|| is bounded for t >= 0 (TimeStepping.stable); the
+    Runge-Kutta step of an unbounded generator is not formalized (the scheme r(tau A) through the
+    resolvent is).
+    The orders of the three instances are those of their stability functions (exact: order m and
+    not m + 1), which are their classical orders; the order conditions of Runge-Kutta methods for
+    nonlinear problems are not formalized. L-stability is stated as deg p < deg q (r(infinity) =
+    0). TimeStepping.lumerPhillips is stated on real or complex Hilbert spaces; its uniqueness
+    clause compares with every strongly continuous semigroup with the same generator graph, on
+    [0, infinity).
 
 review:
   status: "self-assessed"
@@ -562,7 +621,11 @@ review:
     - "none"
   notes: >-
     Not yet reviewed by the author: TimeStepping.maxNormRate and the translation-invariance and
-    edge-length clauses of TimeStepping.fdHeat (2026-11-24) are new, and the statements of this
+    edge-length clauses of TimeStepping.fdHeat (2026-11-24) are new, and so are
+    TimeStepping.schemes, TimeStepping.rungeKutta and TimeStepping.lumerPhillips (2026-11-24;
+    schemes implies the former TimeStepping.backwardEuler_isAStable and
+    TimeStepping.crankNicolson_isAStable, checked in Lean in a scratch file outside the entry), and
+    the statements of this
     entry are new or restated from palomar/vonneumann and the earlier forms of this entry (the von
     Neumann and Hilbert-space statements were reviewed by the author in their earlier form).
     Restructured 2026-11-18 as one story (A-stable rational time stepping for C_0-semigroups, with
@@ -685,16 +748,34 @@ alignment:
         k tau (n B h^2/12 + K n^(m+1) B' tau^m)
         (Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible; the derivatives by
         iteratedFDeriv_apply_single_eq_iterate and FiniteDifference.iteratedFDeriv_apply_pairs).
-    - source: "[HairerWanner1996], §IV.3"
-      lean: "TimeStepping.backwardEuler_isAStable"
+    - source: "[HairerWanner1996], §IV.3, §IV.5"
+      lean: "TimeStepping.schemes"
       module: "Challenge"
       status: "proved"
-      note: "Non-vacuity: backward Euler is A-stable of order 1."
-    - source: "[HairerWanner1996], §IV.3"
-      lean: "TimeStepping.crankNicolson_isAStable"
+      note: >-
+        The schemes that meet the hypotheses. For q without zeros in the closed left half-plane,
+        A-stability is |r(iy)| <= 1 on the imaginary axis, by the maximum principle
+        (Feec.TimeStepping.RationalScheme.isAStable_iff_forall_re_nonpos, from
+        Feec.TimeStepping.norm_div_le_of_re_nonpos by Phragmen-Lindelof); the theta-schemes:
+        A-stable iff theta >= 1/2 (Feec.TimeStepping.RationalScheme.isAStable_theta and
+        Feec.TimeStepping.one_half_le_of_norm_theta_le), order m iff m <= 1 or m = 2 at
+        theta = 1/2 (Feec.TimeStepping.X_pow_dvd_theta_iff); the symmetric schemes q(-z)/q(z):
+        A-stable, |r(iy)| = 1, isometries for bounded skew operators
+        (Feec.TimeStepping.RationalScheme.IsSymmetric.norm_eval and norm_apply_apply). Generalizes
+        the former TimeStepping.backwardEuler_isAStable and TimeStepping.crankNicolson_isAStable.
+    - source: "[HairerWanner1996], §IV.3, Prop 3.2; §IV.5; §IV.6"
+      lean: "TimeStepping.rungeKutta"
       module: "Challenge"
       status: "proved"
-      note: "Non-vacuity: Crank-Nicolson is A-stable, |r(infinity)| = 1, of order 2."
+      note: >-
+        Runge-Kutta methods of bounded operators: unique stages and the step n(tau L) d(tau L)^(-1) u
+        (Feec.TimeStepping.ButcherTableau.existsUnique_isStage and IsStage.add_smul_sum_eq, with
+        Feec.TimeStepping.ButcherTableau.stabilityNum_eq_stabilityDen_add from the matrix
+        determinant lemma Matrix.det_add_replicateCol_mul_replicateRow_eq_det_add); the two-stage
+        Gauss-Legendre, Radau IIA and SDIRK methods of Feec.TimeStepping.RungeKutta, with the
+        symmetry of Gauss-Legendre (Feec.TimeStepping.RationalScheme.isSymmetric_gaussLegendre2)
+        and their exact orders (Feec.TimeStepping.RationalScheme.not_hasOrder_gaussLegendre2, not_hasOrder_radauIIA2,
+        not_hasOrder_sdirk2).
     - source: "[Pazy1983], §1.5"
       lean: "TimeStepping.hilleYosida"
       module: "Challenge"
@@ -705,5 +786,10 @@ alignment:
       module: "Challenge"
       status: "proved"
       note: "A classical input: rational functions of contractions with poles outside the closed unit disc, complex Hilbert spaces; behind contractive. ContinuousLinearMap.norm_aeval_mul_inverse_le."
+    - source: "[Pazy1983], §1.4, Thm 4.3; §1.2"
+      lean: "TimeStepping.lumerPhillips"
+      module: "Challenge"
+      status: "proved"
+      note: "A classical input: on real or complex Hilbert spaces, m-dissipative operators generate unique contraction semigroups, and generators of contraction semigroups are m-dissipative; it identifies the hypothesis of contractive with the case M = 1 of stable and error. LinearPMap.IsMDissipative.semigroup, eqOn_semigroup and Feec.C0Semigroup.IsContraction.isMDissipative_generator."
 
 acknowledgements: "Mathlib and the Lean FRO; the sources cited above."

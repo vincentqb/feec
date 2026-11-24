@@ -11,15 +11,19 @@ applied to `u' = L u` is the one-step scheme `u ↦ R(τ L) u` of its **stabilit
 `R(z) = 1 + z bᵀ (1 - z A)⁻¹ 𝟙 = det(1 - z A + z 𝟙 bᵀ)/det(1 - z A)`
 (`ButcherTableau.stabilityFunction_eq`, the matrix determinant lemma; [HairerWanner1996],
 §IV.3, Prop 3.2): the real rational function with numerator `stabilityNum` and denominator
-`stabilityDen`. A method whose `R` is bounded at infinity and has no poles in the closed left
+`stabilityDen`. A method with `deg n ≤ deg d` whose denominator has no zero in the closed left
 half-plane is a rational scheme (`ButcherTableau.toRationalScheme`), so `Feec.TimeStepping.Rational`
 applies: A-stable methods are contractions for every m-dissipative generator (von Neumann's
-inequality) and converge at their order (Brenner–Thomée).
+inequality) and converge at their order (Brenner–Thomée). For a bounded `L`, the stages
+`kᵢ = L (u + τ ∑ⱼ aᵢⱼ kⱼ)` exist and are unique when `d(τL)` is invertible, and the step
+`u + τ ∑ᵢ bᵢ kᵢ` is `n(τL) d(τL)⁻¹ u` (`ButcherTableau.existsUnique_isStage`,
+`ButcherTableau.IsStage.add_smul_sum_eq`, in `Feec.TimeStepping.RungeKuttaStages`).
 
 ## Instances
 
 Each tableau below gives a rational scheme of the same name in `RationalScheme`, with its order
-(`HasOrder`) and A-stability (`IsAStable`, or `IsSymmetric` for the Gauss methods):
+(`HasOrder`; exact by `Feec.TimeStepping.AStableSchemes`) and A-stability (`IsAStable`, or
+`IsSymmetric` for the Gauss methods):
 
 * `implicitMidpoint` (one-stage Gauss): `R(z) = (1 + z/2)/(1 - z/2)`, order `2`, symmetric: the
   Crank–Nicolson scheme (`implicitMidpoint_eq_theta`);
@@ -119,8 +123,8 @@ theorem stabilityFunction_eq (z : ℂ) (hz : (1 - z • T.A.map (algebraMap ℝ 
   rw [Finset.sum_comm]
   simp only [mul_assoc]
 
-/-- A method whose stability function is bounded at infinity and has no poles in the closed left
-half-plane is a **rational scheme**. -/
+/-- A method whose stability function has `deg n ≤ deg d` and a denominator without zeros in the
+closed left half-plane is a **rational scheme**. -/
 def toRationalScheme (hdeg : T.stabilityNum.natDegree ≤ T.stabilityDen.natDegree)
     (hden : ∀ z : ℂ, z.re ≤ 0 → aeval z T.stabilityDen ≠ 0) : RationalScheme :=
   ⟨T.stabilityNum, T.stabilityDen, hdeg, hden⟩

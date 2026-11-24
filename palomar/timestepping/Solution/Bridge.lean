@@ -4,6 +4,9 @@ public import Solution.Defs
 public import Feec.TimeStepping.BanachFEEC
 public import Feec.TimeStepping.RationalSemigroup
 public import Feec.Models.Cube.FiniteDifferenceHeat
+public import Feec.TimeStepping.AStableSchemes
+public import Feec.TimeStepping.RungeKuttaStages
+public import Feec.Semigroup.LumerPhillips
 
 /-!
 # The bridge from the challenge to `Feec`
@@ -13,9 +16,10 @@ The challenge is stated over Mathlib's polynomials and bounded operators. The di
 * an A-stable `r = p/q` (`TimeStepping.IsAStable`, `|r| ≤ 1` on the closed left half-plane) is
   a `Feec.TimeStepping.RationalScheme` (`TimeStepping.IsAStable.scheme`, through
   `Feec.TimeStepping.RationalScheme.ofBounded`, whose `deg p ≤ deg q` follows from the bound on the
-  imaginary axis), A-stable in the sense of `Feec` (the imaginary axis); `TimeStepping.HasOrder`
-  gives the order of `Feec` (`Feec.TimeStepping.RationalScheme.hasOrder_of_isBigO`), and the
-  converse holds (`TimeStepping.hasOrder_of_dvd`, for the examples);
+  imaginary axis), A-stable in the sense of `Feec` (the imaginary axis), and conversely by the
+  maximum principle (`TimeStepping.isAStable_iff`,
+  `Feec.TimeStepping.RationalScheme.isAStable_iff_forall_re_nonpos`); `TimeStepping.HasOrder` is
+  the order of `Feec`, the divisibility `X^{m+1} ∣ p - q Tₘ` (`TimeStepping.hasOrder_iff_dvd`);
 * `TimeStepping.rationalOfResolvent` is `Feec.TimeStepping.RationalScheme.resolventStep`
   (`TimeStepping.resolventPoly_eq`), and for a bounded generator the resolvent form is
   `p(τL) q(τL)⁻¹` (`TimeStepping.step_eq`, from `Feec.TimeStepping.resolventEval_eq_mul_aeval`);
@@ -126,6 +130,32 @@ theorem hasOrder_of_dvd (hq : aeval (0 : ℂ) q ≠ 0) {m : ℕ}
   rw [hp, add_div, mul_div_cancel_left₀ _ hz]
   ring
 
+/-- **A-stability on the imaginary axis**, for `q` without zeros in the closed left half-plane:
+the maximum principle
+`Feec.TimeStepping.RationalScheme.isAStable_iff_forall_re_nonpos` for the scheme
+`Feec.TimeStepping.RationalScheme.ofBounded p q`. -/
+theorem isAStable_iff (p q : ℝ[X]) : IsAStable p q ↔ (∀ z : ℂ, z.re ≤ 0 → aeval z q ≠ 0) ∧
+    ∀ y : ℝ, ‖aeval (y * Complex.I) p / aeval (y * Complex.I) q‖ ≤ 1 := by
+  refine ⟨fun h => ⟨h.aeval_ne_zero, h.norm_le⟩, fun ⟨hq, hC⟩ z hz => ⟨hq z hz, ?_⟩⟩
+  exact (RationalScheme.ofBounded p q hq hC).isAStable_iff_forall_re_nonpos.1 hC z hz
+
+/-- **The order is the divisibility** `X^{m+1} ∣ p - q Tₘ` (`Tₘ` the Taylor polynomial of the
+exponential), for `q(0) ≠ 0`: `Feec.TimeStepping.X_pow_dvd_sub_mul_expTaylor` over `ℂ`, and
+`TimeStepping.hasOrder_of_dvd`. -/
+theorem hasOrder_iff_dvd (hq : aeval (0 : ℂ) q ≠ 0) {m : ℕ} :
+    HasOrder p q m ↔ X ^ (m + 1) ∣ p - q * expTaylor m := by
+  refine ⟨fun h => ?_, hasOrder_of_dvd hq⟩
+  have h' : (fun z : ℂ => aeval z p / aeval z q - Complex.exp z) =O[𝓝 0]
+      fun z => z ^ (m + 1) := h
+  have hG := X_pow_dvd_sub_mul_expTaylor (p := p.map (algebraMap ℝ ℂ))
+    (q := q.map (algebraMap ℝ ℂ)) (by rwa [eval_map_algebraMap])
+    (by simpa only [eval_map_algebraMap] using h')
+  rw [X_pow_dvd_iff] at hG ⊢
+  intro d hd
+  have := hG d hd
+  rwa [← Polynomial.map_mul, ← Polynomial.map_sub, coeff_map, Complex.coe_algebraMap,
+    Complex.ofReal_eq_zero] at this
+
 end Rational
 
 section Operators
@@ -155,6 +185,12 @@ theorem mem_graph_iff (G : Feec.C0Semigroup 𝕜 E) {x y : E} :
   refine ⟨fun h => ?_, fun h => LinearPMap.mem_graph_iff_exists.2 ⟨⟨y, h⟩, G.generator_apply_eq h⟩⟩
   obtain ⟨hx, rfl⟩ := LinearPMap.mem_graph_iff_exists.1 h
   exact G.hasDerivWithinAt_generator ⟨x, hx⟩
+
+/-- The graph of `Feec.C0Semigroup.generator` is `generatorGraph`. -/
+theorem generatorGraph_eq (G : Feec.C0Semigroup 𝕜 E) :
+    generatorGraph G.S = (G.generator.graph : Set (E × E)) := by
+  ext ⟨x, y⟩
+  exact (mem_graph_iff G).symm
 
 end Operators
 

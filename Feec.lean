@@ -166,6 +166,7 @@ public import Feec.ForMathlib.InnerProductSpace.IsometryDefect
 public import Feec.ForMathlib.InnerProductSpace.MoorePenrose
 public import Feec.ForMathlib.InnerProductSpace.OrthogonalClosure
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann
+public import Feec.ForMathlib.LinearAlgebra.MatrixDeterminantLemma
 public import Feec.ForMathlib.LinearPMap.Basic
 public import Feec.ForMathlib.LinearPMap.Bounded
 public import Feec.ForMathlib.LinearPMap.ClosedRange
@@ -471,6 +472,7 @@ public import Feec.Semigroup.Perturbation
 public import Feec.Semigroup.Rescale
 public import Feec.Semigroup.Spectral
 public import Feec.Semigroup.Stone
+public import Feec.TimeStepping.AStableSchemes
 public import Feec.TimeStepping.BanachFEEC
 public import Feec.TimeStepping.BlockMatrix
 public import Feec.TimeStepping.Cayley
@@ -487,6 +489,7 @@ public import Feec.TimeStepping.RationalQuasi
 public import Feec.TimeStepping.RationalSemigroup
 public import Feec.TimeStepping.RationalSharp
 public import Feec.TimeStepping.RungeKutta
+public import Feec.TimeStepping.RungeKuttaStages
 public import Feec.TimeStepping.StableFamily
 public import Feec.TimeStepping.Theta
 public import Feec.TimeStepping.TimeScheme

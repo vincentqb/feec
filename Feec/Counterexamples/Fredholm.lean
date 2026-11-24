@@ -26,7 +26,9 @@ range and finite-dimensional harmonic forms"
 (`Feec.HilbertComplex.HasCompactPropertyAt.closed_and_fredholm`).
 
 The compactness property itself holds on infinite-dimensional spaces:
-`ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)` (`Fredholm.invComplex`), has it at every index
+`ℓ² --A⁻¹--> ℓ² → 0`, `A⁻¹ = diag(n+1)` (`Fredholm.invDiag`: closed, densely defined,
+self-adjoint and onto, acting coordinatewise: `invDiag_isClosed`, `dense_invDiag_domain`,
+`adjoint_invDiag`, `range_invDiag`, `invDiag_apply`; `Fredholm.invComplex`), has it at every index
 (`hasCompactProperty_infiniteDimensional`).
 
 ## References
@@ -420,6 +422,17 @@ theorem diag_invDiag (u : (invDiag 𝕜).domain) : diag 𝕜 (invDiag 𝕜 u) = 
 theorem invDiag_diag (v : L2 𝕜) (h : diag 𝕜 v ∈ (invDiag 𝕜).domain) :
     invDiag 𝕜 ⟨diag 𝕜 v, h⟩ = v :=
   diag_injective (diag_invDiag _)
+
+/-- The coordinates of `A⁻¹ u`: `(A⁻¹ u)ₙ = (n + 1) uₙ`. -/
+theorem invDiag_apply (u : (invDiag 𝕜).domain) (n : ℕ) :
+    invDiag 𝕜 u n = ((n : 𝕜) + 1) * (u : L2 𝕜) n := by
+  have h := congrArg (fun y : L2 𝕜 => y n) (diag_invDiag u)
+  simp only [diag_apply] at h
+  rw [← h, mul_div_cancel₀ _ (natCast_add_one_ne_zero n)]
+
+/-- **`A⁻¹` is onto**: `A⁻¹ (A y) = y`. -/
+theorem range_invDiag : LinearMap.range (invDiag 𝕜).toFun = ⊤ :=
+  LinearPMap.inverse_range ker_diagPMap
 
 theorem dense_invDiag_domain : Dense ((invDiag 𝕜).domain : Set (L2 𝕜)) := by
   rw [Submodule.dense_iff_topologicalClosure_eq_top, Submodule.topologicalClosure_eq_top_iff,

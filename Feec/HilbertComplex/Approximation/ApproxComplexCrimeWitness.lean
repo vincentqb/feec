@@ -300,7 +300,7 @@ def shiftedRate (T : ℝ) : (ofComplexCrime (shifted 𝕜 Q hQ)).RateClass T :=
         (by
           change ‖y - y‖ + _ ≤ _
           rw [sub_self, norm_zero, zero_add]; exact norm_idTotalD_sub_shifted_le n y)
-        (S.norm_one_sub_J_add_le_norm n y) (norm_inner_shifted_cochainDefect_le n ⟨y, hy1⟩)
+        (S.norm_one_sub_J_add_le_opNorm n y) (norm_inner_shifted_cochainDefect_le n ⟨y, hy1⟩)
       rw [Real.rpow_one]
       have hmy : perturbMesh n * ‖y‖ ≤ perturbMesh n * l2Norm x :=
         mul_le_mul_of_nonneg_left hnorm hm
@@ -391,7 +391,7 @@ def scaledRate (T : ℝ) : (ofComplexCrime (scaled 𝕜 Q hQ).toCrime).RateClass
       obtain ⟨h1, h2, h3⟩ := S.rateData_of_split n ⟨y, hy1⟩ w (Ea := 0)
         (Eb := ‖1 - S.J n‖ * (S.boundConst * l2Norm x)) (Eg := 0)
         (by dsimp only; rw [hiw, hiDw, sub_self, sub_self, norm_zero, add_zero])
-        ((S.norm_one_sub_J_add_le_norm n w).trans
+        ((S.norm_one_sub_J_add_le_opNorm n w).trans
           (mul_le_mul_of_nonneg_left hw (norm_nonneg _))) (fun v => by
           rw [(scaledFamily 𝕜).cochainDefect_toCrimeFamily, inner_zero_left, norm_zero,
             zero_mul])
@@ -657,7 +657,7 @@ def mixedRate (T : ℝ) : (ofComplexCrime (mixed 𝕜 Q hQ)).RateClass T :=
           nlinarith [norm_nonneg (S.proj n y)]
         have hJ : ‖1 - S.J n‖ ≤ 3 * perturbMesh n := mixed_innerDefect_le_mesh n
         rw [Real.rpow_one]
-        refine (S.norm_one_sub_J_add_le_norm n _).trans ?_
+        refine (S.norm_one_sub_J_add_le_opNorm n _).trans ?_
         calc ‖1 - S.J n‖ * (‖S.proj n y‖ + ‖S.D n (S.proj n y)‖)
             ≤ 3 * perturbMesh n * (4 * S.boundConst * l2Norm x) :=
               mul_le_mul hJ hw (add_nonneg (norm_nonneg _) (norm_nonneg _))

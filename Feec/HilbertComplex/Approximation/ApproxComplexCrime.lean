@@ -72,7 +72,7 @@ complex-level structure.
 * `ApproxComplexCrime.Family.inner_residual_eq`, `norm_residual_le`: the residual is at most
   `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ`, `δ` the cochain
   defect, and `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖` is at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)` and at most
-  `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_one_sub_J_add_le_norm`, `norm_one_sub_J_add_le`).
+  `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)` (`norm_one_sub_J_add_le_opNorm`, `norm_one_sub_J_add_le`).
 * `ApproxComplexCrime.Family.graphDefect`: **the inner-product defect in the graph norm**
   `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ`, so
   `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_one_sub_J_apply_le`); at most `‖1 - Jₕ‖`
@@ -453,7 +453,7 @@ theorem norm_one_sub_J_add_le (h : κ) (w : S.X h) :
     (S.norm_one_sub_J_apply_le_of_D_eq_zero h (S.D_D h w))).trans_eq (by ring)
 
 /-- `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ ‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)`. -/
-theorem norm_one_sub_J_add_le_norm (h : κ) (w : S.X h) :
+theorem norm_one_sub_J_add_le_opNorm (h : κ) (w : S.X h) :
     ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ ‖1 - S.J h‖ * (‖w‖ + ‖S.D h w‖) :=
   (add_le_add ((1 - S.J h).le_opNorm w) ((1 - S.J h).le_opNorm _)).trans_eq (by ring)
 
@@ -641,7 +641,7 @@ theorem inner_residual_eq (h : κ) (y : H.wave.domain) (w v : S.X h) :
 the residual of `w` is at most
 `(‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ) (‖v‖ + ‖𝐝ₕ v‖)`. The
 inner-product defect enters only at `w` and `𝐝ₕ w`: at most `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖)`
-(`norm_one_sub_J_add_le_norm`) and at most `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`
+(`norm_one_sub_J_add_le_opNorm`) and at most `‖1 - Jₕ‖_{Vₕ} (‖w‖ + 2 ‖𝐝ₕ w‖)`
 (`norm_one_sub_J_add_le`). -/
 theorem norm_residual_le (h : κ) (y : H.wave.domain) (w : S.X h) {δ : ℝ}
     (hδ : ∀ v, ‖⟪S.cochainDefect h y, v⟫_𝕜‖ ≤ δ * (‖v‖ + ‖S.D h v‖)) (v : S.X h) :
@@ -1154,7 +1154,7 @@ theorem approxFEEC_ofComplexCrime {H : HilbertComplex 𝕜 c W} {κ : Type*}
   refine ⟨approxFEEC _ _, ofComplexCrime_L F, hinv, fun h Kh hK hKK v hv t => ?_,
     fun h y z w ε hε hres => S.norm_sub_incl_load_le h y z w hε hres,
     fun h y w δ hδ v => (S.norm_residual_le h y w hδ v).trans (mul_le_mul_of_nonneg_right
-      (add_le_add_left (add_le_add_left (S.norm_one_sub_J_add_le_norm h w) _) _) (by positivity)),
+      (add_le_add_left (add_le_add_left (S.norm_one_sub_J_add_le_opNorm h w) _) _) (by positivity)),
     S.norm_load_sub_adjoint_le,
     fun y hy => F.tendsto_incl_load hy, fun y hy => F.tendsto_defect hy⟩
   exact Metric.infDist_zero_of_mem (hKK ⟨_, hinv h Kh hK v hv t, rfl⟩)
@@ -1455,8 +1455,9 @@ theorem norm_load_sub_adjoint_le_of_rate (h : κ) (y z : PiLp 2 W) (w : S.X h) {
 error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖ ≤ Eₐ`, inner-product defect
 `‖(1 - Jₕ) w‖ + ‖(1 - Jₕ) 𝐝ₕ w‖ ≤ E_β` and a cochain defect `≤ E_γ` in the dual discrete graph
 norm satisfies `‖y - iₕ w‖ ≤ Eₐ`, `‖(1 - Jₕ) w‖ ≤ E_β` and has residual `≤ E_β + C Eₐ + E_γ`
-(`norm_residual_le`). For an approximant of size `‖w‖ + ‖𝐝ₕ w‖ ≤ E_w`, `E_β = ‖1 - Jₕ‖ E_w`
-(`norm_one_sub_J_add_le_norm`) and `E_β = 2 ‖1 - Jₕ‖_{Vₕ} E_w` (`norm_one_sub_J_add_le`). -/
+(`norm_residual_le`). For an approximant of size `‖w‖ + ‖𝐝ₕ w‖ ≤ E_w`, one can take
+`E_β = ‖1 - Jₕ‖ E_w` (`norm_one_sub_J_add_le_opNorm`) or `E_β = 2 ‖1 - Jₕ‖_{Vₕ} E_w`
+(`norm_one_sub_J_add_le`). -/
 theorem rateData_of_split (h : κ) (y : H.wave.domain) (w : S.X h) {Ea Eb Eg : ℝ}
     (ha : ‖(y : PiLp 2 W) - S.incl h w‖ + ‖H.totalD ⟨y, y.2.1⟩ - S.incl h (S.D h w)‖ ≤ Ea)
     (hb : ‖(1 - S.J h) w‖ + ‖(1 - S.J h) (S.D h w)‖ ≤ Eb)
@@ -1627,7 +1628,7 @@ def RateClass.toCrimeRate {T : ℝ} (R : F.RateClass T) :
         have hres := fun v => (S.toCrimeFamily.norm_residual_le h y u (δ := 0) (fun v => by
           rw [S.cochainDefect_toCrimeFamily, inner_zero_left, norm_zero, zero_mul]) v).trans
           (mul_le_mul_of_nonneg_right (add_le_add_left (add_le_add_left
-            (S.toCrimeFamily.norm_one_sub_J_add_le_norm h u) _) _) (by positivity))
+            (S.toCrimeFamily.norm_one_sub_J_add_le_opNorm h u) _) _) (by positivity))
         refine ⟨u, ?_, ?_, fun v => ?_⟩
         · change ‖(y : PiLp 2 W) - S.inclL h u‖ ≤ _
           nlinarith
@@ -2044,9 +2045,10 @@ on `Dc` is a rate class of order `min(α, β, γ)` (`rateClass` with `Cₐ' = (1
 `splitConst`): its constants are `C = (1 + 8 C_ι) Cₐ'` and
 `C' = 2 (1 + 8 (1 + C_ι²) + C_ι (1 + 8 C_ι)) Cₐ'` (`rateClass_of_split_C`,
 `rateClass_of_split_C'`). For approximants of size `‖w‖ + ‖𝐝ₕ w‖ ≤ C_w ‖x‖_c`, the inner-product
-defect at them is `O(m^β)` with `C_β = C C_w` when `‖1 - Jₕ‖ ≤ C m(h)^β`
-(`Family.norm_one_sub_J_add_le_norm`) and with `C_β = 2 C C_w` when only the defect in the graph
-norm is, `‖1 - Jₕ‖_{Vₕ} ≤ C m(h)^β` (`Family.norm_one_sub_J_add_le`). The three estimates enter
+defect at them is `O(m^β)` with `C_β = c C_w` when `‖1 - Jₕ‖ ≤ c m(h)^β`
+(`Family.norm_one_sub_J_add_le_opNorm`; the former hypotheses of this constructor, with the same
+constants) and with `C_β = 2 c C_w` when only the defect in the graph norm is,
+`‖1 - Jₕ‖_{Vₕ} ≤ c m(h)^β` (`Family.norm_one_sub_J_add_le`). The three estimates enter
 through `Family.rateData_of_split` and are combined by `add_rpow_le_rpow_min`. -/
 def rateClass_of_split (T : ℝ) (Dc : Set (PiLp 2 W)) (hDc : Dc ⊆ (F.Z : Set (PiLp 2 W)))
     (cn : PiLp 2 W → ℝ) (m : κ → ℝ) (α β γ Ca Cb Cg : ℝ)

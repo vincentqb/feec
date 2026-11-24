@@ -23,7 +23,9 @@ the graph space `Γ(𝐝)` of the total differential, i.e. `ξ ∈ C¹([0,T]; V)
   `h = (1/(n+1))ₙ`, lies in `D(L)`, but `L U₀ = (-h, 0, 0) ∉ D(𝐝)` (`h ∉ R(A) = D(A⁻¹)`), so no
   strong solution from `U₀` is `C¹` into `Γ(𝐝)` at `0`, on any interval `[0, T]`, `T > 0`
   (`not_C1_graphSpace`). In particular `U₀ ∉ D(L²)`.
-* the coordinate truncations `span{e₀, …, e_{N-1}}` form a dense family of subcomplexes
+* the coordinate truncations `span{e₀, …, e_{N-1}}` (`trunc`; the truncation `truncSum` is the
+  orthogonal projection on them and commutes with `A⁻¹`, `starProjection_trunc`,
+  `truncSum_invDiag`) form a dense family of subcomplexes
   (`truncSub`, `eventually_exists_mem_graphSub`), and the semi-discrete solutions for this datum
   converge anyway (`tendstoUniformlyOn_truncSub_datum`): convergence holds for `D(L)` data
   without the regularity Thm 4.14 needs.
@@ -265,6 +267,26 @@ theorem invDiag_mem_trunc {N : ℕ} (u : (invDiag 𝕜).domain) (hu : (u : L2 �
   simp only [diag_apply] at h
   rw [hu n hn] at h
   simpa [div_eq_zero_iff, natCast_add_one_ne_zero (𝕜 := 𝕜) n] using h
+
+/-- The truncation `P_N` is the orthogonal projection onto `span{e₀, …, e_{N-1}}`. -/
+theorem starProjection_trunc (N : ℕ) (x : L2 𝕜) :
+    (trunc 𝕜 N).starProjection x = truncSum 𝕜 N x := by
+  refine Submodule.eq_starProjection_of_mem_orthogonal (truncSum_mem N x)
+    ((Submodule.mem_orthogonal _ _).2 fun y hy => ?_)
+  rw [lp.inner_eq_tsum]
+  refine (tsum_congr fun m => ?_).trans tsum_zero
+  rw [lp.coeFn_sub, Pi.sub_apply, truncSum_apply]
+  split_ifs with h
+  · rw [sub_self, inner_zero_right]
+  · rw [hy m (not_lt.1 h), inner_zero_left]
+
+/-- **The truncations commute with `A⁻¹`**: `P_N A⁻¹ u = A⁻¹ P_N u`. -/
+theorem truncSum_invDiag (N : ℕ) (u : (invDiag 𝕜).domain) :
+    truncSum 𝕜 N (invDiag 𝕜 u) =
+      invDiag 𝕜 ⟨truncSum 𝕜 N u, trunc_le_domain N (truncSum_mem N (u : L2 𝕜))⟩ :=
+  lp.ext <| funext fun m => by
+    rw [truncSum_apply, invDiag_apply, invDiag_apply, truncSum_apply]
+    split_ifs <;> simp
 
 variable (𝕜) in
 /-- The truncation spaces of `ℓ² --A⁻¹--> ℓ² → 0`. -/

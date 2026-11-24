@@ -21,7 +21,8 @@ uniform discrete Poincaré inequality fails, although the harmonic forms are fin
 ## Main results
 
 * **`periodic_not_staticVerdict`**, **`periodicFamily_not_staticVerdict`**;
-  `starProjection_trunc`, `diag_truncSum`, `periodic_d_eq`.
+  `diag_truncSum`, `periodic_d_eq` (the truncations are the orthogonal projections,
+  `Feec.Counterexamples.ClassicalRegularity.starProjection_trunc`).
 
 ## References
 
@@ -46,18 +47,6 @@ open Ell2 (L2)
 open ClassicalRegularity
 
 variable {𝕜 : Type*} [RCLike 𝕜]
-
-/-- The truncation `P_N` is the orthogonal projection onto `span{e₀, …, e_{N-1}}`. -/
-theorem starProjection_trunc (N : ℕ) (x : L2 𝕜) :
-    (trunc 𝕜 N).starProjection x = truncSum 𝕜 N x := by
-  refine Submodule.eq_starProjection_of_mem_orthogonal (truncSum_mem N x)
-    ((Submodule.mem_orthogonal _ _).2 fun y hy => ?_)
-  rw [lp.inner_eq_tsum]
-  refine (tsum_congr fun m => ?_).trans tsum_zero
-  rw [lp.coeFn_sub, Pi.sub_apply, truncSum_apply]
-  split_ifs with h
-  · rw [sub_self, inner_zero_right]
-  · rw [hy m (not_lt.1 h), inner_zero_left]
 
 /-- `A = diag(1/(n+1))` commutes with the truncations. -/
 theorem diag_truncSum (N : ℕ) (x : L2 𝕜) : diag 𝕜 (truncSum 𝕜 N x) = truncSum 𝕜 N (diag 𝕜 x) :=

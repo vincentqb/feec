@@ -414,11 +414,12 @@ theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
 
 /-- **Non-vacuity of the defect in the graph norm**: a Hilbert complex with `ℓ²(ℕ, ℝ)` in every
 degree, with closed ranges on the window `[0, 2)`, carries a family of discrete differential spaces
-with cochain reading maps `iₙ` and cochain projections `πₙ` bounded by `1` in the graph norm, with
-`iₙ πₙ → 1` on `D(𝐝)`, such that `‖1 - iₙ* iₙ‖ = 1` at every level (so `‖1 - iₙ* iₙ‖ ↛ 0`) while
-the inner-product defect tends to `0`; with the discrete Poincaré inequality and convergence for
-every datum, it meets the hypotheses of the convergence conjunct of the cochain clause and of the
-heat clause of `FEEC.crimeFEEC`, which the hypothesis `‖1 - iₙ* iₙ‖ → 0` would exclude. -/
+indexed by `ℕ` (refined along `atTop`) with cochain reading maps `iₙ` and cochain projections `πₙ`
+bounded by `1` in the graph norm, with `iₙ πₙ → 1` on `D(𝐝)`, such that `‖1 - iₙ* iₙ‖ = 1` at
+every level (so `‖1 - iₙ* iₙ‖ ↛ 0`) while the inner-product defect tends to `0`; with the discrete
+Poincaré inequality and convergence for every datum, it meets the hypotheses of the convergence
+conjunct of the cochain clause and of the heat clause of `FEEC.crimeFEEC`, which the hypothesis
+`‖1 - iₙ* iₙ‖ → 0` would exclude. -/
 theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ²(ℕ, ℝ))
     (S : H.CrimeFamily.{0} 0 2 ℕ) (P : S.CochainProj 1),
     (∀ i : Fin 2, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℓ²(ℕ, ℝ))) ∧

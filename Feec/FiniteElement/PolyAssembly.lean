@@ -8,12 +8,11 @@ public import Feec.FiniteElement.PolyElement
 For an admissible sequence `S` (`Feec.FiniteElement.PolySeq`), the moments
 `ω ↦ ∫_{T̂_m} F_q^* ω ∧ η` along vertex families `q` (`Feec.FiniteElement.vertexMoment`) against
 the test forms `η ∈ S.test k m` are the degrees of freedom of the element family
-`Feec.FiniteElement.polyElement n S`. They assemble its global spaces:
+`Feec.FiniteElement.polyElement n S`. Along points of a face they only see the tangential traces
+on the face (`vertexMoment_congr`), and their agreement against all test forms survives a
+reordering of the points (`PolySeq.vertexMoment_comp_perm_eq`, `PolySeq.vertexMoment_lexEnum_eq`:
+the test forms are affinely invariant). Hence:
 
-* along points of a face `g`, the moments only see the tangential traces on `g`
-  (`vertexMoment_congr`), and their agreement against all test forms survives a reordering of the
-  points (`PolySeq.vertexMoment_comp_perm_eq`, `PolySeq.vertexMoment_lexEnum_eq`: the test forms
-  are affinely invariant);
 * **conformity by moments** ([AFW2010], §5.2): for two forms of `S_k` and a face `g` of an
   `n`-simplex, the agreement of the tangential traces on `g`, of the moments on every face of `g`
   along every enumeration of its vertices, and along one enumeration, are equivalent
@@ -22,18 +21,18 @@ the test forms `η ∈ S.test k m` are the degrees of freedom of the element fam
   `n`-simplex, along one enumeration of the face, is zero
   (`PolySeq.eq_zero_of_vertexMoment_eq_zero`), and for every enumeration of the faces and every
   assignment of a linear functional on the test forms to each face exactly one form of `S_k` has
-  these moments (`PolySeq.existsUnique_vertexMoment_eq`);
-* the glued space `Vₕᵏ` has the dimension of the global degrees of freedom
-  (`LocalElement.finrank_V`, the companion of `LocalElement.finrank_V₀`), which for
-  `polyElement n S` number `Σ_m #{m-faces of M} dim (test forms on m-faces)`
-  (`PolySeq.card_globalDofIdx`).
+  these moments (`PolySeq.existsUnique_vertexMoment_eq`).
+
+Together with the dimension of the glued spaces (`LocalElement.finrank_V`) and the number of the
+global degrees of freedom (`PolySeq.card_globalDofIdx`, in `Feec.FiniteElement.PolyComplex`),
+they assemble the finite element spaces of `S` from the face moments.
 
 ## References
 
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §4.5–4.6, §5.1
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010],
-  §5.2 (Theorems 5.5, 5.7)
+  §5.2 (Theorem 5.5; the spaces defined by single-valued moments)
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -47,31 +46,6 @@ namespace Feec.FiniteElement
 open ExteriorFibre Feec.Mesh
 
 variable {n : ℕ}
-
-/-- **Moments only see tangential traces**: along points `q₀, …, q_m` of `g`, the moment
-`∫_{T̂_m} F_q^* ω ∧ η` of a form of degree `k` depends only on its tangential trace on `g`. -/
-theorem vertexMoment_congr {m k : ℕ} {g : Finset (Fin n → ℝ)} (q : Fin (m + 1) → Fin n → ℝ)
-    (hq : ∀ l, q l ∈ g) (η : FormField m) {ω ω' : FormField n} (hω : ∀ x, IsDeg k (ω x))
-    (hω' : ∀ x, IsDeg k (ω' x))
-    (h : ∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)), TangentialTraceEq g k (ω x) (ω' x)) :
-    vertexMoment q η ω = vertexMoment q η ω' := by
-  rw [vertexMoment_eq_integral, vertexMoment_eq_integral]
-  refine setIntegral_congr_fun (measurableSet_refSimplex _) fun y hy => ?_
-  have hx : affine (simplexMatrix q) (q 0) y ∈ convexHull ℝ (g : Set (Fin n → ℝ)) :=
-    convexHull_mono (Set.range_subset_iff.2 fun l => Finset.mem_coe.2 (hq l))
-      (simplexMap_mem_convexHull q hy)
-  simp only [wedgeField, affinePullback_apply]
-  rw [pullback_simplexMatrix_eq_of_tangentialTraceEq q hq (hω _) (hω' _) (h _ hx)]
-
-/-- An enumeration of the points of `g` is a reordering of their lexicographic enumeration. -/
-theorem exists_lexEnum_eq_comp_perm {g : Finset (Fin n → ℝ)} {m : ℕ} (hc : #g = m + 1)
-    {q : Fin (m + 1) → Fin n → ℝ} (hq : Set.range q = g) :
-    ∃ π : Equiv.Perm (Fin (m + 1)), lexEnum g m = q ∘ π := by
-  have hqinj : Function.Injective q := by
-    have himg : Finset.univ.image q = g := Finset.coe_injective (by simp [hq])
-    rw [← Set.injOn_univ, ← Finset.coe_univ]
-    exact Finset.injOn_of_card_image_eq (by rw [himg, card_univ, Fintype.card_fin, ← hc])
-  exact exists_perm_comp_eq (lexEnum_injective hc) hqinj (by rw [range_lexEnum hc, hq])
 
 namespace PolySeq
 
@@ -208,59 +182,6 @@ theorem existsUnique_vertexMoment_eq (T : Affine.Simplex ℝ (Fin n → ℝ) n) 
   · exact LinearMap.congr_fun (congr_fun hw ⟨⟨m, hlt hg⟩, ⟨g, hg⟩⟩) η
   · exact (funext fun i => LinearMap.ext fun η => hw' i.1 i.2 i.2.2 η).trans hw.symm
 
-/-- **The global degrees of freedom of an admissible sequence** on a mesh `M`: there are
-`Σ_m #{m-faces of M} dim (test forms on m-faces)` of them. -/
-theorem card_globalDofIdx (M : SimplicialMesh n) (k : ℕ) :
-    Fintype.card ((polyElement n S).GlobalDofIdx M k) =
-      ∑ m ∈ range (n + 1), (M.faces m).ncard * Module.finrank ℝ (S.test k m) := by
-  classical
-  set F := LocalElement.meshFaces M
-  set a : ℕ → ℕ := fun m => Module.finrank ℝ (S.test k m)
-  have hcard : ∀ g ∈ F, #g ∈ range (n + 2) := fun g hg => by
-    obtain ⟨T, -, hgT⟩ := (LocalElement.mem_meshFaces M).1 hg
-    have := Finset.card_le_card hgT
-    rw [card_vertexSet] at this
-    exact mem_range.2 (by omega)
-  have hfib : ∀ m, (M.faces m).ncard = #(F.filter fun g => #g = m + 1) := fun m => by
-    rw [← Set.ncard_coe_finset]
-    congr 1
-    ext g
-    change (#g = m + 1 ∧ ∃ T ∈ M.simplices, g ⊆ vertexSet T) ↔ _
-    rw [Finset.mem_coe, mem_filter, LocalElement.mem_meshFaces]
-    exact and_comm
-  have h0 : (∑ g ∈ F with #g = 0, (if g.Nonempty then a (#g - 1) else 0)) = 0 :=
-    Finset.sum_eq_zero fun g hg => by
-      rw [mem_filter, card_eq_zero] at hg
-      simp [hg.2]
-  rw [Fintype.card_sigma]
-  change ∑ g : F, Fintype.card (S.DofIdx (g : Finset (Fin n → ℝ)) k) = _
-  simp only [card_dofIdx]
-  rw [Finset.sum_coe_sort F (fun g => if g.Nonempty then a (#g - 1) else 0),
-    ← Finset.sum_fiberwise_of_maps_to hcard, sum_range_succ', h0, add_zero]
-  refine sum_congr rfl fun m _ => ?_
-  rw [hfib, ← smul_eq_mul, ← Finset.sum_const]
-  refine sum_congr rfl fun g hg => ?_
-  rw [mem_filter] at hg
-  rw [ite_eq_left (card_pos.1 (by omega)), hg.2]
-  rfl
-
 end PolySeq
-
-namespace LocalElement
-
-variable (E : LocalElement n) (M : SimplicialMesh n)
-
-/-- **`dim Vₕᵏ = dim Λ_hᵏ(M) = #{global DOFs}`**: the gluing is injective (`finrank_V₀` for the
-spaces with vanishing boundary DOFs). -/
-theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
-    Module.finrank ℝ (E.V M k) = Fintype.card (E.GlobalDofIdx M k) := by
-  have hinj : Function.Injective
-      (E.glue M (k : ℤ) ∘ₗ (E.globalSpace M ((k : ℤ).toNat)).subtype) := by
-    rw [LinearMap.coe_comp]
-    exact (E.glue_injective M hΩ k).comp Subtype.val_injective
-  rw [V, LinearMap.finrank_range_of_inj hinj]
-  exact E.finrank_globalSpace M k
-
-end LocalElement
 
 end Feec.FiniteElement

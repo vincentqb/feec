@@ -10,7 +10,9 @@ Two facts about the glued spaces `Vₕᵏ = E.V M k` of an element family on a m
 (`Feec.FiniteElement.LocalElement`):
 
 * **`LocalElement.exists_piece_of_mem_V`**: a form of `Vₕᵏ` is, almost everywhere on each element
-  `Ω ∩ T`, a form field of the local space `P(T)ᵏ` (the frontier of a simplex is null);
+  `Ω ∩ T`, a form field of the local space `P(T)ᵏ` (the frontier of a simplex is null), and
+  equality almost everywhere on `Ω` is equality almost everywhere on every element
+  (`ae_eq_restrict_domain_iff`);
 * **`exists_affine_of_mem_polySpace_one`**: the form fields of `P₁Λᵏ` are affine,
   `ω(x)_s = a_s + Σᵢ A_{s,i} xᵢ` (from `MvPolynomial.eval_eq_of_totalDegree_le_one`: a polynomial
   of total degree at most `1` is `c₀ + Σᵢ cᵢ Xᵢ`); so are those of `P₁⁻Λᵏ ⊆ P₁Λᵏ`, the Whitney
@@ -113,6 +115,20 @@ theorem ae_mem_interior_closedInterior (Ω : Set (Fin n → ℝ))
   filter_upwards [ae_restrict_of_ae h1, h2] with x hx hx'
   by_contra hi
   exact hx ⟨subset_closure hx', hi⟩
+
+/-- **Equality almost everywhere on a mesh is local**: two functions agree almost everywhere on
+`Ω` iff they agree almost everywhere on every element `Ω ∩ T`. -/
+theorem ae_eq_restrict_domain_iff (M : SimplicialMesh n) {β : Type*} {f g : (Fin n → ℝ) → β} :
+    f =ᵐ[volume.restrict M.domain] g ↔
+      ∀ T ∈ M.simplices, f =ᵐ[volume.restrict (M.domain ∩ T.closedInterior)] g := by
+  have e : M.domain = ⋃ T ∈ M.simplices, M.domain ∩ T.closedInterior := by
+    refine Subset.antisymm (fun x hx => ?_) (iUnion₂_subset fun _ _ => inter_subset_left)
+    have : x ∈ ⋃ T ∈ M.simplices, T.closedInterior := by
+      rw [M.biUnion_closedInterior]; exact subset_closure hx
+    obtain ⟨T, hT, hxT⟩ := mem_iUnion₂.1 this
+    exact mem_iUnion₂.2 ⟨T, hT, hx, hxT⟩
+  conv_lhs => rw [e]
+  exact ae_eq_restrict_biUnion_finset_iff _ _ _ _
 
 namespace LocalElement
 

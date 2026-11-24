@@ -3,6 +3,7 @@ module
 public import Solution.Mesh
 public import Solution.Poly
 public import Solution.Trace
+public import Feec.FiniteElement.AffinePieces
 public import Feec.FiniteElement.PolyElement
 
 /-!
@@ -15,8 +16,8 @@ freedom agree on shared faces) is the space `femSpace` of the challenge with no 
 a face iff the tangential traces do (`Feec.FiniteElement.PolySeq.dof_congr` and trace
 determination on faces of every dimension,
 `Feec.FiniteElement.PolySeq.tangentialTraceEq_of_dof_eq_face`), and the glued field is the
-element field almost everywhere on each simplex (the frontiers of simplices are null). (The same
-bridge as in `palomar/fem`.)
+element field almost everywhere on each simplex (`Feec.FiniteElement.LocalElement.glue_ae_eq`: the
+frontiers of simplices are null). (The bridge of `palomar/fem`.)
 
 ## References
 
@@ -36,52 +37,6 @@ namespace FEEC
 open Feec.Domain Feec.FiniteElement Feec.ExteriorFibre
 
 variable {n : ℕ}
-
-/-- Almost every point of a simplex lies in its interior. -/
-theorem ae_mem_interior (Ω : Set (Fin n → ℝ)) (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    ∀ᵐ x ∂volume.restrict (Ω ∩ T.closedInterior), x ∈ interior T.closedInterior := by
-  have h0 := Convex.addHaar_frontier volume (Feec.Mesh.convex_closedInterior T)
-  have h1 : ∀ᵐ x ∂volume, x ∉ frontier T.closedInterior := measure_eq_zero_iff_ae_notMem.1 h0
-  have h2 : ∀ᵐ x ∂volume.restrict (Ω ∩ T.closedInterior), x ∈ T.closedInterior :=
-    ae_restrict_of_ae_restrict_of_subset inter_subset_right
-      (ae_restrict_mem T.isCompact_closedInterior.isClosed.measurableSet)
-  filter_upwards [ae_restrict_of_ae h1, h2] with x hx hx'
-  by_contra hi
-  exact hx ⟨subset_closure hx', hi⟩
-
-/-- Functions agreeing almost everywhere on every `Ω ∩ T` agree almost everywhere on `Ω`. -/
-theorem ae_eq_of_simplices (M : Feec.Mesh.SimplicialMesh n) {f g : (Fin n → ℝ) → ℝ}
-    (h : ∀ T ∈ M.simplices, f =ᵐ[volume.restrict (M.domain ∩ T.closedInterior)] g) :
-    f =ᵐ[volume.restrict M.domain] g := by
-  have e : M.domain = ⋃ T ∈ M.simplices, M.domain ∩ T.closedInterior := by
-    refine Subset.antisymm (fun x hx => ?_) (iUnion₂_subset fun _ _ => inter_subset_left)
-    have : x ∈ ⋃ T ∈ M.simplices, T.closedInterior := by
-      rw [M.biUnion_closedInterior]; exact subset_closure hx
-    obtain ⟨T, hT, hxT⟩ := mem_iUnion₂.1 this
-    exact mem_iUnion₂.2 ⟨T, hT, hx, hxT⟩
-  change ∀ᵐ x ∂volume.restrict M.domain, f x = g x
-  rw [e, ae_restrict_biUnion_finset_iff]
-  exact h
-
-section Glue
-
-variable (E : LocalElement n) (M : Feec.Mesh.SimplicialMesh n)
-
-/-- **The glued field is the element field almost everywhere on each simplex.** -/
-theorem glue_ae_eq {k : ℤ} (v : E.Piecewise M k.toNat) {T : Affine.Simplex ℝ (Fin n → ℝ) n}
-    (hT : T ∈ M.simplices) (s : formIdx n k) :
-    ⇑((E.glue M k v) s) =ᵐ[volume.restrict (M.domain ∩ T.closedInterior)]
-      fun x => E.extendPW M v T x s.1 := by
-  have h1 : ⇑((E.glue M k v) s) =ᵐ[volume.restrict M.domain]
-      pieceFun M fun T => formComp (k := k) (E.extendPW M v T) s :=
-    coeFn_pieceL2 M M.domain (fun T => formComp (k := k) (E.extendPW M v T))
-      (fun T hT s => continuous_formComp (E.contDiff_extendPW M v hT).continuous s) s
-  filter_upwards [ae_restrict_of_ae_restrict_of_subset inter_subset_left h1,
-    ae_mem_interior M.domain T] with x hx hx'
-  rw [hx, pieceFun_of_mem_interior M _ hT hx']
-  rfl
-
-end Glue
 
 variable (S : PolySeq) (M : SimplicialMesh n) (Ω : Set (Fin n → ℝ)) (hdom : M.domain = Ω)
 
@@ -141,20 +96,18 @@ theorem ofPieces_mem {k : ℤ} {u : L2Form Ω k} {p : Affine.Simplex ℝ (Fin n 
 theorem glue_ofPieces {k : ℤ} {u : L2Form Ω k} {p : Affine.Simplex ℝ (Fin n → ℝ) n → FormField n}
     (hp : IsFemPieces Ω M S k u p) :
     (polyElement n S.toFeec).glue (M.toFeec Ω hdom) k (ofPieces S M Ω hdom p hp.1) = u := by
-  refine PiLp.ext fun s => Lp.ext ?_
-  refine ae_eq_of_simplices (M.toFeec Ω hdom) fun T hT =>
-    (glue_ae_eq _ (M.toFeec Ω hdom) _ hT s).trans ?_
-  rw [LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT]
-  exact (hp.2.1 T hT s).symm
+  refine PiLp.ext fun s => Lp.ext ((ae_eq_restrict_domain_iff (M.toFeec Ω hdom)).2 fun T hT =>
+    (LocalElement.glue_ae_eq _ (M.toFeec Ω hdom) _ hT s).trans (hp.2.1 T hT s).symm)
 
 theorem isFemPieces_glue {k : ℤ}
     (v : (polyElement n S.toFeec).globalSpace (M.toFeec Ω hdom) k.toNat) :
     IsFemPieces Ω M S k ((polyElement n S.toFeec).glue (M.toFeec Ω hdom) k v)
       ((polyElement n S.toFeec).extendPW (M.toFeec Ω hdom) v.1) := by
-  refine ⟨fun T hT => ?_, fun T hT s => glue_ae_eq _ (M.toFeec Ω hdom) v.1 hT s,
-    fun T hT T' hT' => ?_⟩
+  refine ⟨fun T hT => ?_, fun T hT s => ?_, fun T hT T' hT' => ?_⟩
   · rw [LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT, ← mem_space_iff S (T := T)]
     exact (v.1 ⟨T, hT⟩).2
+  · rw [LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT]
+    exact LocalElement.glue_ae_eq _ (M.toFeec Ω hdom) v.1 hT s
   · rw [LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT,
       LocalElement.extendPW_of_mem _ (M.toFeec Ω hdom) _ hT']
     exact traceEq_of_mem_globalSpace S M Ω hdom v.2 hT hT'

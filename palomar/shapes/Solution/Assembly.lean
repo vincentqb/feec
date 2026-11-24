@@ -3,6 +3,7 @@ module
 public import Solution.Dof
 public import Solution.Spaces
 public import Feec.FiniteElement.PolyAssembly
+public import Feec.FiniteElement.PolyComplex
 
 /-!
 # The bridge for the assembly
@@ -15,9 +16,9 @@ taken on every simplex by exactly one form
 (`Feec.FiniteElement.PolySeq.existsUnique_vertexMoment_eq`), these forms have single-valued
 traces (conformity by moments) and glue to an element of the finite element space
 (`ofPieces_mem_of_traceEq`, `isFemPieces_glue`), which is unique, a finite element form being
-almost everywhere its pieces (`ae_eq_of_simplices`); the pieces are unique by the injectivity of
-the gluing (`Feec.FiniteElement.LocalElement.glue_injective`);
-and the finite element space is the glued space of `Feec.FiniteElement.polyElement`
+almost everywhere its pieces (`Feec.FiniteElement.ae_eq_restrict_domain_iff`); the pieces are
+unique by the injectivity of the gluing (`Feec.FiniteElement.LocalElement.glue_injective`); and
+the finite element space is the glued space of `Feec.FiniteElement.polyElement`
 (`mem_V_iff`), of dimension `Feec.FiniteElement.LocalElement.finrank_V` counted by
 `Feec.FiniteElement.PolySeq.card_globalDofIdx` (the faces through `SimplicialMesh.faces_eq`).
 
@@ -145,9 +146,8 @@ theorem assembly_of_feec (M : SimplicialMesh n) (S : PolySeq) (k : ℕ) :
       have hpp : ∀ T ∈ M.simplices, p' T = p T := fun T hT =>
         (congrArg Subtype.val (hwu T hT ⟨p' T, by rw [← S.space_eq]; exact hp'.1 T hT⟩
           ((hmom T (p' T)).1 (hp'c T hT)))).trans (hpT T hT).symm
-      refine PiLp.ext fun s => Lp.ext (ae_eq_of_simplices M' fun T hT => ?_)
-      have h2 := glue_ae_eq E M' (ofPieces S M M.domain rfl p hpS) hT s
-      rw [LocalElement.extendPW_of_mem _ M' _ hT] at h2
+      refine PiLp.ext fun s => Lp.ext ((ae_eq_restrict_domain_iff M').2 fun T hT => ?_)
+      have h2 := LocalElement.glue_ae_eq E M' (ofPieces S M M.domain rfl p hpS) hT s
       refine (hp'.2.1 T hT s).trans ?_
       rw [hpp T hT]
       exact h2.symm

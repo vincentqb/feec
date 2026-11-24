@@ -25,7 +25,7 @@ Then
 
 * `Λ_hᵏ(M)` is finite-dimensional of dimension `Σ_g #DOF(g)` (`finrank_globalSpace`), the global
   DOFs being a linear isomorphism (`globalDofEquiv`); the gluing into `L²(Ω; Λᵏ)` is injective
-  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension; with
+  (`glue_injective`), so the glued spaces `Vₕᵏ` have the same dimension (`finrank_V`); with
   vanishing boundary DOFs, the dimension is the number of interior DOFs, those of the faces not
   contained in a boundary facet (`interiorDofEquiv`, `finrank_globalSpace₀`, `finrank_V₀`);
 * `Λ_hᵏ(M) ⊆ {piecewise fields with continuous tangential traces}`
@@ -767,6 +767,16 @@ theorem glue_injective (hΩ : IsOpen M.domain) (k : ℕ) :
     exact ⟨z, hz.1, hz.2, hzΩ⟩
   have hclosed : IsClosed {y | f y = 0} := isClosed_eq hf continuous_const
   exact closure_minimal (fun y hy => hEq hy) hclosed (hcl hx)
+
+/-- **`dim Vₕᵏ = dim Λ_hᵏ(M) = #{global DOFs}`**: the gluing is injective. -/
+theorem finrank_V (hΩ : IsOpen M.domain) (k : ℕ) :
+    Module.finrank ℝ (E.V M k) = Fintype.card (E.GlobalDofIdx M k) := by
+  have hinj : Function.Injective
+      (E.glue M (k : ℤ) ∘ₗ (E.globalSpace M ((k : ℤ).toNat)).subtype) := by
+    rw [LinearMap.coe_comp]
+    exact (E.glue_injective M hΩ k).comp Subtype.val_injective
+  rw [V, LinearMap.finrank_range_of_inj hinj]
+  exact finrank_globalSpace E M k
 
 /-! ### The dimension of the spaces with vanishing boundary DOFs -/
 

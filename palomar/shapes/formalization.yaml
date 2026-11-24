@@ -216,7 +216,8 @@ automation:
     (2026-11-17); the entry was split off palomar/fem on 2026-11-18 with unchanged statements.
     FEEC.assembly and Feec.FiniteElement.PolyAssembly were written by an AI agent on 2026-11-24,
     the statement revised after an independent AI review (the bridges of the finite element
-    spaces, Solution/Mesh.lean, Trace.lean and Spaces.lean, are those of palomar/fem).
+    spaces, Solution/Mesh.lean, Trace.lean and Spaces.lean, are adapted from those of
+    palomar/fem).
 
 fidelity:
   divergences: >-
@@ -235,10 +236,10 @@ fidelity:
     it fails. The conclusions of invariance (the summands of (3.10), (3.18), Theorem 3.5) are
     stated for the pullback of every linear (resp. affine) map, singular ones included; the
     hypotheses of the classifications only for the invertible ones (GL(n, K) for the subspaces
-    of H_r Lambda^k; x -> g x + b for Theorem 3.6, which is stronger than AFW's hypothesis of all
-    affine maps). The irreducibility is stated for r, k >= 1 (H_(r+1) Lambda^(k+1)); Theorem
-    3.6's s >= -1 is stated as the two alternatives s = -1 (d P_(r+1) Lambda^(k-1)) and
-    0 <= s <= r.
+    of H_r Lambda^k; x -> g x + b for Theorem 3.6, a weaker hypothesis than AFW's invariance under
+    all affine maps, hence a stronger theorem). The irreducibility is stated for r, k >= 1
+    (H_(r+1) Lambda^(k+1)); Theorem 3.6's s >= -1 is stated as the two alternatives s = -1
+    (d P_(r+1) Lambda^(k-1)) and 0 <= s <= r.
     (3) FEEC.unisolvent states unisolvence as injectivity of the moments together with the count
     (number of moments = dimension); bijectivity onto the dual for chosen bases of the test
     spaces follows by linear algebra and is not stated. A moment is taken over a simplex given by
@@ -256,8 +257,9 @@ fidelity:
     spaces with the piecewise polynomial forms of H Lambda^k(Omega); that identification is not
     claimed (the inclusion in H Lambda^k(Omega) is proved in Feec and is part of the subcomplexes
     of palomar/fem; the converse is not proved). The uniqueness of the pieces, hence the
-    bijection, and the dimension need an open domain: a mesh of a null set carries only the zero
-    form.
+    bijection, and the dimension are stated for meshes of open sets; some such hypothesis is
+    needed, since the closure of a null set (the rational points of a closed simplex, say) can be
+    meshed, and on such a mesh every L^2 form is zero.
     (4) Shared notions: the polynomial forms (PolyForm, polyForm, homForm, koszul, polyFormMinus,
     evalForm), the form fields and the sign epsilon(j, s) that they and the moments use
     (FormField, sgn), the covector value covEval, the L^2 forms (FormIdx, L2Form), the admissible
@@ -333,10 +335,11 @@ alignment:
       status: "proved"
       note: >-
         From Feec.FiniteElement.PolySeq.tangentialTraceEq_tfae (conformity by moments on a face of
-        a simplex), PolySeq.existsUnique_vertexMoment_eq (prescribed moments on a simplex, along
-        any enumerations), LocalElement.glue_injective, LocalElement.finrank_V and
-        PolySeq.card_globalDofIdx (Feec.FiniteElement.PolyAssembly) for the element family
-        Feec.FiniteElement.polyElement (Solution/Assembly.lean; femSpace is its glued space,
-        Solution/Spaces.lean, the bridge of palomar/fem).
+        a simplex) and PolySeq.existsUnique_vertexMoment_eq (prescribed moments on a simplex, along
+        any enumerations) of Feec.FiniteElement.PolyAssembly, LocalElement.glue_injective and
+        LocalElement.finrank_V (Feec.FiniteElement.Assembly) and PolySeq.card_globalDofIdx
+        (Feec.FiniteElement.PolyComplex), for the element family Feec.FiniteElement.polyElement
+        (Solution/Assembly.lean; femSpace is its glued space, Solution/Spaces.lean, the bridge of
+        palomar/fem).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

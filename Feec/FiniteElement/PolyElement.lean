@@ -50,6 +50,8 @@ are the same for all simplices by affine invariance (`localPolySpace_eq`).
 * `PolyKind.test_of_transition`: **for each of the four transitions**, the traces on the facets
   and the exterior derivative of a target test form are source test forms;
 * `vertexMoment_extDeriv`: Stokes' formula for moments along any vertex family;
+* `vertexMoment_congr`: along points of a face, the moments only see the tangential traces on
+  the face (`PolySeq.dof_congr` for the degrees of freedom);
 * `PolySeq.isUnisolvent_dof`, `PolySeq.tangentialTraceEq_of_dof_eq`, `PolySeq.dof_congr`,
   `PolySeq.dof_comp_extDerivC1_mem_span`: the axioms of an element family;
 * `PolySeq.tangentialTraceEq_of_dof_eq_face`: the degrees of freedom on a face of any dimension
@@ -336,6 +338,16 @@ theorem range_lexEnum {g : Finset (Fin n → ℝ)} {m : ℕ} (h : #g = m + 1) :
   conv_rhs => rw [← image_lexEnum h]
   rw [coe_image, coe_univ, Set.image_univ]
 
+/-- An enumeration of the points of `g` is a reordering of their lexicographic enumeration. -/
+theorem exists_lexEnum_eq_comp_perm {g : Finset (Fin n → ℝ)} {m : ℕ} (hc : #g = m + 1)
+    {q : Fin (m + 1) → Fin n → ℝ} (hq : Set.range q = g) :
+    ∃ π : Equiv.Perm (Fin (m + 1)), lexEnum g m = q ∘ π := by
+  have hqinj : Function.Injective q := by
+    have himg : Finset.univ.image q = g := Finset.coe_injective (by simp [hq])
+    rw [← Set.injOn_univ, ← Finset.coe_univ]
+    exact Finset.injOn_of_card_image_eq (by rw [himg, card_univ, Fintype.card_fin, ← hc])
+  exact exists_perm_comp_eq (lexEnum_injective hc) hqinj (by rw [range_lexEnum hc, hq])
+
 /-- A subfamily of a sorted family is the sorted enumeration of its range. -/
 theorem lexEnum_image_comp {N m : ℕ} {p : Fin (N + 1) → Fin n → ℝ}
     (hp : StrictMono fun i => toLex (p i)) {e : Fin (m + 1) → Fin (N + 1)} (he : StrictMono e) :
@@ -595,6 +607,21 @@ theorem pullback_simplexMatrix_eq_of_tangentialTraceEq {m k : ℕ} {g : Finset (
     exact vsub_mem_vectorSpan ℝ (Finset.mem_coe.2 (hq _)) (Finset.mem_coe.2 (hq 0))
   · rw [(hα.pullback _) t ht, (hβ.pullback _) t ht]
 
+/-- **Moments only see tangential traces**: along points `q₀, …, q_m` of `g`, the moment
+`∫_{T̂_m} F_q^* ω ∧ η` of a form of degree `k` depends only on its tangential trace on `g`. -/
+theorem vertexMoment_congr {m k : ℕ} {g : Finset (Fin n → ℝ)} (q : Fin (m + 1) → Fin n → ℝ)
+    (hq : ∀ l, q l ∈ g) (η : FormField m) {ω ω' : FormField n} (hω : ∀ x, IsDeg k (ω x))
+    (hω' : ∀ x, IsDeg k (ω' x))
+    (h : ∀ x ∈ convexHull ℝ (g : Set (Fin n → ℝ)), TangentialTraceEq g k (ω x) (ω' x)) :
+    vertexMoment q η ω = vertexMoment q η ω' := by
+  rw [vertexMoment_eq_integral, vertexMoment_eq_integral]
+  refine setIntegral_congr_fun (measurableSet_refSimplex _) fun y hy => ?_
+  have hx : affine (simplexMatrix q) (q 0) y ∈ convexHull ℝ (g : Set (Fin n → ℝ)) :=
+    convexHull_mono (Set.range_subset_iff.2 fun l => Finset.mem_coe.2 (hq l))
+      (simplexMap_mem_convexHull q hy)
+  simp only [wedgeField, affinePullback_apply]
+  rw [pullback_simplexMatrix_eq_of_tangentialTraceEq q hq (hω _) (hω' _) (h _ hx)]
+
 /-- The moment of the degree-`k` part, `ω ↦ ∫_{T̂_m} F_q^* ω_k ∧ η`, as a linear functional on
 continuous forms. -/
 def degMoment (k : ℕ) {m : ℕ} (q : Fin (m + 1) → Fin n → ℝ) (η : FormField m)
@@ -845,16 +872,9 @@ theorem dof_congr {g : Finset (Fin n → ℝ)} {k : ℕ} (i : S.DofIdx g k) {w �
       TangentialTraceEq g k ((w : FormField n) x) ((η : FormField n) x)) :
     S.dof g k i w = S.dof g k i η := by
   have hg : #g = #g - 1 + 1 := by have := card_pos.2 i.2; omega
-  set q := lexEnum g (#g - 1)
-  have hqg : ∀ l, q l ∈ g := lexEnum_mem hg
-  rw [dof_apply, dof_apply, vertexMoment_eq_integral, vertexMoment_eq_integral]
-  refine setIntegral_congr_fun (measurableSet_refSimplex _) fun y hy => ?_
-  have hx : affine (simplexMatrix q) (q 0) y ∈ convexHull ℝ (g : Set (Fin n → ℝ)) := by
-    rw [← range_lexEnum hg]
-    exact simplexMap_mem_convexHull q hy
-  simp only [wedgeField, affinePullback_apply]
-  rw [pullback_simplexMatrix_eq_of_tangentialTraceEq q hqg (isDeg_degField k _ _)
-    (isDeg_degField k _ _) (TangentialTraceEq.degField (h _ hx))]
+  rw [dof_apply, dof_apply]
+  exact vertexMoment_congr _ (lexEnum_mem hg) _ (isDeg_degField k _) (isDeg_degField k _)
+    fun x hx => (h x hx).degField
 
 /-- Stokes compatibility for one test form: `ω ↦ ∫ F_q^* (dω)_{k+1} ∧ η`, for a test form `η` of
 degree `k + 1`, is a combination of the degree-`k` degrees of freedom of the faces of `g`. -/

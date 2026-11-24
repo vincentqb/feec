@@ -10,7 +10,8 @@ The compared theorems of `Challenge.lean`. `FEEC.affineInvariantForms` and the c
 theorems are `Feec.FiniteElement.InvariantForm`, `Feec.FiniteElement.AffineInvariantForm` and
 `Feec.Counterexamples.PositiveCharacteristic` through `Solution.Affine`; `FEEC.unisolvent` is
 `Feec.FiniteElement.LocalDof` through `Solution.Dof`, and `FEEC.assembly` is
-`Feec.FiniteElement.PolyAssembly` through `Solution.Assembly`.
+`Feec.FiniteElement.PolyAssembly`, with the dimensions of `Feec.FiniteElement.Assembly` and
+`Feec.FiniteElement.PolyComplex`, through `Solution.Assembly`.
 
 ## References
 

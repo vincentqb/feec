@@ -400,7 +400,9 @@ theorem norm_apply_le_defect (h : κ) (v : S.X h) :
 theorem graphDefect_le_defect (h : κ) : S.toFeec.graphDefect h ≤ √2 * S.defect h :=
   S.toFeec.graphDefect_le_of_forall h (S.defect_nonneg h) (S.norm_apply_le_defect h)
 
-theorem tendsto_graphDefect {S : HilbertComplex.CrimeFamily.{u} H a m κ}
+/-- A vanishing defect gives a vanishing `Feec` defect in the graph norm
+(`graphDefect_le_defect`). -/
+theorem tendsto_graphDefect_of_tendsto_defect {S : HilbertComplex.CrimeFamily.{u} H a m κ}
     (hJ : Tendsto S.defect S.l (𝓝 0)) : Tendsto S.toFeec.graphDefect S.l (𝓝 0) :=
   squeeze_zero S.toFeec.graphDefect_nonneg S.graphDefect_le_defect
     (by simpa using hJ.const_mul √2)
@@ -448,8 +450,9 @@ theorem cochainVerdict
       cohomology := fun hπ => ?_
       rate := ⟨S.toFeec.cochainRateConst (max Cπ 0) cP * √2, fun h {f σ u p} hs {σh uh ph} hsh
         {ε} hσ hu hp hb hJ => ?_⟩ }
-  · exact (hi.toFeec.tendsto_staticError hcr' P.toFeec hP hcP (tendsto_graphDefect hJ)
-      (fun x hx => hπ ⟨x, hx⟩) f).congr fun h => (S.readError_sol_eq hcr' hs (hsh h)).symm
+  · exact (hi.toFeec.tendsto_staticError hcr' P.toFeec hP hcP
+      (tendsto_graphDefect_of_tendsto_defect hJ) (fun x hx => hπ ⟨x, hx⟩) f).congr fun h =>
+        (S.readError_sol_eq hcr' hs (hsh h)).symm
   · have : FiniteDimensional 𝕜 ((H.win a m).total.harmonic ()) := (H.totalHarmonic_eq a m) ▸ ‹_›
     have happ : ∀ q ∈ (H.win a m).total.harmonic (), Tendsto (fun h =>
         ‖q - S.toFeec.incl h (P.toFeec.π h q)‖) S.l (𝓝 0) := fun q hq =>
@@ -545,7 +548,7 @@ theorem heatVerdict
       K := ⊤
       isClosed_K := by rw [Submodule.top_coe]; exact isClosed_univ
       l := S.l
-      tendsto_graphDefect := tendsto_graphDefect hJ }
+      tendsto_graphDefect := tendsto_graphDefect_of_tendsto_defect hJ }
   have hconv' : ∀ f, Tendsto (fun h => S.toFeec.staticError hcr' h f) S.l (𝓝 0) := fun f =>
     ((S.convergesAt_iff.1 (hconv f)) _ _ _ (H.isTotalMixedSolution_totalSol a m hcr' f)
       (fun h => S.inclD h (S.toFeec.mixedSol h f).fst)

@@ -3818,8 +3818,10 @@ example (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP) (hP : G.toF
     {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
     (hreg : ∀ t ∈ Icc 0 T, G.toHeat.S t x ∈ H.heatReg Reg L) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
-    type_of% (G.rate_heat_of_static hcr hcP hP hm hK0 hK hJ hL hx hreg h ht) :=
-  G.feec.heat_rate hcr hcP hP hm hK0 hK hJ hL hx hreg h ht
+    type_of% (G.rate_heat_of_static hcr hcP hP hm hK0 hK
+      (fun h => (G.toFamily.graphDefect_le h).trans (hJ h)) hL hx hreg h ht) :=
+  G.feec.heat_rate hcr hcP hP hm hK0 hK (fun h => (G.toFamily.graphDefect_le h).trans (hJ h)) hL
+    hx hreg h ht
 
 end Crime
 
@@ -4033,8 +4035,8 @@ theorem crime_old_tendsto_staticError (hi : S.IsCochain) (hcr : ∀ i, H.ClosedR
     Tendsto (fun h => S.staticError hcr h f) l (𝓝 0) := by
   cases isEmpty_or_nonempty κ
   · exact tendsto_of_isEmpty
-  · exact hi.tendsto_staticError hcr (P.toCochainProj (Classical.arbitrary κ)) hP hcP hJ
-      (fun x _ => happ x) f
+  · exact hi.tendsto_staticError hcr (P.toCochainProj (Classical.arbitrary κ)) hP hcP
+      (S.tendsto_graphDefect_of_tendsto hJ) (fun x _ => happ x) f
 
 end CochainProjGraph
 

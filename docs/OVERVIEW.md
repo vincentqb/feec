@@ -237,8 +237,7 @@ the residual of any discrete triple
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le`), and the residual splits into the
 inner-product defect in the graph norm `‖1 − Jₕ‖_{Vₕ}` (`1 − Jₕ` acts only on discrete forms whose
 graph norm the estimates control), the read error, the cochain defects of `u = G f` and `𝐝 u`, and
-the harmonic
-defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms
+the harmonic defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.norm_staticResidual_le`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le_of_split`). Consistent approximation
 is again equivalent to convergence
@@ -248,8 +247,7 @@ of data it gives convergence for every datum
 (`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`,
 `Feec.HilbertComplex.Approximation.HeatCrime`; it uses only the family, the constraint, the filter
 and the inner-product defect in the graph norm, `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily`)
-follows the
-conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
+follows the conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
 projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static errors tend to `0` (the
 inner-product defect enters its consistency defect; in the crown, from static consistency on a
 dense set), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖_{Vₕ} ≤ K mᵅ` gives the heat rate

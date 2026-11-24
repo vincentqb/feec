@@ -503,7 +503,7 @@ theorem shear_J_ne_one (n : ℕ) : (shearIdZero 𝕜).J n ≠ 1 := fun hJ => by
     change ‖harmonicDatum 𝕜 - (shearIdZero 𝕜).incl n
       ((shearIdZero 𝕜).proj n (harmonicDatum 𝕜))‖ = 0
     rw [shear_incl_proj, sub_self, norm_zero]
-  rw [e, (shearIdZero 𝕜).graphDefect_eq_zero hJ] at h
+  rw [e, ((shearIdZero 𝕜).graphDefect_eq_zero_iff n).2 hJ] at h
   simp only [mul_zero, zero_mul, add_zero] at h
   exact (perturbMesh_pos n).not_ge h
 

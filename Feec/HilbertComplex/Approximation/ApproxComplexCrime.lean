@@ -55,8 +55,8 @@ equivalent to `iₕ Rₕ y → y` (`ApproxComplexCrime.consistent_iff_tendsto_in
 is the convergence hypothesis on the projection, and the content is in the ways to check it.
 The residual splits exactly (`inner_residual_eq`) into the inner-product defect, the
 graph-norm approximation error `‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖` and the cochain defect, so graph-norm
-approximation and a cochain defect tending to `0` give it (`consistent_of_cochainDefect`,
-`ApproxComplexCrime.ofCochainDefect`). It also holds with a Galerkin projection as approximant
+approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖ → 0` give it
+(`consistent_of_cochainDefect`, `ApproxComplexCrime.ofCochainDefect`). It also holds with a Galerkin projection as approximant
 (residual `0`): `ApproxComplexCrime.ofGalerkinCore` re-reads a discretization with
 orthogonal reading maps whose generator is `𝐝ₕ - 𝐝ₕ*` and a core whose comparison satisfies the
 Galerkin identity `(1 - Lₕ) pₕ(t) = iₕ* (1 - L) e^{tL} x` as a complex-level family; the cochain
@@ -70,6 +70,13 @@ core (its convergence is not re-proved) and adds the complex-level structure.
   `w` of residual `≤ ε`.
 * `ApproxComplexCrime.Family.inner_residual_eq`, `norm_residual_le`: the residual is at most
   `‖1 - Jₕ‖ (‖w‖ + ‖𝐝ₕ w‖) + C (‖y - iₕ w‖ + ‖𝐝 y - iₕ 𝐝ₕ w‖) + δ`, `δ` the cochain defect.
+* `ApproxComplexCrime.Family.graphDefect`: **the inner-product defect in the graph norm**
+  `‖1 - Jₕ‖_{Vₕ}`, the norm of `1 - Jₕ` from the graph space `Vₕ` of `𝐝ₕ` to `Xₕ`, so
+  `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} (‖v‖ + ‖𝐝ₕ v‖)` (`norm_one_sub_J_apply_le`); at most `‖1 - Jₕ‖`
+  (`graphDefect_le`), and at most `√2 δ` if `‖(1 - Jₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v`
+  (`graphDefect_le_of_forall`). It is the defect hypothesis of the heat and wave families
+  (`HeatFamily`, `ApproxComplexCrime`): `Bₕ` is bounded in the graph norm,
+  `‖Bₕ z‖ + ‖𝐝ₕ Bₕ z‖ ≤ 8 C ‖z‖` (`norm_load_add_le`).
 * `ApproxComplexCrime.Family.load_defect`, `norm_load_sub_adjoint_le`: **the defect identity**
   `Rₕ (L y) - Lₕ Rₕ y = Δₕ (L y) - Δₕ y`, `Δₕ z = Rₕ z - iₕ* z`, and
   `‖Δₕ z‖ ≤ ‖1 - Jₕ‖ ‖Rₕ z‖ + C ‖z - iₕ Rₕ z‖`.
@@ -390,11 +397,11 @@ theorem norm_one_sub_J_le (h : κ) : ‖1 - S.J h‖ ≤ 1 + S.boundConst ^ 2 :=
   rw [ContinuousLinearMap.adjoint.norm_map, pow_two]
   exact mul_le_mul (S.norm_incl_le h) (S.norm_incl_le h) (norm_nonneg _) S.boundConst_nonneg
 
-/-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` on the
-graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`), the least `δ` with
+/-- **The inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ}`: the norm of `1 - Jₕ` from the
+graph space `Vₕ` of `𝐝ₕ` (`‖v‖²_{Vₕ} = ‖v‖² + ‖𝐝ₕ v‖²`) to `Xₕ`, the least `δ` with
 `‖(1 - Jₕ) v‖ ≤ δ ‖v‖_{Vₕ}`. It is at most `‖1 - Jₕ‖` (`graphDefect_le`), and it is the defect
-that the static and heat theories with crimes use: they apply `1 - Jₕ` only to discrete forms
-whose graph norm they control (`norm_one_sub_J_apply_le`,
+that the static, heat and wave theories with crimes use: they apply `1 - Jₕ` only to discrete
+forms whose graph norm they control (`norm_one_sub_J_apply_le`,
 `norm_one_sub_J_apply_le_of_D_eq_zero`). -/
 def graphDefect (h : κ) : ℝ :=
   ‖(1 - S.J h) ∘L ((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).graphFst‖
@@ -406,9 +413,15 @@ theorem graphDefect_le (h : κ) : S.graphDefect h ≤ ‖1 - S.J h‖ :=
   ContinuousLinearMap.opNorm_le_bound _ (norm_nonneg _) fun v =>
     ((1 - S.J h).le_opNorm _).trans (mul_le_mul_of_nonneg_left (norm_graphFst_le v) (norm_nonneg _))
 
-/-- `‖1 - Jₕ‖_{Vₕ} = 0` when `Jₕ = 1`. -/
-theorem graphDefect_eq_zero {h : κ} (hJ : S.J h = 1) : S.graphDefect h = 0 := by
-  rw [graphDefect, hJ, sub_self, ContinuousLinearMap.zero_comp, norm_zero]
+/-- `‖1 - Jₕ‖_{Vₕ} = 0` iff `Jₕ = 1` (the inclusion of the graph space is onto). -/
+theorem graphDefect_eq_zero_iff (h : κ) : S.graphDefect h = 0 ↔ S.J h = 1 := by
+  refine ⟨fun h0 => ?_, fun hJ => by
+    rw [graphDefect, hJ, sub_self, ContinuousLinearMap.zero_comp, norm_zero]⟩
+  rw [graphDefect, norm_eq_zero] at h0
+  refine (sub_eq_zero.1 (ContinuousLinearMap.ext fun v => ?_)).symm
+  have := congrArg (fun A => A (((S.D h : S.X h →ₗ[𝕜] S.X h).toPMap ⊤).toGraphSpace
+    ⟨v, Submodule.mem_top⟩)) h0
+  exact this
 
 /-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖_{Vₕ}` on the graph space `Vₕ` of `𝐝ₕ`. -/
 theorem norm_one_sub_J_graphFst_le (h : κ)
@@ -737,16 +750,17 @@ structure ApproxComplexCrime.HeatFamily (H : HilbertComplex 𝕜 c W) (κ : Type
 /-- An **approximating family of discrete differential spaces** for `H`: a family
 (`ApproxComplexCrime.Family`) of discrete differential spaces `(Xₕ, 𝐝ₕ)` with reading maps that
 need not be cochain maps, a closed constraint `K`, a filter `l`, a set `A ⊆ D(L)` of admissible
-states, a core `Z ≤ D(L²)` whose forward orbits and those of `L Z` stay in `A`, and the
-Holst–Stern hypotheses:
+states, a core `Z ≤ D(L²)` whose forward orbits and those of `L Z` stay in `A`, and hypotheses
+of Holst–Stern type:
 
 * the **inner-product defect in the graph norm** `‖1 - Jₕ‖_{Vₕ} → 0` (`Family.graphDefect`);
 * **consistent approximation** on `A`: approximants `wₕ` with `‖y - iₕ wₕ‖ → 0` whose discrete
   residual `⟪(1 - Lₕ) wₕ, v⟫ - ⟪(1 - L) y, iₕ v⟫` tends to `0` in the dual discrete graph norm.
   By `ApproxComplexCrime.Family.inner_residual_eq` the residual is the sum of the inner-product
   defect, the graph-norm approximation error and the cochain defect, so it follows from graph-norm
-  approximation and a cochain defect tending to `0` (`ApproxComplexCrime.ofCochainDefect`); it can
-  also be checked directly with a Galerkin projection as approximant (residual `0`).
+  approximation, a cochain defect tending to `0` and `‖1 - Jₕ‖ → 0`
+  (`ApproxComplexCrime.ofCochainDefect`); it can also be checked directly with a Galerkin
+  projection as approximant (residual `0`).
 
 The field `consistent` is equivalent to `iₕ Rₕ y → y` on `A`
 (`consistent_iff_tendsto_incl_load`); from it and the inner-product defect, the uniform
@@ -1069,8 +1083,8 @@ end ApproxFEEC
 open ApproxFEEC in
 /-- **The approximating FEEC theorem for approximating families of discrete differential spaces**
 (reading maps that need not be cochain maps). For an approximating family `F`
-(`ApproxComplexCrime`: inner-product defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximation on the
-admissible states), the discretization `ofComplexCrime F` (generator the Hodge wave operator
+(`ApproxComplexCrime`: inner-product defect `‖1 - Jₕ‖_{Vₕ} → 0` in the graph norm and consistent
+approximation on the admissible states), the discretization `ofComplexCrime F` (generator the Hodge wave operator
 `𝐝ₕ - 𝐝ₕ*` of `Xₕ`) with the core `ofComplexCrimeCore F` (comparison: the exact-load modified
 elliptic projection of the exact orbit) satisfies:
 
@@ -1835,7 +1849,7 @@ def ApproxComplexCrime.ofGalerkinCore : ApproxComplexCrime.{u} H κ where
   Z_le := hZ
   orbit_mem x hx t ht := ⟨⟨x, hx, t, ht, Or.inl rfl⟩, ⟨x, hx, t, ht, Or.inr rfl⟩⟩
   tendsto_graphDefect := tendsto_const_nhds.congr fun h =>
-    ((ApproxComplexCrime.Family.ofApproxFEEC F D hDD).graphDefect_eq_zero
+    (((ApproxComplexCrime.Family.ofApproxFEEC F D hDD).graphDefect_eq_zero_iff h).2
       (ApproxComplexCrime.Family.ofApproxFEEC_J F D hDD hF h)).symm
   consistent y hy ε hε := by
     set S := ApproxComplexCrime.Family.ofApproxFEEC F D hDD

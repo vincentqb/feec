@@ -505,9 +505,8 @@ theorem norm_sub_ritzR_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
 
 include hcP hP hm hK0 hK hJ hL in
 /-- **Static consistency of the heat Ritz projection with crimes**:
-`‖Δₕ ℓ(A y)‖ ≤ 2 C e(A y) + C e(A² y) + ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖A² y‖ ≤
-(3 C + 16 c_P² C) K L mᵅ`
-on the regular states. -/
+`‖Δₕ ℓ(A y)‖ ≤ 2 C e(A y) + C e(A² y) + ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖A² y‖`, at most
+`(3 C + 16 c_P² C) K L mᵅ` on the regular states. -/
 theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
     ‖F.ritzDefect hcr h (DissipFEEC.genExt (-H.hodgeLaplacian) y,
       DissipFEEC.genExt (-H.hodgeLaplacian) (DissipFEEC.genExt (-H.hodgeLaplacian) y))‖ ≤

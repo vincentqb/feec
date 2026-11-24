@@ -43,8 +43,9 @@ The defects are the price of the crimes: the inner-product defect enters the est
 measured from the discrete graph norm, as the least `δ` with
 `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)`, since the estimates apply `1 - iₕ* iₕ` only to discrete
 forms whose graph norm they control. It is at most the operator norm `‖1 - iₕ* iₕ‖`, which
-[HolstStern2012], §3.3, assume to tend to `0`, and can be much smaller: for mass lumping
-([Thomee2006], Ch. 15) it is `O(h)`, while `‖1 - iₕ* iₕ‖` does not tend to `0`. The witness
+[HolstStern2012], §3.3, require to tend to `0` for convergence, and can be much smaller: for mass
+lumping of `P₁` elements ([Thomee2006], Ch. 15) it is `O(h)`, `h` the longest edge, while
+`‖1 - iₕ* iₕ‖ ≥ n / (n + 2)` on every mesh of dimension `n`. The witness
 `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert complex with
 nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`, hence a
 vanishing defect, meet the hypotheses of the three clauses, read a discrete harmonic form off the
@@ -295,8 +296,8 @@ def ConvergesAt (f : Total W a m) : Prop :=
     (∀ h, S.IsSolution h f (xh h)) → Tendsto (fun h => S.readError h x (xh h)) S.l (𝓝 0)
 /-- The **inner-product defect** of the reading map in the discrete graph norm: the least `δ ≥ 0`
 with `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v ∈ Xₕ`, the norm of `1 - iₕ* iₕ` from `Xₕ`
-with the graph norm of `𝐝ₕ` (an infimum over a set that contains `‖1 - iₕ* iₕ‖`, hence at most
-`‖1 - iₕ* iₕ‖`). -/
+with the graph norm of `𝐝ₕ` to `Xₕ` (the set of these `δ` is closed, so the infimum is attained,
+and contains `‖1 - iₕ* iₕ‖`, so the defect is at most `‖1 - iₕ* iₕ‖`). -/
 def defect (h : κ) : ℝ :=
   sInf {δ | 0 ≤ δ ∧ ∀ v, ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)}
 /-- The **uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `N(𝐝ₕ)ᗮ`. -/

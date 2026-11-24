@@ -255,8 +255,8 @@ def ConvergesAt (f : Total W a m) : Prop :=
     (∀ h, S.IsSolution h f (xh h)) → Tendsto (fun h => S.readError h x (xh h)) S.l (𝓝 0)
 /-- The **inner-product defect** of the reading map in the discrete graph norm: the least `δ ≥ 0`
 with `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v ∈ Xₕ`, the norm of `1 - iₕ* iₕ` from `Xₕ`
-with the graph norm of `𝐝ₕ` (an infimum over a set that contains `‖1 - iₕ* iₕ‖`, hence at most
-`‖1 - iₕ* iₕ‖`). -/
+with the graph norm of `𝐝ₕ` to `Xₕ` (the set of these `δ` is closed, so the infimum is attained,
+and contains `‖1 - iₕ* iₕ‖`, so the defect is at most `‖1 - iₕ* iₕ‖`). -/
 def defect (h : κ) : ℝ :=
   sInf {δ | 0 ≤ δ ∧ ∀ v, ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)}
 /-- The **uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `N(𝐝ₕ)ᗮ`. -/

@@ -660,18 +660,16 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
 /-- **The FEEC theorem for approximating families with variational crimes.** For every approximating
 family `F` of discrete differential spaces of a Hilbert complex (`ApproxComplexCrime`: inner-product
 defect `‖1 - iₕ* iₕ‖_{Vₕ} → 0` in the graph norm and consistent approximation on the admissible
-states, the reading maps
-need not be cochain maps): the approximating FEEC theorem on the core, the discrete generator
-`𝐝ₕ - 𝐝ₕ*`, the fully discrete theorems for every time scheme and for leapfrog under the CFL
-condition, the perturbed theorems for every bounded perturbation (dense core), exact preservation of
-discrete constraints, the Strang, residual and defect estimates with their limits, the fully
-discrete FEEC theorem on Banach spaces (`banachFEEC`), and, under closed range and a uniform
-discrete Poincaré inequality, the static FEEC theorem with crimes (`Family.staticFEEC`) and the
-heat FEEC theorem with crimes with its rate (`heatFEEC`, `rate_heat_of_static`). The conforming
-windows give the zero-defect instance (`ConstrainedFEEC.toCrime`,
-`ConformingFamily.Verdict.crime`); scheme (6.5) is an instance
-(`Feec.Instances.EinsteinBianchiFEMCrown`). [HolstStern2012], §3; [BrennerThomee1979]; [Pazy1983],
-§3.4 -/
+states, the reading maps need not be cochain maps): the approximating FEEC theorem on the core, the
+discrete generator `𝐝ₕ - 𝐝ₕ*`, the fully discrete theorems for every time scheme and for leapfrog
+under the CFL condition, the perturbed theorems for every bounded perturbation (dense core), exact
+preservation of discrete constraints, the Strang, residual and defect estimates with their limits,
+the fully discrete FEEC theorem on Banach spaces (`banachFEEC`), and, under closed range and a
+uniform discrete Poincaré inequality, the static FEEC theorem with crimes (`Family.staticFEEC`) and
+the heat FEEC theorem with crimes with its rate (`heatFEEC`, `rate_heat_of_static`). The conforming
+windows give the zero-defect instance (`ConstrainedFEEC.toCrime`, `ConformingFamily.Verdict.crime`);
+scheme (6.5) is an instance (`Feec.Instances.EinsteinBianchiFEMCrown`). [HolstStern2012], §3;
+[BrennerThomee1979]; [Pazy1983], §3.4 -/
 theorem feec (F : ApproxComplexCrime H κ) : F.Verdict :=
   ⟨(approxFEEC_ofComplexCrime F).1, fun Θ => dissipFEEC_fullyDiscrete _ Θ,
     fun R _ hx h v _ _ hτ hc hc1 _ hw h0 _ hn =>
@@ -785,8 +783,8 @@ theorem windowCrime_tendsto_staticError (F : ConformingFamily H κ) (a : α) (m 
   have hJ : ∀ h, G.toComplex.toFamily.toCrimeFamily.J h = 1 := G.toCrime_J
   refine (G.toComplex.toFamily.isCochain_toCrimeFamily).tendsto_staticError hcr
     (F.windowCochainProj a m K hK) hP hcP ?_ (fun x _ => F.windowCrime_tendsto_incl_π a m K hK x) f
-  exact tendsto_const_nhds.congr fun h => (G.toComplex.toFamily.toCrimeFamily.graphDefect_eq_zero
-    (hJ h)).symm
+  exact tendsto_const_nhds.congr fun h =>
+    ((G.toComplex.toFamily.toCrimeFamily.graphDefect_eq_zero_iff h).2 (hJ h)).symm
 
 /-- **The conforming windows read with crimes eventually have the cohomology of the window**:
 under closed range and with finite-dimensional harmonic forms, `[z] ↦ [πₕ z]` is eventually an
@@ -954,7 +952,7 @@ theorem windowCrime_rate_static (F : ConformingFamily H κ) (J : F.Jackson ρ) (
     exact (H.window a m).total.starProjection_cycles_eq_of_mem_orthogonal ()
       ((H.window a m).greenOp_mem_orthogonal_harmonic hcr f)
   have hJ : S.graphDefect h * ‖X‖ ≤ ε := by
-    rw [S.graphDefect_eq_zero (G.toCrime_J h), zero_mul]
+    rw [(S.graphDefect_eq_zero_iff h).2 (G.toCrime_J h), zero_mul]
     have := Real.rpow_nonneg (J.meshSize_nonneg h) (J.ord s)
     positivity
   refine (hi.staticError_le_of_approx hcr (F.windowCochainProj a m K hK) hP hcP h f
@@ -993,7 +991,8 @@ theorem windowCrime_rate_heat (F : ConformingFamily H κ) (J : F.Jackson ρ) (a 
   refine ⟨cP, C, hC0, fun {L} hL {T x} hx hreg h t ht =>
     (F.windowCrime a m K hK).rate_heat_of_static hcr hcP hP J.meshSize_nonneg hC0
       (fun hL' hf h => hC hL' hf h) (fun h => ?_) hL hx hreg h ht⟩
-  rw [(F.windowCrime a m K hK).toFamily.graphDefect_eq_zero ((F.windowFEEC a m K hK).toCrime_J h)]
+  rw [((F.windowCrime a m K hK).toFamily.graphDefect_eq_zero_iff h).2
+    ((F.windowFEEC a m K hK).toCrime_J h)]
   exact mul_nonneg hC0 (Real.rpow_nonneg (J.meshSize_nonneg h) _)
 
 /-- **The rated conclusions of the FEEC theorem** (`feec_rated`) for a conforming family `F` with a

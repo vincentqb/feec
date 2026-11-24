@@ -43,14 +43,16 @@ derived from bounded cochain projections, is `Feec.HilbertComplex.Approximation.
 * `ApproxComplexCrime.Family.staticError_le`: **the Strang lemma**, for every discrete triple
   `x̃`, `e(f) ≤ readError(x̃) + 80 C c_P² ‖B x̃ - F‖`.
 * `ApproxComplexCrime.Family.inner_staticResidual_eq`, `norm_staticResidual_le`: **the residual
-  splits** into the inner-product defect `‖1 - Jₕ‖`, the read error of `x̃`, the cochain defects
-  `κₕ(u)`, `κₕ(𝐝 u)` (`ApproxComplexCrime.Family.cochainDefect`) in the dual discrete graph norm,
-  and the **harmonic defect** `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms `q`;
+  splits** into the inner-product defect in the graph norm `‖1 - Jₕ‖_{Vₕ}`
+  (`ApproxComplexCrime.Family.graphDefect`, at most `‖1 - Jₕ‖`: `1 - Jₕ` is applied only to
+  `σ̃`, `ũ`, `𝐝ₕ σ̃`, `𝐝ₕ ũ` and `p̃`), the read error of `x̃`, the cochain defects `κₕ(u)`,
+  `κₕ(𝐝 u)` (`ApproxComplexCrime.Family.cochainDefect`) in the dual discrete graph norm, and the
+  **harmonic defect** `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms `q`;
   `staticError_le_of_split`: the error estimate
-  `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`, `δ₁`,
-  `δ₂` bounds of the cochain defects and `η` of the harmonic defect (the crime analogue of
+  `e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`,
+  `δ₁`, `δ₂` bounds of the cochain defects and `η` of the harmonic defect (the crime analogue of
   [HolstStern2012], Thm 3.10 and Cor 3.11; for cochain reading maps `δ₁ = δ₂ = 0` and `η` is
-  bounded by the approximation of `P_𝔷 u` and `‖1 - Jₕ‖`,
+  bounded by the approximation of `P_𝔷 u` and `‖1 - Jₕ‖_{Vₕ}`,
   `ApproxComplexCrime.Family.IsCochain.staticError_le`).
 * `ApproxComplexCrime.Family.staticConsistent_iff_tendsto`: consistent approximation at `f`
   (approximants with read error and residual tending to `0`) is equivalent to `e(f) → 0`;
@@ -509,10 +511,21 @@ theorem inner_staticResidual_eq (h : κ) (f : PiLp 2 W) (x y : (S.cpx h).MixedSp
     inner_one_sub_J_right, inner_sub_right]
   ring
 
-theorem norm_inner_one_sub_J_le (h : κ) (a b : S.X h) :
-    ‖⟪a, (1 - S.J h) b⟫_𝕜‖ ≤ ‖a‖ * (‖1 - S.J h‖ * ‖b‖) :=
-  (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left ((1 - S.J h).le_opNorm b)
+/-- `‖(1 - Jₕ) v‖ ≤ ‖1 - Jₕ‖_{Vₕ} ‖v‖` on the domain space `Vₕ` of `(Xₕ, 𝐝ₕ)`, its graph space
+(`graphDefect`). -/
+theorem norm_one_sub_J_domainIncl_le (h : κ) (v : (S.cpx h).domainSpace ()) :
+    ‖(1 - S.J h) ((S.cpx h).domainIncl () v)‖ ≤ S.graphDefect h * ‖v‖ :=
+  S.norm_one_sub_J_graphFst_le h v
+
+theorem norm_inner_one_sub_J_le (h : κ) (a : S.X h) (v : (S.cpx h).domainSpace ()) :
+    ‖⟪a, (1 - S.J h) ((S.cpx h).domainIncl () v)⟫_𝕜‖ ≤ ‖a‖ * (S.graphDefect h * ‖v‖) :=
+  (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left (S.norm_one_sub_J_domainIncl_le h v)
     (norm_nonneg _))
+
+theorem norm_inner_one_sub_J_le_of_D_eq_zero (h : κ) (a : S.X h) {b : S.X h} (hb : S.D h b = 0) :
+    ‖⟪a, (1 - S.J h) b⟫_𝕜‖ ≤ ‖a‖ * (S.graphDefect h * ‖b‖) :=
+  (norm_inner_le_norm _ _).trans (mul_le_mul_of_nonneg_left
+    (S.norm_one_sub_J_apply_le_of_D_eq_zero h hb) (norm_nonneg _))
 
 theorem norm_inner_incl_sub_le (h : κ) (a b : S.X h) (z : PiLp 2 W) :
     ‖⟪S.incl h a, S.incl h b - z⟫_𝕜‖ ≤ ‖a‖ * (S.boundConst * ‖z - S.incl h b‖) := by
@@ -539,22 +552,31 @@ theorem sum_norm_mixedComponents_le (h : κ) (y : (S.cpx h).MixedSpace () ()) :
 
 /-- **The residual bound**: if the cochain defects `κₕ(u)`, `κₕ(𝐝 u)` are at most `δ₁`, `δ₂` in the
 dual discrete graph norm and the harmonic defect is at most `η`, `|⟪iₕ q, u⟫| ≤ η ‖q‖` on the
-discrete harmonic forms, then `‖B x - F‖ ≤ 3 (5 ‖1 - Jₕ‖ ‖x‖ + C E + δ₁ + δ₂ + η)`, `E` the read
-error of `x`. -/
+discrete harmonic forms, then `‖B x - F‖ ≤ 3 (5 ‖1 - Jₕ‖_{Vₕ} ‖x‖ + C E + δ₁ + δ₂ + η)`, `E` the
+read error of `x`: `1 - Jₕ` is applied to `σ̃` and `ũ` (graph norm at most `‖x‖`) and to `𝐝ₕ σ̃`,
+`𝐝ₕ ũ`, `p̃`, which `𝐝ₕ` maps to `0`. -/
 theorem norm_staticResidual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ())
     {δ₁ δ₂ η : ℝ} (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)
     (hδ₁ : ∀ v, ‖⟪S.cochainDefect h (H.greenWave hcr f), v⟫_𝕜‖ ≤ δ₁ * (‖v‖ + ‖S.D h v‖))
     (hδ₂ : ∀ v, ‖⟪S.cochainDefect h (H.dGreenWave hcr f), v⟫_𝕜‖ ≤ δ₂ * (‖v‖ + ‖S.D h v‖))
     (hη : ∀ q ∈ (S.cpx h).harmonic (),
       ‖⟪S.incl h q, (H.greenWave hcr f : PiLp 2 W)⟫_𝕜‖ ≤ η * ‖q‖) :
-    ‖S.staticResidual h f x‖ ≤ 3 * (5 * ‖1 - S.J h‖ * ‖x‖ +
+    ‖S.staticResidual h f x‖ ≤ 3 * (5 * S.graphDefect h * ‖x‖ +
       S.boundConst * S.readError h (H.totalMixedSolution hcr f) x + δ₁ + δ₂ + η) := by
   have hE := S.readError_nonneg h (H.totalMixedSolution hcr f) x
   have hC := S.boundConst_nonneg
+  have hj := S.graphDefect_nonneg h
   refine ContinuousLinearMap.opNorm_le_bound _ (by positivity) fun y => ?_
   rw [S.inner_staticResidual_eq hcr h f x y]
   refine (norm_sum₁₅_le _ _ _ _ _ _ _ _ _ _ _ _ _ _ _).trans ?_
-  obtain ⟨n0, n1, n2, n3, n4⟩ := norm_mixedComponents_le (S.cpx h) x
+  obtain ⟨-, n1, -, n3, n4⟩ := norm_mixedComponents_le (S.cpx h) x
+  have n0 : ‖x.fst‖ ≤ ‖x‖ := WithLp.norm_fst_le (x := x)
+  have n2 : ‖x.snd.fst‖ ≤ ‖x‖ :=
+    (WithLp.norm_fst_le (x := x.snd)).trans (WithLp.norm_snd_le (x := x))
+  have hD0 : S.D h ((S.cpx h).mixedD0 () () x) = 0 := by rw [cpx_mixedD0, S.D_D]
+  have hD1 : S.D h ((S.cpx h).mixedD1 () () () x) = 0 := by rw [cpx_mixedD1, S.D_D]
+  have hD2 : S.D h ((S.cpx h).mixedI2 () () x) = 0 :=
+    ((mem_diffComplex_harmonic (S.D h) (S.D_D h)).1 x.snd.snd.2).1
   have b5 : ‖⟪(S.cpx h).mixedI0 () () y, S.cochainDefect h (H.greenWave hcr f)⟫_𝕜‖ ≤
       δ₁ * (‖(S.cpx h).mixedI0 () () y‖ + ‖(S.cpx h).mixedD0 () () y‖) := by
     rw [norm_inner_symm]; exact hδ₁ _
@@ -565,21 +587,21 @@ theorem norm_staticResidual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace
       ‖(S.cpx h).mixedI2 () () y‖ * η :=
     (hη _ y.snd.snd.2).trans_eq (mul_comm _ _)
   unfold readError
-  exact residual_arith (norm_nonneg _) hC hδ₁0 hδ₂0 hη0 (norm_nonneg _) (norm_nonneg _)
+  exact residual_arith hj hC hδ₁0 hδ₂0 hη0 (norm_nonneg _) (norm_nonneg _)
     (norm_nonneg _) (norm_nonneg _) (norm_nonneg _) (norm_nonneg _) (norm_nonneg _)
     (norm_nonneg _) (norm_nonneg _) (norm_nonneg _) (norm_nonneg _) n0 n1 n2 n3 n4
     (S.sum_norm_mixedComponents_le h y)
-    (S.norm_inner_one_sub_J_le h _ _) (S.norm_inner_incl_sub_le h _ _ _)
-    (S.norm_inner_one_sub_J_le h _ _) (S.norm_inner_incl_sub_le h _ _ _) b5
-    (S.norm_inner_one_sub_J_le h _ _) (S.norm_inner_incl_sub_le h _ _ _)
-    (S.norm_inner_one_sub_J_le h _ _) (S.norm_inner_incl_sub_le h _ _ _) b10
-    (S.norm_inner_one_sub_J_le h _ _) (S.norm_inner_incl_sub_le h _ _ _)
-    (S.norm_inner_one_sub_J_le h _ _) (S.norm_inner_incl_sub_le h _ _ _) b15
+    (S.norm_inner_one_sub_J_le h _ x.fst) (S.norm_inner_incl_sub_le h _ _ _)
+    (S.norm_inner_one_sub_J_le h _ x.snd.fst) (S.norm_inner_incl_sub_le h _ _ _) b5
+    (S.norm_inner_one_sub_J_le_of_D_eq_zero h _ hD0) (S.norm_inner_incl_sub_le h _ _ _)
+    (S.norm_inner_one_sub_J_le_of_D_eq_zero h _ hD1) (S.norm_inner_incl_sub_le h _ _ _) b10
+    (S.norm_inner_one_sub_J_le_of_D_eq_zero h _ hD2) (S.norm_inner_incl_sub_le h _ _ _)
+    (S.norm_inner_one_sub_J_le h _ x.snd.fst) (S.norm_inner_incl_sub_le h _ _ _) b15
 
 /-- **The error estimate of the mixed method with variational crimes**: for every discrete triple
 `x̃` with cochain defects at most `δ₁`, `δ₂` and harmonic defect at most `η`,
-`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖ ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`: best
-approximation, inner-product defect and the defects of the reading map. Cf. [HolstStern2012],
+`e(f) ≤ E + 240 C c_P² (5 ‖1 - Jₕ‖_{Vₕ} ‖x̃‖ + C E + δ₁ + δ₂ + η)`, `E` the read error of `x̃`:
+best approximation, inner-product defect and the defects of the reading map. Cf. [HolstStern2012],
 Thm 3.10 and Cor 3.11 (cochain reading maps: `δ₁ = δ₂ = 0`, and `η` is derived in
 `ApproxComplexCrime.Family.IsCochain.staticError_le`) -/
 theorem staticError_le_of_split {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP) (h : κ)
@@ -590,14 +612,14 @@ theorem staticError_le_of_split {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ c
     (hη : ∀ q ∈ (S.cpx h).harmonic (),
       ‖⟪S.incl h q, (H.greenWave hcr f : PiLp 2 W)⟫_𝕜‖ ≤ η * ‖q‖) :
     S.staticError hcr h f ≤ S.readError h (H.totalMixedSolution hcr f) x +
-      240 * S.boundConst * cP ^ 2 * (5 * ‖1 - S.J h‖ * ‖x‖ +
+      240 * S.boundConst * cP ^ 2 * (5 * S.graphDefect h * ‖x‖ +
         S.boundConst * S.readError h (H.totalMixedSolution hcr f) x + δ₁ + δ₂ + η) := by
   have h1 := S.staticError_le hcr hP hcP h f x
   have h2 := S.norm_staticResidual_le hcr h f x hδ₁0 hδ₂0 hη0 hδ₁ hδ₂ hη
   have : 0 ≤ 80 * S.boundConst * cP ^ 2 := by have := S.boundConst_nonneg; positivity
   calc _ ≤ _ := h1
     _ ≤ S.readError h (H.totalMixedSolution hcr f) x + 80 * S.boundConst * cP ^ 2 * (3 *
-        (5 * ‖1 - S.J h‖ * ‖x‖ + S.boundConst * S.readError h (H.totalMixedSolution hcr f) x +
+        (5 * S.graphDefect h * ‖x‖ + S.boundConst * S.readError h (H.totalMixedSolution hcr f) x +
           δ₁ + δ₂ + η)) := add_le_add le_rfl (mul_le_mul_of_nonneg_left h2 this)
     _ = _ := by ring
 
@@ -638,10 +660,10 @@ theorem staticConsistent_iff_tendsto {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 
     rw [Real.dist_eq, sub_zero, abs_of_nonneg (S.staticError_nonneg hcr h f)] at hh
     exact ⟨S.mixedSol h f, hh.le, by rw [S.staticResidual_mixedSol, norm_zero]; exact hε.le⟩
 
-/-- **Consistent approximation from vanishing defects**: if the inner-product defect tends to `0`
-and `f` has bounded discrete approximants whose read error, cochain defects and harmonic defect
-tend to `0`, then `f` is consistently approximated (`norm_staticResidual_le`). -/
-theorem staticConsistent_of_split {l : Filter κ} (hJ : Tendsto (fun h => ‖1 - S.J h‖) l (𝓝 0))
+/-- **Consistent approximation from vanishing defects**: if the inner-product defect in the graph
+norm tends to `0` and `f` has bounded discrete approximants whose read error, cochain defects and
+harmonic defect tend to `0`, then `f` is consistently approximated (`norm_staticResidual_le`). -/
+theorem staticConsistent_of_split {l : Filter κ} (hJ : Tendsto S.graphDefect l (𝓝 0))
     {B : ℝ} (f : PiLp 2 W)
     (happ : ∀ ε > 0, ∀ᶠ h in l, ∃ x : (S.cpx h).MixedSpace () (), ‖x‖ ≤ B ∧
       S.readError h (H.totalMixedSolution hcr f) x ≤ ε ∧
@@ -662,9 +684,9 @@ theorem staticConsistent_of_split {l : Filter κ} (hJ : Tendsto (fun h => ‖1 -
   refine ⟨x, hE.trans (div_le_self hε.le (by nlinarith)), ?_⟩
   refine (S.norm_staticResidual_le hcr h f x hε'.le hε'.le hε'.le hδ₁ hδ₂ hη).trans ?_
   have hxB' : ‖x‖ ≤ B' := hxB.trans (le_max_left _ _)
-  have hj0 := norm_nonneg (1 - S.J h)
-  have h1 : 5 * ‖1 - S.J h‖ * ‖x‖ ≤ ε / 6 := by
-    have : ‖1 - S.J h‖ * ‖x‖ ≤ ε / (30 * (B' + 1)) * B' :=
+  have hj0 := S.graphDefect_nonneg h
+  have h1 : 5 * S.graphDefect h * ‖x‖ ≤ ε / 6 := by
+    have : S.graphDefect h * ‖x‖ ≤ ε / (30 * (B' + 1)) * B' :=
       mul_le_mul hj.le hxB' (norm_nonneg _) (by positivity)
     have e : ε / (30 * (B' + 1)) * B' ≤ ε / 30 := by
       rw [div_mul_eq_mul_div, div_le_div_iff₀ (by positivity) (by norm_num)]
@@ -844,15 +866,15 @@ structure StaticVerdict : Prop where
     S.staticError hcr h f ≤
       S.readError h (H.totalMixedSolution hcr f) x + 80 * S.boundConst * cP ^ 2 *
         ‖S.staticResidual h f x‖
-  /-- the residual splits into the inner-product defect, the read error, the cochain defects and
-  the harmonic defect -/
+  /-- the residual splits into the inner-product defect in the graph norm, the read error, the
+  cochain defects and the harmonic defect -/
   residual_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) {δ₁ δ₂ η : ℝ}
     (hδ₁0 : 0 ≤ δ₁) (hδ₂0 : 0 ≤ δ₂) (hη0 : 0 ≤ η)
     (hδ₁ : ∀ v, ‖⟪S.cochainDefect h (H.greenWave hcr f), v⟫_𝕜‖ ≤ δ₁ * (‖v‖ + ‖S.D h v‖))
     (hδ₂ : ∀ v, ‖⟪S.cochainDefect h (H.dGreenWave hcr f), v⟫_𝕜‖ ≤ δ₂ * (‖v‖ + ‖S.D h v‖))
     (hη : ∀ q ∈ (S.cpx h).harmonic (),
       ‖⟪S.incl h q, (H.greenWave hcr f : PiLp 2 W)⟫_𝕜‖ ≤ η * ‖q‖) :
-    ‖S.staticResidual h f x‖ ≤ 3 * (5 * ‖1 - S.J h‖ * ‖x‖ +
+    ‖S.staticResidual h f x‖ ≤ 3 * (5 * S.graphDefect h * ‖x‖ +
       S.boundConst * S.readError h (H.totalMixedSolution hcr f) x + δ₁ + δ₂ + η)
   /-- the error estimate in terms of the crimes -/
   error_le (h : κ) (f : PiLp 2 W) (x : (S.cpx h).MixedSpace () ()) {δ₁ δ₂ η : ℝ}
@@ -862,7 +884,7 @@ structure StaticVerdict : Prop where
     (hη : ∀ q ∈ (S.cpx h).harmonic (),
       ‖⟪S.incl h q, (H.greenWave hcr f : PiLp 2 W)⟫_𝕜‖ ≤ η * ‖q‖) :
     S.staticError hcr h f ≤ S.readError h (H.totalMixedSolution hcr f) x +
-      240 * S.boundConst * cP ^ 2 * (5 * ‖1 - S.J h‖ * ‖x‖ +
+      240 * S.boundConst * cP ^ 2 * (5 * S.graphDefect h * ‖x‖ +
         S.boundConst * S.readError h (H.totalMixedSolution hcr f) x + δ₁ + δ₂ + η)
   /-- consistent approximation at `f` is convergence at `f` -/
   consistent_iff (f : PiLp 2 W) :

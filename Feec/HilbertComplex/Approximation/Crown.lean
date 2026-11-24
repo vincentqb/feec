@@ -117,7 +117,8 @@ hypothesis of `heat_rate` discharged, `windowCrime_rate_static`, `windowCrime_ra
 **Approximating families with variational crimes** (`ApproxComplexCrime.feec`, statement
 `ApproxComplexCrime.Verdict`; [HolstStern2012], §3). For discrete differential spaces `(Xₕ, 𝐝ₕ)`
 with their own inner products and reading maps `iₕ` that need not be inclusions nor cochain maps,
-with inner-product defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximation on the admissible states
+with inner-product defect `‖1 - iₕ* iₕ‖_{Vₕ} → 0` in the graph norm of `𝐝ₕ` (at most
+`‖1 - iₕ* iₕ‖`) and consistent approximation on the admissible states
 (the cochain defect `⟪𝐝ₕ* iₕ* y - iₕ* 𝐝* y, v⟫` enters the consistency residual): the approximating,
 fully discrete (every time scheme, leapfrog) and perturbed (dense core) FEEC theorems on the
 core, exact preservation of discrete constraints, and the Strang, residual-splitting and defect
@@ -641,13 +642,13 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
     F.toHeat.Verdict
       (F.heatCore hcr hcP hP ((F.toFamily.staticFEEC hcr F.l hcP hP).converges hD hc))
   /-- the heat rate with variational crimes from a static rate `e(f) ≤ K L mᵅ` on regular data
-  and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` -/
+  and an inner-product defect `‖1 - Jₕ‖_{Vₕ} ≤ K mᵅ` in the graph norm -/
   heat_rate (hcr : ∀ i, H.ClosedRangeAt i) {cP : ℝ} (hcP : 1 ≤ cP)
     (hP : F.toFamily.IsPoincare cP) {Reg : ℝ → Set (PiLp 2 W)} {m : κ → ℝ}
     (hm : ∀ h, 0 ≤ m h) {α K : ℝ} (hK0 : 0 ≤ K)
     (hK : ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L → f ∈ Reg L → ∀ h,
       F.toFamily.staticError hcr h f ≤ K * L * m h ^ α)
-    (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L) {T : ℝ}
+    (hJ : ∀ h, F.toFamily.graphDefect h ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L) {T : ℝ}
     {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
     (hreg : ∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ H.heatReg Reg L) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :
@@ -658,7 +659,8 @@ structure Verdict (F : ApproxComplexCrime H κ) : Prop where
 
 /-- **The FEEC theorem for approximating families with variational crimes.** For every approximating
 family `F` of discrete differential spaces of a Hilbert complex (`ApproxComplexCrime`: inner-product
-defect `‖1 - iₕ* iₕ‖ → 0` and consistent approximation on the admissible states, the reading maps
+defect `‖1 - iₕ* iₕ‖_{Vₕ} → 0` in the graph norm and consistent approximation on the admissible
+states, the reading maps
 need not be cochain maps): the approximating FEEC theorem on the core, the discrete generator
 `𝐝ₕ - 𝐝ₕ*`, the fully discrete theorems for every time scheme and for leapfrog under the CFL
 condition, the perturbed theorems for every bounded perturbation (dense core), exact preservation of
@@ -783,8 +785,8 @@ theorem windowCrime_tendsto_staticError (F : ConformingFamily H κ) (a : α) (m 
   have hJ : ∀ h, G.toComplex.toFamily.toCrimeFamily.J h = 1 := G.toCrime_J
   refine (G.toComplex.toFamily.isCochain_toCrimeFamily).tendsto_staticError hcr
     (F.windowCochainProj a m K hK) hP hcP ?_ (fun x _ => F.windowCrime_tendsto_incl_π a m K hK x) f
-  simp only [hJ, sub_self, norm_zero]
-  exact tendsto_const_nhds
+  exact tendsto_const_nhds.congr fun h => (G.toComplex.toFamily.toCrimeFamily.graphDefect_eq_zero
+    (hJ h)).symm
 
 /-- **The conforming windows read with crimes eventually have the cohomology of the window**:
 under closed range and with finite-dimensional harmonic forms, `[z] ↦ [πₕ z]` is eventually an
@@ -951,8 +953,8 @@ theorem windowCrime_rate_static (F : ConformingFamily H κ) (J : F.Jackson ρ) (
     rw [HilbertComplex.boundaryPart, domainIncl_cyclesToDomainSpace]
     exact (H.window a m).total.starProjection_cycles_eq_of_mem_orthogonal ()
       ((H.window a m).greenOp_mem_orthogonal_harmonic hcr f)
-  have hJ : ‖1 - S.J h‖ * ‖X‖ ≤ ε := by
-    rw [show S.J h = 1 from G.toCrime_J h, sub_self, norm_zero, zero_mul]
+  have hJ : S.graphDefect h * ‖X‖ ≤ ε := by
+    rw [S.graphDefect_eq_zero (G.toCrime_J h), zero_mul]
     have := Real.rpow_nonneg (J.meshSize_nonneg h) (J.ord s)
     positivity
   refine (hi.staticError_le_of_approx hcr (F.windowCochainProj a m K hK) hP hcP h f
@@ -991,8 +993,7 @@ theorem windowCrime_rate_heat (F : ConformingFamily H κ) (J : F.Jackson ρ) (a 
   refine ⟨cP, C, hC0, fun {L} hL {T x} hx hreg h t ht =>
     (F.windowCrime a m K hK).rate_heat_of_static hcr hcP hP J.meshSize_nonneg hC0
       (fun hL' hf h => hC hL' hf h) (fun h => ?_) hL hx hreg h ht⟩
-  rw [show (F.windowCrime a m K hK).toFamily.J h = 1 from (F.windowFEEC a m K hK).toCrime_J h,
-    sub_self, norm_zero]
+  rw [(F.windowCrime a m K hK).toFamily.graphDefect_eq_zero ((F.windowFEEC a m K hK).toCrime_J h)]
   exact mul_nonneg hC0 (Real.rpow_nonneg (J.meshSize_nonneg h) _)
 
 /-- **The rated conclusions of the FEEC theorem** (`feec_rated`) for a conforming family `F` with a

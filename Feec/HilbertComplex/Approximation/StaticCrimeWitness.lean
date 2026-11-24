@@ -251,8 +251,8 @@ theorem readError_shiftedApprox_le (n : ℕ) (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
 theorem shifted_staticConsistent (f : PiLp 2 (W3 𝕜 𝕜 PUnit)) :
     (shiftedFamily 𝕜).StaticConsistent closedRangeAt_idComplex atTop f := by
   set X := (idComplex 𝕜).totalMixedSolution closedRangeAt_idComplex f
-  have hJ : Tendsto (fun n => ‖1 - (shiftedFamily 𝕜).J n‖) atTop (𝓝 0) := by
-    simp only [shifted_J, sub_self, norm_zero]; exact tendsto_const_nhds
+  have hJ : Tendsto (shiftedFamily 𝕜).graphDefect atTop (𝓝 0) :=
+    tendsto_const_nhds.congr fun n => ((shiftedFamily 𝕜).graphDefect_eq_zero (shifted_J n)).symm
   set a := ‖(idComplex 𝕜).total.mixedI0 () () X‖
   set b := ‖(idComplex 𝕜).total.mixedI1 () () X‖
   set g := ‖((idComplex 𝕜).greenWave closedRangeAt_idComplex f : PiLp 2 (W3 𝕜 𝕜 PUnit))‖

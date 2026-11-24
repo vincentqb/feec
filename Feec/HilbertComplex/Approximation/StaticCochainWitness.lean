@@ -178,7 +178,7 @@ theorem shear_tendsto_staticError (f : PiLp 2 V) :
       (closedRangeAt_of_finiteDimensional E) n f) atTop (𝓝 0) :=
   let ⟨_, hcP, hP⟩ := shear_isPoincare E N hNN hND
   (shear_isCochain E N hNN hND).tendsto_staticError _ (shearCochainProj E N hNN hND) hP hcP
-    (shear_tendsto_innerDefect E N hNN)
+    ((shearFamily E N hNN).tendsto_graphDefect_of_tendsto (shear_tendsto_innerDefect E N hNN))
     (fun x _ => tendsto_const_nhds.congr fun n => by
       change (0 : ℝ) = ‖x - (shearFamily E N hNN).incl n
         ((shearFamily E N hNN).proj n x)‖
@@ -201,7 +201,8 @@ def shearHeat : ApproxComplexCrime.HeatFamily E ℕ where
   K := ⊤
   isClosed_K := by rw [Submodule.top_coe]; exact isClosed_univ
   l := atTop
-  tendsto_innerDefect := shear_tendsto_innerDefect E N hNN
+  tendsto_graphDefect :=
+    (shearFamily E N hNN).tendsto_graphDefect_of_tendsto (shear_tendsto_innerDefect E N hNN)
 
 include hND in
 /-- **The heat FEEC theorem with crimes applies to a shear family**: closed range, the uniform
@@ -241,17 +242,17 @@ theorem shear_staticError_le : ∃ K, 0 ≤ K ∧ ∀ n f,
     rw [ApproxComplexCrime.Family.CochainProj.projError, hz, hz, hz, hz, hz]; norm_num
   rw [hpe, hz] at h
   simp only [mul_zero, zero_add, add_zero] at h
-  have hJ := norm_one_sub_shear_J_le E N hNN n
+  have hJ := ((shearFamily E N hNN).graphDefect_le n).trans (norm_one_sub_shear_J_le E N hNN n)
   have hX : ‖T f‖ ≤ ‖T‖ * ‖f‖ := T.le_opNorm f
   have hm := (perturbMesh_pos n).le
   have h1 := mul_le_mul hJ hX (norm_nonneg _) (by positivity)
   refine h.trans ?_
-  have e : C * Cπ * ‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖ + 240 * C * cP ^ 2 *
-      (51 * Cπ * ‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖ +
-        C * (C * Cπ * ‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖)) =
-      A * (‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖) := by ring
+  have e : C * Cπ * (shearFamily E N hNN).graphDefect n * ‖T f‖ + 240 * C * cP ^ 2 *
+      (51 * Cπ * (shearFamily E N hNN).graphDefect n * ‖T f‖ +
+        C * (C * Cπ * (shearFamily E N hNN).graphDefect n * ‖T f‖)) =
+      A * ((shearFamily E N hNN).graphDefect n * ‖T f‖) := by ring
   rw [e]
-  calc A * (‖1 - (shearFamily E N hNN).J n‖ * ‖T f‖) ≤
+  calc A * ((shearFamily E N hNN).graphDefect n * ‖T f‖) ≤
         A * (perturbMesh n * (‖N‖ * (2 + ‖N‖)) * (‖T‖ * ‖f‖)) := mul_le_mul_of_nonneg_left h1 hA
     _ = _ := by ring
 
@@ -284,8 +285,9 @@ theorem shear_rate_heat : ∃ cP K : ℝ, 0 ≤ K ∧ ∀ {L : ℝ}, 0 ≤ L →
       nlinarith)
     (fun n => by
       rw [Real.rpow_one]
-      exact (norm_one_sub_shear_J_le E N hNN n).trans_eq (by rw [mul_comm])
-        |>.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (perturbMesh_pos n).le))
+      exact ((shearFamily E N hNN).graphDefect_le n).trans
+        ((norm_one_sub_shear_J_le E N hNN n).trans_eq (by rw [mul_comm])
+          |>.trans (mul_le_mul_of_nonneg_right (le_max_right _ _) (perturbMesh_pos n).le)))
     hL hx hreg n ht
   rwa [Real.rpow_one] at h
 
@@ -490,7 +492,7 @@ theorem shear_staticError_pos (n : ℕ) :
     norm_harmonicDatum_sub_shear_incl] at h
 
 /-- **The reading maps are not isometric**: `Jₙ ≠ 1`, since the gap
-`‖p - iₙ P_ℌₙ πₙ p‖ = hₙ > 0` is bounded by `C C_π ‖1 - Jₙ‖ ‖p‖` alone (`iₙ πₙ = 1`;
+`‖p - iₙ P_ℌₙ πₙ p‖ = hₙ > 0` is bounded by `C C_π ‖1 - Jₙ‖_{Vₙ} ‖p‖` alone (`iₙ πₙ = 1`;
 `ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`). -/
 theorem shear_J_ne_one (n : ℕ) : (shearIdZero 𝕜).J n ≠ 1 := fun hJ => by
   have h : perturbMesh n ≤ _ := (norm_harmonicDatum_sub_shear_gap n).symm.le.trans
@@ -501,7 +503,7 @@ theorem shear_J_ne_one (n : ℕ) : (shearIdZero 𝕜).J n ≠ 1 := fun hJ => by
     change ‖harmonicDatum 𝕜 - (shearIdZero 𝕜).incl n
       ((shearIdZero 𝕜).proj n (harmonicDatum 𝕜))‖ = 0
     rw [shear_incl_proj, sub_self, norm_zero]
-  rw [e, hJ, sub_self, norm_zero] at h
+  rw [e, (shearIdZero 𝕜).graphDefect_eq_zero hJ] at h
   simp only [mul_zero, zero_mul, add_zero] at h
   exact (perturbMesh_pos n).not_ge h
 

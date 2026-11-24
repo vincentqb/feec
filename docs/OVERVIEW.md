@@ -188,7 +188,9 @@ the dual discrete graph norm. The comparison is the exact-load elliptic projecti
 pairs `(y, L y)` (`Feec.HilbertComplex.ApproxFEEC.ofComplexCrimeCore`) with its hypotheses
 derived. The hypothesis is consistent approximation on a set of admissible states: approximants
 with `‖y − iₕwₕ‖ → 0` and discrete residual `⟪(1 − Lₕ)wₕ, v⟫ − ⟪(1 − L)y, iₕv⟫ → 0` (dual discrete graph
-norm), with the inner-product defect `‖1 − Jₕ‖ → 0`. Since `Rₕy` is itself an approximant with
+norm), with the inner-product defect in the graph norm of `𝐝ₕ` tending to `0`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.graphDefect`, the norm `‖1 − Jₕ‖_{Vₕ}` of `1 − Jₕ`
+on the graph space `Vₕ` of `𝐝ₕ`, at most `‖1 − Jₕ‖`). Since `Rₕy` is itself an approximant with
 residual `0`, consistent approximation at `y` is equivalent to `iₕRₕy → y`
 (`Feec.HilbertComplex.ApproxComplexCrime.consistent_iff_tendsto_incl_load`): the hypothesis is the
 pointwise convergence of the projection, and the content is in the ways to check it. The residual splits exactly
@@ -233,7 +235,9 @@ of `iₕ` mapping `ker 𝐝` into `ker 𝐝ₕ` when `‖𝐝 iₕ v‖ ≤ C' �
 mixed solution of the total complex, the error is at most best approximation plus `80 C c_P²` times
 the residual of any discrete triple
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le`), and the residual splits into the
-inner-product defect, the read error, the cochain defects of `u = G f` and `𝐝 u`, and the harmonic
+inner-product defect in the graph norm `‖1 − Jₕ‖_{Vₕ}` (`1 − Jₕ` acts only on discrete forms whose
+graph norm the estimates control), the read error, the cochain defects of `u = G f` and `𝐝 u`, and
+the harmonic
 defect `sup |⟪iₕ q, u⟫| / ‖q‖` over the discrete harmonic forms
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.norm_staticResidual_le`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.staticError_le_of_split`). Consistent approximation
@@ -243,11 +247,12 @@ of data it gives convergence for every datum
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.tendsto_staticError_of_dense`). The heat theorem
 (`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`,
 `Feec.HilbertComplex.Approximation.HeatCrime`; it uses only the family, the constraint, the filter
-and the inner-product defect, `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily`) follows the
+and the inner-product defect in the graph norm, `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily`)
+follows the
 conforming route with `iₕ*` in place of the orthogonal projection: the heat Ritz
 projection `P_ℌₕ iₕ* y − Gₕ iₕ* z` gives a core when the static errors tend to `0` (the
 inner-product defect enters its consistency defect; in the crown, from static consistency on a
-dense set), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖ ≤ K mᵅ` gives the heat rate
+dense set), and a static rate `e(f) ≤ K L mᵅ` with `‖1 − Jₕ‖_{Vₕ} ≤ K mᵅ` gives the heat rate
 `(2K + C (3C + 16 c_P² C) K t) L mᵅ`
 (`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static`). These are the fields
 `static`, `heat`, `heat_rate` of `Feec.HilbertComplex.ApproxComplexCrime.Verdict`. The shifted
@@ -261,21 +266,21 @@ cochain projections bounded in the graph norm of `D(𝐝)`, the `V`-bounds of §
 `CochainProj.ofNormLe`)
 have no cochain defect, the discrete Poincaré inequality `(c₀ + 1) C_π C`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.isPoincare`, Thm 3.5), a harmonic defect
-bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖ ‖u‖`, `b = P_𝔷 u`
+bounded by `C ‖b − iₕ πₕ b‖ + C_π ‖1 − Jₕ‖_{Vₕ} ‖u‖`, `b = P_𝔷 u`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_inner_incl_harmonic_le`), the gap
-`‖p − iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p − iₕ πₕ p‖ + C C_π ‖1 − Jₕ‖ ‖p‖` on `ℌ`
+`‖p − iₕ P_ℌₕ πₕ p‖ ≤ (1 + C²) ‖p − iₕ πₕ p‖ + C C_π ‖1 − Jₕ‖_{Vₕ} ‖p‖` on `ℌ`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_harmonic_le`), the error
 estimate with no assumed defect
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le`; with the factor
 `μ = sup ‖(1 − iₕ πₕ) r‖` over the unit harmonic forms of Cor 3.11, through the gap bound
-`‖(1 − P_ℌ) iₕ q‖ ≤ (C μ + C_π ‖1 − Jₕ‖) ‖q‖` on `ℌₕ`,
+`‖(1 − P_ℌ) iₕ q‖ ≤ (C μ + C_π ‖1 − Jₕ‖_{Vₕ}) ‖q‖` on `ℌₕ`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_incl_sub_harmonicProj_le`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic`; in the
 infimum form `μ inf_v ‖P_𝔅 u − iₕ v‖_V` of Cor 3.11, from the quasi-optimality
 `‖x − iₕ πₕ x‖ ≤ (1 + C C_π) (‖x − iₕ v‖ + ‖𝐝 x − iₕ 𝐝ₕ v‖)` on `D(𝐝)`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.norm_sub_incl_π_le`,
 `Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_harmonic_inf`),
-convergence for every datum from `‖1 − Jₕ‖ → 0` and `iₕ πₕ → 1`
+convergence for every datum from `‖1 − Jₕ‖_{Vₕ} → 0` and `iₕ πₕ → 1`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.tendsto_staticError`), and the
 isomorphism on cohomology under the strict gap on `ℌ`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.cohomologyEquiv`, Thm 3.3, Cor 3.4).
@@ -289,7 +294,7 @@ cohomology
 `Feec.HilbertComplex.ConformingFamily.windowCrime_eventually_bijective_cohomologyMap`; the fields
 `crime_static`, `crime_cohomology` of `Feec.HilbertComplex.ConformingFamily.Verdict`). **Rates
 with crimes**: Jackson-type approximation of `σ, u, p, P_𝔷 u` in the graph norm and
-`‖1 − Jₕ‖ ‖X‖` within `ε` give `e(f) ≤ K ε`
+`‖1 − Jₕ‖_{Vₕ} ‖X‖` within `ε` give `e(f) ≤ K ε`
 (`Feec.HilbertComplex.ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`, at the
 projected approximants `staticError_le_projError`); so the conforming windows with a Jackson
 estimate have the static and heat rates `O(L hᵒʳᵈ⁽ˢ⁾)` read with crimes

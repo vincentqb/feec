@@ -29,23 +29,27 @@ beyond both sources:
    maps.
 2. **Cochain reading maps.** If the `iₕ` are cochain maps with cochain projections bounded in the
    graph norm, the discrete Poincaré inequality holds, the method converges for every datum when
-   the inner-product defect `‖1 - iₕ* iₕ‖` tends to `0` and `iₕ πₕ → 1` on `D(𝐝)`, the discrete
-   cohomology is eventually that of the window (for finite-dimensional harmonic forms, with
-   `iₕ πₕ → 1` on them), and the error is bounded by the approximation of the solution and the
-   defect.
-3. **The heat equation.** Under a uniform discrete Poincaré inequality, when `‖1 - iₕ* iₕ‖ → 0`
-   and the static method converges for every datum, the Hodge heat equation `u' = -Δ u` of the
-   window is well posed and the semidiscrete and A-stable fully discrete solutions of
-   `uₕ' = (𝐝ₕ - 𝐝ₕ*)² uₕ`, read by `iₕ`, converge to its solutions, with the temporal error of
-   [BrennerThomee1979] (the route of [GilletteHolstZhu2017] with the elliptic projection of
-   [Wheeler1973] built from the static theory with crimes).
+   the inner-product defect tends to `0` and `iₕ πₕ → 1` on `D(𝐝)`, the discrete cohomology is
+   eventually that of the window (for finite-dimensional harmonic forms, with `iₕ πₕ → 1` on
+   them), and the error is bounded by the approximation of the solution and the defect.
+3. **The heat equation.** Under a uniform discrete Poincaré inequality, when the inner-product
+   defect tends to `0` and the static method converges for every datum, the Hodge heat equation
+   `u' = -Δ u` of the window is well posed and the semidiscrete and A-stable fully discrete
+   solutions of `uₕ' = (𝐝ₕ - 𝐝ₕ*)² uₕ`, read by `iₕ`, converge to its solutions, with the temporal
+   error of [BrennerThomee1979] (the route of [GilletteHolstZhu2017] with the elliptic projection
+   of [Wheeler1973] built from the static theory with crimes).
 
-The defects are the price of the crimes: the inner-product defect enters the estimates. The
-witness `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert
-complex with nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`
-meet the hypotheses of the three clauses, read a discrete harmonic form off the harmonic forms,
-and leave a positive error at every level. The conforming case (subcomplexes with cochain
-projections) is the Palomar entry `palomar/feec`.
+The defects are the price of the crimes: the inner-product defect enters the estimates. It is
+measured from the discrete graph norm, as the least `δ` with
+`‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)`, since the estimates apply `1 - iₕ* iₕ` only to discrete
+forms whose graph norm they control. It is at most the operator norm `‖1 - iₕ* iₕ‖`, which
+[HolstStern2012], §3.3, assume to tend to `0`, and can be much smaller: for mass lumping
+([Thomee2006], Ch. 15) it is `O(h)`, while `‖1 - iₕ* iₕ‖` does not tend to `0`. The witness
+`FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a Hilbert complex with
+nonzero harmonic forms, non-isometric cochain reading maps with `‖1 - iₕ* iₕ‖ → 0`, hence a
+vanishing defect, meet the hypotheses of the three clauses, read a discrete harmonic form off the
+harmonic forms, and leave a positive error at every level. The conforming case (subcomplexes with
+cochain projections) is the Palomar entry `palomar/feec`.
 
 ## References
 
@@ -55,6 +59,7 @@ projections) is the Palomar entry `palomar/feec`.
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
 * [M. Holst, C. Tiee, *Finite element exterior calculus for parabolic evolution problems on Riemannian hypersurfaces*][HolstTiee2018]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006]
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
 
 Bibliography: [references.bib](../../docs/references.bib)
@@ -288,8 +293,12 @@ against the solution tend to `0`. -/
 def ConvergesAt (f : Total W a m) : Prop :=
   ∀ x, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ xh : ∀ h, S.X h × S.X h × S.X h,
     (∀ h, S.IsSolution h f (xh h)) → Tendsto (fun h => S.readError h x (xh h)) S.l (𝓝 0)
-/-- The **inner-product defect** `‖1 - iₕ* iₕ‖` of the reading map. -/
-def defect (h : κ) : ℝ := ‖1 - (S.incl h).adjoint ∘L S.incl h‖
+/-- The **inner-product defect** of the reading map in the discrete graph norm: the least `δ ≥ 0`
+with `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v ∈ Xₕ`, the norm of `1 - iₕ* iₕ` from `Xₕ`
+with the graph norm of `𝐝ₕ` (an infimum over a set that contains `‖1 - iₕ* iₕ‖`, hence at most
+`‖1 - iₕ* iₕ‖`). -/
+def defect (h : κ) : ℝ :=
+  sInf {δ | 0 ≤ δ ∧ ∀ v, ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)}
 /-- The **uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `N(𝐝ₕ)ᗮ`. -/
 def IsPoincare (cP : ℝ) : Prop :=
   ∀ h (v : S.X h), v ∈ (LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h))ᗮ → ‖v‖ ≤ cP * ‖S.D h v‖
@@ -327,7 +336,8 @@ structure StaticVerdict (C : ℝ) : Prop where
 ([HolstStern2012], Thms 3.3, 3.5, 3.10, Cors 3.4, 3.11). -/
 structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
   poincare : ∃ cP, S.IsPoincare cP
-  /-- convergence for every datum when `‖1 - iₕ* iₕ‖ → 0` and `iₕ πₕ → 1` on `D(𝐝)` -/
+  /-- convergence for every datum when the inner-product defect tends to `0` and `iₕ πₕ → 1` on
+  `D(𝐝)` -/
   converges (hJ : Tendsto S.defect S.l (𝓝 0))
     (hπ : ∀ x : (𝐝).domain, Tendsto (fun h => ‖(x : Total W a m) - S.incl h (P.π h x)‖) S.l (𝓝 0))
     (f) : S.ConvergesAt f
@@ -341,7 +351,7 @@ structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
       ∀ z : (𝐝).domain, 𝐝 z = 0 → (∃ y, P.π h z = S.D h y) →
         ∃ y : (𝐝).domain, (z : Total W a m) = 𝐝 y
   /-- the error is at most `K ε` when `σ, u, p` and `P_𝔅 u` are within `ε` of `iₕ Xₕ` in the read
-  error and `‖1 - iₕ* iₕ‖ (‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖) ≤ ε` -/
+  error and the inner-product defect times `‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖` is at most `ε` -/
   rate : ∃ K : ℝ, ∀ (h : κ) {f x}, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ {xh},
     S.IsSolution h f xh → ∀ {ε : ℝ}, (∃ v, S.readGap h x.1 (𝐝 x.1) v ≤ ε) →
       (∃ v, S.readGap h x.2.1 (𝐝 x.2.1) v ≤ ε) → (∃ v, S.readGap h x.2.2 0 v ≤ ε) →
@@ -362,8 +372,9 @@ read by `iₕ`: under a uniform discrete Poincaré inequality, the static verdic
 solvability, stability, the Strang lemma, convergence from consistency on a dense set); for
 cochain reading maps with cochain projections bounded in the graph norm, the cochain verdict
 (discrete Poincaré inequality, convergence, cohomology isomorphisms, error bound); and under a
-uniform discrete Poincaré inequality, when `‖1 - iₕ* iₕ‖ → 0` and the static method converges for
-every datum, the evolution verdict of `u' = L² u` by `(𝐝ₕ - 𝐝ₕ*)²` read by `iₕ`. -/
+uniform discrete Poincaré inequality, when the inner-product defect (in the discrete graph norm)
+tends to `0` and the static method converges for every datum, the evolution verdict of
+`u' = L² u` by `(𝐝ₕ - 𝐝ₕ*)²` read by `iₕ`. -/
 theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (S : H.CrimeFamily a m κ)
     (hcr : ∀ i : Fin m, 0 < (i : ℕ) →
       IsClosed (H.boundaries (a + (i : ℕ)) : Set (W (a + (i : ℕ))))) :
@@ -377,15 +388,18 @@ theorem crimeFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} {a : ℤ} {m : ℕ} (
 /-- **Non-vacuity of `FEEC.crimeFEEC`**: a Hilbert complex with `ℝ` in every degree, with closed
 ranges and nonzero harmonic forms on the window `[0, 3)`, carries a family of discrete
 differential spaces with cochain reading maps `iₙ` and cochain projections `πₙ`, `iₙ πₙ = 1`, not
-isometric (`iₙ* iₙ ≠ 1`) but with `‖1 - iₙ* iₙ‖ → 0`, that meets the hypotheses of the three
-clauses (with the discrete Poincaré inequality and convergence for every datum); a discrete
-harmonic form is read off `ℌ`, and the error at some datum is positive at every level. -/
+isometric (`iₙ* iₙ ≠ 1`) but with `‖1 - iₙ* iₙ‖ → 0`, so with a vanishing inner-product defect
+(at most `‖1 - iₙ* iₙ‖`), that meets the hypotheses of the three clauses (with the discrete
+Poincaré inequality and convergence for every datum); a discrete harmonic form is read off `ℌ`,
+and the error at some datum is positive at every level. -/
 theorem crime_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℝ)
     (S : H.CrimeFamily.{0} 0 3 ℕ) (P : S.CochainProj 2),
     (∀ i : Fin 3, 0 < (i : ℕ) → IsClosed (H.boundaries (0 + (i : ℕ)) : Set ℝ)) ∧
     S.l = atTop ∧ S.IsCochain ∧ (∃ cP, S.IsPoincare cP) ∧
-    (∀ n, (S.incl n).adjoint ∘L S.incl n ≠ 1) ∧ Tendsto S.defect atTop (𝓝 0) ∧
-    (∀ n (x : (H.totalD 0 3).domain), S.incl n (P.π n x) = x) ∧ (∀ f, S.ConvergesAt f) ∧
+    (∀ n, (S.incl n).adjoint ∘L S.incl n ≠ 1) ∧
+    Tendsto (fun n => ‖1 - (S.incl n).adjoint ∘L S.incl n‖) atTop (𝓝 0) ∧
+    Tendsto S.defect atTop (𝓝 0) ∧ (∀ n (x : (H.totalD 0 3).domain), S.incl n (P.π n x) = x) ∧
+    (∀ f, S.ConvergesAt f) ∧
     (∃ q ∈ H.totalHarmonic 0 3, q ≠ 0) ∧
     (∀ n, ∃ q ∈ S.harmonic n, S.incl n q ∉ H.totalHarmonic 0 3) ∧
     ∃ f, ∀ x, IsMixedSolution (H.totalMixedSpace 0 3) f x → ∀ n xh,

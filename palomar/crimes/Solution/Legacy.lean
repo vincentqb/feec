@@ -104,8 +104,9 @@ structure StaticVerdict₀ (C : ℝ) : Prop where
 structure CochainVerdict₀ {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
   /-- the uniform discrete Poincaré inequality -/
   poincare : ∃ cP, S.IsPoincare cP
-  /-- convergence for every datum when `‖1 - iₕ* iₕ‖ → 0` and `iₕ πₕ → 1` on `D(𝐝)` -/
-  converges (hJ : Tendsto (fun h => ‖1 - (S.incl h).adjoint ∘L S.incl h‖) S.l (𝓝 0))
+  /-- convergence for every datum when the inner-product defect tends to `0` and `iₕ πₕ → 1` on
+  `D(𝐝)` -/
+  converges (hJ : Tendsto S.defect S.l (𝓝 0))
     (hπ : ∀ x : (H.totalD a m).domain,
       Tendsto (fun h => ‖(x : Total W a m) - S.incl h (P.π h x)‖) S.l (𝓝 0))
     {f : Total W a m} {σ u : (H.totalD a m).domain} {p : Total W a m}
@@ -122,7 +123,7 @@ structure CochainVerdict₀ {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
       ∀ z : (H.totalD a m).domain, H.totalD a m z = 0 → (∃ y, P.π h z = S.D h y) →
         ∃ y : (H.totalD a m).domain, (z : Total W a m) = H.totalD a m y
   /-- the error is at most `K ε` when `σ, u, p` and `P_𝔅 u` are within `ε` of `iₕ Xₕ` in the graph
-  norm and `‖1 - iₕ* iₕ‖ (‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖) ≤ ε` -/
+  norm and the inner-product defect times `‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖` is at most `ε` -/
   rate : ∃ K : ℝ, ∀ (h : κ) {f : Total W a m} {σ u : (H.totalD a m).domain} {p : Total W a m},
     H.IsTotalMixedSolution a m f σ u p → ∀ {σh uh ph : S.X h}, S.IsMixedSolution h f σh uh ph →
     ∀ {ε : ℝ}, (∃ v, ‖(σ : Total W a m) - S.incl h v‖ +
@@ -131,7 +132,7 @@ structure CochainVerdict₀ {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
       (∃ v, ‖p - S.incl h v‖ + ‖S.incl h (S.D h v)‖ ≤ ε) →
       (∃ v, ‖(LinearMap.range (H.totalD a m).toFun).topologicalClosure.starProjection
         (u : Total W a m) - S.incl h v‖ + ‖S.incl h (S.D h v)‖ ≤ ε) →
-      ‖1 - (S.incl h).adjoint ∘L S.incl h‖ * (‖(σ : Total W a m)‖ + ‖H.totalD a m σ‖ +
+      S.defect h * (‖(σ : Total W a m)‖ + ‖H.totalD a m σ‖ +
         ‖(u : Total W a m)‖ + ‖H.totalD a m u‖ + ‖p‖) ≤ ε →
       S.readError₀ h σ u p σh uh ph ≤ K * ε
 

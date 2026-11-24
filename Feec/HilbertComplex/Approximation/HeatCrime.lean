@@ -9,7 +9,8 @@ public import Feec.HilbertComplex.Approximation.StaticCrime
 The Hodge heat equation `u' = -Δ u` on `W = ⊕ Wⁱ`, discretized on a family of discrete
 differential spaces for the heat equation (`ApproxComplexCrime.HeatFamily`: `Xₕ` with its own inner
 product, a differential `𝐝ₕ` independent of `𝐝`, reading maps `iₕ` that need not be cochain maps
-nor isometric, a closed constraint, a filter and the inner-product defect `‖1 - Jₕ‖ → 0`; every
+nor isometric, a closed constraint, a filter and the inner-product defect in the graph norm
+`‖1 - Jₕ‖_{Vₕ} → 0`, `ApproxComplexCrime.Family.graphDefect`; every
 approximating family `ApproxComplexCrime` is one) by the discrete Hodge Laplacian
 `Δₕ = 𝐝ₕ 𝐝ₕ* + 𝐝ₕ* 𝐝ₕ` of `(Xₕ, 𝐝ₕ)`, is a dissipative FEEC discretization
 (`ApproxComplexCrime.HeatFamily.toHeat`), and the dissipative FEEC theorem holds for it with
@@ -27,8 +28,9 @@ the **heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ 
   `ℓ y = (y, -Δ y)` of `D(Δ²)`: its Galerkin property `-Δₕ Rₕ (y, z) = (1 - P_ℌₕ) iₕ* z`
   (`heatGen_ritzR`) gives the defect operator
   `Δₕ (y, z) = 2 P_ℌₕ iₕ* (1 - P_ℌ) y + iₕ* G z - Gₕ iₕ* z` (`ritzDefect_lift`), bounded by
-  `2 C e((1 - P_ℌ) y) + C e(z) + ‖1 - Jₕ‖ ‖Gₕ iₕ* z‖` (`norm_ritzDefect_le`): with crimes the
-  inner-product defect enters the consistency of the heat flow.
+  `2 C e((1 - P_ℌ) y) + C e(z) + ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖z‖` (`norm_ritzDefect_le`: `1 - Jₕ` acts
+  on `Gₕ iₕ* z`, uniformly stable in the graph norm): with crimes the inner-product defect enters
+  the consistency of the heat flow.
 * **Convergence** (`ApproxComplexCrime.HeatFamily.heatCore`, `heatFEEC`): under the uniform
   discrete Poincaré inequality, if the static errors tend to `0` for every datum (e.g. from
   consistency on a dense set, `ApproxComplexCrime.Family.StaticVerdict.converges`), the heat
@@ -37,10 +39,10 @@ the **heat Ritz projection with crimes** `Rₕ (y, z) = P_ℌₕ iₕ* y - Gₕ 
   through `F.toHeatFamily`, so `F.heatFEEC` is the theorem for `F` (the field `heat` of
   `ApproxComplexCrime.Verdict`).
 * **Rates** (`ApproxComplexCrime.HeatFamily.heatRateClass`, `rate_heat_of_static`): a static
-  rate `e(f) ≤ K L mᵅ` on regular data and an inner-product defect `‖1 - Jₕ‖ ≤ K mᵅ` give
+  rate `e(f) ≤ K L mᵅ` on regular data and an inner-product defect `‖1 - Jₕ‖_{Vₕ} ≤ K mᵅ` give
   `‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L mᵅ`. The static rate is a
   hypothesis: for cochain reading maps it follows from Jackson-type approximation of the mixed
-  solution and of `b = P_𝔷 G f` in the graph norm and from `‖1 - Jₕ‖ ‖X‖`
+  solution and of `b = P_𝔷 G f` in the graph norm and from `‖1 - Jₕ‖_{Vₕ} ‖X‖`
   (`ApproxComplexCrime.Family.IsCochain.staticError_le_of_approx`); it is discharged on the
   conforming windows (`ConformingFamily.windowCrime_rate_heat`) and the shear families
   (`ApproxComplexCrime.shear_rate_heat`).
@@ -170,6 +172,18 @@ theorem norm_green_adjoint_incl_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 �
     ‖S.green h ((S.incl h).adjoint f)‖ ≤ 16 * cP ^ 2 * S.boundConst * ‖f‖ := by
   rw [green_adjoint_incl]
   exact (norm_mixedComponents_le (S.cpx h) _).2.2.1.trans (S.norm_mixedSol_le hP hcP h f)
+
+/-- `‖(1 - Jₕ) Gₕ iₕ* f‖ ≤ ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖f‖` (uniform stability in the graph norm). -/
+theorem norm_one_sub_J_green_adjoint_incl_le {cP : ℝ} (hP : S.IsPoincare cP) (hcP : 1 ≤ cP)
+    (h : κ) (f : PiLp 2 W) :
+    ‖(1 - S.J h) (S.green h ((S.incl h).adjoint f))‖ ≤
+      S.graphDefect h * (16 * cP ^ 2 * S.boundConst * ‖f‖) := by
+  rw [green_adjoint_incl]
+  refine (S.norm_one_sub_J_domainIncl_le h (S.mixedSol h f).snd.fst).trans
+    (mul_le_mul_of_nonneg_left (le_trans ?_ (S.norm_mixedSol_le hP hcP h f))
+      (S.graphDefect_nonneg h))
+  exact (WithLp.norm_fst_le (x := (S.mixedSol h f).snd)).trans
+    (WithLp.norm_snd_le (x := S.mixedSol h f))
 
 variable {S hcr} in
 theorem tendsto_incl_green {l : Filter κ}
@@ -303,13 +317,13 @@ variable {cP : ℝ} (hcP : 1 ≤ cP) (hP : F.toFamily.IsPoincare cP)
 
 include hcP hP in
 /-- **The defect operator is small**: `‖Δₕ (y, z)‖ ≤ 2 C e((1 - P_ℌ) y) + C e(z) +
-‖1 - Jₕ‖ 16 c_P² C ‖z‖`, `e` the static error with crimes. -/
+‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖z‖`, `e` the static error with crimes. -/
 theorem norm_ritzDefect_le (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     ‖F.ritzDefect hcr h g‖ ≤
       2 * F.toFamily.boundConst *
           F.toFamily.staticError hcr h (g.1 - (H.total.harmonic ()).starProjection g.1) +
         F.toFamily.boundConst * F.toFamily.staticError hcr h g.2 +
-        ‖1 - F.toFamily.J h‖ * (16 * cP ^ 2 * F.toFamily.boundConst * ‖g.2‖) := by
+        F.toFamily.graphDefect h * (16 * cP ^ 2 * F.toFamily.boundConst * ‖g.2‖) := by
   set P := (H.total.harmonic ()).starProjection
   have hC := F.toFamily.boundConst_nonneg
   have h1 : ‖F.toFamily.harmonicProj h ((F.toFamily.incl h).adjoint (g.1 - P g.1))‖ ≤
@@ -323,7 +337,7 @@ theorem norm_ritzDefect_le (h : κ) (g : PiLp 2 W × PiLp 2 W) :
   have h2 : ‖(F.toFamily.incl h).adjoint (H.greenOp hcr g.2) -
       F.toFamily.green h ((F.toFamily.incl h).adjoint g.2)‖ ≤
       F.toFamily.boundConst * F.toFamily.staticError hcr h g.2 +
-        ‖1 - F.toFamily.J h‖ * (16 * cP ^ 2 * F.toFamily.boundConst * ‖g.2‖) := by
+        F.toFamily.graphDefect h * (16 * cP ^ 2 * F.toFamily.boundConst * ‖g.2‖) := by
     have e : (F.toFamily.incl h).adjoint (H.greenOp hcr g.2) -
         F.toFamily.green h ((F.toFamily.incl h).adjoint g.2) =
         (F.toFamily.incl h).adjoint (H.greenOp hcr g.2 -
@@ -335,8 +349,7 @@ theorem norm_ritzDefect_le (h : κ) (g : PiLp 2 W × PiLp 2 W) :
     rw [e]
     refine (norm_sub_le _ _).trans (add_le_add ((F.toFamily.norm_adjoint_incl_apply_le h _).trans
       (mul_le_mul_of_nonneg_left (F.toFamily.norm_greenOp_sub_le hcr h g.2) hC)) ?_)
-    exact ((1 - F.toFamily.J h).le_opNorm _).trans (mul_le_mul_of_nonneg_left
-      (F.toFamily.norm_green_adjoint_incl_le hP hcP h g.2) (norm_nonneg _))
+    exact F.toFamily.norm_one_sub_J_green_adjoint_incl_le hP hcP h g.2
   rw [ritzDefect_apply]
   refine (norm_add_le _ _).trans ?_
   rw [norm_smul, RCLike.norm_ofNat]
@@ -413,7 +426,7 @@ variable (hconv : ∀ f, Tendsto (fun h => F.toFamily.staticError hcr h f) F.l (
 include hcP hP hconv in
 /-- **The heat core with crimes**: the core of the heat Ritz projection, data `D(Δ²)` (dense,
 `dense_heatCore_data`), from the convergence of the static mixed method with crimes for every
-datum and the inner-product defect `‖1 - Jₕ‖ → 0`. -/
+datum and the inner-product defect in the graph norm `‖1 - Jₕ‖_{Vₕ} → 0`. -/
 def heatCore : F.toHeat.Core :=
   (F.heatRitz hcr hcP hP).toCore
     (fun g => by
@@ -428,7 +441,7 @@ def heatCore : F.toHeat.Core :=
       show Tendsto _ F.l _
       have h1 := hconv (g.1 - (H.total.harmonic ()).starProjection g.1)
       have h2 := hconv g.2
-      have h3 := F.tendsto_innerDefect
+      have h3 := F.tendsto_graphDefect
       simpa using ((h1.const_mul (2 * F.toFamily.boundConst)).add
         (h2.const_mul F.toFamily.boundConst)).add
         (h3.mul_const (16 * cP ^ 2 * F.toFamily.boundConst * ‖g.2‖)))
@@ -463,7 +476,7 @@ variable {cP : ℝ} (hcP : 1 ≤ cP) (hP : F.toFamily.IsPoincare cP) {Reg : ℝ 
   (hm : ∀ h, 0 ≤ m h) {α K : ℝ} (hK0 : 0 ≤ K)
   (hK : ∀ {L : ℝ} {f : PiLp 2 W}, 0 ≤ L → f ∈ Reg L → ∀ h,
     F.toFamily.staticError hcr h f ≤ K * L * m h ^ α)
-  (hJ : ∀ h, ‖1 - F.toFamily.J h‖ ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L)
+  (hJ : ∀ h, F.toFamily.graphDefect h ≤ K * m h ^ α) {L : ℝ} (hL : 0 ≤ L)
 
 include hK hL in
 /-- **Static approximation of the heat Ritz projection with crimes**:
@@ -492,7 +505,8 @@ theorem norm_sub_ritzR_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
 
 include hcP hP hm hK0 hK hJ hL in
 /-- **Static consistency of the heat Ritz projection with crimes**:
-`‖Δₕ ℓ(A y)‖ ≤ 2 C e(A y) + C e(A² y) + ‖1 - Jₕ‖ 16 c_P² C ‖A² y‖ ≤ (3 C + 16 c_P² C) K L mᵅ`
+`‖Δₕ ℓ(A y)‖ ≤ 2 C e(A y) + C e(A² y) + ‖1 - Jₕ‖_{Vₕ} 16 c_P² C ‖A² y‖ ≤
+(3 C + 16 c_P² C) K L mᵅ`
 on the regular states. -/
 theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h : κ) :
     ‖F.ritzDefect hcr h (DissipFEEC.genExt (-H.hodgeLaplacian) y,
@@ -510,7 +524,7 @@ theorem norm_ritzDefect_lift_le {y : PiLp 2 W} (hy : y ∈ H.heatReg Reg L) (h :
   have hmα := Real.rpow_nonneg (hm h) α
   have h1 := hK hL hy.2.2.1 h
   have h2 := hK hL hy.2.2.2.1 h
-  have h3 : ‖1 - F.toFamily.J h‖ * (16 * cP ^ 2 * C *
+  have h3 : F.toFamily.graphDefect h * (16 * cP ^ 2 * C *
       ‖DissipFEEC.genExt (-H.hodgeLaplacian) (DissipFEEC.genExt (-H.hodgeLaplacian) y)‖) ≤
       K * m h ^ α * (16 * cP ^ 2 * C * L) :=
     mul_le_mul (hJ h) (mul_le_mul_of_nonneg_left hy.2.2.2.2 (by positivity)) (by positivity)
@@ -544,7 +558,7 @@ include hcP hP hm hK0 hK hJ hL in
 stays in the regular states with bound `L`,
 `‖S(t) x - iₕ e^{-tΔₕ} Rₕ ℓ x‖ ≤ (2 K + C (3 C + 16 c_P² C) K t) L mᵅ`, for every constant `K` of
 the static rate with crimes `e(f) ≤ K L mᵅ` and of the inner-product defect
-`‖1 - Jₕ‖ ≤ K mᵅ`. -/
+`‖1 - Jₕ‖_{Vₕ} ≤ K mᵅ`. -/
 theorem rate_heat_of_static {T : ℝ} {x : PiLp 2 W} (hx : x ∈ (-H.hodgeLaplacian).sqDomain)
     (hreg : ∀ t ∈ Icc 0 T, F.toHeat.S t x ∈ H.heatReg Reg L) (h : κ) {t : ℝ}
     (ht : t ∈ Icc 0 T) :

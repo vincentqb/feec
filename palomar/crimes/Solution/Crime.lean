@@ -359,6 +359,58 @@ theorem staticVerdict
 
 theorem J_eq (h : κ) : S.toFeec.J h = (S.incl h).adjoint ∘L S.incl h := rfl
 
+/-! #### The inner-product defect in the discrete graph norm -/
+
+/-- The bounds of the infimum defining the defect: the `δ ≥ 0` with
+`‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v`. -/
+def defectBounds (h : κ) : Set ℝ :=
+  {δ | 0 ≤ δ ∧ ∀ v, ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)}
+
+theorem defect_eq (h : κ) : S.defect h = sInf (S.defectBounds h) := rfl
+
+theorem bddBelow_defectBounds (h : κ) : BddBelow (S.defectBounds h) := ⟨0, fun _ hδ => hδ.1⟩
+
+/-- `‖1 - iₕ* iₕ‖` is a bound (`‖v‖ ≤ ‖v‖ + ‖𝐝ₕ v‖`). -/
+theorem norm_mem_defectBounds (h : κ) :
+    ‖1 - (S.incl h).adjoint ∘L S.incl h‖ ∈ S.defectBounds h :=
+  ⟨norm_nonneg _, fun v => ((1 - (S.incl h).adjoint ∘L S.incl h).le_opNorm v).trans
+    (mul_le_mul_of_nonneg_left (le_add_of_nonneg_right (norm_nonneg _)) (norm_nonneg _))⟩
+
+theorem isClosed_defectBounds (h : κ) : IsClosed (S.defectBounds h) := by
+  rw [defectBounds, Set.ofPred_and, Set.ofPred_forall]
+  exact (isClosed_le continuous_const continuous_id).inter
+    (isClosed_iInter fun v => isClosed_le continuous_const (continuous_id.mul continuous_const))
+
+theorem defect_nonneg (h : κ) : 0 ≤ S.defect h :=
+  Real.sInf_nonneg fun _ hδ => hδ.1
+
+/-- The defect is at most `‖1 - iₕ* iₕ‖`. -/
+theorem defect_le (h : κ) : S.defect h ≤ ‖1 - (S.incl h).adjoint ∘L S.incl h‖ :=
+  csInf_le (S.bddBelow_defectBounds h) (S.norm_mem_defectBounds h)
+
+/-- **The infimum is attained** (the bounds form a closed set):
+`‖(1 - iₕ* iₕ) v‖ ≤ δₕ (‖v‖ + ‖𝐝ₕ v‖)`. -/
+theorem norm_apply_le_defect (h : κ) (v : S.X h) :
+    ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ S.defect h * (‖v‖ + ‖S.D h v‖) :=
+  ((S.isClosed_defectBounds h).csInf_mem ⟨_, S.norm_mem_defectBounds h⟩
+    (S.bddBelow_defectBounds h)).2 v
+
+/-- `Feec`'s inner-product defect in the graph norm is at most `√2 δₕ`
+(`Feec.HilbertComplex.ApproxComplexCrime.Family.graphDefect_le_of_forall`). -/
+theorem graphDefect_le_defect (h : κ) : S.toFeec.graphDefect h ≤ √2 * S.defect h :=
+  S.toFeec.graphDefect_le_of_forall h (S.defect_nonneg h) (S.norm_apply_le_defect h)
+
+theorem tendsto_graphDefect {S : HilbertComplex.CrimeFamily.{u} H a m κ}
+    (hJ : Tendsto S.defect S.l (𝓝 0)) : Tendsto S.toFeec.graphDefect S.l (𝓝 0) :=
+  squeeze_zero S.toFeec.graphDefect_nonneg S.graphDefect_le_defect
+    (by simpa using hJ.const_mul √2)
+
+/-- `‖1 - iₕ* iₕ‖ → 0` implies that the defect tends to `0`. -/
+theorem tendsto_defect_of_tendsto
+    (hJ : Tendsto (fun h => ‖1 - (S.incl h).adjoint ∘L S.incl h‖) S.l (𝓝 0)) :
+    Tendsto S.defect S.l (𝓝 0) :=
+  squeeze_zero S.defect_nonneg S.defect_le hJ
+
 /-- The cochain property is `Feec`'s. -/
 theorem IsCochain.toFeec {S : HilbertComplex.CrimeFamily.{u} H a m κ} (hi : S.IsCochain) :
     S.toFeec.IsCochain :=
@@ -394,10 +446,10 @@ theorem cochainVerdict
     { poincare := ⟨cP, hP⟩
       converges := fun hJ hπ {f σ u p} hs {σh uh ph} hsh => ?_
       cohomology := fun hπ => ?_
-      rate := ⟨S.toFeec.cochainRateConst (max Cπ 0) cP, fun h {f σ u p} hs {σh uh ph} hsh {ε}
-        hσ hu hp hb hJ => ?_⟩ }
-  · exact (hi.toFeec.tendsto_staticError hcr' P.toFeec hP hcP hJ (fun x hx => hπ ⟨x, hx⟩)
-      f).congr fun h => (S.readError_sol_eq hcr' hs (hsh h)).symm
+      rate := ⟨S.toFeec.cochainRateConst (max Cπ 0) cP * √2, fun h {f σ u p} hs {σh uh ph} hsh
+        {ε} hσ hu hp hb hJ => ?_⟩ }
+  · exact (hi.toFeec.tendsto_staticError hcr' P.toFeec hP hcP (tendsto_graphDefect hJ)
+      (fun x hx => hπ ⟨x, hx⟩) f).congr fun h => (S.readError_sol_eq hcr' hs (hsh h)).symm
   · have : FiniteDimensional 𝕜 ((H.win a m).total.harmonic ()) := (H.totalHarmonic_eq a m) ▸ ‹_›
     have happ : ∀ q ∈ (H.win a m).total.harmonic (), Tendsto (fun h =>
         ‖q - S.toFeec.incl h (P.toFeec.π h q)‖) S.l (𝓝 0) := fun q hq =>
@@ -441,22 +493,38 @@ theorem cochainVerdict
         norm_nonneg (H.totalD a m (H.coordT a m X.fst)),
         norm_nonneg (H.coordT a m X.snd.fst : Total W a m),
         norm_nonneg (H.totalD a m (H.coordT a m X.snd.fst)), norm_nonneg (X.snd.snd : Total W a m)]
-    refine hi.toFeec.staticError_le_of_approx hcr' P.toFeec hP hcP h f ?_ ?_ ?_ ?_ ?_
+    have hN : 0 ≤ ‖(H.coordT a m X.fst : Total W a m)‖ + ‖H.totalD a m (H.coordT a m X.fst)‖ +
+        ‖(H.coordT a m X.snd.fst : Total W a m)‖ + ‖H.totalD a m (H.coordT a m X.snd.fst)‖ +
+        ‖(X.snd.snd : Total W a m)‖ := by positivity
+    have hε : 0 ≤ ε := (mul_nonneg (S.defect_nonneg h) hN).trans hJ
+    have hle : ∀ {t : ℝ}, t ≤ ε → t ≤ √2 * ε := fun ht =>
+      ht.trans (le_mul_of_one_le_left hε (Real.one_le_sqrt.2 one_le_two))
+    refine (hi.toFeec.staticError_le_of_approx hcr' P.toFeec hP hcP h f (ε := √2 * ε) ?_ ?_ ?_ ?_
+      ?_).trans_eq (by ring)
     · obtain ⟨v, hv⟩ := hσ
       exact ⟨v, by
         rw [Feec.HilbertComplex.mixedI0_apply, Feec.HilbertComplex.mixedD0_apply,
           ← H.totalD_coordT a m]
-        exact hv⟩
+        exact hle hv⟩
     · obtain ⟨v, hv⟩ := hu
       exact ⟨v, by
         rw [Feec.HilbertComplex.mixedI1_apply, Feec.HilbertComplex.mixedD1_apply,
           ← H.totalD_coordT a m]
-        exact hv⟩
-    · exact hp
-    · rw [hb']; exact hb
-    · have key : ‖1 - (S.incl h).adjoint ∘L S.incl h‖ * ‖X‖ ≤ ε :=
-        (mul_le_mul_of_nonneg_left hXn (norm_nonneg _)).trans hJ
-      exact key
+        exact hle hv⟩
+    · obtain ⟨v, hv⟩ := hp
+      exact ⟨v, hle hv⟩
+    · obtain ⟨v, hv⟩ := hb
+      exact ⟨v, by rw [hb']; exact hle hv⟩
+    · calc S.toFeec.graphDefect h * ‖X‖
+          ≤ √2 * S.defect h * (‖(H.coordT a m X.fst : Total W a m)‖ +
+            ‖H.totalD a m (H.coordT a m X.fst)‖ + ‖(H.coordT a m X.snd.fst : Total W a m)‖ +
+            ‖H.totalD a m (H.coordT a m X.snd.fst)‖ + ‖(X.snd.snd : Total W a m)‖) :=
+            mul_le_mul (S.graphDefect_le_defect h) hXn (norm_nonneg _)
+              (mul_nonneg (Real.sqrt_nonneg 2) (S.defect_nonneg h))
+        _ = √2 * (S.defect h * (‖(H.coordT a m X.fst : Total W a m)‖ +
+            ‖H.totalD a m (H.coordT a m X.fst)‖ + ‖(H.coordT a m X.snd.fst : Total W a m)‖ +
+            ‖H.totalD a m (H.coordT a m X.snd.fst)‖ + ‖(X.snd.snd : Total W a m)‖)) := by ring
+        _ ≤ √2 * ε := mul_le_mul_of_nonneg_left hJ (Real.sqrt_nonneg 2)
 
 variable [∀ i, NormedSpace ℝ (W i)] [∀ i, IsScalarTower ℝ 𝕜 (W i)]
 
@@ -477,7 +545,7 @@ theorem heatVerdict
       K := ⊤
       isClosed_K := by rw [Submodule.top_coe]; exact isClosed_univ
       l := S.l
-      tendsto_innerDefect := hJ }
+      tendsto_graphDefect := tendsto_graphDefect hJ }
   have hconv' : ∀ f, Tendsto (fun h => S.toFeec.staticError hcr' h f) S.l (𝓝 0) := fun f =>
     ((S.convergesAt_iff.1 (hconv f)) _ _ _ (H.isTotalMixedSolution_totalSol a m hcr' f)
       (fun h => S.inclD h (S.toFeec.mixedSol h f).fst)

@@ -253,8 +253,12 @@ against the solution tend to `0`. -/
 def ConvergesAt (f : Total W a m) : Prop :=
   ∀ x, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ xh : ∀ h, S.X h × S.X h × S.X h,
     (∀ h, S.IsSolution h f (xh h)) → Tendsto (fun h => S.readError h x (xh h)) S.l (𝓝 0)
-/-- The **inner-product defect** `‖1 - iₕ* iₕ‖` of the reading map. -/
-def defect (h : κ) : ℝ := ‖1 - (S.incl h).adjoint ∘L S.incl h‖
+/-- The **inner-product defect** of the reading map in the discrete graph norm: the least `δ ≥ 0`
+with `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)` for every `v ∈ Xₕ`, the norm of `1 - iₕ* iₕ` from `Xₕ`
+with the graph norm of `𝐝ₕ` (an infimum over a set that contains `‖1 - iₕ* iₕ‖`, hence at most
+`‖1 - iₕ* iₕ‖`). -/
+def defect (h : κ) : ℝ :=
+  sInf {δ | 0 ≤ δ ∧ ∀ v, ‖(1 - (S.incl h).adjoint ∘L S.incl h) v‖ ≤ δ * (‖v‖ + ‖S.D h v‖)}
 /-- The **uniform discrete Poincaré inequality** `‖v‖ ≤ c_P ‖𝐝ₕ v‖` on `N(𝐝ₕ)ᗮ`. -/
 def IsPoincare (cP : ℝ) : Prop :=
   ∀ h (v : S.X h), v ∈ (LinearMap.ker (S.D h : S.X h →ₗ[𝕜] S.X h))ᗮ → ‖v‖ ≤ cP * ‖S.D h v‖
@@ -292,7 +296,8 @@ structure StaticVerdict (C : ℝ) : Prop where
 ([HolstStern2012], Thms 3.3, 3.5, 3.10, Cors 3.4, 3.11). -/
 structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
   poincare : ∃ cP, S.IsPoincare cP
-  /-- convergence for every datum when `‖1 - iₕ* iₕ‖ → 0` and `iₕ πₕ → 1` on `D(𝐝)` -/
+  /-- convergence for every datum when the inner-product defect tends to `0` and `iₕ πₕ → 1` on
+  `D(𝐝)` -/
   converges (hJ : Tendsto S.defect S.l (𝓝 0))
     (hπ : ∀ x : (𝐝).domain, Tendsto (fun h => ‖(x : Total W a m) - S.incl h (P.π h x)‖) S.l (𝓝 0))
     (f) : S.ConvergesAt f
@@ -306,7 +311,7 @@ structure CochainVerdict {Cπ : ℝ} (P : S.CochainProj Cπ) : Prop where
       ∀ z : (𝐝).domain, 𝐝 z = 0 → (∃ y, P.π h z = S.D h y) →
         ∃ y : (𝐝).domain, (z : Total W a m) = 𝐝 y
   /-- the error is at most `K ε` when `σ, u, p` and `P_𝔅 u` are within `ε` of `iₕ Xₕ` in the read
-  error and `‖1 - iₕ* iₕ‖ (‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖) ≤ ε` -/
+  error and the inner-product defect times `‖σ‖ + ‖𝐝σ‖ + ‖u‖ + ‖𝐝u‖ + ‖p‖` is at most `ε` -/
   rate : ∃ K : ℝ, ∀ (h : κ) {f x}, IsMixedSolution (H.totalMixedSpace a m) f x → ∀ {xh},
     S.IsSolution h f xh → ∀ {ε : ℝ}, (∃ v, S.readGap h x.1 (𝐝 x.1) v ≤ ε) →
       (∃ v, S.readGap h x.2.1 (𝐝 x.2.1) v ≤ ε) → (∃ v, S.readGap h x.2.2 0 v ≤ ε) →

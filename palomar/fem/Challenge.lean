@@ -29,9 +29,11 @@ conditions, `S(M_N) ⊆ HΛ(Ω)` and `S̊(M_N) ⊆ H̊Λ(Ω)` are families of fi
 subcomplexes with cochain projections (the smoothed projections) that extend to projections of
 `L²(Ω; Λᵏ)` bounded uniformly in `N`; the families approximate in the graph norm, and the
 projections attain the rate `h_N^{s+1}` on `C^{s+2}` forms (for `S̊`, vanishing outside `Ω`) where
-`S` reproduces `P_sΛ`. On parallelepipeds the exterior derivatives have closed range
-(`fem_parallelepiped`); on the cube, with its Freudenthal meshes and without boundary conditions,
-the rate holds for the forms `x` with `x, dx ∈ H^{s+1}` (`fem_cube`).
+`S` reproduces `P_sΛ`. On parallelepipeds the exterior derivatives have closed range, the
+harmonic forms are finite-dimensional, of dimension `[k = 0]` for `HΛ` and `[k = n]` for `H̊Λ`,
+and the compactness property holds (`fem_parallelepiped`); on the cube, with its Freudenthal
+meshes and without boundary conditions, the rate holds for the forms `x` with
+`x, dx ∈ H^{s+1}` (`fem_cube`).
 
 **This is exactly what the Galerkin theorems of `palomar/feec` need** (`FEEC.projectionFEEC`,
 `FEEC.staticFEEC`, `FEEC.evolutionFEEC`), in the same notions (the shared blocks
@@ -43,10 +45,12 @@ those of the Jackson estimates; the wave clause of `FEEC.evolutionFEEC` needs ap
 (in the last degree of the window in `L²`, which follows from the graph norm by density), so it
 holds on every such `Ω`; its heat clause moreover graph-norm bounds, the `L²` bound of the
 projections in the last degree and closed ranges. On parallelepipeds all of them apply, at the
-rates `h^{s+1}` (the cohomology clause of the static verdict needs moreover finite-dimensional
-harmonic forms, not proved here). The rate attained by the projections themselves
-(`Jackson.ProjRate`) is more than they need: it gives the comparison fields of the fully
-discrete schemes of `palomar/waves`.
+rates `h^{s+1}`, and so does the cohomology clause of the static verdict, which needs moreover
+finite-dimensional harmonic forms: for every mesh family and admissible sequence the cochain
+projections eventually induce isomorphisms from the cohomology of `HΛ(Ω)`, resp. `H̊Λ(Ω)`, onto
+that of `S(M_N)`, resp. `S̊(M_N)`, of dimension `[k = 0]`, resp. `[k = n]` in degree `k`. The
+rate attained by the projections themselves (`Jackson.ProjRate`) is more than they need: it gives
+the comparison fields of the fully discrete schemes of `palomar/waves`.
 
 ## Conventions
 
@@ -463,19 +467,33 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
         (if b then IsCsFormMin Ω else IsCsForm Ω) s j L x) ∧ J.ProjRate := by
   sorry
 
-/-- **Parallelepipeds** ([Freudenthal1942]; [AFW2010], §4): every parallelepiped `A (0, 1)ⁿ + b`,
-`A` invertible, is star-shaped with respect to a ball, carries a shape-regular, quasi-uniform
-family of meshes with `h_N → 0` (images of Freudenthal meshes), and the weak and the minimal
-exterior derivatives have closed range in every degree: the closed ranges that `FEEC.staticFEEC`,
-the heat clause of `FEEC.evolutionFEEC` and the converse of `FEEC.projectionFEEC` need besides the
-conclusions of `fem`. -/
+/-- **Parallelepipeds** ([Freudenthal1942]; [AFW2010], §3.1.3, §4; [Arnold2018], Ch. 6): every
+parallelepiped `Ω = A (0, 1)ⁿ + b`, `A` invertible, is star-shaped with respect to a ball and
+carries a shape-regular, quasi-uniform family of meshes with `h_N → 0` (images of Freudenthal
+meshes); `HΛ(Ω)` (`bc = false`, `dMax`), resp. `H̊Λ(Ω)` (`bc = true`, `dMin`), is a Hilbert complex
+in which, in every degree `k`, `dᵏ` has closed range, the harmonic forms
+`ℌᵏ = N(dᵏ) ∩ N((dᵏ⁻¹)*)` (`HilbertComplex.harmonic` of `palomar/feec`) are finite-dimensional,
+of dimension `[k = 0]`, resp. `[k = n]` (that of the cohomology `N(dᵏ) / R(dᵏ⁻¹) ≅ ℌᵏ`), and the
+compactness property holds: the unit ball of `D(dᵏ) ∩ D((dᵏ⁻¹)*)` in its graph norm
+`(‖x‖² + ‖dx‖² + ‖(dᵏ⁻¹)* x‖²)^½` is relatively compact in `L²(Ω; Λᵏ)` (which implies the closed
+range and the finite-dimensional harmonic forms). Besides the conclusions of `fem`, the closed
+ranges are what `FEEC.staticFEEC`, the heat clause of `FEEC.evolutionFEEC` and the converse of
+`FEEC.projectionFEEC` need, and the finite-dimensional harmonic forms what the cohomology clause
+of `FEEC.staticFEEC` needs. -/
 theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det)
     (b : Fin n → ℝ) :
     IsStarShapedBall (parallelepiped A b) ∧ (∃ M, IsMeshFamily (parallelepiped A b) M) ∧
-      ∀ k, IsClosed (LinearMap.range (dMax (parallelepiped A b) k).toFun :
-          Set (L2Form (parallelepiped A b) (k + 1))) ∧
-        IsClosed (LinearMap.range (dMin (parallelepiped A b) k).toFun :
-          Set (L2Form (parallelepiped A b) (k + 1))) := by
+      ∀ bc : Bool, ∃ H : HilbertComplex ℝ (L2Form (parallelepiped A b)),
+        (∀ k, H.d k (k + 1) =
+          if bc then dMin (parallelepiped A b) k else dMax (parallelepiped A b) k) ∧
+        ∀ k, IsClosed (LinearMap.range (H.d k (k + 1)).toFun :
+            Set (L2Form (parallelepiped A b) (k + 1))) ∧
+          FiniteDimensional ℝ ↥((H.d k (k + 1)).ker ⊓ (H.d (k - 1) k)†.ker) ∧
+          Module.finrank ℝ ↥((H.d k (k + 1)).ker ⊓ (H.d (k - 1) k)†.ker) =
+            (if k = (if bc then (n : ℤ) else 0) then 1 else 0) ∧
+          IsCompact (closure {x : L2Form (parallelepiped A b) k |
+            ∃ (hx : x ∈ (H.d k (k + 1)).domain) (hx' : x ∈ (H.d (k - 1) k)†.domain),
+              ‖x‖ ^ 2 + ‖H.d k (k + 1) ⟨x, hx⟩‖ ^ 2 + ‖(H.d (k - 1) k)† ⟨x, hx'⟩‖ ^ 2 ≤ 1}) := by
   sorry
 
 /-- **Sobolev rates on the cube** ([AFW2010], §5.4–§5.5; [Arnold2018], Ch. 7): the cube `(0, ½)ⁿ`

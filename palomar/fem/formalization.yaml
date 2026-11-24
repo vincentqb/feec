@@ -39,8 +39,11 @@ project:
     outside Omega for b = true), ||x - pi_N x|| and ||dx - d pi_N x|| are at most B L h_N^(s+1),
     in the degrees j where S contains P_s Lambda^j and P_s Lambda^(j+1).
     FEEC.fem_parallelepiped: every parallelepiped A (0,1)^n + b, A invertible (every open box), is
-    such a domain, carries such a mesh family, and the weak and the minimal exterior derivatives
-    have closed range in every degree. FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries
+    such a domain and carries such a mesh family, and H Lambda(Omega) and H°Lambda(Omega) are
+    Hilbert complexes with, in every degree k, closed range, finite-dimensional harmonic forms
+    N(d^k) ∩ N((d^(k-1))*), of dimension [k = 0] for H Lambda and [k = n] for H°Lambda, and the
+    compactness property (the unit ball of D(d^k) ∩ D((d^(k-1))*) in its graph norm is
+    relatively compact in L^2). FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries
     such a mesh family, the Freudenthal meshes (stated by their vertices: every simplex of M_N is
     a Kuhn simplex h (z + K_sigma), h = 1/(2(N+1)), with vertices
     h (z + e_sigma(0) + ... + e_sigma(j-1))), for which the family of FEEC.fem (b = false)
@@ -60,8 +63,10 @@ project:
     follows from graph-norm approximation by density), so it holds on every domain of this
     entry; its heat clause moreover graph-norm bounds, the L^2 bound of the projections in the
     last degree (both from FEEC.fem) and closed ranges (FEEC.fem_parallelepiped). On
-    parallelepipeds all of them apply, at the rates h^(s+1) (the cohomology clause of the static
-    verdict needs moreover finite-dimensional harmonic forms, not proved here). The rate attained
+    parallelepipeds all of them apply, at the rates h^(s+1), and so does the cohomology clause of
+    the static verdict, which needs moreover the finite-dimensional harmonic forms of
+    FEEC.fem_parallelepiped: for every mesh family and admissible sequence the cochain
+    projections eventually induce isomorphisms H^k(Omega) ≅ H^k(S(M_N)). The rate attained
     by the projections themselves (Jackson.ProjRate) is more than these theorems need: it gives
     the comparison fields of the fully discrete schemes of palomar/waves.
     The proof is the library Feec of this repository (Feec.FiniteElement, Feec.Models.StarShaped,
@@ -192,10 +197,11 @@ status:
     (they are the sequence topSeq of palomar/waves), the assembly of the global spaces from the
     degrees of freedom, the finite element theory of the cube with mixed boundary conditions, the
     cubical and weak-symmetry elements, the H^1 approximation of the smoothed projections.
-    Not formalized: the closed range on general star-shaped or Lipschitz domains (true on
-    Lipschitz domains by Picard 1984, Costabel-McIntosh 2010); Sobolev (H^(s+1)) rates on
-    general star-shaped domains and mesh families (see fidelity (7)); merely shape-regular
-    (not quasi-uniform) meshes; Lipschitz polyhedral domains.
+    Not formalized: the closed range, the finite-dimensional harmonic forms and the compactness
+    property on general star-shaped or Lipschitz domains (true on Lipschitz domains by Picard
+    1984, Costabel-McIntosh 2010); Sobolev (H^(s+1)) rates on general star-shaped domains and
+    mesh families (see fidelity (7)); merely shape-regular (not quasi-uniform) meshes; Lipschitz
+    polyhedral domains.
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -273,9 +279,10 @@ fidelity:
     domains, which are not covered (the extension-dilation construction of the smoothed
     projections in Feec uses star-shapedness). The closed range of d, a hypothesis of
     FEEC.staticFEEC (through Poincare inequalities), of the heat clause of FEEC.evolutionFEEC and
-    of the converse of FEEC.projectionFEEC in palomar/feec, is proved only on parallelepipeds
-    (FEEC.fem_parallelepiped); on other star-shaped domains it stays a hypothesis of these. The
-    wave clause of FEEC.evolutionFEEC does not need it.
+    of the converse of FEEC.projectionFEEC in palomar/feec, and the finite-dimensional harmonic
+    forms of the cohomology clause of FEEC.staticFEEC are proved only on parallelepipeds
+    (FEEC.fem_parallelepiped); on other star-shaped domains they stay hypotheses of these. The
+    wave clause of FEEC.evolutionFEEC needs neither.
     (7) Rates. On general star-shaped domains and mesh families (FEEC.fem) the Jackson class is
     C^(s+2) forms with sup bounds on the (s+1)-st derivatives of x and dx on the closure of
     Omega: one derivative more than the order requires and a W^(s+1,infinity) instead of an
@@ -324,7 +331,9 @@ review:
     their definitions); FEEC.fem (the former FEEC.fem and FEEC.femMin, one theorem over the
     boundary condition since 2026-11-18), FEEC.fem_parallelepiped and FEEC.fem_cube as of
     2026-11-06, restated 2026-11-17 without the window verdicts (the static, wave and heat
-    theorems apply through palomar/feec) and with the projection rates (Jackson.ProjRate). Every
+    theorems apply through palomar/feec) and with the projection rates (Jackson.ProjRate);
+    FEEC.fem_parallelepiped extended on 2026-11-24 with the harmonic forms and the compactness
+    property of H Lambda and H°Lambda (formerly the closed ranges alone). Every
     merge of the library was gated by a full build (zero warnings), an axiom audit (propext,
     Classical.choice, Quot.sound only) and an independent AI review. No external mathematical
     review.
@@ -343,13 +352,18 @@ alignment:
         exists_mem_poly_le_of_isCsForm (and their Min versions); the spaces through
         Solution/Spaces.lean (mem_V_iff, mem_V₀_iff); the projection rate from the Jackson
         estimate and the uniform bound (Solution/Complex.lean, Jackson.projRate).
-    - source: "[Freudenthal1942]; [AFW2010] §4 (closed range)"
+    - source: "[Freudenthal1942]; [AFW2010] §3.1.3 (compactness property), §4 (closed range, harmonic forms); [Arnold2018] Ch. 6"
       lean: "FEEC.fem_parallelepiped"
       module: "Challenge"
       status: "proved"
       note: >-
-        From Feec.Models.StarShaped.ParallelepipedWitness and
-        Feec.Models.Parallelepiped.closedRangeAt, closedRangeAt_min.
+        From Feec.Models.StarShaped.ParallelepipedWitness and the compactness property of H Lambda
+        and H°Lambda on the parallelepiped, Feec.Models.Parallelepiped.hasCompactProperty and
+        hasCompactProperty_min (the property of the cube, Feec.Models.Cube.FEM.hasCompactProperty,
+        transported along the pullback of forms), which gives the closed ranges and the
+        finite-dimensional harmonic forms (Feec.HilbertComplex.HasCompactPropertyAt.isClosed_range,
+        finiteDimensional_harmonic; Solution/Complex.lean, hodge_ofFeec); their dimensions from
+        Feec.Models.Parallelepiped.finrank_harmonic and finrank_harmonic_min.
     - source: "[AFW2010] §5; [Arnold2018] Ch. 7 (Sobolev approximation); [Evans2010] §5.2"
       lean: "FEEC.fem_cube"
       module: "Challenge"

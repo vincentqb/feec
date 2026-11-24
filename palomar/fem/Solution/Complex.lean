@@ -2,6 +2,7 @@ module
 
 public import Solution.Defs
 public import Feec.HilbertComplex.Approximation.ConformingFamily
+public import Feec.HilbertComplex.Compactness
 public import Feec.ForMathlib.Analysis.QuasiOptimal
 
 /-!
@@ -10,6 +11,9 @@ public import Feec.ForMathlib.Analysis.QuasiOptimal
 A `Feec.HilbertComplex` on `ComplexShape.up ℤ` is a Hilbert complex of the challenge with the same
 fields (`HilbertComplex.ofFeec`), and so are its subcomplexes (`Subcomplex.ofFeec`); a `Feec`
 cochain projection, defined on `W`, restricts to the domain complex (`CochainProjection.ofFeec`).
+The harmonic forms of `Feec` are the challenge's `N(dᵏ) ∩ N((dᵏ⁻¹)†)` (`harmonic_eq_ofFeec`), and
+its compactness property makes the graph-norm unit ball of `D(dᵏ) ∩ D((dᵏ⁻¹)†)` relatively
+compact (`isCompact_closure_ofFeec`; with the closed range and the harmonic forms, `hodge_ofFeec`).
 Eventual approximation in `W` and for `d` gives the graph-norm approximation of the challenge
 (`approximates_of_eventually`), and graph-norm approximation gives approximation in `W`
 (`tendsto_infDist`). Cochain projections extending to uniformly bounded
@@ -68,6 +72,52 @@ def CochainProjection.ofFeec {S : G.Subcomplex} (P : S.CochainProjection) :
 
 @[simp] theorem CochainProjection.ofFeec_π {S : G.Subcomplex} (P : S.CochainProjection) (i : ℤ)
     (x : (G.d i (i + 1)).domain) : ((CochainProjection.ofFeec P).π i x : W i) = P.π i x := rfl
+
+/-! ### Harmonic forms and the compactness property -/
+
+/-- The harmonic forms `ℌᵏ` of `Feec` are `N(dᵏ) ∩ N((dᵏ⁻¹)†)`, the expression of the challenge. -/
+theorem harmonic_eq_ofFeec (k : ℤ) :
+    G.harmonic k = ((ofFeec G).d k (k + 1)).ker ⊓ ((ofFeec G).d (k - 1) k)†.ker := by
+  change G.cycles k ⊓ ((G.d _ k)†).ker = _
+  rw [G.cycles_eq (rfl : (ComplexShape.up ℤ).Rel k (k + 1)),
+    (ComplexShape.up ℤ).prev_eq' (sub_add_cancel k 1)]
+  rfl
+
+/-- **The compactness property in the form of the challenge**: the unit ball of
+`D(dᵏ) ∩ D((dᵏ⁻¹)†)` in its graph norm `(‖x‖² + ‖dx‖² + ‖d†x‖²)^½` lies in the box
+`‖x‖, ‖dx‖, ‖d†x‖ ≤ 1` of `Feec.HilbertComplex.HasCompactPropertyAt`, hence in a compact set, so its
+closure is compact. -/
+theorem isCompact_closure_ofFeec {k : ℤ} (hG : G.HasCompactPropertyAt k) :
+    IsCompact (closure {x : W k | ∃ (hx : x ∈ ((ofFeec G).d k (k + 1)).domain)
+      (hx' : x ∈ ((ofFeec G).d (k - 1) k)†.domain),
+        ‖x‖ ^ 2 + ‖(ofFeec G).d k (k + 1) ⟨x, hx⟩‖ ^ 2 +
+          ‖((ofFeec G).d (k - 1) k)† ⟨x, hx'⟩‖ ^ 2 ≤ 1}) := by
+  obtain ⟨K, hK, hsub⟩ := (Feec.HilbertComplex.hasCompactPropertyAt_iff_of_rel (H := G)
+    (sub_add_cancel k 1) (rfl : (ComplexShape.up ℤ).Rel k (k + 1))).1 hG
+  refine hK.closure_of_subset fun x ⟨hx, hx', h⟩ => ?_
+  change ‖x‖ ^ 2 + ‖G.d k (k + 1) ⟨x, hx⟩‖ ^ 2 + ‖(G.d (k - 1) k)† ⟨x, hx'⟩‖ ^ 2 ≤ 1 at h
+  have h1 := norm_nonneg x
+  have h2 := norm_nonneg (G.d k (k + 1) ⟨x, hx⟩)
+  have h3 := norm_nonneg ((G.d (k - 1) k)† ⟨x, hx'⟩)
+  exact hsub x hx hx' (by nlinarith) (by nlinarith) (by nlinarith)
+
+/-- **The Hodge data of a `Feec` complex with the compactness property**, in the form of the
+challenge: in degree `k`, closed range, finite-dimensional harmonic forms (of dimension
+`[k = m]` if those of `G` are) and the relatively compact graph-norm unit ball. -/
+theorem hodge_ofFeec (hG : G.HasCompactProperty) {m : ℤ}
+    (hm : ∀ k, Module.finrank 𝕜 (G.harmonic k) = if k = m then 1 else 0) (k : ℤ) :
+    IsClosed (LinearMap.range ((ofFeec G).d k (k + 1)).toFun : Set (W (k + 1))) ∧
+      FiniteDimensional 𝕜 ↥(((ofFeec G).d k (k + 1)).ker ⊓ ((ofFeec G).d (k - 1) k)†.ker) ∧
+      Module.finrank 𝕜 ↥(((ofFeec G).d k (k + 1)).ker ⊓ ((ofFeec G).d (k - 1) k)†.ker) =
+        (if k = m then 1 else 0) ∧
+      IsCompact (closure {x : W k | ∃ (hx : x ∈ ((ofFeec G).d k (k + 1)).domain)
+        (hx' : x ∈ ((ofFeec G).d (k - 1) k)†.domain),
+          ‖x‖ ^ 2 + ‖(ofFeec G).d k (k + 1) ⟨x, hx⟩‖ ^ 2 +
+            ‖((ofFeec G).d (k - 1) k)† ⟨x, hx'⟩‖ ^ 2 ≤ 1}) := by
+  rw [← harmonic_eq_ofFeec]
+  refine ⟨?_, (hG k).finiteDimensional_harmonic, hm k, isCompact_closure_ofFeec (hG k)⟩
+  have h := (hG k).isClosed_range
+  rwa [(ComplexShape.up ℤ).next_eq' (rfl : (ComplexShape.up ℤ).Rel k (k + 1))] at h
 
 variable (H : HilbertComplex 𝕜 W)
 

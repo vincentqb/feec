@@ -22,12 +22,16 @@ the interpolation error (`MeshFamily.exists_mem_poly_le_of_isCsForm`, `_Min`); t
 the Jackson rate (`HilbertComplex.SubcomplexFamily.Jackson.projRate`).
 
 `FEEC.fem_parallelepiped` from `Feec.Models.StarShaped.ParallelepipedWitness` (the star domain and
-the image Freudenthal meshes of `A (0, ½)ⁿ + b`, here with the matrix `2 A`) and
-`Feec.Models.Parallelepiped.closedRangeAt`, `closedRangeAt_min`. `FEEC.fem_cube`: the family of
-`FEEC.fem` on the cube with the Freudenthal meshes (`CubeWitness`), whose spaces are the cube's
-`Feec.Models.Cube.FEM.poly` (`poly_V_eq`); the best approximation of `H^{s+1}` data
-(`exists_infDist_le_of_isSobolevForm`, from `Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high`
-and `Feec.Models.Cube.SobolevRestriction.exists_qNorm_le`) passes to the graph norm through the
+the image Freudenthal meshes of `A (0, ½)ⁿ + b`, here with the matrix `2 A`), the compactness
+property of `HΛ` and `H̊Λ` there (`Feec.Models.Parallelepiped.hasCompactProperty`, `_min`), which
+gives the closed ranges and the finite-dimensional harmonic forms (`HilbertComplex.hodge_ofFeec`),
+and their dimensions (`Feec.Models.Parallelepiped.finrank_harmonic`, `_min`).
+
+`FEEC.fem_cube`: the family of `FEEC.fem` on the cube with the Freudenthal meshes (`CubeWitness`),
+whose spaces are the cube's `Feec.Models.Cube.FEM.poly` (`poly_V_eq`); the best approximation of
+`H^{s+1}` data (`exists_infDist_le_of_isSobolevForm`, from
+`Feec.Models.Cube.FEM.infDist_poly_le_sobolevQ_high` and
+`Feec.Models.Cube.SobolevRestriction.exists_qNorm_le`) passes to the graph norm through the
 uniformly bounded projections.
 
 ## References
@@ -209,10 +213,17 @@ theorem parallelepiped_eq (A : Matrix (Fin n) (Fin n) ℝ) (hA2 : IsUnit ((2 : �
 theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsUnit A.det)
     (b : Fin n → ℝ) :
     IsStarShapedBall (parallelepiped A b) ∧ (∃ M, IsMeshFamily (parallelepiped A b) M) ∧
-      ∀ k, IsClosed (LinearMap.range (dMax (parallelepiped A b) k).toFun :
-          Set (L2Form (parallelepiped A b) (k + 1))) ∧
-        IsClosed (LinearMap.range (dMin (parallelepiped A b) k).toFun :
-          Set (L2Form (parallelepiped A b) (k + 1))) := by
+      ∀ bc : Bool, ∃ H : HilbertComplex ℝ (L2Form (parallelepiped A b)),
+        (∀ k, H.d k (k + 1) =
+          if bc then dMin (parallelepiped A b) k else dMax (parallelepiped A b) k) ∧
+        ∀ k, IsClosed (LinearMap.range (H.d k (k + 1)).toFun :
+            Set (L2Form (parallelepiped A b) (k + 1))) ∧
+          FiniteDimensional ℝ ↥((H.d k (k + 1)).ker ⊓ (H.d (k - 1) k)†.ker) ∧
+          Module.finrank ℝ ↥((H.d k (k + 1)).ker ⊓ (H.d (k - 1) k)†.ker) =
+            (if k = (if bc then (n : ℤ) else 0) then 1 else 0) ∧
+          IsCompact (closure {x : L2Form (parallelepiped A b) k |
+            ∃ (hx : x ∈ (H.d k (k + 1)).domain) (hx' : x ∈ (H.d (k - 1) k)†.domain),
+              ‖x‖ ^ 2 + ‖H.d k (k + 1) ⟨x, hx⟩‖ ^ 2 + ‖(H.d (k - 1) k)† ⟨x, hx'⟩‖ ^ 2 ≤ 1}) := by
   have hA2 : IsUnit ((2 : ℝ) • A).det := by
     rw [Matrix.det_smul, isUnit_iff_ne_zero]
     exact mul_ne_zero (pow_ne_zero _ two_ne_zero) hA.ne_zero
@@ -220,15 +231,20 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
   set D := ParallelepipedWitness.starDomain ((2 : ℝ) • A) hA2 b
   refine ⟨⟨D.isOpen, D.isBounded, D.x₀, D.s₀, D.s₀_pos, D.starBall⟩,
     ⟨_, isMeshFamily_ofFeec (ParallelepipedWitness.meshFamily ((2 : ℝ) • A) hA2 b)⟩,
-    fun k => ⟨?_, ?_⟩⟩
-  · have h := Feec.Models.Parallelepiped.closedRangeAt ((2 : ℝ) • A) hA2 b (k + 1)
-    rw [Feec.HilbertComplex.ClosedRangeAt, Feec.HilbertComplex.boundaries_eq _ rfl,
-      deRham_maximalComplex_d, ← dMax_eq] at h
-    exact h
-  · have h := Feec.Models.Parallelepiped.closedRangeAt_min ((2 : ℝ) • A) hA2 b (k + 1)
-    rw [Feec.HilbertComplex.ClosedRangeAt, Feec.HilbertComplex.boundaries_eq _ rfl,
-      deRham_minimalComplex_d, ← dMin_eq] at h
-    exact h
+    fun bc => ?_⟩
+  cases bc
+  · refine ⟨HilbertComplex.ofFeec (Feec.Models.Parallelepiped.complex ((2 : ℝ) • A) b),
+      fun k => ?_, HilbertComplex.hodge_ofFeec
+        (Feec.Models.Parallelepiped.hasCompactProperty _ hA2 b)
+        (Feec.Models.Parallelepiped.finrank_harmonic _ hA2 b)⟩
+    rw [HilbertComplex.ofFeec_d, deRham_maximalComplex_d, dMax_eq]
+    rfl
+  · refine ⟨HilbertComplex.ofFeec (Feec.Models.Parallelepiped.complexMin ((2 : ℝ) • A) b),
+      fun k => ?_, HilbertComplex.hodge_ofFeec
+        (Feec.Models.Parallelepiped.hasCompactProperty_min _ hA2 b)
+        (Feec.Models.Parallelepiped.finrank_harmonic_min _ hA2 b)⟩
+    rw [HilbertComplex.ofFeec_d, deRham_minimalComplex_d, dMin_eq]
+    rfl
 
 /-! ### Sobolev rates on the cube -/
 

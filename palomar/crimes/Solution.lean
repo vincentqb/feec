@@ -3,23 +3,27 @@ module
 public import Solution.Convert
 public import Solution.HighMode
 public import Solution.Witness
+public import Solution.Lumped
 
 /-!
 # Variational crimes for Hilbert complexes (solution)
 
-The theorem of `Challenge.lean` and its witness. `FEEC.crimeFEEC` from the static, cochain and
+The theorems of `Challenge.lean`. `FEEC.crimeFEEC` from the static, cochain and
 heat verdicts of `Solution.Crime` (through `Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC`,
 the cochain case `Feec.HilbertComplex.Approximation.StaticCochain` and
 `Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC`), converted by `Solution.Convert`;
 `FEEC.crime_nonvacuous` from the shear family of `Solution.Witness` and the cochain clause of
 `FEEC.crimeFEEC`; `FEEC.crime_defect_nonvacuous` from the family of `Solution.HighMode` (an
 unbounded diagonal `d⁰` on `ℓ²`, reading maps that double the square norm of the highest mode) and
-the cochain clause.
+the cochain clause; `FEEC.crime_massLumping` from `Feec.FiniteElement.LumpedMassDefect` through
+the bridge `Solution.Lumped` (meshes, `P₁` gradients and interpolants, the consistent and the
+lumped mass of the challenge are those of `Feec`).
 
 ## References
 
 * [M. Holst, A. Stern, *Geometric variational crimes: Hilbert complexes, finite element exterior calculus, and problems on hypersurfaces*][HolstStern2012]
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus: from Hodge theory to numerical stability*][AFW2010]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
 
 Bibliography: [references.bib](../../docs/references.bib)
 -/
@@ -143,5 +147,63 @@ theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ
     fun x => HighMode.tendsto_incl_proj (x : HighMode.T)
   exact ⟨HighMode.complex, HighMode.family, HighMode.proj, HighMode.not_bounded_totalD, hcr, rfl,
     HighMode.isCochain, V.poincare, HighMode.norm_one_sub_J, hJ, hπ, V.converges hJ hπ⟩
+
+/-- **Mass lumping of `P₁` elements** ([Thomee2006], Ch. 15): the bounds of
+`Feec.FiniteElement.LumpedMassDefect` through the bridge `Solution.Lumped`: mass equivalence
+(`Feec.FiniteElement.p1Mass_le_lumpedInner`, `Feec.FiniteElement.lumpedInner_le_mul_p1Mass`),
+the hat functions (`Feec.FiniteElement.lumpedInner_nodalIndicator`,
+`Feec.FiniteElement.lumpedMass_pos`, `Feec.FiniteElement.p1Mass_nodalIndicator`:
+`⟨φₓ, φₓ⟩_L = m(x) > 0`, `⟨φₓ, φₓ⟩ = 2 m(x) / (n + 2)`), the defect from the graph norm
+(`Feec.FiniteElement.abs_lumpedInner_sub_p1Mass_le`), and for lumped readings
+(`Feec.FiniteElement.IsLumpedReading`) the operator bounds
+`Feec.FiniteElement.IsLumpedReading.le_opNorm_one_sub_adjoint_comp_self` and
+`Feec.FiniteElement.IsLumpedReading.norm_one_sub_adjoint_comp_self_apply_le`. -/
+theorem crime_massLumping {n : ℕ} (M : SimplicialMesh n) :
+    (∀ u, p1Mass M u u ≤ lumpedInner M u u ∧ lumpedInner M u u ≤ (n + 2) * p1Mass M u u) ∧
+    (∀ T ∈ M.simplices, ∀ x ∈ vertexSet T,
+      let φ : (Fin n → ℝ) → ℝ := fun z => if z = x then 1 else 0
+      0 < lumpedInner M φ φ ∧
+        lumpedInner M φ φ - p1Mass M φ φ = n / (n + 2) * lumpedInner M φ φ) ∧
+    (∀ h : ℝ, 0 ≤ h →
+      (∀ T ∈ M.simplices, ∀ i j, (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ h ^ 2) →
+      ∀ u w, |lumpedInner M u w - p1Mass M u w| ≤
+        √(n * (n + 1) / 2) / (n + 2) * h * √(p1Stiffness M u u) * √(lumpedInner M w w)) ∧
+    ∀ {X E : Type} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [CompleteSpace X]
+      [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
+      (ν : X → (Fin n → ℝ) → ℝ) (ι : X →L[ℝ] E),
+      (∀ v w, ⟪v, w⟫_ℝ = lumpedInner M (ν v) (ν w)) →
+      (∀ v w, ⟪ι v, ι w⟫_ℝ = p1Mass M (ν v) (ν w)) →
+      (∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, ∀ v, (ν v = fun z => if z = x then 1 else 0) →
+        n / (n + 2) ≤ ‖1 - ι.adjoint ∘L ι‖) ∧
+      ∀ h : ℝ, 0 ≤ h →
+        (∀ T ∈ M.simplices, ∀ i j,
+          (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ h ^ 2) →
+        ∀ v, ‖(1 - ι.adjoint ∘L ι) v‖ ≤
+          √(n * (n + 1) / 2) / (n + 2) * h * √(p1Stiffness M (ν v) (ν v)) := by
+  refine ⟨fun u => ?_, fun T hT x hx => ?_, fun h hh hM u w => ?_,
+    fun {X E} _ _ _ _ _ _ ν ι hν hι => ?_⟩
+  · rw [p1Mass_eq, lumpedInner_eq]
+    exact ⟨Feec.FiniteElement.p1Mass_le_lumpedInner _ u,
+      Feec.FiniteElement.lumpedInner_le_mul_p1Mass _ u⟩
+  · show 0 < lumpedInner M (Feec.FiniteElement.nodalIndicator x)
+        (Feec.FiniteElement.nodalIndicator x) ∧
+      lumpedInner M (Feec.FiniteElement.nodalIndicator x) (Feec.FiniteElement.nodalIndicator x) -
+          p1Mass M (Feec.FiniteElement.nodalIndicator x) (Feec.FiniteElement.nodalIndicator x) =
+        n / (n + 2) *
+          lumpedInner M (Feec.FiniteElement.nodalIndicator x) (Feec.FiniteElement.nodalIndicator x)
+    rw [p1Mass_eq, lumpedInner_eq, Feec.FiniteElement.lumpedInner_nodalIndicator,
+      Feec.FiniteElement.p1Mass_nodalIndicator]
+    refine ⟨Feec.FiniteElement.lumpedMass_pos M.toFeec hT (by rwa [← vertexSet_eq]), ?_⟩
+    field_simp
+    ring
+  · rw [p1Mass_eq, lumpedInner_eq, lumpedInner_eq, p1Stiffness_eq]
+    exact Feec.FiniteElement.abs_lumpedInner_sub_p1Mass_le M.toFeec hh hM u w
+  · have hr : Feec.FiniteElement.IsLumpedReading M.toFeec ν ι :=
+      ⟨fun v w => (hν v w).trans (lumpedInner_eq M _ _),
+        fun v w => (hι v w).trans (p1Mass_eq M _ _)⟩
+    refine ⟨fun T hT x hx v hv => hr.le_opNorm_one_sub_adjoint_comp_self hT
+      (by rwa [← vertexSet_eq]) hv, fun h hh hM v => ?_⟩
+    rw [p1Stiffness_eq]
+    exact hr.norm_one_sub_adjoint_comp_self_apply_le hh hM v
 
 end FEEC

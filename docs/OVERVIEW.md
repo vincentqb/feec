@@ -108,12 +108,18 @@ lumped-mass Galerkin method on `P̊₁⁻Λ⁰`, the `P₁` (Whitney `0`-form) f
 boundary DOFs (the interior nodal values are a linear isomorphism onto it;
 `Feec.FiniteElement.P1Global`), and the errors hold in `L^∞(Q)` for the finite element function
 (plus `n² D₂ h² / 2`). On each element the lumped and the consistent masses differ by a sum over
-the pairs of vertices, at most a constant times the edge length, the gradient and the lumped norm
-(`Feec.FiniteElement.LumpedMassDefect`, element-level identities and bounds, not assembled over a
-mesh). The classical `(2n + 1)`-point finite difference scheme is the same scheme
-(`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat`, field `finiteDifference` of the
-companion: its Laplacian is the lumped-mass one, so the iterates and the estimates coincide). With
-natural boundary conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum
+the pairs of vertices, at most a constant times the edge length, the gradient and the lumped norm;
+assembled over a mesh (`Feec.FiniteElement.LumpedMassDefect`), the consistent and the lumped mass
+are equivalent, `⟨u, u⟩ ≤ ⟨u, u⟩_L ≤ (n + 2) ⟨u, u⟩`, on every mesh, and mass lumping is an
+inner-product crime: for every lumped reading (discrete functions with the lumped inner product,
+read with the consistent mass), the defect `1 - ι* ι` has operator norm at least `n / (n + 2)` as
+soon as the discrete space contains a hat function, while `‖(1 - ι* ι) v‖ ≤ c_n h ‖∇(ν v)_h‖`,
+`c_n = √(n (n + 1) / 2) / (n + 2)`, `h` the longest edge (compared in `palomar/crimes`,
+`FEEC.crime_massLumping`); its operator norm is at most `(n + 1) / (n + 2)`, with equality,
+`n ≥ 1`, on the Freudenthal meshes with every vertex a node (proved in `Feec`, not compared). The classical `(2n + 1)`-point finite difference scheme is the same
+scheme (`Feec.Models.Cube.FiniteDifferenceHeat.finiteDifferenceHeat`, field `finiteDifference` of
+the companion: its Laplacian is the lumped-mass one, so the iterates and the estimates coincide).
+With natural boundary conditions (`Feec.Models.Cube.MaxNormNeumann.maxNormNeumann`) the maximum
 principle holds and the errors are `O(h)` (semidiscrete), `O(τ + h)` for backward Euler and
 `O(h) + C_r tₙ τᵖ ‖Lₕ^{p+1} v‖_∞` for every A-stable rational scheme, in the maximum norm at the
 nodes and in `L^∞(Q)`; `O(h²)` is not proved for Neumann. Both meshes are families of non-obtuse

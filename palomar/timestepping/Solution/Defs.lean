@@ -150,6 +150,7 @@ structure SimplicialMesh (n : ℕ) where
       convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
 -- palomar-shared-end: SimplicialMesh
 
+-- palomar-shared: p1
 /-- **The gradient `∇Π_T u` of the `P₁` interpolant** of `u` on the `n`-simplex `T` of `ℝⁿ` with
 vertices `v₀, …, vₙ`: the gradient of the affine function with the values `u(vⱼ)` at the
 vertices, the vector `g` with `g · (vₗ - v₀) = u(vₗ) - u(v₀)` for `l = 1, …, n`, that is
@@ -159,12 +160,12 @@ coordinate `λⱼ`. -/
 def p1Grad {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ) : Fin n → ℝ :=
   Matrix.vecMul (fun l : Fin n => u (T.points l.succ) - u (T.points 0))
     (Matrix.of fun i l : Fin n => T.points l.succ i - T.points 0 i)⁻¹
-
 /-- **The `P₁` stiffness form** of the mesh `M` on nodal values (only the values of `u`, `w` at
 the vertices enter), `a(u, w) = Σ_T ∫_T ∇Π_T u · ∇Π_T w`: the Dirichlet form `∫ ∇u_h · ∇w_h` of
 the continuous piecewise affine functions `u_h`, `w_h` with these vertex values. -/
 def p1Stiffness {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
   ∑ T ∈ M.simplices, ∫ _ in T.closedInterior, p1Grad T u ⬝ᵥ p1Grad T w
+-- palomar-shared-end: p1
 
 /-- **The lumped mass** of the mesh `M` at `y`, the vertex quadrature of `∫ φ_y` (`φ_y` the
 continuous piecewise affine hat function at `y`): `m(y) = Σ_T |T| / (n + 1)` over the simplices

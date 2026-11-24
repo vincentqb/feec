@@ -5,6 +5,12 @@ public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.Analysis.Convex.Hull
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
+public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 /-!
 # Variational crimes for Hilbert complexes
@@ -45,12 +51,17 @@ measured from the discrete graph norm, as the least `δ` with
 `‖(1 - iₕ* iₕ) v‖ ≤ δ (‖v‖ + ‖𝐝ₕ v‖)`, since the estimates apply `1 - iₕ* iₕ` only to discrete
 forms whose graph norm they control; it is at most the operator norm `‖1 - iₕ* iₕ‖`, which
 [HolstStern2012], §3.3, assume to tend to `0` for convergence. The motivating example is mass
-lumping of `P₁` elements ([Thomee2006], Ch. 15), an inner-product crime; its analysis is not
-compared. The witness `FEEC.crime_nonvacuous` shows that the hypotheses admit genuine crimes: on a
-Hilbert complex with nonzero harmonic forms, non-isometric cochain reading maps with
-`‖1 - iₕ* iₕ‖ → 0`, hence a vanishing defect, meet the hypotheses of the three clauses, read a
-discrete harmonic form off the harmonic forms, and leave a positive error at every level. The
-witness `FEEC.crime_defect_nonvacuous` shows that a vanishing defect is a strictly weaker
+lumping of `P₁` elements ([Thomee2006], Ch. 15), an inner-product crime: `FEEC.crime_massLumping`
+states, on every simplicial mesh, the equivalence of the lumped and the consistent mass, the
+values of both at the hat functions and a quadrature error estimate, and their reading for every
+lumped reading of degree `0`: its operator-norm defect `‖1 - ι* ι‖` is at least `n / (n + 2)` as
+soon as the discrete space contains the hat function of a vertex, whatever the mesh size, while
+`‖(1 - ι* ι) v‖ ≤ c_n h ‖∇(ν v)_h‖` with `c_n = √(n (n + 1) / 2) / (n + 2)` and `h` the longest
+edge. The witness `FEEC.crime_nonvacuous` shows that the hypotheses
+admit genuine crimes: on a Hilbert complex with nonzero harmonic forms, non-isometric cochain
+reading maps with `‖1 - iₕ* iₕ‖ → 0`, hence a vanishing defect, meet the hypotheses of the three
+clauses, read a discrete harmonic form off the harmonic forms, and leave a positive error at every
+level. The witness `FEEC.crime_defect_nonvacuous` shows that a vanishing defect is a strictly weaker
 hypothesis than `‖1 - iₕ* iₕ‖ → 0`: on a Hilbert complex with `ℓ²(ℕ, ℝ)` in every degree and an
 unbounded differential, cochain reading maps with `‖1 - iₙ* iₙ‖ = 1` at every level and a vanishing
 defect meet the hypotheses of the convergence conjunct of the cochain clause and of the heat
@@ -72,7 +83,7 @@ Bibliography: [references.bib](../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace lp
-open Filter Topology Set LinearPMap
+open Filter Topology Set LinearPMap MeasureTheory
 
 universe u
 
@@ -431,6 +442,109 @@ theorem crime_defect_nonvacuous : ∃ (H : HilbertComplex ℝ fun _ : ℤ => ℓ
     (∀ x : (H.totalD 0 2).domain, Tendsto (fun n =>
       ‖(x : Total (fun _ : ℤ => ℓ²(ℕ, ℝ)) 0 2) - S.incl n (P.π n x)‖) atTop (𝓝 0)) ∧
     ∀ f, S.ConvergesAt f := by
+  sorry
+
+/-! ### Mass lumping -/
+-- palomar-shared: SimplicialMesh
+/-- The vertex set `{v₀, …, v_k}` of a simplex. -/
+def vertexSet {n k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : Finset (Fin n → ℝ) :=
+  Finset.univ.image T.points
+/-- A **conforming simplicial mesh** of `closure domain ⊆ ℝⁿ`: a finite set of `n`-simplices
+whose closed simplices cover `closure domain`, have pairwise disjoint interiors, and meet face to
+face (the intersection of two closed simplices is the convex hull of their common vertices). -/
+structure SimplicialMesh (n : ℕ) where
+  /-- the `n`-simplices -/
+  simplices : Finset (Affine.Simplex ℝ (Fin n → ℝ) n)
+  /-- the meshed set `Ω`; the mesh covers its closure -/
+  domain : Set (Fin n → ℝ)
+  biUnion_closedInterior : ⋃ T ∈ simplices, T.closedInterior = closure domain
+  pairwise_disjoint_interior :
+    (simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)).Pairwise fun T T' =>
+      Disjoint (interior T.closedInterior) (interior T'.closedInterior)
+  inter_closedInterior : ∀ T ∈ simplices, ∀ T' ∈ simplices,
+    T.closedInterior ∩ T'.closedInterior =
+      convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
+-- palomar-shared-end: SimplicialMesh
+-- palomar-shared: p1
+/-- **The gradient `∇Π_T u` of the `P₁` interpolant** of `u` on the `n`-simplex `T` of `ℝⁿ` with
+vertices `v₀, …, vₙ`: the gradient of the affine function with the values `u(vⱼ)` at the
+vertices, the vector `g` with `g · (vₗ - v₀) = u(vₗ) - u(v₀)` for `l = 1, …, n`, that is
+`g = (Eᵀ)⁻¹ δ` for the edge matrix `E` with columns `vₗ - v₀` and `δₗ = u(vₗ) - u(v₀)`. For `u`
+equal to `1` at `vⱼ` and `0` at the other vertices it is the gradient `∇λⱼ` of the barycentric
+coordinate `λⱼ`. -/
+def p1Grad {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ) : Fin n → ℝ :=
+  Matrix.vecMul (fun l : Fin n => u (T.points l.succ) - u (T.points 0))
+    (Matrix.of fun i l : Fin n => T.points l.succ i - T.points 0 i)⁻¹
+/-- **The `P₁` stiffness form** of the mesh `M` on nodal values (only the values of `u`, `w` at
+the vertices enter), `a(u, w) = Σ_T ∫_T ∇Π_T u · ∇Π_T w`: the Dirichlet form `∫ ∇u_h · ∇w_h` of
+the continuous piecewise affine functions `u_h`, `w_h` with these vertex values. -/
+def p1Stiffness {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
+  ∑ T ∈ M.simplices, ∫ _ in T.closedInterior, p1Grad T u ⬝ᵥ p1Grad T w
+-- palomar-shared-end: p1
+/-- **The `P₁` interpolant** `Π_T u(x) = u(v₀) + ∇Π_T u · (x - v₀)` of `u` on the `n`-simplex `T`
+of `ℝⁿ` with vertices `v₀, …, vₙ`: the affine function with the values `u(vⱼ)` at the vertices. -/
+def p1Interp {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ)
+    (x : Fin n → ℝ) : ℝ :=
+  u (T.points 0) + p1Grad T u ⬝ᵥ (x - T.points 0)
+/-- **The consistent mass** of the mesh `M` on nodal values (only the values of `u`, `w` at the
+vertices enter), `⟨u, w⟩ = Σ_T ∫_T Π_T u Π_T w`: the `L²` inner product `∫ u_h w_h` of the
+continuous piecewise affine functions `u_h`, `w_h` with these vertex values. -/
+def p1Mass {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
+  ∑ T ∈ M.simplices, ∫ x in T.closedInterior, p1Interp T u x * p1Interp T w x
+/-- **The lumped inner product** of the mesh `M` on nodal values,
+`⟨u, w⟩_L = Σ_T |T| / (n + 1) Σⱼ u(vⱼ) w(vⱼ)`: the consistent mass computed with the vertex
+quadrature rule on each simplex, the inner product of the lumped mass method ([Thomee2006],
+Ch. 15). -/
+def lumpedInner {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
+  ∑ T ∈ M.simplices, volume.real T.closedInterior / (n + 1) *
+    ∑ j, u (T.points j) * w (T.points j)
+
+/-- **Mass lumping of `P₁` elements: an inner-product crime whose defect is bounded below in the
+operator norm and `O(h)` from the discrete graph norm** ([Thomee2006], Ch. 15;
+[HolstStern2012], §3.3). On every simplicial mesh `M` of a domain of `ℝⁿ` (every `n`; no shape
+regularity, quasi-uniformity or condition on the domain), for nodal values `u`, `w` (`u_h`, `w_h`
+the continuous piecewise affine functions with these vertex values, `‖∇u_h‖² = a(u, u)`), with
+`c_n = √(n (n + 1) / 2) / (n + 2)` and `h ≥ 0` a bound of the Euclidean lengths of the edges:
+
+1. `⟨u, u⟩ ≤ ⟨u, u⟩_L ≤ (n + 2) ⟨u, u⟩`;
+2. the hat function `φₓ` of every vertex `x` has `⟨φₓ, φₓ⟩_L > 0` and
+   `⟨φₓ, φₓ⟩_L - ⟨φₓ, φₓ⟩ = n / (n + 2) ⟨φₓ, φₓ⟩_L`;
+3. `|⟨u, w⟩_L - ⟨u, w⟩| ≤ c_n h ‖∇u_h‖ ‖w‖_L`;
+4. for every **lumped reading** of degree `0`, a Hilbert space `X` of discrete functions with nodal
+   values `ν v` and the lumped inner product, `⟪v, w⟫ = ⟨ν v, ν w⟩_L` (a discrete space of the
+   lumped mass method, with or without boundary conditions), read by `ι : X → E` with the
+   consistent mass, `⟪ι v, ι w⟫ = ⟨ν v, ν w⟩` (for instance `ι v = (ν v)_h` in `L²` of the meshed
+   region): `‖1 - ι* ι‖ ≥ n / (n + 2)` as soon as `X` contains the hat function of a vertex, and
+   `‖(1 - ι* ι) v‖ ≤ c_n h ‖∇(ν v)_h‖`.
+
+Lumped readings with every hat function exist: by (1) and (2), `⟨·, ·⟩_L` and `⟨·, ·⟩` are inner
+products on the values at the vertices. By (1) the reading maps are uniformly bounded and
+uniformly injective, `‖ι v‖ ≤ ‖v‖ ≤ √(n + 2) ‖ι v‖`, with constants independent of the mesh; by
+(4) the operator-norm defect `‖1 - ι* ι‖` of [HolstStern2012] stays bounded below as the mesh is
+refined, while the inner-product defect of degree `0` measured from the discrete graph norm, as in
+`CrimeFamily.defect` with `‖𝐝ₕ v‖ = ‖∇(ν v)_h‖`, is at most `c_n h`. -/
+theorem crime_massLumping {n : ℕ} (M : SimplicialMesh n) :
+    (∀ u, p1Mass M u u ≤ lumpedInner M u u ∧ lumpedInner M u u ≤ (n + 2) * p1Mass M u u) ∧
+    (∀ T ∈ M.simplices, ∀ x ∈ vertexSet T,
+      let φ : (Fin n → ℝ) → ℝ := fun z => if z = x then 1 else 0
+      0 < lumpedInner M φ φ ∧
+        lumpedInner M φ φ - p1Mass M φ φ = n / (n + 2) * lumpedInner M φ φ) ∧
+    (∀ h : ℝ, 0 ≤ h →
+      (∀ T ∈ M.simplices, ∀ i j, (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ h ^ 2) →
+      ∀ u w, |lumpedInner M u w - p1Mass M u w| ≤
+        √(n * (n + 1) / 2) / (n + 2) * h * √(p1Stiffness M u u) * √(lumpedInner M w w)) ∧
+    ∀ {X E : Type} [NormedAddCommGroup X] [InnerProductSpace ℝ X] [CompleteSpace X]
+      [NormedAddCommGroup E] [InnerProductSpace ℝ E] [CompleteSpace E]
+      (ν : X → (Fin n → ℝ) → ℝ) (ι : X →L[ℝ] E),
+      (∀ v w, ⟪v, w⟫_ℝ = lumpedInner M (ν v) (ν w)) →
+      (∀ v w, ⟪ι v, ι w⟫_ℝ = p1Mass M (ν v) (ν w)) →
+      (∀ T ∈ M.simplices, ∀ x ∈ vertexSet T, ∀ v, (ν v = fun z => if z = x then 1 else 0) →
+        n / (n + 2) ≤ ‖1 - ι.adjoint ∘L ι‖) ∧
+      ∀ h : ℝ, 0 ≤ h →
+        (∀ T ∈ M.simplices, ∀ i j,
+          (T.points i - T.points j) ⬝ᵥ (T.points i - T.points j) ≤ h ^ 2) →
+        ∀ v, ‖(1 - ι.adjoint ∘L ι) v‖ ≤
+          √(n * (n + 1) / 2) / (n + 2) * h * √(p1Stiffness M (ν v) (ν v)) := by
   sorry
 
 end FEEC

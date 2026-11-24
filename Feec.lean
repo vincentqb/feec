@@ -162,6 +162,7 @@ public import Feec.ForMathlib.InnerProductSpace.Basic
 public import Feec.ForMathlib.InnerProductSpace.Complexification
 public import Feec.ForMathlib.InnerProductSpace.Diagonal
 public import Feec.ForMathlib.InnerProductSpace.Isometry
+public import Feec.ForMathlib.InnerProductSpace.IsometryDefect
 public import Feec.ForMathlib.InnerProductSpace.MoorePenrose
 public import Feec.ForMathlib.InnerProductSpace.OrthogonalClosure
 public import Feec.ForMathlib.InnerProductSpace.VonNeumann

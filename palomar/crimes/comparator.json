@@ -1,7 +1,8 @@
 {
   "challenge_module": "Challenge",
   "solution_module": "Solution",
-  "theorem_names": ["FEEC.crimeFEEC", "FEEC.crime_nonvacuous", "FEEC.crime_defect_nonvacuous"],
+  "theorem_names": ["FEEC.crimeFEEC", "FEEC.crime_nonvacuous", "FEEC.crime_defect_nonvacuous",
+    "FEEC.crime_massLumping"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

@@ -41,11 +41,12 @@ project:
     ||(1 - i_h* i_h) v|| <= delta (||v|| + ||d_h v||) for every v in X_h (CrimeFamily.defect), at
     most the operator norm ||1 - i_h* i_h||; the estimates apply 1 - i_h* i_h only to discrete
     forms whose graph norm they control. The motivating example is mass lumping of P1 elements
-    ([Thomee2006], Ch. 15), an inner-product crime; its analysis is not compared. (heat) Under a
-    uniform discrete Poincare inequality, when delta_h -> 0 and the static method converges for
-    every datum: the Hodge heat equation u' = L^2 u = -Delta u of the window is well posed (a
-    contraction semigroup U characterized by its strong solutions), the semidiscrete solutions of
-    u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h read by i_h converge to its solutions uniformly on
+    ([Thomee2006], Ch. 15), an inner-product crime, compared as FEEC.crime_massLumping (below).
+    (heat) Under a uniform discrete Poincare inequality, when delta_h -> 0 and the static method
+    converges for every datum: the Hodge heat equation u' = L^2 u = -Delta u of the window is well
+    posed (a contraction semigroup U characterized by its strong solutions), the semidiscrete
+    solutions of u_h' = (d_h - d_h*)^2 u_h = -Delta_h u_h read by i_h converge to its solutions
+    uniformly on
     bounded time intervals for every family of initial values with i_h v_h -> x, and so do the
     iterates of every A-stable rational scheme r = P/Q of order p >= 1 as h and tau tend to 0, with
     the temporal error K n tau tau^p ||Delta_h^(p+1) w|| (K independent of h). The clauses (static)
@@ -74,10 +75,26 @@ project:
     k = n of degree 0, and the truncations to the modes k <= n, rescaled on that mode, as cochain
     projections: 1 - i_n* i_n is minus the projection on that mode, on which d_n is (n + 1) sqrt 2,
     so ||(1 - i_n* i_n) v|| <= (||v|| + ||d_n v||) / (n + 1), and d is unbounded
-    (||d i_n (e_n, 0)|| >= (n + 1) sqrt 2 while ||i_n (e_n, 0)|| <= 2). The conforming case
-    (subcomplexes with cochain projections, the inclusion as reading map) is the Palomar entry
-    palomar/feec. The statement is self-contained over Mathlib; the proof is the library Feec of
-    this repository.
+    (||d i_n (e_n, 0)|| >= (n + 1) sqrt 2 while ||i_n (e_n, 0)|| <= 2). The compared theorem
+    FEEC.crime_massLumping is the finite element counterpart of this separation, in degree 0, mesh
+    by mesh: on every simplicial mesh of a domain of R^n (every n, no shape regularity,
+    quasi-uniformity or condition on the domain), for nodal values u, w with the continuous
+    piecewise affine functions u_h, w_h, the consistent mass <u, w> = sum_T int_T Pi_T u Pi_T w and
+    the lumped mass <u, w>_L = sum_T |T| / (n + 1) sum_j u(v_j) w(v_j) (the vertex quadrature rule
+    on each simplex), with c_n = sqrt(n (n + 1) / 2) / (n + 2) and h a bound of the Euclidean edge
+    lengths: (1) <u, u> <= <u, u>_L <= (n + 2) <u, u>; (2) the hat function phi_x of every vertex
+    has <phi_x, phi_x>_L > 0 and <phi_x, phi_x>_L - <phi_x, phi_x> = n / (n + 2) <phi_x, phi_x>_L;
+    (3) |<u, w>_L - <u, w>| <= c_n h ||grad u_h|| ||w||_L; and (4) for every lumped reading of
+    degree 0, a Hilbert space X of discrete functions with nodal values nu v and the lumped inner
+    product, read by iota : X -> E with the consistent mass (for instance iota v = (nu v)_h in L2
+    of the meshed region), ||1 - iota* iota|| >= n / (n + 2) as soon as X contains the hat function
+    of a vertex, whatever the mesh size, while ||(1 - iota* iota) v|| <= c_n h ||grad (nu v)_h||.
+    So the reading maps are uniformly bounded and uniformly injective, the operator-norm defect of
+    [HolstStern2012] stays bounded below as the mesh is refined, and the defect of degree 0
+    measured from the discrete graph norm (with ||d_h v|| = ||grad (nu v)_h||) is at most c_n h.
+    The conforming case (subcomplexes with cochain projections, the inclusion as reading map) is the
+    Palomar entry palomar/feec. The statement is self-contained over Mathlib; the proof is the
+    library Feec of this repository.
   authors:
     - "Vincent Quenneville-Bélair"
   # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
@@ -181,9 +198,12 @@ sources:
     relationship: "background"
     note: >-
       The lumped mass method, an inner-product crime: the motivating example for measuring the
-      defect of the challenge from the discrete graph norm. Its analysis is not compared
-      (Feec.FiniteElement.LumpedMassDefect has element-level identities and bounds, not assembled
-      over a mesh).
+      defect of the challenge from the discrete graph norm, compared as FEEC.crime_massLumping
+      (mass equivalence, the hat functions, a quadrature error estimate
+      |<u, w>_L - <u, w>| <= c_n h ||grad u_h|| ||w||_L on every mesh, and their operator reading
+      for the lumped readings). The statements are elementary consequences of the element mass
+      matrices; the explicit constant c_n and the operator-norm lower bound n / (n + 2) are not
+      taken from the source.
     author_endorsement: "not-contacted"
   - title: "Solving Ordinary Differential Equations II"
     authors:
@@ -210,12 +230,13 @@ related_formalizations: []
 
 status:
   scope: >-
-    Formalized and compared: the theorem FEEC.crimeFEEC and the witnesses FEEC.crime_nonvacuous
-    and FEEC.crime_defect_nonvacuous (Challenge.lean, 436 lines), the first two formerly Theorem 4
-    and a witness of palomar/feec (the witness now also states the discrete Poincare inequality and
-    convergence for every datum, so that it meets the hypotheses of the three clauses; since
-    2026-11-24 the inner-product defect is measured from the discrete graph norm, a strengthening
-    that FEEC.crime_defect_nonvacuous shows to be strict; see review.notes). Not
+    Formalized and compared: the theorem FEEC.crimeFEEC, the witnesses FEEC.crime_nonvacuous
+    and FEEC.crime_defect_nonvacuous, and mass lumping FEEC.crime_massLumping (Challenge.lean,
+    550 lines), the first two formerly Theorem 4 and a witness of palomar/feec (the witness now also
+    states the discrete Poincare inequality and convergence for every datum, so that it meets the
+    hypotheses of the three clauses; since 2026-11-24 the inner-product defect is measured from the
+    discrete graph norm, a strengthening that FEEC.crime_defect_nonvacuous shows to be strict; see
+    review.notes). Not
     compared, proved in Feec: the wave equation with crimes, the rates of the heat equation with
     crimes (Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.rate_heat_of_static), the splitting
     of the residual into an inner-product and a cochain defect
@@ -223,7 +244,14 @@ status:
     maps (Feec.HilbertComplex.Approximation.StaticCrimeWitness), and the instances (every
     conforming window read as a family with crimes; the weak-symmetry scheme (6.5) of
     [QuennevilleBelair2015] for the linearized Einstein-Bianchi equations,
-    Feec.Instances.EinsteinBianchiFEMCrown).
+    Feec.Instances.EinsteinBianchiFEMCrown), and the rest of mass lumping
+    (Feec.FiniteElement.LumpedMassDefect: the upper bound ||1 - i* i|| <= (n + 1) / (n + 2) for
+    every lumped reading, IsLumpedReading.opNorm_one_sub_adjoint_comp_self_le; the reading map
+    lumpedReading of the lumped-mass method on the nodes of a mesh into L2(Omega) when the open
+    simplices lie in Omega, with its gradient lumpedGrad; on the Freudenthal meshes of a box with
+    every vertex a node and n >= 1, ||1 - i_h* i_h|| = (n + 1) / (n + 2) exactly at every level,
+    opNorm_one_sub_adjoint_comp_self_lumpedReading_freudenthalMesh, by a nodal function of the
+    vertex color sum_l q_l mod (n + 1), which has zero sum on every simplex).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -262,12 +290,14 @@ automation:
     schemes, Solution/Crime.lean for the families with crimes, Solution/Legacy.lean and
     Solution/Convert.lean for the componentwise forms of the mixed problems, Solution/Witness.lean
     and Solution/HighMode.lean for the witnesses, the latter with the operator diag(k + 1) on l2 and
-    its truncations of Feec.Counterexamples.Fredholm and Feec.Counterexamples.ClassicalRegularity)
-    and applies Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC, the cochain case
-    Feec.HilbertComplex.Approximation.StaticCochain,
+    its truncations of Feec.Counterexamples.Fredholm and Feec.Counterexamples.ClassicalRegularity,
+    Solution/Lumped.lean for the meshes, the P1 gradients and interpolants and the consistent and
+    lumped masses) and applies Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC, the cochain
+    case Feec.HilbertComplex.Approximation.StaticCochain,
     Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC,
     Feec.HilbertComplex.dissipFEEC_fullyDiscrete and
-    Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le.
+    Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le, and for mass lumping the mesh-level
+    bounds of Feec.FiniteElement.LumpedMassDefect.
 
 fidelity:
   divergences: >-
@@ -328,10 +358,24 @@ fidelity:
     for some Hilbert complex with l2(N, R) in every degree (the statement fixes no differential,
     and states that the differential of the window is unbounded); its solution is a diagonal
     model, not a finite element family. Mass lumping, the motivating example of the description,
-    is neither compared nor proved in Feec (Feec.FiniteElement.LumpedMassDefect has the
-    element-level identities and bounds only). (8) The heat statement assumes a real structure
-    [NormedSpace R (W i)] for derivatives in time, and nothing relating it to the K-structure: a
-    real normed-space structure on a normed K-space is the restricted one, which the solution
+    is compared as FEEC.crime_massLumping, a statement on every mesh about the bilinear forms of
+    the method and its lumped readings of degree 0, not a family of discrete complexes: it states
+    no CrimeFamily (the discrete spaces of the other degrees and the de Rham complex are not
+    stated) and quantifies over the lumped readings (a Hilbert space X with nodal values nu and the
+    lumped inner product, a map iota with the consistent mass) instead of constructing one; they
+    exist with every hat function by its conjuncts (1) and (2), which make <., .>_L and <., .>
+    inner products on the values at the vertices, and the lumped-mass method into L2(Omega) is
+    one when the open simplices lie in Omega (proved in Feec, lumpedReading,
+    isLumpedReading_lumpedReading, not compared). The graph-norm reading CrimeFamily.defect <= c_n h
+    of degree 0 is the docstring's (the compared bound is ||(1 - iota* iota) v|| <=
+    c_n h ||grad (nu v)_h||, with ||d_h v|| = ||grad (nu v)_h||); h is a bound of the Euclidean edge
+    lengths (not the sup-norm mesh size of palomar/fem); the hat function is stated at every vertex
+    (so in every space of nodal values containing it, with or without boundary conditions). The
+    upper bound ||1 - i_h* i_h|| <= (n + 1) / (n + 2) and the exact value (n + 1) / (n + 2) on
+    Freudenthal meshes are proved in Feec and not compared. (8) The heat statement assumes a real
+    structure [NormedSpace R (W i)] for derivatives in time, and nothing relating it to the
+    K-structure: a real normed-space structure on a normed K-space is the restricted one, which the
+    solution
     proves. (9) Shared vocabulary: the notions this entry shares with the other Palomar entries are
     copied from the canonical blocks of palomar/shared/vocabulary.lean.txt (HilbertComplex; window
     with Total, totalDomain, totalD and wave; the square sq of an operator; boundaries; the mixed
@@ -340,16 +384,32 @@ fidelity:
     palomar/feec (HilbertComplex also with palomar/fem, palomar/constraints and palomar/waves, the
     windows with palomar/constraints and palomar/waves, sq with palomar/constraints,
     IsStrongSolution with palomar/constraints and palomar/einsteinbianchi, the rational schemes
-    with palomar/timestepping), and the gate checks them byte for byte; the
-    definitions of the crimes (CrimeFamily and its notions) and of the mixed Hodge Laplacian of a
-    window (totalHarmonic, totalMixedSpace) are this entry's.
+    with palomar/timestepping), the meshes SimplicialMesh and vertexSet (also with palomar/fem,
+    palomar/einsteinbianchi, palomar/timestepping and palomar/waves) and the P1 gradient and
+    stiffness form p1Grad and p1Stiffness (block p1, with palomar/timestepping), and the gate
+    checks them byte for byte; the definitions of the crimes (CrimeFamily and its notions), of the
+    mixed Hodge Laplacian of a window (totalHarmonic, totalMixedSpace) and of the P1 interpolant
+    and the consistent and lumped masses (p1Interp, p1Mass, lumpedInner) are this entry's.
 
 review:
   status: "self-assessed"
   reviewers:
     - "none"
   notes: >-
-    Not yet reviewed by the author. Strictness (2026-11-24): FEEC.crime_defect_nonvacuous, a
+    Not yet reviewed by the author. Mass lumping (2026-11-24): FEEC.crime_massLumping, a new
+    compared theorem, states the bounds of the motivating example on every mesh (mass
+    equivalence, the hat functions, the defect from the graph norm, and their operator reading for
+    every lumped reading: ||1 - iota* iota|| >= n / (n + 2) with a hat function,
+    ||(1 - iota* iota) v|| <= c_n h ||grad (nu v)_h||), which the description had claimed without
+    proof and which were removed under the review below; an independent review checked the
+    definitions, the constants (by hand for n = 1, 2 and numerically for n = 1, ..., 4) and the
+    wording, and the operator readings, first stated in the docstring, became the conjunct (4) so
+    that the statement carries them; Feec proves them over meshes
+    (Feec.FiniteElement.LumpedMassDefect, formerly element-level only; the element bound
+    sharpened to the n (n + 1) ordered pairs of distinct vertices, which gives c_n), with the
+    operator-norm statements for every lumped reading and the exact value on Freudenthal meshes
+    (not compared); the P1 gradient and stiffness form of palomar/timestepping became the shared
+    block p1 (its text unchanged). Strictness (2026-11-24): FEEC.crime_defect_nonvacuous, a
     second compared witness, shows that the generalization below is strict (a family with
     ||1 - i_n* i_n|| = 1 that meets the hypotheses of the convergence conjunct of the cochain clause
     and of the heat clause); in Feec the constructors of the wave theory with crimes take the defect

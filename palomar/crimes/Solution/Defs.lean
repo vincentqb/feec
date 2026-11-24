@@ -5,14 +5,21 @@ public import Mathlib.Analysis.InnerProductSpace.LinearPMap
 public import Mathlib.Analysis.InnerProductSpace.PiL2
 public import Mathlib.Analysis.InnerProductSpace.l2Space
 public import Mathlib.Analysis.Normed.Algebra.Exponential
+public import Mathlib.Analysis.Convex.Hull
+public import Mathlib.Analysis.Real.Sqrt
+public import Mathlib.LinearAlgebra.AffineSpace.Simplex.Basic
+public import Mathlib.LinearAlgebra.Matrix.NonsingularInverse
+public import Mathlib.MeasureTheory.Integral.Bochner.Basic
+public import Mathlib.MeasureTheory.Measure.Lebesgue.Basic
 
 /-!
 # The definitions of the challenge
 
 A verbatim copy of the definitions of `Challenge.lean` (everything but the theorems
-`FEEC.crimeFEEC`, `FEEC.crime_nonvacuous` and `FEEC.crime_defect_nonvacuous`), compiled against
-Mathlib alone so that their elaborated values are those of the challenge. The solution imports this
-module and the bridges to `Feec`, and proves the theorems (`Solution.lean`).
+`FEEC.crimeFEEC`, `FEEC.crime_nonvacuous`, `FEEC.crime_defect_nonvacuous` and
+`FEEC.crime_massLumping`), compiled against Mathlib alone so that their elaborated values are
+those of the challenge. The solution imports this module and the bridges to `Feec`, and proves the
+theorems (`Solution.lean`).
 
 ## References
 
@@ -22,12 +29,13 @@ module and the bridges to `Feec`, and proves the theorems (`Solution.lean`).
 * [A. Gillette, M. Holst, Y. Zhu, *Finite element exterior calculus for evolution problems*][GilletteHolstZhu2017]
 * [E. Hairer, G. Wanner, *Solving Ordinary Differential Equations II*][HairerWanner1996]
 * [M. F. Wheeler, *A priori L₂ error estimates for Galerkin approximations to parabolic partial differential equations*][Wheeler1973]
+* [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
 
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
 open scoped InnerProductSpace lp
-open Filter Topology Set LinearPMap
+open Filter Topology Set LinearPMap MeasureTheory
 
 universe u
 
@@ -327,4 +335,59 @@ end HilbertComplex
 /-! ### Variational crimes: the theorem and its witnesses -/
 
 variable [∀ i, NormedSpace ℝ (W i)]
+/-! ### Mass lumping -/
+-- palomar-shared: SimplicialMesh
+/-- The vertex set `{v₀, …, v_k}` of a simplex. -/
+def vertexSet {n k : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) k) : Finset (Fin n → ℝ) :=
+  Finset.univ.image T.points
+/-- A **conforming simplicial mesh** of `closure domain ⊆ ℝⁿ`: a finite set of `n`-simplices
+whose closed simplices cover `closure domain`, have pairwise disjoint interiors, and meet face to
+face (the intersection of two closed simplices is the convex hull of their common vertices). -/
+structure SimplicialMesh (n : ℕ) where
+  /-- the `n`-simplices -/
+  simplices : Finset (Affine.Simplex ℝ (Fin n → ℝ) n)
+  /-- the meshed set `Ω`; the mesh covers its closure -/
+  domain : Set (Fin n → ℝ)
+  biUnion_closedInterior : ⋃ T ∈ simplices, T.closedInterior = closure domain
+  pairwise_disjoint_interior :
+    (simplices : Set (Affine.Simplex ℝ (Fin n → ℝ) n)).Pairwise fun T T' =>
+      Disjoint (interior T.closedInterior) (interior T'.closedInterior)
+  inter_closedInterior : ∀ T ∈ simplices, ∀ T' ∈ simplices,
+    T.closedInterior ∩ T'.closedInterior =
+      convexHull ℝ ((vertexSet T : Set (Fin n → ℝ)) ∩ vertexSet T')
+-- palomar-shared-end: SimplicialMesh
+-- palomar-shared: p1
+/-- **The gradient `∇Π_T u` of the `P₁` interpolant** of `u` on the `n`-simplex `T` of `ℝⁿ` with
+vertices `v₀, …, vₙ`: the gradient of the affine function with the values `u(vⱼ)` at the
+vertices, the vector `g` with `g · (vₗ - v₀) = u(vₗ) - u(v₀)` for `l = 1, …, n`, that is
+`g = (Eᵀ)⁻¹ δ` for the edge matrix `E` with columns `vₗ - v₀` and `δₗ = u(vₗ) - u(v₀)`. For `u`
+equal to `1` at `vⱼ` and `0` at the other vertices it is the gradient `∇λⱼ` of the barycentric
+coordinate `λⱼ`. -/
+def p1Grad {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ) : Fin n → ℝ :=
+  Matrix.vecMul (fun l : Fin n => u (T.points l.succ) - u (T.points 0))
+    (Matrix.of fun i l : Fin n => T.points l.succ i - T.points 0 i)⁻¹
+/-- **The `P₁` stiffness form** of the mesh `M` on nodal values (only the values of `u`, `w` at
+the vertices enter), `a(u, w) = Σ_T ∫_T ∇Π_T u · ∇Π_T w`: the Dirichlet form `∫ ∇u_h · ∇w_h` of
+the continuous piecewise affine functions `u_h`, `w_h` with these vertex values. -/
+def p1Stiffness {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
+  ∑ T ∈ M.simplices, ∫ _ in T.closedInterior, p1Grad T u ⬝ᵥ p1Grad T w
+-- palomar-shared-end: p1
+/-- **The `P₁` interpolant** `Π_T u(x) = u(v₀) + ∇Π_T u · (x - v₀)` of `u` on the `n`-simplex `T`
+of `ℝⁿ` with vertices `v₀, …, vₙ`: the affine function with the values `u(vⱼ)` at the vertices. -/
+def p1Interp {n : ℕ} (T : Affine.Simplex ℝ (Fin n → ℝ) n) (u : (Fin n → ℝ) → ℝ)
+    (x : Fin n → ℝ) : ℝ :=
+  u (T.points 0) + p1Grad T u ⬝ᵥ (x - T.points 0)
+/-- **The consistent mass** of the mesh `M` on nodal values (only the values of `u`, `w` at the
+vertices enter), `⟨u, w⟩ = Σ_T ∫_T Π_T u Π_T w`: the `L²` inner product `∫ u_h w_h` of the
+continuous piecewise affine functions `u_h`, `w_h` with these vertex values. -/
+def p1Mass {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
+  ∑ T ∈ M.simplices, ∫ x in T.closedInterior, p1Interp T u x * p1Interp T w x
+/-- **The lumped inner product** of the mesh `M` on nodal values,
+`⟨u, w⟩_L = Σ_T |T| / (n + 1) Σⱼ u(vⱼ) w(vⱼ)`: the consistent mass computed with the vertex
+quadrature rule on each simplex, the inner product of the lumped mass method ([Thomee2006],
+Ch. 15). -/
+def lumpedInner {n : ℕ} (M : SimplicialMesh n) (u w : (Fin n → ℝ) → ℝ) : ℝ :=
+  ∑ T ∈ M.simplices, volume.real T.closedInterior / (n + 1) *
+    ∑ j, u (T.points j) * w (T.points j)
+
 end FEEC

@@ -394,7 +394,9 @@ fidelity:
     (TimeStepping.HasOrder) is r(z) - e^z = O(z^(m+1)) at 0. IsAStable, HasOrder and rationalApply
     are the shared block rationalScheme of palomar/shared/vocabulary.lean.txt (with palomar/feec
     and palomar/crimes; checked byte for byte by the gate), as are the simplicial meshes (block
-    SimplicialMesh, with palomar/fem, palomar/waves and palomar/einsteinbianchi). The derivatives
+    SimplicialMesh, with palomar/fem, palomar/waves, palomar/einsteinbianchi and palomar/crimes)
+    and the P1 gradient and stiffness form p1Grad and p1Stiffness (block p1, with
+    palomar/crimes). The derivatives
     in TimeStepping.fdHeat are Mathlib's iterated derivatives on coordinate vectors,
     D^k f(x)(e_(i_1), ..., e_(i_k)) (iteratedFDeriv). Mathlib has no C_0-semigroups or functional
     calculus for unbounded operators: a strongly continuous semigroup is a family S with S(0) = 1,

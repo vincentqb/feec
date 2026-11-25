@@ -79,7 +79,8 @@ bounded semigroups), and when is the Banach-space theory needed?
   need not tend to `0` (`maxNormRate`). The witness (`fdHeat`): finite differences on
   a cube are the lumped-mass method of a non-obtuse mesh, translation invariant at the nodes, and
   from initial data satisfying the compatibility conditions every A-stable scheme of order `m`
-  has maximum-norm error `O(h² + τᵐ)`, uniformly in `h`.
+  has maximum-norm error `O(h² + τᵐ)`, uniformly in `h`; the first Dirichlet eigenmode
+  (`sineMode`) meets these hypotheses.
 
 Three classical inputs are stated as well: the Hille–Yosida estimates (`hilleYosida`,
 [Pazy1983], §1.5), whose resolvent `(1 - τA)⁻¹` defines `r(τA)` and is backward Euler, von
@@ -592,6 +593,13 @@ def gridInterp {n : ℕ} (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (f : (Fin n →
     gridNodes n N → ℝ :=
   fun g => f (gridPoint b h g)
 
+/-- **The first Dirichlet eigenmode of the heat equation** on the cube `b + (0, s)ⁿ`:
+`u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π²/s²`, the solution of `uₜ = Δu` from the
+first eigenfunction `∏ᵢ sin(π (xᵢ - bᵢ)/s)` of the Dirichlet Laplacian of the cube (eigenvalue
+`-λ`). -/
+def sineMode {n : ℕ} (b : Fin n → ℝ) (s t : ℝ) (x : Fin n → ℝ) : ℝ :=
+  Real.exp (-(n * (Real.pi / s) ^ 2) * t) * ∏ i, Real.sin (Real.pi / s * (x i - b i))
+
 /-- **The heat equation in the maximum norm by finite differences**, the witness of
 `maxNormHeat` ([Thomee2006], Ch. 15; [BrennerThomee1979]):
 
@@ -621,7 +629,13 @@ the finite difference Laplacian `Δₕ`:
   directions `l` (only `l 0, …, l m` enter). The scheme started from `Iₕ u(0)` satisfies, for
   every `τ > 0` and `kτ ≤ T`,
   `‖Iₕ u(kτ) - r(τΔₕ)ᵏ Iₕ u(0)‖_∞ ≤ kτ (n B h²/12 + K nᵐ⁺¹ B' τᵐ)`: `O(h² + τᵐ)` with `K`
-  independent of `h`, `τ`, the dimension and `u`. -/
+  independent of `h`, `τ`, the dimension and `u`;
+* (**the hypotheses are met**) by the first Dirichlet eigenmode `sineMode`,
+  `u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π²/s²`, which is `1` at the centre of `Q` at
+  `t = 0`: for every `n`, `m`, `b`, `s > 0` and `T` it is a classical solution as above, with
+  `u₁ = -λ u` and `B = (π/s)⁴`, and `ũ = u(0)` on all of `ℝⁿ` (its own odd `2s`-periodic
+  extension) is odd under the reflections in the faces of `Q` and of class `C^{2m+2}`, with
+  `B' = (π/s)^{2m+2}` (each `∂²_l` multiplies it by `-(π/s)²`). -/
 theorem fdHeat :
     (∀ {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ),
       IsSubMarkovGenerator (fdLaplacian G h)) ∧
@@ -633,7 +647,7 @@ theorem fdHeat :
         (T.points k - T.points j) ⬝ᵥ (T.points k - T.points j) ≤ n * (s / (N + 1 : ℕ)) ^ 2) ∧
       lumpedLaplacian M (fun g : gridNodes n N => gridPoint b (s / (N + 1 : ℕ)) g) =
         fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ∧
-    ∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →
+    (∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →
     ∃ K : ℝ, ∀ (n : ℕ) (b : Fin n → ℝ) (s T B B' : ℝ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
       (ũ : (Fin n → ℝ) → ℝ), 0 < s →
       (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (u t)) →
@@ -653,7 +667,23 @@ theorem fdHeat :
         ‖gridInterp b (s / (N + 1 : ℕ)) N (u (k * τ)) -
             (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k)
               (gridInterp b (s / (N + 1 : ℕ)) N (u 0))‖ ≤
-          k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m) := by
+          k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m)) ∧
+    ∀ (n m : ℕ) (b : Fin n → ℝ) (s T : ℝ), 0 < s →
+      (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (sineMode b s t)) ∧
+      (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Ioo (b i) (b i + s),
+        HasDerivAt (fun t => sineMode b s t x) (-(n * (Real.pi / s) ^ 2) * sineMode b s t x) t ∧
+          -(n * (Real.pi / s) ^ 2) * sineMode b s t x =
+            ∑ i, iteratedFDeriv ℝ 2 (sineMode b s t) x fun _ => Pi.single i 1) ∧
+      (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s),
+        x ∉ univ.pi (fun i => Ioo (b i) (b i + s)) → sineMode b s t x = 0) ∧
+      (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ∀ i,
+        |iteratedFDeriv ℝ 4 (sineMode b s t) x fun _ => Pi.single i 1| ≤ (Real.pi / s) ^ 4) ∧
+      ContDiff ℝ (2 * m + 2) (sineMode b s 0) ∧
+      (∀ i x, sineMode b s 0 (Function.update x i (2 * b i - x i)) = -sineMode b s 0 x ∧
+        sineMode b s 0 (Function.update x i (2 * (b i + s) - x i)) = -sineMode b s 0 x) ∧
+      (∀ (l : ℕ → Fin n) x, |iteratedFDeriv ℝ (2 * m + 2) (sineMode b s 0) x
+        fun j => Pi.single (l ((j : ℕ) / 2)) 1| ≤ (Real.pi / s) ^ (2 * m + 2)) ∧
+      sineMode b s 0 (b + (s / 2) • fun _ => 1) = 1 := by
   sorry
 
 /-! ### The hypotheses on `r` are met -/

@@ -32,8 +32,9 @@ project:
     the nodes, so backward Euler converges at O(tau + h^2) in the maximum norm uniformly over all
     such meshes, while on non-obtuse meshes in general the nodal consistency error need not tend to
     0; the witness: on a cube the classical finite difference scheme is the lumped-mass method of
-    a non-obtuse mesh of the cube (in the proof, the Freudenthal mesh), and from compatible initial data its maximum-norm error is
-    O(h^2 + tau^m), uniformly in h. In Lean 4 over Mathlib, fourteen compared theorems: (1)
+    a non-obtuse mesh of the cube (in the proof, the Freudenthal mesh), and from compatible initial
+    data, the first Dirichlet eigenmode among them, its maximum-norm error is O(h^2 + tau^m),
+    uniformly in h. In Lean 4 over Mathlib, fourteen compared theorems: (1)
     Brenner-Thomee's stability bound for every A-stable real rational r
     (|r(infinity)| = 1 included) and every bounded strongly continuous semigroup of a real or
     complex Banach space, with the resolvent shown to exist and be unique and r(tau A) defined
@@ -78,7 +79,9 @@ project:
     d^2_(i_1) ... d^2_(i_(m+1)) of its derivatives bounded by B'), the scheme started from the nodal
     interpolant has maximum-norm error ||I_h u(k tau) - r(tau Delta_h)^k I_h u(0)|| <= k tau (n B
     h^2/12 + K n^(m+1) B' tau^m), the mesh of the cube being translation invariant at the interior
-    nodes with edges of length at most sqrt(n) h (TimeStepping.fdHeat); (10) the rational schemes
+    nodes with edges of length at most sqrt(n) h, and the first Dirichlet eigenmode
+    e^(-lambda t) prod_i sin(pi (x_i - b_i)/s) meets every hypothesis, for every m (B = (pi/s)^4,
+    B' = (pi/s)^(2m+2)) (TimeStepping.fdHeat); (10) the rational schemes
     that meet the hypotheses on r: for q without zeros in the closed left half-plane, A-stability
     is |r(iy)| <= 1 on the imaginary axis (the maximum principle), the theta-schemes
     (1 + (1 - theta) z)/(1 - theta z) are A-stable iff theta >= 1/2 and of order m iff m <= 1, or
@@ -313,7 +316,48 @@ sources:
       existentially, the Freudenthal mesh in the proof).
     author_endorsement: "n/a"
 
-related_formalizations: []
+related_formalizations:
+  - id: "doi:10.1007/978-3-030-76384-8_20"
+    relationship: "independent"
+    note: >-
+      M. Tekriwal, K. Duraisamy, J.-B. Jeannin, A formal proof of the Lax equivalence theorem
+      for finite difference schemes (NFM 2021): in Coq, consistent and stable discretizations
+      of a linear operator equation between complete normed spaces converge;
+      TimeStepping.converges is the Lax principle for one-step schemes of semigroups. A search
+      of OpenAlex, arXiv, HAL, the Isabelle AFP and Mathlib on 2026-11-25 found no
+      formalization of C0-semigroups of unbounded operators, of the Hille-Yosida or
+      Lumer-Phillips theorems, of von Neumann's inequality, of the stability of A-stable
+      rational approximations or of the discrete maximum principle.
+  - id: "doi:10.1007/978-3-642-32347-8_26"
+    relationship: "other"
+    note: >-
+      F. Immler, J. Hölzl, Numerical analysis of ordinary differential equations in
+      Isabelle/HOL (ITP 2012; the AFP entry Ordinary_Differential_Equations): the
+      Picard-Lindelöf theorem and one-step methods with local and global error bounds, the
+      Euler method executable with rounding errors; explicit methods for ODEs, not A-stable
+      schemes for semigroups.
+  - id: "doi:10.1007/s10817-023-09686-y"
+    relationship: "other"
+    note: >-
+      F. Faissole, Formally-verified round-off error analysis of Runge-Kutta methods (J.
+      Automated Reasoning 68, 2024): in Coq, bounds on the floating-point error of Runge-Kutta
+      methods applied to linear systems, instantiated for Euler and RK2; round-off analysis of
+      explicit methods, not stability functions or A-stability.
+  - id: "doi:10.1007/978-3-031-16681-5_2"
+    relationship: "other"
+    note: >-
+      E. Deniz, A. Rashid, O. Hasan, S. Tahar, On the formalization of the heat conduction
+      problem in HOL (CICM 2022): in HOL Light, solutions of the one-dimensional heat equation
+      by separation of variables under several initial and boundary conditions; exact
+      solutions, not discretizations.
+  - id: "doi:10.48550/arXiv.2608.06272"
+    relationship: "other"
+    note: >-
+      E. Lorist, M. Meyries, M. Veraar, A solution to the inverse generator problem and
+      related questions (arXiv 2608.06272, 2026): its Theorem 1.1, explicit matrices with
+      bounds on exp(t A_n) and exp(A_n^-1), is formalized in Lean 4; its consequences, among
+      them the operator-norm instability of Crank-Nicolson for an exponentially stable
+      semigroup of a Hilbert space, are proved on paper.
 
 status:
   scope: >-
@@ -389,7 +433,9 @@ automation:
     this entry, among others: the P1 gradient by the edge matrix and the P1 interpolant of a
     vertex hat function (Feec.FiniteElement.p1Grad_eq_vecMul,
     Feec.FiniteElement.p1Grad_nodalIndicator); the compatible-data estimate behind fdHeat
-    (Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible); the iterated derivatives on
+    (Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible) and the compatibility of the first
+    eigenmode to every order (Feec.Models.Cube.FiniteDifferenceHeat.sineSolution_compatible); the
+    iterated derivatives on
     coordinate vectors of C^p functions as iterated partial derivatives
     (iteratedFDeriv_apply_single_eq_foldr, with its pure and paired cases
     iteratedFDeriv_apply_single_eq_iterate and FiniteDifference.iteratedFDeriv_apply_pairs); the
@@ -524,11 +570,13 @@ fidelity:
     both ends), stronger than the vanishing of Delta^j u(0) on the boundary in general. Class
     C^(2m+2) asks one vanishing order more (2m + 2) than the bound needs: a Lipschitz derivative
     of order 2m + 1 of u~ would do. The scheme starts from the nodal interpolant I_h u(0). No
-    bound on the time derivatives of u beyond those implied is assumed. Feec proves that the
-    first Dirichlet eigenmode e^(-lambda t) prod_i sin(pi (x_i - b_i)/s) is a classical solution
-    with the bounds of the maximum-norm estimates (Feec.Models.Cube.MaxNormHeat.sineSolution,
-    maxNormHeat_nonvacuous); that it also meets the compatibility hypothesis of fdHeat (it is odd
-    and 2s-periodic) is argued, not formalized, and no compared theorem states it.
+    bound on the time derivatives of u beyond those implied is assumed. The fourth clause states
+    that the first Dirichlet eigenmode sineMode, e^(-lambda t) prod_i sin(pi (x_i - b_i)/s) with
+    lambda = n pi^2/s^2, equal to 1 at the centre of the cube at t = 0, meets every hypothesis of
+    the third, for every n, m, b, s > 0 and T: a classical solution with u_1 = -lambda u and
+    B = (pi/s)^4, and u~ = u(0) on all of R^n (its own odd 2s-periodic extension), odd under the
+    face reflections and of class C^(2m+2), with B' = (pi/s)^(2m+2) (each d^2_l multiplies it by
+    -(pi/s)^2). It is one mode; no other compatible datum is exhibited.
     (7) Hilbert spaces and backward Euler. TimeStepping.contractive assumes only that q has no zero
     in the closed left half-plane; its bound (sup_y |r(iy)|)^n is <= 1 exactly for A-stable r, and
     infinite when deg p > deg q; it concerns generators of contraction semigroups (M = 1).
@@ -711,7 +759,10 @@ alignment:
         order m and compatible initial data, started from I_h u(0), maximum-norm error
         k tau (n B h^2/12 + K n^(m+1) B' tau^m)
         (Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible; the derivatives by
-        iteratedFDeriv_apply_single_eq_iterate and FiniteDifference.iteratedFDeriv_apply_pairs).
+        iteratedFDeriv_apply_single_eq_iterate and FiniteDifference.iteratedFDeriv_apply_pairs);
+        the first Dirichlet eigenmode meets every hypothesis
+        (Feec.Models.Cube.MaxNormHeat.sineSolution,
+        Feec.Models.Cube.FiniteDifferenceHeat.sineSolution_compatible).
     - source: "[HairerWanner1996], §IV.3, §IV.5"
       lean: "TimeStepping.schemes"
       module: "Challenge"

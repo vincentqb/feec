@@ -309,11 +309,12 @@ fidelity:
     that a Poincare inequality of d^i holds iff its range is closed, so the closed-range form of
     [AFW2010] follows. (4) Windows (Theorem 3): the evolutions live on the l2 sum of m
     consecutive degrees of the truncated complex (for an interior window L = d - d* is the
-    Hodge-Dirac operator of the truncated complex). The wave conclusions assume no bound of the
-    projections (the elliptic projections are bounded on every subcomplex, C_P = 4 sqrt 3,
-    [QuennevilleBelair2015] Prop. 4.13). The heat conclusions assume the projections bounded in the
-    graph norm in the degrees a, ..., a+m-2 and in the norm of W on D(d) in the last degree a+m-1
-    (with no differential in the window; for an interior window this W-bound differs from the
+    Hodge-Dirac operator of the truncated complex). The wave conclusions assume that the family
+    approximates on the window (SubcomplexFamily.ApproximatesOn) and no bound of the projections
+    (the elliptic projections are bounded on every subcomplex, C_P = 4 sqrt 3,
+    [QuennevilleBelair2015] Prop. 4.13). The heat conclusions assume that the family approximates
+    on the window, the projections bounded in the graph norm in the degrees a, ..., a+m-2 and in
+    the norm of W on D(d) in the last degree a+m-1 (with no differential in the window; for an interior window this W-bound differs from the
     V-bound of [AFW2010] §3.3 there, neither implying the other; the smoothed projections satisfy
     both), and closed ranges in the degrees a+1, ..., a+m-1. (5) Fully discrete: the temporal
     errors are in the discrete norms ||B_h^(p+1) w||, which are not bounded uniformly in h for

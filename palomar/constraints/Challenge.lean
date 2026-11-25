@@ -38,9 +38,13 @@ subcomplex propagates ([QuennevilleBelair2015], Prop 4.16). The question is then
 
 **The verdicts** (`FEEC.tsd_boundary_conditions`, the fields of `TSDVerdict`, one per row) for the
 system (4.14) on states `(σ, E, B)` (`gradCurlWave`, `gradCurlMirror`, constraint
-`K = {0} × L²(TSD) × L²(TSD)`, `tsdConstraint`), for the system (6.1) of the complex with weak
-symmetry of the method of Ch. 5–6 (`WeakSymmetryData.IsWave`, constraint `IsTSDState`), and for
-the first-order system `Ė = -curl B`, `Ḃ = curl E` (`absorbing`, constraint `tsdPair`). The
+`K = {0} × L²(TSD) × L²(TSD)`, `tsdConstraint`), for the system (6.1), the Hodge wave equation of
+the complex with weak symmetry that the method of Ch. 5–6 builds from Bernstein–Gelfand–Gelfand
+(BGG) data, two de Rham complexes linked by maps `S` (`bggData`, `WeakSymmetryData.IsWave`), on
+states `(σ, u, M, ρ)`: `u` the rows of `E` (vector `1`-forms), `ρ` the rows of `⋆B` (vector
+`2`-forms), `M` the multiplier of the symmetry of `E` and `σ` the potential, the first component
+of `Γ = {(σ, φ) | d⁰σ = S⁰φ}` (constraint `IsTSDState`: `σ = 0`, `M = 0`, `E` and `B` TSD), and
+for the first-order system `Ė = -curl B`, `Ḃ = curl E` (`absorbing`, constraint `tsdPair`). The
 **electric** boundary conditions `σ = 0`, `n × E = 0` on `∂Ω` are those of the minimal complex
 `H̊Λ` (vanishing tangential traces: essential boundary conditions, imposed in the spaces), for
 (4.14) and in both rows of (6.1); the **mirror** boundary conditions on the cube, `σ · n = 0`,

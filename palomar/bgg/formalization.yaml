@@ -59,9 +59,9 @@ project:
     and the div-div diagram (n >= 1; HΛ(Omega) (x) R^n over HΛ(Omega), (S phi)_a = dx_a ∧ phi,
     J = n - 1) have stacked diagrams of their domain complexes (the graph spaces) that satisfy
     the hypotheses of the main clause of FEEC.bggHilbert, s^i bounded below before J and onto
-    modulo d from J on (the regular decompositions of §2, Theorem 3, on Omega), so their BGG
-    complexes, with the quotient norm, have bounded differentials with closed range in every
-    degree, with
+    modulo d from J on (the regular decompositions of §2, Theorem 3, on Omega; but not (23): s^J
+    is not onto, for the Hessian diagram if n >= 1), so their BGG complexes, with the quotient
+    norm, have bounded differentials with closed range in every degree, with
     finite-dimensional cohomology of dimension n + 1, 6 and n + 1 in degree 0 and 0 in the other
     degrees: the rows have the cohomology of a point, so S induces zero on cohomology and the
     dimensions of the rows add ((27)); and their cohomology in degree 0 is identified:
@@ -75,13 +75,10 @@ project:
     surjectivity of (23); in the diagrams (20) of Arnold-Hu, whose bottom row has in degree i the
     regularity of the top row in degree i + 1 and S^i = id (x) s^i, (23) is a condition on
     finite-dimensional maps s^i, met by their examples, but it fails in the diagrams of L^2 de Rham
-    complexes of the same regularity used here: for the Hessian, elasticity and div-div diagrams
-    of the L^2 de Rham complexes on any nonempty open set of R^3, S^J is not onto between the L^2
-    domains (Feec.Domain.hessianMaximalData_not_surjective,
-    Feec.Domain.elasticityMaximalData_not_surjective,
-    Feec.Domain.divDivMaximalData_not_surjective), while on every parallelepiped the regular
-    decompositions make S onto modulo d (a clause of FEEC.bggParallelepiped); the clauses with
-    the explicit map (30) assume (23) and do not apply there. The statement is self-contained over
+    complexes of the same regularity used here: on every parallelepiped s^J is not onto between
+    the L^2 domains (for the Hessian diagram if n >= 1) while the regular decompositions make it
+    onto modulo d (both are clauses of FEEC.bggParallelepiped); the clauses with the explicit map (30) assume (23) and do not apply
+    there. The statement is self-contained over
     Mathlib
     (ModuleCat, CochainComplex, QuasiIso, ShortComplex.ShortExact, Module.finrank, IsIso,
     ContinuousLinearMap, AntilipschitzWith, IsClosed, WithLp, the quotient norm of Submodule
@@ -236,7 +233,27 @@ sources:
     note: "The L^2 Hessian and div-div complexes and their cohomology, the examples of FEEC.bggParallelepiped."
     author_endorsement: "not-contacted"
 
-related_formalizations: []
+related_formalizations:
+  - id: "doi:10.46298/afm.13609"
+    relationship: "builds-on"
+    note: >-
+      J. Riou, Formalization of derived categories in Lean/mathlib (Annals of Formalized
+      Mathematics, 2025): in Lean 4 Mathlib, the derived category of an abelian category,
+      built on Mathlib's homology of short complexes, shifts of cochain complexes and homotopy
+      categories. This entry states its theorems with those cochain complexes, shifts,
+      homology and quasi-isomorphisms; it does not use derived categories. Its twisted complex
+      is, up to a shift and the order of the factors, the mapping cone of S : V~ -> V[1]
+      (Mathlib's CochainComplex.mappingCone, from the same work); the entry defines it
+      directly (FEEC.BGG.twisted). A search of OpenAlex, arXiv, HAL, the Isabelle AFP and
+      Mathlib on 2026-11-25 found no formalization of BGG complexes or of Hilbert complexes.
+  - id: "doi:10.1007/s10817-007-9094-x"
+    relationship: "other"
+    note: >-
+      J. Aransay, C. Ballarin, J. Rubio, A mechanized proof of the basic perturbation lemma
+      (J. Automated Reasoning 40, 2008): in Isabelle/HOL, the basic perturbation lemma of
+      homological algebra, which transfers a reduction of a chain complex to a perturbed
+      differential. Loosely related: reductions of chain complexes, not the twisted or BGG
+      complexes of this entry.
 
 status:
   scope: >-
@@ -256,7 +273,8 @@ status:
     diagrams of the L^2 de Rham complex of forms on every parallelepiped A (0, 1)^n + b with A
     invertible, the Hessian one for every n at J = 0, the elasticity one for n = 3 at J = 1 and
     the div-div one for every n >= 1 at J = n - 1 (the hypotheses of the main clause of
-    FEEC.bggHilbert for the stacked diagrams of their domain complexes, closed range of the BGG
+    FEEC.bggHilbert for the stacked diagrams of their domain complexes, s^J not onto (for the
+    Hessian diagram if n >= 1), closed range of the BGG
     complexes in every degree, finite-dimensional cohomology of dimension n + 1, 6, n + 1 in
     degree 0 and 0 in the other degrees, and the degree-0 cohomology identified with the affine
     functions, the rigid motions and the fields a + c x); the cube (0, 1/2)^3 is the case n = 3,
@@ -325,8 +343,12 @@ status:
     Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS: rescaled test fields and the
     open mapping theorem; so no right inverses exist there,
     Feec.Domain.hessianMaximalData_not_injSurjWith and its siblings). This is the reason for the
-    weakened hypothesis of the main clauses, recorded as a remark in the module docstring of the
-    challenge. The finite element (FEEC) theorems for these complexes on boxes and
+    weakened hypothesis of the main clauses. For the diagrams of forms the failure of
+    surjectivity is a clause of FEEC.bggParallelepiped; Feec proves it on every nonempty open set
+    of R^n, n >= 1 (R^3 for the elasticity diagram)
+    (Feec.FiniteElement.hessianFormData_exists_forall_S_ne,
+    elasticityFormData_exists_forall_S_ne, divDivFormData_exists_forall_S_ne, from
+    Feec.BGG.HilbertData.exists_forall_S_ne). The finite element (FEEC) theorems for these complexes on boxes and
     parallelepipeds (Feec.Models.Parallelepiped.hessianFEEC_affine, ...) are outside this entry:
     they quantify over stacked conforming families that are not constructed on any domain. Also
     proved in Feec and not compared: the explicit map (30) on the smooth Hessian, elasticity and
@@ -445,8 +467,8 @@ fidelity:
     with a choice of right inverses for i >= J. In the Hilbert setting, injectivity of S^i for
     i < J is replaced by boundedness below, which id (x) s^i with s^i injective between
     finite-dimensional spaces satisfies. The weakening is needed for the L^2 examples, where S^J
-    is not onto between the domains (status.scope; the module docstring of the challenge names
-    the Feec theorems). (8) The equality criterion (27) is stated degreewise: dim H^i(BGG) =
+    is not onto between the domains (a clause of FEEC.bggParallelepiped; status.scope). (8) The
+    equality criterion (27) is stated degreewise: dim H^i(BGG) =
     dim H^i(V) + dim H^i(V~) iff S^(i-1) and S^i induce zero on cohomology, which implies
     Arnold-Hu's all-degree form. Theorem 6's dimension bound is stated where both rows have
     finite-dimensional cohomology; Arnold-Hu's inequality is vacuous otherwise.
@@ -572,6 +594,10 @@ alignment:
         divDiv_lowest_iff with Feec.FiniteElement.ker_maximal_zero_eq_span; on the parallelepipeds
         (FEEC.parallelepiped_eq: Feec.Models.Parallelepiped.domain (2 A) b) the hypotheses are
         Feec.Models.Parallelepiped.FormBGG.deRham_hasRegularDecomposition_domain and
-        Feec.Models.Parallelepiped.finrank_cohomology.
+        Feec.Models.Parallelepiped.finrank_cohomology. s^J not onto: FEEC.BGG.DomainDiagram.not_surjective_s
+        with Feec.FiniteElement.hessianFormData_exists_forall_S_ne,
+        elasticityFormData_exists_forall_S_ne and divDivFormData_exists_forall_S_ne (rescaled test
+        fields with d S^J phi = 0 on which d~^J is unbounded, Feec.BGG.HilbertData.exists_forall_S_ne,
+        the open mapping theorem).
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

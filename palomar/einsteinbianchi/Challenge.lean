@@ -45,15 +45,15 @@ answer has two parts.
   gravitational wave.
 
 Both are cases of the abstract method, `FEEC.bggWeakSymmetry` (Prop 5.4, Thm 5.5, Prop 6.2): for
-BGG data with weak symmetry and finite-dimensional subcomplexes with bounded cochain projections
-`π`, its semi-discrete form (6.5) is stable, keeps a discrete Gauss law (`IsBGG`) and, if `π¹S⁰`
-maps `Ṽₕ⁰` onto `Vₕ¹` and `d̃⁰` is injective there, is well posed for the initial values
-satisfying a compatibility condition, and under uniform constants the method that replaces `S` by
-`Sₕ = πS` is uniquely solvable and converges up to the consistency of `Sₕ` at the order `h`. The
-electric discretizations meet all its hypotheses, with `Sₕ ≠ S`, the mirror ones those of (6.5);
-in both the compatibility condition is a restriction: the initial values of (6.5) are constrained.
-`FEEC.weakSymmetry_electric_nonvacuous`: nontrivial solutions meet the hypotheses of the electric
-rates.
+Bernstein–Gelfand–Gelfand (BGG) data with weak symmetry and finite-dimensional subcomplexes with
+bounded cochain projections `π`, its semi-discrete form (6.5) is stable, keeps a discrete Gauss law
+(`IsBGG`) and, if `π¹S⁰` maps `Ṽₕ⁰` onto `Vₕ¹` and `d̃⁰` is injective there, is well posed for the
+initial values satisfying a compatibility condition, and under uniform constants the method that
+replaces `S` by `Sₕ = πS` is uniquely solvable and converges up to the consistency of `Sₕ` at the
+order `h`. The electric discretizations meet all its hypotheses, with `Sₕ ≠ S`, the mirror ones
+those of (6.5); in both the compatibility condition is a restriction: the initial values of (6.5)
+are constrained. `FEEC.weakSymmetry_electric_nonvacuous`: nontrivial solutions meet the hypotheses
+of the electric rates.
 
 **The complex with weak symmetry.** The BGG construction ([ArnoldHu2021]) couples two de Rham
 complexes by connecting maps `S : Ṽⁱ → Vⁱ⁺¹` with `d S = -S d̃`; eliminating `Ṽ⁰` against `V¹`

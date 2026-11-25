@@ -149,7 +149,26 @@ sources:
     note: "The source of AFW2006's irreducibility claim in §3.4; the formalization proves it without representation theory."
     author_endorsement: "not-contacted"
 
-related_formalizations: []
+related_formalizations:
+  - id: "doi:10.48550/arXiv.2604.20345"
+    relationship: "independent"
+    note: >-
+      S. Boldo, F. Clément, V. Martin, M. Mayero, H. Mouhcine, A Rocq formalization of
+      simplicial Lagrange finite elements (arXiv 2604.20345, 2026): in Rocq (Coq), the
+      unisolvence of the simplicial Lagrange elements with evenly distributed nodes in every
+      dimension and degree, point-value degrees of freedom of polynomials (0-forms), without
+      polynomial differential forms, the Koszul operator or a classification of affinely
+      invariant spaces. A search of OpenAlex, arXiv, HAL, the Isabelle AFP and Mathlib on
+      2026-11-25 found no formalization of the classification of affinely invariant spaces of
+      polynomial differential forms, of the Koszul operator on polynomial forms or of degrees
+      of freedom of P_r^- Lambda.
+  - id: "https://leanprover-community.github.io/mathlib4_docs/Mathlib/Analysis/Calculus/DifferentialForm/Basic.html"
+    relationship: "other"
+    note: >-
+      Mathlib, Mathlib.Analysis.Calculus.DifferentialForm.Basic: differential forms on normed
+      spaces as maps into continuous alternating maps, with the exterior derivative extDeriv,
+      d(d omega) = 0 and the compatibility with pullbacks. This entry defines its own
+      polynomial forms and exterior derivative and does not use this module.
 
 status:
   scope: >-

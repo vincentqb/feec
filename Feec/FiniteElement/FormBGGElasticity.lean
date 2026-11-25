@@ -26,6 +26,13 @@ and has the `H¹`-preserving right inverses `½ Sᵀ` in degree `2` (`W = 0` on 
 analytic BGG theorem at `J = 1`, the regular decompositions of the diagram following from those of
 the rows (`elasticityFormData_antilipschitz`, `elasticityFormData_regularDecomposition`).
 
+`S` twice is minus the div–div map after the Hessian map, `S^{k+1} S^k = −D W`
+(`crossL2_crossL2`), so `S¹ S⁰ ψ` is closed for the gradients `ψ` of the Hessian diagram, on which
+`d̃⁰` is unbounded: **`S¹` is not onto between the `L²` domains** on every nonempty open `Ω`
+(`elasticityFormData_exists_forall_S_ne`), as `S⁰` and `Sⁿ⁻¹` of the Hessian and div–div
+diagrams (`Feec.FiniteElement.hessianFormData_exists_forall_S_ne`,
+`Feec.FiniteElement.divDivFormData_exists_forall_S_ne`).
+
 ## Main definitions
 
 * `crossL2`, `crossAdj`, `elasticityFormData`.
@@ -34,6 +41,8 @@ the rows (`elasticityFormData_antilipschitz`, `elasticityFormData_regularDecompo
 
 * `inner_crossL2`, `crossAdj_crossL2`, `crossAdj_crossL2_zero`, `crossL2_crossAdj`.
 * `elasticityFormData_antilipschitz`, **`elasticityFormData_regularDecomposition`**.
+* `crossL2_crossL2`, `elasticityFormData_exists_lt_norm`,
+  **`elasticityFormData_exists_forall_S_ne`**.
 
 ## References
 
@@ -161,6 +170,20 @@ theorem crossL2_crossAdj (k : ℤ) (w : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (for
   linear_combination (norm := module) c1 - c2 - c3 + c4 - hD
 
 /-! ### The elasticity diagram -/
+
+/-- **The elasticity map twice is minus the div–div map after the Hessian map**:
+`S^{k+1} S^k = -D W` on `L²(Ω; Λᵏ ⊗ ℝ³)`, `W v = Σₐ dxₐ ∧ vₐ` (`wsL2`) and
+`(D w)_b = dx_b ∧ w` (`dxVecL2`):
+`(S S v)_b = dx_{b+2} ∧ dx_b ∧ v_{b+2} + dx_{b+1} ∧ dx_b ∧ v_{b+1}`. -/
+theorem crossL2_crossL2 (k : ℤ) (v : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 k))) :
+    crossL2 (k + 1) (crossL2 k v) = -dxVecL2 (k + 1) (wsL2 k v) := by
+  refine PiLp.ext fun b => ?_
+  obtain ⟨h1, h2, h3, h4⟩ := fin3_add_add b
+  rw [crossL2_apply, crossL2_apply, crossL2_apply, PiLp.neg_apply, dxVecL2_apply, wsL2_eq_sum,
+    map_sum, sum_fin3 _ b, h1, h2, h3, h4, map_sub, map_sub, dxL2_dxL2_self, dxL2_dxL2_self,
+    dxL2_dxL2_self, eq_neg_of_add_eq_zero_left (dxL2_dxL2_add_dxL2_dxL2 k (b + 2) b (v (b + 2))),
+    eq_neg_of_add_eq_zero_left (dxL2_dxL2_add_dxL2_dxL2 k (b + 1) b (v (b + 1)))]
+  abel
 
 variable (hΩ : IsOpen Ω)
 include hΩ
@@ -319,5 +342,70 @@ theorem elasticityFormData_regularDecomposition
     (elasticityFormData hΩ).RegularDecomposition 1 :=
   (elasticityFormData hΩ).regularDecomposition_of_forall_exists fun _ hi _ hu =>
     elasticityFormData_exists_add_eq hΩ h hi hu
+
+/-! ### `S¹` is not onto between the `L²` domains -/
+
+/-- **`d̃¹` is unbounded on the `φ = S⁰ ψ`, `ψ` a rescaled gradient, of the elasticity
+diagram**: on every nonempty open `Ω ⊆ ℝ³`, for every `C` some vector `1`-form `φ = S⁰ ψ`, with
+`ψ` the vector `0`-form of `hessianFormData_exists_lt_norm`, has `d (S¹ φ) = 0` and
+`C ‖φ‖ < ‖d̃¹ φ‖`: `d (S¹ S⁰ ψ) = S² S¹ d̃⁰ψ = -D W d̃⁰ψ = D d (W ψ) = 0` (`crossL2_crossL2`,
+`W ψ` closed) and `‖d̃¹ φ‖ = ‖S¹ d̃⁰ ψ‖ ≥ ‖d̃⁰ ψ‖ / K`, `S¹` bounded below. -/
+theorem elasticityFormData_exists_lt_norm (hne : Ω.Nonempty) (C : ℝ) :
+    ∃ φ : ((elasticityFormData hΩ).Ht.d (0 + 1) (0 + 1 + 1)).domain,
+      (elasticityFormData hΩ).H.d (0 + 1 + 1) (0 + 1 + 1 + 1)
+          ⟨_, (elasticityFormData hΩ).S_mapsTo (0 + 1) (0 + 1 + 1) (0 + 1 + 1 + 1) φ⟩ = 0 ∧
+        C * ‖(φ : PiLp 2 fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 (0 + 1)))‖ <
+          ‖(elasticityFormData hΩ).Ht.d (0 + 1) (0 + 1 + 1) φ‖ := by
+  obtain ⟨K₁, hK₁⟩ := elasticityFormData_antilipschitz hΩ (0 + 1) (by norm_num)
+  rw [elasticityFormData_S] at hK₁
+  set S₀ : PiLp 2 (fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0)) →L[ℝ] _ := crossL2 0
+  obtain ⟨ψ, hdψ, hlt⟩ := hessianFormData_exists_lt_norm hΩ hne (by norm_num : 0 < 3)
+    (max C 0 * ‖S₀‖ * K₁)
+  set D := elasticityFormData hΩ
+  have hmem := D.S_mapsTo 0 (0 + 1) (0 + 1 + 1) ψ
+  have hd : D.H.d (0 + 1) (0 + 1 + 1) ⟨_, hmem⟩ = -crossL2 (0 + 1) (D.Ht.d 0 (0 + 1) ψ) := by
+    rw [D.anticomm 0 (0 + 1) (0 + 1 + 1) ψ, elasticityFormData_S]
+  have hW := (hessianFormData hΩ).anticomm 0 (0 + 1) (0 + 1 + 1) ψ
+  rw [hdψ, hessianFormData_S, eq_comm, neg_eq_zero] at hW
+  have hW' : wsL2 (0 + 1) (D.Ht.d 0 (0 + 1) ψ) = 0 := hW
+  have e : D.Ht.d (0 + 1) (0 + 1 + 1) ⟨_, hmem⟩ = -crossL2 (0 + 1) (D.Ht.d 0 (0 + 1) ψ) := hd
+  refine ⟨⟨_, hmem⟩, ?_, ?_⟩
+  · rw [D.anticomm (0 + 1) (0 + 1 + 1) (0 + 1 + 1 + 1) ⟨_, hmem⟩, elasticityFormData_S, e,
+      map_neg, neg_neg, crossL2_crossL2, hW', map_zero, neg_zero]
+  · rw [e, norm_neg]
+    have h1 := (crossL2 (0 + 1)).bound_of_antilipschitz hK₁ (D.Ht.d 0 (0 + 1) ψ)
+    have h2 : ‖S₀ (ψ : PiLp 2 fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0))‖ ≤ ‖S₀‖ * ‖(ψ : _)‖ :=
+      S₀.le_opNorm _
+    have hlt' : max C 0 * ‖S₀‖ * K₁ * ‖(ψ : PiLp 2 fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0))‖ <
+        ‖D.Ht.d 0 (0 + 1) ψ‖ := hlt
+    have hK0 : (0 : ℝ) ≤ K₁ := K₁.2
+    have hC : C * ‖S₀ (ψ : PiLp 2 fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0))‖ ≤
+        max C 0 * ‖S₀‖ * ‖(ψ : _)‖ := by
+      calc C * ‖S₀ (ψ : PiLp 2 fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0))‖
+          ≤ max C 0 * ‖S₀ (ψ : PiLp 2 fun _ : Fin 3 => L2F ℝ Ω (formIdx 3 0))‖ :=
+            mul_le_mul_of_nonneg_right (le_max_left _ _) (norm_nonneg _)
+        _ ≤ max C 0 * (‖S₀‖ * ‖(ψ : _)‖) :=
+            mul_le_mul_of_nonneg_left h2 (le_max_right _ _)
+        _ = _ := by ring
+    have key : K₁ * (max C 0 * ‖S₀‖ * ‖(ψ : _)‖) <
+        K₁ * ‖crossL2 (0 + 1) (D.Ht.d 0 (0 + 1) ψ)‖ := by
+      calc K₁ * (max C 0 * ‖S₀‖ * ‖(ψ : _)‖) = max C 0 * ‖S₀‖ * K₁ * ‖(ψ : _)‖ := by ring
+        _ < ‖D.Ht.d 0 (0 + 1) ψ‖ := hlt'
+        _ ≤ _ := h1
+    exact hC.trans_lt (lt_of_mul_lt_mul_left key hK0)
+
+/-- **`S¹` is not onto between the `L²` domains of the elasticity diagram** on every nonempty
+open `Ω ⊆ ℝ³`: some `u ∈ HΛ²(Ω) ⊗ ℝ³` is `S¹ φ` for no `φ ∈ HΛ¹(Ω) ⊗ ℝ³` (in vector proxies,
+`S¹ u = uᵀ − tr(u) I` maps `H(curl; Ω; 𝕄)` onto a proper subspace of `H(div; Ω; 𝕄)`;
+`Feec.Domain.elasticityMaximalData_not_surjective`). -/
+theorem elasticityFormData_exists_forall_S_ne (hne : Ω.Nonempty) :
+    ∃ u ∈ ((vecRow 3 hΩ).d (1 + 1) (1 + 1 + 1)).domain,
+      ∀ φ ∈ ((vecRow 3 hΩ).d 1 (1 + 1)).domain, crossL2 1 φ ≠ u := by
+  have h := (elasticityFormData hΩ).exists_forall_S_ne (i := 0 + 1) (j := 0 + 1 + 1)
+    (k := 0 + 1 + 1 + 1) rfl rfl
+    ((elasticityFormData_antilipschitz hΩ (0 + 1) (by norm_num)).choose_spec.injective)
+    (elasticityFormData_exists_lt_norm hΩ hne)
+  rw [elasticityFormData_S] at h
+  exact h
 
 end Feec.FiniteElement

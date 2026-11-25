@@ -32,6 +32,8 @@ domain complexes are.
   and Corollary 1 of [ArnoldHu2021] (`Data.quasiIso_sumIso_comp`, `Data.derived_represents`).
 * `HilbertData.injective_domainS`, `HilbertData.antilipschitz_domainS`: `S` one-to-one (bounded
   below) is one-to-one (bounded below) between the domains.
+* `HilbertData.exists_forall_S_ne`, `HilbertData.not_surjective_domainS`: `S` one-to-one is not
+  onto between the domains where `d̃` is unbounded on the `φ` with `d S φ = 0` (open mapping).
 * `HilbertData.isClosed_Δ_and_eliminates_bgg`, `HilbertData.BGGVerdict`,
   **`HilbertData.bggVerdict`**: the analytic BGG theorem for the BGG complex `bgg J`, from the
   connecting maps up to `J` bounded below and the regular decompositions after `J`
@@ -98,6 +100,53 @@ theorem injective_domainS {i j : ι} (h : Function.Injective (D.S i j)) :
     Function.Injective (D.domainS i j) := fun φ ψ hφψ =>
   D.Ht.domainIncl_injective i (h (by
     rw [← domainIncl_domainS, ← domainIncl_domainS, hφψ]))
+
+/-- **`S` is not onto between the domains where `d̃` is unbounded on the `φ` with `d S φ = 0`.**
+If `S i j` is one-to-one and, for every `C`, some `φ ∈ D(d̃ i j)` with `d j k (S φ) = 0` has
+`C ‖φ‖ < ‖d̃ φ‖`, then some `u ∈ D(d j k)` is `S φ` for no `φ ∈ D(d̃ i j)`. Otherwise `S` would be
+a bounded bijection of the domain spaces, bounded below by the open mapping theorem, so that
+`‖d̃ φ‖ ≤ ‖φ‖_{D(d̃)} ≤ K ‖S φ‖_{D(d)} = K ‖S φ‖ ≤ K ‖S‖ ‖φ‖` whenever `d S φ = 0`. -/
+theorem exists_forall_S_ne {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
+    (hS : Function.Injective (D.S i j))
+    (h : ∀ C : ℝ, ∃ φ : (D.Ht.d i j).domain,
+      D.H.d j k ⟨_, D.S_mapsTo i j k φ⟩ = 0 ∧ C * ‖(φ : Wt i)‖ < ‖D.Ht.d i j φ‖) :
+    ∃ u ∈ (D.H.d j k).domain, ∀ φ ∈ (D.Ht.d i j).domain, D.S i j φ ≠ u := by
+  obtain rfl := c.next_eq' hij
+  obtain rfl := c.next_eq' hjk
+  by_contra! hsurj
+  have hs : Function.Surjective (D.domainS i (c.next i)) := fun w => by
+    obtain ⟨φ, hφ, hφu⟩ := hsurj (D.H.domainIncl _ w) (D.H.domainIncl_mem _ w)
+    exact ⟨(D.Ht.d i (c.next i)).toGraphSpace ⟨φ, hφ⟩, D.H.domainIncl_injective _ hφu⟩
+  obtain ⟨K, hK⟩ := (D.domainS i (c.next i)).antilipschitz_of_injective_of_isClosed_range
+    (D.injective_domainS hS) (by rw [hs.range_eq]; exact isClosed_univ)
+  obtain ⟨φ, hdφ, hlt⟩ := h (K * ‖D.S i (c.next i)‖)
+  set v := (D.Ht.d i (c.next i)).toGraphSpace φ
+  have h1 : ‖D.Ht.d i (c.next i) φ‖ ≤ ‖v‖ := D.Ht.norm_d_domainCoord_le i (c.next i) v
+  have h2 : ‖v‖ ≤ K * ‖D.domainS i (c.next i) v‖ :=
+    ContinuousLinearMap.bound_of_antilipschitz _ hK v
+  have h3 : ‖D.domainS i (c.next i) v‖ = ‖D.S i (c.next i) φ‖ := by
+    have e := D.H.norm_sq_domainSpace (c.next i) (D.domainS i (c.next i) v)
+    have e0 : D.H.d (c.next i) (c.next (c.next i))
+        (D.H.domainCoord (c.next i) _ (D.domainS i (c.next i) v)) = 0 := hdφ
+    rw [e0, norm_zero, zero_pow two_ne_zero, add_zero, domainIncl_domainS] at e
+    exact (sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 e
+  have h4 : ‖D.S i (c.next i) φ‖ ≤ ‖D.S i (c.next i)‖ * ‖(φ : Wt i)‖ :=
+    (D.S i (c.next i)).le_opNorm _
+  have hK0 : (0 : ℝ) ≤ K := K.2
+  nlinarith [mul_le_mul_of_nonneg_left h4 hK0]
+
+/-- **`S` is not onto between the domain spaces**: `domainS i j` is not surjective under the
+hypotheses of `exists_forall_S_ne`. -/
+theorem not_surjective_domainS {i j k : ι} (hij : c.Rel i j) (hjk : c.Rel j k)
+    (hS : Function.Injective (D.S i j))
+    (h : ∀ C : ℝ, ∃ φ : (D.Ht.d i j).domain,
+      D.H.d j k ⟨_, D.S_mapsTo i j k φ⟩ = 0 ∧ C * ‖(φ : Wt i)‖ < ‖D.Ht.d i j φ‖) :
+    ¬ Function.Surjective (D.domainS i j) := fun hs => by
+  obtain ⟨u, hu, hne⟩ := D.exists_forall_S_ne hij hjk hS h
+  obtain rfl := c.next_eq' hij
+  obtain rfl := c.next_eq' hjk
+  obtain ⟨v, hv⟩ := hs ((D.H.d (c.next i) (c.next (c.next i))).toGraphSpace ⟨u, hu⟩)
+  exact hne _ (D.Ht.domainIncl_mem i v) (by rw [← domainIncl_domainS, hv]; rfl)
 
 /-- **Analytic BGG data on the domains**: the domain complexes of the two rows, with the
 connecting maps on the domains. -/

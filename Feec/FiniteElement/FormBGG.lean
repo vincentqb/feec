@@ -38,7 +38,16 @@ fibre maps decides the hypotheses of the analytic BGG theorem (`Feec.BGG.Hilbert
 The adjoints are the contractions `ι_c` (`ιL2`), with the Cartan identity
 `ι_c (dx_{c'} ∧ ·) + dx_{c'} ∧ ι_c = δ_{cc'}` (`ιL2_dxL2_add_dxL2_ιL2`) and the Euler identities
 `Σ_c dx_c ∧ ι_c = k + 1`, `Σ_c ι_c (dx_c ∧ ·) = n − k` (`sum_dxL2_ιL2`, `sum_ιL2_dxL2`), from which
-`Feec.FiniteElement.FormBGGElasticity` builds the elasticity diagram on `ℝ³`.
+`Feec.FiniteElement.FormBGGElasticity` builds the elasticity diagram on `ℝ³`; the anticommutation
+`dxₐ ∧ dx_c ∧ · = −dx_c ∧ dxₐ ∧ ·` (`dxL2_dxL2_add_dxL2_dxL2`) gives its identity
+`S^{k+1} S^k = −D W` (`Feec.FiniteElement.crossL2_crossL2`).
+
+**`Sᴶ` is not onto between the domains** on every nonempty open `Ω`, `n ≥ 1`, at the `J` of both
+diagrams (`hessianFormData_exists_forall_S_ne`, `divDivFormData_exists_forall_S_ne`): (23) of
+[ArnoldHu2021] fails between the `L²` domains, and the weaker hypothesis "onto modulo `d`" of
+`Feec.BGG.HilbertData.bggVerdict` is the one the regular decompositions give. The rescalings of a
+test field `φ` with `d (Sᴶ φ) = 0` (a gradient `Sᵀ dχ`, resp. any `(n − 1)`-form) make
+`‖d̃ᴶ φ‖ / ‖φ‖` unbounded, which an onto `Sᴶ` forbids (`Feec.BGG.HilbertData.exists_forall_S_ne`).
 
 ## Main definitions
 
@@ -52,11 +61,14 @@ The adjoints are the contractions `ι_c` (`ιL2`), with the Cartan identity
 * `dxL2_mem_maximal`.
 * `hessianFormData_antilipschitz`, **`hessianFormData_regularDecomposition`**;
   `divDivFormData_antilipschitz`, **`divDivFormData_regularDecomposition`**.
+* `dxL2_dxL2_add_dxL2_dxL2`, `dxL2_dxL2_self`, `wsFields_wsFieldsAdj`.
+* `hessianFormData_exists_lt_norm`, **`hessianFormData_exists_forall_S_ne`**;
+  `divDivFormData_exists_lt_norm`, **`divDivFormData_exists_forall_S_ne`**.
 
 ## References
 
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021], §4.1 (the Hessian and div–div
-  diagrams), §2 (regular decompositions)
+  diagrams), §2 (regular decompositions), §3 ((23), the hypothesis of Theorem 7)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Finite element exterior calculus, homological techniques, and applications*][AFW2006],
   §2 (exterior algebra: `dxₐ ∧ ·` and its adjoint, the contraction)
 
@@ -143,15 +155,22 @@ theorem sum_wsCoeff_mul_wsCoeff (k : ℤ) (t t' : formIdx n (k + 1)) :
     by_contra hp
     exact h (eq_of_wsCoeff_ne_zero (left_ne_zero_of_mul hp) (right_ne_zero_of_mul hp))
 
-/-- **`S Sᵀ = k + 1`**: `S (Sᵀ w) = (k + 1) w` on `L²(Ω; Λᵏ⁺¹)`. -/
+/-- **`S Sᵀ = k + 1` on coefficient fields**: `S (Sᵀ ψ) = (k + 1) ψ` (`sum_wsCoeff_mul_wsCoeff`). -/
+theorem wsFields_wsFieldsAdj {F : Type*} [AddCommMonoid F] [Module ℝ F] (k : ℤ)
+    (ψ : formIdx n (k + 1) → F) : wsFields k (wsFieldsAdj k ψ) = ((k : ℝ) + 1) • ψ := by
+  funext t
+  simp only [wsFields, wsFieldsAdj, Finset.smul_sum, smul_smul, Pi.smul_apply]
+  rw [Finset.sum_comm]
+  simp only [← Finset.sum_smul, sum_wsCoeff_mul_wsCoeff, ite_smul, zero_smul,
+    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+
+/-- **`S Sᵀ = k + 1`**: `S (Sᵀ w) = (k + 1) w` on `L²(Ω; Λᵏ⁺¹)` (`wsFields_wsFieldsAdj`). -/
 theorem wsL2_wsL2Adj (k : ℤ) (w : L2F ℝ Ω (formIdx n (k + 1))) :
     wsL2 k (wsL2Adj k w) = ((k : ℝ) + 1) • w := by
   refine PiLp.ext fun t => ?_
   rw [wsL2_apply, PiLp.smul_apply]
-  simp only [wsL2Adj_apply, Finset.smul_sum, smul_smul]
-  rw [Finset.sum_comm]
-  simp only [← Finset.sum_smul, sum_wsCoeff_mul_wsCoeff, ite_smul, zero_smul,
-    Finset.sum_ite_eq, Finset.mem_univ, ite_true]
+  simp only [wsL2Adj_apply]
+  exact congrFun (wsFields_wsFieldsAdj k fun t => w t) t
 
 /-- The `0`-forms have one coefficient, that of `∅`. -/
 theorem formIdx_zero_eq (r s : formIdx n 0) : r = s := by
@@ -478,6 +497,70 @@ theorem ιL2_dxL2 (k : ℤ) (c c' : Fin n) (w : L2F ℝ Ω (formIdx n (k + 1))) 
     ιL2 (k + 1) c (dxL2 (k + 1) c' w) = (if c = c' then w else 0) - dxL2 k c' (ιL2 k c w) :=
   eq_sub_of_add_eq (ιL2_dxL2_add_dxL2_ιL2 k c c' w)
 
+/-! ### `dxₐ ∧ dx_c ∧ · = -dx_c ∧ dxₐ ∧ ·` -/
+
+/-- `Σ_{r'} c(t; a, r') X(r') = ε(a, t) X(t ∖ a)` for `a ∈ t`, and `0` otherwise. -/
+theorem sum_wsCoeff_mul (k : ℤ) (a : Fin n) (t : formIdx n (k + 1)) (X : formIdx n k → ℝ) :
+    ∑ r, wsCoeff k t (a, r) * X r =
+      if h : a ∈ t.1 then ExteriorFibre.sgn a t.1 * X ⟨t.1.erase a, card_erase_of_formIdx t h⟩
+      else 0 := by
+  split_ifs with h
+  · rw [Finset.sum_eq_single ⟨t.1.erase a, card_erase_of_formIdx t h⟩ (fun r _ hr => by
+        rw [wsCoeff_eq, ite_eq_right fun h' => hr (Subtype.ext h'.2.symm), zero_mul]) (by simp),
+      wsCoeff_eq, ite_eq_left ⟨h, rfl⟩]
+  · exact Finset.sum_eq_zero fun r _ => by rw [wsCoeff_eq, ite_eq_right fun h' => h h'.1, zero_mul]
+
+/-- **`dxₐ ∧ dx_c ∧ · = -dx_c ∧ dxₐ ∧ ·` on the coefficients**:
+`Σ_{r'} (c(t; a, r') c(r'; c, r) + c(t; c, r') c(r'; a, r)) = 0`. -/
+theorem sum_wsCoeff_mul_wsCoeff_add (k : ℤ) (a c : Fin n) (t : formIdx n (k + 1 + 1))
+    (r : formIdx n k) :
+    ∑ r', (wsCoeff (k + 1) t (a, r') * wsCoeff k r' (c, r) +
+      wsCoeff (k + 1) t (c, r') * wsCoeff k r' (a, r)) = 0 := by
+  rw [Finset.sum_add_distrib, sum_wsCoeff_mul, sum_wsCoeff_mul]
+  by_cases hac : a = c
+  · subst hac
+    split_ifs with h
+    · rw [wsCoeff_eq, ite_eq_right fun h' => Finset.notMem_erase a t.1 h'.1]; ring
+    · ring
+  by_cases ha : a ∈ t.1
+  · by_cases hc : c ∈ t.1
+    · simp only [ha, hc, ↓reduceDIte]
+      rw [wsCoeff_eq, wsCoeff_eq]
+      have hca : c ∈ t.1.erase a := Finset.mem_erase.2 ⟨Ne.symm hac, hc⟩
+      have hac' : a ∈ t.1.erase c := Finset.mem_erase.2 ⟨hac, ha⟩
+      simp only [hca, hac', true_and, Finset.erase_right_comm (s := t.1) (a := a) (b := c)]
+      split_ifs
+      · rw [ExteriorFibre.sgn_erase ha, ExteriorFibre.sgn_erase hc]
+        have := ExteriorFibre.ite_lt_add_ite_lt (R := ℝ) hac
+        linear_combination (ExteriorFibre.sgn a t.1 * ExteriorFibre.sgn c t.1 : ℝ) * this
+      · ring
+    · simp only [ha, hc, ↓reduceDIte]
+      rw [wsCoeff_eq, ite_eq_right fun h' => hc (Finset.mem_of_mem_erase h'.1)]; ring
+  · simp only [ha, ↓reduceDIte]
+    split_ifs with hc
+    · rw [wsCoeff_eq, ite_eq_right fun h' => ha (Finset.mem_of_mem_erase h'.1)]; ring
+    · ring
+
+/-- **`dxₐ ∧ dx_c ∧ φ + dx_c ∧ dxₐ ∧ φ = 0`** on `L²(Ω; Λᵏ)`. -/
+theorem dxL2_dxL2_add_dxL2_dxL2 (k : ℤ) (a c : Fin n) (φ : L2F ℝ Ω (formIdx n k)) :
+    dxL2 (k + 1) a (dxL2 k c φ) + dxL2 (k + 1) c (dxL2 k a φ) = 0 := by
+  refine PiLp.ext fun t => ?_
+  rw [PiLp.add_apply, dxL2_apply, dxL2_apply, PiLp.zero_apply]
+  simp only [dxL2_apply, Finset.smul_sum, smul_smul]
+  rw [Finset.sum_comm, Finset.sum_comm (s := Finset.univ (α := formIdx n (k + 1))),
+    ← Finset.sum_add_distrib]
+  refine Finset.sum_eq_zero fun r _ => ?_
+  rw [← Finset.sum_add_distrib]
+  simp only [← add_smul]
+  rw [← Finset.sum_smul, sum_wsCoeff_mul_wsCoeff_add, zero_smul]
+
+/-- **`dxₐ ∧ dxₐ ∧ φ = 0`** on `L²(Ω; Λᵏ)`. -/
+theorem dxL2_dxL2_self (k : ℤ) (a : Fin n) (φ : L2F ℝ Ω (formIdx n k)) :
+    dxL2 (k + 1) a (dxL2 k a φ) = 0 := by
+  have h := dxL2_dxL2_add_dxL2_dxL2 k a a φ
+  rw [← two_smul ℝ] at h
+  exact (smul_eq_zero.1 h).resolve_left two_ne_zero
+
 /-! ### `H¹` fields -/
 
 variable (hΩ : IsOpen Ω)
@@ -727,5 +810,181 @@ theorem divDivFormData_regularDecomposition
     (divDivFormData hΩ).RegularDecomposition ((n : ℤ) - 1) :=
   (divDivFormData hΩ).regularDecomposition_of_forall_exists fun _ hi _ hu =>
     divDivFormData_exists_add_eq hΩ h hi hu
+
+/-! ### `S` is not onto between the `L²` domains
+
+At `J = 0` (Hessian) and `J = n − 1` (div–div) the regular decompositions make `Sᴶ` onto modulo
+`d`, but not onto: (23) of [ArnoldHu2021] fails between the domains. The rescalings of a test
+field `φ` with `d (Sᴶ φ) = 0` make `‖d̃ᴶ φ‖ / ‖φ‖` unbounded
+(`Feec.Domain.ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff`), which an onto `Sᴶ` forbids
+(`Feec.BGG.HilbertData.exists_forall_S_ne`). -/
+
+/-- **`d̃⁰` is unbounded on the gradients of the Hessian diagram**: on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1`, for every `C` some vector `0`-form `φ ∈ D(d̃⁰)`, the rescaled gradient
+`Sᵀ dχ` of a test function `χ`, has `S φ` closed and `C ‖φ‖ < ‖d̃⁰ φ‖`. -/
+theorem hessianFormData_exists_lt_norm (hne : Ω.Nonempty) (hn : 0 < n) (C : ℝ) :
+    ∃ φ : ((hessianFormData hΩ).Ht.d 0 (0 + 1)).domain,
+      (hessianFormData hΩ).H.d (0 + 1) (0 + 1 + 1)
+          ⟨_, (hessianFormData hΩ).S_mapsTo 0 (0 + 1) (0 + 1 + 1) φ⟩ = 0 ∧
+        C * ‖(φ : PiLp 2 fun _ : Fin n => L2F ℝ Ω (formIdx n 0))‖ <
+          ‖(hessianFormData hΩ).Ht.d 0 (0 + 1) φ‖ := by
+  obtain ⟨χ, hχ, hχ0⟩ := exists_isTest_univ_ne_zero (Fin n → ℝ) ℝ
+  set j₀ : Fin n := ⟨0, hn⟩
+  set B₀ := extDerivOp ℝ n 0
+  set χ' : formIdx n 0 → (Fin n → ℝ) → ℝ := fun _ => χ
+  have hχ' : IsTestField Set.univ χ' := fun _ => hχ
+  set Ψ := wsFieldsAdj 0 (B₀.apply χ')
+  have hΨ : ∀ c, IsTestField Set.univ (Ψ c) := isTestField_wsFieldsAdj (B₀.isTestField_apply hχ')
+  have hSΨ : wsFields 0 Ψ = B₀.apply χ' := by
+    rw [wsFields_wsFieldsAdj]; simp
+  have hBΨ : ∃ c, B₀.apply (Ψ c) ≠ 0 := by
+    by_contra! h
+    have hΨ0 : ∀ c r, Ψ c r = 0 := fun c r => by
+      obtain rfl := formIdx_zero_eq r ⟨∅, by simp⟩
+      by_contra hne0
+      refine (hΨ c ⟨∅, by simp⟩).fderiv_apply_ne_zero hne0 (v := coordDir j₀) (by simp)
+        (funext fun x => ?_)
+      have := congrFun (congrFun (h c) ⟨{j₀}, by simp⟩) x
+      rwa [extDerivOp_zero_apply] at this
+    have hB0 : B₀.apply χ' = 0 := by
+      rw [← hSΨ]
+      funext t x
+      simp [wsFields, hΨ0]
+    refine hχ.fderiv_apply_ne_zero hχ0 (v := coordDir j₀) (by simp) (funext fun x => ?_)
+    have := congrFun (congrFun hB0 ⟨{j₀}, by simp⟩) x
+    rwa [extDerivOp_zero_apply] at this
+  obtain ⟨a, b, hφ, hlt⟩ := ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff hΩ hne
+    (isHomogeneous_extDerivOp 0) one_pos hΨ hBΨ C
+  have hmem : ∀ c, testField (hφ c) ∈ ((extDerivOp ℝ n 0).maximal Ω).domain := fun c =>
+    ((extDerivOp ℝ n 0).minimal_le_maximal hΩ).1
+      ((extDerivOp ℝ n 0).testField_mem_minimal_domain hΩ (hφ c))
+  have hφmem : (WithLp.toLp 2 fun c => testField (hφ c)) ∈
+      ((hessianFormData hΩ).Ht.d 0 (0 + 1)).domain :=
+    (mem_vecRow_domain hΩ).2 hmem
+  refine ⟨⟨_, hφmem⟩, ?_, ?_⟩
+  · have hG := isTestField_wsFields hφ
+    have hGe : (wsFields 0 fun c r x => Ψ c r (aff a b x)) =
+        fun t x => B₀.apply χ' t (aff a b x) := by
+      rw [← hSΨ]; funext t x; simp [wsFields, Finset.sum_apply]
+    have hB1 : (extDerivOp ℝ n (0 + 1)).apply (wsFields 0 fun c r x => Ψ c r (aff a b x)) = 0 := by
+      rw [hGe, ConstCoeffOp.apply_comp_aff (isHomogeneous_extDerivOp _)
+        (fun t => (B₀.isTestField_apply hχ' t).contDiff) a b,
+        isComplexPair_extDerivOp 0 χ' (fun _ => hχ.contDiff)]
+      funext j x; simp
+    have hmin := (extDerivOp ℝ n (0 + 1)).testField_mem_minimal_domain hΩ hG
+    have hmax := ((extDerivOp ℝ n (0 + 1)).minimal_le_maximal hΩ).1 hmin
+    have e1 : (hessianFormData hΩ).S 0 (0 + 1) (WithLp.toLp 2 fun c => testField (hφ c)) =
+        testField hG := by
+      rw [hessianFormData_S, wsL2_testField]
+    change (formRow n hΩ).d (0 + 1) (0 + 1 + 1) ⟨_, _⟩ = 0
+    rw [LinearPMap.apply_eq_of_eq (formRow_d hΩ (0 + 1)) _ ⟨_, hmax⟩ e1,
+      ← ((extDerivOp ℝ n (0 + 1)).minimal_le_maximal hΩ).2 (x := ⟨_, hmin⟩) rfl,
+      (extDerivOp ℝ n (0 + 1)).minimal_testField hΩ hG, testField_congr _ IsTestField.zero hB1,
+      testField_zero]
+  · have e2 : (hessianFormData hΩ).Ht.d 0 (0 + 1) ⟨_, hφmem⟩ =
+        WithLp.toLp 2 fun c => testField (B₀.isTestField_apply (hφ c)) := by
+      refine PiLp.ext fun c => ?_
+      change (vecRow n hΩ).d 0 (0 + 1) ⟨_, hφmem⟩ c = _
+      have hmin := (extDerivOp ℝ n 0).testField_mem_minimal_domain hΩ (hφ c)
+      rw [vecRow_d_apply]
+      refine (LinearPMap.apply_eq_of_eq rfl _ ⟨_, hmem c⟩ rfl).trans ?_
+      rw [← ((extDerivOp ℝ n 0).minimal_le_maximal hΩ).2 (x := ⟨_, hmin⟩) rfl,
+        (extDerivOp ℝ n 0).minimal_testField hΩ (hφ c)]
+    rw [e2]
+    exact hlt
+
+/-- **`S⁰` is not onto between the `L²` domains of the Hessian diagram** on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1`: some `u ∈ HΛ¹(Ω)` is `S φ = Σₐ dxₐ ∧ φₐ` for no `φ ∈ HΛ⁰(Ω) ⊗ ℝⁿ` (for `n = 3`,
+in vector proxies, `S⁰ = I` maps `H¹(Ω; ℝ³)` onto a proper subspace of `H(curl; Ω)`;
+`Feec.Domain.hessianMaximalData_not_surjective`). -/
+theorem hessianFormData_exists_forall_S_ne (hne : Ω.Nonempty) (hn : 0 < n) :
+    ∃ u ∈ ((formRow n hΩ).d (0 + 1) (0 + 1 + 1)).domain,
+      ∀ φ ∈ ((vecRow n hΩ).d 0 (0 + 1)).domain, wsL2 0 φ ≠ u := by
+  have h := (hessianFormData hΩ).exists_forall_S_ne (i := 0) (j := 0 + 1) (k := 0 + 1 + 1)
+    rfl rfl ((hessianFormData_antilipschitz hΩ 0 le_rfl).choose_spec.injective)
+    (hessianFormData_exists_lt_norm hΩ hne hn)
+  rw [hessianFormData_S] at h
+  exact h
+
+/-- **`d` is unbounded on the `(n - 1)`-forms of the div–div diagram**: on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1`, for every `C` some `φ ∈ HΛⁿ⁻¹(Ω)`, a rescaled test form `χ dx_{{j}ᶜ}`, has
+`C ‖φ‖ < ‖dφ‖`; `d (S φ) = 0` holds for every `φ` (no `(n + 1)`-forms). -/
+theorem divDivFormData_exists_lt_norm (hne : Ω.Nonempty) (hn : 0 < n) (C : ℝ) :
+    ∃ φ : ((divDivFormData hΩ).Ht.d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1)).domain,
+      (divDivFormData hΩ).H.d ((n : ℤ) - 1 + 1) ((n : ℤ) - 1 + 1 + 1)
+          ⟨_, (divDivFormData hΩ).S_mapsTo _ _ ((n : ℤ) - 1 + 1 + 1) φ⟩ = 0 ∧
+        C * ‖(φ : L2F ℝ Ω (formIdx n ((n : ℤ) - 1)))‖ <
+          ‖(divDivFormData hΩ).Ht.d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1) φ‖ := by
+  obtain ⟨χ, hχ, hχ0⟩ := exists_isTest_univ_ne_zero (Fin n → ℝ) ℝ
+  set j₀ : Fin n := ⟨0, hn⟩
+  have hc : ((Finset.univ.erase j₀).card : ℤ) = (n : ℤ) - 1 := by
+    rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin]
+    omega
+  set r₀ : formIdx n ((n : ℤ) - 1) := ⟨Finset.univ.erase j₀, hc⟩
+  set ψ : formIdx n ((n : ℤ) - 1) → (Fin n → ℝ) → ℝ := fun r => if r = r₀ then χ else 0
+  have hψ : IsTestField Set.univ ψ := fun r => by
+    by_cases h : r = r₀
+    · simp only [ψ, h, ite_true]; exact hχ
+    · simp only [ψ, h, ite_false]; exact IsTest.zero
+  set B := extDerivOp ℝ n ((n : ℤ) - 1)
+  have hBψ : B.apply ψ ≠ 0 := by
+    intro h
+    have ht : ((Finset.univ : Finset (Fin n)).card : ℤ) = (n : ℤ) - 1 + 1 := by simp
+    refine hχ.fderiv_apply_ne_zero hχ0 (v := coordDir j₀) (by simp) (funext fun x => ?_)
+    have h0 := congrFun (congrFun h ⟨Finset.univ, ht⟩) x
+    rw [extDerivOp_apply] at h0
+    simp only [extD] at h0
+    rw [Finset.sum_eq_single j₀ (fun j _ hj => ?_) (by simp)] at h0
+    · rw [formExt_of_card ψ hc] at h0
+      simp only [ψ, show (⟨Finset.univ.erase j₀, hc⟩ : formIdx n ((n : ℤ) - 1)) = r₀ from rfl,
+        ↓reduceIte] at h0
+      have hs : (ExteriorFibre.sgn j₀ (Finset.univ : Finset (Fin n)) : ℝ) ≠ 0 := by
+        intro h1
+        have := ExteriorFibre.sgn_mul_self (R := ℝ) j₀ (Finset.univ : Finset (Fin n))
+        rw [h1, zero_mul] at this
+        exact zero_ne_one this
+      simpa using (mul_eq_zero.1 h0).resolve_left hs
+    · have hne' : (⟨Finset.univ.erase j, by
+          rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin]
+          omega⟩ : formIdx n ((n : ℤ) - 1)) ≠ r₀ := fun he => by
+        have := congrArg (fun r : formIdx n ((n : ℤ) - 1) => j₀ ∈ r.1) he
+        simp [r₀, hj.symm] at this
+      rw [formExt_of_card ψ (by
+          rw [Finset.card_erase_of_mem (Finset.mem_univ _), Finset.card_univ, Fintype.card_fin]
+          omega)]
+      simp only [ψ, hne', ite_false]
+      simp
+  obtain ⟨a, b, hφ, hlt⟩ := ConstCoeffOp.exists_lt_norm_testField_comp_aff hΩ hne
+    (isHomogeneous_extDerivOp _) one_pos hψ hBψ C
+  have hmin := B.testField_mem_minimal_domain hΩ hφ
+  have hmax := (B.minimal_le_maximal hΩ).1 hmin
+  have hφmem : testField hφ ∈ ((divDivFormData hΩ).Ht.d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1)).domain :=
+    (mem_formRow_domain hΩ).2 hmax
+  have hE : IsEmpty (formIdx n ((n : ℤ) - 1 + 1 + 1)) := ⟨fun s => by
+    have h1 := s.2
+    have h2 := Finset.card_le_univ s.1
+    rw [Fintype.card_fin] at h2
+    omega⟩
+  have hsub : Subsingleton (PiLp 2 fun _ : Fin n => L2F ℝ Ω (formIdx n ((n : ℤ) - 1 + 1 + 1))) :=
+    ⟨fun x y => PiLp.ext fun c => PiLp.ext fun t => isEmptyElim t⟩
+  refine ⟨⟨_, hφmem⟩, Subsingleton.elim _ _, ?_⟩
+  change C * ‖testField hφ‖ < ‖(formRow n hΩ).d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1) ⟨_, hφmem⟩‖
+  rw [LinearPMap.apply_eq_of_eq (formRow_d hΩ _) _ ⟨_, hmax⟩ rfl,
+    ← (B.minimal_le_maximal hΩ).2 (x := ⟨_, hmin⟩) rfl, B.minimal_testField hΩ hφ]
+  exact hlt
+
+/-- **`Sⁿ⁻¹` is not onto between the `L²` domains of the div–div diagram** on every nonempty
+open `Ω ⊆ ℝⁿ`, `n ≥ 1`: some `u ∈ L²(Ω; Λⁿ ⊗ ℝⁿ)` is `S φ = (dxₐ ∧ φ)ₐ` for no
+`φ ∈ HΛⁿ⁻¹(Ω)` (for `n = 3`, in vector proxies, `S² = I` maps `H(div; Ω)` onto a proper subspace
+of `L²(Ω; ℝ³)`; `Feec.Domain.divDivMaximalData_not_surjective`). -/
+theorem divDivFormData_exists_forall_S_ne (hne : Ω.Nonempty) (hn : 0 < n) :
+    ∃ u ∈ ((vecRow n hΩ).d ((n : ℤ) - 1 + 1) ((n : ℤ) - 1 + 1 + 1)).domain,
+      ∀ φ ∈ ((formRow n hΩ).d ((n : ℤ) - 1) ((n : ℤ) - 1 + 1)).domain, dxVecL2 _ φ ≠ u := by
+  have h := (divDivFormData hΩ).exists_forall_S_ne (i := (n : ℤ) - 1)
+    (j := (n : ℤ) - 1 + 1) (k := (n : ℤ) - 1 + 1 + 1) rfl rfl
+    ((divDivFormData_antilipschitz hΩ _ le_rfl).choose_spec.injective)
+    (divDivFormData_exists_lt_norm hΩ hne hn)
+  rw [divDivFormData_S] at h
+  exact h
 
 end Feec.FiniteElement

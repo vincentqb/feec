@@ -42,6 +42,11 @@ on `∂Q`, so `Δₕ Iₕ f = Iₕ Dₕ f` for the difference Laplacian `Dₕ` o
 (`FiniteDifference.abs_iterate_diffLaplacian_le`) bounds the discrete datum of the error of
 `rational` (`norm_fdLaplacian_pow_interp_le`).
 
+**`FiniteDifferenceHeat.sineSolution_compatible`**: the first eigenmode
+`MaxNormHeat.sineSolution` meets these hypotheses for every order `p`: `u(0)` is smooth, odd in
+the faces of `Q` (its own odd `2s`-periodic extension), and
+`∂²_{i₁} ⋯ ∂²_{i_k} u(0) = (-(π/s)²)ᵏ u(0)` (`secondPartials_sineProd`), so `B' = (π/s)^{2p+2}`.
+
 ## References
 
 * [V. Thomée, *Galerkin Finite Element Methods for Parabolic Problems*][Thomee2006], Ch. 15
@@ -54,8 +59,9 @@ Bibliography: [references.bib](../../../docs/references.bib)
 open Set Finset NormedSpace Feec.FiniteElement Feec.TimeStepping
 open Feec.Models.Cube.Geometry (openCube closedCube)
 open Feec.Models.Cube.MaxNormHeat (Nodes Space meshSize interp HeatSolution lumpedLaplacian
-  lumpedLaplacian_apply maxNormHeat)
+  lumpedLaplacian_apply maxNormHeat sineDeriv sineFreq sineSolution)
 open FiniteDifference (diffLaplacian IsOddAbout secondPartials)
+open scoped ContDiff
 
 @[expose] public noncomputable section
 
@@ -261,5 +267,53 @@ theorem rational_compatible (hs : 0 < s) {T : ℝ} (S : HeatSolution b s T) {r :
   have := mul_le_mul_of_nonneg_left hD
     (mul_nonneg (mul_nonneg hK (by positivity : (0 : ℝ) ≤ k * τ)) (by positivity : 0 ≤ τ ^ p))
   nlinarith
+
+/-! ### The first eigenmode is compatible to every order -/
+
+/-- **The words of pure second derivatives of a product of sines**:
+`∂²_{i₁} ⋯ ∂²_{i_k} (c ∏ⱼ sin(a (xⱼ - bⱼ))) = (-a²)ᵏ c ∏ⱼ sin(a (xⱼ - bⱼ))`. -/
+theorem secondPartials_sineProd (b : Fin n → ℝ) (a c : ℝ) (w : List (Fin n)) :
+    secondPartials w (fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) 0 (x j)) =
+      fun x => (-a ^ 2) ^ w.length * c * ∏ j, sineDeriv a (b j) 0 (x j) := by
+  induction w with
+  | nil => simp [secondPartials]
+  | cons i w ih =>
+    change partialDeriv i (partialDeriv i (secondPartials w _)) = _
+    rw [ih, MaxNormHeat.partialDeriv_partialDeriv_sineProd]
+    funext x
+    rw [List.length_cons, pow_succ]
+    ring
+
+/-- **The first eigenmode is compatible to every order**: `u(0) = ∏ᵢ sin(π (xᵢ - bᵢ)/s)` of
+`MaxNormHeat.sineSolution` is smooth on `ℝⁿ`, odd in the faces of `Q` (it is its own odd
+`2s`-periodic extension), and `∂²_{i₁} ⋯ ∂²_{i_k} u(0) = (-(π/s)²)ᵏ u(0)`, so
+`|∂²_{i₁} ⋯ ∂²_{i_k} u(0)| ≤ (π/s)^{2k}`: the hypotheses of `rational_compatible` hold for every
+order `p`, with `ũ = u(0)` and `B' = (π/s)^{2p+2}`. -/
+theorem sineSolution_compatible (b : Fin n → ℝ) (hs : 0 < s) (T : ℝ) :
+    ContDiff ℝ ∞ ((sineSolution b hs T).u 0) ∧
+      IsFaceOdd b s ((sineSolution b hs T).u 0) ∧
+      ∀ (w : List (Fin n)) (x : Fin n → ℝ),
+        |secondPartials w ((sineSolution b hs T).u 0) x| ≤ sineFreq s ^ (2 * w.length) := by
+  have e : (sineSolution b hs T).u 0 = fun x : Fin n → ℝ =>
+      Real.exp (-(n * sineFreq s ^ 2) * 0) * ∏ j, sineDeriv (sineFreq s) (b j) 0 (x j) := rfl
+  refine ⟨?_, fun i => ⟨?_, ?_⟩, fun w x => ?_⟩
+  · rw [e]; simp only [MaxNormHeat.sineDeriv]; fun_prop
+  · rw [e]
+    exact FiniteDifference.isOddAbout_const_mul_prod _ i (b i)
+      (MaxNormHeat.sineDeriv_zero_two_mul_sub _ _) _
+  · rw [e]
+    refine FiniteDifference.isOddAbout_const_mul_prod _ i (b i + s) (fun y => ?_) _
+    simp only [MaxNormHeat.sineDeriv, MaxNormHeat.sineFreq]
+    rw [show Real.pi / s * (2 * (b i + s) - y - b i) = 2 * Real.pi - Real.pi / s * (y - b i) by
+      field_simp; ring, Real.sin_two_pi_sub]
+  · rw [e, secondPartials_sineProd]
+    have ha : 0 ≤ sineFreq s := div_nonneg Real.pi_pos.le hs.le
+    rw [mul_zero, Real.exp_zero, mul_one, abs_mul, abs_pow, abs_neg, abs_pow, abs_of_nonneg ha,
+      ← pow_mul, Finset.abs_prod]
+    calc sineFreq s ^ (2 * w.length) * ∏ j, |sineDeriv (sineFreq s) (b j) 0 (x j)|
+        ≤ sineFreq s ^ (2 * w.length) * 1 := by
+          gcongr
+          exact Finset.prod_le_one₀ (fun _ _ => abs_nonneg _) fun j _ => Real.abs_sin_le_one _
+      _ = sineFreq s ^ (2 * w.length) := mul_one _
 
 end Feec.Models.Cube.FiniteDifferenceHeat

@@ -459,7 +459,9 @@ principle `FiniteDifference.isSubMarkovGenerator_laplacian`; the Freudenthal mes
 (`Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq`), and the compatible-data estimate
 `Feec.Models.Cube.FiniteDifferenceHeat.rational_compatible`, the classical solution as a
 `Feec.Models.Cube.MaxNormHeat.HeatSolution` and its derivatives as partial derivatives
-(`iteratedFDeriv_apply_single_eq_iterate`, `FiniteDifference.iteratedFDeriv_apply_pairs`). -/
+(`iteratedFDeriv_apply_single_eq_iterate`, `FiniteDifference.iteratedFDeriv_apply_pairs`); the
+first eigenmode `Feec.Models.Cube.MaxNormHeat.sineSolution`, compatible to every order by
+`Feec.Models.Cube.FiniteDifferenceHeat.sineSolution_compatible`. -/
 theorem fdHeat :
     (∀ {ι : Type*} [Fintype ι] [DecidableEq ι] (G : Finset (ι → ℤ)) (h : ℝ),
       IsSubMarkovGenerator (fdLaplacian G h)) ∧
@@ -471,7 +473,7 @@ theorem fdHeat :
         (T.points k - T.points j) ⬝ᵥ (T.points k - T.points j) ≤ n * (s / (N + 1 : ℕ)) ^ 2) ∧
       lumpedLaplacian M (fun g : gridNodes n N => gridPoint b (s / (N + 1 : ℕ)) g) =
         fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ∧
-    ∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →
+    (∀ p q : ℝ[X], IsAStable p q → ∀ m : ℕ, HasOrder p q m →
     ∃ K : ℝ, ∀ (n : ℕ) (b : Fin n → ℝ) (s T B B' : ℝ) (u u₁ : ℝ → (Fin n → ℝ) → ℝ)
       (ũ : (Fin n → ℝ) → ℝ), 0 < s →
       (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (u t)) →
@@ -491,12 +493,28 @@ theorem fdHeat :
         ‖gridInterp b (s / (N + 1 : ℕ)) N (u (k * τ)) -
             (rationalApply p q (τ • fdLaplacian (gridNodes n N) (s / (N + 1 : ℕ))) ^ k)
               (gridInterp b (s / (N + 1 : ℕ)) N (u 0))‖ ≤
-          k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m) := by
+          k * τ * (n * B * (s / (N + 1 : ℕ)) ^ 2 / 12 + K * n ^ (m + 1) * B' * τ ^ m)) ∧
+    ∀ (n m : ℕ) (b : Fin n → ℝ) (s T : ℝ), 0 < s →
+      (∀ t ∈ Icc 0 T, ContDiff ℝ 4 (sineMode b s t)) ∧
+      (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Ioo (b i) (b i + s),
+        HasDerivAt (fun t => sineMode b s t x) (-(n * (Real.pi / s) ^ 2) * sineMode b s t x) t ∧
+          -(n * (Real.pi / s) ^ 2) * sineMode b s t x =
+            ∑ i, iteratedFDeriv ℝ 2 (sineMode b s t) x fun _ => Pi.single i 1) ∧
+      (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s),
+        x ∉ univ.pi (fun i => Ioo (b i) (b i + s)) → sineMode b s t x = 0) ∧
+      (∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Icc (b i) (b i + s), ∀ i,
+        |iteratedFDeriv ℝ 4 (sineMode b s t) x fun _ => Pi.single i 1| ≤ (Real.pi / s) ^ 4) ∧
+      ContDiff ℝ (2 * m + 2) (sineMode b s 0) ∧
+      (∀ i x, sineMode b s 0 (Function.update x i (2 * b i - x i)) = -sineMode b s 0 x ∧
+        sineMode b s 0 (Function.update x i (2 * (b i + s) - x i)) = -sineMode b s 0 x) ∧
+      (∀ (l : ℕ → Fin n) x, |iteratedFDeriv ℝ (2 * m + 2) (sineMode b s 0) x
+        fun j => Pi.single (l ((j : ℕ) / 2)) 1| ≤ (Real.pi / s) ^ (2 * m + 2)) ∧
+      sineMode b s 0 (b + (s / 2) • fun _ => 1) = 1 := by
   refine ⟨fun G h => ?_, fun n N b s hs =>
     ⟨SimplicialMesh.ofFeec (Feec.Mesh.freudenthalMesh b s hs (N + 1)),
     Feec.Mesh.freudenthalMesh_domain b s hs (N + 1), ?_, fun g => ⟨?_, ?_⟩,
     fun T hT j k => Feec.FiniteElement.dotProduct_sub_le_freudenthalMesh b hs N hT j k, ?_⟩,
-    fun p q hr m hm => ?_⟩
+    fun p q hr m hm => ?_, fun n m b s T hs => ?_⟩
   · rw [fdLaplacian_eq]
     exact .ofFeec (FiniteDifference.isSubMarkovGenerator_laplacian G h)
   · rw [isNonobtuse_iff, SimplicialMesh.toFeec_ofFeec]
@@ -508,6 +526,25 @@ theorem fdHeat :
     exact Feec.FiniteElement.isTranslationInvariantAt_freudenthalMesh b hs N g.2
   · rw [lumpedLaplacian_eq, SimplicialMesh.toFeec_ofFeec, fdLaplacian_eq]
     exact (Feec.Models.Cube.FiniteDifferenceHeat.fdLaplacian_eq b hs N).symm
+  swap
+  · let S := Feec.Models.Cube.MaxNormHeat.sineSolution b hs T
+    have hc := Feec.Models.Cube.FiniteDifferenceHeat.sineSolution_compatible b hs T
+    refine ⟨fun t ht => S.contDiff t ht, fun t ht x hx => ⟨S.hasDerivAt t ht x hx, ?_⟩,
+      fun t ht x hx hno => S.boundary t ht x hx hno, fun t ht x hx i => ?_,
+      by exact_mod_cast contDiff_infty.1 hc.1 (2 * m + 2),
+      fun i x => ⟨(hc.2.1 i).1 x, (hc.2.1 i).2 x⟩,
+      fun l x => ?_, Feec.Models.Cube.MaxNormHeat.sineSolution_u_zero_center b hs T⟩
+    · change S.u₁ t x = _
+      rw [S.heat t ht x hx, laplacian_apply]
+      exact Finset.sum_congr rfl fun i _ =>
+        (iteratedFDeriv_apply_single_eq_iterate (S.contDiff t ht) i (p := 2) (by norm_num) x).symm
+    · change |iteratedFDeriv ℝ 4 (S.u t) x _| ≤ _
+      rw [iteratedFDeriv_apply_single_eq_iterate (S.contDiff t ht) i (by norm_num) x]
+      exact S.bound₄ t ht x hx i
+    · have h := hc.2.2 (List.ofFn fun i : Fin (m + 1) => l i) x
+      rw [← FiniteDifference.iteratedFDeriv_apply_pairs (m := m + 1)
+        (by exact_mod_cast contDiff_infty.1 hc.1 (2 * (m + 1))) l x, List.length_ofFn] at h
+      exact h
   refine ⟨hr.scheme.sharpConst m, ?_⟩
   intro n b s T B B' u u₁ ũ hs hu hh hbd hB hũ hũu hodd hB' N τ hτ k hk
   have hheat : ∀ t ∈ Icc 0 T, ∀ x ∈ univ.pi fun i => Ioo (b i) (b i + s),

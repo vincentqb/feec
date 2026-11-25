@@ -181,6 +181,21 @@ theorem IsOddAbout.eq_zero {i : Fin n} {c : ℝ} {f : (Fin n → ℝ) → ℝ} (
   rw [hx, show 2 * c - c = c by ring, Function.update_eq_self_iff.2 hx.symm] at h
   linarith
 
+/-- A product `κ ∏ⱼ Gⱼ(xⱼ)` whose `i`-th factor is odd about `c` is odd about the hyperplane
+`xᵢ = c`. -/
+theorem isOddAbout_const_mul_prod (G : Fin n → ℝ → ℝ) (i : Fin n) (c : ℝ)
+    (hG : ∀ y, G i (2 * c - y) = -G i y) (κ : ℝ) :
+    IsOddAbout i c fun x => κ * ∏ j, G j (x j) := by
+  intro x
+  simp only
+  rw [← Finset.mul_prod_erase _ _ (Finset.mem_univ i),
+    ← Finset.mul_prod_erase _ _ (Finset.mem_univ i), Function.update_self, hG]
+  have : ∏ j ∈ univ.erase i, G j (Function.update x i (2 * c - x i) j) =
+      ∏ j ∈ univ.erase i, G j (x j) :=
+    Finset.prod_congr rfl fun j hj => by rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
+  rw [this]
+  ring
+
 private theorem update_reflect_add (i l : Fin n) (c t : ℝ) (x : Fin n → ℝ) :
     Function.update x i (2 * c - x i) + t • Pi.single l 1 =
       Function.update (x + (if l = i then -t else t) • Pi.single l 1) i

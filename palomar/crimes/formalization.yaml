@@ -224,7 +224,17 @@ sources:
     note: "The abstract setting of Hilbert complexes of closed densely defined operators."
     author_endorsement: "not-contacted"
 
-related_formalizations: []
+related_formalizations:
+  - id: "doi:10.1145/3018610.3018625"
+    relationship: "independent"
+    note: >-
+      S. Boldo, F. Clément, F. Faissole, V. Martin, M. Mayero, A Coq formal proof of the
+      Lax-Milgram theorem (CPP 2017): in Coq, the Lax-Milgram theorem and Céa's lemma, the
+      quasi-optimality of conforming Galerkin approximation on closed subspaces; variational
+      crimes concern discrete spaces that are not subspaces, where Strang-type lemmas replace
+      Céa's. A search of OpenAlex, arXiv, HAL, the Isabelle AFP and Mathlib on 2026-11-25
+      found no formalization of Strang-type lemmas, nonconforming Galerkin methods
+      (variational crimes), mixed methods or mass lumping.
 
 status:
   scope: >-

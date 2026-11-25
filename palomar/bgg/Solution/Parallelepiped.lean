@@ -181,6 +181,23 @@ theorem sup_range_eq_top_of_exists (D : Feec.BGG.HilbertData ℝ (ComplexShape.u
   rw [he]
   exact hmem
 
+omit [∀ k, CompleteSpace (E k)] [∀ k, CompleteSpace (Et k)] in
+/-- **`sᵏ` is not onto where `Sᵏ` is not onto between the domains**: `s` acts as `S` on the first
+components (`BGG.DomainDiagram.fst_s`), and a point of a graph is determined by its first
+component. -/
+theorem BGG.DomainDiagram.not_surjective_s {T : ∀ k, E k →ₗ.[ℝ] E (k + 1)}
+    {Tt : ∀ k, Et k →ₗ.[ℝ] Et (k + 1)} {S : ∀ k, Et k →L[ℝ] E (k + 1)}
+    (D : BGG.DomainDiagram T Tt S) {k : ℤ}
+    (h : ∃ u ∈ (T (k + 1)).domain, ∀ φ ∈ (Tt k).domain, S k φ ≠ u) :
+    ¬ Function.Surjective (D.s k) := fun hs => by
+  obtain ⟨u, hu, hne⟩ := h
+  obtain ⟨x, hx⟩ := hs (graphEquiv (T (k + 1)) ⟨u, hu⟩)
+  obtain ⟨y, rfl⟩ := (graphEquiv (Tt k)).surjective x
+  refine hne y y.2 ?_
+  have e := D.fst_s k (graphEquiv (Tt k) y)
+  rw [hx, graphEquiv_fst, graphEquiv_fst] at e
+  exact e.symm
+
 /-- `D(d i (c.next i)) ≃ Γ(d i (i + 1))`. -/
 def graphDomainEquiv (H : Feec.HilbertComplex ℝ (ComplexShape.up ℤ) E) (i : ℤ) :
     (H.d i ((ComplexShape.up ℤ).next i)).domain ≃ₗ[ℝ] graph2 (H.d i (i + 1)) :=

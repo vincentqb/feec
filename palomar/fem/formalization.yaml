@@ -174,7 +174,26 @@ sources:
       not attributed to the thesis. The formalization is by the thesis author.
     author_endorsement: "participated"
 
-related_formalizations: []
+related_formalizations:
+  - id: "doi:10.48550/arXiv.2604.20345"
+    relationship: "independent"
+    note: >-
+      S. Boldo, F. Clément, V. Martin, M. Mayero, H. Mouhcine, A Rocq formalization of
+      simplicial Lagrange finite elements (arXiv 2604.20345, 2026; H. Mouhcine's thesis,
+      Université Paris-Saclay 2024, doi:10.70675/bef849ddzafbcz410dzb0c1zda3cec325e53): in
+      Rocq (Coq), finite elements as cells with polynomial spaces and degrees of freedom,
+      instantiated by the simplicial Lagrange elements of every dimension and degree,
+      unisolvence included; local scalar elements, without spaces of forms or projections. A
+      search of OpenAlex, arXiv, HAL, the Isabelle AFP and Mathlib on 2026-11-25 found no
+      formalization of Whitney forms, of the P_r Lambda or P_r^- Lambda spaces, of discrete
+      exterior calculus or of bounded commuting projections.
+  - id: "doi:10.48550/arXiv.2609.32561"
+    relationship: "other"
+    note: >-
+      A. J. Soto Franco, K. Marshall-Stevens, Formalising linear elliptic PDE theory in Lean 4
+      (arXiv 2609.32561, 2026): on Mathlib, Sobolev spaces, the Poincaré inequality,
+      Rellich-Kondrachov compactness and the Dirichlet problem for divergence-form elliptic
+      operators; scalar Sobolev theory, without H(curl), H(div) or finite element spaces.
 
 status:
   scope: >-

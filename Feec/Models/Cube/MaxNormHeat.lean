@@ -609,6 +609,24 @@ theorem prod_update_const_mul (G : Fin n → ℝ → ℝ) (i : Fin n) (κ : ℝ)
   congr 2
   exact Finset.prod_congr rfl fun j hj => by rw [Function.update_of_ne (Finset.ne_of_mem_erase hj)]
 
+/-- `∂ᵢ² (c ∏ⱼ sin(a (xⱼ - bⱼ))) = -a² c ∏ⱼ sin(a (xⱼ - bⱼ))`. -/
+theorem partialDeriv_partialDeriv_sineProd (b : Fin n → ℝ) (a c : ℝ) (i : Fin n) :
+    partialDeriv i (partialDeriv i fun x : Fin n → ℝ => c * ∏ j, sineDeriv a (b j) 0 (x j)) =
+      fun x => -a ^ 2 * c * ∏ j, sineDeriv a (b j) 0 (x j) := by
+  funext x
+  have := congrFun (iterate_partialDeriv_sine b a c i 2 (by omega)) x
+  simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
+  rw [this, sineFactors, show sineDeriv a (b i) 2 =
+    fun y => -a ^ 2 * sineDeriv a (b i) 0 y from rfl,
+    prod_update_const_mul (fun j => sineDeriv a (b j) 0)]
+  ring
+
+/-- The factor `y ↦ sin(a (y - c))` is odd about `c`: `sin(a (2c - y - c)) = -sin(a (y - c))`. -/
+theorem sineDeriv_zero_two_mul_sub (a c y : ℝ) :
+    sineDeriv a c 0 (2 * c - y) = -sineDeriv a c 0 y := by
+  simp only [sineDeriv]
+  rw [show a * (2 * c - y - c) = -(a * (y - c)) by ring, Real.sin_neg]
+
 /-- The eigenmode `e^{-λt} ∏ᵢ sin(π(xᵢ - cᵢ)/s)` has time derivative `-λ` times itself (any
 centre `c`, any `x`). -/
 theorem hasDerivAt_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
@@ -630,15 +648,8 @@ theorem laplacian_sineMode (c : Fin n → ℝ) (t : ℝ) (x : Fin n → ℝ) :
   have e : ∀ i, partialDeriv i (partialDeriv i (fun x : Fin n → ℝ =>
       Real.exp (-(n * sineFreq s ^ 2) * t) * ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j))) x =
       -sineFreq s ^ 2 * (Real.exp (-(n * sineFreq s ^ 2) * t) *
-        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) :=
-    fun i => by
-      have := congrFun (iterate_partialDeriv_sine c (sineFreq s)
-        (Real.exp (-(n * sineFreq s ^ 2) * t)) i 2 (by omega)) x
-      simp only [Function.iterate_succ, Function.iterate_zero, Function.comp, id] at this
-      rw [this, sineFactors, show sineDeriv (sineFreq s) (c i) 2 =
-        fun y => -sineFreq s ^ 2 * sineDeriv (sineFreq s) (c i) 0 y from rfl,
-        prod_update_const_mul (fun j => sineDeriv (sineFreq s) (c j) 0)]
-      ring
+        ∏ j, sineDeriv (sineFreq s) (c j) 0 (x j)) := fun i =>
+    (congrFun (partialDeriv_partialDeriv_sineProd c _ _ i) x).trans (by ring)
   simp only [laplacian, e, sum_const, card_univ, Fintype.card_fin, nsmul_eq_mul]
   ring
 

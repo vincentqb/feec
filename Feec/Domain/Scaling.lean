@@ -26,7 +26,8 @@ which the derivative vanishes, and these leave its support).
 
 * `fderiv_apply_ne_zero`, `IsTest.fderiv_apply_ne_zero`, `exists_isTest_univ_ne_zero`,
   `norm_sq_testField`, `integral_comp_aff`.
-* **`ConstCoeffOp.exists_lt_norm_testField_comp_aff`**.
+* **`ConstCoeffOp.exists_lt_norm_testField_comp_aff`**, and for finite families of fields with a
+  common rescaling `ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff`.
 
 ## References
 
@@ -121,26 +122,34 @@ theorem integral_comp_aff {a : ℝ} (ha : a ≠ 0) (b : E) (g : E → ℝ) :
   rw [integral_smul_measure, ENNReal.toReal_ofReal (jac_pos ha).le, smul_eq_mul] at h
   rw [← h, inv_mul_cancel_left₀ (jac_pos ha).ne']
 
-/-- **Homogeneous operators of positive order are unbounded on rescaled test fields.** If `B` is
-homogeneous of order `r > 0` and `B ψ ≠ 0` for a smooth compactly supported field `ψ`, then on
-every nonempty open `Ω`, for every `C`, a rescaling `ψ ∘ aff a b` of `ψ` is a test
-field on `Ω` with `C ‖ψ ∘ aff a b‖ < ‖B (ψ ∘ aff a b)‖` in `L²(Ω)`. -/
-theorem ConstCoeffOp.exists_lt_norm_testField_comp_aff (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
-    {κ : Type*} [Fintype κ] {B : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (hB : B.IsHomogeneous r)
-    (hr : 0 < r) {ψ : ι → E → 𝕜} (hψ : IsTestField univ ψ) (hBψ : B.apply ψ ≠ 0) (C : ℝ) :
-    ∃ (a : ℝ) (b : E) (hφ : IsTestField Ω fun i x => ψ i (aff a b x)),
-      C * ‖testField hφ‖ < ‖testField (B.isTestField_apply hφ)‖ := by
+/-- **Homogeneous operators of positive order are unbounded on rescaled families of test
+fields.** If `B` is homogeneous of order `r > 0` and `B ψ_c ≠ 0` for some member of a finite
+family `ψ` of smooth compactly supported fields, then on every nonempty open `Ω`, for every `C`,
+a common rescaling `ψ_c ∘ aff a b` of the family consists of test fields on `Ω` with
+`C ‖(ψ_c ∘ aff a b)_c‖ < ‖(B (ψ_c ∘ aff a b))_c‖` in `L²(Ω)ᵐ` (the `ℓ²` sum over the family):
+`‖ψ_c ∘ aff a b‖²` scales as `a^{-n}` and `‖B (ψ_c ∘ aff a b)‖²` as `a^{2r - n}`. -/
+theorem ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
+    {κ m : Type*} [Fintype κ] [Fintype m] {B : ConstCoeffOp E 𝕜 ι κ} {r : ℕ}
+    (hB : B.IsHomogeneous r) (hr : 0 < r) {ψ : m → ι → E → 𝕜} (hψ : ∀ c, IsTestField univ (ψ c))
+    (hBψ : ∃ c, B.apply (ψ c) ≠ 0) (C : ℝ) :
+    ∃ (a : ℝ) (b : E) (hφ : ∀ c, IsTestField Ω fun i x => ψ c i (aff a b x)),
+      C * ‖WithLp.toLp 2 fun c => testField (hφ c)‖ <
+        ‖WithLp.toLp 2 fun c => testField (B.isTestField_apply (hφ c))‖ := by
   obtain ⟨x₀, hx₀⟩ := hne
   obtain ⟨ρ, hρ, hball⟩ := Metric.isOpen_iff.1 hΩ x₀ hx₀
-  obtain ⟨R, hR⟩ := (isCompact_iUnion fun i => (hψ i).hasCompactSupport.isCompact).isBounded
-    |>.subset_closedBall 0
-  set S₀ := ∑ i, ∫ y, ‖ψ i y‖ ^ 2
-  set S₁ := ∑ j, ∫ y, ‖B.apply ψ j y‖ ^ 2
-  have hS₀ : 0 ≤ S₀ := Finset.sum_nonneg fun i _ => integral_nonneg fun _ => by positivity
+  obtain ⟨R, hR⟩ := (isCompact_iUnion fun p : m × ι =>
+    (hψ p.1 p.2).hasCompactSupport.isCompact).isBounded.subset_closedBall 0
+  set S₀ := ∑ c, ∑ i, ∫ y, ‖ψ c i y‖ ^ 2
+  set S₁ := ∑ c, ∑ j, ∫ y, ‖B.apply (ψ c) j y‖ ^ 2
+  have hS₀ : 0 ≤ S₀ := Finset.sum_nonneg fun c _ =>
+    Finset.sum_nonneg fun i _ => integral_nonneg fun _ => by positivity
   have hS₁ : 0 < S₁ := by
-    obtain ⟨j, hj⟩ := Function.ne_iff.1 hBψ
+    obtain ⟨c, hc⟩ := hBψ
+    obtain ⟨j, hj⟩ := Function.ne_iff.1 hc
     obtain ⟨y, hy⟩ := Function.ne_iff.1 hj
-    have hBj := B.isTestField_apply hψ j
+    have hBj := B.isTestField_apply (hψ c) j
+    refine Finset.sum_pos' (fun c _ => Finset.sum_nonneg fun j _ =>
+      integral_nonneg fun _ => by positivity) ⟨c, Finset.mem_univ _, ?_⟩
     refine Finset.sum_pos' (fun j _ => integral_nonneg fun _ => by positivity)
       ⟨j, Finset.mem_univ _, ?_⟩
     refine (hBj.continuous.norm.pow 2).integral_pos_of_hasCompactSupport_nonneg_nonzero
@@ -165,21 +174,27 @@ theorem ConstCoeffOp.exists_lt_norm_testField_comp_aff (hΩ : IsOpen Ω) (hne : 
     rw [norm_smul, Real.norm_eq_abs, abs_of_pos ha] at hx'
     rw [div_lt_iff₀ hρ] at haR
     nlinarith [norm_nonneg (x - x₀)]
-  have hφ : IsTestField Ω fun i x => ψ i (aff a b x) := fun i =>
-    (IsTest.comp_aff' ha.ne' b rfl ⟨(hψ i).contDiff, (hψ i).hasCompactSupport,
-      (subset_iUnion (fun i => tsupport (ψ i)) i).trans hR⟩).mono hsub
+  have hφ : ∀ c, IsTestField Ω fun i x => ψ c i (aff a b x) := fun c i =>
+    (IsTest.comp_aff' ha.ne' b rfl ⟨(hψ c i).contDiff, (hψ c i).hasCompactSupport,
+      (subset_iUnion (fun p : m × ι => tsupport (ψ p.1 p.2)) (c, i)).trans hR⟩).mono hsub
   refine ⟨a, b, hφ, ?_⟩
   have hj : 0 < jac (E := E) a := jac_pos ha.ne'
-  have hu : ‖testField hφ‖ ^ 2 = (jac (E := E) a)⁻¹ * S₀ := by
-    rw [norm_sq_testField, Finset.mul_sum]
-    exact Finset.sum_congr rfl fun i _ => integral_comp_aff ha.ne' b fun y => ‖ψ i y‖ ^ 2
-  have hv : ‖testField (B.isTestField_apply hφ)‖ ^ 2 = a ^ (2 * r) * ((jac (E := E) a)⁻¹ * S₁) := by
-    rw [norm_sq_testField, ConstCoeffOp.apply_comp_aff hB (fun i => (hψ i).contDiff) a b,
-      Finset.mul_sum, Finset.mul_sum]
+  have hu : ‖WithLp.toLp 2 fun c => testField (hφ c)‖ ^ 2 = (jac (E := E) a)⁻¹ * S₀ := by
+    rw [PiLp.norm_sq_eq_of_L2, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun c _ => ?_
+    rw [PiLp.toLp_apply, norm_sq_testField, Finset.mul_sum]
+    exact Finset.sum_congr rfl fun i _ => integral_comp_aff ha.ne' b fun y => ‖ψ c i y‖ ^ 2
+  have hv : ‖WithLp.toLp 2 fun c => testField (B.isTestField_apply (hφ c))‖ ^ 2 =
+      a ^ (2 * r) * ((jac (E := E) a)⁻¹ * S₁) := by
+    rw [PiLp.norm_sq_eq_of_L2, Finset.mul_sum, Finset.mul_sum]
+    refine Finset.sum_congr rfl fun c _ => ?_
+    rw [PiLp.toLp_apply, norm_sq_testField,
+      ConstCoeffOp.apply_comp_aff hB (fun i => (hψ c i).contDiff) a b, Finset.mul_sum,
+      Finset.mul_sum]
     refine Finset.sum_congr rfl fun j _ => ?_
     simp_rw [norm_mul, RCLike.norm_ofReal, mul_pow, abs_pow, abs_of_pos ha, ← pow_mul,
       mul_comm r 2]
-    rw [integral_const_mul, integral_comp_aff ha.ne' b fun y => ‖B.apply ψ j y‖ ^ 2]
+    rw [integral_const_mul, integral_comp_aff ha.ne' b fun y => ‖B.apply (ψ c) j y‖ ^ 2]
   have hC : C ≤ C' := le_max_left _ _
   have hC0 : 0 ≤ C' := le_max_right _ _
   refine (mul_le_mul_of_nonneg_right hC (norm_nonneg _)).trans_lt ?_
@@ -191,6 +206,21 @@ theorem ConstCoeffOp.exists_lt_norm_testField_comp_aff (hΩ : IsOpen Ω) (hne : 
     nlinarith
   have hjinv : 0 < (jac (E := E) a)⁻¹ := inv_pos.2 hj
   nlinarith
+
+/-- **Homogeneous operators of positive order are unbounded on rescaled test fields.** If `B` is
+homogeneous of order `r > 0` and `B ψ ≠ 0` for a smooth compactly supported field `ψ`, then on
+every nonempty open `Ω`, for every `C`, a rescaling `ψ ∘ aff a b` of `ψ` is a test
+field on `Ω` with `C ‖ψ ∘ aff a b‖ < ‖B (ψ ∘ aff a b)‖` in `L²(Ω)` (the family
+`exists_lt_norm_toLp_testField_comp_aff` of one field). -/
+theorem ConstCoeffOp.exists_lt_norm_testField_comp_aff (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
+    {κ : Type*} [Fintype κ] {B : ConstCoeffOp E 𝕜 ι κ} {r : ℕ} (hB : B.IsHomogeneous r)
+    (hr : 0 < r) {ψ : ι → E → 𝕜} (hψ : IsTestField univ ψ) (hBψ : B.apply ψ ≠ 0) (C : ℝ) :
+    ∃ (a : ℝ) (b : E) (hφ : IsTestField Ω fun i x => ψ i (aff a b x)),
+      C * ‖testField hφ‖ < ‖testField (B.isTestField_apply hφ)‖ := by
+  obtain ⟨a, b, hφ, h⟩ := ConstCoeffOp.exists_lt_norm_toLp_testField_comp_aff hΩ hne hB hr
+    (m := Unit) (fun _ => hψ) ⟨(), hBψ⟩ C
+  refine ⟨a, b, hφ (), ?_⟩
+  simpa [PiLp.norm_eq_of_L2, Real.sqrt_sq (norm_nonneg _)] using h
 
 end Norm
 

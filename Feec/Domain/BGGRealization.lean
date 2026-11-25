@@ -50,7 +50,11 @@ proper subspace of `H(div; Ω; 𝕄)`, and `S² = I` maps `H(div; Ω)` onto a pr
 a left inverse, `Aᵏ` and `Aᵏ⁺¹` are homogeneous, `Aᵏ` of positive order, and a smooth compactly
 supported `ψ` has `Aᵏ⁺¹ Sᵏ ψ = 0 ≠ Aᵏ ψ` (`ψ = ∇χ`, `-mskw ∇χ`, `χ e₀`), then `Sᵏ` onto would
 give `‖Aᵏ φ‖ ≤ C (‖φ‖ + ‖Aᵏ⁺¹ Sᵏ φ‖)` on test fields (open mapping), which the rescalings of `ψ`
-violate (`Feec.Domain.ConstCoeffOp.exists_lt_norm_testField_comp_aff`). Hence `InjSurjWith`
+violate (`Feec.Domain.ConstCoeffOp.exists_lt_norm_testField_comp_aff`). In differential forms
+the same holds on every nonempty open `Ω ⊆ ℝⁿ`, `n ≥ 1` (`ℝ³` for the elasticity diagram)
+(`Feec.FiniteElement.hessianFormData_exists_forall_S_ne`,
+`Feec.FiniteElement.elasticityFormData_exists_forall_S_ne`,
+`Feec.FiniteElement.divDivFormData_exists_forall_S_ne`). Hence `InjSurjWith`
 fails from every `J ≤ 0`, `1`, `2` (`hessianMaximalData_not_injSurjWith`,
 `elasticityMaximalData_not_injSurjWith`, `divDivMaximalData_not_injSurjWith`), and the
 explicit-map fields of the verdicts below hold vacuously. The explicit map applies
@@ -289,26 +293,18 @@ theorem maximalData_bggVerdict [∀ k, DecidableEq (B.bot.ι k)] (hΩ : IsOpen �
 /-- **`Sᵏ` is not onto between the domains** of the maximal realizations, on every nonempty open
 `Ω`, when `Sᵏ = M k` has a left inverse, `Aᵏ` (bottom row) and `Aᵏ⁺¹` (top row) are homogeneous,
 `Aᵏ` of positive order, and some smooth compactly supported field `ψ` has `Aᵏ⁺¹ Sᵏ ψ = 0` but
-`Aᵏ ψ ≠ 0`. Otherwise `Sᵏ` would be an isomorphism of the domains (open mapping), so
-`‖Aᵏ φ‖ ≤ C (‖φ‖ + ‖Aᵏ⁺¹ Sᵏ φ‖)` on test fields, which the rescalings of `ψ` violate
-(`ConstCoeffOp.exists_lt_norm_testField_comp_aff`). -/
+`Aᵏ ψ ≠ 0`: the rescalings `φ` of `ψ` have `Aᵏ⁺¹ Sᵏ φ = 0` and unbounded `‖Aᵏ φ‖ / ‖φ‖`
+(`ConstCoeffOp.exists_lt_norm_testField_comp_aff`), which an onto `Sᵏ` forbids
+(`Feec.BGG.HilbertData.not_surjective_domainS`, the open mapping theorem). -/
 theorem not_surjective_maximalData_domainS (hΩ : IsOpen Ω) (hne : Ω.Nonempty) {k : ℤ}
     [DecidableEq (B.bot.ι k)] {N : Matrix (B.bot.ι k) (B.top.ι (k + 1)) 𝕜} (hN : N * M k = 1)
     {a r : ℕ} (htop : (B.top.A (k + 1)).IsHomogeneous a) (hbot : (B.bot.A k).IsHomogeneous r)
     (hr : 0 < r) {ψ : B.bot.ι k → E → 𝕜} (hψ : IsTestField Set.univ ψ)
     (hSψ : (B.top.A (k + 1)).apply ((B.S k).apply ψ) = 0) (hdψ : (B.bot.A k).apply ψ ≠ 0) :
     ¬ Function.Surjective ((B.maximalData M hM hΩ).domainData.S k (k + 1)) := by
-  intro hs
-  have hinj : Function.Injective ((B.maximalData M hM hΩ).domainS k (k + 1)) :=
-    (B.maximalData M hM hΩ).injective_domainS (by
-      rw [maximalData_S]; exact (L2F.antilipschitz_ofMatrixCLM hN).injective)
-  obtain ⟨K, hK⟩ :=
-    ((B.maximalData M hM hΩ).domainS k (k + 1)).antilipschitz_of_injective_of_isClosed_range
-      hinj (by
-        rw [Function.Surjective.range_eq (f := (B.maximalData M hM hΩ).domainS k (k + 1)) hs]
-        exact isClosed_univ)
-  obtain ⟨α, β, hφ, hlt⟩ := ConstCoeffOp.exists_lt_norm_testField_comp_aff hΩ hne hbot hr hψ hdψ
-    (K * ‖(L2F.ofMatrixCLM (M k) : L2F 𝕜 Ω (B.bot.ι k) →L[𝕜] L2F 𝕜 Ω (B.top.ι (k + 1)))‖)
+  refine (B.maximalData M hM hΩ).not_surjective_domainS (k := k + 1 + 1) rfl rfl (by
+    rw [maximalData_S]; exact (L2F.antilipschitz_ofMatrixCLM hN).injective) fun C => ?_
+  obtain ⟨α, β, hφ, hlt⟩ := ConstCoeffOp.exists_lt_norm_testField_comp_aff hΩ hne hbot hr hψ hdψ C
   have hMφ := (ConstCoeffOp.ofMatrix (M k)).isTestField_apply hφ
   -- `Aᵏ⁺¹ Sᵏ φ = 0` for the rescaling `φ` of `ψ`
   have h0 : (B.top.A (k + 1)).apply ((ConstCoeffOp.ofMatrix (M k)).apply
@@ -320,50 +316,26 @@ theorem not_surjective_maximalData_domainS (hΩ : IsOpen Ω) (hne : Ω.Nonempty)
       (fun i => ((ConstCoeffOp.ofMatrix (M k)).isTestField_apply hψ i).contDiff) α β, ← hM, hSψ]
     funext j x
     simp
-  -- `φ` in the domain of `Aᵏ`, and `Aᵏ⁺¹ (M φ) = 0` in `L²`
   have hmin := (B.bot.A k).testField_mem_minimal_domain hΩ hφ
   have hmax := ((B.bot.A k).minimal_le_maximal hΩ).1 hmin
-  have hmem : testField hφ ∈
-      ((B.bot.maximalComplex hΩ).d k ((ComplexShape.up ℤ).next k)).domain := by
-    rw [(ComplexShape.up ℤ).next_eq' rfl, ConstCoeffComplex.maximalComplex_d]; exact hmax
-  set v := ((B.bot.maximalComplex hΩ).d k ((ComplexShape.up ℤ).next k)).toGraphSpace ⟨_, hmem⟩
-  have hdv : ‖testField ((B.bot.A k).isTestField_apply hφ)‖ ≤ ‖v‖ := by
-    have e : (B.bot.maximalComplex hΩ).d k (k + 1)
-        ((B.bot.maximalComplex hΩ).domainCoord k (k + 1) v) =
-          testField ((B.bot.A k).isTestField_apply hφ) := by
-      rw [LinearPMap.apply_eq_of_eq (B.bot.maximalComplex_d hΩ k) _ ⟨_, hmax⟩ rfl,
-        ← ((B.bot.A k).minimal_le_maximal hΩ).2 (x := ⟨_, hmin⟩) rfl,
-        (B.bot.A k).minimal_testField hΩ hφ]
-    rw [← e]
-    exact HilbertComplex.norm_d_domainCoord_le _ k (k + 1) v
-  set w := (B.maximalData M hM hΩ).domainS k (k + 1) v
-  have hιw : (B.top.maximalComplex hΩ).domainIncl (k + 1) w = testField hMφ := by
-    change (B.maximalData M hM hΩ).S k (k + 1) (testField hφ) = _
+  have hmem : testField hφ ∈ ((B.maximalData M hM hΩ).Ht.d k (k + 1)).domain := by
+    change testField hφ ∈ ((B.bot.maximalComplex hΩ).d k (k + 1)).domain
+    rw [ConstCoeffComplex.maximalComplex_d]; exact hmax
+  have hminM := (B.top.A (k + 1)).testField_mem_minimal_domain hΩ hMφ
+  have hmaxM := ((B.top.A (k + 1)).minimal_le_maximal hΩ).1 hminM
+  have hιw : (B.maximalData M hM hΩ).S k (k + 1) (testField hφ) = testField hMφ := by
     rw [maximalData_S, L2F.ofMatrixCLM_testField]
-  have hw : ‖w‖ ≤ ‖(L2F.ofMatrixCLM (M k) : L2F 𝕜 Ω (B.bot.ι k) →L[𝕜] L2F 𝕜 Ω _)‖ *
-      ‖testField hφ‖ := by
-    have hminM := (B.top.A (k + 1)).testField_mem_minimal_domain hΩ hMφ
-    have hmaxM := ((B.top.A (k + 1)).minimal_le_maximal hΩ).1 hminM
-    have hd0 : (B.top.maximalComplex hΩ).d (k + 1) (k + 1 + 1)
-        ((B.top.maximalComplex hΩ).domainCoord (k + 1) (k + 1 + 1) w) = 0 := by
-      rw [LinearPMap.apply_eq_of_eq (B.top.maximalComplex_d hΩ (k + 1)) _ ⟨_, hmaxM⟩ hιw,
-        ← ((B.top.A (k + 1)).minimal_le_maximal hΩ).2 (x := ⟨_, hminM⟩) rfl,
-        (B.top.A (k + 1)).minimal_testField hΩ hMφ, testField_congr _ IsTestField.zero h0,
-        testField_zero]
-    have hsq : ∀ j, (ComplexShape.up ℤ).Rel (k + 1) j → ‖w‖ ^ 2 =
-        ‖(B.top.maximalComplex hΩ).domainIncl (k + 1) w‖ ^ 2 + ‖(B.top.maximalComplex hΩ).d
-          (k + 1) j ((B.top.maximalComplex hΩ).domainCoord (k + 1) j w)‖ ^ 2 := fun j hj => by
-      obtain rfl := (ComplexShape.up ℤ).next_eq' hj
-      exact HilbertComplex.norm_sq_domainSpace _ _ w
-    have hsq := hsq (k + 1 + 1) rfl
-    rw [hd0, norm_zero, zero_pow two_ne_zero, add_zero, hιw] at hsq
-    rw [(sq_eq_sq₀ (norm_nonneg _) (norm_nonneg _)).1 hsq, ← L2F.ofMatrixCLM_testField]
-    exact ContinuousLinearMap.le_opNorm _ _
-  have hvw : ‖v‖ ≤ K * ‖w‖ := ContinuousLinearMap.bound_of_antilipschitz _ hK v
-  have hK0 : (0 : ℝ) ≤ K := K.2
-  have := hdv.trans (hvw.trans (mul_le_mul_of_nonneg_left hw hK0))
-  rw [← mul_assoc] at this
-  exact absurd hlt (not_lt.2 this)
+  refine ⟨⟨_, hmem⟩, ?_, ?_⟩
+  · change (B.top.maximalComplex hΩ).d (k + 1) (k + 1 + 1) ⟨_, _⟩ = 0
+    rw [LinearPMap.apply_eq_of_eq (B.top.maximalComplex_d hΩ (k + 1)) _ ⟨_, hmaxM⟩ hιw,
+      ← ((B.top.A (k + 1)).minimal_le_maximal hΩ).2 (x := ⟨_, hminM⟩) rfl,
+      (B.top.A (k + 1)).minimal_testField hΩ hMφ, testField_congr _ IsTestField.zero h0,
+      testField_zero]
+  · change C * ‖testField hφ‖ < ‖(B.bot.maximalComplex hΩ).d k (k + 1) ⟨_, hmem⟩‖
+    rw [LinearPMap.apply_eq_of_eq (B.bot.maximalComplex_d hΩ k) _ ⟨_, hmax⟩ rfl,
+      ← ((B.bot.A k).minimal_le_maximal hΩ).2 (x := ⟨_, hmin⟩) rfl,
+      (B.bot.A k).minimal_testField hΩ hφ]
+    exact hlt
 
 /-- **The explicit-map hypothesis fails between the `L²` domains**: under the hypotheses of
 `not_surjective_maximalData_domainS`, no right inverses `t` of the connecting maps from any

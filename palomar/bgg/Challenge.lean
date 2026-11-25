@@ -59,9 +59,10 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on pa
   exterior derivative `dMax` on `L²(Ω; Λ)`, its copy on vectors of forms `L²(Ω; Λ ⊗ ℝⁿ)`, and the
   connecting maps `wedge`, `crossWedge`, `dxVec` built from `dxₐ ∧ ·`), the domain complexes form
   stacked diagrams of bounded Hilbert rows (`BGG.DomainDiagram`) satisfying the hypotheses of the
-  main clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1`, so the three BGG complexes, with the
-  quotient norm, have bounded differentials with closed range in every degree; their cohomology
-  is finite-dimensional, of dimension `n + 1`, `6`, `n + 1` in degree `0` and `0` in the other
+  main clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1` (but not (23): `sᴶ`, `Sᴶ` between the
+  domains, is not onto, for the Hessian diagram if `n ≥ 1`), so the three BGG complexes, with the
+  quotient norm, have bounded differentials with closed range in every degree; their cohomology is
+  finite-dimensional, of dimension `n + 1`, `6`, `n + 1` in degree `0` and `0` in the other
   degrees (`BGG.DomainDiagram.Verdict`), the sum of the dimensions for the rows; and their
   cohomology in degree `0` is, through `[(σ, φ)] ↦ u` (`σ = (u, du)`), the space of the affine
   functions, of the rigid motions, resp. of the fields `a + c x` on `Ω`
@@ -73,15 +74,12 @@ row in degree `i + 1` and `Sⁱ = id ⊗ sⁱ`, it is a condition on finite-dime
 by their examples. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for
 `i < J`, and onto modulo `d`, `R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`, for `i ≥ J`. The diagrams of
 `FEEC.bggParallelepiped`, whose rows are `L²` de Rham complexes of the same regularity, need the
-weaker hypothesis: for the Hessian, elasticity and div–div diagrams of the `L²` de Rham complexes
-on any nonempty open `Ω ⊆ ℝ³`, `Sᴶ` is not onto between the `L²` domains
-(`S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)`, `S¹ = T - tr : H(curl; Ω; 𝕄) → H(div; Ω; 𝕄)`,
-`S² = I : H(div; Ω) → L²(Ω; 𝕜³)`; in Feec `Feec.Domain.hessianMaximalData_not_surjective`,
-`elasticityMaximalData_not_surjective` and `divDivMaximalData_not_surjective`, instances of
-`Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS`), while on every parallelepiped
-they are onto modulo `d`, by the regular decompositions of the rows (a clause of
-`FEEC.bggParallelepiped`). The clauses with the explicit map (30) assume (23) and right inverses
-of `Sⁱ`, so they do not apply between those `L²` domains (they do on smooth fields).
+weaker hypothesis: there `Sᴶ` is not onto between the `L²` domains (for the Hessian diagram if
+`n ≥ 1`; for `n = 3`, in vector proxies, `S⁰ = I : H¹(Ω; ℝ³) → H(curl; Ω)`,
+`S¹u = uᵀ - tr(u) I : H(curl; Ω; 𝕄) → H(div; Ω; 𝕄)`, `S² = I : H(div; Ω) → L²(Ω; ℝ³)`), while it
+is onto modulo `d`, by the regular decompositions of the rows (both are clauses of
+`FEEC.bggParallelepiped`). The clauses with the explicit map (30) assume (23) and right inverses of
+`Sⁱ`, so they do not apply between those `L²` domains (they do on smooth fields).
 
 Complexes of any length are included (rows vanishing outside a window). Non-vacuity:
 `BGG.hypotheses_id` (`S = 𝟙 : V⟦1⟧ ⟶ V⟦1⟧`) and `BGG.hypotheses_bounded_id` (`sⁱ = id`,
@@ -883,7 +881,12 @@ invertible (`parallelepiped`; the cube `(0, ½)³` is the one of `n = 3`, `A = �
 
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
 of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
-`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Ω`). So their BGG
+`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Ω`); but `sᴶ` is not onto
+(for the Hessian diagram, `n ≥ 1`), so (23) fails and the explicit-map clauses of
+`FEEC.bggHilbert` do not apply to them (for `n = 3`, in vector proxies, the maps
+`S⁰ = I`, `S¹u = uᵀ - tr(u) I` and `S² = I` of the three diagrams map `H¹(Ω; ℝ³)`,
+`H(curl; Ω; 𝕄)` and `H(div; Ω)` onto proper subspaces of `H(curl; Ω)`, `H(div; Ω; 𝕄)` and
+`L²(Ω; ℝ³)`). So their BGG
 complexes, with the quotient norm, have bounded differentials with closed range in every degree (in
 the proof by `FEEC.bggHilbert`, the graph spaces of the closed `dMax` being complete), and their
 cohomology is finite-dimensional, of dimension `n + 1`, `6` and `n + 1` in degree `0`
@@ -903,19 +906,20 @@ theorem bggParallelepiped :
     (∀ (n : ℕ) (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (dMax (parallelepiped A b))
         (fun k => vecOp fun _ : Fin n => dMax (parallelepiped A b) k) (wedge (parallelepiped A b)),
-        D.Verdict 0 (n + 1) ∧ D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (c : Fin n → ℝ),
-          ∀ s, ⇑(u s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a + c ⬝ᵥ x}) ∧
+        D.Verdict 0 (n + 1) ∧ (0 < n → ¬Function.Surjective (D.s 0)) ∧
+          D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (c : Fin n → ℝ),
+            ∀ s, ⇑(u s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a + c ⬝ᵥ x}) ∧
     (∀ (A : Matrix (Fin 3) (Fin 3) ℝ) (b : Fin 3 → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (parallelepiped A b) k)
         (fun k => vecOp fun _ : Fin 3 => dMax (parallelepiped A b) k)
         (crossWedge (parallelepiped A b)),
-        D.Verdict 1 6 ∧ D.CohomologyIs 1 0 {u | ∃ a c : Fin 3 → ℝ,
+        D.Verdict 1 6 ∧ ¬Function.Surjective (D.s 1) ∧ D.CohomologyIs 1 0 {u | ∃ a c : Fin 3 → ℝ,
           ∀ i s, ⇑(u i s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a i + (c ⨯₃ x) i}) ∧
     ∀ n : ℕ, 0 < n → ∀ (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin n => dMax (parallelepiped A b) k)
         (dMax (parallelepiped A b)) (dxVec (parallelepiped A b)),
-        D.Verdict ((n : ℤ) - 1) (n + 1) ∧ D.CohomologyIs ((n : ℤ) - 1) 0
-          {u | ∃ (a : Fin n → ℝ) (c : ℝ),
+        D.Verdict ((n : ℤ) - 1) (n + 1) ∧ ¬Function.Surjective (D.s ((n : ℤ) - 1)) ∧
+          D.CohomologyIs ((n : ℤ) - 1) 0 {u | ∃ (a : Fin n → ℝ) (c : ℝ),
             ∀ i s, ⇑(u i s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a i + c * x i} := by
   sorry
 

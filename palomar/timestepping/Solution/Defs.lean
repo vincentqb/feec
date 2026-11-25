@@ -230,6 +230,13 @@ def gridInterp {n : ℕ} (b : Fin n → ℝ) (h : ℝ) (N : ℕ) (f : (Fin n →
     gridNodes n N → ℝ :=
   fun g => f (gridPoint b h g)
 
+/-- **The first Dirichlet eigenmode of the heat equation** on the cube `b + (0, s)ⁿ`:
+`u(t, x) = e^{-λt} ∏ᵢ sin(π (xᵢ - bᵢ)/s)`, `λ = n π²/s²`, the solution of `uₜ = Δu` from the
+first eigenfunction `∏ᵢ sin(π (xᵢ - bᵢ)/s)` of the Dirichlet Laplacian of the cube (eigenvalue
+`-λ`). -/
+def sineMode {n : ℕ} (b : Fin n → ℝ) (s t : ℝ) (x : Fin n → ℝ) : ℝ :=
+  Real.exp (-(n * (Real.pi / s) ^ 2) * t) * ∏ i, Real.sin (Real.pi / s * (x i - b i))
+
 /-! ### The hypotheses on `r` are met -/
 
 /-- The numerator `p(z) = det(1 - z A + z 𝟙 bᵀ)` of the **stability function** `r = p/q` of the

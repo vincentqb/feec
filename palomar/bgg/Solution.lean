@@ -26,8 +26,11 @@ domain complexes (`FEEC.toDomainDiagram`) with the cohomology of the rows
 siblings, from the regular decompositions of `HΛ(Ω)`), and the rows have the cohomology of a point
 (`Feec.FiniteElement.finrank_vecRow_cohomology_of`), so `S` induces zero on cohomology
 (`Feec.BGG.Data.inducesZero_of_isZero_rowBot`, `inducesZero_of_isZero_rowTop`) and the dimensions
-add (`FEEC.BGG.DomainDiagram.verdict`). The cohomology of degree `0`: in the lowest degree of the
-rows `[(σ, φ)] ↦ σ` embeds `H⁰` with range `{σ | dσ ∈ S⁰ N(d̃⁰)}`
+add (`FEEC.BGG.DomainDiagram.verdict`). `sᴶ` is not onto
+(`FEEC.BGG.DomainDiagram.not_surjective_s`): `Sᴶ` is not onto between the `L²` domains on every
+nonempty open `Ω` (`Feec.FiniteElement.hessianFormData_exists_forall_S_ne` and its siblings,
+rescaled test fields with `d Sᴶ φ = 0` on which `d̃ᴶ` is unbounded). The cohomology of degree `0`:
+in the lowest degree of the rows `[(σ, φ)] ↦ σ` embeds `H⁰` with range `{σ | dσ ∈ S⁰ N(d̃⁰)}`
 (`Feec.BGG.Data.exists_bgg_homology_lowCycles`, through `FEEC.BGG.exists_bgg_homology_lowCycles`
 and `FEEC.cohomologyIs_toDomainDiagram`), the `u` with `d u = S⁰ v` for a constant `v`: the affine
 functions, the rigid motions and the fields `a + b x` (`Feec.FiniteElement.hessian_lowest_iff`,
@@ -379,6 +382,40 @@ theorem BGG.elasticity {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) (hb : Bornol
   simp only [Set.mem_ofPred_eq, elasticityFormData_S]
   exact elasticity_lowest_iff hΩ hb (ker_maximal_zero_eq_span hΩ hb (by simpa using hH 0)) u
 
+open Feec.FiniteElement in
+/-- **`S⁰` is not onto between the domains of the Hessian diagram** on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1` (`Feec.FiniteElement.hessianFormData_exists_forall_S_ne`). -/
+theorem BGG.hessian_exists_forall_ne {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    (hne : Ω.Nonempty) (hn : 0 < n) :
+    ∃ u ∈ (dMax Ω (0 + 1)).domain, ∀ φ ∈ (vecOp fun _ : Fin n => dMax Ω 0).domain,
+      wedge Ω 0 φ ≠ u := by
+  have h := hessianFormData_exists_forall_S_ne hΩ hne hn
+  rwa [dMax_formRow_eq hΩ, vecOp_vecRow_eq hΩ, ← wedge_eq] at h
+
+open Feec.FiniteElement in
+/-- **`S¹` is not onto between the domains of the elasticity diagram** on every nonempty open
+`Ω ⊆ ℝ³` (`Feec.FiniteElement.elasticityFormData_exists_forall_S_ne`). -/
+theorem BGG.elasticity_exists_forall_ne {Ω : Set (Fin 3 → ℝ)} (hΩ : IsOpen Ω) (hne : Ω.Nonempty) :
+    ∃ u ∈ (vecOp fun _ : Fin 3 => dMax Ω (1 + 1)).domain,
+      ∀ φ ∈ (vecOp fun _ : Fin 3 => dMax Ω 1).domain, crossWedge Ω 1 φ ≠ u := by
+  have h := elasticityFormData_exists_forall_S_ne hΩ hne
+  rwa [vecOp_vecRow_eq hΩ, vecOp_vecRow_eq hΩ, ← crossWedge_eq] at h
+
+open Feec.FiniteElement in
+/-- **`Sⁿ⁻¹` is not onto between the domains of the div–div diagram** on every nonempty open
+`Ω ⊆ ℝⁿ`, `n ≥ 1` (`Feec.FiniteElement.divDivFormData_exists_forall_S_ne`). -/
+theorem BGG.divDiv_exists_forall_ne {n : ℕ} {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
+    (hne : Ω.Nonempty) (hn : 0 < n) :
+    ∃ u ∈ (vecOp fun _ : Fin n => dMax Ω ((n : ℤ) - 1 + 1)).domain,
+      ∀ φ ∈ (dMax Ω ((n : ℤ) - 1)).domain, dxVec Ω ((n : ℤ) - 1) φ ≠ u := by
+  have h := divDivFormData_exists_forall_S_ne hΩ hne hn
+  rwa [vecOp_vecRow_eq hΩ, dMax_formRow_eq hΩ, ← dxVec_eq] at h
+
+/-- The parallelepiped `A (0, 1)ⁿ + b` is nonempty (the image of the centre). -/
+theorem parallelepiped_nonempty {n : ℕ} (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ) :
+    (parallelepiped A b).Nonempty :=
+  ⟨_, ⟨fun _ => 1 / 2, fun _ _ => ⟨by norm_num, by norm_num⟩, rfl⟩⟩
+
 /-- `A` invertible makes `2 A` invertible. -/
 theorem isUnit_det_two_smul {n : ℕ} {A : Matrix (Fin n) (Fin n) ℝ} (hA : IsUnit A.det) :
     IsUnit ((2 : ℝ) • A).det := by
@@ -402,9 +439,15 @@ invertible (`parallelepiped`; the cube `(0, ½)³` is the one of `n = 3`, `A = �
 
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
 of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
-`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Ω`). So their BGG
-complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree,
-and their cohomology is finite-dimensional, of dimension `n + 1`, `6` and `n + 1` in degree `0`
+`J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Ω`); but `sᴶ` is not onto
+(for the Hessian diagram, `n ≥ 1`), so (23) fails and the explicit-map clauses of
+`FEEC.bggHilbert` do not apply to them (for `n = 3`, in vector proxies, the maps
+`S⁰ = I`, `S¹u = uᵀ - tr(u) I` and `S² = I` of the three diagrams map `H¹(Ω; ℝ³)`,
+`H(curl; Ω; 𝕄)` and `H(div; Ω)` onto proper subspaces of `H(curl; Ω)`, `H(div; Ω; 𝕄)` and
+`L²(Ω; ℝ³)`). So their BGG
+complexes, with the quotient norm, have bounded differentials with closed range in every degree (in
+the proof by `FEEC.bggHilbert`, the graph spaces of the closed `dMax` being complete), and their
+cohomology is finite-dimensional, of dimension `n + 1`, `6` and `n + 1` in degree `0`
 and `0` in the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a
 point, so `S` induces zero on cohomology and the dimensions of the cohomology of the rows add
 (`FEEC.bggFinrank`). **The cohomology in degree `0`** is the space of the affine functions
@@ -416,43 +459,56 @@ BGG complexes are the `L²` Hessian complex `H²(Ω) → H(curl; Ω; 𝕊) → H
 and the `L²` elasticity and div–div complexes of [ArnoldHu2021], §4.1 (away from `J` by
 `BGG.Identification`; in degree `J`, `sᴶ` being injective,
 `Γᴶ / Δᴶ ≅ {σ ∈ Vᴶ | dσ ∈ R(sᴶ)} / R(sᴶ⁻¹)`, e.g. `H²(Ω)`); this identification of the complexes is
-not part of the statement. -/
+not part of the statement.
+The non-surjectivity of `sᴶ` is `Feec`'s
+(`Feec.FiniteElement.hessianFormData_exists_forall_S_ne`,
+`Feec.FiniteElement.elasticityFormData_exists_forall_S_ne`,
+`Feec.FiniteElement.divDivFormData_exists_forall_S_ne`) through
+`BGG.DomainDiagram.not_surjective_s`. -/
 theorem bggParallelepiped :
     (∀ (n : ℕ) (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (dMax (parallelepiped A b))
         (fun k => vecOp fun _ : Fin n => dMax (parallelepiped A b) k) (wedge (parallelepiped A b)),
-        D.Verdict 0 (n + 1) ∧ D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (c : Fin n → ℝ),
-          ∀ s, ⇑(u s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a + c ⬝ᵥ x}) ∧
+        D.Verdict 0 (n + 1) ∧ (0 < n → ¬Function.Surjective (D.s 0)) ∧
+          D.CohomologyIs 0 0 {u | ∃ (a : ℝ) (c : Fin n → ℝ),
+            ∀ s, ⇑(u s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a + c ⬝ᵥ x}) ∧
     (∀ (A : Matrix (Fin 3) (Fin 3) ℝ) (b : Fin 3 → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin 3 => dMax (parallelepiped A b) k)
         (fun k => vecOp fun _ : Fin 3 => dMax (parallelepiped A b) k)
         (crossWedge (parallelepiped A b)),
-        D.Verdict 1 6 ∧ D.CohomologyIs 1 0 {u | ∃ a c : Fin 3 → ℝ,
+        D.Verdict 1 6 ∧ ¬Function.Surjective (D.s 1) ∧ D.CohomologyIs 1 0 {u | ∃ a c : Fin 3 → ℝ,
           ∀ i s, ⇑(u i s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a i + (c ⨯₃ x) i}) ∧
     ∀ n : ℕ, 0 < n → ∀ (A : Matrix (Fin n) (Fin n) ℝ) (b : Fin n → ℝ), IsUnit A.det →
       ∃ D : BGG.DomainDiagram (fun k => vecOp fun _ : Fin n => dMax (parallelepiped A b) k)
         (dMax (parallelepiped A b)) (dxVec (parallelepiped A b)),
-        D.Verdict ((n : ℤ) - 1) (n + 1) ∧ D.CohomologyIs ((n : ℤ) - 1) 0
-          {u | ∃ (a : Fin n → ℝ) (c : ℝ),
+        D.Verdict ((n : ℤ) - 1) (n + 1) ∧ ¬Function.Surjective (D.s ((n : ℤ) - 1)) ∧
+          D.CohomologyIs ((n : ℤ) - 1) 0 {u | ∃ (a : Fin n → ℝ) (c : ℝ),
             ∀ i s, ⇑(u i s) =ᵐ[volume.restrict (parallelepiped A b)] fun x => a i + c * x i} := by
   refine ⟨fun n A b hA => ?_, fun A b hA => ?_, fun n hn A b hA => ?_⟩
   · have hA2 := isUnit_det_two_smul hA
-    rw [parallelepiped_eq A hA2 b]
+    have hne := parallelepiped_nonempty A b
+    rw [parallelepiped_eq A hA2 b] at hne ⊢
     have := FormBGG.finiteDimensional_formRow_cohomology_domain _ hA2 b
-    exact BGG.hessian (isOpen_domain _ b) (isBounded_domain _ hA2 b)
+    obtain ⟨D, hV, hC⟩ := BGG.hessian (isOpen_domain _ b) (isBounded_domain _ hA2 b)
       (FormBGG.deRham_hasRegularDecomposition_domain _ hA2 b) (finrank_cohomology _ hA2 b)
+    exact ⟨D, hV, fun hn => D.not_surjective_s
+      (BGG.hessian_exists_forall_ne (isOpen_domain _ b) hne hn), hC⟩
   · have hA2 := isUnit_det_two_smul hA
-    rw [parallelepiped_eq A hA2 b]
+    have hne := parallelepiped_nonempty A b
+    rw [parallelepiped_eq A hA2 b] at hne ⊢
     have := FormBGG.finiteDimensional_formRow_cohomology_domain _ hA2 b
-    exact BGG.elasticity (isOpen_domain _ b) (isBounded_domain _ hA2 b)
+    obtain ⟨D, hV, hC⟩ := BGG.elasticity (isOpen_domain _ b) (isBounded_domain _ hA2 b)
       ((FormBGG.deRham_hasRegularDecomposition_domain _ hA2 b).mono zero_le_one)
       (finrank_cohomology _ hA2 b)
+    exact ⟨D, hV, D.not_surjective_s (BGG.elasticity_exists_forall_ne (isOpen_domain _ b) hne), hC⟩
   · have : NeZero n := ⟨hn.ne'⟩
     have hA2 := isUnit_det_two_smul hA
-    rw [parallelepiped_eq A hA2 b]
+    have hne := parallelepiped_nonempty A b
+    rw [parallelepiped_eq A hA2 b] at hne ⊢
     have := FormBGG.finiteDimensional_formRow_cohomology_domain _ hA2 b
-    exact BGG.divDiv (isOpen_domain _ b) (isBounded_domain _ hA2 b)
+    obtain ⟨D, hV, hC⟩ := BGG.divDiv (isOpen_domain _ b) (isBounded_domain _ hA2 b)
       ((FormBGG.deRham_hasRegularDecomposition_domain _ hA2 b).mono (by omega))
       (finrank_cohomology _ hA2 b)
+    exact ⟨D, hV, D.not_surjective_s (BGG.divDiv_exists_forall_ne (isOpen_domain _ b) hne hn), hC⟩
 
 end FEEC

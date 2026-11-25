@@ -23,8 +23,8 @@ path = "../.."
 [[lean_lib]]
 name = "Challenge"
 
-# The proof: the challenge's definitions verbatim (`Solution.Defs`), the bridge to `Feec`
-# (`Solution.Bridge`) and the theorem (`Solution`).
+# The proof: the challenge's definitions verbatim (`Solution.Defs`), the bridges to `Feec`
+# (the other `Solution.*` modules) and the theorems (`Solution`).
 [[lean_lib]]
 name = "Solution"
 globs = ["Solution", "Solution.+"]

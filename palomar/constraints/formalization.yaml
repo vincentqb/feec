@@ -238,7 +238,32 @@ sources:
     note: "The connecting map S^1 = 2 vskw of the complex with weak symmetry."
     author_endorsement: "not-contacted"
 
-related_formalizations: []
+related_formalizations:
+  - id: "https://github.com/leanprover-community/physlib"
+    relationship: "other"
+    note: >-
+      Physlib, a Lean 4 physics library on Mathlib: the module
+      Physlib.Electromagnetism.ThreeDimension.MaxwellEquations states Maxwell's equations in
+      free space and derives them from an electromagnetic potential, without boundary
+      conditions, evolution groups or constraint propagation. A search of OpenAlex, arXiv,
+      HAL, the Isabelle AFP and Mathlib on 2026-11-25 found no formalization of Stone's
+      theorem on one-parameter unitary groups, of the unitary groups or contraction semigroups
+      of unbounded skew-adjoint or m-dissipative operators, of the propagation of constraints
+      or of the Einstein-Bianchi system.
+  - id: "doi:10.4230/LIPIcs.ITP.2026.3"
+    relationship: "other"
+    note: >-
+      D. Unruh, J. M. Rodríguez Caballero, Complex bounded operators in Isabelle/HOL (ITP
+      2026; the paper of the AFP entry Complex_Bounded_Operators): complex Hilbert spaces,
+      bounded operators, adjoints, unitaries, projectors and closed subspaces; unbounded
+      skew-adjoint generators and Stone's theorem are outside its scope.
+  - id: "https://github.com/vincentqb/feec/tree/main/palomar/einsteinbianchi"
+    relationship: "other"
+    note: >-
+      The Palomar entry palomar/einsteinbianchi of the same repository, on the same library:
+      what the weak-symmetry finite element method computes for the system (6.1). It restates
+      the electric and the mirror verdicts of this entry for (6.1) to identify the limit of
+      the method.
 
 status:
   scope: >-

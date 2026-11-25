@@ -59,8 +59,8 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on pa
   exterior derivative `dMax` on `L²(Ω; Λ)`, its copy on vectors of forms `L²(Ω; Λ ⊗ ℝⁿ)`, and the
   connecting maps `wedge`, `crossWedge`, `dxVec` built from `dxₐ ∧ ·`), the domain complexes form
   stacked diagrams of bounded Hilbert rows (`BGG.DomainDiagram`) satisfying the hypotheses of the
-  main clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1`, so the three BGG complexes are bounded
-  Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree; their cohomology
+  main clause of `FEEC.bggHilbert` at `J = 0, 1, n - 1`, so the three BGG complexes, with the
+  quotient norm, have bounded differentials with closed range in every degree; their cohomology
   is finite-dimensional, of dimension `n + 1`, `6`, `n + 1` in degree `0` and `0` in the other
   degrees (`BGG.DomainDiagram.Verdict`), the sum of the dimensions for the rows; and their
   cohomology in degree `0` is, through `[(σ, φ)] ↦ u` (`σ = (u, du)`), the space of the affine
@@ -68,13 +68,16 @@ answer, the last for the `L²` Hessian, elasticity and div–div complexes on pa
   (`BGG.DomainDiagram.CohomologyIs`).
 
 **The hypothesis.** Arnold–Hu assume (23): `Sⁱ` injective for `i ≤ J` and surjective for
-`i ≥ J`. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for `i < J`, and
-onto modulo `d`, `R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`, for `i ≥ J`. Their examples need the weaker hypothesis:
-for the Hessian, elasticity and div–div diagrams of the `L²` de Rham complexes on any nonempty open
-`Ω ⊆ ℝ³`, `Sᴶ` is not onto between the `L²` domains (`S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)`,
-`S¹ = T - tr : H(curl; Ω; 𝕄) → H(div; Ω; 𝕄)`, `S² = I : H(div; Ω) → L²(Ω; 𝕜³)`; in Feec
-`Feec.Domain.hessianMaximalData_not_surjective`, `elasticityMaximalData_not_surjective` and
-`divDivMaximalData_not_surjective`, instances of
+`i ≥ J`; in their diagrams (20), where the bottom row has in degree `i` the regularity of the top
+row in degree `i + 1` and `Sⁱ = id ⊗ sⁱ`, it is a condition on finite-dimensional maps `sⁱ`, met
+by their examples. The theorems assume `Sⁱ` injective (bounded below, for Hilbert rows) only for
+`i < J`, and onto modulo `d`, `R(dⁱ) + R(Sⁱ) = Vⁱ⁺¹`, for `i ≥ J`. The diagrams of
+`FEEC.bggParallelepiped`, whose rows are `L²` de Rham complexes of the same regularity, need the
+weaker hypothesis: for the Hessian, elasticity and div–div diagrams of the `L²` de Rham complexes
+on any nonempty open `Ω ⊆ ℝ³`, `Sᴶ` is not onto between the `L²` domains
+(`S⁰ = I : H¹(Ω; 𝕜³) → H(curl; Ω)`, `S¹ = T - tr : H(curl; Ω; 𝕄) → H(div; Ω; 𝕄)`,
+`S² = I : H(div; Ω) → L²(Ω; 𝕜³)`; in Feec `Feec.Domain.hessianMaximalData_not_surjective`,
+`elasticityMaximalData_not_surjective` and `divDivMaximalData_not_surjective`, instances of
 `Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS`), while on every parallelepiped
 they are onto modulo `d`, by the regular decompositions of the rows (a clause of
 `FEEC.bggParallelepiped`). The clauses with the explicit map (30) assume (23) and right inverses
@@ -506,7 +509,8 @@ def ΔL (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) 
 
 /-- **The space `Γⁱ / Δⁱ` of the BGG complex with the quotient norm** of the `ℓ²` norm,
 `‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖`. For `i ≠ J` it is the norm of the output space `Υⁱ` of
-[ArnoldHu2021], (25) (`‖[(σ, φ)]‖ = ‖P_{R(Sⁱ⁻¹)ᗮ} σ‖` before `J`, `‖φ‖` on `0 × N(Sⁱ)` after `J`);
+[ArnoldHu2021], (25) (`‖[(σ, φ)]‖ = ‖P_{R(Sⁱ⁻¹)ᗮ} σ‖` before `J`, for `R(Sⁱ⁻¹)` closed, e.g.
+`Sⁱ⁻¹` bounded below; `‖φ‖` on `0 × N(Sⁱ)` after `J`);
 at `J` it is `inf_ψ (‖σ + Sψ‖² + ‖φ - d̃ψ‖²)^½`, under (23) equivalent to, not equal to,
 `‖P_{R(Sᴶ⁻¹)ᗮ} σ‖`. -/
 abbrev QuotL (s : ∀ i, Ht i →L[𝕜] H (i + 1))
@@ -880,8 +884,9 @@ invertible (`parallelepiped`; the cube `(0, ½)³` is the one of `n = 3`, `A = �
 have stacked diagrams of their domain complexes (`BGG.DomainDiagram`) that satisfy the hypotheses
 of the main clause of `FEEC.bggHilbert`: `sⁱ` bounded below before `J`, and onto modulo `d` from
 `J` on (the regular decompositions of [ArnoldHu2021], §2, Theorem 3, on `Ω`). So their BGG
-complexes are bounded Hilbert complexes (by `FEEC.bggHilbert`), with closed range in every degree,
-and their cohomology is finite-dimensional, of dimension `n + 1`, `6` and `n + 1` in degree `0`
+complexes, with the quotient norm, have bounded differentials with closed range in every degree (in
+the proof by `FEEC.bggHilbert`, the graph spaces of the closed `dMax` being complete), and their
+cohomology is finite-dimensional, of dimension `n + 1`, `6` and `n + 1` in degree `0`
 and `0` in the other degrees (`BGG.DomainDiagram.Verdict`): the rows have the cohomology of a
 point, so `S` induces zero on cohomology and the dimensions of the cohomology of the rows add
 (`FEEC.bggFinrank`). **The cohomology in degree `0`** is the space of the affine functions

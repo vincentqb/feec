@@ -10,7 +10,7 @@ public import Feec.HilbertComplex.Approximation.Crown
 The window of a family of subcomplexes of the challenge (`HilbertComplex.SubcomplexFamily.toFeec`
 of `Solution.Bridge`, restricted to the degrees `a, …, a + m - 1`) is a
 `Feec.HilbertComplex.ConstrainedFEEC` when the family approximates in the graph norm of the window
-(`SubcomplexFamily.windowFEEC`, `SubcomplexFamily.approximates_window`), and the graph-norm bounds of
+(`HilbertComplex.windowFEEC`, `SubcomplexFamily.approximates_window`), and the graph-norm bounds of
 the projections in the window are those of `Feec` (`SubcomplexFamily.isGraphBounded_window`; in the
 last degree through the continuous extension of a projection bounded in `W`). This module identifies
 the challenge's window operators, discrete operators and rational schemes

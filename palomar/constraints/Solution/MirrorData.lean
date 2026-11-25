@@ -9,7 +9,7 @@ public import Feec.Models.Cube.MirrorWeakSymmetryTSD
 `dPart J k` is `Feec`'s `d_J` (`dPart_eq`: the challenge's span is the graph of `d_max` on the
 forms vanishing near the `J`-faces, whose closure is the graph of `d_J`), so `mirrorData` is the
 forms model `Feec.Models.Cube.MirrorWeakSymmetry.mirrorBGGSegment` of the mirror data:
-top row `d_∅ = d_max`, bottom row `∏ₐ d_{a}`, `S = wsL2` (`mirrorData_eq`).
+top row `d_∅ = d_max`, bottom row `∏ₐ d_{a}`, `S = wsL2`.
 
 ## References
 

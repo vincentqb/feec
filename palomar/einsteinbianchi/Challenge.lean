@@ -35,9 +35,9 @@ answer has two parts.
   (`σ = 0`, `n × E = 0` on `∂Q`, §6.3) the method is well posed for constrained initial values,
   and it converges, with no regularity, from every datum of `D(L)`, each the limit of discrete
   initial states, and at the rates `h` (static) and `(1 + t) h` (wave) for solutions of class
-  `H¹`; but from the TSD datum `(0, 0, 0, ⋆β)` its limit leaves TSD, and at the times it is not
-  TSD neither are, for all large `N`, the discrete fields: it computes a solution that is not a
-  gravitational wave.
+  `H¹`; but from some TSD datum (in the proof `(0, 0, 0, ⋆β)`) its limit leaves TSD, and at the
+  times it is not TSD neither are, for all large `N`, the discrete fields: it computes a solution
+  that is not a gravitational wave.
 * `FEEC.weakSymmetry_mirror`: with the **mirror** boundary conditions it converges, with no
   regularity, from every TSD datum of `D(L)`, each the limit of discrete initial states, to the
   exact solution, which stays TSD, and at the rate `(1 + t) h` from the TSD data of `D(L³)`; and
@@ -813,7 +813,8 @@ Prop 6.2; [AFW2010], §5.5; [ChristiansenWinther2008]). There are discretization
   `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`) has, for every `T > 0`, every strong solution `U` from it an
   electric field `E(t)` that is not TSD at some `t ∈ [0, T]` and a magnetic field `B(t')` that is
   not symmetric at some `t' ∈ [0, T]`; at these times, for all large `N`, so have the discrete
-  fields of every family of trajectories of (6.5) whose initial states converge to `U₀`;
+  fields of every family of trajectories of (6.5) without source whose initial states converge to
+  `U₀`;
 * (*the static rate*) for every solution of (5.3) with `‖λ‖ ≤ L` whose components `σ`, `φₐ`,
   `d̃φₐ`, `uₐ`, `d̃uₐ` lie in `H¹(Q)` with norms at most `L`, the solution of (5.6) has
   `errorSq ≤ (K L h_N)²`;

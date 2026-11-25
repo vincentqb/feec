@@ -15,8 +15,9 @@ Laplacian of the window is the mixed problem of the total complex
 residual of the challenge bounds `Feec`'s residual functional (`CrimeFamily.norm_staticResidual_le`).
 This module turns `Feec.HilbertComplex.ApproxComplexCrime.Family.staticFEEC`, the cochain case of
 `Feec.HilbertComplex.Approximation.StaticCochain` and
-`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC` into the verdict of the challenge
-(`CrimeFamily.verdict`).
+`Feec.HilbertComplex.ApproxComplexCrime.HeatFamily.heatFEEC` into the conclusions of the three
+clauses of the challenge (`CrimeFamily.staticVerdict`, `CrimeFamily.cochainVerdict`,
+`CrimeFamily.heatVerdict`).
 
 ## References
 

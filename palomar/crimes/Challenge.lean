@@ -26,7 +26,7 @@ and Tiee ([HolstTiee2018], §4) for the semidiscrete Hodge heat equation, with e
 Hilbert complex (on `ℤ`, over `ℝ` or `ℂ`), for every family of discrete differential spaces
 (`CrimeFamily`: finite-dimensional, `𝐝ₕ² = 0`, uniformly bounded reading maps with uniformly
 bounded left inverses), in three clauses; the first and the third need no cochain reading maps,
-beyond both sources:
+which both sources assume:
 
 1. **Stability and the Strang lemma.** Under a uniform discrete Poincaré inequality, the mixed
    Hodge Laplacian of the window and its discretizations with the load `iₕ* f` are uniquely

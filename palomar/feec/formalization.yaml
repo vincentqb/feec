@@ -1,13 +1,8 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of the Galerkin approximation of Hilbert
-# complexes (`palomar/feec/`; it replaces the former packages palomar/static and palomar/dynamic,
-# whose general compared theorems it contains). Compared in other entries (status.scope): the
-# finite element families that meet its hypotheses in palomar/fem, the variational crimes in
-# palomar/crimes, the constraint-propagation conclusions in palomar/constraints, the BGG theorems
-# in palomar/bgg.
-# Open items before submitting (user decisions): the root licence file and `project.license`
-# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
-# a public GitHub repository and the 40-character commit to submit.
+# complexes (`palomar/feec/`). Compared in other entries (status.scope): the finite element
+# families that meet its hypotheses in palomar/fem, the variational crimes in palomar/crimes, the
+# constraint-propagation criterion in palomar/constraints, the BGG theorems in palomar/bgg.
 version: "v0.4"
 
 project:
@@ -47,11 +42,12 @@ project:
     tau tend to 0, with the temporal error K n tau tau^p ||L_h^(p+1) w|| (K independent of h), and
     for every Jackson estimate the fully discrete error is at most ||v - x|| + C (1 + n tau) L
     h^(ord s) + K n tau tau^p ||L_h^(p+1) v|| when the trajectories of x and L x are s-regular with
-    bound L; with projections bounded in the graph norm of the window (in the norm of W in the
-    last degree) and closed ranges, the Hodge heat equation u' = L^2 u = -Delta u has the same
-    evolution verdict (well-posedness, semidiscrete and fully discrete convergence, temporal
-    error). In short: the elliptic and parabolic problems need bounded cochain projections, which
-    by Theorem 1 are uniform discrete stability; the hyperbolic one needs only approximation. The
+    bound L; where the family moreover has projections bounded in the graph norm of the window
+    (in the norm of W in the last degree) and closed ranges, the Hodge heat equation
+    u' = L^2 u = -Delta u has the same evolution verdict (well-posedness, semidiscrete and fully
+    discrete convergence, temporal error). In short: the elliptic and parabolic theorems assume
+    bounded cochain projections, which by Theorem 1 are uniform discrete stability; the hyperbolic
+    one assumes only approximation. The
     compared witness FEEC.spectral_nonvacuous shows that a nontrivial family meets the hypotheses
     of the three theorems, rates included: on the torus T^n = R^n/Z^n (n >= 1), the L2 de Rham
     complex in Fourier coefficients (k-forms l2(Z^n; Lambda^k), TorusForm; d the multiplier
@@ -86,8 +82,7 @@ project:
     self-contained over Mathlib; the proof is the library Feec of this repository.
   authors:
     - "Vincent Quenneville-Bélair"
-  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
-  license: "TBD-BY-USER"
+  license: "Apache-2.0"
   responsible_maintainers:
     - "Vincent Quenneville-Bélair"
 
@@ -102,28 +97,36 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
-    type: "article"
+    type: "paper"
     location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.5 (Theorems 3.4-3.9; (30))"
-    relationship: "formalizes"
+    relationship: "adapts"
     note: >-
       The a priori theory of §3.3-§3.4 for the mixed Hodge Laplacian (discrete cohomology,
       harmonic gap, uniform discrete Poincare inequality, unique solvability and stability,
       quasi-optimal graph-norm error bound and convergence) under the hypotheses of §3.3 in the
       degrees used, the converse Thm 3.7, and rates from approximation estimates as in §3.5
       (checked against arXiv:0906.4325: Thms 3.4-3.7 and (30) in §3.3, Thms 3.8, 3.9 in §3.4).
+      Adapted: Thm 3.7 is stated without closed range and with degree-dependent constants, and the
+      a priori theory with one constant Phi(c, c_P), its hypotheses localized to the degrees used
+      and the inf-sup condition and the gaps in equivalent forms (fidelity (2), (3)); no gap in the
+      source's proof is claimed.
     author_endorsement: "not-contacted"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
     authors:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
-    type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 (Theorems 4.6, 4.7, 4.14, Proposition 4.13)"
-    relationship: "formalizes"
+    type: "other"
+    location: "PhD thesis, University of Minnesota, 2015; Ch. 4 (Theorems 4.6, 4.7, 4.14, Proposition 4.13)"
+    relationship: "adapts"
     note: >-
       The semidiscrete Hodge wave equation for a Hilbert complex: skew-adjointness of the wave
       operator, well-posedness, convergence of the semidiscrete solutions with an error bound by
       the graph-norm best approximation of the trajectory (the elliptic projections bounded by
-      4 sqrt 3, Prop 4.13), and the rate from approximation estimates. The propagation of
+      4 sqrt 3, Prop 4.13), and the rate from approximation estimates. Theorem 3 differs from two
+      statements of Ch. 4: skew-adjointness is stated with no closed-range hypothesis, which
+      Thm 4.6 assumes, and the error bound through the graph-norm best approximation of the
+      trajectories of x and L x, where Thm 4.14 states it for solutions in C^0(V) ∩ C^1(W). The
+      propagation of
       constraints of the same chapter (§4.10, the reducing subcomplexes of Prop 4.16) is the
       subject of palomar/constraints. The formalization is by the thesis author.
     author_endorsement: "participated"
@@ -132,14 +135,14 @@ sources:
       - "Philip Brenner"
       - "Vidar Thomée"
     id: "doi:10.1137/0716051"
-    type: "article"
+    type: "paper"
     location: "SIAM J. Numer. Anal. 16 (1979)"
-    relationship: "formalizes"
+    relationship: "adapts"
     note: >-
       The temporal error K n tau tau^p ||B^(p+1) w|| of A-stable rational schemes of order p for
-      contraction semigroups; formalized here for the bounded dissipative discrete generators,
-      with K = sup_y |rho(iy)| + 1/(p+1)! (rho the remainder of r - exp), by von Neumann's
-      inequality.
+      contraction semigroups; adapted to the bounded dissipative discrete generators, with
+      K = sup_y |rho(iy)| + 1/(p+1)! (rho the remainder of r - exp), and proved by von Neumann's
+      inequality, not by the paper's method.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus, homological techniques, and applications"
     authors:
@@ -147,7 +150,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
-    type: "article"
+    type: "paper"
     location: "Acta Numerica 15 (2006)"
     relationship: "background"
     author_endorsement: "not-contacted"
@@ -166,17 +169,20 @@ sources:
       - "Michael Holst"
       - "Yunrong Zhu"
     id: "doi:10.4208/jcm.1610-m2015-0319"
-    type: "article"
+    type: "paper"
     location: "J. Comput. Math. 35 (2017)"
-    relationship: "background"
-    note: "The semidiscrete Hodge heat equation in FEEC."
+    relationship: "adapts"
+    note: >-
+      The semidiscrete Hodge heat equation in FEEC, the source of the heat clause of Theorem 3,
+      which states it on every window, with convergence for every datum (no rate) and the A-stable
+      fully discrete schemes.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus for parabolic problems"
     authors:
       - "Douglas N. Arnold"
       - "Hongtao Chen"
     id: "doi:10.1051/m2an/2016013"
-    type: "article"
+    type: "paper"
     location: "ESAIM Math. Model. Numer. Anal. 51 (2017), 17-34"
     relationship: "background"
     note: >-
@@ -198,46 +204,40 @@ sources:
       - "Jochen Brüning"
       - "Matthias Lesch"
     id: "doi:10.1016/0022-1236(92)90147-B"
-    type: "article"
+    type: "paper"
     location: "J. Funct. Anal. 108 (1992)"
     relationship: "background"
     note: "The abstract setting of Hilbert complexes of closed densely defined operators."
     author_endorsement: "not-contacted"
 
-related_formalizations: []
+related_formalizations:
+  - id: "doi:10.1145/3018610.3018625"
+    relationship: "independent"
+    note: >-
+      S. Boldo, F. Clément, F. Faissole, V. Martin, M. Mayero, A Coq formal proof of the
+      Lax-Milgram theorem (CPP 2017): the coercive case of the well-posedness of variational
+      problems, in Coq; Theorem 2 concerns the mixed (saddle-point) Hodge Laplacian under inf-sup
+      conditions.
 
 status:
   scope: >-
     Formalized and compared: the three theorems FEEC.projectionFEEC, FEEC.staticFEEC and
-    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean, 681 lines). The
-    theorems restate the former compared theorems
-    FEEC.feec (a verdict of about 40 fields), FEEC.feec_rated, FEEC.staticFEEC_uniform,
-    FEEC.exists_cochainProjection and FEEC.exists_subcomplexFamily_iff with no conclusion dropped,
-    except those compared in other entries (the correspondence is in review.notes). Compared in
+    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean). Compared in
     other entries: the finite element families that meet the hypotheses of the three theorems in
-    palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube). The former witness
-    FEEC.feec_cube (the lowest-order Whitney forms on the Freudenthal meshes of the cube
-    (0, 1/2)^n) is no longer compared, and none of its conclusions is lost: FEEC.fem on the cube
-    (star-shaped with respect to a ball by FEEC.fem_parallelepiped with A = 1/2, b = 0), with
-    the Freudenthal meshes of FEEC.fem_cube and the sequence P_1^- Lambda in every degree, gives
-    a family whose spaces are the Whitney forms (affine on every Kuhn simplex), with projections
-    bounded in L2 uniformly in N in every degree (the last degree of every window included) and
-    in the graph norm, approximation, and a Jackson estimate of order h_N = 1/(2(N+1)) on C^2
-    forms; FEEC.fem_parallelepiped gives the closed ranges; the former rate C L/(N+1) of the
-    mixed method on C^2 data is the rate conjunct of FEEC.staticFEEC for that estimate, not
-    restated (the estimate of FEEC.fem_cube asks x and dx in H^1 instead). Also compared in other
-    entries: the variational crimes of [HolstStern2012] (FEEC.crimeFEEC and its witness
-    FEEC.crime_nonvacuous, formerly Theorem 4 of this entry) in palomar/crimes; the
-    constraint-propagation conclusions of the former wave and evolution verdicts (a closed
-    constraint propagates iff it reduces the wave operator, the invariant core,
-    the constraints of reducing subcomplexes, [QuennevilleBelair2015] Prop 4.16) in
-    palomar/constraints (FEEC.constraint_propagation); the BGG theorems of [ArnoldHu2021] in
-    palomar/bgg; the weak-symmetry theorem in palomar/einsteinbianchi. Not compared, proved in
-    Feec: the explicit constants, the spatial heat rates, the uniform fully discrete rates,
-    leapfrog, Runge-Kutta, bounded perturbations, and the identification with weak derivatives of
-    the torus Fourier multipliers of the other first-order symbols
-    (Feec.Fourier.TorusWeak.mem_graph_iff_isWeak; that of the de Rham symbol is a conjunct of the
-    witness).
+    palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube; on the cube (0, 1/2)^n with the
+    Freudenthal meshes and the sequence P_1^- Lambda in every degree they are the lowest-order
+    Whitney forms, with projections bounded in L2 and in the graph norm uniformly in N,
+    approximation, closed ranges and a Jackson estimate of order h_N = 1/(2(N+1)) on C^2 forms);
+    the variational crimes of [HolstStern2012] (FEEC.crimeFEEC and its witnesses) in
+    palomar/crimes; the constraint-propagation criterion (a closed constraint propagates iff it
+    reduces the wave operator, the invariant core, the constraints of reducing subcomplexes,
+    [QuennevilleBelair2015] Prop 4.16) in palomar/constraints (FEEC.constraint_propagation); the
+    BGG theorems of [ArnoldHu2021] in palomar/bgg; the weak-symmetry theorem in
+    palomar/einsteinbianchi. Not compared, proved in Feec: the explicit constants, the spatial heat
+    rates, the uniform fully discrete rates, leapfrog, Runge-Kutta, bounded perturbations, and the
+    identification with weak derivatives of the torus Fourier multipliers of the other first-order
+    symbols (Feec.Fourier.TorusWeak.mem_graph_iff_isWeak; that of the de Rham symbol is a
+    conjunct of the witness).
   sorry_count: 0
   sorry_in_definitions: 0
   axioms: ["propext", "Classical.choice", "Quot.sound"]
@@ -257,12 +257,12 @@ automation:
         hardware: "local machine and API"
       prompting_notes: >-
         The author set the mathematical goals (the thesis and the FEEC literature), the
-        statement design and the review standard; agents proposed and proved lemmas, and wrote
-        this challenge from the earlier static and dynamic challenges.
+        statement design and the review standard; agents proposed and proved lemmas and wrote the
+        challenge.
     - method: "manual"
       models: []
       framework: "n/a"
-      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      tool_setup: "Statement design and direction."
       cost:
         wall_time: "not tracked"
         spend_usd: "n/a"
@@ -295,20 +295,19 @@ fidelity:
     conclusion of a clause is a verdict structure (StaticVerdict, WaveVerdict, EvolutionVerdict)
     or a rate (HasRate, HasWaveRate).
     (2) Theorem 1: stated for families of finite-dimensional subcomplexes with the discrete
-    Poincare and harmonic constants per degree and uniform in h; the former single-subcomplex form
-    (FEEC.exists_cochainProjection) is the case of the one-point index type. Thm 3.7 is stated
+    Poincare and harmonic constants per degree and uniform in h; the single-subcomplex form is the
+    case of the one-point index type. Thm 3.7 is stated
     without closed range and with degree-dependent constants (the proof inverts P_H on the range of
     P_H restricted to the discrete harmonic forms); no gap in the source's proof is claimed. The
-    converse needs closed ranges, which the second clause assumes. (3) Static theory (Theorem 2),
-    as in the former palomar/static: equivalent forms of the inf-sup condition (every x has a y
+    converse needs closed ranges, which the second clause assumes. (3) Static theory (Theorem 2):
+    equivalent forms of the inf-sup condition (every x has a y
     with ||y|| <= ||x|| and ||x||^2 <= C |B(x; y)|) and of the gaps (W-norm quantities, equal to
     the V-norm ones on cycles); one constant Phi(c, c_P) for all bounds of a degree; hypotheses
     localized to the degrees used; finite-dimensional harmonic forms for the vanishing of the
     harmonic gap and the eventual isomorphisms (necessary). The hypotheses are graph-norm bounds
     c of the projections and Poincare inequalities with constant c_P; the first clause states
     that a Poincare inequality of d^i holds iff its range is closed, so the closed-range form of
-    [AFW2010] (and of the former FEEC.feec.static, with some constant) follows. (4) Windows
-    (Theorem 3), as in the former palomar/dynamic: the evolutions live on the l2 sum of m
+    [AFW2010] follows. (4) Windows (Theorem 3): the evolutions live on the l2 sum of m
     consecutive degrees of the truncated complex (for an interior window L = d - d* is the
     Hodge-Dirac operator of the truncated complex). The wave conclusions assume no bound of the
     projections (the elliptic projections are bounded on every subcomplex, C_P = 4 sqrt 3,
@@ -392,8 +391,8 @@ fidelity:
     here. The variational crimes of [HolstStern2012] (discrete complexes that are not
     subcomplexes, non-isometric reading maps) are the subject of palomar/crimes, which shares the
     Hilbert complexes, windows, mixed problems and the evolution verdict of this entry; the
-    constraint-propagation conclusions of the former wave and evolution verdicts are compared in
-    palomar/constraints as FEEC.constraint_propagation. (10) Shared vocabulary: the notions this
+    constraint-propagation criterion is compared in palomar/constraints as
+    FEEC.constraint_propagation. (10) Shared vocabulary: the notions this
     entry shares with the other Palomar entries are copied from the canonical blocks of
     palomar/shared/vocabulary.lean.txt (HilbertComplex, shared with palomar/fem,
     palomar/constraints, palomar/crimes and palomar/waves; SubcomplexFamily with graphNorm,
@@ -405,110 +404,30 @@ fidelity:
     EvolutionVerdict), shared with palomar/crimes; IsStrongSolution, shared with
     palomar/constraints, palomar/crimes and palomar/einsteinbianchi; IsAStable, HasOrder,
     rationalApply, shared with palomar/crimes and palomar/timestepping), and the
-    gate checks them byte for byte. Two of them read differently from the earlier text, with the
-    same meaning. Strong solutions are those of an operator given by its graph, a relation
-    A ⊆ X × X (Mathlib's SetRel), so the evolution verdict states IsStrongSolution A.graph
-    (definitionally the earlier LinearPMap form, Solution: FEEC.isStrongSolution_graph_iff). A
-    rational scheme is a pair (P, Q) of real polynomials, A-stable when Q has no zero and
-    |P/Q| <= 1 on the closed left half-plane ([HairerWanner1996], §IV.3), of order p when
-    P(z)/Q(z) - e^z = O(z^(p+1)) at 0, instead of a structure n/d with deg n <= deg d and no pole
-    in re z <= 0, A-stable on the imaginary axis, of order p when X^(p+1) divides n - d T_p; the
-    Solution proves the two forms equivalent (FEEC.isAStable_iff, the converse by the maximum
-    modulus principle on the unit disc through the Cayley transform w -> (w - 1)/(w + 1);
-    FEEC.hasOrder_iff).
+    gate checks them byte for byte. Strong solutions are those of an operator given by its graph,
+    a relation A ⊆ X × X (Mathlib's SetRel), so the evolution verdict states
+    IsStrongSolution A.graph (equivalent to the LinearPMap form, Solution:
+    FEEC.isStrongSolution_graph_iff). A rational scheme is a pair (P, Q) of real polynomials,
+    A-stable when Q has no zero and |P/Q| <= 1 on the closed left half-plane ([HairerWanner1996],
+    §IV.3), of order p when P(z)/Q(z) - e^z = O(z^(p+1)) at 0; the Solution proves these
+    equivalent to the forms of Feec (a fraction n/d with deg n <= deg d and no pole in re z <= 0,
+    A-stable on the imaginary axis, of order p when X^(p+1) divides n - d T_p; FEEC.isAStable_iff,
+    the converse by the maximum modulus principle on the unit disc through the Cayley transform
+    w -> (w - 1)/(w + 1); FEEC.hasOrder_iff).
 
 review:
-  status: "self-assessed"
+  status: "agent-reviewed"
   reviewers:
-    - "none"
+    - "Claude (Anthropic) agents: independent review of each merge"
   notes: >-
-    Not yet reviewed by the author. Restructure (2026-11-18, one story: the Galerkin
-    approximation of Hilbert complexes): the former compared theorems become three named
-    theorems, with every conclusion kept except those compared in other entries.
-    Correspondence: FEEC.feec.static (closed ranges, some constant) and FEEC.staticFEEC_uniform
-    (one function Phi(c, c_P)) are the second clause of FEEC.staticFEEC, the closed-range form
-    through its first clause (closed range iff a Poincare inequality, new), and the static field
-    of FEEC.feec_rated is the rate conjunct of that clause; the fields skewAdjoint, wave and heat
-    of FEEC.feec are the three clauses of FEEC.evolutionFEEC, and the wave field of
-    FEEC.feec_rated (for each scheme and regularity index, a group with the wave verdict and the
-    rate) is the HasWaveRate conjunct of its wave clause (one group for every estimate, scheme and
-    index; the group is unique); FEEC.exists_cochainProjection (one subcomplex) and the former
-    FEEC.exists_subcomplexFamily_iff are the two clauses of FEEC.projectionFEEC (the first stated
-    for families, constants uniform in h). Moved out (2026-11-18, one story per entry): Theorem 4
-    (FEEC.crimeFEEC, the three clauses of the former CrimeFamily.Verdict) and its witness
-    FEEC.crime_nonvacuous to palomar/crimes, with the definitions only they use (CrimeFamily and
-    its notions, totalHarmonic, totalMixedSpace); the witness FEEC.feec_cube removed (its family,
-    the lowest-order Whitney forms of the cube, is a family of palomar/fem), with the differential
-    forms and IsCsForm; new: the witness FEEC.spectral_nonvacuous with TorusForm and torusD (the
-    spectral Galerkin family of the torus, Solution/Torus.lean); Challenge 795 -> 618 lines.
-    Removed earlier: SubcomplexFamily.Verdict,
-    SubcomplexFamily.Rated, CrimeFamily.Verdict and IsReducing (with the fields propagates_iff,
-    invariantCore, subcomplex of WaveVerdict and reducing_iff of EvolutionVerdict); new then:
-    SubcomplexFamily.HasWaveRate. Earlier history: the challenge merged the former palomar/static
-    and palomar/dynamic challenges (statements equivalent), and was redesigned for the 1000-line
-    limit with no conclusion dropped: one mixed problem of a pair of closed operators on a Galerkin
-    space (FEEC.MixedSpace, mixedForm, galerkin, IsMixedSolution: x in X and B(x; y) = <v, f> for
-    all y in X, on a Galerkin space equivalent to the three equations; HilbertComplex.mixedSpace,
-    Subcomplex.mixedSpace), solutions as triples; one evolution verdict for a generator and
-    discrete spaces with reading maps (EvolutionVerdict A l X iota B S, as Feec's DissipFEEC) for
-    the wave and the heat equations (the inclusion X_h -> W), so the heat clause also asserts
-    density, the A-stable rational schemes and the temporal error; SubcomplexFamily.HasRate (the
-    mixed method has a rate on regularity classes); CochainProjection.harmonicError. The Solution
-    proves the componentwise forms (Solution/Legacy.lean) and converts (Solution/Convert.lean).
-    Audit A (2026-11-17, an AI editor's read): the per-h fully discrete wave bound (fidelity (5))
-    is disclosed; Feec proves Thm 3.7 of [AFW2010] with no closed-range hypothesis
-    (Feec.HilbertComplex.Subcomplex.exists_cochainProjection), and no gap in the source's proof is
-    claimed. Every merge of the library was gated by a full build (zero warnings), an axiom audit
-    (propext, Classical.choice, Quot.sound only), regression snapshots and an independent AI
-    review. No external mathematical review. Vocabulary pass (2026-11-18): the shared notions are
-    the canonical blocks of palomar/shared/vocabulary.lean.txt (fidelity (10)); the rational
-    schemes are pairs (P, Q) with A-stability on the closed half-plane and the order by
-    O(z^(p+1)), the strong solutions those of a graph, both proved equivalent to the earlier text;
-    the blocks boundaries, mixed and evolution are new (2026-11-18), the text of this entry,
-    shared with palomar/crimes. Independent review (2026-11-18): how the conclusions of the
-    former FEEC.feec_cube follow from palomar/fem and FEEC.staticFEEC (status.scope); the
-    Arnold-Chen paper on parabolic problems added to the sources; the identification of the
-    torus multiplier with the weak exterior derivative stated as Feec proves it (fidelity (7)).
-    Witness (2026-11-18): the harmonic forms of the torus are stated finite-dimensional, of
-    dimension (n choose k) in degree k (was: nonzero in the degrees 0 <= k <= n, which this
-    implies), so that the cohomology clause of the static verdict is exercised (fidelity (7)); the
-    solution uses Feec's de Rham model of the torus, now graded by Z, directly. Independent review
-    (2026-11-19): fidelity (7) names the clause hypothesis the witness meets without stating it
-    (the harmonic gap of SubcomplexFamily.StaticVerdict.cohomology_of_lt). Witness (2026-11-23):
-    it states a Jackson estimate on the Sobolev classes of the torus (IsTorusSobolev, new; mesh
-    size (2 pi (N + 1))^-1, order s, constant 1) and that the truncations fix the harmonic forms,
-    so that the rate conjuncts of Theorems 2 and 3 and the strict harmonic gap of
-    cohomology_of_lt are exercised (fidelity (7); was: the rates exercised only by palomar/fem,
-    the gap holding without being stated); Feec proves the spectral approximation estimate for
-    every symbol complex of the torus (Feec.Fourier.Torus.norm_sub_starProjection_band_le).
-    Independent review (2026-11-23), checked: the former conjuncts of the witness are unchanged,
-    IsTorusSobolev is the H^s norm of T^n = R^n/Z^n for the Fourier convention of TorusForm, the
-    bound h_N^s follows from |2 pi xi| >= 2 pi (N + 1) off the band; changed: the description
-    reads the strict gap as a consequence of ||q - pi_N q|| = 0, and Feec proves the estimate in
-    every weaker norm (Feec.Fourier.Torus.sobolev_sub_starProjection_band_le,
-    ||u - pi_N u||^2_{H^t} <= (1 + (2 pi (N + 1))^2)^(t - s) ||u||^2_{H^s} for t <= s), with the
-    L2 bound of the witness and the truncation bound of the cube
-    (Feec.Models.Cube.Sobolev.sobSum_sub_trunc_le, formerly a copy of the proof) from it. Witness
-    (2026-11-24): the identification of the multiplier torusD with the weak exterior derivative
-    of L2(T^n; Lambda^k), formerly disclosed as not part of the statement, is three conjuncts of
-    the witness (torusInv u has the Fourier coefficients u; torusInv is onto the L2 forms; the
-    graph of d is the weak graph, IsWeakTorusD, tested against all smooth functions), with the new
-    definitions torusHaar, torusInv and IsWeakTorusD (fidelity (7)); the former conjuncts are
-    unchanged; Feec proves the de Rham instance (Feec.Models.Torus.DeRham.mem_graph_iff_isWeak,
-    isWeak_deRham_iff; the linearity of the symbol, Feec.Fourier.Exterior.deRham_m_succ_eq_sum).
-    Independent review (2026-11-24), checked: the new witness implies the former one (proved in a
-    scratch file, not committed: the former statement, copied verbatim and elaborated against the
-    new challenge, has the elaborated type of the former FEEC.spectral_nonvacuous, and every
-    former declaration of the challenge keeps its elaborated type and value under the new import
-    Mathlib.Analysis.Fourier.AddCircleMulti); torusHaar is the measure of Mathlib's
-    UnitAddTorus.mFourierCoeff and mFourierLp; the conjunct on the Fourier coefficients excludes a
-    junk value of the series torusInv; IsWeakTorusD is the distributional d, coefficientwise, with
-    the signs eps(j, s) of torusD, the bilinear pairing and all smooth test functions; at
-    phi = conj(psi) dx_s the codifferential is (delta phi)_{s - j} = -eps(j, s) d_j conj(psi), so
-    the test-form identity of fidelity (7) is the defining one for psi. Changed: the docstring of
-    the witness states the bijection apart from the identification;
-    LinearPMap.mem_graph_iff_exists takes operators between two spaces (was: E -> E), and
-    Feec.Models.Torus.DeRham.mem_graph_iff_isWeak uses it (was: a copy of its proof).
+    No human has reviewed the Challenge statements and definitions yet; the author directed
+    their design. Every change merged into the repository was reviewed by an independent AI
+    agent (Claude, Anthropic) that had not written it, checking the statements against the cited
+    sources and the docstrings against the Lean, and its findings were addressed before merging.
+    Each merge was also gated by a full build with zero errors and warnings, an axiom audit
+    (propext, Classical.choice and Quot.sound only), the repository's naming, layering and
+    citation checks, and lake comparator on the entries whose solutions import a changed
+    module. No external mathematical review.
 
 alignment:
   namespace: "FEEC"

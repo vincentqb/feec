@@ -657,9 +657,9 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ⊆ {u | IsTSD₀ (mat1 u)}) ∧
     ∀ F : Submodule ℝ (L2Vec Ω 1), FiniteDimensional ℝ F →
       ∃ u : L2Vec Ω 1, IsTSD (mat1 u) ∧ ∀ f ∈ F, ¬IsTSD₀ (mat1 (u - f))
-  /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from the TSD
-  datum `(0, 0, 0, ⋆β)` of `D(L)` strong solutions exist on every `[0, T]`, and every one has at
-  some times a non-TSD `E` and a non-symmetric `B` -/
+  /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from some TSD
+  datum of `D(L)` (in the proof `(0, 0, 0, ⋆β)`) strong solutions exist on every `[0, T]`, and
+  every one has at some times a non-TSD `E` and a non-symmetric `B` -/
   weakSymmetry : ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
     (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
     ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →

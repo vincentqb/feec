@@ -23,7 +23,8 @@ equation `U' = L U` of a Hilbert complex, whose operators carry the boundary con
 [QuennevilleBelair2015] (§4.10, Prop 4.17; §6.1) studies whether TSD data stay TSD. Whether
 boundary conditions preserve the constraints is a central question of the initial boundary value
 problem of general relativity ([FriedrichNagy1999], [KreissWinicour2006], [CPRST2003]). This
-entry answers it for each boundary condition.
+entry answers it for three families of boundary conditions: the electric ones (on bounded domains,
+every boundary condition containing `n × E = 0`), the absorbing ones and the mirror ones.
 
 **The criterion** (`FEEC.constraint_propagation`, the fields of `PropagationCriterion`;
 [Kato1995], §III.5.6), over `𝕜 = ℝ` or `ℂ`. A densely defined skew-adjoint generator `L` has a
@@ -59,9 +60,10 @@ complement in `Ω`, the **boundary layer**.
 | mirror (tensorial reflections) | the cube (`MirrorVerdict`) | kept for (4.14) and for (6.1), with moving data |
 
 **Not claimed.** Whether on every bounded domain only stationary data keep the constraint
-(`K* ⊆ N(L)`) is open. It is proved on boxes; on domains star-shaped with respect to a ball it is
-equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)`, and on the ball no such
-eigenfield is `C²` up to the boundary, which leaves the eigenfields of lower regularity.
+(`K* ⊆ N(L)`) is not decided here. It is proved on boxes; on domains star-shaped with respect to a
+ball it is equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)`, and on the
+ball no such eigenfield is `C²` up to the boundary, which leaves the eigenfields of lower
+regularity.
 
 ## Conventions
 
@@ -716,9 +718,9 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ⊆ {u | IsTSD₀ (mat1 u)}) ∧
     ∀ F : Submodule ℝ (L2Vec Ω 1), FiniteDimensional ℝ F →
       ∃ u : L2Vec Ω 1, IsTSD (mat1 u) ∧ ∀ f ∈ F, ¬IsTSD₀ (mat1 (u - f))
-  /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from the TSD
-  datum `(0, 0, 0, ⋆β)` of `D(L)` strong solutions exist on every `[0, T]`, and every one has at
-  some times a non-TSD `E` and a non-symmetric `B` -/
+  /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from some TSD
+  datum of `D(L)` (in the proof `(0, 0, 0, ⋆β)`) strong solutions exist on every `[0, T]`, and
+  every one has at some times a non-TSD `E` and a non-symmetric `B` -/
   weakSymmetry : ∃ U₀, (∃ V, (bggData Ω).IsWave U₀ V) ∧ IsTSDState U₀ ∧ ∀ T > 0,
     (∃ U, U 0 = U₀ ∧ IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U) ∧
     ∀ U, U 0 = U₀ → IsStrongSolution {p | (bggData Ω).IsWave p.1 p.2} (Icc 0 T) U →

@@ -758,12 +758,12 @@ theorem rungeKutta :
 /-! ### The classical inputs -/
 
 /-- **The Hille–Yosida estimates** ([Pazy1983], §1.5), a classical input of the answer. Let `S`
-be a strongly continuous semigroup of a complex Banach space (real ones are covered by
-complexification in `Feec`, not here) with `‖S t‖ ≤ M e^{ωt}`, generator `A`. Every `z` with
-`re z > ω` is in the resolvent set of `A`: there is a bounded `R` with `R (z x - A x) = x` on
-`D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ` for every `m`. At
-`z = 1/τ`, `ωτ < 1`, the resolvent `(1 - τA)⁻¹ = z R` defines the rational schemes `r(τA)`
-(`rationalOfResolvent`) and is backward Euler (`backwardEuler`). -/
+be a strongly continuous semigroup of a complex Banach space (real ones are reached through their
+complexification in the proofs of the other theorems) with `‖S t‖ ≤ M e^{ωt}`, generator `A`.
+Every `z` with `re z > ω` is in the resolvent set of `A`: there is a bounded `R` with
+`R (z x - A x) = x` on `D(A)`, `R y ∈ D(A)` with `A R y = z R y - y`, and `‖Rᵐ‖ ≤ M/(re z - ω)ᵐ`
+for every `m`. At `z = 1/τ`, `ωτ < 1`, the resolvent `(1 - τA)⁻¹ = z R` defines the rational
+schemes `r(τA)` (`rationalOfResolvent`) and is backward Euler (`backwardEuler`). -/
 theorem hilleYosida {E : Type*} [NormedAddCommGroup E] [NormedSpace ℂ E] [CompleteSpace E]
     (S : ℝ → E →L[ℂ] E) (hS : IsC0Semigroup S) {M ω : ℝ}
     (hSb : ∀ t : ℝ, 0 ≤ t → ‖S t‖ ≤ M * Real.exp (ω * t)) (z : ℂ) (hz : ω < z.re) :

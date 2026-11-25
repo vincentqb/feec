@@ -10,8 +10,8 @@ The complexification `cplx X = (0, E, (0, B))` of a state `X = (0, u, 0, ρ)` (r
 the second operator `(S₁, curl)` (`ofRealRows_mem`) and `(0, B)` in the domain of its adjoint,
 with `-d₁† (0, B) = Y_u` (`mem_adjoint_cplx`): the pairing with a complex field splits into real
 and imaginary parts (`ofReal_rows_decomp`), each a real field of the domain, on which it is the
-challenge's Green identity. The fields of a TSD state are complex TSD fields (`tsd_cplx_E`,
-`tsd_cplx_B`).
+challenge's Green identity. The complexified fields of a TSD state are TSD
+(`Solution.MirrorTSD`, `ofRealF_tsd`).
 
 ## References
 

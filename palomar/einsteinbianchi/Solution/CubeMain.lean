@@ -6,7 +6,7 @@ public import Feec.Models.Cube.PolyFiniteElementConvergence
 /-!
 # The hypotheses of `FEEC.WeakSymmetryData.weakSymmetry_of` on the cube, with one constant
 
-With the smoothers of `Feec.Models.Cube.WeakSymmetry.tableRows_uniform_cochainProjection` and the
+With the smoothers of `Feec.Models.Cube.FEM.tableRows_uniform_cochainProjection` and the
 regularity constant of `Feec.Models.Cube.WeakSymmetry.exists_curlPotential_bound`, one constant
 `C` bounds the continuous hypotheses, the projections and the consistency (`cube_hyps`), and the
 spaces of `cubeQ` are those of Table 5.1 (`cubeQ_spaces`).

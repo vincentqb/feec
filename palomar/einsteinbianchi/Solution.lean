@@ -19,9 +19,9 @@ public import Solution.Instance
 adapted, `Solution.WellPosed`).
 
 `FEEC.weakSymmetry_electric`: the cube data are `Feec`'s (`bggData_cube_eq`); `cube_hyps`,
-`cubeQ_spaces`, `femSpace_univ_eq`, the hypotheses of well-posedness and the constrained initial
-values `cubeQ_S0_onto`, `cubeQ_exists_ker` (`Solution.Constrained`), `cube_bestApprox`
-(`Solution.Instance`), the
+`cubeQ_spaces` (`Solution.CubeMain`), `femSpace_univ_eq` (`Solution.MirrorSpaces`), the
+hypotheses of well-posedness and the constrained initial values `cubeQ_S0_onto`,
+`cubeQ_exists_ker` (`Solution.Constrained`), `cube_bestApprox` (`Solution.Instance`), the
 convergence from every datum of `D(L)` and the limit of the TSD datum `(0, 0, 0, ⋆β)`
 (`cube_converges`, `cube_beta`, `Solution.Converge`), and the `H¹` rates `cube_static_rate_sob`,
 `cube_wave_rate_sob` (`Solution.CubeSobolev`, `Solution.CubeWave`). The `C²` rates of the thesis

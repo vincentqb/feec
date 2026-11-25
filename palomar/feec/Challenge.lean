@@ -35,8 +35,8 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
    rational scheme of order `p ≥ 1` ([BrennerThomee1979]), the wave equation at the Jackson
    rates.
 
-The elliptic and parabolic problems need bounded cochain projections, which are uniform discrete
-stability; the hyperbolic one needs only approximation. The witness `FEEC.spectral_nonvacuous`
+The elliptic and parabolic theorems assume bounded cochain projections, which are uniform discrete
+stability; the hyperbolic one assumes only approximation. The witness `FEEC.spectral_nonvacuous`
 shows that a nontrivial family meets the hypotheses of the three theorems, rates included: the
 spectral Galerkin spaces of band-limited forms of the de Rham complex of the torus, with the
 Fourier truncations as cochain projections and a Jackson estimate of these spaces on the Sobolev
@@ -558,9 +558,9 @@ variable [∀ i, NormedSpace ℝ (W i)]
 Prop 4.13; [GilletteHolstZhu2017]; [BrennerThomee1979]). On every window `[a, a + m)` the wave
 operator `L = 𝐝 - 𝐝*` is skew-adjoint. Where `F` approximates (no bound of the projections, no
 closed range), the Hodge wave equation `U' = L U` has a unitary group `S` with the wave verdict and
-the rates of every Jackson estimate; with projections bounded in the graph norm (in `W` in the
-last degree) and closed ranges, the heat equation `u' = L² u` has the evolution verdict. Both
-verdicts include the fully discrete A-stable rational schemes. -/
+the rates of every Jackson estimate; where moreover the projections are bounded in the graph norm
+(in `W` in the last degree) and the ranges closed, the heat equation `u' = L² u` has the evolution
+verdict. Both verdicts include the fully discrete A-stable rational schemes. -/
 theorem evolutionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (F : H.SubcomplexFamily κ) (a : ℤ)
     (m : ℕ) : (H.wave a m)† = -H.wave a m ∧
     (F.ApproximatesOn a m → ∃ S, F.WaveVerdict a m S ∧ ∀ {ρ : Type*} (J : F.Jackson ρ) (s : ρ),

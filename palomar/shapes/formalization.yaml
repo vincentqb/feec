@@ -1,12 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of the affinely invariant polynomial
-# differential forms and their degrees of freedom (`palomar/shapes/`). New on 2026-11-18, from the
-# former palomar/fem (FEEC.unisolvent, FEEC.affineInvariantForms,
-# FEEC.charZero_iff_classification, FEEC.charZero_iff_closed_eq_exact), which had taken the
-# classification theorems from the former palomar/periodic. FEEC.assembly added on 2026-11-24.
-# Open items before submitting (user decisions): the root licence file and `project.license`
-# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
-# a public GitHub repository and the 40-character commit to submit.
+# differential forms and their degrees of freedom (`palomar/shapes/`).
 version: "v0.4"
 
 project:
@@ -74,8 +68,7 @@ project:
     Feec.FiniteElement.PolyElement, Feec.FiniteElement.PolyAssembly).
   authors:
     - "Vincent Quenneville-Bélair"
-  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
-  license: "TBD-BY-USER"
+  license: "Apache-2.0"
   responsible_maintainers:
     - "Vincent Quenneville-Bélair"
 
@@ -90,9 +83,9 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
-    type: "article"
+    type: "paper"
     location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential; (3.2); §3.4: (3.10), (3.18), Theorems 3.5-3.6), §4 (Theorems 4.10, 4.14: the degrees of freedom and their unisolvence), §5.1 (the finite element spaces assembled from the degrees of freedom)"
-    relationship: "formalizes"
+    relationship: "adapts"
     note: >-
       The polynomial spaces are stated in coordinates (a polynomial coefficient for each dx_s),
       over every field where only algebra is involved. The degrees of freedom are compared on a
@@ -111,10 +104,13 @@ sources:
       as {omega in P_r Lambda^k | d omega in P_s Lambda^(k+1)}, the identities (3.4), (3.7),
       (3.19) and Lemma 3.7 as separate statements (proved in Feec in the form the proofs use),
       the decomposition (3.20) and the inequivalence of its summands, and the classification of
-      the affinely invariant subcomplexes (§3.5; not proved in Feec). Locators of §3.4 checked
-      against the published text for the former entry palomar/periodic; those of §4 as cited in
-      Feec, not rechecked for this entry; §5.1 as cited by AFW2010 for its Theorem 5.7 (the
-      proof of the assembly), not rechecked against this text.
+      the affinely invariant subcomplexes (§3.5; not proved in Feec). Adapted: §3.4 is stated over
+      every field of characteristic 0, Theorem 3.6 under invariance by the invertible affine maps
+      only (a weaker hypothesis than the source's, hence a stronger theorem), and the two
+      characteristic-p theorems are not in the source (novelty is not claimed). Locators of §3.4
+      checked against the published text; those of §4 as cited in Feec, not rechecked for this
+      entry; §5.1 as cited by AFW2010 for its Theorem 5.7 (the proof of the assembly), not
+      rechecked against this text.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -122,7 +118,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
-    type: "article"
+    type: "paper"
     location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §5.2: Thm 5.5 (the degrees of freedom of P_r Lambda^k and P_r^- Lambda^k, the geometric decomposition of the dual spaces), the definition of the finite element spaces by single-valued moments"
     relationship: "formalizes"
     note: >-
@@ -131,7 +127,7 @@ sources:
       free coordinates (the assembly) and the dimension; the identification of these spaces with
       the piecewise polynomial forms of H Lambda^k(Omega) (Theorem 5.7) is not claimed (see the
       fidelity notes). Locators of §5.2 (Theorems 5.5 and 5.7, the definition by single-valued
-      moments) checked against arXiv:0906.4325 for this entry on 2026-11-24.
+      moments) checked against arXiv:0906.4325.
     author_endorsement: "not-contacted"
   - title: "Finite Element Exterior Calculus"
     authors:
@@ -167,8 +163,8 @@ status:
     periodic table; AFW2006 §3.5): the theorems classify spaces, not complexes.
     Not compared (proved in Feec, outside the statement): the polynomial identities, dimension
     formulas and exactness of the polynomial de Rham and Koszul complexes of P_r Lambda,
-    P_r^- Lambda and Q_r^- Lambda (formerly compared in palomar/periodic, exactness and
-    dimensions only; Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm), the
+    P_r^- Lambda and Q_r^- Lambda (Feec.Algebra.PolynomialFormDim, Feec.Algebra.CubicalForm),
+    the
     classification with the summands as kernels
     (Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification_ker); for the
     assembled spaces, the spaces with vanishing traces on the boundary (their dimension is the
@@ -199,7 +195,7 @@ automation:
     - method: "manual"
       models: []
       framework: "n/a"
-      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      tool_setup: "Statement design and direction."
       cost:
         wall_time: "not tracked"
         spend_usd: "n/a"
@@ -208,24 +204,17 @@ automation:
   spend_usd: "not tracked"
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
-    written by an AI agent for this submission, to be reviewed by the author; the Solution
-    identifies them with the definitions of the library Feec (Solution/Poly.lean, Affine.lean,
-    Dof.lean, Mesh.lean, Trace.lean, Spaces.lean, Assembly.lean) and applies its theorems. The
-    classification statements and their bridge come from the former entry palomar/periodic
-    (restated on the coordinate forms on 2026-11-17), the unisolvence from the former palomar/fem
-    (2026-11-17); the entry was split off palomar/fem on 2026-11-18 with unchanged statements.
-    FEEC.assembly and Feec.FiniteElement.PolyAssembly were written by an AI agent on 2026-11-24,
-    the statement revised after an independent AI review (the bridges of the finite element
-    spaces, Solution/Mesh.lean, Trace.lean and Spaces.lean, are adapted from those of
-    palomar/fem).
+    written by AI agents under the author's direction; the Solution identifies them with the
+    definitions of the library Feec (Solution/Poly.lean, Affine.lean, Dof.lean, Mesh.lean,
+    Trace.lean, Spaces.lean, Assembly.lean; the bridges of the finite element spaces, Mesh.lean,
+    Trace.lean and Spaces.lean, are those of palomar/fem) and applies its theorems.
 
 fidelity:
   divergences: >-
     (1) Coordinates: polynomial forms are coefficient functions
     Finset (Fin n) -> MvPolynomial (Fin n) K over a field K (the coefficient of dx_s, s a set of
-    indices), the standard coordinate model, not Mathlib's exterior algebra (the former
-    palomar/periodic used P(K^n) (x) Lambda(K^n)*; the two are identified in Feec,
-    Feec.Algebra.ExteriorAlgebraForm). The pullback of polynomial forms is stated by minors,
+    indices), the standard coordinate model, not Mathlib's exterior algebra (the two are
+    identified in Feec, Feec.Algebra.ExteriorAlgebraForm). The pullback of polynomial forms is stated by minors,
     (phi^* omega)_t = sum_(#s = #t) det B_(s,t) (omega_s o phi). Real polynomial forms are
     evaluated to form fields on R^n = Fin n -> R (evalForm) for the moments.
     (2) AFW2006 §3.4 is stated over every field K of characteristic 0 (the source works over R).
@@ -274,20 +263,18 @@ fidelity:
     not use.
 
 review:
-  status: "self-assessed"
+  status: "agent-reviewed"
   reviewers:
-    - "none"
+    - "Claude (Anthropic) agents: independent review of each merge"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the five compared theorems and their
-    definitions); FEEC.unisolvent and faceMoment new on 2026-11-17; FEEC.assembly,
-    SimplicialMesh.faces and PolySeq.testForms new on 2026-11-24 (restated the same day after an
-    independent AI review: conformity as three equivalent conditions over genuine faces, the
-    moments as free coordinates, the citation of AFW2010 Theorem 5.7 moved to the claims not made), when faceMoment was restated over a list of vertices
-    (FEEC.unisolvent over T.points o e: the same moments, definitionally); the classification theorems
-    moved from palomar/periodic (2026-10-31 to 2026-11-04) and restated on the coordinate forms
-    on 2026-11-17; all moved here from palomar/fem on 2026-11-18. Every merge of the library was
-    gated by a full build (zero warnings), an axiom audit (propext, Classical.choice, Quot.sound
-    only) and an independent AI review. No external mathematical review.
+    No human has reviewed the Challenge statements and definitions yet; the author directed
+    their design. Every change merged into the repository was reviewed by an independent AI
+    agent (Claude, Anthropic) that had not written it, checking the statements against the cited
+    sources and the docstrings against the Lean, and its findings were addressed before merging.
+    Each merge was also gated by a full build with zero errors and warnings, an axiom audit
+    (propext, Classical.choice and Quot.sound only), the repository's naming, layering and
+    citation checks, and lake comparator on the entries whose solutions import a changed
+    module. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
@@ -311,16 +298,16 @@ alignment:
       status: "proved"
       note: >-
         From Feec.Counterexamples.PositiveCharacteristic.charZero_iff_classification
-        (Solution/Affine.lean). The source works over R; a fidelity statement about the
-        generalization (2).
+        (Solution/Affine.lean). Not in the source, which works over R; novelty is not claimed
+        (fidelity (2)).
     - source: "[AFW2006] (3.2) (the hypothesis: characteristic 0 is necessary for the homogeneous Poincare lemma)"
       lean: "FEEC.charZero_iff_closed_eq_exact"
       module: "Challenge"
       status: "proved"
       note: >-
         From Feec.Counterexamples.PositiveCharacteristic.charZero_iff_closed_eq_exact
-        (Solution/Affine.lean). The source works over R; a fidelity statement about the
-        generalization (2).
+        (Solution/Affine.lean). Not in the source, which works over R; novelty is not claimed
+        (fidelity (2)).
     - source: "[AFW2006] Theorems 4.9, 4.10, 4.13, 4.14; [AFW2010] Thm 5.5"
       lean: "FEEC.unisolvent"
       module: "Challenge"

@@ -1,12 +1,6 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of the uniformly bounded commuting
-# projections of the finite element de Rham complexes (`palomar/fem/`). Since 2026-11-18 the
-# entry is this one question: its theorems on the fully discrete Hodge wave equation and on
-# Maxwell's equations (semi-discrete) are the entry palomar/waves, its shape-function theorems
-# (unisolvence, the classification of the affinely invariant spaces) the entry palomar/shapes.
-# Open items before submitting (user decisions): the root licence file and `project.license`
-# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
-# a public GitHub repository and the 40-character commit to submit.
+# projections of the finite element de Rham complexes (`palomar/fem/`).
 version: "v0.4"
 
 project:
@@ -16,9 +10,10 @@ project:
     polynomial spaces P_r Lambda^k and P_r^- Lambda^k of Arnold-Falk-Winther, admit cochain
     projections bounded uniformly in the mesh? Stated over Mathlib, the answer is yes, with or
     without boundary conditions, on every bounded open domain star-shaped with respect to a
-    ball, for every shape-regular quasi-uniform family of simplicial meshes and every admissible
-    sequence of polynomial spaces; the families approximate in the graph norm and the
-    projections attain the rate h^(s+1). Three compared theorems.
+    ball (polyhedral, its closure being meshed), for every shape-regular quasi-uniform family of
+    simplicial meshes and every admissible sequence of polynomial spaces; the families
+    approximate in the graph norm and the projections attain the rate h^(s+1). Three compared
+    theorems.
     FEEC.fem (the headline): let Omega in R^n (n >= 1) be a bounded open domain star-shaped
     with respect to a ball, M_N conforming simplicial meshes of Omega (Mathlib's Affine.Simplex),
     uniformly shape regular (every simplex T contains a ball of radius rho with
@@ -46,9 +41,9 @@ project:
     relatively compact in L^2). FEEC.fem_cube, Sobolev rates: the cube (0, 1/2)^n carries
     such a mesh family, the Freudenthal meshes (stated by their vertices: every simplex of M_N is
     a Kuhn simplex h (z + K_sigma), h = 1/(2(N+1)), with vertices
-    h (z + e_sigma(0) + ... + e_sigma(j-1))), for which the family of FEEC.fem (b = false)
-    attains the rate h_N^(s+1) for Sobolev data: if x and dx lie in H^(s+1)(Omega) with norm at
-    most L (H^m(Omega) the restrictions to Omega of the forms whose coefficients have weak
+    h (z + e_sigma(0) + ... + e_sigma(j-1))), for which a family with the conclusions of FEEC.fem
+    (b = false; in the proof, the family of FEEC.fem) attains the rate h_N^(s+1) for Sobolev
+    data: if x and dx lie in H^(s+1)(Omega) with norm at most L (H^m(Omega) the restrictions to Omega of the forms whose coefficients have weak
     derivatives in L^2(R^n) along all words of length at most m), then ||x - pi_N x|| and
     ||d x - d pi_N x|| are at most B L h_N^(s+1), in every dimension.
     This is exactly what the Galerkin theorems of the Palomar entry palomar/feec need
@@ -74,8 +69,7 @@ project:
     Feec.Models.Cube.SobolevRestriction).
   authors:
     - "Vincent Quenneville-Bélair"
-  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
-  license: "TBD-BY-USER"
+  license: "Apache-2.0"
   responsible_maintainers:
     - "Vincent Quenneville-Bélair"
 
@@ -90,16 +84,16 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
-    type: "article"
+    type: "paper"
     location: "Acta Numerica 15 (2006), §3 (the spaces P_r Lambda^k, P_r^- Lambda^k, the Koszul differential), §5 (assembly of the global spaces with single-valued traces, admissible sequences (5.13))"
-    relationship: "formalizes"
+    relationship: "adapts"
     note: >-
       The polynomial spaces are stated in coordinates (a polynomial coefficient for each dx_s),
-      P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1). The global spaces are stated
-      as piecewise polynomial forms with single-valued tangential traces on every common face of
-      two simplices; their equivalence with the assembly from the degrees of freedom is proved in
-      Feec and used in the solution, not stated (the degrees of freedom on one simplex are the
-      entry palomar/shapes). Locators as cited in Feec, not rechecked for this entry.
+      P_r^- Lambda^k = P_(r-1) Lambda^k + kappa H_(r-1) Lambda^(k+1). Adapted: the global spaces
+      are stated as piecewise polynomial forms with single-valued tangential traces on every
+      common face of two simplices (their equivalence with the assembly from the degrees of
+      freedom is FEEC.assembly of palomar/shapes), and the admissible sequences have r_k >= 1
+      (fidelity (5)). Locators as cited in Feec, not rechecked for this entry.
     author_endorsement: "not-contacted"
   - title: "Finite element exterior calculus: from Hodge theory to numerical stability"
     authors:
@@ -107,24 +101,27 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
-    type: "article"
+    type: "paper"
     location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), §3.3-§3.5 (subcomplexes, bounded cochain projections, approximation, Jackson-type estimates), §4 (the L^2 de Rham complex), §5.2 (the complexes of P_r Lambda and P_r^- Lambda), §5.5 (smoothed projections)"
-    relationship: "formalizes"
+    relationship: "adapts"
     note: >-
-      The smoothed projections are constructed in Feec for shape-regular quasi-uniform meshes of a
-      domain star-shaped with respect to a ball (the extension-dilation-mollification construction),
-      and stated only through their properties (uniform L^2 bound, commutation, projection).
-      Locators as cited in Feec, not rechecked for this entry.
+      Adapted: the smoothed projections are constructed in Feec for shape-regular quasi-uniform
+      meshes of a domain star-shaped with respect to a ball (the extension-dilation-mollification
+      construction; the source allows Lipschitz polyhedral domains), and stated only through their
+      properties (uniform L^2 bound, commutation, projection), with the Jackson class of C^(s+2)
+      forms (fidelity (4), (6), (7)). Locators as cited in Feec, not rechecked for this entry.
     author_endorsement: "not-contacted"
   - title: "Smoothed projections in finite element exterior calculus"
     authors:
       - "Snorre H. Christiansen"
       - "Ragnar Winther"
     id: "doi:10.1090/S0025-5718-07-02081-9"
-    type: "article"
+    type: "paper"
     location: "Math. Comp. 77 (2008), the smoothed projections and their uniform L^2 bounds"
-    relationship: "formalizes"
-    note: "Locator as cited in Feec, not rechecked for this entry."
+    relationship: "adapts"
+    note: >-
+      Adapted as for [AFW2010]: star-shaped domains and quasi-uniform meshes (fidelity (4), (6)).
+      Locator as cited in Feec, not rechecked for this entry.
     author_endorsement: "not-contacted"
   - title: "Finite Element Exterior Calculus"
     authors:
@@ -132,7 +129,8 @@ sources:
     id: "doi:10.1137/1.9781611975543"
     type: "book"
     location: "CBMS-NSF Regional Conference Series in Applied Mathematics 93 (2018), Ch. 6 (the L^2 de Rham complex), Ch. 7 (finite element spaces, approximation estimates)"
-    relationship: "formalizes"
+    relationship: "adapts"
+    note: "Adapted as for [AFW2010]: star-shaped domains, quasi-uniform meshes, the C^(s+2) Jackson class."
     author_endorsement: "not-contacted"
   - title: "The Finite Element Method for Elliptic Problems"
     authors:
@@ -147,27 +145,28 @@ sources:
       - "Lawrence C. Evans"
     id: "doi:10.1090/gsm/019"
     type: "book"
-    location: "AMS Graduate Studies in Mathematics 19, 2nd ed. (2010), §5.2 (weak derivatives, H^m), §5.4 (extensions)"
+    location: "AMS Graduate Studies in Mathematics 19, 2nd ed. (2010), §5.2 (weak derivatives, H^m)"
     relationship: "background"
     note: >-
       The Sobolev spaces of FEEC.fem_cube: weak derivatives in L^2(R^n), restricted to the
-      domain (equal to the weak-derivative space H^m(Omega) on Lipschitz domains by the
-      extension theorem, which is not formalized).
+      domain (equal to the weak-derivative space H^m(Omega) on Lipschitz domains by Stein's
+      extension theorem, which is not formalized; Evans §5.4 proves the extension for C^1
+      boundaries).
     author_endorsement: "not-contacted"
   - title: "Simplizialzerlegungen von beschränkter Flachheit"
     authors:
       - "Hans Freudenthal"
     id: "doi:10.2307/1968813"
-    type: "article"
+    type: "paper"
     location: "Ann. of Math. 43 (1942) (the Freudenthal triangulations: the mesh families of FEEC.fem_parallelepiped and FEEC.fem_cube)"
     relationship: "background"
-    author_endorsement: "not-contacted"
+    author_endorsement: "n/a"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
     authors:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
-    type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 4 (finite element approximation of Hilbert complexes)"
+    type: "other"
+    location: "PhD thesis, University of Minnesota, 2015; Ch. 4 (finite element approximation of Hilbert complexes)"
     relationship: "background"
     note: >-
       The thesis uses the uniformly bounded cochain projections of the finite element complexes
@@ -188,14 +187,13 @@ status:
     the project description explains): the uniform discrete Poincare inequality and harmonic
     bound (the converse of FEEC.projectionFEEC), the mixed method and its rates
     (FEEC.staticFEEC), the semidiscrete and A-stable fully discrete wave and heat equations with
-    the rates of the Jackson estimates (FEEC.evolutionFEEC). Compared in other entries since
-    2026-11-18 (formerly here): the inverse estimate, the fully discrete Hodge wave equation, the
-    Whitney schemes of the cube and Maxwell's equations (palomar/waves); the unisolvence of the
-    degrees of freedom and the classification of the affinely invariant spaces of polynomial
-    forms (palomar/shapes).
-    Not compared (proved in Feec, outside the statement): the Whitney forms as a separate family
-    (they are the sequence topSeq of palomar/waves), the assembly of the global spaces from the
-    degrees of freedom, the finite element theory of the cube with mixed boundary conditions, the
+    the rates of the Jackson estimates (FEEC.evolutionFEEC). Compared in other entries: the
+    inverse estimate, the fully discrete Hodge wave equation, the Whitney schemes of the cube and
+    Maxwell's equations (palomar/waves); the unisolvence of the degrees of freedom, their
+    assembly into the finite element spaces and the classification of the affinely invariant
+    spaces of polynomial forms (palomar/shapes). Not compared (proved in Feec, outside the
+    statement): the Whitney forms as a separate family (they are the sequence topSeq of
+    palomar/waves), the finite element theory of the cube with mixed boundary conditions, the
     cubical and weak-symmetry elements, the H^1 approximation of the smoothed projections.
     Not formalized: the closed range, the finite-dimensional harmonic forms and the compactness
     property on general star-shaped or Lipschitz domains (true on Lipschitz domains by Picard
@@ -225,7 +223,7 @@ automation:
     - method: "manual"
       models: []
       framework: "n/a"
-      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      tool_setup: "Statement design and direction."
       cost:
         wall_time: "not tracked"
         spend_usd: "n/a"
@@ -234,14 +232,11 @@ automation:
   spend_usd: "not tracked"
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
-    written by an AI agent for this submission, to be reviewed by the author; the Solution
+    written by AI agents under the author's direction; the Solution
     identifies them with the definitions of the library Feec (Solution/Forms.lean, Poly.lean,
     Mesh.lean, Trace.lean, Spaces.lean, Regularity.lean) and applies its theorems; the
     projections attain the Jackson rate by the quasi-optimality of a bounded projection
     (Solution/Complex.lean, Jackson.projRate, from Feec.ForMathlib.Analysis.QuasiOptimal).
-    Restructured on 2026-11-18 as one question: the theorems of the fully discrete Hodge wave
-    equation and of Maxwell's equations moved to palomar/waves, those of the shape functions to
-    palomar/shapes, with their definitions (the Challenge from 997 to 498 lines).
 
 fidelity:
   divergences: >-
@@ -259,7 +254,7 @@ fidelity:
     tangential traces on every common face (the trace agreement on all subsimplices, not only on
     facets); the sources define them through degrees of freedom or as the piecewise polynomial
     forms in H Lambda^k(Omega). The equivalence of the two descriptions of the global spaces is
-    proved in the solution, not stated; the equivalence with membership in H Lambda^k is not
+    compared in palomar/shapes (FEEC.assembly); the equivalence with membership in H Lambda^k is not
     stated (the conformity direction is a consequence of the subcomplex property, which is
     compared).
     (4) Shape regularity is the bound h_T / rho_T <= sigma (Ciarlet §3.1), stated as: every
@@ -318,26 +313,25 @@ fidelity:
     shared with palomar/feec (the Hilbert complexes and their families), palomar/waves (all but
     the families and IsSobolevForm), palomar/einsteinbianchi (the forms, polynomial forms,
     admissible sequences, meshes, covector values, finite element spaces and IsSobolevForm),
-    palomar/constraints (the Hilbert complexes and the forms), palomar/shapes (the forms,
+    palomar/constraints (the Hilbert complexes and the forms), palomar/bgg (the forms),
+    palomar/shapes (the forms,
     polynomial forms, admissible sequences, simplicial meshes, covector values and finite element
     spaces), palomar/crimes (the Hilbert complexes and the simplicial meshes) and
     palomar/timestepping (the simplicial meshes).
 
 review:
-  status: "self-assessed"
+  status: "agent-reviewed"
   reviewers:
-    - "none"
+    - "Claude (Anthropic) agents: independent review of each merge"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the three compared theorems and
-    their definitions); FEEC.fem (the former FEEC.fem and FEEC.femMin, one theorem over the
-    boundary condition since 2026-11-18), FEEC.fem_parallelepiped and FEEC.fem_cube as of
-    2026-11-06, restated 2026-11-17 without the window verdicts (the static, wave and heat
-    theorems apply through palomar/feec) and with the projection rates (Jackson.ProjRate);
-    FEEC.fem_parallelepiped extended on 2026-11-24 with the harmonic forms and the compactness
-    property of H Lambda and H°Lambda (formerly the closed ranges alone). Every
-    merge of the library was gated by a full build (zero warnings), an axiom audit (propext,
-    Classical.choice, Quot.sound only) and an independent AI review. No external mathematical
-    review.
+    No human has reviewed the Challenge statements and definitions yet; the author directed
+    their design. Every change merged into the repository was reviewed by an independent AI
+    agent (Claude, Anthropic) that had not written it, checking the statements against the cited
+    sources and the docstrings against the Lean, and its findings were addressed before merging.
+    Each merge was also gated by a full build with zero errors and warnings, an axiom audit
+    (propext, Classical.choice and Quot.sound only), the repository's naming, layering and
+    citation checks, and lake comparator on the entries whose solutions import a changed
+    module. No external mathematical review.
 
 alignment:
   namespace: "FEEC"

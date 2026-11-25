@@ -11,7 +11,7 @@ datum `U₀ = (0, 0, 0, ⋆β)`, `β = x₃ (e₁ e₂ᵀ + e₂ e₁ᵀ)`, of `
 
 * `U₀` lies in the domain of `L`, with `(L U₀)_u = B⁻¹ diag(1, -1, 0)`, from Green's formula for
   `curl_min` against the smooth `β` (`curl β = -diag(1, -1, 0)`, `inner_rhoBeta_dt1`); every
-  `V` with `L U₀ = V` has this electric component (`isWave_rhoBeta_eq`), by density of `D(d̃¹)`.
+  `V` with `L U₀ = V` has this electric component (`isWave_datumBeta_eq`), by density of `D(d̃¹)`.
 * Along a strong solution, `B' = B(d̃u) = curl_min E` (`fieldE_mem_curl_minimal`) and
   `⟪E'(0), diag(1, -1, 0)⟫ = 2|Ω| ≠ 0`, so `B(t)` is not symmetric for some `t`
   (`Feec.Counterexamples.BoundedBGG.exists_not_symm_of_path`), and `E(t)` is not TSD for some `t`

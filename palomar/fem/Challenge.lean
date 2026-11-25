@@ -18,11 +18,12 @@ public import Mathlib.RingTheory.MvPolynomial.Homogeneous
 
 Do the finite element de Rham complexes of `P_rΛ` and `P_r⁻Λ` forms admit cochain projections
 bounded uniformly in the mesh? Let `Ω ⊆ ℝⁿ` be a bounded open domain star-shaped with respect to a
-ball (the sources allow Lipschitz polyhedral domains), `M_N` shape-regular, quasi-uniform
-simplicial meshes of `Ω` with `h_N → 0`, and `S` an admissible sequence (`P_{r_k}Λᵏ` or
-`P_{r_k}⁻Λᵏ` in each degree; [AFW2006], §5; [AFW2010], §5.2). The finite element spaces
-`S_k(M_N)` (`femSpace`) are the `L²` forms that are on every simplex a polynomial form of `S_k`,
-with single-valued tangential traces; `S̊_k(M_N)` have moreover vanishing traces on `∂Ω`.
+ball, polyhedral since its closure is meshed (the sources allow Lipschitz polyhedral domains),
+`M_N` shape-regular, quasi-uniform simplicial meshes of `Ω` with `h_N → 0`, and `S` an admissible
+sequence (`P_{r_k}Λᵏ` or `P_{r_k}⁻Λᵏ` in each degree; [AFW2006], §5; [AFW2010], §5.2). The finite
+element spaces `S_k(M_N)` (`femSpace`) are the `L²` forms that are on every simplex a polynomial
+form of `S_k`, with single-valued tangential traces; `S̊_k(M_N)` have moreover vanishing traces on
+`∂Ω`.
 
 **They do** (`fem`; [AFW2010], §5.5; [ChristiansenWinther2008]): with or without boundary
 conditions, `S(M_N) ⊆ HΛ(Ω)` and `S̊(M_N) ⊆ H̊Λ(Ω)` are families of finite-dimensional
@@ -442,7 +443,7 @@ def IsSobolevForm {n : ℕ} (Ω : Set (Fin n → ℝ)) (m : ℕ) (j : ℤ) (L : 
 /-! ### Uniform stability -/
 
 /-- **The finite element de Rham complexes are uniformly stable** ([AFW2006], §5; [AFW2010],
-§5.2, §5.5; [ChristiansenWinther2008]; [Arnold2018], Ch. 7; [QuennevilleBelair2015], Ch. 4). For
+§5.2, §5.5; [ChristiansenWinther2008]; [Arnold2018], Ch. 7). For
 `Ω` star-shaped with respect to a ball, shape-regular, quasi-uniform meshes `M_N` of `Ω` with
 `h_N → 0` and an admissible sequence `S`: `HΛ(Ω)` (`b = false`, `dMax`), resp. `H̊Λ(Ω)` (`b = true`,
 `dMin`), is a Hilbert complex, and the spaces `S_k(M_N)`, resp. `S̊_k(M_N)` (vanishing boundary
@@ -451,7 +452,8 @@ projections extend to projections `P` of `L²(Ω; Λᵏ)` with `‖P‖` bounded
 bounded in every graph norm), which approximates in the graph norm, with a Jackson estimate of
 order `h_N^{s+1}` for `C^{s+2}` forms (`IsCsForm`, resp. `IsCsFormMin`) in the degrees where `S`
 reproduces `P_sΛ` (`PolySeq.PolyOrderAt`), attained by the projections (`Jackson.ProjRate`): the
-hypotheses of `FEEC.staticFEEC` and `FEEC.evolutionFEEC` but closed ranges (module docstring). -/
+hypotheses of `FEEC.staticFEEC` and `FEEC.evolutionFEEC` except closed ranges (module
+docstring). -/
 theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M) (S : PolySeq) (b : Bool) :
     ∃ (H : HilbertComplex ℝ (L2Form Ω)) (F : H.SubcomplexFamily ℕ) (J : F.Jackson ℕ),
@@ -469,9 +471,9 @@ theorem fem [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsStarShapedBall Ω)
 
 /-- **Parallelepipeds** ([Freudenthal1942]; [AFW2010], §3.1.3, §4; [Arnold2018], Ch. 6): every
 parallelepiped `Ω = A (0, 1)ⁿ + b`, `A` invertible, is star-shaped with respect to a ball and
-carries a shape-regular, quasi-uniform family of meshes with `h_N → 0` (images of Freudenthal
-meshes); `HΛ(Ω)` (`bc = false`, `dMax`), resp. `H̊Λ(Ω)` (`bc = true`, `dMin`), is a Hilbert complex
-in which, in every degree `k`, `dᵏ` has closed range, the harmonic forms
+carries a shape-regular, quasi-uniform family of meshes with `h_N → 0` (in the proof, images of
+Freudenthal meshes); `HΛ(Ω)` (`bc = false`, `dMax`), resp. `H̊Λ(Ω)` (`bc = true`, `dMin`), is a
+Hilbert complex in which, in every degree `k`, `dᵏ` has closed range, the harmonic forms
 `ℌᵏ = N(dᵏ) ∩ N((dᵏ⁻¹)*)` (`HilbertComplex.harmonic` of `palomar/feec`) are finite-dimensional,
 of dimension `[k = 0]`, resp. `[k = n]` (that of the cohomology `N(dᵏ) / R(dᵏ⁻¹) ≅ ℌᵏ`), and the
 compactness property holds: the unit ball of `D(dᵏ) ∩ D((dᵏ⁻¹)*)` in its graph norm
@@ -499,7 +501,8 @@ theorem fem_parallelepiped [NeZero n] (A : Matrix (Fin n) (Fin n) ℝ) (hA : IsU
 /-- **Sobolev rates on the cube** ([AFW2010], §5.4–§5.5; [Arnold2018], Ch. 7): the cube `(0, ½)ⁿ`
 carries a shape-regular, quasi-uniform family of meshes with `h_N → 0`, the Freudenthal meshes
 (`IsFreudenthal`, [Freudenthal1942]; other mesh families are not covered), such that for every
-admissible sequence `S` the family of `fem` has a Jackson estimate of order `h_N^{s+1}` for the
+admissible sequence `S` a family with the conclusions of `fem` (in the proof, the family of `fem`)
+has a Jackson estimate of order `h_N^{s+1}` for the
 forms `x` with `x, dx ∈ H^{s+1}(Ω)` of norm at most `L` (`IsSobolevForm`; `H^{s+1} ⊆ D(d)`),
 where `S` reproduces `P_sΛ`, attained by its cochain projections (`Jackson.ProjRate`). -/
 theorem fem_cube [NeZero n] : ∃ M : ℕ → SimplicialMesh n, IsMeshFamily (cube n) M ∧

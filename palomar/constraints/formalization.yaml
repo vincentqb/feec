@@ -3,9 +3,6 @@
 # the TSD constraints of the linearized Einstein-Bianchi equations (`palomar/constraints/`): the
 # criterion (propagation is reduction, the invariant core) and the verdict of each boundary
 # condition.
-# Open items before submitting (user decisions): the root licence file and `project.license`
-# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
-# a public GitHub repository and the 40-character commit to submit.
 version: "v0.4"
 
 project:
@@ -16,22 +13,17 @@ project:
     The linearized Einstein-Bianchi system evolves the electric and magnetic parts E, B of the
     linearized Weyl tensor and describes gravitational waves only while E and B are TSD
     (symmetric, trace-free, divergence-free). It is the Hodge wave equation U' = L U of a Hilbert
-    complex whose operators carry the boundary conditions; the thesis (§4.10, Prop 4.17; §6.1)
-    studies whether TSD data stay TSD, the question of constraint-preserving boundary conditions
+    complex whose operators carry the boundary conditions; the author's thesis
+    (Quenneville-Bélair 2015, §4.10, Prop 4.17; §6.1) studies whether TSD data stay TSD, the question of constraint-preserving boundary conditions
     of the initial boundary value problem of general relativity (Friedrich-Nagy, Kreiss-Winicour,
     Calabrese-Pullin-Reula-Sarbach-Tiglio). Stated over Mathlib in the vocabulary of differential
-    forms, with the definitions of forms and minimal exterior derivatives (shared with palomar/fem,
-    palomar/waves and palomar/einsteinbianchi, the form fields also with palomar/shapes), Hilbert
-    complexes (with palomar/feec, palomar/fem, palomar/crimes and palomar/waves), their windows
-    (Total, totalDomain, totalD, wave; with palomar/feec, palomar/crimes and palomar/waves), the
-    square sq of an operator (with palomar/feec and palomar/crimes) and strong solutions (with
-    palomar/feec, palomar/crimes and palomar/einsteinbianchi), the canonical blocks of
-    palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate, and the
-    Einstein-Bianchi vocabulary shared with palomar/einsteinbianchi as canonical blocks too: the
-    vector forms (L2Vec, vecOp), the fields (mat1, mat2, IsTSD), the system (6.1) (wedge,
-    WeakSymmetryData with IsWave, FormData, bggData), its constraint (IsTSDState) and the mirror
-    data (dPart, mirrorData), whose bottom row is also the operator pair of the system (4.14) with
-    the mirror boundary conditions (gradCurlMirror). Operators are given by their graphs
+    forms; the forms and minimal exterior derivatives, Hilbert complexes, their windows, the square
+    sq of an operator, strong solutions and the Einstein-Bianchi vocabulary (the vector forms
+    L2Vec, vecOp; the fields mat1, mat2, IsTSD; the system (6.1): wedge, WeakSymmetryData with
+    IsWave, FormData, bggData; its constraint IsTSDState; the mirror data dPart, mirrorData, whose
+    bottom row is also the operator pair of the system (4.14) with the mirror boundary
+    conditions, gradCurlMirror) are canonical blocks shared with other Palomar entries of this
+    repository (palomar/shared/vocabulary.lean.txt). Operators are given by their graphs
     (relations), an evolution S of
     u' = A u on I (IsEvolution: bounded linear S t over the scalars, S 0 = 1, every orbit from
     D(A) a strong solution on I; no group law assumed) and the invariant core
@@ -53,16 +45,7 @@ project:
     (the thesis' Prop 4.16). (shortComplex) For a real short Hilbert complex of closed densely
     defined d^0, d^1 (d^1 d^0 = 0) and a reducing subcomplex Z^0 x Z^1 x Z^2, every strong
     solution of the Hodge wave equation (in the relation form of the systems below) starting in
-    Z^0 x Z^1 x Z^2 stays in it. So the question for each boundary condition is K*. These are the
-    fields propagates_iff, invariantCore, subcomplex and reducing_iff of the former verdict of
-    palomar/feec, compared here at least as generally: propagates_iff and invariantCore by group
-    with window (the wave group of every window, unique), subcomplex by window, reducing_iff by
-    group (the wave group) and by semigroup with window (the heat semigroup of every window, also
-    that of the former verdict with variational crimes), for every window of every Hilbert
-    complex over R or C, without the approximation hypotheses under which palomar/feec stated
-    them. The evolution of the former verdict is the one here: its orbits from D(L) are strong
-    solutions on every [0, T], so it agrees with the unique evolution at t >= 0, and at t < 0 by
-    the group laws of both.
+    Z^0 x Z^1 x Z^2 stays in it. So the question for each boundary condition is K*.
     FEEC.tsd_boundary_conditions : FEEC.TSDVerdict, the verdict of each boundary condition, one
     field per boundary condition and domain class (interior, ElectricVerdict, StarShapedVerdict,
     ball, BoxVerdict, AbsorbingVerdict, MirrorVerdict), for the system (4.14)
@@ -83,14 +66,18 @@ project:
     Hilbert complex (closed, densely defined, d^1 d^0 = 0), the system has an evolution, and for
     every one K* = {0} x S_1* x S_2* with closed S_1*, S_2* of TSD fields, the largest reducing
     subcomplex of the complex in K (IsReducingSubcomplex; so PropagationCriterion.shortComplex
-    applies to it), S_1* within L^2(TSD_0) (rows weakly divergence-free with vanishing normal
-    trace; zero mean), both strictly smaller than L^2(TSD), S_2* containing a nonzero stationary
-    datum; for every boundary condition containing n x E = 0 (every short Hilbert complex
+    applies to it), both strictly smaller than L^2(TSD), S_2* containing every stationary TSD
+    magnetic datum, among them a linearly independent sequence; for every short Hilbert complex
+    W^0 -> L^2 Lambda^1 (x) R^3 -> W^2 with D(d^1) in H°(curl) and every evolution of its Hodge
+    wave equation, the data whose evolution keeps sigma = 0 and E TSD have E in L^2(TSD_0) (rows
+    weakly divergence-free with vanishing normal trace; zero mean), so S_1* lies in L^2(TSD_0); for
+    every boundary condition containing n x E = 0 (every short Hilbert complex
     W^0 -> L^2 Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 whose d^1 is a restriction of the minimal
     curl, W^0 and d^0 arbitrary; among them the complex of (4.14) and, with W^0 = 0, the
     first-order system E' = -curl* B, B' = curl E with n x E = 0), the TSD datum (0, 0, beta),
     beta = x_3 (e_1 e_2^T + e_2 e_1^T), lies in D(L), and from (0, E_0, beta) every strong
-    solution on [0, T], T > 0, has a non-TSD electric field at some time;
+    solution on [0, T], T > 0, has a non-TSD electric field and a non-symmetric magnetic field at
+    some times;
     K does not reduce L, already because P_K D(L) is not in D(L), in the electric and in the
     magnetic slot, for every boundary condition containing n x E = 0: the orthogonal projection
     onto L^2(TSD) of some u with (0, u, 0) in D(L) leaves H°(curl), which contains D(d^1) (for
@@ -98,14 +85,14 @@ project:
     rho' onto L^2(TSD) of some rho with (0, 0, rho) in D(L) has (0, 0, rho') outside D(L), so
     that P_K (0, 0, rho) = (0, 0, rho') leaves D(L) whatever the electric part of K (for the
     electric boundary conditions, the projection onto L^2(TSD) of some field with rows in
-    H(curl) leaves H(curl)); L^2(TSD) and D(d^1) intersect in a non-dense subspace of L^2(TSD),
-    for every restriction d^1 of the minimal curl (for the electric ones, D(d^1) = H°(curl)); and
-    for the system (6.1) of the complex with weak symmetry of
-    Ch. 5-6 (the same boundary conditions in both rows) the TSD datum (0, 0, 0, *beta) of D(L)
-    has strong solutions on every [0, T], every one of which has a non-TSD E and a non-symmetric
-    B at some times;
+    H(curl) leaves H(curl)); for every restriction d^1 of the minimal curl (for the electric ones,
+    D(d^1) = H°(curl)) the closure of L^2(TSD) ∩ D(d^1) lies in L^2(TSD_0), which has infinite
+    codimension in L^2(TSD); and for the system (6.1) of the complex with weak symmetry of Ch. 5-6
+    (the same boundary conditions in both rows) some TSD datum of D(L) (in the proof
+    (0, 0, 0, *beta)) has strong solutions on every [0, T], every one of which has a non-TSD E and
+    a non-symmetric B at some times;
     (domains star-shaped with respect to a ball) L^2(TSD) and H(curl) (rows in H Lambda^1)
-    intersect in a dense subspace of L^2(TSD), while the closure of L^2(TSD) and H°(curl) is
+    intersect in a dense subspace of L^2(TSD), while the closure of L^2(TSD) ∩ H°(curl) is
     L^2(TSD_0), and K* consists of stationary data iff no nonzero TSD eigenfield u of curl* curl
     with frequency xi > 0 has curl u outside H°(curl);
     (the unit ball) every TSD eigenfield (xi != 0) with a representative C^2 on a neighbourhood of
@@ -132,20 +119,13 @@ project:
     D(L) in the constraint and stay in it, and some datum U_0 of the constraint with
     U_0, L U_0, L^2 U_0 in D(L) has L U_0 != 0.
     Not claimed: whether on every bounded domain only stationary data keep the constraint
-    (K* in N(L)). It is open; it is proved on boxes, it is equivalent on domains star-shaped with
+    (K* in N(L)); it is proved on boxes, it is equivalent on domains star-shaped with
     respect to a ball to the absence of TSD eigenfields u with curl u outside H°(curl), and on the
     ball no such eigenfield is C^2 up to the boundary. The proof is the library Feec of this
-    repository (Feec.Semigroup.Stone, Feec.Semigroup.Invariance,
-    Feec.Semigroup.DissipativeInvariance, Feec.HilbertComplex.Window, Dirac, HodgeHeat, Reducing,
-    Feec.Counterexamples.BoundedDomainTSD,
-    Feec.Counterexamples.BoundedBGG, BoxStationary, BallEigenfields,
-    Feec.Models.StarShaped.EigenDense, Feec.Models.BoundedDomain.MovingTSD, Interior,
-    Feec.Models.Cube.Absorbing, AbsorbingTSD, Feec.Models.Cube.Mirror, MirrorBGG,
-    MirrorConstraint, MirrorWeakSymmetryTSD).
+    repository (status.scope and the alignment name its modules).
   authors:
     - "Vincent Quenneville-Bélair"
-  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
-  license: "TBD-BY-USER"
+  license: "Apache-2.0"
   responsible_maintainers:
     - "Vincent Quenneville-Bélair"
 
@@ -158,15 +138,20 @@ sources:
     authors:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
-    type: "PhD thesis, University of Minnesota, 2015"
-    location: "§3.4 (the first-order system), §4.4 (Thm 4.6: the Hodge wave operator is skew-adjoint), §4.9 (Prop 4.16: reducing subcomplexes), §4.10 ((4.14), Prop 4.17: propagation of the TSD constraints), §5.3, §6.1, §6.3 (the complex with weak symmetry and its boundary conditions)"
-    relationship: "formalizes"
+    type: "other"
+    location: "PhD thesis, University of Minnesota, 2015; §3.4 (the first-order system), §4.4 (Thm 4.6: the Hodge wave operator is skew-adjoint), §4.9 (Prop 4.16: reducing subcomplexes), §4.10 ((4.14), Prop 4.17: propagation of the TSD constraints), §5.3, §6.1, §6.3 (the complex with weak symmetry and its boundary conditions)"
+    relationship: "adapts"
     note: >-
       The source of the systems (4.14) and (6.1), of their electric boundary conditions, those of
       the minimal complexes (§4.10, §6.3), and of the question whether the TSD constraints
-      propagate (Prop 4.17, §6.1). The verdicts of FEEC.tsd_boundary_conditions (the invariant core on bounded domains,
-      the star-shaped and ball criteria, boxes), the absorbing and mirror boundary conditions are
-      Feec's. The formalization is by the thesis author.
+      propagate (Prop 4.17, §6.1). On every nonempty bounded open domain the compared verdict
+      differs from Prop 4.17, which states under a projection hypothesis that TSD data stay TSD
+      with the electric boundary conditions: the projection hypothesis, the density used in its
+      proof and the conclusion do not hold there (ElectricVerdict.projection_electric, not_dense
+      and beta), and the criterion states Thm 4.6 without its closed-range hypothesis. The verdicts
+      of FEEC.tsd_boundary_conditions (the invariant core on bounded domains, the star-shaped and
+      ball criteria, boxes) and the absorbing and mirror boundary conditions are not in the thesis;
+      novelty is not claimed. The formalization is by the thesis author.
     author_endorsement: "participated"
   - title: "Perturbation Theory for Linear Operators"
     authors:
@@ -183,14 +168,18 @@ sources:
     id: "doi:10.1007/978-1-4612-5561-1"
     type: "book"
     location: "Applied Mathematical Sciences 44 (1983), §1.4 (Lumer-Phillips), §1.10 (Stone), §4.1"
-    relationship: "background"
+    relationship: "adapts"
+    note: >-
+      Stone's theorem and the Lumer-Phillips theorem, conjuncts of FEEC.constraint_propagation,
+      adapted to Hilbert spaces over R or C with the evolutions characterized by their strong
+      solutions.
     author_endorsement: "not-contacted"
   - title: "The Initial Boundary Value Problem for Einstein's Vacuum Field Equation"
     authors:
       - "Helmut Friedrich"
       - "Gabriel Nagy"
     id: "doi:10.1007/s002200050571"
-    type: "article"
+    type: "paper"
     location: "Comm. Math. Phys. 201 (1999), 619-655"
     relationship: "background"
     note: "Constraint-preserving boundary conditions for the Einstein equations; not formalized."
@@ -200,7 +189,7 @@ sources:
       - "Heinz-Otto Kreiss"
       - "Jeffrey Winicour"
     id: "doi:10.1088/0264-9381/23/16/S07"
-    type: "article"
+    type: "paper"
     location: "Class. Quantum Grav. 23 (2006), S405-S420"
     relationship: "background"
     note: "Constraint preservation at boundaries in numerical relativity; not formalized."
@@ -213,7 +202,7 @@ sources:
       - "Olivier Sarbach"
       - "Manuel Tiglio"
     id: "doi:10.1007/s00220-003-0889-2"
-    type: "article"
+    type: "paper"
     location: "Comm. Math. Phys. 240 (2003), 377-395"
     relationship: "background"
     note: "Constraint-preserving boundary conditions by derivative conditions; not formalized."
@@ -233,7 +222,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
-    type: "article"
+    type: "paper"
     location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), 281-354, §4 (the minimal and maximal exterior derivatives)"
     relationship: "background"
     author_endorsement: "not-contacted"
@@ -243,7 +232,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0025-5718-07-01998-9"
-    type: "article"
+    type: "paper"
     location: "Math. Comp. 76 (2007), 1699-1723"
     relationship: "background"
     note: "The connecting map S^1 = 2 vskw of the complex with weak symmetry."
@@ -265,9 +254,8 @@ status:
     the projection hypothesis in the electric and in the magnetic slot, the density and the
     electric part of the invariant core; the
     absorbing boundary conditions on the cube, with the domain of dependence; the mirror
-    boundary conditions on the cube for the systems (4.14) and (6.1)). The Challenge is 866
-    lines. Open,
-    and not claimed: that only stationary data
+    boundary conditions on the cube for the systems (4.14) and (6.1)). Not claimed: that only
+    stationary data
     keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
     absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
     fields C^2 up to the boundary; Feec proves it on the ball only under the boundary regularity
@@ -311,7 +299,7 @@ automation:
     - method: "manual"
       models: []
       framework: "n/a"
-      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      tool_setup: "Statement design and direction."
       cost:
         wall_time: "not tracked"
         spend_usd: "n/a"
@@ -320,7 +308,7 @@ automation:
   spend_usd: "not tracked"
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
-    written by an AI agent for this submission, to be reviewed by the author; the Solution
+    written by AI agents under the author's direction; the Solution
     identifies them with the definitions of the library Feec and applies its theorems:
     Solution/Engine.lean (evolutions and strong solutions as Feec's C_0-groups and semigroups
     over R or C, uniqueness of evolutions, the reducing criteria, Stone's group as the
@@ -456,46 +444,18 @@ fidelity:
     AbsorbingVerdict.lost give losses (within every [0, T], T > 0).
 
 review:
-  status: "self-assessed"
+  status: "agent-reviewed"
   reviewers:
-    - "none"
+    - "Claude (Anthropic) agents: independent review of each merge"
   notes: >-
-    Not yet reviewed by the author: the Challenge statement (the two compared theorems and their
-    definitions, 2026-11-18, new), and its changes of 2026-11-23: ElectricVerdict.projection,
-    renamed projection_electric, has a second conjunct for every boundary condition containing
-    n x E = 0, ElectricVerdict.not_dense
-    is stated for every restriction d^1 of the minimal curl (the former statement its instance
-    d^1 = the minimal curl), and ElectricVerdict.beta states (0, 0, beta) in D(L) for every such
-    boundary condition (formerly for (4.14) only, now its instance); then the new clauses
-    ElectricVerdict.projection_magnetic (the magnetic slot), TSDVerdict.interior (every open set,
-    R^3 included) and AbsorbingVerdict.interior, with the new definitions IsDivFree, IsSymTFOn
-    and depDomain, and AbsorbingVerdict.lost within every interval [0, T] (formerly at some
-    t >= 0, which follows).
-    FEEC.constraint_propagation states the criterion formerly in
-    the verdict of palomar/feec (there for the windows of Hilbert complexes approximated by
-    subcomplex families; here for every window, and for every skew-adjoint or m-dissipative
-    generator), and FEEC.tsd_boundary_conditions contains the statements formerly compared in
-    palomar/einsteinbianchi as FEEC.tsd_not_propagates (ElectricVerdict.weakSymmetry),
-    FEEC.box_stationary (BoxVerdict.forward; its existence clause through
-    ElectricVerdict.evolution, an evolution on R on every bounded open set) and
-    FEEC.mirror_tsd_propagates (the (6.1) instance of MirrorVerdict), the same statements over
-    the same definitions. New (2026-11-24, not yet reviewed by the author): the mirror verdict is
-    one structure MirrorVerdict A K for a system A and a constraint K, asserted for (6.1) (the
-    former statement, unchanged up to the membership notation) and for the system (4.14) with
-    the mirror boundary conditions (the new definition gradCurlMirror). New (2026-11-25, not yet
-    reviewed by the author): ElectricVerdict.not_dense states that the closure of L^2(TSD) and
-    D(d^1) lies in L^2(TSD_0), of infinite codimension in L^2(TSD) (the former non-density, the
-    case F = 0); ElectricVerdict.core that S_2* contains every stationary TSD magnetic datum, with
-    a linearly independent sequence of them (the former nonzero stationary datum follows), its
-    clause S_1* within L^2(TSD_0) now the instance of the new clause ElectricVerdict.core_electric
-    (every short complex with D(d^1) in H°(curl)); ElectricVerdict.beta adds that B loses its
-    symmetry; and the new definition IsShortComplex replaces the hypotheses of a short complex,
-    written out before in ElectricVerdict.complex, beta, projection_electric, projection_magnetic
-    and PropagationCriterion.shortComplex (the same statements).
-    The identifiers of the sources other than the thesis were checked against Crossref
-    (2026-11-18). Every merge of the library was gated by a full build (zero warnings), an axiom audit
-    (propext, Classical.choice, Quot.sound only) and an independent AI review. No external
-    mathematical review.
+    No human has reviewed the Challenge statements and definitions yet; the author directed
+    their design. Every change merged into the repository was reviewed by an independent AI
+    agent (Claude, Anthropic) that had not written it, checking the statements against the cited
+    sources and the docstrings against the Lean, and its findings were addressed before merging.
+    Each merge was also gated by a full build with zero errors and warnings, an axiom audit
+    (propext, Classical.choice and Quot.sound only), the repository's naming, layering and
+    citation checks, and lake comparator on the entries whose solutions import a changed
+    module. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
@@ -531,7 +491,8 @@ alignment:
         dense intersection of D(d_1) and D(d_0*) (Feec.ShortHilbertComplex.dense_domain_inf_adjoint,
         Feec.Domain.topologicalClosure_inf_eq_of_mapsTo), exists_projTSD_not_mem_domain,
         density_dichotomy, both halves, H(curl) through
-        Feec.Domain.ConstCoeffOp.maximal_ofMatrixCLM_of_comm and curlOp_formalAdj_apply),
+        Feec.Domain.ConstCoeffOp.maximal_ofMatrixCLM_of_comm and
+        Feec.Domain.curlOp_formalAdj_apply),
         Feec.Models.BoundedDomain (invariantCore₁_le_tsd₀ on every short complex with D(d_1) in
         H°(curl), inf_le_tsd₀, not_tsd_le_tsd₀_sup_finiteDimensional, hessL2_mem_adjoint,
         linearIndependent_hessL2_expCos, not_coreSub_le_stationary_iff) with

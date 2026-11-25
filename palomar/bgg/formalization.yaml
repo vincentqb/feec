@@ -1,18 +1,11 @@
 # yaml-language-server: $schema=https://raw.githubusercontent.com/mathlib-initiative/formalization.yaml/main/schema/formalization.schema.json
 # formalization.yaml v0.4 for the Palomar submission of the BGG complexes of Arnold and Hu
-# (`palomar/bgg/`). Re-created (2026-11-18) from the former palomar/bgg (deleted when palomar/feec
-# absorbed it), whose BGG theorems it compares again: FEEC.bggCohomology, FEEC.bggFinrank and
-# FEEC.bggHilbert, with the former FEEC.bggIdentification, FEEC.bggSum, FEEC.bggExplicit,
-# FEEC.bggOrthogonal and the shortExact field of the former BGG verdict as clauses of these three
-# theorems. The discretization with weak symmetry of the former entry (FEEC.bggWeakSymmetry) is
-# compared in palomar/einsteinbianchi.
-# Open items before submitting (user decisions): the root licence file and `project.license`
-# (Palomar requires exactly one root LICENSE whose SPDX identifier equals `project.license`),
-# a public GitHub repository and the 40-character commit to submit.
+# (`palomar/bgg/`). The discretization with weak symmetry (FEEC.bggWeakSymmetry) is compared in
+# palomar/einsteinbianchi.
 version: "v0.4"
 
 project:
-  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, the output Hilbert complex with the quotient norm, and the L^2 Hessian, elasticity and div-div complexes on parallelepipeds"
+  name: "Bernstein-Gelfand-Gelfand complexes (Arnold-Hu 2021): the output complex, its cohomology and dimension, the explicit cohomology map and representatives, the output Hilbert complex with the quotient norm, and the BGG complexes of the L^2 Hessian, elasticity and div-div diagrams on parallelepipeds"
   description: >-
     A Lean 4 formalization of the Bernstein-Gelfand-Gelfand construction of Arnold and Hu (2021),
     §3 and §5, the abstract construction from which they derive the elasticity, Hessian and
@@ -27,7 +20,8 @@ project:
     (24)-(26), by cochain maps Gamma / Delta -> V / R(S) and N(S) -> Gamma / Delta bijective
     before and after J (and at J when S^J is bijective), with the differential d~ (S^J)^(-1) d at
     J (BGG.Identification), and T is an extension 0 -> V -> T -> V~ -> 0; with S^i injective for
-    i < J and onto modulo d for i >= J (R(d^i) + R(S^i) = V^(i+1), in particular S^i surjective),
+    i < J and onto modulo d for i >= J (R(d^i) + R(S^i) = V^(i+1), implied by, and weaker than,
+    S^i surjective),
     the inclusion Gamma -> T and the projection Gamma -> Gamma / Delta are quasi-isomorphisms (the
     BGG complex has the cohomology of the twisted complex, §5.2), the BGG complex is exact when
     both rows are, and if S is null-homotopic it has the cohomology of the sum complex; if
@@ -66,7 +60,8 @@ project:
     J = n - 1) have stacked diagrams of their domain complexes (the graph spaces) that satisfy
     the hypotheses of the main clause of FEEC.bggHilbert, s^i bounded below before J and onto
     modulo d from J on (the regular decompositions of §2, Theorem 3, on Omega), so their BGG
-    complexes are bounded Hilbert complexes with closed range in every degree, with
+    complexes, with the quotient norm, have bounded differentials with closed range in every
+    degree, with
     finite-dimensional cohomology of dimension n + 1, 6 and n + 1 in degree 0 and 0 in the other
     degrees: the rows have the cohomology of a point, so S induces zero on cohomology and the
     dimensions of the rows add ((27)); and their cohomology in degree 0 is identified:
@@ -77,9 +72,12 @@ project:
     v closed, and on the connected parallelepiped a 0-form with constant weak gradient is affine),
     the kernels of hess, sym grad and dev grad that the classical complexes resolve
     (Pauly-Zulehner; Arnold-Hu, §1, for RM). The hypothesis "onto modulo d" replaces the
-    surjectivity of (23) because (23) fails for the examples: for the Hessian, elasticity and
-    div-div diagrams of the L^2 de Rham complexes on any nonempty open set of R^3, S^J is not
-    onto between the L^2 domains (Feec.Domain.hessianMaximalData_not_surjective,
+    surjectivity of (23); in the diagrams (20) of Arnold-Hu, whose bottom row has in degree i the
+    regularity of the top row in degree i + 1 and S^i = id (x) s^i, (23) is a condition on
+    finite-dimensional maps s^i, met by their examples, but it fails in the diagrams of L^2 de Rham
+    complexes of the same regularity used here: for the Hessian, elasticity and div-div diagrams
+    of the L^2 de Rham complexes on any nonempty open set of R^3, S^J is not onto between the L^2
+    domains (Feec.Domain.hessianMaximalData_not_surjective,
     Feec.Domain.elasticityMaximalData_not_surjective,
     Feec.Domain.divDivMaximalData_not_surjective), while on every parallelepiped the regular
     decompositions make S onto modulo d (a clause of FEEC.bggParallelepiped); the clauses with
@@ -112,8 +110,7 @@ project:
     divDiv_lowest_iff).
   authors:
     - "Vincent Quenneville-Bélair"
-  # TBD-BY-USER: replace with the SPDX identifier of the root LICENSE file once added.
-  license: "TBD-BY-USER"
+  license: "Apache-2.0"
   responsible_maintainers:
     - "Vincent Quenneville-Bélair"
 
@@ -127,9 +124,9 @@ sources:
       - "Douglas N. Arnold"
       - "Kaibo Hu"
     id: "doi:10.1007/s10208-021-09498-9"
-    type: "article"
+    type: "paper"
     location: "Found. Comput. Math. 21 (2021), §3 ((19)-(31), Theorems 6 and 7, Proposition 1, Corollary 1), §4.1-4.2 (the examples: the diagram (32) in three dimensions, (36) in n dimensions) and §5 ((58)-(59) the twisted complex, §5.1 the sum complex, §5.2 splitting off an exact subcomplex); locators checked against the arXiv preprint (arXiv:2005.12437), not against the published version"
-    relationship: "formalizes"
+    relationship: "adapts"
     note: >-
       §5 proves Theorem 6 in two steps: the twisted complex compared with the sum complex (§5.1)
       and its splitting into the output complex and an exact subcomplex (§5.2). The challenge
@@ -140,28 +137,46 @@ sources:
       Theorem 6 (FEEC.bggFinrank), and the Hilbert-complex conclusions of Theorem 6 and of the
       paragraph after it, with the quotient norm, and the orthogonal form of (30) with the
       Moore-Penrose inverse (29) into the output complex (24)-(26), with Corollary 1
-      (FEEC.bggHilbert). The equation and section numbers were checked against the arXiv
+      (FEEC.bggHilbert). Adapted: the hypothesis (23) of the main clauses is weakened to S^i
+      injective before J and onto modulo d from J on, the algebraic theorems hold over any ring,
+      on Z and for arbitrary S, the output complex is the subquotient Gamma / Delta with the
+      quotient norm (at J equivalent to, not equal to, the paper's norm), and the examples are
+      diagrams of L^2 de Rham complexes of the same regularity on parallelepipeds (fidelity (1),
+      (3), (6), (7), (11)). The equation and section numbers were checked against the arXiv
       preprint; their agreement with the published article is not verified.
     author_endorsement: "not-contacted"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
     authors:
       - "Vincent Quenneville-Bélair"
     id: "http://hdl.handle.net/11299/175309"
-    type: "PhD thesis, University of Minnesota, 2015"
-    location: "Ch. 5 (the BGG diagram of the linearized Einstein-Bianchi system)"
+    type: "other"
+    location: "PhD thesis, University of Minnesota, 2015; Ch. 5 (the BGG diagram of the linearized Einstein-Bianchi system)"
     relationship: "background"
     note: >-
-      The thesis uses the two-row diagram of Arnold-Hu for the complex with weak symmetry; its
-      discretization (Prop 5.4, Thm 5.5) is compared in palomar/einsteinbianchi, not here. The
-      formalization is by the thesis author.
+      The thesis builds its complex with weak symmetry from a two-row diagram with weakly imposed
+      symmetry, after [AFW2007] (Ch. 5); its discretization (Prop 5.4, Thm 5.5) is compared in
+      palomar/einsteinbianchi, not here. The formalization is by the thesis author.
     author_endorsement: "participated"
+  - title: "BGG sequences with weak regularity and applications"
+    authors:
+      - "Andreas Čap"
+      - "Kaibo Hu"
+    id: "doi:10.1007/s10208-023-09608-9"
+    type: "paper"
+    location: "Found. Comput. Math. 24 (2024), 1145-1184"
+    relationship: "background"
+    note: >-
+      BGG sequences on Sobolev spaces of weak regularity, the closest work on the analytic BGG
+      construction beyond the smooth and the shifted-regularity settings; not formalized, and
+      novelty is not claimed for the generality of fidelity (6)-(7).
+    author_endorsement: "not-contacted"
   - title: "Bernstein-Gelfand-Gelfand sequences"
     authors:
       - "Andreas Čap"
       - "Jan Slovák"
       - "Vladimír Souček"
     id: "doi:10.2307/3062111"
-    type: "article"
+    type: "paper"
     location: "Ann. of Math. (2) 154 (2001)"
     relationship: "background"
     note: "BGG sequences in differential geometry; not formalized."
@@ -172,7 +187,7 @@ sources:
       - "I. M. Gelfand"
       - "S. I. Gelfand"
     id: "zbmath:0338.58019"
-    type: "incollection"
+    type: "paper"
     location: "Lie Groups and Their Representations (Budapest, 1971), Halsted, 1975, 21-64"
     relationship: "background"
     note: "The BGG resolution, origin of the name; not formalized."
@@ -183,7 +198,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1017/S0962492906210018"
-    type: "article"
+    type: "paper"
     location: "Acta Numerica 15 (2006), §11"
     relationship: "background"
     note: "The elasticity complex derived from two de Rham complexes, an instance of the construction."
@@ -194,7 +209,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0273-0979-10-01278-4"
-    type: "article"
+    type: "paper"
     location: "Bull. Amer. Math. Soc. (N.S.) 47 (2010), 281-354, §4 (the L^2 de Rham complex HΛ(Omega))"
     relationship: "background"
     note: "The rows of the diagrams of FEEC.bggParallelepiped: the weak exterior derivative dMax on L^2(Omega; Λ)."
@@ -205,7 +220,7 @@ sources:
       - "Richard S. Falk"
       - "Ragnar Winther"
     id: "doi:10.1090/S0025-5718-07-01998-9"
-    type: "article"
+    type: "paper"
     location: "Math. Comp. 76 (2007), 1699-1723"
     relationship: "background"
     note: "The map S v = sum_a dx_a ∧ v_a of the Hessian diagram of FEEC.bggParallelepiped."
@@ -215,7 +230,7 @@ sources:
       - "Dirk Pauly"
       - "Walter Zulehner"
     id: "doi:10.1080/00036811.2018.1542685"
-    type: "article"
+    type: "paper"
     location: "Applicable Analysis 99 (2020), 1579-1630"
     relationship: "background"
     note: "The L^2 Hessian and div-div complexes and their cohomology, the examples of FEEC.bggParallelepiped."
@@ -244,14 +259,10 @@ status:
     FEEC.bggHilbert for the stacked diagrams of their domain complexes, closed range of the BGG
     complexes in every degree, finite-dimensional cohomology of dimension n + 1, 6, n + 1 in
     degree 0 and 0 in the other degrees, and the degree-0 cohomology identified with the affine
-    functions, the rigid motions and the fields a + c x); the cube (0, 1/2)^3 of the former
-    FEEC.bggCube is the case n = 3, A = I/2, b = 0 (FEEC.cube_eq_parallelepiped, proved in the
-    challenge), every open box the case of a diagonal A. Challenge.lean, 919 lines. The
-    first three are the BGG theorems of the former palomar/bgg (FEEC.bggCohomology,
-    FEEC.bggIdentification, FEEC.bggFinrank, FEEC.bggSum, FEEC.bggExplicit, FEEC.bggHilbert,
-    FEEC.bggOrthogonal), regrouped into three theorems with no conclusion dropped (review.notes);
-    its weak-symmetry theorem FEEC.bggWeakSymmetry is compared in palomar/einsteinbianchi. The
-    corollary states the dimensions of the cohomology and identifies the degree-0 cohomology of the
+    functions, the rigid motions and the fields a + c x); the cube (0, 1/2)^3 is the case n = 3,
+    A = I/2, b = 0 (FEEC.cube_eq_parallelepiped, proved in the challenge), every open box the case
+    of a diagonal A. The weak-symmetry theorem FEEC.bggWeakSymmetry is compared in
+    palomar/einsteinbianchi. The corollary states the dimensions of the cohomology and identifies the degree-0 cohomology of the
     three BGG complexes with the affine functions P_1, the rigid motions RM and the fields a + c x
     (RT) as spaces of L^2 functions on the parallelepiped (a linear injection H^0 -> L^2 with that
     range, mapping the class of a cocycle [(sigma, phi)] to the function u of sigma = (u, du)); the
@@ -299,14 +310,16 @@ status:
     maps (Feec.Models.Parallelepiped.deRham_hasRegularDecomposition_affine; FEEC.bggParallelepiped
     uses them through the diagrams of forms), and in three
     dimensions for the de Rham complexes with values in K^m over every RCLike K
-    (deRhamVec_hasRegularDecomposition_affine, deRhamVec_hasRegularDecomposition_Q), with their
-    finite-dimensional cohomology (finiteDimensional_cohomology_deRhamVec_affine); these give the
+    (Feec.Models.Parallelepiped.deRhamVec_hasRegularDecomposition_affine, from
+    Feec.Models.Cube.Sobolev.deRhamVec_hasRegularDecomposition_Q), with their finite-dimensional
+    cohomology (Feec.Models.Parallelepiped.finiteDimensional_cohomology_deRhamVec_affine); these
+    give the
     onto-modulo-d hypothesis R(d) + R(S) = D(d) of the Hessian, elasticity and div-div diagrams
     of vector proxies between the L^2 domain complexes
     (Feec.Domain.hessianMaximalData_regularDecomposition,
     elasticityMaximalData_regularDecomposition, divDivMaximalData_regularDecomposition; on the
-    cube Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q and its siblings), while
-    (23) itself fails there: S^J is not onto between the L^2 domains on any nonempty open set
+    cube Feec.Models.Cube.hessianMaximalData_regularDecomposition_Q and its siblings), while the
+    surjectivity of (23) fails there: S^J is not onto between the L^2 domains on any nonempty open set
     (Feec.Domain.hessianMaximalData_not_surjective, elasticityMaximalData_not_surjective,
     divDivMaximalData_not_surjective, from the general
     Feec.Domain.ConstCoeffBGG.not_surjective_maximalData_domainS: rescaled test fields and the
@@ -343,7 +356,7 @@ automation:
     - method: "manual"
       models: []
       framework: "n/a"
-      tool_setup: "Statement design, review of definitions and of the challenge statement."
+      tool_setup: "Statement design and direction."
       cost:
         wall_time: "not tracked"
         spend_usd: "n/a"
@@ -352,7 +365,7 @@ automation:
   spend_usd: "not tracked"
   notes: >-
     Human-directed, AI-written development. The Challenge statement and its definitions were
-    written for this submission by an AI agent and are to be reviewed by the author; the Solution
+    written by AI agents under the author's direction; the Solution
     translates them to the library Feec (Solution/Bridge.lean: the stacked diagram as
     Feec.BGG.Data, whose twisted complex is the challenge's by definition, and the Hilbert rows as
     Feec.BGG.BoundedData) and applies Feec.BGG.Data.quasiIso_Γ, Feec.BGG.Data.quasiIso_derived,
@@ -361,7 +374,13 @@ automation:
     Feec.BGG.Data.quasiIso_bggSumMap, Feec.BGG.Data.bgg_represents, the general subquotient of
     Feec.HilbertComplex.Quotient (Gamma / Delta on the l2 products as a
     Feec.HilbertComplex.Subquotient), Feec.BGG.BoundedData.isClosed_bgg_Δ,
-    Feec.BGG.BoundedData.quasiIso_orthSumMap, isIso_toOrth and orth_represents.
+    Feec.BGG.BoundedData.quasiIso_orthSumMap, isIso_toOrth and orth_represents; for
+    FEEC.bggParallelepiped, Solution/Parallelepiped.lean (the stacked diagrams of the graph
+    spaces of Feec's analytic BGG data of forms, Feec.FiniteElement.hessianFormData,
+    elasticityFormData and divDivFormData, with the hypotheses on the rows
+    Feec.Models.Parallelepiped.FormBGG.deRham_hasRegularDecomposition_domain and
+    Feec.Models.Parallelepiped.finrank_cohomology) and FEEC.bggHilbert and FEEC.bggFinrank of the
+    challenge.
 
 fidelity:
   divergences: >-
@@ -485,75 +504,18 @@ fidelity:
     motions; P_1 and RT are the kernels of the Hessian and div-div complexes of Pauly-Zulehner.
 
 review:
-  status: "self-assessed"
+  status: "agent-reviewed"
   reviewers:
-    - "none"
+    - "Claude (Anthropic) agents: independent review of each merge"
   notes: >-
-    Re-created entry (2026-11-18, the form that needs no new Feec work): the BGG
-    theorems of the former palomar/bgg (deleted when palomar/feec absorbed them; palomar/feec
-    compared FEEC.bggCohomology, FEEC.bggFinrank and FEEC.bggHilbert only) move out of
-    palomar/feec and the bookkeeping dropped there is restored as clauses: FEEC.bggCohomology
-    states the former FEEC.bggIdentification (BGG.Identification, for every S and J), the
-    shortExact field of the former FEEC.BGG.Verdict (for every S), the former verdict
-    (quasi-isomorphisms, cohomology of T, exactness) under the hypotheses, the cohomology of the
-    sum complex of the former FEEC.bggSum under the hypotheses, its Proposition 1 and isomorphism
-    with the sum complex for every null-homotopy, and the former FEEC.bggExplicit; FEEC.bggHilbert
-    states the former FEEC.bggHilbert (main clause, its hypotheses now premises of the clause) and
-    the former FEEC.bggOrthogonal (orthogonal clause); FEEC.bggFinrank is unchanged. The
-    definitions are those of the former palomar/bgg (Gamma and Delta in its readable form,
-    FEEC.BGG.ΓL, ΔL, QuotL as definitions), minus FEEC.BGG.Verdict (now clauses) and the weak
-    symmetry. Every merge of the library was gated by a full build (zero warnings), an axiom audit
-    (propext, Classical.choice, Quot.sound only), regression snapshots and an independent AI
-    review. No external mathematical review; not yet reviewed by the author, in particular the
-    clause structure of the three statements, the orthogonal clause of FEEC.bggHilbert and the
-    quotient norm of its main clause (at J equivalent but not equal to the norm of Arnold-Hu, see
-    fidelity (3)), and the definitions FEEC.BGG.moorePenrose, FEEC.BGG.Υ, FEEC.BGG.ΓL,
-    FEEC.BGG.ΔL and FEEC.BGG.QuotL. Editorial risk (two AI editorial audits, 2026-11-17): the
-    entry was the algebraic and Hilbert-space skeleton of Arnold-Hu, with no concrete instance.
-    FEEC.bggCube (2026-11-23) adds it: the Hessian, elasticity and div-div complexes of §4.1 on
-    the cube, closed range in every degree and the dimensions 4, 6, 4 of their cohomology in
-    degree 0 (0 above), from the regular decompositions of the L^2 de Rham complex on the cube
-    and the cohomology of a point of its rows; since 2026-11-23 also H^0 = P_1, RM, RT
-    (was: the dimensions only), by BGG.DomainDiagram.CohomologyIs, from the lowest cohomology of a
-    BGG complex (Feec.BGG.Data.exists_bgg_homology_lowCycles) and the distributional kernel on the
-    connected cube (a 0-form of HΛ(Q) with constant weak gradient is affine, then
-    Feec.Models.Cube.FormBGG.exists_maximal_eq_sum_dxL2_iff, now
-    Feec.FiniteElement.exists_maximal_eq_sum_dxL2_iff). Independent review
-    (2026-11-23): in vector proxies wedge, crossWedge and dxVec are the connecting maps of §4.1
-    with the skew matrix (mskw v)_(ab) = eps_(abc) v_c (S^0 = I, S^1 = 2 vskw, S^2 = tr;
-    -mskw, S, 2 vskw; . I, -mskw, I), at J = 0, 1, 2; the dimensions are 1 + 3, 3 + 3 and 3 + 1
-    (S induces zero on cohomology since H^(-1)(V~) = H^1(V) = 0); FEEC.bggCube was proved from
-    FEEC.bggHilbert and FEEC.bggFinrank of the challenge; the module docstring states the
-    question the four theorems answer. Independent review of BGG.DomainDiagram.CohomologyIs
-    (2026-11-23): its compatibility clause determines f (every class of H^0 is that of a cocycle
-    in Gamma^0), so it states that [(sigma, phi)] -> u is well defined, one-to-one and onto P;
-    P_1, RM and RT are the u with d u = S^0 c for a constant c, S^0 = I, mskw (up to sign) and
-    ι in vector proxies; Arnold-Hu do not name these spaces (fidelity (11)). Since 2026-11-24
-    the corollary is FEEC.bggParallelepiped (was FEEC.bggCube, on the cube (0, 1/2)^3 only):
-    every parallelepiped A (0, 1)^n + b, the Hessian and div-div diagrams in every dimension
-    (n >= 1 for div-div), with the definition FEEC.parallelepiped of palomar/fem and the proved
-    FEEC.cube_eq_parallelepiped; the former statement is the case n = 3, A = I/2, b = 0 (checked
-    in a scratch file against the former statement copied verbatim, not committed). The proof
-    keeps its structure: the two hypotheses on the rows are transported from the cube along the
-    pullback of forms (Feec.Models.Parallelepiped.deRham_hasRegularDecomposition_affine,
-    finrank_cohomology), and the degree-0 identification holds on every bounded open set with
-    dim H^0(HΛ) = 1 (Feec.FiniteElement.ker_maximal_zero_eq_span, generalized from the cube).
-    What remains of the risk: the corollary is on the parallelepipeds only (not on general
-    Lipschitz domains), and FEEC.bggParallelepiped with its definitions (parallelepiped, graph2,
-    dxWedge, dxVec, crossWedge, BGG.DomainDiagram, BGG.DomainDiagram.Verdict,
-    BGG.DomainDiagram.CohomologyIs) is not yet reviewed by the author. Independent review of
-    FEEC.bggParallelepiped (2026-11-24): the former FEEC.bggCube follows from it (proved in a
-    scratch file, not committed, against the former statement of main ff4a488 copied verbatim:
-    n = 3, A = I/2, b = 0 with FEEC.cube_eq_parallelepiped and (3 : Z) - 1 = 2; also from the
-    Solution, with the standard axioms only); the other three compared statements and the other
-    definitions are unchanged; the dimensions n + 1, 6, n + 1 and the degree-0 cohomology agree
-    with a computation by hand of Gamma^0 / Delta^0, also in the degenerate case n = 0 (the
-    parallelepiped is the point R^0, dim H^0 = 1). Fixes: the n-dimensional diagrams are located
-    in §4.2 of Arnold-Hu (fidelity (11); they were attributed to §4.1 with the locators for
-    n ≠ 3 unchecked), and the remark that the diagram on Omega is conjugate to that of the cube
-    by the pullback composed with constant matrices on the vector index, which is not proved, is
-    removed from the docstring of FEEC.bggParallelepiped, from fidelity (11) and from the module
-    docstring of Feec.Models.Parallelepiped.BGGCohomology.
+    No human has reviewed the Challenge statements and definitions yet; the author directed
+    their design. Every change merged into the repository was reviewed by an independent AI
+    agent (Claude, Anthropic) that had not written it, checking the statements against the cited
+    sources and the docstrings against the Lean, and its findings were addressed before merging.
+    Each merge was also gated by a full build with zero errors and warnings, an axiom audit
+    (propext, Classical.choice and Quot.sound only), the repository's naming, layering and
+    citation checks, and lake comparator on the entries whose solutions import a changed
+    module. No external mathematical review.
 
 alignment:
   namespace: "FEEC"
@@ -589,8 +551,7 @@ alignment:
         cohomologyEquiv and Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology;
         orthogonal clause through FEEC.BGG.orthogonal from
         Feec.BGG.BoundedData.quasiIso_orthSumMap, Feec.BGG.BoundedData.isIso_toOrth and
-        Feec.BGG.BoundedData.orth_represents. Statement and FEEC.BGG.ΓL, FEEC.BGG.ΔL,
-        FEEC.BGG.QuotL, FEEC.BGG.moorePenrose, FEEC.BGG.Υ not yet reviewed by the author.
+        Feec.BGG.BoundedData.orth_represents.
     - source: "[ArnoldHu2021], §4.1 (the Hessian, elasticity and div-div diagrams for n = 3) and §4.2 (the Hessian and div-div diagrams in n dimensions, J = 0 and J = n - 1 in (36)) with Theorem 6 and (27), on parallelepipeds; §2, Theorem 3 (regular decompositions); their degree-0 cohomology P_1, RM, RT: [PaulyZulehner2020] and [ArnoldHu2021], §1 (RM)"
       lean: "FEEC.bggParallelepiped"
       module: "Challenge"
@@ -611,7 +572,6 @@ alignment:
         divDiv_lowest_iff with Feec.FiniteElement.ker_maximal_zero_eq_span; on the parallelepipeds
         (FEEC.parallelepiped_eq: Feec.Models.Parallelepiped.domain (2 A) b) the hypotheses are
         Feec.Models.Parallelepiped.FormBGG.deRham_hasRegularDecomposition_domain and
-        Feec.Models.Parallelepiped.finrank_cohomology. Statement and definitions not yet reviewed
-        by the author.
+        Feec.Models.Parallelepiped.finrank_cohomology.
 
 acknowledgements: "Mathlib and the Lean FRO; the literature cited above."

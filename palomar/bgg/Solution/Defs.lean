@@ -439,7 +439,8 @@ def ΔL (s : ∀ i, Ht i →L[𝕜] H (i + 1)) (hs : ∀ i x, d (i + 1) (s i x) 
 
 /-- **The space `Γⁱ / Δⁱ` of the BGG complex with the quotient norm** of the `ℓ²` norm,
 `‖[x]‖ = inf_{δ ∈ Δⁱ} ‖x - δ‖`. For `i ≠ J` it is the norm of the output space `Υⁱ` of
-[ArnoldHu2021], (25) (`‖[(σ, φ)]‖ = ‖P_{R(Sⁱ⁻¹)ᗮ} σ‖` before `J`, `‖φ‖` on `0 × N(Sⁱ)` after `J`);
+[ArnoldHu2021], (25) (`‖[(σ, φ)]‖ = ‖P_{R(Sⁱ⁻¹)ᗮ} σ‖` before `J`, for `R(Sⁱ⁻¹)` closed, e.g.
+`Sⁱ⁻¹` bounded below; `‖φ‖` on `0 × N(Sⁱ)` after `J`);
 at `J` it is `inf_ψ (‖σ + Sψ‖² + ‖φ - d̃ψ‖²)^½`, under (23) equivalent to, not equal to,
 `‖P_{R(Sᴶ⁻¹)ᗮ} σ‖`. -/
 abbrev QuotL (s : ∀ i, Ht i →L[𝕜] H (i + 1))

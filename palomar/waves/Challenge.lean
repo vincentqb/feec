@@ -525,10 +525,11 @@ def IsMaxwellGalerkin (Ω : Set (Fin 3 → ℝ)) (V₀ : Set (L2Field Ω (Fin 1)
 
 /-- **The global inverse estimate** ([Ciarlet2002], §3.2; [BrennerScott2008], §4.5): for a
 shape-regular, quasi-uniform family of meshes `M_N` of an open `Ω` whose open simplices lie in `Ω`
-(true when `Ω` is the interior of its closure, e.g. Lipschitz or star-shaped), every admissible
-sequence and every degree `k`, the forms `v` of `S_k(M_N)` lie in `HΛᵏ(Ω)` and
-`h_N ‖dv‖ ≤ C ‖v‖`, `C` independent of `N`. It bounds the discrete wave operator,
-`‖Lₕ‖ ≤ 2 C / h_N`: the CFL condition of `fem_wave` and `leapfrog_cube`. -/
+(true when `Ω` is the interior of its closure, e.g. Lipschitz or star-shaped with respect to a ball;
+`Ω` is polyhedral, its closure being meshed), every admissible sequence and every degree `k`, the
+forms `v` of `S_k(M_N)` lie in `HΛᵏ(Ω)` and `h_N ‖dv‖ ≤ C ‖v‖`, `C` independent of `N`. It
+bounds the discrete wave operator, `‖Lₕ‖ ≤ 2 C / h_N`: the CFL condition of `fem_wave` and
+`leapfrog_cube`. -/
 theorem inverse_estimate [NeZero n] {Ω : Set (Fin n → ℝ)} (hΩ : IsOpen Ω)
     {M : ℕ → SimplicialMesh n} (hM : IsMeshFamily Ω M)
     (hint : ∀ N, ∀ T ∈ (M N).simplices, interior T.closedInterior ⊆ Ω) (S : PolySeq) (k : ℕ) :

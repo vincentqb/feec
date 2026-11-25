@@ -16,10 +16,12 @@ so are those of every short complex carried to a `Feec` short complex by unitary
 (`hodgeWave_graph_iff`, `eq_waveGroup_of_isEvolution`, `mem_invariantCore_iff_of`).
 The electric and magnetic fields carry `L²(TSD)`, `L²(TSD₀)`, `H̊(curl)`, `H(curl)`, the adjoint of
 the curl and the eigenfields to those of `Feec` (`mem_dom_iff`, `mem_domMax_iff`, `isTSD₀_iff`,
-`isEigenfield_iff`), and the verdicts are those of `Feec.Counterexamples.BoundedDomainTSD`
-(`electric_of`), `Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with
+`isEigenfield_iff`), and the verdicts are those of `Feec.Counterexamples.BoundedDomainTSD` and
+`Feec.Models.BoundedDomain.eq_zero_of_isEigenfield_of_mem_minimal` (`electric_of`),
+`Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` with
 `Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl` (`starShaped_of`),
-`Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball` (`ball_of`) and
+`Feec.Counterexamples.BallEigenfields` (`not_coreSub_le_stationary_of_eigenfield`, `eigenfield_of`;
+`eq_zero_of_isEigenfield_of_contDiff_ball`, `ball_of`) and
 `Feec.Counterexamples.BoxStationary.mem_invariantCore_tsd_iff_box` (`box_of`).
 
 ## References
@@ -263,6 +265,30 @@ theorem gcState_magnetic (ρ : L2Vec Ω 2) :
   · change fieldE (0 : L2Vec Ω 1) = (0 : L2F ℝ Ω Ix); simp
   · rfl
 
+omit hΩ in
+theorem gcState_electric (u : L2Vec Ω 1) :
+    gcState ((0, u, 0) : L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) =
+      inj₁ (𝕜 := ℝ) (L2F ℝ Ω (Fin 3)) (L2F ℝ Ω Ix) (L2F ℝ Ω Ix) (fieldE u) := by
+  refine PiLp.ext fun i => ?_
+  fin_cases i
+  · change -field0 (0 : L2Vec Ω 0) = (0 : L2F ℝ Ω (Fin 3)); simp
+  · rfl
+  · change fieldB (0 : L2Vec Ω 2) = (0 : L2F ℝ Ω Ix); simp
+
+/-- **`K*` consists of stationary data iff `Feec`'s `coreSub` does**, through the state map. -/
+theorem invariantCore_subset_stationary_iff {S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ]
+    (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2)} (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) :
+    invariantCore S (tsdConstraint Ω) ⊆ {U | (U, 0) ∈ gradCurlWave Ω} ↔
+      (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) ≤ (gradCurl ℝ hΩ).stationary := by
+  constructor
+  · intro h y hy
+    have hx : gcInv y ∈ invariantCore S (tsdConstraint Ω) := by
+      rw [gc_mem_invariantCore_iff hΩ hS, gcState_gcInv]; exact hy
+    have := (gc_mem_stationary_iff hΩ _).1 (h hx)
+    rwa [gcState_gcInv] at this
+  · intro h x hx
+    exact (gc_mem_stationary_iff hΩ x).2 (h ((gc_mem_invariantCore_iff hΩ hS x).1 hx))
+
 /-- A magnetic datum `B ∈ D(d₁†)` with `d₁† B = 0` is stationary. -/
 theorem inj₂_mem_stationary {B : L2F ℝ Ω Ix} (hB : B ∈ ((gradCurl ℝ hΩ).d₁†).domain)
     (h0 : (gradCurl ℝ hΩ).d₁† ⟨B, hB⟩ = 0) :
@@ -385,25 +411,6 @@ theorem isEigenfield_iff (ξ : ℝ) (v : L2Vec Ω 1) :
       exact e.symm
     obtain ⟨h2, e2⟩ := apply_of_mem_graph ((mem_graph_adjoint_curl_iff hΩ _ _).2 hg)
     exact ⟨h1, h2, e2⟩
-
-/-- `curl v ∉ H̊(curl)`, read through the fields. -/
-theorem curl_not_mem_iff (v : L2Vec Ω 1) :
-    (∀ h, ¬∃ w ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
-        mat1 w = mat2 ((vecOp fun _ => dMin Ω 1) ⟨v, h⟩)) ↔
-      ∀ h1 : fieldE v ∈ (gradCurl ℝ hΩ).d₁.domain,
-        ((gradCurl ℝ hΩ).d₁ ⟨fieldE v, h1⟩ : L2F ℝ Ω Ix) ∉
-          ((curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω).domain := by
-  constructor
-  · intro H h1 hm
-    have h := (mem_dom_iff hΩ v).2 h1
-    refine H h ⟨fieldE.symm ((gradCurl ℝ hΩ).d₁ ⟨fieldE v, h1⟩), (mem_dom_iff hΩ _).2 (by simpa
-      using hm), ?_⟩
-    rw [mat1_eq_mat2_iff, LinearIsometryEquiv.apply_symm_apply, curl_fieldE hΩ ⟨v, h⟩ h1]
-  · rintro H h ⟨w, hw, e⟩
-    have h1 := (mem_dom_iff hΩ v).1 h
-    refine H h1 ?_
-    rw [curl_fieldE hΩ ⟨v, h⟩ h1, ← (mat1_eq_mat2_iff _ _).1 e]
-    exact (mem_dom_iff hΩ w).1 hw
 
 end GradCurl
 

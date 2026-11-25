@@ -36,7 +36,7 @@ reduces it iff `S(t)`, `t ≥ 0`, keeps `K` and `Kᗮ`. On every window of a Hil
 Hodge wave operator is skew-adjoint, its square is m-dissipative, and the product of a reducing
 subcomplex propagates ([QuennevilleBelair2015], Prop 4.16). The question is then to compute `K*`.
 
-**The verdicts** (`FEEC.tsd_boundary_conditions`, the fields of `TSDVerdict`, one per row) for the
+**The verdicts** (`FEEC.tsd_boundary_conditions`, the fields of `TSDVerdict`, by row) for the
 system (4.14) on states `(σ, E, B)` (`gradCurlWave`, `gradCurlMirror`, constraint
 `K = {0} × L²(TSD) × L²(TSD)`, `tsdConstraint`), for the system (6.1), the Hodge wave equation of
 the complex with weak symmetry that the method of Ch. 5–6 builds from Bernstein–Gelfand–Gelfand
@@ -55,19 +55,19 @@ complement in `Ω`, the **boundary layer**.
 
 | boundary conditions | domain | verdict |
 |---|---|---|
-| electric | every open `Ω`, `ℝ³` included (`TSDVerdict.interior`) | `σ = 0` and the Gauss laws kept, symmetry and trace-freeness on the domain of dependence: kept on `ℝ³`, lost at most in the boundary layer |
-| | every nonempty bounded open `Ω` (`ElectricVerdict`) | lost from every `(0, E₀, β)`, `E` leaving TSD and `B` its symmetry, `P_K D(L) ⊄ D(L)` in the electric and in the magnetic slot, and the electric part of `K*` of vanishing normal trace, for every boundary condition containing `n × E = 0`; the closure of `L²(TSD) ∩ H̊(curl)` within `L²(TSD₀)`, of infinite codimension; `K*` the largest reducing subcomplex in `K`, strictly smaller, with infinitely many independent stationary data; lost for (6.1) too |
-| | star-shaped with respect to a ball (`StarShapedVerdict`) | `L²(TSD) ∩ H(curl)` dense, the closure of `L²(TSD) ∩ H̊(curl)` is `L²(TSD₀)`; `K*` stationary iff no TSD eigenfield `u` has `curl u ∉ H̊(curl)` |
-| | the unit ball (`TSDVerdict.ball`) | no nonzero TSD eigenfield is `C²` up to the boundary |
+| electric | every open `Ω`, `ℝ³` included (`TSDVerdict.interior`, `TSDVerdict.eigenfield`) | `σ = 0` and the Gauss laws kept, symmetry and trace-freeness on the domain of dependence: kept on `ℝ³`, lost at most in the boundary layer; a nonzero TSD eigenfield `u` of `curl* curl` gives the moving datum `(0, u, 0)` of `K*` |
+| | every nonempty bounded open `Ω` (`ElectricVerdict`) | lost from every `(0, E₀, β)`, `E` leaving TSD and `B` its symmetry, `P_K D(L) ⊄ D(L)` in the electric and in the magnetic slot, and the electric part of `K*` of vanishing normal trace, for every boundary condition containing `n × E = 0`; the closure of `L²(TSD) ∩ H̊(curl)` within `L²(TSD₀)`, of infinite codimension; `K*` the largest reducing subcomplex in `K`, strictly smaller, with infinitely many independent stationary data; no nonzero eigenfield `u` of `curl* curl` of nonzero frequency with `curl u ∈ H̊(curl)`; lost for (6.1) too |
+| | star-shaped with respect to a ball (`StarShapedVerdict`) | `L²(TSD) ∩ H(curl)` dense, the closure of `L²(TSD) ∩ H̊(curl)` is `L²(TSD₀)`; `K*` stationary iff there is no nonzero TSD eigenfield |
+| | the unit ball (`TSDVerdict.ball`) | no nonzero TSD eigenfield is `C²` up to the boundary (so `K*` is stationary if the electric Maxwell eigenfields are `C²` up to the boundary) |
 | | every box (`BoxVerdict`) | `K* = K ∩ N(L)`: only stationary data keep the constraint |
 | absorbing (Silver–Müller) | the cube (`AbsorbingVerdict`) | m-dissipative, radiating; lost within every `[0, T]`, in the boundary layer only (the Gauss laws kept) |
 | mirror (tensorial reflections) | the cube (`MirrorVerdict`) | kept for (4.14) and for (6.1), with moving data |
 
 **Not claimed.** Whether on every bounded domain only stationary data keep the constraint
 (`K* ⊆ N(L)`) is not decided here. It is proved on boxes; on domains star-shaped with respect to a
-ball it is equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)`, and on the
-ball no such eigenfield is `C²` up to the boundary, which leaves the eigenfields of lower
-regularity.
+ball it is equivalent to the absence of nonzero TSD eigenfields `u`, which would have
+`curl u ∉ H̊(curl)`; on the ball no such eigenfield is `C²` up to the boundary, so it would follow
+from the boundary regularity of the electric Maxwell eigenfields, which is not proved here.
 
 ## Conventions
 
@@ -722,6 +722,12 @@ structure ElectricVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧ u ∈ d1.domain} ⊆ {u | IsTSD₀ (mat1 u)}) ∧
     ∀ F : Submodule ℝ (L2Vec Ω 1), FiniteDimensional ℝ F →
       ∃ u : L2Vec Ω 1, IsTSD (mat1 u) ∧ ∀ f ∈ F, ¬IsTSD₀ (mat1 (u - f))
+  /-- an eigenfield `v` of `curl* curl` of nonzero frequency (`IsEigenfield`, `ξ ≠ 0`; TSD or not)
+  such that both `v` and `curl v` have vanishing tangential traces, `curl v ∈ H̊(curl)` (the
+  magnetic field of `d¹v` is the electric field of some `w ∈ D(d¹)`), vanishes -/
+  eigenfield_eq_zero (ξ : ℝ) (hξ : ξ ≠ 0) (v : L2Vec Ω 1) (hv : IsEigenfield Ω ξ v)
+      (hc : ∀ h, ∃ w ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
+        mat1 w = mat2 ((vecOp fun _ => dMin Ω 1) ⟨v, h⟩)) : v = 0
   /-- the system (6.1) of the complex with weak symmetry loses the constraints too: from some TSD
   datum of `D(L)` (in the proof `(0, 0, 0, ⋆β)`) strong solutions exist on every `[0, T]`, and
   every one has at some times a non-TSD `E` and a non-symmetric `B` -/
@@ -742,13 +748,13 @@ structure StarShapedVerdict (Ω : Set (Fin 3 → ℝ)) : Prop where
       u ∈ (vecOp fun _ => dMax Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} = {u | IsTSD (mat1 u)} ∧
     closure {u : L2Vec Ω 1 | IsTSD (mat1 u) ∧
       u ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain} = {u | IsTSD₀ (mat1 u)}
-  /-- for every evolution, `K*` consists of stationary data iff no nonzero TSD eigenfield `u` of
-  `curl* curl` (`IsEigenfield`, `ξ > 0`) has `curl u ∉ H̊(curl)` -/
+  /-- for every evolution, `K*` consists of stationary data iff there is no nonzero TSD eigenfield
+  `v` of `curl* curl` (`IsEigenfield`, `ξ > 0`; each one gives the moving datum `(0, v, 0)` of
+  `K*`, `TSDVerdict.eigenfield`, and has `curl v ∉ H̊(curl)`,
+  `ElectricVerdict.eigenfield_eq_zero`) -/
   stationary_iff (S : ℝ → _ →L[ℝ] _) (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) :
     invariantCore S (tsdConstraint Ω) ⊆ {U | (U, 0) ∈ gradCurlWave Ω} ↔
-      ¬∃ ξ > 0, ∃ v : L2Vec Ω 1, v ≠ 0 ∧ IsTSD (mat1 v) ∧ IsEigenfield Ω ξ v ∧
-        ∀ h, ¬∃ w ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
-          mat1 w = mat2 ((vecOp fun _ => dMin Ω 1) ⟨v, h⟩)
+      ¬∃ ξ > 0, ∃ v : L2Vec Ω 1, v ≠ 0 ∧ IsTSD (mat1 v) ∧ IsEigenfield Ω ξ v
 
 /-- **The verdict of the electric boundary conditions on the box `∏ᵢ (aᵢ, aᵢ + ℓᵢ)`**, for the
 system (4.14): only stationary data keep the constraint. -/
@@ -815,11 +821,12 @@ structure MirrorVerdict {X : Type*} [NormedAddCommGroup X] [NormedSpace ℝ X] (
   moving : ∃ U₀ V₁ V₂ V₃, (U₀, V₁) ∈ A ∧ (V₁, V₂) ∈ A ∧ (V₂, V₃) ∈ A ∧ U₀ ∈ K ∧ V₁ ≠ 0
 
 /-- **The verdict of each boundary condition on the TSD constraints** ([QuennevilleBelair2015],
-§4.10 (Prop 4.17), §6.1, §6.3), one field per row of the table of the module docstring; by
-`PropagationCriterion` each verdict is about the invariant core `K*`. Whether on every bounded
-domain only stationary data keep the constraint is open and not claimed: on the ball it is
-equivalent to the absence of TSD eigenfields `u` with `curl u ∉ H̊(curl)` (`StarShapedVerdict`),
-which `ball` proves only for the eigenfields `C²` up to the boundary. -/
+§4.10 (Prop 4.17), §6.1, §6.3), one field per row of the table of the module docstring (two for
+the first, `interior` and `eigenfield`); by `PropagationCriterion` each verdict is about the
+invariant core `K*`. Whether on every bounded domain only stationary data keep the constraint is
+not decided here: on the ball it is equivalent to the absence of nonzero TSD eigenfields
+(`StarShapedVerdict`), which `ball` proves for the eigenfields `C²` up to the boundary; so it
+would follow from the boundary regularity of the electric Maxwell eigenfields. -/
 structure TSDVerdict : Prop where
   /-- the electric boundary conditions on every open `Ω ⊆ ℝ³`, bounded or not (for `Ω = ℝ³`
   there is no boundary): every strong solution of (4.14) on `[0, T]` from data in `K` keeps
@@ -833,6 +840,18 @@ structure TSDVerdict : Prop where
     (h0 : U 0 ∈ tsdConstraint Ω) (t : ℝ) (ht : t ∈ Icc 0 T) :
     (U t).1 = 0 ∧ IsDivFree (mat1 (U t).2.1) ∧ IsDivFree (mat2 (U t).2.2) ∧
       IsSymTFOn (depDomain Ω t) (mat1 (U t).2.1) ∧ IsSymTFOn (depDomain Ω t) (mat2 (U t).2.2)
+  /-- the electric boundary conditions on every open `Ω ⊆ ℝ³`, bounded or not: for every
+  evolution, a nonzero TSD eigenfield `v` of `curl* curl` (`IsEigenfield`, `ξ > 0`) gives the
+  moving datum `(0, v, 0)` of `K*`: it keeps the constraint, is not stationary, and evolves as
+  `(0, cos(ξt) v, (sin(ξt)/ξ) d¹v)` (the half of `StarShapedVerdict.stationary_iff` that holds
+  with no spectral hypothesis). Whether such an eigenfield exists on some `Ω` is not decided
+  here; on boxes there is none (`K*` is stationary there, `BoxVerdict.core`) -/
+  eigenfield (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (S : ℝ → _ →L[ℝ] _)
+    (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) (ξ : ℝ) (hξ : 0 < ξ) (v : L2Vec Ω 1)
+    (hv0 : v ≠ 0) (hv : IsTSD (mat1 v)) (hE : IsEigenfield Ω ξ v) :
+    (0, v, 0) ∈ invariantCore S (tsdConstraint Ω) ∧ ((0, v, 0), 0) ∉ gradCurlWave Ω ∧
+      ∃ h, ∀ t, S t (0, v, 0) =
+        (0, Real.cos (ξ * t) • v, (Real.sin (ξ * t) / ξ) • (vecOp fun _ => dMin Ω 1) ⟨v, h⟩)
   /-- the electric boundary conditions on every nonempty bounded open `Ω ⊆ ℝ³` -/
   electric (Ω : Set (Fin 3 → ℝ)) (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) : ElectricVerdict Ω
@@ -843,7 +862,10 @@ structure TSDVerdict : Prop where
     (hstar : ∃ x₀ s, 0 < s ∧ ∀ y ∈ Ω, ∀ z ∈ Metric.ball x₀ s, segment ℝ z y ⊆ Ω) :
     StarShapedVerdict Ω
   /-- the electric boundary conditions on the unit ball: every TSD eigenfield of `curl* curl`
-  (`ξ ≠ 0`) that is `C²` on a neighbourhood of the closed ball vanishes -/
+  (`ξ ≠ 0`) that is `C²` on a neighbourhood of the closed ball vanishes; so, by
+  `StarShapedVerdict.stationary_iff`, `K*` consists of stationary data as soon as every TSD
+  eigenfield is `C²` up to the boundary, as the boundary regularity of the electric Maxwell
+  eigenfields, applied to the rows, would give -/
   ball (ξ : ℝ) (hξ : ξ ≠ 0) (v : L2Vec unitBall 1) (hv : IsTSD (mat1 v))
     (hE : IsEigenfield unitBall ξ v)
     (hC : ∃ O : Set (Fin 3 → ℝ), IsOpen O ∧ {x | ∑ i, x i ^ 2 ≤ 1} ⊆ O ∧

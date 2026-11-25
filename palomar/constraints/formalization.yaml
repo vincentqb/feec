@@ -47,8 +47,8 @@ project:
     solution of the Hodge wave equation (in the relation form of the systems below) starting in
     Z^0 x Z^1 x Z^2 stays in it. So the question for each boundary condition is K*.
     FEEC.tsd_boundary_conditions : FEEC.TSDVerdict, the verdict of each boundary condition, one
-    field per boundary condition and domain class (interior, ElectricVerdict, StarShapedVerdict,
-    ball, BoxVerdict, AbsorbingVerdict, MirrorVerdict), for the system (4.14)
+    field per boundary condition and domain class (interior and eigenfield, ElectricVerdict,
+    StarShapedVerdict, ball, BoxVerdict, AbsorbingVerdict, MirrorVerdict), for the system (4.14)
     on states (sigma, u, rho) (E = rows u_a, B = rows of *rho_a), the Hodge wave equation of
     H°Lambda^0 (x) R^3 -> H°Lambda^1 (x) R^3 -> L^2 Lambda^2 (x) R^3 (gradCurlWave; vector
     proxies H°^1 -> H°(curl) -> L^2, grad and curl of the rows), constraint
@@ -60,7 +60,9 @@ project:
     distance more than t from the complement of Omega: on R^3 TSD is kept, and elsewhere U(t) is
     in K iff its fields are symmetric and trace-free almost everywhere on the boundary layer
     Omega minus depDomain Omega t, where the losses of (4.14) below occur (those with the
-    electric boundary conditions);
+    electric boundary conditions); and every nonzero TSD eigenfield u of curl* curl (frequency
+    xi > 0) gives the datum (0, u, 0) of K*, not stationary, with orbit
+    (0, cos(xi t) u, (sin(xi t)/xi) curl u);
     (electric boundary conditions sigma = 0, n x E = 0, those of the minimal complex: every
     nonempty bounded open Omega in R^3, no regularity of the boundary) the complex is a short
     Hilbert complex (closed, densely defined, d^1 d^0 = 0), the system has an evolution, and for
@@ -87,16 +89,17 @@ project:
     electric boundary conditions, the projection onto L^2(TSD) of some field with rows in
     H(curl) leaves H(curl)); for every restriction d^1 of the minimal curl (for the electric ones,
     D(d^1) = H°(curl)) the closure of L^2(TSD) ∩ D(d^1) lies in L^2(TSD_0), which has infinite
-    codimension in L^2(TSD); and for the system (6.1) of the complex with weak symmetry of Ch. 5-6
+    codimension in L^2(TSD); an eigenfield u of curl* curl (xi != 0) with curl u in H°(curl) too
+    is zero; and for the system (6.1) of the complex with weak symmetry of Ch. 5-6
     (the same boundary conditions in both rows) some TSD datum of D(L) (in the proof
     (0, 0, 0, *beta)) has strong solutions on every [0, T], every one of which has a non-TSD E and
     a non-symmetric B at some times;
     (domains star-shaped with respect to a ball) L^2(TSD) and H(curl) (rows in H Lambda^1)
     intersect in a dense subspace of L^2(TSD), while the closure of L^2(TSD) ∩ H°(curl) is
-    L^2(TSD_0), and K* consists of stationary data iff no nonzero TSD eigenfield u of curl* curl
-    with frequency xi > 0 has curl u outside H°(curl);
+    L^2(TSD_0), and K* consists of stationary data iff there is no nonzero TSD eigenfield;
     (the unit ball) every TSD eigenfield (xi != 0) with a representative C^2 on a neighbourhood of
-    the closed ball vanishes;
+    the closed ball vanishes (so K* consists of stationary data if every TSD eigenfield is C^2 up
+    to the boundary, as the boundary regularity of the electric Maxwell eigenfields would give);
     (every open box) K* = K intersected with N(L), with vanishing electric field: only stationary
     data keep the constraint; and for all subspaces S_1, S_2 of TSD fields a strong solution on
     [0, infinity) stays in {0} x S_1 x S_2 iff it starts there with L U(0) = 0;
@@ -120,9 +123,9 @@ project:
     U_0, L U_0, L^2 U_0 in D(L) has L U_0 != 0.
     Not claimed: whether on every bounded domain only stationary data keep the constraint
     (K* in N(L)); it is proved on boxes, it is equivalent on domains star-shaped with
-    respect to a ball to the absence of TSD eigenfields u with curl u outside H°(curl), and on the
-    ball no such eigenfield is C^2 up to the boundary. The proof is the library Feec of this
-    repository (status.scope and the alignment name its modules).
+    respect to a ball to the absence of nonzero TSD eigenfields, and on the ball it would follow
+    from the boundary regularity of the Maxwell eigenfields, not proved here. The proof is the
+    library Feec of this repository (status.scope and the alignment name its modules).
   authors:
     - "Vincent Quenneville-Bélair"
   license: "Apache-2.0"
@@ -277,17 +280,20 @@ status:
     (4.14), and on every nonempty bounded open set for the system (6.1); for every boundary
     condition containing n x E = 0, on every nonempty bounded open set, the datum (0, E_0, beta),
     the projection hypothesis in the electric and in the magnetic slot, the density and the
-    electric part of the invariant core; the
+    electric part of the invariant core; the moving data of the TSD eigenfields on every open set
+    and, on every nonempty bounded open set, the vanishing of the eigenfields of nonzero frequency
+    with both tangential traces zero; the
     absorbing boundary conditions on the cube, with the domain of dependence; the mirror
     boundary conditions on the cube for the systems (4.14) and (6.1)). Not claimed: that only
-    stationary data
-    keep TSD on every bounded domain (proved on boxes; on the ball it would follow from the
-    absence of TSD eigenfields u with curl u outside H°(curl), excluded here in the class of
-    fields C^2 up to the boundary; Feec proves it on the ball only under the boundary regularity
-    of Maxwell eigenfields, absent from Mathlib,
-    Feec.Counterexamples.BallEigenDense.coreSub_le_stationary_ball3_of_maxwellRegularity, not
-    compared). Not compared here (proved in Feec): the sym-curl system (4.19) on every bounded
-    domain and every ball (BoundedSymTSD, EveryBallSymTSD), another system; the mirror boundary
+    stationary data keep TSD on every bounded domain (proved on boxes; on the ball it is the
+    absence of nonzero TSD eigenfields, excluded here in the class of fields C^2 up to the
+    boundary, so it would follow from the boundary regularity of the Maxwell eigenfields, absent
+    from Mathlib; Feec's conditional form,
+    Feec.Counterexamples.BallEigenDense.coreSub_le_stationary_ball3_of_maxwellRegularity, is not
+    compared: it follows from TSDVerdict.ball and StarShapedVerdict.stationary_iff, the rows of a
+    TSD eigenfield being Maxwell eigenfields). Not compared here (proved in Feec): the sym-curl
+    system (4.19) on every bounded domain and every ball (BoundedSymTSD, EveryBallSymTSD),
+    another system; the mirror boundary
     conditions for the system (4.14) on every open box (Feec.Models.Box.Mirror.propagatesBox,
     existsUnique_memBox, exists_nonstationaryBox), whose comparison needs mirror operators on
     boxes in the challenge (dPart is defined on the cube) and the real forms bridge on boxes, and
@@ -427,10 +433,13 @@ fidelity:
     solutions.
     (5) Star-shaped domains: with respect to a ball of the sup norm (equivalently of the Euclidean
     norm). The unit ball is Euclidean; eigenfields (IsEigenfield) are u in H°(curl) with
-    curl u in D(curl*) and curl* curl u = xi^2 u (the adjoint of Mathlib's LinearPMap); curl u
-    outside H°(curl) is stated as: no w in H°Lambda^1 (x) R^3 has the electric field of w equal to
-    the magnetic field of curl u. The ball clause asks a representative C^2 on a neighbourhood of
-    the closed ball.
+    curl u in D(curl*) and curl* curl u = xi^2 u (the adjoint of Mathlib's LinearPMap); curl u in
+    H°(curl) (ElectricVerdict.eigenfield_eq_zero) is stated as: some w in H°Lambda^1 (x) R^3 has
+    the electric field of w equal to the magnetic field of curl u. The ball clause asks a
+    representative C^2 on a neighbourhood of the closed ball. The orbit in TSDVerdict.eigenfield
+    holds for every t in R. Whether a nonzero TSD eigenfield exists on some domain is not decided
+    here (on boxes there is none: K* is stationary there, BoxVerdict.core), so that clause may be
+    vacuous; it is the half of StarShapedVerdict.stationary_iff that needs no spectral hypothesis.
     (6) Absorbing boundary conditions: on the cube (0, 1/2)^3 only, for the first-order system
     without the gauge sigma; the energy space is the closure of the triples (Phi, curl Phi, Phi_tau)
     of C^1 fields, with boundary values on the six faces parametrized by the square (0, 1/2)^2
@@ -520,9 +529,10 @@ alignment:
         Feec.Domain.curlOp_formalAdj_apply),
         Feec.Models.BoundedDomain (invariantCore₁_le_tsd₀ on every short complex with D(d_1) in
         H°(curl), inf_le_tsd₀, not_tsd_le_tsd₀_sup_finiteDimensional, hessL2_mem_adjoint,
-        linearIndependent_hessL2_expCos, not_coreSub_le_stationary_iff) with
-        Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl,
-        Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball,
+        linearIndependent_hessL2_expCos, eq_zero_of_isEigenfield_of_mem_minimal,
+        gradCurl_coreSub_spectral) with Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl,
+        Feec.Counterexamples.BallEigenfields (not_coreSub_le_stationary_of_eigenfield on every
+        open set, eq_zero_of_isEigenfield_of_contDiff_ball),
         Feec.Counterexamples.BoxStationary (mem_invariantCore_tsd_iff_box,
         forward_iff_stationary_box), Feec.Counterexamples.BoundedBGG for (6.1)
         (Solution/GradCurl.lean, Verdicts.lean, Bounded.lean, Box.lean); absorbing:

@@ -6,9 +6,9 @@ public import Feec.HilbertComplex.Reweight
 /-!
 # The verdicts of the electric boundary conditions
 
-The verdicts `FEEC.ElectricVerdict`, `FEEC.StarShapedVerdict`, `FEEC.TSDVerdict.ball` and
-`FEEC.BoxVerdict` for the system (4.14) with the electric boundary conditions, read off `Feec`
-through `Solution.GradCurl`:
+The verdicts `FEEC.ElectricVerdict`, `FEEC.StarShapedVerdict`, `FEEC.TSDVerdict.eigenfield`,
+`FEEC.TSDVerdict.ball` and `FEEC.BoxVerdict` for the system (4.14) with the electric boundary
+conditions, read off `Feec` through `Solution.GradCurl`:
 
 * `electric_of`: on every nonempty bounded open `Ω`, the invariant core
   (`Feec.Counterexamples.BoundedDomainTSD.invariantCore_tsd`, with the stationary Hessians
@@ -25,11 +25,16 @@ through `Solution.GradCurl`:
   (`not_starProjection_mem_adjoint_domain`, and `not_starProjection_mem_curl_maximal` for
   `H(curl)`; `magnetic_proj`, `magnetic_proj_curl`, the projection through the fields by
   `starProjection_tsd_eq`); the density (`inf_le_tsd₀`, monotone in `D(d¹)`, and
-  `Feec.Models.BoundedDomain.not_tsd_le_tsd₀_sup_finiteDimensional`; `electric_dense`); and the
-  system (6.1) (`tsd_not_propagates_of` of `Solution.Bounded`);
+  `Feec.Models.BoundedDomain.not_tsd_le_tsd₀_sup_finiteDimensional`; `electric_dense`); the
+  eigenfields with both tangential traces zero vanish
+  (`Feec.Models.BoundedDomain.eq_zero_of_isEigenfield_of_mem_minimal`; `electric_eigenfield`); and
+  the system (6.1) (`tsd_not_propagates_of` of `Solution.Bounded`);
+* `eigenfield_of`: on every open `Ω`, the moving datum of a TSD eigenfield
+  (`Feec.Counterexamples.BallEigenfields.not_coreSub_le_stationary_of_eigenfield`), its orbit
+  read through the state map;
 * `starShaped_of`: on domains star-shaped with respect to a ball, `density_dichotomy` (both
   halves, `H(curl)` through `mem_domMax_iff`) and
-  `Feec.Models.BoundedDomain.not_coreSub_le_stationary_iff` with the complete set of eigenvectors
+  `Feec.Models.BoundedDomain.gradCurl_coreSub_spectral` with the complete set of eigenvectors
   `Feec.Models.StarShaped.StarDomain.eigenDense_gradCurl`;
 * `ball_of`: `Feec.Counterexamples.BallEigenfields.eq_zero_of_isEigenfield_of_contDiff_ball`;
 * `box_of`: `Feec.Counterexamples.BoxStationary.mem_invariantCore_tsd_iff_box` and
@@ -581,6 +586,20 @@ theorem electric_dense (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω
       ⟨f, hf, rfl⟩, ?_⟩
     rw [map_sub, LinearIsometryEquiv.apply_symm_apply, sub_add_cancel]
 
+/-- **No nonzero eigenfield has both tangential traces zero**, on a bounded open `Ω`:
+`Feec.Models.BoundedDomain.eq_zero_of_isEigenfield_of_mem_minimal` through the fields. -/
+theorem electric_eigenfield (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (ξ : ℝ) (hξ : ξ ≠ 0)
+    (v : L2Vec Ω 1) (hv : IsEigenfield Ω ξ v)
+    (hc : ∀ h, ∃ w ∈ (vecOp fun _ => dMin Ω 1 : L2Vec Ω 1 →ₗ.[ℝ] L2Vec Ω 2).domain,
+      mat1 w = mat2 ((vecOp fun _ => dMin Ω 1) ⟨v, h⟩)) : v = 0 := by
+  refine (LinearIsometryEquiv.map_eq_zero_iff fieldE).1
+    (eq_zero_of_isEigenfield_of_mem_minimal hΩ hb hξ ((isEigenfield_iff hΩ ξ v).1 hv)
+      fun h1 => ?_)
+  have h := (mem_dom_iff hΩ v).2 h1
+  obtain ⟨w, hw, e⟩ := hc h
+  rw [curl_fieldE hΩ ⟨v, h⟩ h1, ← (mat1_eq_mat2_iff _ _).1 e]
+  exact (mem_dom_iff hΩ w).1 hw
+
 /-- **The electric boundary conditions, on a nonempty bounded open `Ω`.** -/
 theorem electric_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty) :
     ElectricVerdict Ω :=
@@ -588,7 +607,47 @@ theorem electric_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.No
     electric_core_electric hΩ hb, electric_beta hΩ hb hne, electric_proj hΩ hb hne,
     ⟨magnetic_proj_curl hΩ hb hne, fun W0 _ _ _ d0 d1 hd hle =>
       magnetic_proj hΩ hb hne W0 d0 d1 hd hle⟩,
-    electric_dense hΩ hb hne, tsd_not_propagates_of hΩ hb hne⟩
+    electric_dense hΩ hb hne, electric_eigenfield hΩ hb, tsd_not_propagates_of hΩ hb hne⟩
+
+/-- **A nonzero TSD eigenfield is a moving datum of `K*`**, on every open `Ω`:
+`Feec.Counterexamples.BallEigenfields.not_coreSub_le_stationary_of_eigenfield`, with the orbit
+`cos(ξt) x + (sin(ξt)/ξ) L x` of `x = (0, v, 0)` read through the state map
+(`L x = (0, 0, d¹v)`: `d₀† v = 0` for TSD `v`). -/
+theorem eigenfield_of (hΩ : IsOpen Ω)
+    (S : ℝ → (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2) →L[ℝ] (L2Vec Ω 0 × L2Vec Ω 1 × L2Vec Ω 2))
+    (hS : IsEvolution ℝ (gradCurlWave Ω) univ S) (ξ : ℝ) (hξ : 0 < ξ) (v : L2Vec Ω 1)
+    (hv0 : v ≠ 0) (hv : IsTSD (mat1 v)) (hE : IsEigenfield Ω ξ v) :
+    (0, v, 0) ∈ invariantCore S (tsdConstraint Ω) ∧ ((0, v, 0), 0) ∉ gradCurlWave Ω ∧
+      ∃ h, ∀ t, S t (0, v, 0) =
+        (0, Real.cos (ξ * t) • v, (Real.sin (ξ * t) / ξ) • (vecOp fun _ => dMin Ω 1) ⟨v, h⟩) := by
+  have hv' := (isTSD_mat1_iff v).1 hv
+  have hE' := (isEigenfield_iff hΩ ξ v).1 hE
+  obtain ⟨hK, hns, ⟨hD, horb⟩, -⟩ :=
+    Feec.Counterexamples.BallEigenfields.not_coreSub_le_stationary_of_eigenfield hΩ hξ
+      (fun h => hv0 ((LinearIsometryEquiv.map_eq_zero_iff fieldE).1 h)) hv' hE'
+  obtain ⟨h1, -, -⟩ := hE'
+  obtain ⟨h2, e2⟩ := LinearPMap.exists_apply_eq_zero_of_mem_ker (tsd_le_ker_gradCurl hΩ hv')
+  refine ⟨(gc_mem_invariantCore_iff hΩ hS _).2 (by rw [gcState_electric]; exact hK),
+    fun h => hns (by rw [← gcState_electric]; exact (gc_mem_stationary_iff hΩ _).1 h), hE.1,
+    fun t => ?_⟩
+  rw [gc_eq_of_isEvolution hΩ hS, gcState_electric, horb t, stateInvL_apply]
+  have w0 := ShortHilbertComplex.wave_inj₁_zero (S := gradCurl ℝ hΩ) ⟨fieldE v, h1⟩ h2
+  have w1 := ShortHilbertComplex.wave_inj₁_one (S := gradCurl ℝ hΩ) ⟨fieldE v, h1⟩ h2
+  have w2 := ShortHilbertComplex.wave_inj₁_two (S := gradCurl ℝ hΩ) ⟨fieldE v, h1⟩ h2
+  rw [e2, neg_zero] at w0
+  rw [curl_fieldE hΩ ⟨v, hE.1⟩ h1] at w2
+  simp only [PiLp.add_apply, PiLp.smul_apply, w0, w1, w2, ShortHilbertComplex.inj₁_apply_zero,
+    ShortHilbertComplex.inj₁_apply_one, ShortHilbertComplex.inj₁_apply_two, smul_zero, add_zero,
+    zero_add]
+  refine Prod.ext ?_ (Prod.ext ?_ ?_)
+  · show -field0.symm ((Real.sin (ξ * t) / ξ) • (0 : L2F ℝ Ω (Fin 3))) = 0
+    rw [smul_zero, map_zero, neg_zero]
+  · show fieldE.symm (Real.cos (ξ * t) • fieldE v) = Real.cos (ξ * t) • v
+    rw [map_smul, LinearIsometryEquiv.symm_apply_apply]
+  · show fieldB.symm ((Real.sin (ξ * t) / ξ) •
+        (fieldB ((vecOp fun _ => dMin Ω 1) ⟨v, hE.1⟩) : L2F ℝ Ω Ix)) =
+      (Real.sin (ξ * t) / ξ) • (vecOp fun _ => dMin Ω 1) ⟨v, hE.1⟩
+    rw [map_smul, LinearIsometryEquiv.symm_apply_apply]
 
 /-- **Domains star-shaped with respect to a ball.** -/
 theorem starShaped_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
@@ -612,28 +671,16 @@ theorem starShaped_of (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
           exact (Metric.mem_closedBall.1
             ((Metric.isClosed_closedBall.closure_subset_iff.2 hr) hy)).trans (le_max_left _ _) }
     have hD : (gradCurl ℝ hΩ).EigenDense := D.eigenDense_gradCurl
-    have hle : invariantCore S (tsdConstraint Ω) ⊆ {U | (U, 0) ∈ gradCurlWave Ω} ↔
-        (gradCurl ℝ hΩ).coreSub (tsd Ω) (tsd Ω) ≤ (gradCurl ℝ hΩ).stationary := by
-      constructor
-      · intro h y hy
-        have hx : gcInv y ∈ invariantCore S (tsdConstraint Ω) := by
-          rw [gc_mem_invariantCore_iff hΩ hS, gcState_gcInv]; exact hy
-        have := (gc_mem_stationary_iff hΩ _).1 (h hx)
-        rwa [gcState_gcInv] at this
-      · intro h x hx
-        exact (gc_mem_stationary_iff hΩ x).2 (h ((gc_mem_invariantCore_iff hΩ hS x).1 hx))
-    rw [hle, ← not_iff_not, not_not, not_coreSub_le_stationary_iff hΩ hb hD]
+    rw [invariantCore_subset_stationary_iff hΩ hS, ← not_iff_not, not_not,
+      (gradCurl_coreSub_spectral hΩ hb hD).2.2.1]
     constructor
-    · rintro ⟨ξ, hξ, v', hv'0, hv', hE, hc⟩
-      refine ⟨ξ, hξ, fieldE.symm v', ?_, ?_, ?_, ?_⟩
+    · rintro ⟨ξ, hξ, v', hv'0, hv', hE⟩
+      refine ⟨ξ, hξ, fieldE.symm v', ?_, ?_, ?_⟩
       · rw [Ne, LinearIsometryEquiv.map_eq_zero_iff]; exact hv'0
       · rw [isTSD_iff, toIx_mat1, LinearIsometryEquiv.apply_symm_apply]; exact hv'
       · rw [isEigenfield_iff hΩ, LinearIsometryEquiv.apply_symm_apply]; exact hE
-      · rw [curl_not_mem_iff hΩ]
-        simpa only [LinearIsometryEquiv.apply_symm_apply] using hc
-    · rintro ⟨ξ, hξ, v, hv0, hv, hE, hc⟩
-      refine ⟨ξ, hξ, fieldE v, ?_, ?_, (isEigenfield_iff hΩ ξ v).1 hE,
-        (curl_not_mem_iff hΩ v).1 hc⟩
+    · rintro ⟨ξ, hξ, v, hv0, hv, hE⟩
+      refine ⟨ξ, hξ, fieldE v, ?_, ?_, (isEigenfield_iff hΩ ξ v).1 hE⟩
       · rw [Ne, LinearIsometryEquiv.map_eq_zero_iff]; exact hv0
       · rw [← toIx_mat1, ← isTSD_iff]; exact hv
 

@@ -22,7 +22,7 @@ Both refutations hold for **every** short complex whose second operator is conta
 they do not depend on how the thesis' `Γ` is realized.
 
 The loss of symmetry of `B` holds also for the systems run in Ch. 7: the Hodge wave equation
-(4.14), for every short complex with `d₁ ⊆ curl_min` (`thesisComplex_B_not_symm`), and the
+(4.14), for every short complex with `d₁ ⊆ curl_min` (`betaL2_B_not_symm`), and the
 reduced system (4.15) of the grad–curl complex (`thesisComplex_reduced_B_not_symm`), and for
 (4.18) (`symComplexB_B_not_symm`).
 
@@ -323,7 +323,7 @@ variable {W₀ : Type} [NormedAddCommGroup W₀] [InnerProductSpace ℝ W₀] [C
 
 /-- `d₁† β = curl β = -diag(1, -1, 0)` for every short complex with `d₁ ⊆ curl_min` (the
 grad–curl complex of (4.14) among them), and `⟪d₁† β, diag(1, -1, 0)⟫ = -2|Ω|`. -/
-theorem thesisComplex_adjoint_betaL (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+theorem inner_adjoint_betaL2 (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
     (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
     ∃ h : betaL2 hΩ hb ∈ S.d₁†.domain,
@@ -336,14 +336,14 @@ theorem thesisComplex_adjoint_betaL (hΩ : IsOpen Ω) (hb : Bornology.IsBounded 
 complex `H̊¹ → H̊(curl, M) → L²(M)` of (4.14) among them) on a nonempty bounded open `Ω`, from
 `(0, E₀, β)` with any `E₀`, every strong solution on `[0, T]`, `T > 0`, has `B(t)` non-symmetric
 for some `t`, although `β` is symmetric (TSD). [QuennevilleBelair2015], (4.14), Ch. 7 -/
-theorem thesisComplex_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
+theorem betaL2_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω)
     (hne : Ω.Nonempty) (S : ShortHilbertComplex ℝ W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix))
     (hd₁ : S.d₁ ≤ (curlOp 3 : ConstCoeffOp R3 ℝ Ix Ix).minimal Ω) :
     ∀ T > 0, ∀ U : ℝ → PiLp 2 (ShortHilbertComplex.W3 W₀ (L2F ℝ Ω Ix) (L2F ℝ Ω Ix)),
       Evolution.IsStrongSolution S.wave (Icc 0 T) 0 U →
         (U 0 0 : W₀) = 0 → (U 0 2 : L2F ℝ Ω Ix) = betaL2 hΩ hb →
           ∃ t ∈ Icc 0 T, (U t 2 : L2F ℝ Ω Ix) ∉ symSub ℝ Ω := by
-  obtain ⟨h, e⟩ := thesisComplex_adjoint_betaL hΩ hb S hd₁
+  obtain ⟨h, e⟩ := inner_adjoint_betaL2 hΩ hb S hd₁
   intro T hT U hU h0 h2
   refine not_symm_of_adjoint hΩ hb S (ContinuousLinearMap.id ℝ _) (ContinuousLinearMap.id ℝ _)
     (fun u => ?_) ⟨_, h⟩
@@ -363,7 +363,7 @@ theorem thesisComplex_reduced_B_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBou
     (hne : Ω.Nonempty) {T : ℝ} (hT : 0 < T) {E B : ℝ → L2F ℝ Ω Ix}
     (hR : (gradCurl ℝ hΩ).IsReducedSolution (Icc 0 T) E B) (hB : B 0 = betaL2 hΩ hb) :
     ∃ t ∈ Icc 0 T, B t ∉ symSub ℝ Ω := by
-  obtain ⟨h, e⟩ := thesisComplex_adjoint_betaL hΩ hb (gradCurl ℝ hΩ) le_rfl
+  obtain ⟨h, e⟩ := inner_adjoint_betaL2 hΩ hb (gradCurl ℝ hΩ) le_rfl
   have hR' := reduced_not_symm_of_adjoint hΩ hb (gradCurl ℝ hΩ) (ContinuousLinearMap.id ℝ _)
     (ContinuousLinearMap.id ℝ _) (fun u => ((gradCurl ℝ hΩ).d₁.mem_graph u)) hT hR (by
       have e' : (⟨B 0, hR.memB 0 ⟨le_rfl, hT.le⟩⟩ : (gradCurl ℝ hΩ).d₁†.domain) = ⟨_, h⟩ :=

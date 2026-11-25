@@ -157,14 +157,6 @@ theorem measureReal_closedInterior_translate (c : Fin n → ℝ)
   rw [translate, closedInterior_mapEquiv, e, Set.image_add_left, measureReal_def, measureReal_def,
     measure_preimage_add]
 
-/-- An `n`-simplex of `ℝⁿ` has positive volume. -/
-theorem measureReal_closedInterior_pos (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    0 < volume.real T.closedInterior := by
-  rw [measureReal_def]
-  refine ENNReal.toReal_pos ?_ T.isCompact_closedInterior.measure_lt_top.ne
-  exact ((isOpen_interior.measure_pos volume (interior_closedInterior_nonempty T)).trans_le
-    (measure_mono interior_subset)).ne'
-
 /-! ### Hat-function gradients, and their invariance under renumbering and translation -/
 
 /-- **Barycentric gradients under a renumbering of the vertices**: `∇λ^{p ∘ π}ᵢ = ∇λ^p_{π i}`. -/
@@ -573,7 +565,7 @@ theorem abs_lumpedLaplacianOn_sub_laplacian_le {ι : Type*} [Fintype ι] {x : ι
     obtain ⟨T, hTM, hyT⟩ := hv
     rw [lumpedMass_eq_sum_vertexStar]
     exact sum_pos' (fun T _ => div_nonneg measureReal_nonneg (by positivity))
-      ⟨T, mem_vertexStar.2 ⟨hTM, hyT⟩, div_pos (measureReal_closedInterior_pos T) (by positivity)⟩
+      ⟨T, mem_vertexStar.2 ⟨hTM, hyT⟩, div_pos (volume_real_closedInterior_pos T) (by positivity)⟩
   -- the stencil: `m (Lₕ Iₕ u)(y) = Σ ω (u(y + d) - u(y))`
   have h1 : lumpedMass M (x i) * lumpedLaplacianOn M x (fun q => u (x q)) i =
       ∑ T ∈ vertexStar M (x i), ∑ v ∈ vertexSet T,
@@ -1138,7 +1130,7 @@ theorem lumpedLaplacianOn_crossMesh (hh : 0 < h) (U : Unit → ℝ) :
     rw [lumpedMass, sum_crossMesh, sum_div]
     simp only [hcard, mul_one]
   have hV : 0 < ∑ s : Fin n → Bool, volume.real (orthantSimplex hh.ne' s).closedInterior :=
-    sum_pos (fun s _ => measureReal_closedInterior_pos _) univ_nonempty
+    sum_pos (fun s _ => volume_real_closedInterior_pos _) univ_nonempty
   rw [lumpedLaplacianOn_apply_eq_sum, Fintype.sum_unique]
   simp only [lumpedEntry, ha, hm]
   field_simp

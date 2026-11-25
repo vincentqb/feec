@@ -524,7 +524,7 @@ alignment:
         every open set (Solution/Interior.lean); Feec.Counterexamples.BoundedDomainTSD
         (invariantCore_tsd, betaL2_mem_adjoint and betaL2_not_propagates on every short complex
         whose d_1 restricts the minimal curl, with Feec.Counterexamples.BoundedBGG
-        thesisComplex_B_not_symm there, not_starProjection_mem_adjoint_domain there and
+        betaL2_B_not_symm there, not_starProjection_mem_adjoint_domain there and
         not_starProjection_mem_curl_maximal (the magnetic slot),
         exists_projTSD_not_mem_domain_of_dense on every short complex, the
         complexes conjugated to the fields by Feec.ShortHilbertComplex.conj, the latter on the

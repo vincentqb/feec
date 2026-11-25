@@ -348,13 +348,6 @@ theorem abs_lumped_sub_integral_p1Interp_mul_le_p1Grad (T : Affine.Simplex ℝ (
 
 /-! ### The consistent and the lumped mass of a mesh -/
 
-/-- **`|T| > 0`**: an `n`-simplex of `ℝⁿ` has positive volume `|det B_T| / n!`. -/
-theorem volume_real_closedInterior_pos (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
-    0 < volume.real T.closedInterior := by
-  rw [volume_real_closedInterior]
-  exact div_pos (abs_pos.2 (LinearEquiv.isUnit_det' T.linearEquiv.toLinearEquiv).ne_zero)
-    (by positivity)
-
 /-- **The consistent mass** `⟨u, w⟩ = Σ_T ∫_T Πₜu Πₜw` of the mesh `M` on nodal values `u, w`
 (only their values at the vertices enter), assembled elementwise: the `L²(Ω)` inner product
 `∫_Ω u_h w_h` of the global `P₁` functions with these vertex values when the open simplices lie in

@@ -389,11 +389,12 @@ fidelity:
     windows with palomar/constraints and palomar/waves, sq with palomar/constraints,
     IsStrongSolution with palomar/constraints and palomar/einsteinbianchi, the rational schemes
     with palomar/timestepping), the meshes SimplicialMesh and vertexSet (also with palomar/fem,
-    palomar/einsteinbianchi, palomar/timestepping and palomar/waves) and the P1 gradient and
-    stiffness form p1Grad and p1Stiffness (block p1, with palomar/timestepping), and the gate
-    checks them byte for byte; the definitions of the crimes (CrimeFamily and its notions), of the
-    mixed Hodge Laplacian of a window (totalHarmonic, totalMixedSpace) and of the P1 interpolant
-    and the consistent and lumped masses (p1Interp, p1Mass, lumpedInner) are this entry's.
+    palomar/einsteinbianchi, palomar/shapes, palomar/timestepping and palomar/waves) and the P1
+    gradient and stiffness form p1Grad and p1Stiffness (block p1, with palomar/timestepping), and
+    the gate checks them byte for byte; the definitions of the crimes (CrimeFamily and its
+    notions), of the mixed Hodge Laplacian of a window (totalHarmonic, totalMixedSpace) and of the
+    P1 interpolant and the consistent and lumped masses (p1Interp, p1Mass, lumpedInner) are this
+    entry's.
 
 review:
   status: "self-assessed"

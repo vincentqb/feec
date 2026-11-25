@@ -18,7 +18,7 @@ through `Solution.GradCurl`:
   (`Feec.Models.BoundedDomain.invariantCore₁_le_tsd₀`); for every short complex whose `d¹`
   restricts the minimal curl, read through the fields (`exists_fieldComplex`), the datum
   `(0, E₀, β)` (`betaL2_mem_adjoint`, `beta_mem_domain`; `betaL2_not_propagates`,
-  `beta_not_propagates`; `Feec.Counterexamples.BoundedBGG.thesisComplex_B_not_symm`,
+  `beta_not_propagates`; `Feec.Counterexamples.BoundedBGG.betaL2_B_not_symm`,
   `beta_not_symm`), the projection hypothesis in the electric slot
   (`exists_projTSD_not_mem_domain_of_dense` on the dense `D(d₁) ∩ D(d₀†)`, and
   `exists_projTSD_not_mem_domain` for a test field; `electric_proj`) and in the magnetic slot
@@ -388,7 +388,7 @@ theorem beta_not_propagates (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne
   exact ⟨t, ht, fun h => hnot (by rw [isTSD_iff, toIx_mat1] at h; exact h)⟩
 
 /-- **From `(0, E₀, β)` the magnetic field loses its symmetry, for every boundary condition
-containing `n × E = 0`** (`Feec.Counterexamples.BoundedBGG.thesisComplex_B_not_symm`, through the
+containing `n × E = 0`** (`Feec.Counterexamples.BoundedBGG.betaL2_B_not_symm`, through the
 fields). -/
 theorem beta_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.Nonempty)
     (W0 : Type) [NormedAddCommGroup W0] [InnerProductSpace ℝ W0] [CompleteSpace W0]
@@ -400,7 +400,7 @@ theorem beta_not_symm (hΩ : IsOpen Ω) (hb : Bornology.IsBounded Ω) (hne : Ω.
     ∃ t ∈ Icc 0 T, ∃ a i, mat2 (U t).2.2 a i ≠ mat2 (U t).2.2 i a := by
   obtain ⟨S, h0, h1, hS⟩ := exists_fieldComplex hΩ W0 d0 d1 hd
   have hU' := isStrongSolution_toFeec (LinearIsometryEquiv.refl ℝ W0) fieldE fieldB S h0 h1 hU
-  obtain ⟨t, ht, hnot⟩ := Feec.Counterexamples.BoundedBGG.thesisComplex_B_not_symm hΩ hb hne S
+  obtain ⟨t, ht, hnot⟩ := Feec.Counterexamples.BoundedBGG.betaL2_B_not_symm hΩ hb hne S
     (hS hle) T hT _ hU'
     (by rw [hU0]; change -(LinearIsometryEquiv.refl ℝ W0) (0 : W0) = 0; simp)
     (by rw [hU0]; change fieldB (fieldB.symm (betaL2 hΩ hb)) = _;

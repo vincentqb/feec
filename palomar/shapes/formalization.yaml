@@ -267,7 +267,8 @@ fidelity:
     spaces (TraceEq, IsFemPieces, femSpace) are the canonical blocks of
     palomar/shared/vocabulary.lean.txt, checked byte for byte by the gate, shared with
     palomar/fem, palomar/waves and palomar/einsteinbianchi (the form fields and L^2 forms also
-    with palomar/constraints and palomar/bgg). A block is copied whole: the block of the L^2
+    with palomar/constraints and palomar/bgg, the simplicial meshes also with
+    palomar/timestepping and palomar/crimes). A block is copied whole: the block of the L^2
     forms also defines the partial derivative, the exterior derivative and codifferential of form
     fields, test functions, the weak exterior derivative and the cube, which these theorems do
     not use.

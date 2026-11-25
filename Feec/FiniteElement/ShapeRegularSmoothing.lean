@@ -657,6 +657,13 @@ theorem volume_real_closedInterior (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     refSimplex_closedInterior_eq, ← Measure.real, volume_real_refSimplex]
   ring
 
+/-- **`|T| > 0`**: an `n`-simplex of `ℝⁿ` has positive volume `|det B_T| / n!`. -/
+theorem volume_real_closedInterior_pos (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
+    0 < volume.real T.closedInterior := by
+  rw [volume_real_closedInterior]
+  exact div_pos (abs_pos.2 (LinearEquiv.isUnit_det' T.linearEquiv.toLinearEquiv).ne_zero)
+    (by positivity)
+
 theorem volume_closedInterior_lt_top (T : Affine.Simplex ℝ (Fin n → ℝ) n) :
     volume T.closedInterior < ⊤ := T.isCompact_closedInterior.measure_lt_top
 

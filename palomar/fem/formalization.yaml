@@ -318,8 +318,9 @@ fidelity:
     shared with palomar/feec (the Hilbert complexes and their families), palomar/waves (all but
     the families and IsSobolevForm), palomar/einsteinbianchi (the forms, polynomial forms,
     admissible sequences, meshes, covector values, finite element spaces and IsSobolevForm),
-    palomar/constraints (the Hilbert complexes and the forms), palomar/shapes (the form fields,
-    polynomial forms and covector values), palomar/crimes (the Hilbert complexes) and
+    palomar/constraints (the Hilbert complexes and the forms), palomar/shapes (the forms,
+    polynomial forms, admissible sequences, simplicial meshes, covector values and finite element
+    spaces), palomar/crimes (the Hilbert complexes and the simplicial meshes) and
     palomar/timestepping (the simplicial meshes).
 
 review:

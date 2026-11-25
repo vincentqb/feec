@@ -4217,8 +4217,8 @@ Feec.Ch6.Bounded.sndB_apply	Feec.Counterexamples.BoundedBGG.sndB_apply	rename
 Feec.Ch6.Bounded.symComplexB_B_not_symm	Feec.Counterexamples.BoundedBGG.symComplexB_B_not_symm	rename
 Feec.Ch6.Bounded.testFieldR_mem_domain_hessM	-	deleted-helper
 Feec.Ch6.Bounded.testFieldR_mem_graph_hessM	-	deleted-helper
-Feec.Ch6.Bounded.thesisComplex_B_not_symm	Feec.Counterexamples.BoundedBGG.thesisComplex_B_not_symm	rename
-Feec.Ch6.Bounded.thesisComplex_adjoint_betaL	Feec.Counterexamples.BoundedBGG.thesisComplex_adjoint_betaL	rename
+Feec.Ch6.Bounded.thesisComplex_B_not_symm	Feec.Counterexamples.BoundedBGG.betaL2_B_not_symm	generalize
+Feec.Ch6.Bounded.thesisComplex_adjoint_betaL	Feec.Counterexamples.BoundedBGG.inner_adjoint_betaL2	generalize
 Feec.Ch6.Bounded.thesisComplex_exists_B_not_symm	-	deleted-helper
 Feec.Ch6.Bounded.thesisComplex_reduced_B_not_symm	Feec.Counterexamples.BoundedBGG.thesisComplex_reduced_B_not_symm	rename
 Feec.Ch6.Bounded.thesisComplex_reduced_exists_B_not_symm	-	deleted-helper

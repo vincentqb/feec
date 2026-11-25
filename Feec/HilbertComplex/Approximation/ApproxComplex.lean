@@ -38,9 +38,10 @@ No consistency hypothesis along exact solutions is made. The comparison uses `i�
 intertwines the adjoints exactly, `iₕ* 𝐝* = 𝐝ₕ* iₕ*` (`iₕ` being a cochain map), so no
 adjoint-consistency hypothesis is needed. Operator-norm consistency is not used and would be too
 strong in general (for the BGG scheme (6.5) of [QuennevilleBelair2015] the static strong consistency
-bound fails, per the unformalized audit recorded in `Feec.HilbertComplex.BGG.WeakConsistency`; that
-scheme enters through `ApproxFEEC` directly: its discrete differential uses `S₀,ₕ = π¹S⁰ ≠ S⁰`, and
-its reading maps are not shown to be cochain maps).
+bound fails on the Freudenthal meshes of the cube with constants independent of `h`,
+`Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`; that scheme enters through `ApproxFEEC`
+directly: its discrete differential uses `S₀,ₕ = π¹S⁰ ≠ S⁰`, and its reading maps are not shown to
+be cochain maps).
 
 ## Main definitions
 

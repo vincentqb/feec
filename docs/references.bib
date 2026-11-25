@@ -9,14 +9,6 @@
   url     = {http://hdl.handle.net/11299/175309}
 }
 
-@software{QuennevilleBelair_fem4gr,
-  author  = {Quenneville-B{\'e}lair, Vincent},
-  title   = {fem4gr: Mixed finite element methods for general relativity},
-  note    = {FEniCS implementation of the Crank--Nicolson experiments of Ch.~7 of [QuennevilleBelair2015]},
-  year    = {2020},
-  url     = {https://github.com/vincentqb/fem4gr}
-}
-
 @book{Arnold2018,
   author    = {Arnold, Douglas N.},
   title     = {Finite Element Exterior Calculus},
@@ -421,8 +413,7 @@
 
 % ---------------------------------------------------------------------------
 % Additional classical sources cited in docstrings (DOIs verified against
-% Crossref; Necas1962 against Numdam and Eastwood2000 against EuDML, which
-% assign no DOI).
+% Crossref; Eastwood2000 against EuDML, which assigns no DOI).
 
 @book{Carroll2004,
   author    = {Carroll, Sean M.},
@@ -453,40 +444,6 @@
   doi       = {10.1007/978-3-642-66282-9}
 }
 
-@incollection{LaxMilgram1954,
-  author    = {Lax, Peter D. and Milgram, Arthur N.},
-  title     = {Parabolic equations},
-  booktitle = {Contributions to the Theory of Partial Differential Equations},
-  series    = {Annals of Mathematics Studies},
-  volume    = {33},
-  publisher = {Princeton University Press},
-  pages     = {167--190},
-  year      = {1954},
-  doi       = {10.1515/9781400882182-010}
-}
-
-@article{Necas1962,
-  author  = {Ne{\v{c}}as, Jind{\v{r}}ich},
-  title   = {Sur une m{\'e}thode pour r{\'e}soudre les {\'e}quations aux d{\'e}riv{\'e}es partielles du type elliptique, voisine de la variationnelle},
-  journal = {Ann. Scuola Norm. Sup. Pisa (3)},
-  volume  = {16},
-  number  = {4},
-  pages   = {305--326},
-  year    = {1962},
-  url     = {http://www.numdam.org/item/ASNSP_1962_3_16_4_305_0/}
-}
-
-@article{Cea1964,
-  author  = {C{\'e}a, Jean},
-  title   = {Approximation variationnelle des probl{\`e}mes aux limites},
-  journal = {Ann. Inst. Fourier},
-  volume  = {14},
-  number  = {2},
-  pages   = {345--444},
-  year    = {1964},
-  doi     = {10.5802/aif.181}
-}
-
 @article{ChristiansenWinther2008,
   author  = {Christiansen, Snorre H. and Winther, Ragnar},
   title   = {Smoothed projections in finite element exterior calculus},
@@ -507,28 +464,6 @@
   pages   = {723--759},
   year    = {1973},
   doi     = {10.1137/0710062}
-}
-
-@book{BrenanCampbellPetzold1996,
-  author    = {Brenan, K. E. and Campbell, S. L. and Petzold, L. R.},
-  title     = {Numerical Solution of Initial-Value Problems in Differential-Algebraic Equations},
-  series    = {Classics in Applied Mathematics},
-  volume    = {14},
-  publisher = {SIAM},
-  address   = {Philadelphia, PA},
-  year      = {1996},
-  doi       = {10.1137/1.9781611971224}
-}
-
-@article{CrankNicolson1947,
-  author  = {Crank, J. and Nicolson, P.},
-  title   = {A practical method for numerical evaluation of solutions of partial differential equations of the heat-conduction type},
-  journal = {Proc. Cambridge Philos. Soc.},
-  volume  = {43},
-  number  = {1},
-  pages   = {50--67},
-  year    = {1947},
-  doi     = {10.1017/S0305004100023197}
 }
 
 @article{PaigeSaunders1975,
@@ -665,15 +600,6 @@
   note   = {MATH 8445, University of Minnesota, version of 2011-09-05; cited as [17] (2012) in [QuennevilleBelair2015]},
   year   = {2011},
   url    = {https://www-users.cse.umn.edu/~arnold/8445.f11/notes.pdf}
-}
-
-@misc{GilletteHolst2012,
-  author        = {Gillette, Andrew and Holst, Michael},
-  title         = {Finite element exterior calculus for evolution problems},
-  year          = {2012},
-  eprint        = {1202.1573},
-  archivePrefix = {arXiv},
-  note          = {Preprint cited in [QuennevilleBelair2015]; published version [GilletteHolstZhu2017]}
 }
 
 @book{Whitney1957,
@@ -957,72 +883,6 @@
   pages   = {583--606},
   year    = {2019},
   doi     = {10.1090/mcom/3354}
-}
-
-% Related software and formalizations (README.md, Related work). DOIs verified against Crossref.
-
-@article{Kirby2004,
-  author  = {Kirby, Robert C.},
-  title   = {Algorithm 839: {FIAT}, a new paradigm for computing finite element basis functions},
-  journal = {ACM Trans. Math. Software},
-  volume  = {30},
-  number  = {4},
-  pages   = {502--516},
-  year    = {2004},
-  doi     = {10.1145/1039813.1039820}
-}
-
-@book{LoggMardalWells2012,
-  editor    = {Logg, Anders and Mardal, Kent-Andre and Wells, Garth N.},
-  title     = {Automated Solution of Differential Equations by the Finite Element Method: The {FE}ni{CS} Book},
-  series    = {Lecture Notes in Computational Science and Engineering},
-  volume    = {84},
-  publisher = {Springer},
-  year      = {2012},
-  doi       = {10.1007/978-3-642-23099-8}
-}
-
-@article{Rathgeber2017,
-  author  = {Rathgeber, Florian and Ham, David A. and Mitchell, Lawrence and Lange, Michael and Luporini, Fabio and McRae, Andrew T. T. and Bercea, Gheorghe-Teodor and Markall, Graham R. and Kelly, Paul H. J.},
-  title   = {Firedrake: automating the finite element method by composing abstractions},
-  journal = {ACM Trans. Math. Software},
-  volume  = {43},
-  number  = {3},
-  pages   = {1--27},
-  year    = {2017},
-  doi     = {10.1145/2998441}
-}
-
-@article{BellHirani2012,
-  author  = {Bell, Nathan and Hirani, Anil N.},
-  title   = {{PyDEC}: software and algorithms for discretization of exterior calculus},
-  journal = {ACM Trans. Math. Software},
-  volume  = {39},
-  number  = {1},
-  pages   = {1--41},
-  year    = {2012},
-  doi     = {10.1145/2382585.2382588}
-}
-
-@article{Boldo2014,
-  author  = {Boldo, Sylvie and Cl{\'e}ment, Fran{\c{c}}ois and Filli{\^a}tre, Jean-Christophe and Mayero, Micaela and Melquiond, Guillaume and Weis, Pierre},
-  title   = {Trusting computations: a mechanized proof from partial differential equations to actual program},
-  journal = {Comput. Math. Appl.},
-  volume  = {68},
-  number  = {3},
-  pages   = {325--352},
-  year    = {2014},
-  doi     = {10.1016/j.camwa.2014.06.004}
-}
-
-@inproceedings{Boldo2017,
-  author    = {Boldo, Sylvie and Cl{\'e}ment, Fran{\c{c}}ois and Faissole, Florian and Martin, Vincent and Mayero, Micaela},
-  title     = {A {C}oq formal proof of the {L}ax--{M}ilgram theorem},
-  booktitle = {Proceedings of the 6th ACM SIGPLAN Conference on Certified Programs and Proofs (CPP 2017)},
-  pages     = {79--89},
-  publisher = {ACM},
-  year      = {2017},
-  doi       = {10.1145/3018610.3018625}
 }
 
 @article{Clement1975,

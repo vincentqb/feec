@@ -33,20 +33,6 @@ def isPyDigit (c : Char) : Bool :=
   ('0'.toNat ≤ n && n ≤ '9'.toNat) || (0x660 ≤ n && n ≤ 0x669) || (0x6f0 ≤ n && n ≤ 0x6f9) ||
     (0x966 ≤ n && n ≤ 0x96f) || (0xff10 ≤ n && n ≤ 0xff19) || (0x1d7ce ≤ n && n ≤ 0x1d7ff)
 
-/-- The value of a digit accepted by `isPyDigit` (Python's `int`). -/
-def pyDigitVal (c : Char) : Nat :=
-  let n := c.toNat
-  if n ≤ '9'.toNat then n - '0'.toNat
-  else if n ≤ 0x669 then n - 0x660
-  else if n ≤ 0x6f9 then n - 0x6f0
-  else if n ≤ 0x96f then n - 0x966
-  else if n ≤ 0xff19 then n - 0xff10
-  else (n - 0x1d7ce) % 10
-
-/-- Python's `int` on a string of `isPyDigit` characters. -/
-def pyInt (s : String) : Nat :=
-  s.foldl (fun acc c => 10 * acc + pyDigitVal c) 0
-
 private def inRanges (n : Nat) : List (Nat × Nat) → Bool
   | [] => false
   | (a, b) :: rs => (a ≤ n && n ≤ b) || inRanges n rs
@@ -122,8 +108,6 @@ def oneOf (cs : List Char) : Re := .cls fun c => cs.contains c
 def digit : Re := .cls isPyDigit
 /-- `\s`. -/
 def space : Re := .cls isPySpace
-/-- `\S`. -/
-def nonSpace : Re := .cls fun c => !isPySpace c
 /-- `\w`. -/
 def word : Re := .cls isPyWord
 /-- `.` (no `re.S`). -/
@@ -227,23 +211,13 @@ def search (r : Re) (s : Array Char) (pos : Nat := 0) (stop : Nat := s.size) : O
       i := i + 1
     return none
 
-/-- Python's `pattern.fullmatch(s)`. -/
-def fullMatch (r : Re) (s : String) : Option Match :=
-  (Re.seq r .eos).matchAt s.toList.toArray 0
-
-/-- `pattern.findall(s)` for a pattern with exactly one group: the texts of group `g`. -/
-def findAllGroup (r : Re) (s : Array Char) (g : Nat := 1) : Array String :=
-  (r.findAll s).map (·.group g)
-
-/-- Python's `pattern.split(s)`: the pieces between matches, each followed by the texts of the
-groups `groups` of the separating match. -/
-def split (r : Re) (s : String) (groups : List Nat := []) : Array String := Id.run do
+/-- Python's `pattern.split(s)` for a pattern without groups: the pieces between matches. -/
+def split (r : Re) (s : String) : Array String := Id.run do
   let cs := s.toList.toArray
   let mut out := #[]
   let mut prev := 0
   for m in r.findAll cs do
     out := out.push (String.ofList (cs.extract prev m.start).toList)
-    for g in groups do out := out.push (m.group g)
     prev := m.stop
   out.push (String.ofList (cs.extract prev cs.size).toList)
 

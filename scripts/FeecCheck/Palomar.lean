@@ -6,8 +6,7 @@ public import FeecCheck.Util
 # Palomar gate
 
 `lake exe feec-palomar` (also run by `lake exe feec-gate`). Checks the Palomar submission
-packages, the directories `palomar/*/` with a `comparator.json` (`palomarPackages`; README,
-"Palomar submission"); in each:
+packages, the directories `palomar/*/` with a `comparator.json` (`palomarPackages`); in each:
 
 1. every shared block of `Challenge.lean`, the lines between `-- palomar-shared: <name>` and
    `-- palomar-shared-end: <name>`, is byte-identical to the block `<name>` of the canonical file

@@ -517,10 +517,12 @@ Correction: the thesis calls it "the graph norm of `Γ_h`", but `Γ_h` is a spac
 proof only makes sense for `‖w‖² + ‖S₁,h w‖² + ‖dw‖²`. -/
 def gnSq (w : Vt1) : ℝ := ‖w‖ ^ 2 + ‖Q.S1h w‖ ^ 2 + ‖D.dt1 w‖ ^ 2
 
-/-- The surjectivity hypothesis (5.4), for the total projections: `S₀,h Π̃⁰ = Π¹ S₀`.
-Caveat: the thesis checks (5.4) only for canonical projections (Prop 5.7), which do not satisfy
-`Bounded`; no projection is known to us satisfying `Discrete + Bounded + Compatible` in the
-elasticity / Einstein–Bianchi application (cf. `exists_nonvacuous` for an abstract instance).
+/-- The surjectivity hypothesis (5.4), for the total projections: `S₀,h Π̃⁰ = Π¹ S₀`. The thesis
+checks (5.4) for canonical projections (Prop 5.7), which are not defined on all of `L²`; for the
+Table 5.1 elements on the cube the smoothed projections satisfy `Discrete`, `Bounded` and
+`Compatible` (`Feec.Models.Cube.WeakSymmetry.cubeFEM_bounded`,
+`Feec.Models.Cube.WeakSymmetry.cubeFEM_compatible`), and `exists_nonvacuous` is an abstract
+instance.
 See [QuennevilleBelair2015], §5.2, (5.4), and Prop 5.7; cf. the analogous condition in the
 weak-symmetry elasticity elements of [AFW2007]. -/
 def Compatible : Prop := ∀ ψ, Q.P1 (D.S0 (Q.Pt0 ψ)) = Q.P1 (D.S0 ψ)

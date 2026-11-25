@@ -364,8 +364,8 @@ abbrev Converges (v : ∀ h, F.X h) (x : E) : Prop := Tendsto (fun h => F.incl h
 /-- **Comparison trajectories** on `[0, T]`: for each datum `x` of `Data`, discrete trajectories
 `pₕ(t)` with right derivatives `pₕ'(t)`. Consistency is tested along them (orbit form), never in
 operator norm: for the BGG scheme of [QuennevilleBelair2015], (6.5), the static strong consistency
-bound of Prop. 5.9(2) fails (ratio `√(2/3)`, per the unformalized audit recorded in
-`Feec.HilbertComplex.BGG.WeakConsistency`). -/
+bound of Prop. 5.9(2) fails on the Freudenthal meshes of the cube with constants independent of `h`
+(`Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`). -/
 structure Comparison (T : ℝ) where
   /-- the data -/
   Data : Set E

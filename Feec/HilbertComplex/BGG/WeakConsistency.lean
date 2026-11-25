@@ -6,17 +6,19 @@ public import Feec.HilbertComplex.BGG.Discrete
 # Thm 5.5 under weak consistency
 
 The a priori estimate `Feec.BGG.Discrete.error_estimate` (thesis Thm 5.5) assumes the strong
-consistency bound `‖(S₁ − S₁,ₕ)v‖ ≤ C_app h ‖v‖_V` on all of `Ṽₕ¹`. This is false for the
-Table 5.1 elements: per the audit (`docs/audit.json`, a symbolic computation not formalized here,
-since `HilbertComplex` cannot import `FiniteElement`), thesis Prop 5.9(2) fails for the gradient of
-an edge bubble (ratio `√(2/3)`, independent of `h`). The proof only uses the bound inside the
-single term `⟪S₁u, (S₁ − S₁,ₕ)v⟫` against the *exact* solution `u`. This file replaces it by the
-corresponding weak consistency bound and shows how a discrete Hodge decomposition yields that
-bound from hypotheses that do not include the false Prop 5.9(2). Whether `Bounded`, `Compatible`
-and `RegularPotential` hold for the Table 5.1 elements is open (see the caveat on
-`Discrete.Compatible`). `Compatible` is thesis (5.4) in the form `Π¹S₀Π̃⁰ = Π¹S₀` for the total
-projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is a further assumption
-(`Discrete.surjective_of_comp_eq`).
+consistency bound `‖(S₁ − S₁,ₕ)v‖ ≤ C_app h ‖v‖_V` on all of `Ṽₕ¹`. For the Table 5.1 elements on
+the Freudenthal meshes of the cube, no such bound holds with `C_app` independent of `h`, whatever
+the projection onto the Raviart–Thomas spaces
+(`Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`). The proof only uses the bound inside
+the single term `⟪S₁u, (S₁ − S₁,ₕ)v⟫` against the *exact* solution `u`. This file replaces it by the
+corresponding weak consistency bound and shows how a discrete Hodge decomposition yields that bound
+from hypotheses that do not include Prop 5.9(2). For the Table 5.1 elements on the cube, with
+smoothed projections, `Bounded`, `Compatible` and `RegularPotential` hold
+(`Feec.Models.Cube.WeakSymmetry.cubeFEM_bounded`,
+`Feec.Models.Cube.WeakSymmetry.cubeFEM_compatible`, `Feec.Models.Cube.WeakSymmetry.cubeFEMReg` with
+`Feec.Models.Cube.WeakSymmetry.exists_curlPotential_bound`). `Compatible` is thesis (5.4) in the
+form `Π¹S₀Π̃⁰ = Π¹S₀` for the total projections; the thesis uses (5.4) to make `S₀,ₕ` onto, which is
+a further assumption (`Discrete.surjective_of_comp_eq`).
 
 ## Main definitions
 
@@ -78,15 +80,16 @@ variable {V0 V1 W2 Vt0 Vt1 Wt2 : Type*}
 
 /-! ## Thm 5.5 with weak consistency -/
 
-/-- **Thesis Thm 5.5, corrected: weak consistency.** The a priori estimate of `error_estimate`,
-with the strong consistency hypothesis `happ1` on `S₁,ₕ` (false for the Table 5.1 elements
-per the audit, thesis Prop 5.9(2)) replaced by weak consistency against the exact solution:
-`|⟪S₁u, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V` for `v ∈ Ṽₕ¹`, `K ≥ 0` a data constant. The bound has
-`h²K²` in place of `h²‖S₁u‖²`; the constant `errorConst` is unchanged.
-`happ1` implies the hypothesis with `K = ‖S₁u‖`;
-`weakConsistency_of_regularPotential` derives it from hypotheses (`Stability`, `Bounded`,
-regular potentials, Prop 5.9(1), `S₁u ∈ D(d¹*)`) that do not include Prop 5.9(2); whether they hold
-for the Table 5.1 elements is open.
+/-- **Thesis Thm 5.5, adapted: weak consistency.** The a priori estimate of `error_estimate`, with
+the strong consistency hypothesis `happ1` on `S₁,ₕ` (the bound thesis Prop 5.9(2) is meant to
+supply; it fails for the Table 5.1 elements on the Freudenthal meshes of the cube with `C_app`
+independent of `h`, `Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`) replaced by weak
+consistency against the exact solution: `|⟪S₁u, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V` for `v ∈ Ṽₕ¹`,
+`K ≥ 0` a data constant. The bound has `h²K²` in place of `h²‖S₁u‖²`; the constant `errorConst` is
+unchanged. `happ1` implies the hypothesis with `K = ‖S₁u‖`; `weakConsistency_of_regularPotential`
+derives it from hypotheses (`Stability`, `Bounded`, regular potentials, Prop 5.9(1), `S₁u ∈ D(d¹*)`)
+that do not include Prop 5.9(2). `Feec.Models.Cube.WeakSymmetry.cubeFEM_rate_of_err` applies this
+theorem to the Table 5.1 elements on the cube.
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
 theorem error_estimate_of_weakConsistency {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
     (B : Q.Bounded CP) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.Vt1h]
@@ -253,7 +256,7 @@ theorem error_estimate_of_weakConsistency {Cp CR CS CP : ℝ} (H : Stability D C
     (le_add_of_nonneg_right (sq_nonneg _)) (le_add_of_nonneg_left (sq_nonneg _)) hg3
     (graphSq_nonneg _ _) (graphSq_nonneg _ _)
 
-/-- **Thesis Thm 5.5 (a priori error estimate), corrected and with full proof.**
+/-- **Thesis Thm 5.5 (a priori error estimate), adapted.**
 
 Let `(σ, φ, u, λ)` solve the continuous problem (5.3) (tested against discrete functions,
 by conformity), with `λ ∈ W¹` represented by the functional `ℓ = (λ, ·)`, `|ℓ μ| ≤ Λ ‖μ‖`, and let
@@ -282,7 +285,7 @@ Thesis gaps / corrections:
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.6; cf. the quasi-optimal a priori estimates
 for the discrete mixed Hodge Laplacian in [AFW2010], [Arnold2018], the weak-symmetry
 elasticity estimates of [AFW2007], and the Babuška–Brezzi theory [Babuska1971], [Brezzi1974],
-[BoffiBrezziFortin2013]. [QuennevilleBelair2015], Thm 5.5 (corrected) -/
+[BoffiBrezziFortin2013]. [QuennevilleBelair2015], Thm 5.5 (adapted) -/
 theorem error_estimate {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS) (B : Q.Bounded CP)
     (h54 : Q.Compatible)
     [FiniteDimensional ℝ Q.Vt1h]
@@ -339,7 +342,8 @@ structure RegularPotential (Q : Discrete D) (Xr : Type*) [NormedAddCommGroup Xr]
 `dS₀ = −S₁d` and its discrete version `dS₀,ₕ = −S₁,ₕd` (commuting projections). So on gradients
 the consistency error of `S₁,ₕ` is the `d` of the consistency error of `S₀,ₕ`, which is `O(h)`
 (thesis Prop 5.9(1)), but only after integration by parts against `z ∈ D(d*)`: in `L²` it is not
-small (per the audit, the counterexample to thesis Prop 5.9(2) is such a gradient). -/
+small (the field `Feec.Models.Cube.WeakSymmetry.vN`, `(0, 0, grad φ_N)`, of
+`Feec.Models.Cube.WeakSymmetry.exists_bestApproxError_ge` is such a gradient). -/
 theorem S1_sub_S1h_dt0 (ψ : Vt0) : (D.S1 - Q.S1h) (D.dt0 ψ) = D.d1 (Q.S0h ψ - D.S0 ψ) := by
   have h1 := D.anticomm ψ
   have h2 := Q.anticomm_h ψ
@@ -574,13 +578,13 @@ theorem weakConsistency_of_regularPotential_of_bound {Cp CR CS CP : ℝ}
   H.toHarmonicStability.weakConsistency_of_regularPotential_of_bound bot_le B hh hCapp Rg happ0
     hM hz
 
-/-- **Weak consistency from a discrete Hodge decomposition** (the mechanism intended
-for the corrected Thm 5.5 on cube meshes; the hypotheses are not proved for any concrete element
-here). Let `z ∈ D(d¹*)`, i.e. `⟪z, dw⟫ = ⟪z', w⟫` for all
-`w ∈ V¹`. Assume `Stability`, `Bounded`, the consistency of `S₀,ₕ` (`happ0`, thesis
-Prop 5.9(1), true per the audit) and regular
-potentials (`RegularPotential`). Then for `v ∈ Ṽₕ¹`
-`|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V`, `K = weakConsistencyConst … ‖z‖ ‖z'‖`.
+/-- **Weak consistency from a discrete Hodge decomposition** (the mechanism of the adapted Thm 5.5
+on cube meshes, `Feec.Models.Cube.WeakSymmetry.cubeFEM_rate_of_err`). Let `z ∈ D(d¹*)`, i.e.
+`⟪z, dw⟫ = ⟪z', w⟫` for all `w ∈ V¹`. Assume `Stability`, `Bounded`, the consistency of `S₀,ₕ`
+(`happ0`, thesis Prop 5.9(1); for the canonical interpolant
+`Feec.Models.Cube.WeakSymmetry.norm_sub_glue_bggS0h_le`, for the smoothed projections
+`Feec.Models.Cube.WeakSymmetry.cubeFEM_happ0`) and regular potentials (`RegularPotential`). Then for
+`v ∈ Ṽₕ¹` `|⟪z, (S₁ − S₁,ₕ)v⟫| ≤ C_app h K ‖v‖_V`, `K = weakConsistencyConst … ‖z‖ ‖z'‖`.
 
 Proof: take the regular potential `y` of `dv`. Then `v − Π̃¹Ry ∈ ker d ∩ Ṽₕ¹ = dṼₕ⁰` (discrete
 exactness `exact_bot_h`), say `= dψ`. Gradient part: `(S₁ − S₁,ₕ)dψ = d(S₀,ₕ − S₀)ψ`
@@ -601,11 +605,16 @@ theorem weakConsistency_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D
     rw [hz]; exact abs_real_inner_le_norm z' w
 
 /-- **Thesis Thm 5.5 without Prop 5.9(2).** The a priori estimate with the strong consistency of
-`S₁,ₕ` (false per the audit, thesis Prop 5.9(2)) replaced by: regular potentials
-(`RegularPotential`) and `S₁u ∈ D(d¹*)` (regularity of the exact solution,
-`⟪S₁u, dw⟫ = ⟪z', w⟫`). The data constant is `K = weakConsistencyConst … ‖S₁u‖ ‖z'‖`.
-`Stability`, `Bounded` and `Compatible` remain hypotheses; whether `Bounded` + `Compatible` +
-`RegularPotential` hold for the Table 5.1 elements is open (see `Discrete.Compatible`).
+`S₁,ₕ` (the bound thesis Prop 5.9(2) is meant to supply; it fails for the Table 5.1 elements on the
+Freudenthal meshes of the cube with `C_app` independent of `h`,
+`Feec.Models.Cube.WeakSymmetry.not_exists_bestApprox_bound`) replaced by: regular potentials
+(`RegularPotential`) and `S₁u ∈ D(d¹*)` (regularity of the exact solution, `⟪S₁u, dw⟫ = ⟪z', w⟫`).
+The data constant is `K = weakConsistencyConst … ‖S₁u‖ ‖z'‖`. `Stability`, `Bounded` and
+`Compatible` remain hypotheses; for the Table 5.1 elements on the cube, with smoothed projections,
+`Bounded`, `Compatible` and `RegularPotential` hold
+(`Feec.Models.Cube.WeakSymmetry.cubeFEM_bounded`,
+`Feec.Models.Cube.WeakSymmetry.cubeFEM_compatible`, `Feec.Models.Cube.WeakSymmetry.cubeFEMReg` with
+`Feec.Models.Cube.WeakSymmetry.exists_curlPotential_bound`).
 See [QuennevilleBelair2015], Thm 5.5 and Prop 5.9. -/
 theorem error_estimate_of_regularPotential {Cp CR CS CP : ℝ} (H : Stability D Cp CR CS)
     (B : Q.Bounded CP) (h54 : Q.Compatible) [FiniteDimensional ℝ Q.Vt1h]

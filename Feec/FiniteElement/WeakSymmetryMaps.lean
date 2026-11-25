@@ -16,8 +16,7 @@ that is `S⁰ψ = Σᵢ ψᵢ dxᵢ` on vector `0`-forms (the identity `S₀ = I
 `coordWedgeSum_singleton`) and `S¹v = Σᵢ dxᵢ ∧ vᵢ` on vector `1`-forms. With rows `vᵢ = Σⱼ uᵢⱼ dxⱼ`,
 `(S¹v)_{ab} = u_{ab} − u_{ba}` (`coordWedgeSum_pair`): on vector proxies `S¹ = 2 vskw`,
 `(S₁u)ᵢ = u_{i+1,i+2} − u_{i+2,i+1}`, the operator of `Feec.Domain.skwCurlOp`
-and of `Feec.Models.BoundedDomain.skwL` (not `vskw`: the thesis' normalization violates the
-anticommutation, see `docs/audit.json`). This choice of signs gives the thesis' anticommutation
+and of `Feec.Models.BoundedDomain.skwL`. This choice of signs gives the thesis' anticommutation
 
 `d S = −S d` (`extDeriv_coordWedgeField`),
 
@@ -39,7 +38,7 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
   `(k + 1)`-faces contain the constant `1`-forms (`PolySeq.ConstOneTest`), the DOFs of the lowest-order family of `S v`
   are combinations of the DOFs of `v` (`PolySeq.dof_comp_coordWedgeC_mem_span`); this gives
   `S_h = Π' S` on `Vₕ ⊗ ℝⁿ` (`PolySeq.wsPiecewise`, `PolySeq.wsGlobal`, `PolySeq.wsGlobal₀`:
-  vanishing boundary DOFs are preserved), **Prop 5.7 corrected** `Π' S Π̃ = Π' S`
+  vanishing boundary DOFs are preserved), **Prop 5.7, adapted** `Π' S Π̃ = Π' S`
   (`PolySeq.wsGlobal_tensorInterp`), the
   **discrete anticommutation** `d S_h = −S_h d` (`PolySeq.dPiecewise_wsPiecewise`), and
   **`S₀,ₕ` onto `P₁⁻Λ̊¹`** (`PolySeq.wsGlobal₀_surjective`). The interpolants coincide with the
@@ -54,7 +53,7 @@ since `d(dxᵢ ∧ vᵢ) = −dxᵢ ∧ dvᵢ`; in degree `0` it is `curl S₀ =
 ## References
 
 * [V. Quenneville-Bélair, *A New Approach to Finite Element Simulations of General Relativity*][QuennevilleBelair2015],
-  §5.3 (the maps `S₀ = I`, `S₁ = vskw` of the complex (4.16), Prop 5.7)
+  §5.3 (the maps `S₀ = I`, `S₁ = vskw` of the complex (4.16), here `S₁ = 2 vskw`; Prop 5.7)
 * [D. N. Arnold, R. S. Falk, R. Winther, *Mixed finite element methods for linear elasticity with weakly imposed symmetry*][AFW2007]
   (the maps `S` of weakly imposed symmetry)
 * [D. N. Arnold, K. Hu, *Complexes from complexes*][ArnoldHu2021] (BGG connecting maps)
@@ -541,7 +540,7 @@ def wsGlobal₀ (hS : S.ConstOneTest k) :
 
 /-! ### The surjectivity hypothesis (5.4): `Π' S Π̃ = Π' S` -/
 
-/-- **Thesis Prop 5.7, corrected (global form)**: `Π'_h S Π̃_h ψ = Π'_h S ψ` for continuous `ψ`
+/-- **Thesis Prop 5.7, adapted (global form)**: `Π'_h S Π̃_h ψ = Π'_h S ψ` for continuous `ψ`
 (`Π̃_h` the componentwise canonical interpolant, `Π'_h` the canonical interpolant of
 `P₁⁻Λᵏ⁺¹`): the surjectivity hypothesis (5.4) for the canonical projections, i.e.
 `Π¹S⁰Π̃⁰ = Π¹S⁰` (`k = 0`) and `Π²S¹Π̃¹ = Π²S¹` (`k = 1`). -/
@@ -1347,7 +1346,7 @@ theorem bggS0h₀_surjective :
     Function.Surjective (lagrangeP2.wsGlobal₀ (M := M) lagrangeP2_constOneTest_zero) :=
   wsGlobal₀_surjective _
 
-/-- **Thesis Prop 5.7, corrected**, for the elements of Table 5.1: `Π¹S⁰Π̃⁰ = Π¹S⁰` on continuous
+/-- **Thesis Prop 5.7, adapted**, for the elements of Table 5.1: `Π¹S⁰Π̃⁰ = Π¹S⁰` on continuous
 fields (`Π²S¹Π̃¹ = Π²S¹` is `wsGlobal_tensorInterp` with `lagrangeP2_constOneTest_one`). -/
 theorem bggS0h_tensorInterp (ψ : Fin n → contForms n) :
     bggS0h M ((polyElement n lagrangeP2).tensorInterp M n 0 ψ) =
@@ -1372,7 +1371,7 @@ variable {𝕜 : Type*} [RCLike 𝕜] {ι ι' : Type*} {c : ComplexShape ι} {c'
 /-- **Smoothed projections satisfy the surjectivity hypothesis (5.4)**: let `Q = Π R`,
 `Q̃ = Π̃ R̃` be commuting maps into the two finite element rows and `𝒮 : W̃ⁱ → Wʲ` a connecting map
 with `Q 𝒮 y = c Π' 𝒮 (Q̃ y)` (from `R 𝒮 = c 𝒮 R̃`, the dilation factor `c`, and
-`Π 𝒮 Π̃ = Π 𝒮` on smooth fields, the corrected Prop 5.7; `A` is `Π 𝒮` on the discrete fields).
+`Π 𝒮 Π̃ = Π 𝒮` on smooth fields, the adapted Prop 5.7; `A` is `Π 𝒮` on the discrete fields).
 Then the smoothed projections `π = J⁻¹ Q`, `π̃ = J̃⁻¹ Q̃` satisfy `π 𝒮 π̃ = π 𝒮`: since
 `Q̃ π̃ = Q̃`, `Q 𝒮 π̃ x = c A (Q̃ π̃ x) = c A (Q̃ x) = Q 𝒮 x`. This is `Feec.BGG.Discrete.Compatible`
 (`P1 = π`, `Pt0 = π̃`, `S0 = 𝒮`) for smoothed projections. The hypothesis `hA` is not discharged

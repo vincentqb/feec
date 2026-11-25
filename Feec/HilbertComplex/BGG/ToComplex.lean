@@ -29,7 +29,7 @@ symmetries (5.1), `Γ̄ ⊃ Γ --(0 d̃)--> W̃¹ ⊃ Ṽ¹ --(S₁, d̃)--> W²
 * `Hilb.poincare_Γ`, `Hilb.poincare_T`, `Hilb.hodge_Vt1`: Poincaré inequalities and the Hodge
   decomposition of `Ṽ¹` without harmonic part.
 * `Hilb.isClosed_closedRange_exact`: (5.1) is a closed Hilbert complex with closed ranges, exact
-  at `Γ̄` and `W̃¹` (thesis Prop 5.1, corrected).
+  at `Γ̄` and `W̃¹` (thesis Prop 5.1, adapted).
 * `Hilb.toHilbertComplex_closedRangeAt_one`, `Hilb.toHilbertComplex_closedRangeAt_two`,
   `Hilb.toHilbertComplex_cycles_one`, `Hilb.toHilbertComplex_cycles_zero`: the same statements for the Hilbert complex, so the
   Hodge theory of `Feec.HilbertComplex` applies to (5.1).
@@ -240,8 +240,8 @@ abbrev Z1 : Submodule 𝕜 Vt1 := D.T.ker
 lemma mem_Z1 {u : Vt1} : u ∈ D.Z1 ↔ D.S1 u = 0 ∧ D.dt1 u = 0 := by
   simp [Z1, LinearMap.mem_ker, Prod.ext_iff]
 
-/-- The explicit analytic hypotheses (H1)–(H3), (H6) of §5.1 (corrected form, see
-`docs/audit.json`): `d⁰, d̃⁰` injective with closed range (exactness at `V⁰`, `Ṽ⁰`), exactness at
+/-- The explicit analytic hypotheses (H1)–(H3), (H6) of §5.1, in the form used here: `d⁰, d̃⁰`
+injective with closed range (exactness at `V⁰`, `Ṽ⁰`), exactness at
 `V¹`, `Ṽ¹`, closed ranges of `d¹, d̃¹`, and the regularity hypothesis, of which only the
 direction `d¹V¹ ⊆ d¹S₀Ṽ⁰` has content. Ranges are closed in the `W`-spaces, as in the thesis.
 
@@ -278,8 +278,7 @@ lemma exists_poincare {E F : Type*} [NormedAddCommGroup E] [NormedSpace 𝕜 E] 
   obtain ⟨K, hK⟩ := f.antilipschitz_of_injective_of_isClosed_range hf hr
   exact ⟨K, K.2, fun x => hK.le_mul_norm (map_zero f) x⟩
 
-/-- `Γ` is closed in `V⁰ × Ṽ⁰` (thesis Prop 5.1, corrected: the thesis' `(σ, φ) ∈ Γ̄` is
-meaningless for limit points of the completion; closedness of `Γ` is the usable statement).
+/-- `Γ` is closed in `V⁰ × Ṽ⁰` (thesis Prop 5.1, adapted).
 
 See [QuennevilleBelair2015], Prop 5.1 (proof). -/
 theorem isClosed_Γ : IsClosed (D.Γ : Set (V0 × Vt0)) := by
@@ -594,7 +593,7 @@ theorem exact_D0op_D1op (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 
 /-- **The complex with weak symmetries (5.1) is a closed, exact Hilbert complex**:
 `Γ̄ ⊃ Γ --(0 d)--> W̃¹ ⊃ Ṽ¹ --(S, d)--> W² × W̃²` (thesis Prop 5.1).
-[QuennevilleBelair2015], Prop 5.1 (corrected)
+[QuennevilleBelair2015], Prop 5.1 (adapted)
 
 The complex
 `Γ̄ ⊃ Γ --(0 d)--> W̃¹ ⊃ Ṽ¹ --(S, d)--> W² × W̃²`, is a closed Hilbert complex: both operators are
@@ -803,7 +802,7 @@ def toShort (h : D.Hyps) (hS0 : Function.Injective D.S0) :
 
 /-- **(5.1) has closed ranges and is exact**, as a short Hilbert complex on `Γ̄`:
 `R(0 d̃)` and `R(S₁, d̃¹)` are closed, `N(S₁, d̃¹) = R(0 d̃)` and `N(0 d̃) = 0`.
-[QuennevilleBelair2015], Prop 5.1 (corrected)
+[QuennevilleBelair2015], Prop 5.1 (adapted)
 
 See [QuennevilleBelair2015], Prop 5.1. -/
 theorem toShort_closedRange_exact (h : D.Hyps) (hS0 : Function.Injective D.S0) :

@@ -5,16 +5,16 @@ public import FeecCheck.Util
 /-!
 # Layering gate
 
-`lake exe feec-layering` (also run by `lake exe feec-gate`) checks the import rules of
-`docs/REFACTOR_PLAN.md` §1 on the headers of `Feec/**/*.lean` (no environment needed).
+`lake exe feec-layering` (also run by `lake exe feec-gate`) checks the import rules of the
+library on the headers of `Feec/**/*.lean` (no environment needed).
 
 The layers (the top-level directories of `Feec/`) form a partial order, not a chain: the table
 `layerDeps` lists, for each layer, the layers it may import directly, and a layer may import a
 module of layer `L'` iff `L'` is the layer itself, a layer of its `layerSiblings` group, or
 reachable through `layerDeps` (the reflexive-transitive closure). Layers that no path joins
 (`Fourier` and `Domain`; `Variational` and `TimeStepping`; `Examples` and `Numerics`; `Algebra`
-and the analytic chain `Operator` → … → `HilbertComplex`) may not import each other. The relation
-is the one drawn in `docs/REFACTOR_PLAN.md` §1; change both together.
+and the analytic chain `Operator` → … → `HilbertComplex`) may not import each other. The table is
+the specification: a new edge is a change of the table, with its reason.
 
 The check fails when
 
@@ -22,7 +22,7 @@ The check fails when
 * a module imports a module of a layer that its layer may not import, or the root module `Feec`;
 * `Feec.lean` does not import every module of `Feec/`.
 
-Before reading any file it checks the table itself against the hard rules of the plan (an error
+Before reading any file it checks the table itself against the hard rules below (an error
 here means the table was edited wrongly):
 
 * the graph of `layerDeps`, with each `layerSiblings` group contracted to one node, has no cycle;
@@ -39,9 +39,9 @@ public section
 
 namespace FeecCheck.Layering
 
-/-- The layers (top-level directories of `Feec/`) and the layers each may import directly
-(`docs/REFACTOR_PLAN.md` §1). A layer may import the reflexive-transitive closure of its row
-(see `Table.mayImport`). Edges that the plan documents individually:
+/-- The layers (top-level directories of `Feec/`) and the layers each may import directly. A layer
+may import the reflexive-transitive closure of its row (see `Table.mayImport`). Edges with a
+reason of their own:
 
 * `Variational → Evolution`: the Galerkin error bound for evolution problems
   (`Feec.Variational.GalerkinEvolution`) uses the energy method of `Feec.Evolution.Energy`;
@@ -85,8 +85,8 @@ def isolatedLayers : List String := ["ForMathlib", "Mesh"]
 def topTier : List String :=
   ["Models", "Physics", "Counterexamples", "Examples", "Numerics", "Instances"]
 
-/-- The relation of `docs/REFACTOR_PLAN.md` §1: direct edges, sibling groups, the layers that
-import only Mathlib, and the top tier. -/
+/-- The import relation: direct edges, sibling groups, the layers that import only Mathlib, and the
+top tier. -/
 structure Table where
   deps : List (String × List String) := layerDeps
   siblings : List (List String) := layerSiblings
@@ -125,7 +125,7 @@ def reach (l : String) : List String := Id.run do
 /-- Whether a module of layer `l` may import a module of layer `l'`. -/
 def mayImport (l l' : String) : Bool := l == l' || (t.reach l).contains l'
 
-/-- Errors in the table itself (the hard rules of `docs/REFACTOR_PLAN.md` §1). -/
+/-- Errors in the table itself (the hard rules of the module docstring). -/
 def errors : Array String := Id.run do
   let me := "scripts/FeecCheck/Layering.lean:1"
   let mut out := #[]
@@ -191,7 +191,7 @@ def run (t : Table := {}) : IO Report := do
     let some l := layerOf mod | continue
     unless t.layerNames.contains l do
       rep := rep.addError s!"{f}:1: unknown layer Feec.{l}; add it to the table `layerDeps` of \
-        scripts/FeecCheck/Layering.lean and to docs/REFACTOR_PLAN.md §1"
+        scripts/FeecCheck/Layering.lean"
       continue
     for (k, m) in imports (← readText f) do
       nimp := nimp + 1
@@ -203,8 +203,7 @@ def run (t : Table := {}) : IO Report := do
       else if !t.mayImport l l' then
         let why := if t.isolated.contains l then s!"Feec.{l} imports only Mathlib"
           else s!"Feec.{l} may import only {(l :: t.reach l).map ("Feec." ++ ·)}"
-        rep := rep.addError s!"{f}:{k}: layer violation: {why}, but this imports {m} \
-          (docs/REFACTOR_PLAN.md §1)"
+        rep := rep.addError s!"{f}:{k}: layer violation: {why}, but this imports {m}"
   -- `Feec.lean` imports every module
   let root ← imports <$> readText "Feec.lean"
   let rootMods : Std.HashSet String := root.foldl (fun s (_, m) => s.insert m) {}

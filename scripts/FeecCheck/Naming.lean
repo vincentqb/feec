@@ -7,7 +7,7 @@ public import FeecCheck.Env
 # Naming gate
 
 `lake exe feec-naming` (also run by `lake exe feec-gate`) checks the identifiers of the library
-against the bans of `docs/REFACTOR_PLAN.md` §1 and §5: every component of every declaration name
+against the bans below: every component of every declaration name
 of a `Feec.*` module (namespaces included; private names are checked under their user-facing
 name) and every component of every module name. Docstrings and comments are not checked: thesis
 references belong there (`[QuennevilleBelair2015], Prop 4.17`).
@@ -19,8 +19,8 @@ Banned (see `rules`):
 * thesis equation numbers, two digits: `eq61`, `eq_6_1`, `bggComplex_eq61`, `HasEq61`. One digit
   is allowed (`eq1 : Fin 3 ≃ formIdx 3 1`), and so are Lean's equation lemmas `f.eq_1`;
 * process suffixes: `_unconditional`, `_of_isSkewAdjoint`, `_ambient`, `_literal`, `_corrected`,
-  `_compr` (as a `_`-separated word). The plan also lists `_res` and `_max`; they are not checked,
-  since `res` (a resolvent, a restriction) and `max` are ordinary Mathlib vocabulary
+  `_compr` (as a `_`-separated word). `_res` and `_max` are not banned, since `res` (a
+  resolvent, a restriction) and `max` are ordinary Mathlib vocabulary
   (`Feec.Stone.res`, `Feec.Operator.mul_le_max_one`);
 * thesis typography: `bigAL`, `tst`, `nV2`, `opMh`, `Bthesis`, `Complex3`;
 * `Repair`, `Thesis`.

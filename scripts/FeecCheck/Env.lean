@@ -5,7 +5,7 @@ public import Lean
 /-!
 # The environment of `Feec`
 
-The checks that look at declarations (axioms, names, docstrings) import `Feec` at run time from
+The checks that look at declarations (axioms, names) import `Feec` at run time from
 the `.olean` files of `lake build Feec` (the executables declare `needs = ["Feec"]`, so `lake exe`
 builds the library first). They do not link `Feec`: importing at run time keeps the executables
 small and their build independent of the library.
@@ -17,16 +17,14 @@ namespace FeecCheck
 
 open Lean
 
-private unsafe def loadFeecImpl (withChecks : Bool := false) : IO Environment := do
+private unsafe def loadFeecImpl : IO Environment := do
   enableInitializersExecution
   initSearchPath (← findSysroot)
-  let mods := if withChecks then #[`Feec, `FeecCheck] else #[`Feec]
-  importModules (mods.map ({ module := · })) {} (loadExts := true)
+  importModules #[{ module := `Feec }] {} (loadExts := true)
 
-/-- Import `Feec` (with environment extensions, as `lean` does for a file `import Feec`); with
-`withChecks`, also the library `FeecCheck` of the gate (whose names the documentation cites). -/
+/-- Import `Feec` (with environment extensions, as `lean` does for a file `import Feec`). -/
 @[implemented_by loadFeecImpl]
-opaque loadFeec (withChecks : Bool := false) : IO Environment
+opaque loadFeec : IO Environment
 
 /-- The module of a constant, if it was imported. -/
 def moduleOf? (env : Environment) (nm : Name) : Option Name := do

@@ -13,9 +13,8 @@ mesh size `h_N = 1 / (2 (N + 1))`), for the elements of Table 5.1 of [Quennevill
 (`P₂Λ⁰ ⊗ ℝ³ → P₂⁻Λ¹ ⊗ ℝ³` and the lowest-order Nédélec and Raviart–Thomas spaces), with constants
 independent of `N`:
 
-* **Prop 5.8, corrected** (`norm_glue_bggS0h_le`, `norm_glue_bggS1h_le`): `‖S₀,ₕψ‖ ≤ C ‖ψ‖` and
-  `‖S₁,ₕv‖ ≤ C ‖v‖` in `L²(Q)`. The thesis' proof uses global `ℓ¹` sums of DOFs, which are not
-  uniformly equivalent to the `L²` norm (`docs/audit.json`); the proof here is local: on each
+* **Prop 5.8, adapted** (`norm_glue_bggS0h_le`, `norm_glue_bggS1h_le`): `‖S₀,ₕψ‖ ≤ C ‖ψ‖` and
+  `‖S₁,ₕv‖ ≤ C ‖v‖` in `L²(Q)`. The proof is local, not through global `ℓ¹` sums of DOFs: on each
   simplex `S_h = Π' S`, and `Π'` is `L²`-bounded on polynomial fields uniformly on the homothetic
   copies `t + h K_σ` of the Kuhn simplices (`exists_formL2Sq_localInterp_le`).
 * **Prop 5.9(1)** (`norm_sub_glue_bggS0h_le`): `‖(I − Π¹) S⁰ψ‖ ≤ C h ‖∇ψ‖` on `P₂Λ⁰ ⊗ ℝ³`
@@ -510,7 +509,7 @@ theorem exists_formL2Sq_localInterp_le {k r : ℕ} (hk : k + 1 ≤ n) (hr : 1 �
 
 end MeshLocal
 
-/-! ### Prop 5.8, corrected -/
+/-! ### Prop 5.8, adapted -/
 
 section Prop58
 
@@ -607,7 +606,7 @@ theorem norm_le_of_local {N : ℕ} {E E' : LocalElement n} {k k' : ℕ} {m : ℕ
   rw [mul_pow, Real.sq_sqrt hC0]
   exact hsq
 
-/-- **[QuennevilleBelair2015], Prop 5.8, corrected (`S₀,ₕ`)**: `‖S₀,ₕψ‖_{L²(Q)} ≤ C ‖ψ‖_{L²(Q)}`
+/-- **[QuennevilleBelair2015], Prop 5.8, adapted (`S₀,ₕ`)**: `‖S₀,ₕψ‖_{L²(Q)} ≤ C ‖ψ‖_{L²(Q)}`
 on `P₂Λ⁰ ⊗ ℝ³`, `C` independent of the mesh level. -/
 theorem norm_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (ψ : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 0),
@@ -620,8 +619,8 @@ theorem norm_glue_bggS0h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
   obtain ⟨C, hC0, hC⟩ := exists_formL2Sq_wsPiecewise_zero_le
   exact ⟨√C, Real.sqrt_nonneg _, fun N ψ => norm_le_of_local _ _ hC0 fun T => hC N _ T⟩
 
-/-- **[QuennevilleBelair2015], Prop 5.8, corrected (`S₁,ₕ`)**: `‖S₁,ₕv‖_{L²(Q)} ≤ C ‖v‖_{L²(Q)}`
-on `P₂⁻Λ¹ ⊗ ℝ³` (the half of Prop 5.8 that the thesis does not prove). -/
+/-- **[QuennevilleBelair2015], Prop 5.8, adapted (`S₁,ₕ`)**: `‖S₁,ₕv‖_{L²(Q)} ≤ C ‖v‖_{L²(Q)}`
+on `P₂⁻Λ¹ ⊗ ℝ³`. -/
 theorem norm_glue_bggS1h_le : ∃ C, 0 ≤ C ∧ ∀ (N : ℕ)
     (v : Fin 3 → (polyElement 3 PolySeq.lagrangeP2).globalSpace (mesh 3 N) 1),
     ‖(polyElement 3 PolySeq.lowestOrder).glue (mesh 3 N) ((1 : ℕ) + 1 : ℕ)

@@ -96,10 +96,6 @@ def pyStrip (s : String) : String :=
 def pyRepr (s : String) : String :=
   "'" ++ (s.replace "\\" "\\\\").replace "'" "\\'" ++ "'"
 
-/-- Python's `repr` of a list of strings. -/
-def pyReprList (l : List String) : String :=
-  "[" ++ ", ".intercalate (l.map pyRepr) ++ "]"
-
 /-- The Lean files under `dir`, sorted (Python's `sorted(pathlib.Path(dir).rglob('*.lean'))`). -/
 def leanFiles (dir : System.FilePath) : IO (Array System.FilePath) := do
   let fs ← dir.walkDir
@@ -126,48 +122,5 @@ def moduleOfPath (f : System.FilePath) : String :=
 def relPathFrom (f : System.FilePath) (target : String) : String :=
   let depth := (f.components.dropLast.filter (· ≠ ".")).length
   String.join (List.replicate depth "../") ++ target
-
-/-- Insertion-ordered set of strings. -/
-structure OrdSet where
-  arr : Array String := #[]
-  set : Std.HashSet String := {}
-
-namespace OrdSet
-
-def insert (s : OrdSet) (x : String) : OrdSet :=
-  if s.set.contains x then s else ⟨s.arr.push x, s.set.insert x⟩
-
-def contains (s : OrdSet) (x : String) : Bool := s.set.contains x
-
-def size (s : OrdSet) : Nat := s.arr.size
-
-end OrdSet
-
-/-- Insertion-ordered map of strings to sets of strings (Python's `defaultdict(set)`). -/
-structure SetMap where
-  keys : OrdSet := {}
-  map : Std.HashMap String (Std.HashSet String) := {}
-
-namespace SetMap
-
-def add (m : SetMap) (k v : String) : SetMap :=
-  ⟨m.keys.insert k, m.map.insert k ((m.map.getD k {}).insert v)⟩
-
-/-- Create the key with an empty set (the side effect of `d[k]` on a `defaultdict`). -/
-def touch (m : SetMap) (k : String) : SetMap :=
-  if m.keys.contains k then m else ⟨m.keys.insert k, m.map.insert k {}⟩
-
-def addAll (m : SetMap) (k : String) (vs : Std.HashSet String) : SetMap :=
-  vs.fold (fun m v => m.add k v) (m.touch k)
-
-def get (m : SetMap) (k : String) : Std.HashSet String := m.map.getD k {}
-
-def sorted (m : SetMap) (k : String) : Array String := (m.get k).toArray.qsort (· < ·)
-
-/-- The union of all values. -/
-def union (m : SetMap) : Std.HashSet String :=
-  m.map.fold (fun acc _ v => v.fold (fun a x => a.insert x) acc) {}
-
-end SetMap
 
 end FeecCheck

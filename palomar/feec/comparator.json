@@ -2,7 +2,7 @@
   "challenge_module": "Challenge",
   "solution_module": "Solution",
   "theorem_names": ["FEEC.projectionFEEC", "FEEC.staticFEEC", "FEEC.evolutionFEEC",
-    "FEEC.spectral_nonvacuous"],
+    "FEEC.spectral_nonvacuous", "FEEC.closedRange_necessary"],
   "definition_names": [],
   "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"]
 }

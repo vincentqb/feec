@@ -6,8 +6,9 @@ public import Feec.HilbertComplex.Approximation.StaticFEEC
 /-!
 # A conforming family of the periodic complex
 
-The periodic complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℕ`,
-`A = diag(1/(n+1))` (`Feec.Counterexamples.Fredholm.periodic`), has `ℌᵏ = 0` but no closed range.
+The periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℤ`,
+`A = diag(1/(n+1))` (`Feec.Counterexamples.Fredholm.periodic`), has `ℌᵏ = 0` but no closed range
+in the odd degrees.
 It has a conforming family (`periodicFamily`): the truncations `span{e₀, …, e_{N-1}}` in every
 degree, with the orthogonal projections onto them, which commute with `A` (`diag_truncSum`). So
 the crown applies to it, and its static verdict fails in even degrees
@@ -56,13 +57,13 @@ theorem diag_truncSum (N : ℕ) (x : L2 𝕜) : diag 𝕜 (truncSum 𝕜 N x) = 
 
 /-- Every differential of the periodic complex is an everywhere-defined `g ∈ {A, 0}`, and `g`
 commutes with the truncations. -/
-theorem periodic_d_eq (i j : ℕ) : ∃ g : L2 𝕜 →ₗ[𝕜] L2 𝕜, (periodic 𝕜).d i j = g.toPMap ⊤ ∧
+theorem periodic_d_eq (i j : ℤ) : ∃ g : L2 𝕜 →ₗ[𝕜] L2 𝕜, (periodic 𝕜).d i j = g.toPMap ⊤ ∧
     ∀ N x, g ((trunc 𝕜 N).starProjection x) = (trunc 𝕜 N).starProjection (g x) := by
   have h0 : (0 : L2 𝕜 →ₗ.[𝕜] L2 𝕜) = (0 : L2 𝕜 →ₗ[𝕜] L2 𝕜).toPMap ⊤ := rfl
   by_cases h : i + 1 = j
   · subst h
     rw [periodic_d_succ]
-    rcases Nat.even_or_odd i with hi | hi
+    rcases Int.even_or_odd i with hi | hi
     · exact ⟨diag 𝕜, periodicD_of_even hi, fun N x => by
         simp only [ContinuousLinearMap.coe_coe, starProjection_trunc, diag_truncSum]⟩
     · exact ⟨0, (periodicD_of_odd hi).trans h0, fun N x => by simp⟩
@@ -81,7 +82,7 @@ def periodicTrunc (N : ℕ) : (periodic 𝕜).Subcomplex where
     exact (trunc 𝕜 N).starProjection_apply_mem _
 
 variable (𝕜) in
-/-- **A conforming family of the periodic complex** `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯`: the
+/-- **A conforming family of the periodic complex** `⋯ --0--> ℓ² --A--> ℓ² --0--> ⋯`: the
 truncations `span{e₀, …, e_{N-1}}`, `N → ∞`, with the orthogonal projections onto them, of norm
 `1`, which commute with `A`. So the crown applies to it, although the complex has no closed
 range. -/
@@ -113,7 +114,7 @@ the periodic complex (along a nontrivial filter) has the static verdict at an ev
 its uniform discrete Poincaré inequality would close `𝔅ᵏ⁺¹ = R(A)`
 (`ConformingFamily.StaticVerdict.closedRangeAt`). [QuennevilleBelair2015], §4.2; [AFW2010], §3.3 -/
 theorem periodic_not_staticVerdict {κ : Type*}
-    (F : HilbertComplex.ConformingFamily (periodic 𝕜) κ) [F.l.NeBot] {k : ℕ} (hk : Even k) :
+    (F : HilbertComplex.ConformingFamily (periodic 𝕜) κ) [F.l.NeBot] {k : ℤ} (hk : Even k) :
     ¬ F.StaticVerdict k := fun hV =>
   periodic_not_closedRangeAt hk (hV.closedRangeAt rfl)
 

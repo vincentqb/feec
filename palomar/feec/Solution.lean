@@ -2,6 +2,7 @@ module
 
 public import Solution.Convert
 public import Solution.Existence
+public import Solution.Sharpness
 public import Solution.Torus
 
 /-!
@@ -17,7 +18,9 @@ through `Feec.HilbertComplex.SubcomplexFamily.staticFEEC` and `Solution.Bridge`)
 `Feec.HilbertComplex.approxFEEC`, `Feec.HilbertComplex.ConstrainedFEEC.heatFEEC` and
 `Solution.Dynamic`) and `Solution.Rates`. The witness `FEEC.spectral_nonvacuous` from the
 spectral Galerkin family of the torus and its `Hˢ` Jackson estimate (`Solution.Torus`), the
-hypotheses of Theorem 1 through Theorem 1 itself.
+hypotheses of Theorem 1 through Theorem 1 itself. The witness `FEEC.closedRange_necessary` from the
+periodic sequence-space complex and its truncations (`Solution.Sharpness`), the failure of the
+uniform discrete Poincaré inequality through Theorem 2 itself.
 
 ## References
 
@@ -31,7 +34,7 @@ hypotheses of Theorem 1 through Theorem 1 itself.
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace LinearPMap
+open scoped InnerProductSpace LinearPMap lp
 open Filter Topology Set MeasureTheory
 
 universe u v w
@@ -93,7 +96,9 @@ theorem projectionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
       (abs_nonneg C) (fun y => (hC h y).trans_eq (by rw [sq_abs])) x⟩
 
 /-- **Theorem 2: the static theory** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9, §3.3–§3.5): closed range
-is the Poincaré inequality (`HilbertComplex.closedRange_iff_poincareBy`); the static verdict with
+is the Poincaré inequality (`HilbertComplex.closedRange_iff_poincareBy`); the discrete Poincaré
+inequality passes to the limit (`HilbertComplex.SubcomplexFamily.poincareBy_of_eventually`); the
+static verdict with
 the constant `HilbertComplex.staticConst (max c 1) c_P`
 (`HilbertComplex.SubcomplexFamily.staticVerdict_of`) and the rates of
 `HilbertComplex.SubcomplexFamily.rated`. -/
@@ -101,13 +106,16 @@ theorem staticFEEC : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike �
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     {H : HilbertComplex 𝕜 W},
     (∀ i, IsClosed (H.boundaries (i + 1) : Set (W (i + 1))) ↔ ∃ c, H.PoincareBy i c) ∧
+    (∀ {κ : Type w} (F : H.SubcomplexFamily κ) [F.l.NeBot] (j : ℤ) {c : ℝ}, F.Approximates j →
+      (∀ᶠ h in F.l, (F.V h).PoincareBy j c) → H.PoincareBy j c) ∧
     ∀ {κ : Type w} (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ},
       F.IsGraphBoundedBy (j - 1) c → F.IsGraphBoundedBy j c →
       H.PoincareBy (j - 1) cP → H.PoincareBy j cP →
       F.StaticVerdict j (Φ c cP) ∧ ∀ {ρ : Type*} (J : F.Jackson ρ) (s : ρ),
         F.HasRate j (J.Reg s) fun h => J.meshSize h ^ J.ord s :=
   ⟨fun c cP => HilbertComplex.staticConst (max c 1) cP, fun {_ _ _ _ _ _ H} =>
-    ⟨H.closedRange_iff_poincareBy, fun F j c _ hπ hπ' hP hP' =>
+    ⟨H.closedRange_iff_poincareBy, fun _ _ _ _ ha hC =>
+      HilbertComplex.SubcomplexFamily.poincareBy_of_eventually ha hC, fun F j c _ hπ hπ' hP hP' =>
       ⟨(F.staticVerdict_of j (le_max_right _ _) (hπ.mono (le_max_left _ _))
         (hπ'.mono (le_max_left _ _)) hP hP').toStaticVerdict, fun J s =>
         (F.rated J).hasRate j ⟨c, hπ⟩ ⟨c, hπ'⟩
@@ -184,5 +192,37 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
     Torus.isGraphBoundedBy, Torus.norm_π_le, Torus.approximates, Torus.approximatesOn,
     fun N _ q => Torus.harmonicError_eq_zero N q, fun _ => rfl, fun _ => rfl, fun _ _ => rfl,
     fun _ _ _ _ => Iff.rfl⟩
+
+/-- **Sharpness of Theorems 1 and 2: closed ranges cannot be dropped**: the periodic complex
+`⋯ --0--> ℓ² --A--> ℓ² --0--> ⋯`, `A = diag(1/(n+1))`, of `Feec.Counterexamples.Fredholm.periodic`
+with the truncation family of `Feec.Counterexamples.Fredholm.periodicFamily`, through
+`Solution.Sharpness`; in even degrees, a uniform discrete Poincaré inequality would pass to the
+limit (Theorem 2) and close `𝔅ᵏ⁺¹ = R(A)`; in odd degrees, the mixed problem with the datum
+`(1/(n+1))ₙ` has no solution (`Sharpness.not_isMixedSolution_of_odd`,
+`Sharpness.not_staticVerdict_of_odd`). -/
+theorem closedRange_necessary :
+    ∃ (H : HilbertComplex 𝕜 fun _ => ℓ²(ℕ, 𝕜)) (F : H.SubcomplexFamily ℕ),
+      (∀ k (u w : ℓ²(ℕ, 𝕜)), (u, w) ∈ (H.d k (k + 1)).graph ↔
+        ∀ n, w n = if Even k then u n / ((n : 𝕜) + 1) else 0) ∧
+      (∀ k, H.harmonic k = ⊥) ∧ (∀ k, IsClosed (H.boundaries k : Set (ℓ²(ℕ, 𝕜))) ↔ Even k) ∧
+      F.l = atTop ∧ (∀ N k (u : ℓ²(ℕ, 𝕜)), u ∈ (F.V N).V k ↔ ∀ n, N ≤ n → u n = 0) ∧
+      (∀ N k (x : (H.d k (k + 1)).domain) n,
+        ((F.π N).π k x : ℓ²(ℕ, 𝕜)) n = if n < N then (x : ℓ²(ℕ, 𝕜)) n else 0) ∧
+      (∀ k, F.IsGraphBoundedBy k 1) ∧ (∀ k, F.Approximates k) ∧
+      (∀ k, Even k → ¬ ∃ c, ∀ N, (F.V N).PoincareBy k c) ∧
+      (∀ k, Odd k → ∃ f, ∀ x, ¬ IsMixedSolution (H.mixedSpace k) f x) ∧
+      ∀ k C, ¬ F.StaticVerdict k C := by
+  obtain ⟨_, hΦ⟩ := staticFEEC.{_, _, 0, 0}
+  have hP : ∀ k, Even k → ¬ ∃ c, ∀ N, ((Sharpness.family 𝕜).V N).PoincareBy k c :=
+    fun k hk ⟨c, hc⟩ => Int.not_even_iff_odd.2 hk.add_one
+      ((Sharpness.isClosed_boundaries_iff (k + 1)).1 (((hΦ (H := Sharpness.complex 𝕜)).1 k).2
+        ⟨c, (hΦ (H := Sharpness.complex 𝕜)).2.1 (Sharpness.family 𝕜) k
+          (Sharpness.approximates k) (Eventually.of_forall hc)⟩))
+  exact ⟨Sharpness.complex 𝕜, Sharpness.family 𝕜, Sharpness.mem_graph_iff,
+    Sharpness.harmonic_eq_bot, Sharpness.isClosed_boundaries_iff, rfl, fun _ _ _ => Iff.rfl,
+    Sharpness.π_apply, Sharpness.isGraphBoundedBy, Sharpness.approximates,
+    hP, fun _ hk => ⟨_, Sharpness.not_isMixedSolution_of_odd hk⟩,
+    fun k C hV => (Int.even_or_odd k).elim (fun hk => hP k hk ⟨C, hV.poincare⟩)
+      fun hk => Sharpness.not_staticVerdict_of_odd hk C hV⟩
 
 end FEEC

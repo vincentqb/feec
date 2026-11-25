@@ -29,7 +29,10 @@ project:
     Hodge Laplacian, stability, quasi-optimality and convergence of the mixed method; and every
     Jackson estimate (classes Reg s of forms approximated in V_h at the order h^(ord s) in the
     graph norm, as in [AFW2010] §3.5) gives the error C L h^(ord s) when sigma, u, p and P_B u are
-    s-regular with bound L. Theorem 3, FEEC.evolutionFEEC ([QuennevilleBelair2015] Thms 4.6, 4.7,
+    s-regular with bound L; conversely, where V_h approximates in degree j (along a nontrivial
+    filter), a discrete Poincare inequality with constant c for eventually every h gives the
+    Poincare inequality of d^j with the same constant, so it forces the range of d^j to be closed.
+    Theorem 3, FEEC.evolutionFEEC ([QuennevilleBelair2015] Thms 4.6, 4.7,
     4.14, Prop 4.13; [GilletteHolstZhu2017]; [BrennerThomee1979]): on every window W^a + ... +
     W^(a+m-1) of consecutive degrees the wave operator L = d - d* is skew-adjoint (no closed-range
     hypothesis); where the family approximates (graph norm in the degrees a, ..., a+m-2, norm of W
@@ -73,7 +76,19 @@ project:
     h_N = (2 pi (N + 1))^-1 and, for every real s >= 0, the order s, the constant 1 and the class
     of the k-forms x with ||x||_{H^s} <= L and, if x is in D(d), ||dx||_{H^s} <= L, where
     ||u||^2_{H^s} = sum_xi (1 + |2 pi xi|^2)^s |u(xi)|^2 (IsTorusSobolev): every such x has some v
-    in V_N with ||x - v|| and ||d(x - v)|| at most L h_N^s. The finite
+    in V_N with ||x - v|| and ||d(x - v)|| at most L h_N^s. The compared witness
+    FEEC.closedRange_necessary shows that the closed ranges of Theorems 1 and 2 cannot be dropped:
+    on l2(N; K), with A = diag(1/(n+1)) (bounded, one-to-one, with a dense range that is not
+    closed), the periodic complex ... -0-> l2 -A-> l2 -0-> l2 -A-> ... (A from the even degrees)
+    has vanishing harmonic forms in every degree and B^k closed iff k is even; the truncations
+    span{e_0, ..., e_(N-1)} with the coordinate truncations as cochain projections approximate in
+    every degree with projections bounded by 1 in the graph norm, yet in every even degree no
+    discrete Poincare inequality holds uniformly in N, in every odd degree the mixed problem has no
+    solution for some datum (a property of the complex, not of the family), and in no degree does
+    the static verdict hold with any constant. So bounded projections exist without uniform discrete
+    stability where a range is not closed, and neither Poincare hypothesis of Theorem 2 can be
+    dropped: at even j only the one in degree j fails, at odd j only the one in degree j - 1, and
+    the projections are bounded. The finite
     element families that meet the hypotheses (the P_r Lambda and P_r^- Lambda complexes of every
     admissible sequence on shape-regular quasi-uniform meshes, with smoothed cochain projections,
     closed ranges on parallelepipeds, Jackson rates) are the finite element instance of this
@@ -109,7 +124,9 @@ sources:
       Adapted: Thm 3.7 is stated without closed range and with degree-dependent constants, and the
       a priori theory with one constant Phi(c, c_P), its hypotheses localized to the degrees used
       and the inf-sup condition and the gaps in equivalent forms (fidelity (2), (3)); no gap in the
-      source's proof is claimed.
+      source's proof is claimed. The second clause of Theorem 2 (the limit of the discrete Poincare
+      inequality) and the sharpness witness are added here; the source assumes closed ranges
+      throughout.
     author_endorsement: "not-contacted"
   - title: "A New Approach to Finite Element Simulations of General Relativity"
     authors:
@@ -222,7 +239,8 @@ related_formalizations:
 status:
   scope: >-
     Formalized and compared: the three theorems FEEC.projectionFEEC, FEEC.staticFEEC and
-    FEEC.evolutionFEEC, and the witness FEEC.spectral_nonvacuous (Challenge.lean). Compared in
+    FEEC.evolutionFEEC, the witness FEEC.spectral_nonvacuous and the sharpness witness
+    FEEC.closedRange_necessary (Challenge.lean). Compared in
     other entries: the finite element families that meet the hypotheses of the three theorems in
     palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube; on the cube (0, 1/2)^n with the
     Freudenthal meshes and the sequence P_1^- Lambda in every degree they are the lowest-order
@@ -274,10 +292,13 @@ automation:
     library Feec; the Solution translates them (Solution/Bridge.lean for the static theory,
     Solution/Existence.lean for the converse, Solution/Dynamic.lean for the windows and evolutions,
     Solution/Rates.lean for the rates, Solution/Rational.lean for the rational schemes,
-    Solution/OfFeec.lean and Solution/Torus.lean for the witness) and applies
+    Solution/OfFeec.lean and Solution/Torus.lean for the witness, Solution/Sharpness.lean for the
+    sharpness witness) and applies
     Feec.HilbertComplex.SubcomplexFamily.staticFEEC,
     Feec.HilbertComplex.Subcomplex.exists_cochainProjection,
-    Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff, Feec.HilbertComplex.approxFEEC,
+    Feec.HilbertComplex.Subcomplex.exists_isGraphBounded_iff,
+    Feec.HilbertComplex.SubcomplexFamily.le_of_eventually_orthogonal_cyclesW,
+    Feec.HilbertComplex.approxFEEC,
     Feec.HilbertComplex.dissipFEEC_fullyDiscrete, Feec.HilbertComplex.ConstrainedFEEC.heatFEEC,
     Feec.HilbertComplex.ConstrainedFEEC.rate_le and
     Feec.TimeStepping.RationalScheme.norm_apply_pow_sub_exp_le.
@@ -307,11 +328,16 @@ fidelity:
     harmonic gap and the eventual isomorphisms (necessary). The hypotheses are graph-norm bounds
     c of the projections and Poincare inequalities with constant c_P; the first clause states
     that a Poincare inequality of d^i holds iff its range is closed, so the closed-range form of
-    [AFW2010] follows. (4) Windows (Theorem 3): the evolutions live on the l2 sum of m
-    consecutive degrees of the truncated complex (for an interior window L = d - d* is the
-    Hodge-Dirac operator of the truncated complex). The wave conclusions assume that the family
-    approximates on the window (SubcomplexFamily.ApproximatesOn) and no bound of the projections
-    (the elliptic projections are bounded on every subcomplex, C_P = 4 sqrt 3,
+    [AFW2010] follows. The second clause (the discrete Poincare inequality passes to the limit)
+    assumes approximation in degree j in the graph norm along a nontrivial filter (along the
+    trivial filter every property holds eventually) and no bound of the projections; it shows
+    that the Poincare hypothesis of the verdict in degree j is necessary for its poincare clause
+    where the family approximates in degree j; the sharpness witness shows that the hypothesis in
+    degree j - 1 cannot be dropped either (item (7)). (4) Windows (Theorem 3): the evolutions live
+    on the l2 sum of m consecutive degrees of the truncated complex (for an interior window
+    L = d - d* is the Hodge-Dirac operator of the truncated complex). The wave conclusions assume
+    that the family approximates on the window (SubcomplexFamily.ApproximatesOn) and no bound of
+    the projections (the elliptic projections are bounded on every subcomplex, C_P = 4 sqrt 3,
     [QuennevilleBelair2015] Prop. 4.13). The heat conclusions assume that the family approximates
     on the window, the projections bounded in the graph norm in the degrees a, ..., a+m-2 and in
     the norm of W on D(d) in the last degree a+m-1 (with no differential in the window; for an interior window this W-bound differs from the
@@ -333,11 +359,11 @@ fidelity:
     [0, n tau] and is stated for the group S of the wave clause (unique: the strong solutions
     determine it on the dense D(L), and it is a group), for every Jackson estimate, every A-stable
     rational scheme and every regularity index, under the hypothesis of the wave clause only
-    (SubcomplexFamily.ApproximatesOn). No heat rate is compared. (7) Non-vacuity: the hypotheses
-    of the three theorems are hypotheses on a family of subcomplexes and of a Jackson estimate
-    (inhabited by empty classes, which give no rate). FEEC.spectral_nonvacuous is a compared
-    nontrivial family meeting all of them, those of a Jackson estimate with the Sobolev classes,
-    with no finite element vocabulary: the de Rham complex of the torus T^n in Fourier
+    (SubcomplexFamily.ApproximatesOn). No heat rate is compared. (7) Non-vacuity and sharpness: the
+    hypotheses of the three theorems are hypotheses on a family of subcomplexes and of a Jackson
+    estimate (inhabited by empty classes, which give no rate). FEEC.spectral_nonvacuous is a
+    compared nontrivial family meeting all of them, those of a Jackson estimate with the Sobolev
+    classes, with no finite element vocabulary: the de Rham complex of the torus T^n in Fourier
     coefficients and its spectral Galerkin spaces. It is stated on the Fourier side:
     the spaces are l2(Z^n; Lambda^k) with complex coefficients (TorusForm), the differential is
     characterized by its graph, {(u, w) | w(xi)_s = torusD u xi s for all xi, s} (the maximal
@@ -385,6 +411,22 @@ fidelity:
     1-3 applies to the witness, the rates included. The finite
     element families of palomar/fem (FEEC.fem, FEEC.fem_parallelepiped, FEEC.fem_cube) meet the
     hypotheses too and are compared there, with the definitions of this entry (item (10)).
+    FEEC.closedRange_necessary, the sharpness witness, is stated on l2(N; K) = lp (fun _ => K) 2
+    for every RCLike K, the complex graded by Z with every space l2 and d characterized by its
+    graph ((u, w) in the graph of d^k iff w_n = u_n / (n + 1) for even k, w = 0 for odd k), the
+    family by its spaces (u_n = 0 for n >= N) and projections (the truncation of the
+    coordinates). Its last three clauses give, for even k, the failure of the uniform discrete
+    Poincare inequality for this family (the right-hand side of the converse of Theorem 1, whose
+    left-hand side holds), for odd k, a datum f for which the exact mixed problem has no solution,
+    and, in every degree j, the failure of the static verdict for every constant: at even j the
+    hypotheses of Theorem 2 other than the Poincare inequality of d^j hold (B^j is closed, the
+    projections are bounded by 1), at odd j those other than the Poincare inequality of d^(j-1).
+    In odd degrees the failure is therefore that of the clause existsUnique, a property of the
+    complex and not of the family (the second of these clauses); the solution takes f = (1/(n+1))_n:
+    a solution would have A sigma = f, which is not in the range of A. With the second clause of
+    Theorem 2, no family of this complex that approximates in an even degree k along a nontrivial
+    filter has a discrete Poincare inequality in degree k with one constant for eventually every h.
+    The closed ranges of the heat clause of Theorem 3 are not shown necessary.
     (8) The evolution statements assume a real structure [NormedSpace R (W i)] for derivatives in
     time, and nothing relating it to the K-structure: a real normed-space structure on a normed
     K-space is the restricted one (t x and (t : K) x are continuous in t and agree on Q), which the
@@ -452,7 +494,10 @@ alignment:
       status: "proved"
       note: >-
         Theorem 2. Closed range iff Poincare (FEEC.HilbertComplex.closedRange_iff_poincareBy,
-        Solution/Bridge.lean); the static verdict with the constant
+        Solution/Bridge.lean); the limit of the discrete Poincare inequality
+        (FEEC.HilbertComplex.SubcomplexFamily.poincareBy_of_eventually, Solution/Existence.lean,
+        from Feec.HilbertComplex.SubcomplexFamily.le_of_eventually_orthogonal_cyclesW); the
+        static verdict with the constant
         HilbertComplex.staticConst (max c 1) c_P (Solution/Bridge.lean, through
         Feec.HilbertComplex.SubcomplexFamily.staticFEEC); the rate from
         HilbertComplex.SubcomplexFamily.rated (Solution/Rates.lean).
@@ -497,5 +542,21 @@ alignment:
         (FEEC.Torus.torusInv_eq, by UnitAddTorus.hasSum_mFourier_series_L2); the discrete
         stability from FEEC.projectionFEEC
         (Solution.lean).
+    - source: >-
+        Sharpness of Theorems 1 and 2: closed ranges are necessary (this entry; [AFW2010] assumes
+        closed ranges throughout)
+      lean: "FEEC.closedRange_necessary"
+      module: "Challenge"
+      status: "proved"
+      note: >-
+        The sharpness witness. Solution/Sharpness.lean reads it off Feec: the periodic complex
+        Feec.Counterexamples.Fredholm.periodic (graded by Z), its harmonic forms and closed ranges
+        (periodic_harmonic_eq_bot, periodic_closedRangeAt_iff), the truncation family of
+        Feec.Counterexamples.Fredholm.periodicFamily (the orthogonal projections,
+        Feec.Counterexamples.ClassicalRegularity.starProjection_trunc); the failure of the
+        uniform discrete Poincare inequality from the second clause of FEEC.staticFEEC
+        (Solution.lean); the mixed problems without solution in the odd degrees, hence the
+        odd-degree failure of the static verdict, from FEEC.Sharpness.not_isMixedSolution_of_odd
+        (with Feec.Counterexamples.Fredholm.harm_not_mem_range).
 
 acknowledgements: "Mathlib and the Lean FRO; the FEEC literature cited above."

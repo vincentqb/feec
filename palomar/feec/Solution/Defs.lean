@@ -28,7 +28,7 @@ bridges to `Feec`, and proves the theorems (`Solution.lean`).
 Bibliography: [references.bib](../../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace lp
 open Filter Topology Set LinearPMap MeasureTheory
 
 universe u v w
@@ -541,5 +541,7 @@ def IsWeakTorusD {n : ℕ} {k : ℤ}
           ∫ x, u ⟨s.1.erase j, h⟩ x * deriv (fun t : ℝ => φ (x + Pi.single j (t : UnitAddCircle))) 0
             ∂torusHaar n
         else 0
+
+/-! ### Sharpness: closed ranges are necessary -/
 
 end FEEC

@@ -84,10 +84,14 @@ projections (`ConformingFamily.hasUniformProj`).
   `Subcomplex.CochainProjection.exists_isFortinOperator`, `Subcomplex.CochainProjection.infSup`
   (graph-norm bound), `Subcomplex.CochainProjection.exists_isFortinOperator_of_norm_le`,
   `Subcomplex.CochainProjection.infSup_of_norm_le` (bound in `W` in degree `j`).
-* `ConformingFamily.closedRangeAt_of_discretePoincare`,
-  `ConformingFamily.StaticVerdict.closedRangeAt`: an eventual uniform discrete Poincaré inequality
-  at `j → k` forces `𝔅ᵏ` closed, so closed range in the degree after `j` cannot be dropped from
-  the static verdict at `j` (`Feec.Counterexamples.Sharpness`); `ConformingFamily.tendsto_π`.
+* `SubcomplexFamily.closedRangeAt_of_discretePoincare`,
+  `ConformingFamily.closedRangeAt_of_discretePoincare`,
+  `ConformingFamily.StaticVerdict.closedRangeAt`: where `Vₕ` approximates in degree `j`, an
+  eventual uniform discrete Poincaré inequality at `j → k` passes to the limit and forces `𝔅ᵏ`
+  closed, so closed range in the degree after `j` cannot be dropped from the static verdict at `j`
+  (`Feec.Counterexamples.Sharpness`); `SubcomplexFamily.eventually_exists_orthogonal_cyclesW`,
+  `SubcomplexFamily.le_of_eventually_orthogonal_cyclesW` (closed conditions on `Vₕʲ ⊥ 𝔷ₕʲ` pass to
+  `D(dʲ) ∩ (𝔷ʲ)ᗮ`); `ConformingFamily.tendsto_π`.
 * `ConformingFamily.isGraphBounded`, `ConformingFamily.infDist_domainSub_le`,
   `ConformingFamily.tendsto_infDist_domainSub`, `ConformingFamily.hasUniformProj`.
 
@@ -682,6 +686,98 @@ theorem StaticVerdict.rate {G : SubcomplexFamily H κ} {j : ι} (V : G.StaticVer
     ((hqo hs h).trans (mul_le_mul_of_nonneg_left
       (J.approx_le s h hij hjk hC (hπ h) hL hσ hu hb hp) hK)).trans_eq (by ring)⟩
 
+/-! ### Closed range is necessary -/
+
+variable {G}
+
+/-- **Approximation by discrete coexact forms**: where `Vₕ` approximates in degree `j` in the
+graph norm, every `z ∈ D(dʲ)` orthogonal to the cycles `𝔷ʲ` is, eventually in `h`, within `ε` of
+some `y ∈ Vₕʲ` orthogonal to the discrete cycles `𝔷ₕʲ`, in `W` and for `d`. If `v ∈ Vₕʲ` is
+within `ε / 2` of `z` in the graph norm, `y = v - P_{𝔷ₕ} v` is such a point: `d y = d v`, and
+`‖P_{𝔷ₕ} v‖ = ‖P_{𝔷ₕ} (v - z)‖ ≤ ‖v - z‖` since `𝔷ₕʲ ⊆ 𝔷ʲ ⊥ z`. No projection is used. -/
+theorem eventually_exists_orthogonal_cyclesW {j k : ι} (hjk : c.Rel j k) (ha : G.Approximates j)
+    {z : (H.d j k).domain} (hz : (z : W j) ∈ (H.cycles j)ᗮ) {ε : ℝ} (hε : 0 < ε) :
+    ∀ᶠ h in G.l, ∃ (y : W j) (hy : y ∈ (G.V h).V j), (∀ q ∈ (G.V h).cyclesW j, ⟪q, y⟫_𝕜 = 0) ∧
+      ‖(z : W j) - y‖ < ε ∧ ‖H.d j k z - H.d j k ⟨y, (G.V h).le_domain j k hy⟩‖ < ε := by
+  obtain rfl := c.next_eq' hjk
+  filter_upwards [(tendsto_order.1 (ha ((H.d j (c.next j)).toGraphSpace z))).2 (ε / 2)
+    (half_pos hε)] with h hh
+  obtain ⟨_, ⟨a, rfl⟩, hwd⟩ := (infDist_lt_iff ⟨0, zero_mem _⟩).1 hh
+  set Z := (G.V h).cyclesW j
+  set v : W j := (G.V h).toW j a
+  have hv : v ∈ (G.V h).V j := ((G.V h).toHilbertComplex.domainIncl j a).2
+  set σ : H.domainSpace j := (H.d j (c.next j)).toGraphSpace z
+  change dist σ ((G.V h).embD j a) < ε / 2 at hwd
+  have hσ := norm_domainIncl_le H j (σ - (G.V h).embD j a)
+  have hσd := norm_d_domainCoord_le H j (c.next j) (σ - (G.V h).embD j a)
+  rw [← dist_eq_norm] at hσ hσd
+  rw [_root_.map_sub] at hσ
+  rw [_root_.map_sub, LinearPMap.map_sub] at hσd
+  change ‖(z : W j) - v‖ ≤ _ at hσ
+  have e : H.domainCoord j (c.next j) ((G.V h).embD j a) =
+      ⟨v, (G.V h).le_domain j (c.next j) hv⟩ := rfl
+  have e' : H.domainCoord j (c.next j) σ = z := rfl
+  rw [e, e'] at hσd
+  have hp : Z.starProjection v ∈ Z := Z.starProjection_apply_mem v
+  have hy : v - Z.starProjection v ∈ (G.V h).V j := sub_mem hv ((G.V h).cyclesW_le j hp)
+  have hdy : H.d j (c.next j) ⟨v - Z.starProjection v, (G.V h).le_domain j _ hy⟩ =
+      H.d j (c.next j) ⟨v, (G.V h).le_domain j _ hv⟩ := by
+    have hpk : (Z.starProjection v : W j) ∈ (H.d j (c.next j)).ker := by
+      rw [← H.cycles_eq hjk]; exact (G.V h).cyclesW_le_cycles j hp
+    obtain ⟨p, hp1, hp2⟩ := LinearPMap.mem_ker_iff.1 hpk
+    have e : (⟨v - Z.starProjection v, (G.V h).le_domain j _ hy⟩ : (H.d j (c.next j)).domain) =
+        ⟨v, (G.V h).le_domain j _ hv⟩ - p := Subtype.ext (by simp [hp1])
+    rw [e, LinearPMap.map_sub, hp2, sub_zero]
+  -- the discrete cycle part is `P_Z (v - z)`, since `z ⊥ 𝔷ʲ ⊇ Z`
+  have hzZ : Z.starProjection (z : W j) = 0 :=
+    (Z.starProjection_apply_eq_zero_iff).2
+      (Submodule.orthogonal_le ((G.V h).cyclesW_le_cycles j) hz)
+  have hpn : ‖Z.starProjection v‖ ≤ ‖(z : W j) - v‖ := by
+    calc ‖Z.starProjection v‖ = ‖Z.starProjection (v - z)‖ := by rw [map_sub, hzZ, sub_zero]
+      _ ≤ ‖v - z‖ := Z.norm_starProjection_apply_le _
+      _ = _ := norm_sub_rev _ _
+  refine ⟨_, hy, fun q hq =>
+    Submodule.inner_right_of_mem_orthogonal hq (Z.sub_starProjection_mem_orthogonal v), ?_, ?_⟩
+  · calc ‖(z : W j) - (v - Z.starProjection v)‖ ≤ ‖(z : W j) - v‖ + ‖Z.starProjection v‖ := by
+          rw [sub_sub_eq_add_sub, add_sub_right_comm]; exact norm_add_le _ _
+      _ < ε := by linarith
+  · rw [hdy]; linarith
+
+/-- **Closed conditions on the discrete coexact forms pass to the limit**: where `Vₕ` approximates
+in degree `j` (along a nontrivial filter), if eventually `φ (y, d y) ≤ 0` for every `y ∈ Vₕʲ`
+orthogonal to `𝔷ₕʲ`, with `φ` continuous, then `φ (z, d z) ≤ 0` for every `z ∈ D(dʲ)` orthogonal
+to `𝔷ʲ` (`eventually_exists_orthogonal_cyclesW`). -/
+theorem le_of_eventually_orthogonal_cyclesW [G.l.NeBot] {j k : ι} (hjk : c.Rel j k)
+    (ha : G.Approximates j) {φ : W j × W k → ℝ} (hφ : Continuous φ)
+    (hC : ∀ᶠ h in G.l, ∀ {y : W j} (hy : y ∈ (G.V h).V j),
+      (∀ q ∈ (G.V h).cyclesW j, ⟪q, y⟫_𝕜 = 0) → φ (y, H.d j k ⟨y, (G.V h).le_domain j k hy⟩) ≤ 0)
+    {z : (H.d j k).domain} (hz : (z : W j) ∈ (H.cycles j)ᗮ) : φ ((z : W j), H.d j k z) ≤ 0 := by
+  by_contra hneg
+  obtain ⟨ε, hε, hball⟩ := Metric.mem_nhds_iff.1
+    (hφ.continuousAt.preimage_mem_nhds (Ioi_mem_nhds (not_le.1 hneg)))
+  obtain ⟨h, hCh, y, hy, hyo, h1, h2⟩ :=
+    (hC.and (eventually_exists_orthogonal_cyclesW hjk ha hz hε)).exists
+  have hmem : (y, H.d j k ⟨y, (G.V h).le_domain j k hy⟩) ∈ Metric.ball ((z : W j), H.d j k z) ε := by
+    rw [Metric.mem_ball, Prod.dist_eq, dist_comm, dist_eq_norm, dist_comm, dist_eq_norm]
+    exact max_lt h1 h2
+  exact (not_le.2 (hball hmem)) (hCh hy hyo)
+
+/-- **The uniform discrete Poincaré inequality passes to the limit and forces closed range**: where
+`Vₕ` approximates in degree `j` in the graph norm (along a nontrivial filter), if eventually
+`‖x‖ ≤ C ‖d x‖` for every `x ∈ Vₕʲ` orthogonal to `𝔷ₕʲ`, then `‖z‖ ≤ C ‖d z‖` on `D(dʲ) ∩ (𝔷ʲ)ᗮ`
+(`le_of_eventually_orthogonal_cyclesW`), so `𝔅ᵏ` is closed. Closed range in the degree after `j`
+is therefore necessary for the uniform discrete Poincaré inequality of an approximating family,
+the converse of [AFW2010], Thm 3.6 ([Arnold2018], Thm 5.3); no projection is used. -/
+theorem closedRangeAt_of_discretePoincare [G.l.NeBot] {j k : ι} (hjk : c.Rel j k)
+    (ha : G.Approximates j) {C : ℝ}
+    (hC : ∀ᶠ h in G.l, ∀ {x : W j} (hx : x ∈ (G.V h).V j),
+      (∀ y ∈ (G.V h).cyclesW j, ⟪y, x⟫_𝕜 = 0) →
+      ‖x‖ ≤ C * ‖H.d j k ⟨x, (G.V h).le_domain j k hx⟩‖) :
+    H.ClosedRangeAt k :=
+  (H.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨C, fun z hz => sub_nonpos.1
+    (le_of_eventually_orthogonal_cyclesW hjk ha (φ := fun p => ‖p.1‖ - C * ‖p.2‖)
+      (by fun_prop) (hC.mono fun _ hCh _ hy hyo => sub_nonpos.2 (hCh hy hyo)) hz)⟩
+
 end SubcomplexFamily
 
 /-! ### Conforming families -/
@@ -915,56 +1011,19 @@ theorem tendsto_π (i : ι) (w : W i) : Tendsto (fun h => (F.π h).π i w) F.l (
 
 /-- **The uniform discrete Poincaré inequality forces closed range**: if
 `‖x‖ ≤ C ‖d x‖` for eventually every `h` and every `x ∈ Vₕʲ` orthogonal to the discrete cycles
-`𝔷ₕʲ`, then `‖z‖ ≤ C ‖d z‖` on `D(d) ∩ (𝔷ʲ)ᗮ`, so `𝔅ᵏ` is closed. For `z ⊥ 𝔷ʲ`, the part of `πₕ z`
-orthogonal to `𝔷ₕʲ` has the differential `πₕ d z`, and its discrete cycle part `P_{𝔷ₕ} πₕ z =
-P_{𝔷ₕ} (πₕ z - z)` (`𝔷ₕʲ ⊆ 𝔷ʲ ⊥ z`) tends to `0`. Closed range of `𝔅ᵏ` is therefore necessary
-for the `poincare` clause of the static FEEC theorem at `j → k` (`StaticVerdict.closedRangeAt`): this
-is the converse of the discrete Poincaré inequality of [AFW2010], Thm 3.6 ([Arnold2018],
-Thm 5.3). -/
+`𝔷ₕʲ`, then `‖z‖ ≤ C ‖d z‖` on `D(d) ∩ (𝔷ʲ)ᗮ`, so `𝔅ᵏ` is closed: a conforming family approximates
+in the graph norm (`approximates_toSubcomplexFamily`), and the uniform discrete Poincaré inequality
+of an approximating family passes to the limit (`SubcomplexFamily.closedRangeAt_of_discretePoincare`;
+no bound of the projections is used). Closed range of `𝔅ᵏ` is therefore necessary for the
+`poincare` clause of the static FEEC theorem at `j → k` (`StaticVerdict.closedRangeAt`): this is
+the converse of the discrete Poincaré inequality of [AFW2010], Thm 3.6 ([Arnold2018], Thm 5.3). -/
 theorem closedRangeAt_of_discretePoincare [F.l.NeBot] {j k : ι} (hjk : c.Rel j k) {C : ℝ}
     (hC : ∀ᶠ h in F.l, ∀ {x : W j} (hx : x ∈ (F.V h).V j),
       (∀ y ∈ (F.V h).cyclesW j, ⟪y, x⟫_𝕜 = 0) →
       ‖x‖ ≤ C * ‖H.d j k ⟨x, (F.V h).le_domain j k hx⟩‖) :
-    H.ClosedRangeAt k := by
-  refine (H.closedRangeAt_iff_poincare_of_rel hjk).2 ⟨C, fun z hz => ?_⟩
-  have key : ∀ᶠ h in F.l, ‖(z : W j)‖ ≤
-      2 * ‖(z : W j) - (F.π h).π j z‖ + C * ‖(F.π h).π k (H.d j k z)‖ := hC.mono fun h hCh => by
-    set Z := (F.V h).cyclesW j
-    set x := (F.π h).π j z
-    have hx : x ∈ (F.V h).V j := (F.π h).mem j z
-    have hp : Z.starProjection x ∈ Z := Z.starProjection_apply_mem x
-    have hy : x - Z.starProjection x ∈ (F.V h).V j := sub_mem hx ((F.V h).cyclesW_le j hp)
-    have hdy : H.d j k ⟨x - Z.starProjection x, (F.V h).le_domain j k hy⟩ =
-        (F.π h).π k (H.d j k z) := by
-      have hpk : (Z.starProjection x : W j) ∈ (H.d j k).ker := by
-        rw [← H.cycles_eq hjk]; exact (F.V h).cyclesW_le_cycles j hp
-      obtain ⟨p, hp1, hp2⟩ := LinearPMap.mem_ker_iff.1 hpk
-      have e : (⟨x - Z.starProjection x, (F.V h).le_domain j k hy⟩ : (H.d j k).domain) =
-          ⟨x, (F.V h).le_domain j k hx⟩ - p := Subtype.ext (by simp [hp1])
-      rw [e, LinearPMap.map_sub, hp2, sub_zero]
-      exact (F.π h).comm j k z
-    -- the discrete cycle part is `P_Z (x - z)`, since `z ⊥ 𝔷ʲ ⊇ Z`
-    have hzZ : Z.starProjection (z : W j) = 0 :=
-      (Z.starProjection_apply_eq_zero_iff).2
-        (Submodule.orthogonal_le ((F.V h).cyclesW_le_cycles j) hz)
-    have hpn : ‖Z.starProjection x‖ ≤ ‖(z : W j) - x‖ := by
-      calc ‖Z.starProjection x‖ = ‖Z.starProjection (x - z)‖ := by rw [map_sub, hzZ, sub_zero]
-        _ ≤ ‖x - z‖ := Z.norm_starProjection_apply_le _
-        _ = _ := norm_sub_rev _ _
-    have hyn := hCh hy fun q hq =>
-      Submodule.inner_right_of_mem_orthogonal hq (Z.sub_starProjection_mem_orthogonal x)
-    rw [hdy] at hyn
-    calc ‖(z : W j)‖ ≤ ‖(z : W j) - (x - Z.starProjection x)‖ + ‖x - Z.starProjection x‖ :=
-          norm_le_norm_sub_add _ _
-      _ ≤ (‖(z : W j) - x‖ + ‖Z.starProjection x‖) + ‖x - Z.starProjection x‖ := by
-          gcongr; rw [sub_sub_eq_add_sub, add_sub_right_comm]; exact norm_add_le _ _
-      _ ≤ _ := by linarith
-  have hlim : Tendsto (fun h => 2 * ‖(z : W j) - (F.π h).π j z‖ +
-      C * ‖(F.π h).π k (H.d j k z)‖) F.l (𝓝 (C * ‖H.d j k z‖)) := by
-    have h1 := ((tendsto_iff_norm_sub_tendsto_zero.1 (F.tendsto_π j z)).const_mul 2)
-    have h2 := ((F.tendsto_π k (H.d j k z)).norm).const_mul C
-    simpa [norm_sub_rev] using h1.add h2
-  exact ge_of_tendsto hlim key
+    H.ClosedRangeAt k :=
+  haveI : F.toSubcomplexFamily.l.NeBot := ‹F.l.NeBot›
+  SubcomplexFamily.closedRangeAt_of_discretePoincare hjk (F.approximates_toSubcomplexFamily j) hC
 
 /-- **Closed range of `𝔅ᵏ` is necessary for the static verdict at `j → k`**: if the static
 verdict holds at `j` (along a nontrivial filter), its `poincare` clause forces `𝔅ᵏ` closed

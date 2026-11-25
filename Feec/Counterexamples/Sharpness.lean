@@ -35,7 +35,7 @@ behind the shape spaces.
 * **Closed range** (the hypothesis `hcr` of `Verdict.static`). Closed range of `𝔅ᵏ` is necessary
   for the static verdict at `j → k`: its uniform discrete Poincaré inequality forces it
   (`Feec.HilbertComplex.ConformingFamily.StaticVerdict.closedRangeAt`). Finite-dimensional
-  harmonic forms do not replace it: the periodic complex `ℓ² --A--> ℓ² --0--> ⋯`,
+  harmonic forms do not replace it: the periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ⋯`,
   `A = diag(1/(n+1))`, has `ℌᵏ = 0` and a conforming family (`Fredholm.periodicFamily`), and no
   conforming family of it has the static verdict in even degrees
   (`Fredholm.periodic_not_staticVerdict`, `Fredholm.periodicFamily_not_staticVerdict`;

@@ -17,8 +17,9 @@ that every space of harmonic forms `ℌⁱ = 𝔷ⁱ ∩ (𝔅ⁱ)ᗮ` is finite
   `ℌⁱ` vanishes (`Fredholm.harmonic_eq_bot`), but `𝔅¹ = R(A)` is not closed
   (`Fredholm.not_closedRangeAt_one`), so the complex is not exact at `1` although `ℌ¹ = 0`, and
   it fails the compactness property at `0` and `1`. Headline: `fredholm_not_closedRange`.
-* `Fredholm.periodic`: the infinite complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on
-  `ComplexShape.up ℕ`, with the same conclusions at every index (`periodic_not_closedRange`).
+* `Fredholm.periodic`: the two-sided periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯`
+  on `ComplexShape.up ℤ` (`A` from the even degrees), with `ℌᵏ = 0` at every index and `𝔅ᵏ`
+  closed exactly in the even degrees (`periodic_closedRangeAt_iff`, `periodic_not_closedRange`).
 
 The correct statements are "finite-dimensional cohomology ⇒ closed range"
 (`Feec.HilbertComplex.closedRangeAt_of_finiteDimensional_cohomology`) and "compactness ⇒ closed
@@ -316,33 +317,33 @@ theorem not_closedRangeAt_one : ¬ (complex 𝕜).ClosedRangeAt 1 := by
   rw [HilbertComplex.ClosedRangeAt, boundaries_one]
   exact not_isClosed_range_diag
 
-/-! ### The periodic complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` -/
+/-! ### The periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` -/
 
 variable (𝕜) in
 /-- The differentials of the periodic complex: `A` from even degrees, `0` from odd ones. -/
-def periodicD (k : ℕ) : L2 𝕜 →ₗ.[𝕜] L2 𝕜 := if Even k then diagPMap 𝕜 else 0
+def periodicD (k : ℤ) : L2 𝕜 →ₗ.[𝕜] L2 𝕜 := if Even k then diagPMap 𝕜 else 0
 
-theorem periodicD_domain (k : ℕ) : (periodicD 𝕜 k).domain = ⊤ := by
+theorem periodicD_domain (k : ℤ) : (periodicD 𝕜 k).domain = ⊤ := by
   unfold periodicD; split_ifs <;> rfl
 
-theorem periodicD_of_even {k : ℕ} (hk : Even k) : periodicD 𝕜 k = diagPMap 𝕜 := by
+theorem periodicD_of_even {k : ℤ} (hk : Even k) : periodicD 𝕜 k = diagPMap 𝕜 := by
   simp [periodicD, hk]
 
-theorem periodicD_of_odd {k : ℕ} (hk : Odd k) : periodicD 𝕜 k = 0 := by
-  simp [periodicD, Nat.not_even_iff_odd.2 hk]
+theorem periodicD_of_odd {k : ℤ} (hk : Odd k) : periodicD 𝕜 k = 0 := by
+  simp [periodicD, Int.not_even_iff_odd.2 hk]
 
-theorem periodicD_closed (k : ℕ) : (periodicD 𝕜 k).IsClosed := by
+theorem periodicD_closed (k : ℤ) : (periodicD 𝕜 k).IsClosed := by
   unfold periodicD; split_ifs
   · exact (diag 𝕜).isClosed_toPMap_top
   · exact LinearPMap.isClosed_zero
 
-theorem periodicD_mapsTo (k : ℕ) (x : (periodicD 𝕜 k).domain) :
+theorem periodicD_mapsTo (k : ℤ) (x : (periodicD 𝕜 k).domain) :
     (periodicD 𝕜 k x : L2 𝕜) ∈ (periodicD 𝕜 (k + 1)).domain := by
   rw [periodicD_domain]; trivial
 
-theorem periodicD_comp (k : ℕ) (x : (periodicD 𝕜 k).domain) :
+theorem periodicD_comp (k : ℤ) (x : (periodicD 𝕜 k).domain) :
     periodicD 𝕜 (k + 1) ⟨periodicD 𝕜 k x, periodicD_mapsTo k x⟩ = 0 := by
-  rcases Nat.even_or_odd k with hk | hk
+  rcases Int.even_or_odd k with hk | hk
   · exact apply_eq_zero_of_eq_zero (periodicD_of_odd hk.add_one) _
   · have h0 : periodicD 𝕜 k = 0 := periodicD_of_odd hk
     have hx : (periodicD 𝕜 k x : L2 𝕜) = 0 := apply_eq_zero_of_eq_zero h0 x
@@ -351,43 +352,61 @@ theorem periodicD_comp (k : ℕ) (x : (periodicD 𝕜 k).domain) :
     rw [e, LinearPMap.map_zero]
 
 variable (𝕜) in
-/-- The periodic complex `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℕ`. -/
-def periodic : HilbertComplex 𝕜 (ComplexShape.up ℕ) (fun _ : ℕ => L2 𝕜) :=
+/-- The two-sided periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on
+`ComplexShape.up ℤ`: `A` from the even degrees, `0` from the odd ones. -/
+def periodic : HilbertComplex 𝕜 (ComplexShape.up ℤ) (fun _ : ℤ => L2 𝕜) :=
   HilbertComplex.ofSucc (periodicD 𝕜) (fun k => by rw [periodicD_domain]; exact dense_univ)
     periodicD_closed periodicD_mapsTo periodicD_comp
 
-theorem periodic_d_succ (k : ℕ) : (periodic 𝕜).d k (k + 1) = periodicD 𝕜 k :=
+theorem periodic_d_succ (k : ℤ) : (periodic 𝕜).d k (k + 1) = periodicD 𝕜 k :=
   show HilbertComplex.ofSuccD (periodicD 𝕜) k (k + 1) = _ from HilbertComplex.ofSuccD_succ _ k
 
 /-- In even degrees, `𝔷ᵏ = N(A) = 0`. -/
-theorem periodic_cycles_of_even {k : ℕ} (hk : Even k) : (periodic 𝕜).cycles k = ⊥ := by
-  rw [(periodic 𝕜).cycles_eq (show (ComplexShape.up ℕ).Rel k (k + 1) from rfl), periodic_d_succ,
+theorem periodic_cycles_of_even {k : ℤ} (hk : Even k) : (periodic 𝕜).cycles k = ⊥ := by
+  rw [(periodic 𝕜).cycles_eq (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl), periodic_d_succ,
     periodicD_of_even hk, eq_bot_iff]
   intro x hx
   exact (Submodule.mem_bot 𝕜).2 (diag_injective ((mem_ker_toPMap_top_iff.1 hx).trans
     (_root_.map_zero _).symm))
 
 /-- In odd degrees, `𝔅ᵏ⁺¹ = R(A)` for `k` even. -/
-theorem periodic_boundaries_of_even {k : ℕ} (hk : Even k) :
+theorem periodic_boundaries_of_even {k : ℤ} (hk : Even k) :
     (periodic 𝕜).boundaries (k + 1) = LinearMap.range (diag 𝕜 : L2 𝕜 →ₗ[𝕜] L2 𝕜) := by
-  rw [(periodic 𝕜).boundaries_eq (show (ComplexShape.up ℕ).Rel k (k + 1) from rfl),
+  rw [(periodic 𝕜).boundaries_eq (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl),
     periodic_d_succ, periodicD_of_even hk, range_toPMap_top]
 
+/-- In even degrees, `𝔅ᵏ⁺¹ = 0` for `k` odd. -/
+theorem periodic_boundaries_of_odd {k : ℤ} (hk : Odd k) : (periodic 𝕜).boundaries (k + 1) = ⊥ := by
+  rw [(periodic 𝕜).boundaries_eq (show (ComplexShape.up ℤ).Rel k (k + 1) from rfl),
+    periodic_d_succ, periodicD_of_odd hk, eq_bot_iff]
+  rintro _ ⟨x, rfl⟩
+  exact (Submodule.mem_bot 𝕜).2 (apply_eq_zero_of_eq_zero rfl x)
+
 /-- **Every harmonic space of the periodic complex vanishes.** -/
-theorem periodic_harmonic_eq_bot (k : ℕ) : (periodic 𝕜).harmonic k = ⊥ := by
+theorem periodic_harmonic_eq_bot (k : ℤ) : (periodic 𝕜).harmonic k = ⊥ := by
   rw [eq_bot_iff]
   intro x hx
-  rcases Nat.even_or_odd k with hk | ⟨j, rfl⟩
+  rcases Int.even_or_odd k with hk | ⟨j, rfl⟩
   · exact periodic_cycles_of_even (𝕜 := 𝕜) hk ▸ (periodic 𝕜).harmonic_le_cycles k hx
   · have h := ((periodic 𝕜).mem_harmonic_iff.1 hx).2
     rw [periodic_boundaries_of_even ⟨j, two_mul j⟩, orthogonal_range_diag] at h
     exact h
 
 /-- `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`. -/
-theorem periodic_not_closedRangeAt {k : ℕ} (hk : Even k) :
+theorem periodic_not_closedRangeAt {k : ℤ} (hk : Even k) :
     ¬ (periodic 𝕜).ClosedRangeAt (k + 1) := by
   rw [HilbertComplex.ClosedRangeAt, periodic_boundaries_of_even hk]
   exact not_isClosed_range_diag
+
+/-- **The periodic complex has closed range exactly in the even degrees**: `𝔅ᵏ = 0` for `k` even,
+`𝔅ᵏ = R(A)`, dense and not closed, for `k` odd. -/
+theorem periodic_closedRangeAt_iff (k : ℤ) : (periodic 𝕜).ClosedRangeAt k ↔ Even k := by
+  obtain ⟨m, rfl⟩ : ∃ m, m + 1 = k := ⟨k - 1, sub_add_cancel k 1⟩
+  rcases Int.even_or_odd m with hm | hm
+  · exact iff_of_false (periodic_not_closedRangeAt hm) (Int.not_even_iff_odd.2 hm.add_one)
+  · refine iff_of_true ?_ hm.add_one
+    rw [HilbertComplex.ClosedRangeAt, periodic_boundaries_of_odd hm, Submodule.bot_coe]
+    exact isClosed_singleton
 
 /-! ### The compactness property on an infinite-dimensional space -/
 
@@ -526,9 +545,9 @@ theorem not_forall_closedRangeAt_of_finiteDimensional_harmonic :
       (∀ i, FiniteDimensional 𝕜 (H.harmonic i)) → ∀ i, H.ClosedRangeAt i :=
   fun h => not_closedRangeAt_one (h _ finiteDimensional_harmonic 1)
 
-/-- **Periodic form**: `ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℕ` has `ℌᵏ = 0`
-for every `k`, but `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`, so the complex is not exact
-there. [QuennevilleBelair2015], §4.2 (refuted) -/
+/-- **Periodic form**: `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯` on `ComplexShape.up ℤ` has
+`ℌᵏ = 0` for every `k`, but `𝔅ᵏ⁺¹ = R(A)` is not closed for every even `k`, so the complex is not
+exact there. [QuennevilleBelair2015], §4.2 (refuted) -/
 theorem periodic_not_closedRange :
     (∀ k, (periodic 𝕜).harmonic k = ⊥) ∧
       ∀ k, Even k → ¬ (periodic 𝕜).ClosedRangeAt (k + 1) ∧

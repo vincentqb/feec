@@ -26,7 +26,8 @@ theorems answer, for every complex (on `ℤ`, over `ℝ` or `ℂ`) and every fam
    approximates, converge, with the discrete harmonic forms and cohomology converging to the
    continuous ones (finite-dimensional harmonic forms), and Jackson estimates give rates
    ([AFW2010], Thms 3.4–3.6, 3.8, 3.9), with constants depending only on the bound of `πₕ` and the
-   Poincaré constant.
+   Poincaré constant; conversely, where `Vₕ` approximates along a nontrivial filter, a uniform
+   discrete Poincaré inequality passes to the limit, so it forces the range to be closed.
 3. `FEEC.evolutionFEEC`: on every window `Wᵃ ⊕ ⋯ ⊕ W^{a+m-1}`, `L = 𝐝 - 𝐝*` is skew-adjoint; the
    Galerkin solutions of the Hodge wave equation `U' = L U` converge under approximation by `Vₕ`
    alone (no bound of `πₕ`, no closed range), with the error `‖v - x‖ + 2 (1 + 4√3) (1 + t) M`
@@ -40,11 +41,14 @@ stability; the hyperbolic one assumes only approximation. The witness `FEEC.spec
 shows that a nontrivial family meets the hypotheses of the three theorems, rates included: the
 spectral Galerkin spaces of band-limited forms of the de Rham complex of the torus, with the
 Fourier truncations as cochain projections and a Jackson estimate of these spaces on the Sobolev
-classes `Hˢ`. The finite element families that meet them are the subject of the Palomar
-entry `palomar/fem`, the discrete complexes that are not subcomplexes (variational crimes) that of
-`palomar/crimes`. The differential is a family `d i j : Wⁱ → Wʲ` of all pairs, zero unless
-`j = i + 1` (windows need no casts). Mathlib has no `C₀`-semigroups: exact evolutions are operator
-families characterized by their strong solutions.
+classes `Hˢ`. The witness `FEEC.closedRange_necessary` shows that the closed ranges of Theorems 1
+and 2 cannot be dropped, even where the harmonic forms vanish: a complex of sequence spaces with a
+range that is not closed has an approximating family with projections bounded by `1`, no uniform
+discrete Poincaré inequality and no static verdict. The finite element families that meet the
+hypotheses are the subject of the Palomar entry `palomar/fem`, the discrete complexes that are not
+subcomplexes (variational crimes) that of `palomar/crimes`. The differential is a family
+`d i j : Wⁱ → Wʲ` of all pairs, zero unless `j = i + 1` (windows need no casts). Mathlib has no
+`C₀`-semigroups: exact evolutions are operator families characterized by their strong solutions.
 
 ## References
 
@@ -58,7 +62,7 @@ families characterized by their strong solutions.
 Bibliography: [references.bib](../../docs/references.bib)
 -/
 
-open scoped InnerProductSpace
+open scoped InnerProductSpace lp
 open Filter Topology Set LinearPMap MeasureTheory
 
 universe u v w
@@ -535,17 +539,22 @@ theorem projectionFEEC {κ : Type*} {H : HilbertComplex 𝕜 W} (l : Filter κ)
 
 /-- **Theorem 2: the static theory** ([AFW2010], Thms 3.4–3.6, 3.8, 3.9, §3.3–§3.5). The range of
 `dⁱ` is closed iff `dⁱ` satisfies a Poincaré inequality, so the Poincaré hypotheses below are the
-closed ranges of [AFW2010]. If the cochain projections are bounded by `c` in the graph norm in the
-degrees `j - 1`, `j` and `dʲ⁻¹`, `dʲ` satisfy the Poincaré inequality with constant `c_P`, then in
-degree `j` the harmonic gaps, the cohomology isomorphisms, the uniform discrete Poincaré
-inequality, unique solvability, the uniform inf-sup condition, stability, quasi-optimality and
-convergence of the mixed method hold (`StaticVerdict`), with one constant `Φ(c, c_P)` for every
-complex, family and degree; and every Jackson estimate gives the rate `L hᵒʳᵈ⁽ˢ⁾` on `s`-regular
-data. -/
+closed ranges of [AFW2010]. Where `F` approximates in degree `j` (along a nontrivial filter), a
+discrete Poincaré inequality with constant `c` for eventually every `h` gives the Poincaré
+inequality of `dʲ` with the same constant, so `𝔅ʲ⁺¹` must be closed for the uniform discrete
+Poincaré inequality (`FEEC.closedRange_necessary`: bounded projections do not give it).
+If the cochain projections are bounded by `c` in the graph norm in the degrees `j - 1`, `j` and
+`dʲ⁻¹`, `dʲ` satisfy the Poincaré inequality with constant `c_P`, then in degree `j` the harmonic
+gaps, the cohomology isomorphisms, the uniform discrete Poincaré inequality, unique solvability,
+the uniform inf-sup condition, stability, quasi-optimality and convergence of the mixed method
+hold (`StaticVerdict`), with one constant `Φ(c, c_P)` for every complex, family and degree; and
+every Jackson estimate gives the rate `L hᵒʳᵈ⁽ˢ⁾` on `s`-regular data. -/
 theorem staticFEEC : ∃ Φ : ℝ → ℝ → ℝ, ∀ {𝕜 : Type u} [RCLike 𝕜] {W : ℤ → Type v}
     [∀ i, NormedAddCommGroup (W i)] [∀ i, InnerProductSpace 𝕜 (W i)] [∀ i, CompleteSpace (W i)]
     {H : HilbertComplex 𝕜 W},
     (∀ i, IsClosed (H.boundaries (i + 1) : Set (W (i + 1))) ↔ ∃ c, H.PoincareBy i c) ∧
+    (∀ {κ : Type w} (F : H.SubcomplexFamily κ) [F.l.NeBot] (j : ℤ) {c : ℝ}, F.Approximates j →
+      (∀ᶠ h in F.l, (F.V h).PoincareBy j c) → H.PoincareBy j c) ∧
     ∀ {κ : Type w} (F : H.SubcomplexFamily κ) (j : ℤ) {c cP : ℝ},
       F.IsGraphBoundedBy (j - 1) c → F.IsGraphBoundedBy j c →
       H.PoincareBy (j - 1) cP → H.PoincareBy j cP →
@@ -676,6 +685,37 @@ theorem spectral_nonvacuous (n : ℕ) [NeZero n] :
       (∀ s k, J.B s k = 1) ∧ ∀ s k L (x : TorusForm n k), J.Reg s k L x ↔
         IsTorusSobolev s L x ∧
           ∀ hx : x ∈ (H.d k (k + 1)).domain, IsTorusSobolev s L (H.d k (k + 1) ⟨x, hx⟩) := by
+  sorry
+
+/-! ### Sharpness: closed ranges are necessary -/
+
+/-- **Sharpness of Theorems 1 and 2: closed ranges cannot be dropped.** On `ℓ²(ℕ, 𝕜)`, let
+`A = diag(1/(n+1))` (bounded, one-to-one, with a dense range that is not closed) and let `H` be the
+periodic complex `⋯ --0--> ℓ² --A--> ℓ² --0--> ℓ² --A--> ⋯`, `dᵏ = A` for even `k` and `dᵏ = 0`
+for odd `k` (the graph of `d`). Its harmonic forms vanish in every degree and `𝔅ᵏ` is closed iff
+`k` is even, so finite-dimensional harmonic forms do not replace closed ranges. The truncations
+`V_N = span{e₀, …, e_{N-1}}` in every degree, with the coordinate truncations as cochain
+projections, approximate in every degree with projections bounded by `1` in the graph norm; yet in
+every even degree no discrete Poincaré inequality holds uniformly in `N`, in every odd degree the
+mixed problem has no solution for some datum (a property of `H`, not of the family), and in no
+degree does the static verdict hold with any constant. So the closed ranges of the converse of
+Theorem 1 cannot be dropped (bounded projections exist, uniform discrete stability fails), nor
+either Poincaré hypothesis of Theorem 2: the projections are bounded, and at even `j` only the
+hypothesis in degree `j` fails, at odd `j` only that in degree `j - 1`. By Theorem 2, no family of
+`H` that approximates in an even degree `k` along a nontrivial filter has a discrete Poincaré
+inequality in degree `k` with one constant for eventually every `h`. -/
+theorem closedRange_necessary :
+    ∃ (H : HilbertComplex 𝕜 fun _ => ℓ²(ℕ, 𝕜)) (F : H.SubcomplexFamily ℕ),
+      (∀ k (u w : ℓ²(ℕ, 𝕜)), (u, w) ∈ (H.d k (k + 1)).graph ↔
+        ∀ n, w n = if Even k then u n / ((n : 𝕜) + 1) else 0) ∧
+      (∀ k, H.harmonic k = ⊥) ∧ (∀ k, IsClosed (H.boundaries k : Set (ℓ²(ℕ, 𝕜))) ↔ Even k) ∧
+      F.l = atTop ∧ (∀ N k (u : ℓ²(ℕ, 𝕜)), u ∈ (F.V N).V k ↔ ∀ n, N ≤ n → u n = 0) ∧
+      (∀ N k (x : (H.d k (k + 1)).domain) n,
+        ((F.π N).π k x : ℓ²(ℕ, 𝕜)) n = if n < N then (x : ℓ²(ℕ, 𝕜)) n else 0) ∧
+      (∀ k, F.IsGraphBoundedBy k 1) ∧ (∀ k, F.Approximates k) ∧
+      (∀ k, Even k → ¬ ∃ c, ∀ N, (F.V N).PoincareBy k c) ∧
+      (∀ k, Odd k → ∃ f, ∀ x, ¬ IsMixedSolution (H.mixedSpace k) f x) ∧
+      ∀ k C, ¬ F.StaticVerdict k C := by
   sorry
 
 end FEEC

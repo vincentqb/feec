@@ -61,6 +61,25 @@ theorem poincareBy_of_feec {i : ℤ} {C : ℝ} (h : S.toFeec.DiscretePoincare i 
   rw [← Real.sqrt_sq (mul_nonneg (abs_nonneg C) (norm_nonneg _)), mul_pow, sq_abs]
   exact Real.sqrt_le_sqrt h1
 
+/-- **The discrete Poincaré inequality passes to the limit**: where `F` approximates in degree `j`
+(along a nontrivial filter), a discrete Poincaré inequality in the graph norm with constant `c`
+for eventually every `h` gives that of `dʲ`
+(`Feec.HilbertComplex.SubcomplexFamily.le_of_eventually_orthogonal_cyclesW` with
+`φ (x, y) = √(‖x‖² + ‖y‖²) - c ‖y‖`). -/
+theorem _root_.FEEC.HilbertComplex.SubcomplexFamily.poincareBy_of_eventually {κ : Type*}
+    {F : H.SubcomplexFamily κ} [F.l.NeBot] {j : ℤ} {c : ℝ} (ha : F.Approximates j)
+    (hC : ∀ᶠ h in F.l, (F.V h).PoincareBy j c) : H.PoincareBy j c := by
+  have : F.toFeec.l.NeBot := ‹F.l.NeBot›
+  intro z hz
+  refine sub_nonpos.1 (Feec.HilbertComplex.SubcomplexFamily.le_of_eventually_orthogonal_cyclesW
+    (G := F.toFeec) (rel_add_one j) (SubcomplexFamily.approximates_toFeec ha)
+    (φ := fun p => √(‖p.1‖ ^ 2 + ‖p.2‖ ^ 2) - c * ‖p.2‖)
+    (((continuous_fst.norm.pow 2).add (continuous_snd.norm.pow 2)).sqrt.sub
+      (continuous_const.mul continuous_snd.norm))
+    (hC.mono fun h hCh y hy hyo => sub_nonpos.2 (hCh y hy fun q hq =>
+      hyo q ((cyclesW_eq (S := F.V h) j).symm ▸ hq))) (z := z) ?_)
+  rwa [H.cycles_eq j]
+
 theorem harmonicBound_iff {i : ℤ} {C : ℝ} :
     S.toFeec.HarmonicBound i C ↔ S.HarmonicBoundBy i C := by
   unfold Feec.HilbertComplex.Subcomplex.HarmonicBound HarmonicBoundBy
